@@ -1,0 +1,6 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "NaisDeployment"
+metadata:
+  name: "tais-nestapp"
+spec:
+  a: b
