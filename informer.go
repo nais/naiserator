@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
+    "fmt"
 )
 
 func WatchResources(clientSet client_v1alpha1.NaisV1Alpha1Interface) cache.Store {
@@ -24,7 +25,16 @@ func WatchResources(clientSet client_v1alpha1.NaisV1Alpha1Interface) cache.Store
 		},
 		&v1alpha1.NaisDeployment{},
 		1*time.Minute,
-		cache.ResourceEventHandlerFuncs{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				fmt.Println("added")
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				fmt.Println("updated")
+			},
+			DeleteFunc: func(obj interface{}) {
+				fmt.Println("deleted")
+			}},
 	)
 
 	go naisDeploymentController.Run(wait.NeverStop)
