@@ -2,20 +2,20 @@ package v1alpha1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-type NaisDeploymentSpec struct {
-	A string `json:"a"`
+type ApplicationSpec struct {
+	Team string `json:"team"`
 }
 
-type NaisDeployment struct {
+type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec NaisDeploymentSpec `json:"spec"`
+	Spec ApplicationSpec `json:"spec"`
 }
 
-type NaisDeploymentList struct {
+type ApplicationList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []NaisDeployment `json:"items"`
+	Items []Application `json:"items"`
 }

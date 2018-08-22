@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-    "github.com/jhrv/operator/tutorial/api/types/v1alpha1"
+    "github.com/nais/naiserator/api/types/v1alpha1"
     "k8s.io/apimachinery/pkg/runtime/schema"
     "k8s.io/apimachinery/pkg/runtime/serializer"
     "k8s.io/client-go/kubernetes/scheme"
@@ -9,7 +9,7 @@ import (
 )
 
 type NaisV1Alpha1Interface interface {
-    NaisDeployments(namespace string) NaisDeploymentInterface
+    Applications(namespace string) ApplicationInterface
 }
 
 type NaisV1Alpha1Client struct {
@@ -31,8 +31,8 @@ func NewForConfig(c *rest.Config) (*NaisV1Alpha1Client, error) {
     return &NaisV1Alpha1Client{restClient: client}, nil
 }
 
-func (c *NaisV1Alpha1Client) NaisDeployments(namespace string) NaisDeploymentInterface {
-    return &naisDeploymentClient{
+func (c *NaisV1Alpha1Client) Applications(namespace string) ApplicationInterface {
+    return &applicationClient{
         restClient: c.restClient,
         ns: namespace,
     }

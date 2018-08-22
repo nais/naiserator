@@ -1,6 +1,6 @@
 apiVersion: "nais.io/v1alpha1"
-kind: "NaisDeployment"
+kind: "Application"
 metadata:
   name: "tais-nestapp"
 spec:
-  a: b
+  team: aura

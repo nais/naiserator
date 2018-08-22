@@ -18,8 +18,8 @@ var (
 
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&NaisDeployment{},
-		&NaisDeploymentList{},
+		&Application{},
+		&ApplicationList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)

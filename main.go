@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"log"
-	"github.com/jhrv/operator/tutorial/api/types/v1alpha1"
-	clientV1alpha1 "github.com/jhrv/operator/tutorial/clientset/v1alpha1"
+	"github.com/nais/naiserator/api/types/v1alpha1"
+	clientV1alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -44,26 +44,26 @@ func main() {
 		panic(err)
 	}
 
-	naisClient := clientSet.NaisDeployments("default")
-	naisDeploymentList, err := naisClient.List(metav1.ListOptions{})
+	naisClient := clientSet.Applications("default")
+	applicationList, err := naisClient.List(metav1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
 
-	naisDeployment, e := naisClient.Get("nais-testapp", metav1.GetOptions{})
+	application, e := naisClient.Get("nais-testapp", metav1.GetOptions{})
 
 	if e != nil {
 		panic(e)
 	}
 
-	fmt.Println("got nais deployment..", naisDeployment.Spec.A)
+	fmt.Println("got nais deployment..", application.Spec.Team)
 
-	fmt.Printf("naisDeployments found: %+v\n", naisDeploymentList)
+	fmt.Printf("applications found: %+v\n", applicationList)
 	store := WatchResources(clientSet)
 
 	for {
-		naisDeploymentsFromStore := store.List()
-		fmt.Printf("project in store: %d\n", len(naisDeploymentsFromStore))
+		applicationsFromStore := store.List()
+		fmt.Printf("project in store: %d\n", len(applicationsFromStore))
 
 		time.Sleep(2 * time.Second)
 	}

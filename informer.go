@@ -3,8 +3,8 @@ package main
 import (
 	"time"
 
-	"github.com/jhrv/operator/tutorial/api/types/v1alpha1"
-	client_v1alpha1 "github.com/jhrv/operator/tutorial/clientset/v1alpha1"
+	"github.com/nais/naiserator/api/types/v1alpha1"
+	client_v1alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -14,16 +14,16 @@ import (
 )
 
 func WatchResources(clientSet client_v1alpha1.NaisV1Alpha1Interface) cache.Store {
-	naisDeploymentStore, naisDeploymentController := cache.NewInformer(
+	applicationStore, applicationController := cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(lo metav1.ListOptions) (result runtime.Object, err error) {
-				return clientSet.NaisDeployments("default").List(lo)
+				return clientSet.Applications("default").List(lo)
 			},
 			WatchFunc: func(lo metav1.ListOptions) (watch.Interface, error) {
-				return clientSet.NaisDeployments("default").Watch(lo)
+				return clientSet.Applications("default").Watch(lo)
 			},
 		},
-		&v1alpha1.NaisDeployment{},
+		&v1alpha1.Application{},
 		1*time.Minute,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
@@ -37,6 +37,6 @@ func WatchResources(clientSet client_v1alpha1.NaisV1Alpha1Interface) cache.Store
 			}},
 	)
 
-	go naisDeploymentController.Run(wait.NeverStop)
-	return naisDeploymentStore
+	go applicationController.Run(wait.NeverStop)
+	return applicationStore
 }
