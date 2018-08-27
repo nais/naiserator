@@ -16,6 +16,11 @@ spec:
     openAPIV3Schema:
       properties:
         spec:
+          required:
+            - image
+            - team
+            - port
+            - healthcheck
           properties:
             image:
               type: string
@@ -32,8 +37,13 @@ spec:
             port:
               type: integer
             healthcheck:
+              required:
+                - liveness
+                - readiness
               properties:
                 liveness:
+                  required:
+                    - path
                   properties:
                     path:
                       type: string
@@ -46,6 +56,8 @@ spec:
                     failureThreshold:
                       type: integer
                 readiness:
+                  required:
+                    - path
                   properties:
                     path:
                       type: string
