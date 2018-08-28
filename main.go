@@ -41,11 +41,12 @@ func createClientSet() (*clientV1Alpha1.NaisV1Alpha1Client) {
 	if err != nil {
 	   glog.Fatalf("unable to initialize kubernetes config")
 	}
-	clientSet, err := clientV1Alpha1.NewForConfig(config)
 
+	clientSet, err := clientV1Alpha1.NewForConfig(config)
 	if err != nil {
 		glog.Fatalf("unable to create new clientset")
 	}
+
 	return clientSet
 }
 
