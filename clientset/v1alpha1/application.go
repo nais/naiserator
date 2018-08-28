@@ -13,7 +13,6 @@ type ApplicationInterface interface {
     Get(name string, options metav1.GetOptions) (*v1alpha1.Application, error)
     Create(*v1alpha1.Application) (*v1alpha1.Application, error)
     Watch(opts metav1.ListOptions) (watch.Interface, error)
-    // ...
 }
 
 type applicationClient struct {

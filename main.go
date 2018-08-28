@@ -2,16 +2,15 @@ package main
 
 import (
 	"flag"
-	"log"
-	"github.com/nais/naiserator/api/types/v1alpha1"
-	clientV1alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
-    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/scheme"
+	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"fmt"
-
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
+	"github.com/golang/glog"
+	"github.com/nais/naiserator/api/types/v1alpha1"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 var kubeconfig string
@@ -22,49 +21,42 @@ func init() {
 }
 
 func main() {
-	var config *rest.Config
-	var err error
+	glog.Info("starting up")
 
-	if kubeconfig == "" {
-		log.Printf("using in-cluster configuration")
-		config, err = rest.InClusterConfig()
-	} else {
-		log.Printf("using configuration from '%s'", kubeconfig)
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	}
-
-	if err != nil {
-		panic(err)
-	}
-
+    // register custom types
 	v1alpha1.AddToScheme(scheme.Scheme)
 
-	clientSet, err := clientV1alpha1.NewForConfig(config)
+	// make stop channel for exit signals
+	s := make(chan os.Signal, 1)
+	signal.Notify(s, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	WatchResources(createClientSet())
+	<-s
+
+	glog.Info("shutting down")
+}
+
+func createClientSet() (*clientV1Alpha1.NaisV1Alpha1Client) {
+	config, err := getK8sConfig()
 	if err != nil {
-		panic(err)
+	   glog.Fatalf("unable to initialize kubernetes config")
 	}
 
-	naisClient := clientSet.Applications("default")
-	applicationList, err := naisClient.List(metav1.ListOptions{})
+	clientSet, err := clientV1Alpha1.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		glog.Fatalf("unable to create new clientset")
 	}
 
-	application, e := naisClient.Get("nais-testapp", metav1.GetOptions{})
+	return clientSet
+}
 
-	if e != nil {
-		panic(e)
-	}
-
-	fmt.Println("got nais deployment..", application.Spec.Team)
-
-	fmt.Printf("applications found: %+v\n", applicationList)
-	store := WatchResources(clientSet)
-
-	for {
-		applicationsFromStore := store.List()
-		fmt.Printf("project in store: %d\n", len(applicationsFromStore))
-
-		time.Sleep(2 * time.Second)
+func getK8sConfig() (*rest.Config, error) {
+	if kubeconfig == "" {
+		glog.Infof("using in-cluster configuration")
+		return rest.InClusterConfig()
+	} else {
+		glog.Infof("using configuration from '%s'", kubeconfig)
+		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
 }
+
