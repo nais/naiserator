@@ -67,8 +67,6 @@ spec:
                       type: integer
             leaderElection:
               type: boolean
-            redis:
-              type: boolean
             preStopHookPath:
               type: string
             prometheus:
