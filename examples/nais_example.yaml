@@ -48,3 +48,8 @@ spec:
   logtransform: dns_loglevel # Optional. The transformation of the logs, if they should be handled differently than plain text or json
   webproxy: false # Optional. Expose web proxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables.
   secrets: false # Optional. If set to true fetch secrets from Secret Service and inject into the pods. todo link to doc.
+  configMaps:
+    files: # Optional. Specify config maps that will have their data mounted into the container as files.
+      - example_files
+    env: # Optional. Specify config maps that will have their data mounted into the container as environment variables.
+      - example_env

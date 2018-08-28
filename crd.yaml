@@ -107,3 +107,9 @@ spec:
               type: boolean
             secrets:
               type: boolean
+            configMaps:
+              properties:
+                files:
+                  type: array
+                env:
+                  type: array
