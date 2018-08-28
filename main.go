@@ -11,6 +11,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/nais/naiserator/api/types/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/kubernetes"
 )
 
 var kubeconfig string
@@ -30,13 +31,13 @@ func main() {
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	WatchResources(createClientSet())
+	WatchResources(createApplicationClient(), createGenericClient())
 	<-s
 
 	glog.Info("shutting down")
 }
 
-func createClientSet() (*clientV1Alpha1.NaisV1Alpha1Client) {
+func createApplicationClient() (*clientV1Alpha1.NaisV1Alpha1Client) {
 	config, err := getK8sConfig()
 	if err != nil {
 	   glog.Fatalf("unable to initialize kubernetes config")
@@ -48,6 +49,23 @@ func createClientSet() (*clientV1Alpha1.NaisV1Alpha1Client) {
 	}
 
 	return clientSet
+}
+
+
+func createGenericClient() *kubernetes.Clientset {
+
+	config, err := getK8sConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return clientset
 }
 
 func getK8sConfig() (*rest.Config, error) {
