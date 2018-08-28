@@ -4,6 +4,8 @@ Naiserator is an operator that abstracts a number of different Kubernetes resour
 
 ## Getting started
 
+Building Naiserator requires [Go 1.11](https://golang.org/dl/) or later.
+
 ```
 minikube start
 kubectl apply -f api/types/v1alpha1/application.yaml
