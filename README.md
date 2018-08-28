@@ -13,6 +13,10 @@ go run *.go --kubeconfig=<path-to-kubeconfig>
 
 ## Differences from previous nais.yaml
 
-* The `redis` field has been removed ([#6](issues/6))
-* The `alerts` field has been removed ([#7](issues/6))
-* The `fasitResources` field has been removed ([#9](issues/6))
+* The `redis` field has been removed ([#6][i6])
+* The `alerts` field has been removed ([#7][i7])
+* The `fasitResources` field has been removed ([#9][i9])
+
+[i6]: https://github.com/nais/naiserator/issues/6
+[i7]: https://github.com/nais/naiserator/issues/7
+[i9]: https://github.com/nais/naiserator/issues/9
