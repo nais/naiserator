@@ -12,6 +12,7 @@ type ApplicationInterface interface {
     List(opts metav1.ListOptions) (*v1alpha1.ApplicationList, error)
     Get(name string, options metav1.GetOptions) (*v1alpha1.Application, error)
     Create(*v1alpha1.Application) (*v1alpha1.Application, error)
+    Update(*v1alpha1.Application) (*v1alpha1.Application, error)
     Watch(opts metav1.ListOptions) (watch.Interface, error)
 }
 
@@ -51,6 +52,19 @@ func (c *applicationClient) Create(application *v1alpha1.Application) (*v1alpha1
     result := v1alpha1.Application{}
     err := c.restClient.
         Post().
+        Namespace(c.ns).
+        Resource("applications").
+        Body(application).
+        Do().
+        Into(&result)
+
+    return &result, err
+}
+
+func (c *applicationClient) Update(application *v1alpha1.Application) (*v1alpha1.Application, error) {
+    result := v1alpha1.Application{}
+    err := c.restClient.
+        Put().
         Namespace(c.ns).
         Resource("applications").
         Body(application).

@@ -1,0 +1,55 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: tais-nestapp
+  namespace: default
+spec:
+  image: navikt/nais-testapp:69.0.0
+  port: 8080 # the port number which is exposed by the container and should receive traffic
+  team: aura
+  replicas: # set min = max to disable autoscaling
+    min: 2 # minimum number of replicas.
+    max: 4 # maximum number of replicas
+    cpuThresholdPercentage: 50 # total cpu percentage threshold on deployment, at which point it will increase number of pods if current < max
+  healthcheck: #Optional
+    liveness:
+      path: isalive
+      initialDelay: 20
+      timeout: 1
+      periodSeconds: 5     # How often (in seconds) to perform the probe. Default to 10 seconds
+      failureThreshold: 10 # when a Pod starts and the probe fails,
+                           # nais will try failureThreshold times before giving up and restarting the Pod
+                           # Defaults to 3
+    readiness:
+      path: isready
+      initialDelay: 20
+      timeout: 1
+  leaderElection: false # if true, a http endpoint will be available at $ELECTOR_PATH that return the current leader
+                        # Compare this value with the $HOSTNAME to see if the current instance is the leader
+  redis: false # if true, will add Redis sentinels that can be reach on rfs-<your-app-name> with port 26379, and mymaster as the name of the master
+  #Optional. Defaults to NONE.
+  #See https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+  preStopHookPath: "" # A HTTP GET will be issued to this endpoint at least once before the pod is terminated.
+  prometheus: #Optional
+    enabled: false # if true the pod will be scraped for metrics by prometheus
+    path: /metrics # Path to prometheus-metrics
+  istio:
+    enabled: false # when true, envoy-proxy sidecar will be injected into pod and https urls envvars will be rewritten
+  resources: # Optional. See: http://kubernetes.io/docs/user-guide/compute-resources/
+    limits:
+      cpu: 500m # app will have its cpu usage throttled if exceeding this limit
+      memory: 512Mi  # app will be killed if exceeding these limits
+    requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
+      cpu: 200m
+      memory: 256Mi
+  ingress:
+    disabled: false # if true, no ingress will be created and application can only be reached from inside cluster
+  logformat: accesslog # Optional. The format of the logs from the container if the logs should be handled differently than plain text or json
+  logtransform: dns_loglevel # Optional. The transformation of the logs, if they should be handled differently than plain text or json
+  webproxy: false # Optional. Expose web proxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables.
+  secrets: false # Optional. If set to true fetch secrets from Secret Service and inject into the pods. todo link to doc.
+  configMaps:
+    files: # Optional. Specify config maps that will have their data mounted into the container as files.
+      - example_files
+    env: # Optional. Specify config maps that will have their data mounted into the container as environment variables.
+      - example_env
