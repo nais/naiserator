@@ -10,3 +10,9 @@ kubectl apply -f api/types/v1alpha1/application.yaml
 kubectl apply -f examples/nais_example.yaml
 go run *.go --kubeconfig=<path-to-kubeconfig>
 ```
+
+## Differences from previous nais.yaml
+
+* The `redis` field has been removed (#6)
+* The `alerts` field has been removed (#7)
+* The `fasitResources` field has been removed (#9)
