@@ -48,11 +48,3 @@ spec:
   logtransform: dns_loglevel # Optional. The transformation of the logs, if they should be handled differently than plain text or json
   webproxy: false # Optional. Expose web proxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables.
   secrets: false # Optional. If set to true fetch secrets from Secret Service and inject into the pods. todo link to doc.
-  alerts:
-  - alert: Nais-testapp deployed
-    expr: kube_deployment_status_replicas_unavailable{deployment="nais-testapp"} > 0
-    for: 5m
-    labels:
-      severity: Warning
-    annotations:
-      action: Investigate why nais-testapp can't spawn pods. kubectl describe deployment nais-testapp, kubectl describe pod nais-testapp-*.
