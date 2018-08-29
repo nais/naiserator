@@ -16,11 +16,6 @@ spec:
     openAPIV3Schema:
       properties:
         spec:
-          required:
-            - image
-            - team
-            - port
-            - healthcheck
           properties:
             image:
               type: string
