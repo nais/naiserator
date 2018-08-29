@@ -67,6 +67,7 @@ func (c *applicationClient) Update(application *v1alpha1.Application) (*v1alpha1
         Put().
         Namespace(c.ns).
         Resource("applications").
+        Name(application.Name).
         Body(application).
         Do().
         Into(&result)
