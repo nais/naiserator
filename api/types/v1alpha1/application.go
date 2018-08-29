@@ -1,9 +1,9 @@
 package v1alpha1
 
 import (
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/api/core/v1"
 )
 
 type ApplicationSpec struct {
@@ -23,12 +23,12 @@ func (in *Application) GetObjectKind() schema.ObjectKind {
 
 func (in *Application) GetObjectReference() v1.ObjectReference {
 	return v1.ObjectReference{
-		APIVersion: "v1alpha1",
-		UID: in.UID,
-		Name: in.Name,
-		Kind: "Application",
+		APIVersion:      "v1alpha1",
+		UID:             in.UID,
+		Name:            in.Name,
+		Kind:            "Application",
 		ResourceVersion: in.ResourceVersion,
-		Namespace: in.Namespace,
+		Namespace:       in.Namespace,
 	}
 }
 

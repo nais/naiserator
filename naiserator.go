@@ -1,16 +1,17 @@
 package main
 
 import (
-	"k8s.io/client-go/tools/cache"
+	"fmt"
+	"time"
+
+	"github.com/nais/naiserator/api/types/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
-	"github.com/nais/naiserator/api/types/v1alpha1"
-	"time"
-	"fmt"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 )
 
 func add(app *v1alpha1.Application, clientSet kubernetes.Interface, appClient clientV1Alpha1.NaisV1Alpha1Interface) {
@@ -23,11 +24,11 @@ func add(app *v1alpha1.Application, clientSet kubernetes.Interface, appClient cl
 
 	fmt.Println("updating...")
 	//app.GenerateName = "test"
-    //app.Annotations["last-succcessful-resourceversion"] = app.ResourceVersion
+	//app.Annotations["last-succcessful-resourceversion"] = app.ResourceVersion
 
-    result, err := appClient.Applications(app.Namespace).Update(app)
-    if err != nil {
-    	fmt.Println("error when updating annotation:", err)
+	result, err := appClient.Applications(app.Namespace).Update(app)
+	if err != nil {
+		fmt.Println("error when updating annotation:", err)
 		fmt.Printf("%+v\n", result)
 	}
 	//blockOwnerDeletion := true

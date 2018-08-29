@@ -2,16 +2,17 @@ package main
 
 import (
 	"flag"
-	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"os/signal"
 	"syscall"
+
 	"github.com/golang/glog"
 	"github.com/nais/naiserator/api/types/v1alpha1"
-	"k8s.io/client-go/kubernetes/scheme"
+	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var kubeconfig string
@@ -24,7 +25,7 @@ func init() {
 func main() {
 	glog.Info("starting up")
 
-    // register custom types
+	// register custom types
 	v1alpha1.AddToScheme(scheme.Scheme)
 
 	// make stop channel for exit signals
@@ -37,10 +38,10 @@ func main() {
 	glog.Info("shutting down")
 }
 
-func createApplicationClient() (*clientV1Alpha1.NaisV1Alpha1Client) {
+func createApplicationClient() *clientV1Alpha1.NaisV1Alpha1Client {
 	config, err := getK8sConfig()
 	if err != nil {
-	   glog.Fatalf("unable to initialize kubernetes config")
+		glog.Fatalf("unable to initialize kubernetes config")
 	}
 
 	clientSet, err := clientV1Alpha1.NewForConfig(config)
@@ -50,7 +51,6 @@ func createApplicationClient() (*clientV1Alpha1.NaisV1Alpha1Client) {
 
 	return clientSet
 }
-
 
 func createGenericClient() *kubernetes.Clientset {
 
@@ -77,4 +77,3 @@ func getK8sConfig() (*rest.Config, error) {
 		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
 }
-
