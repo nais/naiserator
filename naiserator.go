@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang/glog"
@@ -39,6 +40,16 @@ func reportEvent(event *corev1.Event, c kubernetes.Interface) (*corev1.Event, er
 	return c.CoreV1().Events(event.Namespace).Create(event)
 }
 
+// Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
+func reportError(source string, err error, app *v1alpha1.Application, c kubernetes.Interface) {
+	glog.Error(err)
+	ev := app.GenerateErrorEvent(source, err.Error())
+	_, err = reportEvent(ev, c)
+	if err != nil {
+		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
+	}
+}
+
 func generateService(app *v1alpha1.Application) *corev1.Service {
 	blockOwnerDeletion := true
 	return &corev1.Service{
@@ -72,8 +83,12 @@ func createService(app *v1alpha1.Application, clientSet kubernetes.Interface) (*
 	return clientSet.CoreV1().Services(app.Namespace).Create(svc)
 }
 
-func add(app *v1alpha1.Application, clientSet kubernetes.Interface, appClient clientV1Alpha1.NaisV1Alpha1Interface) {
+func add(app *v1alpha1.Application, clientSet kubernetes.Interface) {
 	var err error
+
+	report := func(source string, err error) {
+		reportError(source, err, app, clientSet)
+	}
 
 	glog.Infof("Start processing application '%s'", app.Name)
 
@@ -87,17 +102,23 @@ func add(app *v1alpha1.Application, clientSet kubernetes.Interface, appClient cl
 		return
 	}
 
-	glog.Infof("Service needs update, starting synchronization...")
+	glog.Infof("Service needs update, starting synchronization.")
+
+	if svc != nil {
+		glog.Infof("Deleting old service.")
+		err = clientSet.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			report("deleteService", fmt.Errorf("while deleting service: %s", err))
+			return
+		}
+	}
+
 	_, err = createService(app, clientSet)
 	if err != nil {
-		glog.Errorf("While creating service: %s", err)
-		ev := app.GenerateErrorEvent("createService", err.Error())
-		_, err = reportEvent(ev, clientSet)
-		if err != nil {
-			glog.Errorf("Additionally, while creating an event for this error, another error occurred: %s", err)
-		}
+		report("createService", fmt.Errorf("while creating service: %s", err))
 		return
 	}
+
 	glog.Info("Successfully created service.")
 
 	glog.Info("Successfully processed application.")
@@ -117,10 +138,10 @@ func WatchResources(clientSet clientV1Alpha1.NaisV1Alpha1Interface, genericClien
 		1*time.Minute,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				add(obj.(*v1alpha1.Application), genericClient, clientSet)
+				add(obj.(*v1alpha1.Application), genericClient)
 			},
 			UpdateFunc: func(old, new interface{}) {
-				add(new.(*v1alpha1.Application), genericClient, clientSet)
+				add(new.(*v1alpha1.Application), genericClient)
 			},
 		})
 
