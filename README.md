@@ -6,6 +6,8 @@ Naiserator is an operator that abstracts a number of different Kubernetes resour
 
 Building Naiserator requires [Go 1.11](https://golang.org/dl/) or later.
 
+We use Go Modules for dependency tracking, so make sure you do `export GO111MODULE=on` before building.
+
 ```
 minikube start
 kubectl apply -f api/types/v1alpha1/application.yaml
