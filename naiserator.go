@@ -61,9 +61,9 @@ func generateService(app *v1alpha1.Application) *corev1.Service {
 			Name:      app.Name,
 			Namespace: app.Namespace,
 			OwnerReferences: []metav1.OwnerReference{{
-				Kind:               app.Kind,
+				APIVersion:         "v1alpha1",
+				Kind:               "Application",
 				Name:               app.Name,
-				APIVersion:         app.APIVersion,
 				UID:                app.UID,
 				BlockOwnerDeletion: &blockOwnerDeletion,
 			}}},
@@ -83,7 +83,36 @@ func createService(app *v1alpha1.Application, clientSet kubernetes.Interface) (*
 	return clientSet.CoreV1().Services(app.Namespace).Create(svc)
 }
 
-func add(app *v1alpha1.Application, clientSet kubernetes.Interface) {
+func synchronizeService(clientSet kubernetes.Interface, app *v1alpha1.Application) error {
+	svc, err := clientSet.CoreV1().Services(app.Namespace).Get(app.Name, metav1.GetOptions{})
+
+	if err == nil && applicationResourceVersionSynced(app, svc) {
+		glog.Info("Service is already in sync with latest version of application spec, skipping.")
+		return nil
+	}
+
+	if err != nil && !errors.IsNotFound(err) {
+		return fmt.Errorf("while querying the Kubernetes API: %s", err)
+	}
+
+	if svc != nil && !errors.IsNotFound(err) {
+		glog.Infof("Deleting old service...")
+		err = clientSet.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			return fmt.Errorf("while deleting service: %s", err)
+		}
+	}
+
+	glog.Infof("Creating new service...")
+	_, err = createService(app, clientSet)
+	if err != nil {
+		return fmt.Errorf("while creating service: %s", err)
+	}
+
+	return nil
+}
+
+func process(app *v1alpha1.Application, clientSet kubernetes.Interface) {
 	var err error
 
 	report := func(source string, err error) {
@@ -92,34 +121,13 @@ func add(app *v1alpha1.Application, clientSet kubernetes.Interface) {
 
 	glog.Infof("Start processing application '%s'", app.Name)
 
-	glog.Infof("Querying service...")
-	svc, err := clientSet.CoreV1().Services(app.Namespace).Get(app.Name, metav1.GetOptions{})
-	if err == nil && applicationResourceVersionSynced(app, svc) {
-		glog.Info("Service is already in sync with latest version of application spec, skipping.")
-		return
-	} else if err != nil && !errors.IsNotFound(err) {
-		glog.Errorf("Encountered an error while querying the Kubernetes API: %s", err)
-		return
-	}
-
-	glog.Infof("Service needs update, starting synchronization.")
-
-	if svc != nil {
-		glog.Infof("Deleting old service.")
-		err = clientSet.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{})
-		if err != nil {
-			report("deleteService", fmt.Errorf("while deleting service: %s", err))
-			return
-		}
-	}
-
-	_, err = createService(app, clientSet)
+	glog.Infof("Start synchronizing service...")
+	err = synchronizeService(clientSet, app)
 	if err != nil {
-		report("createService", fmt.Errorf("while creating service: %s", err))
+		report("synchronizeService", err)
 		return
 	}
-
-	glog.Info("Successfully created service.")
+	glog.Infof("Successfully synchronized service.")
 
 	glog.Info("Successfully processed application.")
 }
@@ -138,10 +146,10 @@ func WatchResources(clientSet clientV1Alpha1.NaisV1Alpha1Interface, genericClien
 		1*time.Minute,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				add(obj.(*v1alpha1.Application), genericClient)
+				process(obj.(*v1alpha1.Application), genericClient)
 			},
 			UpdateFunc: func(old, new interface{}) {
-				add(new.(*v1alpha1.Application), genericClient)
+				process(new.(*v1alpha1.Application), genericClient)
 			},
 		})
 
