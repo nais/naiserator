@@ -7,6 +7,7 @@ import (
 	"github.com/nais/naiserator/api/types/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -16,19 +17,31 @@ import (
 )
 
 // Kubernetes metadata annotation key used to store the version of the successfully processed resource.
-const LAST_SUCCESSFUL_RESOURCE_VERSION_KEY = "nais.io/lastSuccessfulResourceVersion"
+const APPLICATION_RESOURCE_VERSION = "nais.io/applicationResourceVersion"
 
-func needsUpdate(app *v1alpha1.Application) bool {
-	return app.Annotations[LAST_SUCCESSFUL_RESOURCE_VERSION_KEY] != app.ResourceVersion
+// Returns true if a sub-resource's annotation matches the application's resource version.
+func applicationResourceVersionSynced(app metav1.Object, subResource metav1.Object) bool {
+	return subResource.GetAnnotations()[APPLICATION_RESOURCE_VERSION] == app.GetResourceVersion()
 }
 
+// Updates a sub-resource's application resource version annotation.
+func updateResourceVersionAnnotations(app metav1.Object, subResource metav1.Object) {
+	a := subResource.GetAnnotations()
+	if a == nil {
+		a = make(map[string]string)
+	}
+	a[APPLICATION_RESOURCE_VERSION] = app.GetResourceVersion()
+	subResource.SetAnnotations(a)
+}
+
+// Creates a Kubernetes event.
 func reportEvent(event *corev1.Event, c kubernetes.Interface) (*corev1.Event, error) {
 	return c.CoreV1().Events(event.Namespace).Create(event)
 }
 
-func createService(app *v1alpha1.Application, clientSet kubernetes.Interface) (*corev1.Service, error) {
+func generateService(app *v1alpha1.Application) *corev1.Service {
 	blockOwnerDeletion := true
-	svc := &corev1.Service{
+	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
@@ -51,16 +64,12 @@ func createService(app *v1alpha1.Application, clientSet kubernetes.Interface) (*
 			},
 		},
 	}
-
-	return clientSet.CoreV1().Services(app.Namespace).Create(svc)
 }
 
-func updateAnnotation(app *v1alpha1.Application, appClient clientV1Alpha1.NaisV1Alpha1Interface) (*v1alpha1.Application, error) {
-	if app.Annotations == nil {
-		app.Annotations = make(map[string]string)
-	}
-	app.Annotations[LAST_SUCCESSFUL_RESOURCE_VERSION_KEY] = app.ResourceVersion
-	return appClient.Applications(app.Namespace).Update(app)
+func createService(app *v1alpha1.Application, clientSet kubernetes.Interface) (*corev1.Service, error) {
+	svc := generateService(app)
+	updateResourceVersionAnnotations(app, svc)
+	return clientSet.CoreV1().Services(app.Namespace).Create(svc)
 }
 
 func add(app *v1alpha1.Application, clientSet kubernetes.Interface, appClient clientV1Alpha1.NaisV1Alpha1Interface) {
@@ -68,11 +77,17 @@ func add(app *v1alpha1.Application, clientSet kubernetes.Interface, appClient cl
 
 	glog.Infof("Start processing application '%s'", app.Name)
 
-	if !needsUpdate(app) {
-		glog.Info("Application has not changed since last successful iteration, skipping.")
+	glog.Infof("Querying service...")
+	svc, err := clientSet.CoreV1().Services(app.Namespace).Get(app.Name, metav1.GetOptions{})
+	if err == nil && applicationResourceVersionSynced(app, svc) {
+		glog.Info("Service is already in sync with latest version of application spec, skipping.")
+		return
+	} else if err != nil && !errors.IsNotFound(err) {
+		glog.Errorf("Encountered an error while querying the Kubernetes API: %s", err)
 		return
 	}
 
+	glog.Infof("Service needs update, starting synchronization...")
 	_, err = createService(app, clientSet)
 	if err != nil {
 		glog.Errorf("While creating service: %s", err)
@@ -84,12 +99,6 @@ func add(app *v1alpha1.Application, clientSet kubernetes.Interface, appClient cl
 		return
 	}
 	glog.Info("Successfully created service.")
-
-	_, err = updateAnnotation(app, appClient)
-	if err != nil {
-		glog.Errorf("While updating annotation: %s", err)
-		return
-	}
 
 	glog.Info("Successfully processed application.")
 }
