@@ -24,7 +24,7 @@ require (
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.1 // indirect
-	k8s.io/api v0.0.0-20180828152522-d150a5833232
-	k8s.io/apimachinery v0.0.0-20180828123425-c6b66c9c507a
+	k8s.io/api v0.0.0-20180712090710-2d6f90ab1293 // kubernetes-1.11.2
+	k8s.io/apimachinery v0.0.0-20180621070125-103fd098999d // kubernetes-1.11.2
 	k8s.io/client-go v8.0.0+incompatible
 )
