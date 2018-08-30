@@ -16,6 +16,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/prometheus/client_golang v0.8.0
 	github.com/spf13/pflag v1.0.2 // indirect
 	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac // indirect
 	golang.org/x/net v0.0.0-20180826012351-8a410e7b638d // indirect
