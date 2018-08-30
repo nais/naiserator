@@ -36,7 +36,7 @@ type PrometheusConfig struct {
 type Replicas struct {
 	Min                    int `json:"min"`
 	Max                    int `json:"max"`
-	CpuThresholdPercentage int `yaml:"cpuThresholdPercentage"`
+	CpuThresholdPercentage int `json:"cpuThresholdPercentage"`
 }
 
 type ResourceList struct {
