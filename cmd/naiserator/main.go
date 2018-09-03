@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	kubeconfig  string
-	bindAddr    string
+	kubeconfig string
+	bindAddr   string
 )
 
 func init() {
@@ -44,7 +44,12 @@ func main() {
 	}
 
 	// serve metrics
-	go metrics.Serve(bindAddr, "/metrics")
+	go metrics.Serve(
+		bindAddr,
+		"/metrics",
+		"/ready",
+		"/alive",
+	)
 
 	naiserator.Naiserator{ClientSet: createGenericClient(kubeconfig), AppClient: createApplicationClient(kubeconfig)}.WatchResources()
 
