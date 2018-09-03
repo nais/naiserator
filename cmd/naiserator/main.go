@@ -38,22 +38,23 @@ func main() {
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
+	kubeconfig, err := getK8sConfig()
+	if err != nil {
+		glog.Fatalf("unable to initialize kubernetes config")
+	}
+
 	// serve metrics
 	go metrics.Serve(bindAddr, "/metrics")
-	naiserator.Naiserator{ClientSet: createGenericClient(), AppClient: createApplicationClient()}.WatchResources()
+
+	naiserator.Naiserator{ClientSet: createGenericClient(kubeconfig), AppClient: createApplicationClient(kubeconfig)}.WatchResources()
 
 	<-s
 
 	glog.Info("shutting down")
 }
 
-func createApplicationClient() *clientV1Alpha1.NaisV1Alpha1Client {
-	config, err := getK8sConfig()
-	if err != nil {
-		glog.Fatalf("unable to initialize kubernetes config")
-	}
-
-	clientSet, err := clientV1Alpha1.NewForConfig(config)
+func createApplicationClient(kubeconfig *rest.Config) *clientV1Alpha1.NaisV1Alpha1Client {
+	clientSet, err := clientV1Alpha1.NewForConfig(kubeconfig)
 	if err != nil {
 		glog.Fatalf("unable to create new clientset")
 	}
@@ -61,15 +62,8 @@ func createApplicationClient() *clientV1Alpha1.NaisV1Alpha1Client {
 	return clientSet
 }
 
-func createGenericClient() *kubernetes.Clientset {
-
-	config, err := getK8sConfig()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-
+func createGenericClient(kubeconfig *rest.Config) *kubernetes.Clientset {
+	clientset, err := kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
 		panic(err.Error())
 	}
