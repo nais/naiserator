@@ -4,6 +4,8 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	hash "github.com/mitchellh/hashstructure"
+	"strconv"
 )
 
 type Healthcheck struct {
@@ -95,4 +97,9 @@ type ApplicationList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []Application `json:"items"`
+}
+
+func (in Application) Hash() (string, error) {
+	hash, err := hash.Hash(in, nil)
+	return strconv.FormatUint(hash, 10), err
 }
