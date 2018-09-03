@@ -33,7 +33,8 @@ func main() {
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	naiserator.WatchResources(createApplicationClient(), createGenericClient())
+	naiserator.Naiserator{ClientSet: createGenericClient(), AppClient: createApplicationClient()}.WatchResources()
+
 	<-s
 
 	glog.Info("shutting down")

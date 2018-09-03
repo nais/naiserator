@@ -17,6 +17,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+type Naiserator struct {
+	ClientSet kubernetes.Interface
+	AppClient clientV1Alpha1.NaisV1Alpha1Interface
+}
+
 // Kubernetes metadata annotation key used to store the version of the successfully processed resource.
 const ApplicationResourceVersion = "nais.io/applicationResourceVersion"
 
@@ -36,15 +41,15 @@ func updateResourceVersionAnnotations(app metav1.Object, subResource metav1.Obje
 }
 
 // Creates a Kubernetes event.
-func reportEvent(event *corev1.Event, c kubernetes.Interface) (*corev1.Event, error) {
-	return c.CoreV1().Events(event.Namespace).Create(event)
+func (n *Naiserator) reportEvent(event *corev1.Event) (*corev1.Event, error) {
+	return n.ClientSet.CoreV1().Events(event.Namespace).Create(event)
 }
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
-func reportError(source string, err error, app *v1alpha1.Application, c kubernetes.Interface) {
+func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Application) {
 	glog.Error(err)
 	ev := app.CreateEvent(source, err.Error())
-	_, err = reportEvent(ev, c)
+	_, err = n.reportEvent(ev)
 	if err != nil {
 		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
@@ -77,14 +82,14 @@ func generateService(app *v1alpha1.Application) *corev1.Service {
 	}
 }
 
-func createService(app *v1alpha1.Application, clientSet kubernetes.Interface) (*corev1.Service, error) {
+func (n *Naiserator) createService(app *v1alpha1.Application) (*corev1.Service, error) {
 	svc := generateService(app)
 	updateResourceVersionAnnotations(app, svc)
-	return clientSet.CoreV1().Services(app.Namespace).Create(svc)
+	return n.ClientSet.CoreV1().Services(app.Namespace).Create(svc)
 }
 
-func synchronizeService(clientSet kubernetes.Interface, app *v1alpha1.Application) error {
-	svc, err := clientSet.CoreV1().Services(app.Namespace).Get(app.Name, metav1.GetOptions{})
+func (n *Naiserator) synchronizeService(app *v1alpha1.Application) error {
+	svc, err := n.ClientSet.CoreV1().Services(app.Namespace).Get(app.Name, metav1.GetOptions{})
 
 	if err == nil && applicationResourceVersionSynced(app, svc) {
 		glog.Info("Service is already in sync with latest version of application spec, skipping.")
@@ -98,14 +103,14 @@ func synchronizeService(clientSet kubernetes.Interface, app *v1alpha1.Applicatio
 	// should we delete, or simply update like before?
 	if svc != nil && !errors.IsNotFound(err) {
 		glog.Infof("Deleting old service...")
-		err = clientSet.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{})
+		err = n.ClientSet.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			return fmt.Errorf("while deleting service: %s", err)
 		}
 	}
 
 	glog.Infof("Creating new service...")
-	_, err = createService(app, clientSet)
+	_, err = n.createService(app)
 	if err != nil {
 		return fmt.Errorf("while creating service: %s", err)
 	}
@@ -113,17 +118,20 @@ func synchronizeService(clientSet kubernetes.Interface, app *v1alpha1.Applicatio
 	return nil
 }
 
-func process(app *v1alpha1.Application, clientSet kubernetes.Interface) {
+func (n *Naiserator) process(app *v1alpha1.Application) {
+
+	//
+
 	var err error
 
 	report := func(source string, err error) {
-		reportError(source, err, app, clientSet)
+		n.reportError(source, err, app)
 	}
 
 	glog.Infof("Start processing application '%s'", app.Name)
 
 	glog.Infof("Start synchronizing service...")
-	err = synchronizeService(clientSet, app)
+	err = n.synchronizeService(app)
 	if err != nil {
 		report("synchronizeService", err)
 		return
@@ -133,24 +141,24 @@ func process(app *v1alpha1.Application, clientSet kubernetes.Interface) {
 	glog.Info("Successfully processed application", app.Name)
 }
 
-func WatchResources(clientSet clientV1Alpha1.NaisV1Alpha1Interface, genericClient kubernetes.Interface) cache.Store {
+func (n *Naiserator) WatchResources() cache.Store {
 	applicationStore, applicationInformer := cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(lo metav1.ListOptions) (result runtime.Object, err error) {
-				return clientSet.Applications("default").List(lo)
+				return n.AppClient.Applications("default").List(lo)
 			},
 			WatchFunc: func(lo metav1.ListOptions) (watch.Interface, error) {
-				return clientSet.Applications("default").Watch(lo)
+				return n.AppClient.Applications("default").Watch(lo)
 			},
 		},
 		&v1alpha1.Application{},
 		1*time.Minute,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				process(obj.(*v1alpha1.Application), genericClient)
+				n.process(obj.(*v1alpha1.Application))
 			},
 			UpdateFunc: func(old, new interface{}) {
-				process(new.(*v1alpha1.Application), genericClient)
+				n.process(new.(*v1alpha1.Application))
 			},
 		})
 
