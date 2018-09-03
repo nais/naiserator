@@ -18,11 +18,11 @@ import (
 )
 
 // Kubernetes metadata annotation key used to store the version of the successfully processed resource.
-const APPLICATION_RESOURCE_VERSION = "nais.io/applicationResourceVersion"
+const ApplicationResourceVersion = "nais.io/applicationResourceVersion"
 
 // Returns true if a sub-resource's annotation matches the application's resource version.
 func applicationResourceVersionSynced(app metav1.Object, subResource metav1.Object) bool {
-	return subResource.GetAnnotations()[APPLICATION_RESOURCE_VERSION] == app.GetResourceVersion()
+	return subResource.GetAnnotations()[ApplicationResourceVersion] == app.GetResourceVersion()
 }
 
 // Updates a sub-resource's application resource version annotation.
@@ -31,7 +31,7 @@ func updateResourceVersionAnnotations(app metav1.Object, subResource metav1.Obje
 	if a == nil {
 		a = make(map[string]string)
 	}
-	a[APPLICATION_RESOURCE_VERSION] = app.GetResourceVersion()
+	a[ApplicationResourceVersion] = app.GetResourceVersion()
 	subResource.SetAnnotations(a)
 }
 
@@ -95,6 +95,7 @@ func synchronizeService(clientSet kubernetes.Interface, app *v1alpha1.Applicatio
 		return fmt.Errorf("while querying the Kubernetes API: %s", err)
 	}
 
+	// should we delete, or simply update like before?
 	if svc != nil && !errors.IsNotFound(err) {
 		glog.Infof("Deleting old service...")
 		err = clientSet.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{})
