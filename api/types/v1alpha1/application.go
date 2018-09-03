@@ -6,6 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	hash "github.com/mitchellh/hashstructure"
 	"strconv"
+	"github.com/golang/glog"
 )
 
 type Healthcheck struct {

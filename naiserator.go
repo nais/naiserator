@@ -24,6 +24,7 @@ type Naiserator struct {
 
 // Kubernetes metadata annotation key used to store the version of the successfully processed resource.
 const ApplicationResourceVersion = "nais.io/applicationResourceVersion"
+const LastSyncedHashAnnotation = "nais.io/last-synced-hash"
 
 // Returns true if a sub-resource's annotation matches the application's resource version.
 func applicationResourceVersionSynced(app metav1.Object, subResource metav1.Object) bool {
@@ -118,9 +119,25 @@ func (n *Naiserator) synchronizeService(app *v1alpha1.Application) error {
 	return nil
 }
 
-func (n *Naiserator) process(app *v1alpha1.Application) {
+func (n *Naiserator) update(old, new *v1alpha1.Application) {
+	glog.Infoln("updating application", new.Name)
 
-	//
+	hash, err := new.Hash()
+	if err != nil {
+		n.reportError("update, get hash", err, new)
+	}
+	// something has changed, synchronizing all resources
+	if old.Annotations[LastSyncedHashAnnotation] != hash {
+		n.synchronize(new)
+		return
+	}
+
+	glog.Infoln("no changes detected in", new.Name, "skipping sync")
+}
+
+
+func (n *Naiserator) synchronize(app *v1alpha1.Application) {
+	glog.Infoln("synchronizing application", app.Name)
 
 	var err error
 
@@ -139,6 +156,21 @@ func (n *Naiserator) process(app *v1alpha1.Application) {
 	glog.Infof("Successfully synchronized service.")
 
 	glog.Info("Successfully processed application", app.Name)
+
+	n.setLastSynced(app)
+}
+
+func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
+	hash, err := app.Hash()
+	if err != nil {
+		n.reportError("calculateHash", err, app)
+		return err
+	}
+
+	glog.Infoln("setting last synched hash annotation to", hash)
+	app.Annotations[LastSyncedHashAnnotation] = hash
+	_, err = n.AppClient.Applications(app.Namespace).Update(app)
+	return err
 }
 
 func (n *Naiserator) WatchResources() cache.Store {
@@ -155,10 +187,10 @@ func (n *Naiserator) WatchResources() cache.Store {
 		1*time.Minute,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				n.process(obj.(*v1alpha1.Application))
+				n.synchronize(obj.(*v1alpha1.Application))
 			},
 			UpdateFunc: func(old, new interface{}) {
-				n.process(new.(*v1alpha1.Application))
+				n.update(old.(*v1alpha1.Application), new.(*v1alpha1.Application))
 			},
 		})
 
