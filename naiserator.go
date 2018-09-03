@@ -7,6 +7,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/nais/naiserator/api/types/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
+	"github.com/nais/naiserator/metrics"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -115,6 +116,7 @@ func (n *Naiserator) synchronizeService(app *v1alpha1.Application) error {
 	if err != nil {
 		return fmt.Errorf("while creating service: %s", err)
 	}
+	metrics.ResourcesGenerated.Inc()
 
 	return nil
 }
@@ -146,6 +148,7 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 	}
 
 	glog.Infof("Start processing application '%s'", app.Name)
+	metrics.ResourcesProcessed.Inc()
 
 	glog.Infof("Start synchronizing service...")
 	err = n.synchronizeService(app)

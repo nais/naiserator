@@ -18,7 +18,7 @@ var (
 	HttpRequests = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "http_requests",
 		Namespace: "naiserator",
-		Help:      "Number of HTTP requests made to the metrics, health, and liveness checks",
+		Help:      "Number of HTTP requests made to the health and liveness checks",
 	})
 	ResourcesProcessed = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "resources_processed",
