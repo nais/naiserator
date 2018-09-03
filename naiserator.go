@@ -130,7 +130,7 @@ func process(app *v1alpha1.Application, clientSet kubernetes.Interface) {
 	}
 	glog.Infof("Successfully synchronized service.")
 
-	glog.Info("Successfully processed application.")
+	glog.Info("Successfully processed application", app.Name)
 }
 
 func WatchResources(clientSet clientV1Alpha1.NaisV1Alpha1Interface, genericClient kubernetes.Interface) cache.Store {
