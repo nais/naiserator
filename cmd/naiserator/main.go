@@ -7,19 +7,24 @@ import (
 	"syscall"
 
 	"github.com/golang/glog"
-	"github.com/nais/naiserator/api/types/v1alpha1"
 	"github.com/nais/naiserator"
+	"github.com/nais/naiserator/api/types/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
+	"github.com/nais/naiserator/metrics"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-var kubeconfig string
+var (
+	kubeconfig  string
+	bindAddr    string
+)
 
 func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "path to Kubernetes config file")
+	flag.StringVar(&bindAddr, "bind-address", ":8080", "ip:port where http requests are served")
 	flag.Parse()
 }
 
@@ -32,6 +37,9 @@ func main() {
 	// make stop channel for exit signals
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	// serve metrics
+	go metrics.Serve(bindAddr, "/metrics")
 
 	naiserator.WatchResources(createApplicationClient(), createGenericClient())
 	<-s
