@@ -51,7 +51,8 @@ func main() {
 		"/alive",
 	)
 
-	naiserator.Naiserator{ClientSet: createGenericClient(kubeconfig), AppClient: createApplicationClient(kubeconfig)}.WatchResources()
+	n := naiserator.Naiserator{ClientSet: createGenericClient(kubeconfig), AppClient: createApplicationClient(kubeconfig)}
+	n.WatchResources()
 
 	<-s
 
