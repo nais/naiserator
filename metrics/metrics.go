@@ -59,5 +59,5 @@ func Serve(addr, metrics, ready, alive string) {
 	glog.Infof("Serving metrics on %s", metrics)
 	glog.Infof("Serving readiness check on %s", ready)
 	glog.Infof("Serving liveness check on %s", alive)
-	glog.Info(http.ListenAndServe(addr, nil))
+	glog.Info(http.ListenAndServe(addr, h))
 }
