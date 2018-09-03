@@ -43,7 +43,7 @@ func reportEvent(event *corev1.Event, c kubernetes.Interface) (*corev1.Event, er
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
 func reportError(source string, err error, app *v1alpha1.Application, c kubernetes.Interface) {
 	glog.Error(err)
-	ev := app.GenerateErrorEvent(source, err.Error())
+	ev := app.CreateEvent(source, err.Error())
 	_, err = reportEvent(ev, c)
 	if err != nil {
 		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
