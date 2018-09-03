@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (in *Application) GenerateErrorEvent(action string, message string) *corev1.Event {
+func (in *Application) CreateEvent(action string, message string) *corev1.Event {
 	return &corev1.Event{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "naiserator-event",

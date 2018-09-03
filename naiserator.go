@@ -1,4 +1,4 @@
-package main
+package naiserator
 
 import (
 	"fmt"
@@ -18,11 +18,11 @@ import (
 )
 
 // Kubernetes metadata annotation key used to store the version of the successfully processed resource.
-const APPLICATION_RESOURCE_VERSION = "nais.io/applicationResourceVersion"
+const ApplicationResourceVersion = "nais.io/applicationResourceVersion"
 
 // Returns true if a sub-resource's annotation matches the application's resource version.
 func applicationResourceVersionSynced(app metav1.Object, subResource metav1.Object) bool {
-	return subResource.GetAnnotations()[APPLICATION_RESOURCE_VERSION] == app.GetResourceVersion()
+	return subResource.GetAnnotations()[ApplicationResourceVersion] == app.GetResourceVersion()
 }
 
 // Updates a sub-resource's application resource version annotation.
@@ -31,7 +31,7 @@ func updateResourceVersionAnnotations(app metav1.Object, subResource metav1.Obje
 	if a == nil {
 		a = make(map[string]string)
 	}
-	a[APPLICATION_RESOURCE_VERSION] = app.GetResourceVersion()
+	a[ApplicationResourceVersion] = app.GetResourceVersion()
 	subResource.SetAnnotations(a)
 }
 
@@ -43,7 +43,7 @@ func reportEvent(event *corev1.Event, c kubernetes.Interface) (*corev1.Event, er
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
 func reportError(source string, err error, app *v1alpha1.Application, c kubernetes.Interface) {
 	glog.Error(err)
-	ev := app.GenerateErrorEvent(source, err.Error())
+	ev := app.CreateEvent(source, err.Error())
 	_, err = reportEvent(ev, c)
 	if err != nil {
 		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
@@ -95,6 +95,7 @@ func synchronizeService(clientSet kubernetes.Interface, app *v1alpha1.Applicatio
 		return fmt.Errorf("while querying the Kubernetes API: %s", err)
 	}
 
+	// should we delete, or simply update like before?
 	if svc != nil && !errors.IsNotFound(err) {
 		glog.Infof("Deleting old service...")
 		err = clientSet.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{})
