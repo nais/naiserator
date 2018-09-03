@@ -3,7 +3,7 @@
 all: build
 
 build:
-	go build
+	cd cmd/naiserator && go build
 
 docker:
 	docker build -t nais/naiserator .
