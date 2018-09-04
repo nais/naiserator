@@ -7,7 +7,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/nais/naiserator/api/types/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
-	"github.com/nais/naiserator/metrics"
+	"github.com/nais/naiserator/pkg/metrics"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	r "github.com/nais/naiserator/pkg/resourcecreator"
 )
 
 type Naiserator struct {
@@ -36,33 +37,6 @@ func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Applica
 	_, err = n.reportEvent(ev)
 	if err != nil {
 		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
-	}
-}
-
-func createServiceSpec(app *v1alpha1.Application) *corev1.Service {
-	blockOwnerDeletion := true
-	return &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      app.Name,
-			Namespace: app.Namespace,
-			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion:         "v1alpha1",
-				Kind:               "Application",
-				Name:               app.Name,
-				UID:                app.UID,
-				BlockOwnerDeletion: &blockOwnerDeletion,
-			}}},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Port: 69,
-				},
-			},
-		},
 	}
 }
 
@@ -102,7 +76,7 @@ func (n *Naiserator) createOrUpdate(resources []interface{}) error {
 func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 	glog.Infoln("synchronizing application", app.Name)
 
-	resources, err := createResourceSpecs(app)
+	resources, err := r.CreateResourceSpecs(app)
 
 	if err != nil {
 		n.reportError("createResourceSpecs", err, app)
@@ -120,11 +94,6 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 
 	metrics.ApplicationsSynchronized.Inc()
 	glog.Infoln("successfully synchronized application", app.Name)
-}
-func createResourceSpecs(app *v1alpha1.Application) ([]interface{}, error) {
-	var resources []interface{}
-	resources = append(resources, createServiceSpec(app))
-	return resources, nil
 }
 
 func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
