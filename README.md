@@ -1,18 +1,44 @@
-# naiserator
+# Naiserator
 
-Naiserator is an operator that abstracts a number of different Kubernetes resources in order to simplify deployment of applications at NAV.
+Naiserator is a Kubernetes operator which creates many different resources based on a high level abstraction,
+in order to simplify application deployment at NAV.
+Naiserator supercedes [naisd](https://nais.io).
 
-## Getting started
+When an `Application` resource is created in Kubernetes (see
+[example application](api/types/v1alpha1/application.yaml)),
+Naiserator will generate several resources that work together to form a complete deployment:
+  * `Deployment` that runs a specified number of application instances,
+  * `Service` which points to the application endpoint,
+  * `Ingress` adding TLS termination and virtualhost support,
+  * `Horizontal pod autoscaler` for automatic application scaling,
+  * `ConfigMaps`, one for environment variables, and another for files.
+  
+These resources will remain in Kubernetes until the `Application` resource is deleted.
+  
+## Prerequisites
 
-Building Naiserator requires [Go 1.11](https://golang.org/dl/) or later.
+* For deployment, [Kubernetes](https://kubernetes.io/) v1.11.0 or later
+* For development, the [Go](https://golang.org/dl/) programming language, version 1.11 or later
 
-We use Go Modules for dependency tracking, so make sure you do `export GO111MODULE=on` before building.
+## Installation
+
+Production builds can, in the future, be installed by:
+```
+kubectl apply -f kubernetes/naiserator.yml
+```
+
+## Development
+
+[Go modules](https://github.com/golang/go/wiki/Modules)
+are used for dependency tracking. Make sure you do `export GO111MODULE=on` before running any Go commands.
+It is no longer needed to have the project checked out in your `$GOPATH`.
 
 ```
 minikube start
 kubectl apply -f api/types/v1alpha1/application.yaml
 kubectl apply -f examples/nais_example.yaml
-go run *.go --kubeconfig=<path-to-kubeconfig>
+make
+cmd/naiserator/naiserator --kubeconfig=<path-to-kubeconfig>
 ```
 
 ## Differences from previous nais.yaml
