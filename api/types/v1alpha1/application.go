@@ -1,10 +1,10 @@
 package v1alpha1
 
 import (
+	hash "github.com/mitchellh/hashstructure"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	hash "github.com/mitchellh/hashstructure"
 	"strconv"
 )
 
@@ -100,6 +100,18 @@ type ApplicationList struct {
 }
 
 func (in Application) Hash() (string, error) {
-	hash, err := hash.Hash(in, nil)
-	return strconv.FormatUint(hash, 10), err
+	// struct including the relevant fields for
+	// creating a hash of an Application object
+	relevantValues := struct {
+		TypeMeta metav1.TypeMeta
+		AppSpec ApplicationSpec
+		Labels map[string]string
+	}{
+		in.TypeMeta,
+		in.Spec,
+		in.Labels,
+	}
+
+	h, err := hash.Hash(relevantValues, nil)
+	return strconv.FormatUint(h, 10), err
 }

@@ -171,7 +171,7 @@ func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
 		return err
 	}
 
-	glog.Infoln("setting last synched hash annotation to", hash)
+	glog.Infoln("setting last synced hash annotation to", hash)
 	app.Annotations[LastSyncedHashAnnotation] = hash
 	_, err = n.AppClient.Applications(app.Namespace).Update(app)
 	return err
