@@ -1,0 +1,30 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: nais
+spec:
+  finalizers:
+  - kubernetes
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: naiserator
+  namespace: nais
+  labels:
+    app: naiserator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: naiserator
+  template:
+    metadata:
+      labels:
+        app: naiserator
+    spec:
+      containers:
+      - name: naiserator
+        image: nais/naiserator:latest
