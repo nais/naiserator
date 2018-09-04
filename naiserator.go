@@ -25,7 +25,7 @@ type Naiserator struct {
 
 // Kubernetes metadata annotation key used to store the version of the successfully processed resource.
 const ApplicationResourceVersion = "nais.io/applicationResourceVersion"
-const LastSyncedHashAnnotation = "nais.io/last-synced-hash"
+const LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
 
 // Returns true if a sub-resource's annotation matches the application's resource version.
 func applicationResourceVersionSynced(app metav1.Object, subResource metav1.Object) bool {
@@ -160,13 +160,14 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 
 	glog.Info("Successfully processed application", app.Name)
 
-	n.setLastSynced(app)
+	if err := n.setLastSynced(app); err != nil {
+		n.reportError("setlastsyncedhash", err, app)
+	}
 }
 
 func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
 	hash, err := app.Hash()
 	if err != nil {
-		n.reportError("calculateHash", err, app)
 		return err
 	}
 
