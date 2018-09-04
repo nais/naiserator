@@ -8,6 +8,7 @@ import (
 	"github.com/nais/naiserator/api/types/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	"github.com/nais/naiserator/pkg/metrics"
+	r "github.com/nais/naiserator/pkg/resourcecreator"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	r "github.com/nais/naiserator/pkg/resourcecreator"
 )
 
 type Naiserator struct {
@@ -57,9 +57,9 @@ func (n *Naiserator) update(old, new *v1alpha1.Application) {
 	glog.Infoln("no changes detected in", new.Name, "skipping sync")
 }
 
-func (n *Naiserator) createOrUpdate(resources []interface{}) error {
-	for _, r := range resources {
-		switch v := r.(type) {
+func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
+	for _, resource := range resources {
+		switch v := resource.(type) {
 		case *corev1.Service:
 			// check if resource exists (possibly generic?)
 			// if it does, apply resourceversion and update. Else create

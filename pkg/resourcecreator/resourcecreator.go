@@ -4,10 +4,11 @@ import (
 	"github.com/nais/naiserator/api/types/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func CreateResourceSpecs(app *v1alpha1.Application) ([]interface{}, error) {
-	var resources []interface{}
+func CreateResourceSpecs(app *v1alpha1.Application) ([]runtime.Object, error) {
+	var resources []runtime.Object
 	resources = append(resources, createServiceSpec(app))
 	return resources, nil
 }
