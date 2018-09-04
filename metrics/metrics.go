@@ -13,29 +13,29 @@ var (
 	Deployments = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "deployments",
 		Namespace: "naiserator",
-		Help:      "Number of application deployments performed.",
+		Help:      "number of application deployments performed",
 	})
 	HttpRequests = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "http_requests",
 		Namespace: "naiserator",
-		Help:      "Number of HTTP requests made to the health and liveness checks",
+		Help:      "number of HTTP requests made to the health and liveness checks",
 	})
-	ResourcesProcessed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "resources_processed",
+	ApplicationsSynchronized = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:      "applications_synchronized",
 		Namespace: "naiserator",
-		Help:      "Number of nais.io.Application resources that have been processed.",
+		Help:      "number of nais.io.Application resources that have been synchronized",
 	})
 	ResourcesGenerated = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "resources_generated",
 		Namespace: "naiserator",
-		Help:      "Number of Kubernetes resources that have been generated as a result of application deployments.",
+		Help:      "number of Kubernetes resources that have been generated as a result of application deployments",
 	})
 )
 
 func init() {
 	prometheus.MustRegister(Deployments)
 	prometheus.MustRegister(HttpRequests)
-	prometheus.MustRegister(ResourcesProcessed)
+	prometheus.MustRegister(ApplicationsSynchronized)
 	prometheus.MustRegister(ResourcesGenerated)
 }
 
