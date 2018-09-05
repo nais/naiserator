@@ -27,4 +27,4 @@ spec:
     spec:
       containers:
       - name: naiserator
-        image: nais/naiserator:latest
+        image: navikt/naiserator:latest

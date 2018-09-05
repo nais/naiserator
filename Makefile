@@ -17,6 +17,7 @@ docker:
 
 docker-push:
 	docker image push ${TAG}:$(shell /bin/cat ./version)
+	docker image push ${LATEST}
 
 local:
 	go run cmd/naiserator/main.go --logtostderr --kubeconfig=${KUBECONFIG} --bind-address=127.0.0.1:8080
@@ -26,11 +27,3 @@ install:
 
 test:
 	${GO} test ./... --coverprofile=cover.out
-
-linux:
-	docker run --rm \
-		-e GOOS=linux \
-		-e CGO_ENABLED=0 \
-		-v ${PWD}:/go/src/github.com/nais/naiserator \
-		-w /go/src/github.com/nais/naiserator ${GO_IMG} \
-		go build -a -installsuffix cgo -ldflags '-s $(LDFLAGS)' -o naiserator
