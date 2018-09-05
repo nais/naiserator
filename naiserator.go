@@ -10,6 +10,7 @@ import (
 	"github.com/nais/naiserator/pkg/metrics"
 	r "github.com/nais/naiserator/pkg/resourcecreator"
 	corev1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -63,10 +64,13 @@ func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
 		case *corev1.Service:
 			// check if resource exists (possibly generic?)
 			// if it does, apply resourceversion and update. Else create
-			fmt.Printf("updating service...")
+			fmt.Printf("createOrUpdate service...")
+			return nil
+		case *appsv1.Deployment:
+			fmt.Printf("createOrUpdate deployment...")
 			return nil
 		default:
-			fmt.Printf("I don't know about type %T!\n", v)
+			fmt.Printf("I don't know about type %T\n", v)
 			return nil
 		}
 	}
@@ -76,7 +80,12 @@ func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
 func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 	glog.Infoln("synchronizing application", app.Name)
 
-	resources, err := r.CreateResourceSpecs(app)
+	if err := v1alpha1.ApplyDefaults(app); err != nil {
+		glog.Errorf("Could not merge application struct with defaults %s", err)
+		return
+	}
+
+	resources, err := r.GetResources(app)
 
 	if err != nil {
 		n.reportError("createResourceSpecs", err, app)

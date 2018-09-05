@@ -1,41 +1,35 @@
 package resourcecreator
 
 import (
-	"github.com/nais/naiserator/api/types/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
+	nais "github.com/nais/naiserator/api/types/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func CreateResourceSpecs(app *v1alpha1.Application) ([]runtime.Object, error) {
-	var resources []runtime.Object
-	resources = append(resources, createServiceSpec(app))
-	return resources, nil
+
+func GetResources(app *nais.Application) ([]runtime.Object, error) {
+	return []runtime.Object{
+		getService(app),
+		getDeployment(app),
+	}, nil
 }
 
-func createServiceSpec(app *v1alpha1.Application) *corev1.Service {
-	blockOwnerDeletion := true
-	return &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
+func getObjectMeta(app *nais.Application) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:      app.Name,
+		Namespace: app.Namespace,
+		Labels: map[string]string{
+			"app":  app.Name,
+			"team": app.Spec.Team,
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      app.Name,
-			Namespace: app.Namespace,
-			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion:         "v1alpha1",
-				Kind:               "Application",
-				Name:               app.Name,
-				UID:                app.UID,
-				BlockOwnerDeletion: &blockOwnerDeletion,
-			}}},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Port: 69,
-				},
-			},
-		},
+		OwnerReferences: getOwnerReferences(app),
 	}
+}
+
+func getOwnerReferences(app *nais.Application) []metav1.OwnerReference {
+	return []metav1.OwnerReference{app.GetOwnerReference()}
+}
+
+func int32p(i int32) *int32 {
+	return &i
 }

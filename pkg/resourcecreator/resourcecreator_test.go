@@ -1,33 +1,37 @@
 package resourcecreator
 
 import (
-	"github.com/nais/naiserator/api/types/v1alpha1"
+	nais "github.com/nais/naiserator/api/types/v1alpha1"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"strings"
 	"testing"
 )
 
+const (
+	ImageName = "user/image:version"
+)
+
 func TestCreateResourceSpecs(t *testing.T) {
-	app := &v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{
-		Port: 69,
+	app := &nais.Application{Spec: nais.ApplicationSpec{
+		Port:  nais.DefaultPort,
+		Image: ImageName,
 	}}
-	specs, e := CreateResourceSpecs(app)
+
+	if err := nais.ApplyDefaults(app); err != nil {
+		panic(err)
+	}
+
+	specs, e := GetResources(app)
 	assert.NoError(t, e)
 
 	svc := get(specs, "service").(*v1.Service)
-	assert.Equal(t, 69, int(svc.Spec.Ports[0].Port))
-}
+	assert.Equal(t, nais.DefaultPort, int(svc.Spec.Ports[0].Port))
 
-func TestCreateServiceSpec(t *testing.T) {
-	app := &v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{
-		Port: 69,
-	}}
-
-	svc := createServiceSpec(app)
-
-	assert.Equal(t, 69, int(svc.Spec.Ports[0].Port))
+	deploy := get(specs, "deployment").(*appsv1.Deployment)
+	assert.Equal(t, ImageName, deploy.Spec.Template.Spec.Containers[0].Image)
 }
 
 func get(resources []runtime.Object, kind string) runtime.Object {
