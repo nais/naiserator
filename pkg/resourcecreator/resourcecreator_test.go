@@ -17,7 +17,7 @@ func TestCreateResourceSpecs(t *testing.T) {
 	assert.NoError(t, e)
 
 	svc := get(specs, "service").(*v1.Service)
-	assert.Equal(t, int(svc.Spec.Ports[0].Port), 69)
+	assert.Equal(t, 69, int(svc.Spec.Ports[0].Port))
 }
 
 func TestCreateServiceSpec(t *testing.T) {
@@ -27,7 +27,7 @@ func TestCreateServiceSpec(t *testing.T) {
 
 	svc := createServiceSpec(app)
 
-	assert.Equal(t, 69, svc.Spec.Ports[0].Port)
+	assert.Equal(t, 69, int(svc.Spec.Ports[0].Port))
 }
 
 func get(resources []runtime.Object, kind string) runtime.Object {

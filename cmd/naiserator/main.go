@@ -10,7 +10,7 @@ import (
 	"github.com/nais/naiserator"
 	"github.com/nais/naiserator/api/types/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
-	"github.com/nais/naiserator/metrics"
+	"github.com/nais/naiserator/pkg/metrics"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
