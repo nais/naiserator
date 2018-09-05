@@ -26,11 +26,3 @@ install:
 
 test:
 	${GO} test ./... --coverprofile=cover.out
-
-linux:
-	docker run --rm \
-		-e GOOS=linux \
-		-e CGO_ENABLED=0 \
-		-v ${PWD}:/go/src/github.com/nais/naiserator \
-		-w /go/src/github.com/nais/naiserator ${GO_IMG} \
-		go build -a -installsuffix cgo -ldflags '-s $(LDFLAGS)' -o naiserator
