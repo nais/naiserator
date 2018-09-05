@@ -1,7 +1,7 @@
 # Naiserator
 
 Naiserator is a Kubernetes operator that handles the lifecycle of the `CustomResource` called `nais.io/Application`.
-The main goal of Naiserator is to simplify application deployment by providing a high-level abstraction tailored for the [NAIS-platform](https://nais.io) and removes unnecessary complexity.
+The main goal of Naiserator is to simplify application deployment by providing a high-level abstraction tailored for the [NAIS-platform](https://nais.io).
 Naiserator supersedes [naisd](https://nais.io).
 
 When an `Application` resource is created in Kubernetes (see
@@ -32,12 +32,11 @@ kubectl apply -f kubernetes/naiserator.yml
 are used for dependency tracking. Make sure you do `export GO111MODULE=on` before running any Go commands.
 It is no longer needed to have the project checked out in your `$GOPATH`.
 
+local development (assumes [Docker Desktop](https://www.docker.com/products/docker-desktop) or [minikube](https://github.com/kubernetes/minikube)
 ```
-minikube start
 kubectl apply -f api/types/v1alpha1/application.yaml
 kubectl apply -f examples/nais_example.yaml
-make
-cmd/naiserator/naiserator --kubeconfig=<path-to-kubeconfig>
+go run cmd/naiserator/main.go --logtostderr --kubeconfig=<your kubeconfig file> --bind-address=127.0.0.1:8080
 ```
 
 ## Differences from previous nais.yaml
