@@ -17,6 +17,7 @@ docker:
 
 docker-push:
 	docker image push ${TAG}:$(shell /bin/cat ./version)
+	docker image push ${LATEST}
 
 local:
 	go run cmd/naiserator/main.go --logtostderr --kubeconfig=${KUBECONFIG} --bind-address=127.0.0.1:8080
