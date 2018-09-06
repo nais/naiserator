@@ -49,7 +49,7 @@ func getDeploymentSpec(app *nais.Application) appsv1.DeploymentSpec {
 	}
 }
 
-//TODO mount configmaps, vault initcontainer
+//TODO mount configmaps, vault initcontainer, leaderelection
 func getPodSpec(app *nais.Application) corev1.PodSpec {
 	return corev1.PodSpec{
 		Containers: []corev1.Container{

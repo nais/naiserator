@@ -45,11 +45,11 @@ func getAppDefaults() *Application {
 			},
 			Ingress: Ingress{Disabled: false},
 			Resources: ResourceRequirements{
-				Limits: ResourceList{
+				Limits: ResourceSpec{
 					Cpu:    "500m",
 					Memory: "512Mi",
 				},
-				Requests: ResourceList{
+				Requests: ResourceSpec{
 					Cpu:    "200m",
 					Memory: "256Mi",
 				},

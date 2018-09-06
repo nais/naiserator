@@ -41,14 +41,14 @@ type Replicas struct {
 	CpuThresholdPercentage int `json:"cpuThresholdPercentage"`
 }
 
-type ResourceList struct {
+type ResourceSpec struct {
 	Cpu    string `json:"cpu"`
 	Memory string `json:"memory"`
 }
 
 type ResourceRequirements struct {
-	Limits   ResourceList `json:"limits"`
-	Requests ResourceList `json:"requests"`
+	Limits   ResourceSpec `json:"limits"`
+	Requests ResourceSpec `json:"requests"`
 }
 
 // ApplicationSpec used to be called nais manifest.

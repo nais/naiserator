@@ -6,7 +6,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-
 func GetResources(app *nais.Application) ([]runtime.Object, error) {
 	return []runtime.Object{
 		getService(app),
