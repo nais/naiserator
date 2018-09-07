@@ -2,6 +2,8 @@ package naiserator
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-multierror"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"time"
 
 	"github.com/golang/glog"
@@ -58,25 +60,6 @@ func (n *Naiserator) update(old, new *v1alpha1.Application) {
 	glog.Infoln("no changes detected in", new.Name, "skipping sync")
 }
 
-func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
-	for _, resource := range resources {
-		switch v := resource.(type) {
-		case *corev1.Service:
-			// check if resource exists (possibly generic?)
-			// if it does, apply resourceversion and update. Else create
-			fmt.Printf("createOrUpdate service...")
-			return nil
-		case *appsv1.Deployment:
-			fmt.Printf("createOrUpdate deployment...")
-			return nil
-		default:
-			fmt.Printf("I don't know about type %T\n", v)
-			return nil
-		}
-	}
-	return nil
-}
-
 func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 	glog.Infoln("synchronizing application", app.Name)
 
@@ -103,6 +86,67 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 
 	metrics.ApplicationsSynchronized.Inc()
 	glog.Infoln("successfully synchronized application", app.Name)
+}
+
+func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
+	var result = &multierror.Error{}
+
+	for _, resource := range resources {
+		switch r := resource.(type) {
+		case *corev1.Service:
+			svcClient := n.ClientSet.CoreV1().Services(r.Namespace)
+			svc, err := svcClient.Get(r.Name, metav1.GetOptions{})
+
+			// we have an existing resource, append resourceversion and update
+			if err == nil {
+				r.ObjectMeta.ResourceVersion = svc.ObjectMeta.ResourceVersion
+				r.Spec.ClusterIP = svc.Spec.ClusterIP // ClusterIP must be retained as the field is immutable
+				if _, err := svcClient.Update(r); err != nil {
+					multierror.Append(result, fmt.Errorf("unable to update service: %s", err))
+				}
+				continue
+			}
+
+			// no resources found, creating a new one
+			if errors.IsNotFound(err) {
+				if _, err := svcClient.Create(r); err != nil {
+					multierror.Append(result, fmt.Errorf("unable to create service: %s", err))
+				}
+				continue
+			}
+
+			multierror.Append(result, fmt.Errorf("unable to synchronize service: %s", err))
+			continue
+		case *appsv1.Deployment:
+			deployClient := n.ClientSet.AppsV1().Deployments(r.Namespace)
+			deploy, err := deployClient.Get(r.Name, metav1.GetOptions{})
+
+			// we have an existing resource, append resourceversion and update
+			if err == nil {
+				r.ObjectMeta.ResourceVersion = deploy.ObjectMeta.ResourceVersion
+				if _, err := deployClient.Update(r); err != nil {
+					multierror.Append(result, fmt.Errorf("unable to update deployment: %s", err))
+				}
+				continue
+			}
+
+			// no resources found, creating a new one
+			if errors.IsNotFound(err) {
+				if _, err := deployClient.Create(r); err != nil {
+					multierror.Append(result, fmt.Errorf("unable to create deployment: %s", err))
+				}
+				continue
+			}
+
+			multierror.Append(result, fmt.Errorf("unable to synchronize deployment: %s", err))
+			continue
+		default:
+			fmt.Printf("I don't know about type %T\n", r)
+			return nil
+		}
+	}
+
+	return result.ErrorOrNil()
 }
 
 func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {

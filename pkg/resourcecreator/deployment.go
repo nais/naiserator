@@ -68,7 +68,6 @@ func getPodSpec(app *nais.Application) corev1.PodSpec {
 				Lifecycle:       getLifeCycle(app.Spec.PreStopHookPath),
 			},
 		},
-		ServiceAccountName: app.Name,
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
 	}
