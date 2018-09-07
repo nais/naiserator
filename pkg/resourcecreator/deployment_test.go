@@ -2,7 +2,10 @@ package resourcecreator
 
 import (
 	nais "github.com/nais/naiserator/api/types/v1alpha1"
+	"github.com/nais/naiserator/pkg/vault"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/api/core/v1"
+	"os"
 	"strconv"
 	"testing"
 )
@@ -10,6 +13,7 @@ import (
 func TestGetDeployment(t *testing.T) {
 	app := getExampleApp()
 
+	setVaultEnv()
 	deploy := getDeployment(app)
 
 	t.Run("user settings is applied", func(t *testing.T) {
@@ -36,6 +40,28 @@ func TestGetDeployment(t *testing.T) {
 		assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
 		assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 		assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
-		//TODO: secrets, leaderelection
+		assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.Containers, "elector"), "contains sidecar for leader election")
+		assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks"), "contains vault initcontainer")
 	})
+}
+func getContainerByName(containers []v1.Container, name string) *v1.Container {
+	for _, v := range containers {
+		if v.Name == name {
+			return &v
+		}
+	}
+
+	return nil
+}
+
+func setVaultEnv() {
+	for k, v := range map[string]string{
+		vault.EnvVaultAddr:          "a",
+		vault.EnvVaultAuthPath:      "b",
+		vault.EnvInitContainerImage: "c",
+		vault.EnvVaultKVPath:        "d",
+		vault.EnvVaultEnabled:       "e",
+	} {
+		os.Setenv(k, v)
+	}
 }

@@ -1,7 +1,9 @@
 package resourcecreator
 
 import (
+	"fmt"
 	nais "github.com/nais/naiserator/api/types/v1alpha1"
+	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -49,9 +51,9 @@ func getDeploymentSpec(app *nais.Application) appsv1.DeploymentSpec {
 	}
 }
 
-//TODO mount configmaps, vault initcontainer, leaderelection
+//TODO mount configmaps
 func getPodSpec(app *nais.Application) corev1.PodSpec {
-	return corev1.PodSpec{
+	podSpec := corev1.PodSpec{
 		Containers: []corev1.Container{
 			{
 				Name:  app.Name,
@@ -70,6 +72,29 @@ func getPodSpec(app *nais.Application) corev1.PodSpec {
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
 	}
+
+	if app.Spec.LeaderElection {
+		podSpec.Containers = append(podSpec.Containers, createLeaderElectionContainer(app.Namespace, app.Namespace))
+		mainContainer := &podSpec.Containers[0]
+
+		electorPathEnv := corev1.EnvVar{
+			Name:  "ELECTOR_PATH",
+			Value: "localhost:4040",
+		}
+
+		mainContainer.Env = append(mainContainer.Env, electorPathEnv)
+	}
+
+	if app.Spec.Secrets {
+		if initializer, initializerErr := vault.NewInitializer(app.Name, app.Namespace); initializerErr != nil {
+			fmt.Println("ERROR", initializerErr.Error())
+			return corev1.PodSpec{}
+		} else {
+			podSpec = initializer.AddInitContainer(&podSpec)
+		}
+	}
+
+	return podSpec
 }
 
 func getPodObjectMeta(app *nais.Application) metav1.ObjectMeta {
@@ -131,5 +156,23 @@ func getProbe(probe nais.Probe) *corev1.Probe {
 		PeriodSeconds:       int32(probe.PeriodSeconds),
 		FailureThreshold:    int32(probe.FailureThreshold),
 		TimeoutSeconds:      int32(probe.Timeout),
+	}
+}
+
+func createLeaderElectionContainer(name, ns string) corev1.Container {
+	return corev1.Container{
+		Name:            "elector",
+		Image:           "gcr.io/google_containers/leader-elector:0.5",
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU: resource.MustParse("100m"),
+			},
+		},
+		Ports: []corev1.ContainerPort{{
+			ContainerPort: 4040,
+			Protocol:      corev1.ProtocolTCP,
+		}},
+		Args: []string{"--election=" + name, "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", ns)},
 	}
 }
