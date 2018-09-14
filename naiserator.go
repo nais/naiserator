@@ -141,7 +141,7 @@ func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
 			multierror.Append(result, fmt.Errorf("unable to synchronize deployment: %s", err))
 			continue
 		default:
-			fmt.Printf("I don't know about type %T\n", r)
+			fmt.Printf("unknown type %T\n", r)
 			return nil
 		}
 	}
@@ -165,14 +165,14 @@ func (n *Naiserator) WatchResources() cache.Store {
 	applicationStore, applicationInformer := cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(lo metav1.ListOptions) (result runtime.Object, err error) {
-				return n.AppClient.Applications("default").List(lo)
+				return n.AppClient.Applications("").List(lo)
 			},
 			WatchFunc: func(lo metav1.ListOptions) (watch.Interface, error) {
-				return n.AppClient.Applications("default").Watch(lo)
+				return n.AppClient.Applications("").Watch(lo)
 			},
 		},
 		&v1alpha1.Application{},
-		1*time.Minute,
+		5*time.Minute,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				n.synchronize(obj.(*v1alpha1.Application))
