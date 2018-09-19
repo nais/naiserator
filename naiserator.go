@@ -2,9 +2,10 @@ package naiserator
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/go-multierror"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"time"
 
 	"github.com/golang/glog"
 	"github.com/nais/naiserator/api/types/v1alpha1"
@@ -43,41 +44,42 @@ func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Applica
 	}
 }
 
-func (n *Naiserator) update(old, new *v1alpha1.Application) {
-	glog.Infoln("updating application", new.Name)
+func (n *Naiserator) update(old, new *v1alpha1.Application) error {
+	glog.Infof("%s: updating application", new.Name)
 
 	hash, err := new.Hash()
 	if err != nil {
-		n.reportError("update, get hash", err, new)
+		err = fmt.Errorf("while hashing application spec: %s", err)
+		n.reportError("%s %+v", err, new)
+		return err
 	}
 
 	// something has changed, synchronizing all resources
 	if old.Annotations[LastSyncedHashAnnotation] != hash {
-		n.synchronize(new)
-		return
+		glog.Infof("%s: changes detected", new.Name)
+		return n.synchronize(new)
 	}
 
-	glog.Infoln("no changes detected in", new.Name, "skipping sync")
+	glog.Infof("%s: no changes detected, skipping sync", new.Name)
 }
 
-func (n *Naiserator) synchronize(app *v1alpha1.Application) {
-	glog.Infoln("synchronizing application", app.Name)
+func (n *Naiserator) synchronize(app *v1alpha1.Application) error {
+	glog.Infof("%s: synchronizing application", app.Name)
 
 	if err := v1alpha1.ApplyDefaults(app); err != nil {
-		glog.Errorf("Could not merge application struct with defaults %s", err)
-		return
+		return fmt.Errorf("%s: could not merge application struct with defaults", err)
 	}
 
 	resources, err := r.GetResources(app)
 
 	if err != nil {
 		n.reportError("createResourceSpecs", err, app)
-		return
+		return err
 	}
 
 	if err := n.createOrUpdate(resources); err != nil {
 		n.reportError("createOrUpdate(resources)", err, app)
-		return
+		return err
 	}
 
 	if err := n.setLastSynced(app); err != nil {
@@ -85,7 +87,7 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) {
 	}
 
 	metrics.ApplicationsSynchronized.Inc()
-	glog.Infoln("successfully synchronized application", app.Name)
+	glog.Infof("%s: successfully synchronized application", app.Name)
 }
 
 func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
@@ -155,7 +157,7 @@ func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
 		return err
 	}
 
-	glog.Infoln("setting last synced hash annotation to", hash)
+	glog.Infof("%s: setting last synced hash annotation to %x", app.Name, hash)
 	app.Annotations[LastSyncedHashAnnotation] = hash
 	_, err = n.AppClient.Applications(app.Namespace).Update(app)
 	return err
@@ -175,10 +177,16 @@ func (n *Naiserator) WatchResources() cache.Store {
 		5*time.Minute,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				n.synchronize(obj.(*v1alpha1.Application))
+				err := n.synchronize(obj.(*v1alpha1.Application))
+				if err != nil {
+					glog.Errorln(err)
+				}
 			},
 			UpdateFunc: func(old, new interface{}) {
-				n.update(old.(*v1alpha1.Application), new.(*v1alpha1.Application))
+				err := n.update(old.(*v1alpha1.Application), new.(*v1alpha1.Application))
+				if err != nil {
+					glog.Errorln(err)
+				}
 			},
 		})
 
