@@ -61,6 +61,8 @@ func (n *Naiserator) update(old, new *v1alpha1.Application) error {
 	}
 
 	glog.Infof("%s: no changes detected, skipping sync", new.Name)
+
+	return nil
 }
 
 func (n *Naiserator) synchronize(app *v1alpha1.Application) error {
@@ -88,6 +90,8 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) error {
 
 	metrics.ApplicationsSynchronized.Inc()
 	glog.Infof("%s: successfully synchronized application", app.Name)
+
+	return nil
 }
 
 func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
