@@ -30,7 +30,7 @@ func (in *Application) DeepCopy() *Application {
 		return nil
 	}
 	out := new(Application)
-	in.DeepCopyInto(out)
+	in.DeepCopyInto(&out.ObjectMeta)
 	return out
 }
 
@@ -51,7 +51,7 @@ func (in *ApplicationList) DeepCopyInto(out *ApplicationList) {
 		in, out := &in.Items, &out.Items
 		*out = make([]Application, len(*in))
 		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
+			(*in)[i].DeepCopyInto(&(*out)[i].ObjectMeta)
 		}
 	}
 	return
