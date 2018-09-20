@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	"github.com/nais/naiserator/api/types/v1alpha1"
+	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"

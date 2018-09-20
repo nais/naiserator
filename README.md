@@ -5,7 +5,7 @@ The main goal of Naiserator is to simplify application deployment by providing a
 Naiserator supersedes [naisd](https://nais.io).
 
 When an `Application` resource is created in Kubernetes (see
-[example application](api/types/v1alpha1/application.yaml)),
+[example application](pkg/apis/naiserator/v1alpha1/application.yaml)),
 Naiserator will generate several resources that work together to form a complete deployment:
   * `Deployment` that runs a specified number of application instances,
   * `Service` which points to the application endpoint,

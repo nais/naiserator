@@ -26,7 +26,6 @@ spec:
       timeout: 1
   leaderElection: false # if true, a http endpoint will be available at $ELECTOR_PATH that return the current leader
                         # Compare this value with the $HOSTNAME to see if the current instance is the leader
-  redis: false # if true, will add Redis sentinels that can be reach on rfs-<your-app-name> with port 26379, and mymaster as the name of the master
   #Optional. Defaults to NONE.
   #See https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
   preStopHookPath: "" # A HTTP GET will be issued to this endpoint at least once before the pod is terminated.

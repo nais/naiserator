@@ -1,7 +1,7 @@
 package resourcecreator
 
 import (
-	nais "github.com/nais/naiserator/api/types/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

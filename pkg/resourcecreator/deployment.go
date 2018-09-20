@@ -2,7 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
-	nais "github.com/nais/naiserator/api/types/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -68,8 +68,8 @@ func getPodSpec(app *nais.Application) corev1.PodSpec {
 				Lifecycle:       getLifeCycle(app.Spec.PreStopHookPath),
 			},
 		},
-		RestartPolicy:      corev1.RestartPolicyAlways,
-		DNSPolicy:          corev1.DNSClusterFirst,
+		RestartPolicy: corev1.RestartPolicyAlways,
+		DNSPolicy:     corev1.DNSClusterFirst,
 	}
 
 	if app.Spec.LeaderElection {

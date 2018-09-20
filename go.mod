@@ -49,4 +49,5 @@ require (
 	k8s.io/api v0.0.0-20180712090710-2d6f90ab1293 // kubernetes-1.11.2
 	k8s.io/apimachinery v0.0.0-20180621070125-103fd098999d // kubernetes-1.11.2
 	k8s.io/client-go v8.0.0+incompatible
+	k8s.io/code-generator v0.0.0-20180822150921-aae79feb89bd // indirect
 )
