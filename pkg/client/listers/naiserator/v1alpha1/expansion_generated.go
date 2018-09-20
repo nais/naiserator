@@ -9,3 +9,11 @@ type ApplicationListerExpansion interface{}
 // ApplicationNamespaceListerExpansion allows custom methods to be added to
 // ApplicationNamespaceLister.
 type ApplicationNamespaceListerExpansion interface{}
+
+// ApplicationListListerExpansion allows custom methods to be added to
+// ApplicationListLister.
+type ApplicationListListerExpansion interface{}
+
+// ApplicationListNamespaceListerExpansion allows custom methods to be added to
+// ApplicationListNamespaceLister.
+type ApplicationListNamespaceListerExpansion interface{}

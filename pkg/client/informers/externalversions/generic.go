@@ -39,6 +39,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=naiserator.nais.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Naiserator().V1alpha1().Applications().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("applicationlists"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Naiserator().V1alpha1().ApplicationLists().Informer()}, nil
 
 	}
 

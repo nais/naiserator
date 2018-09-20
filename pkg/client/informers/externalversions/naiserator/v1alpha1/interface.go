@@ -10,6 +10,8 @@ import (
 type Interface interface {
 	// Applications returns a ApplicationInformer.
 	Applications() ApplicationInformer
+	// ApplicationLists returns a ApplicationListInformer.
+	ApplicationLists() ApplicationListInformer
 }
 
 type version struct {
@@ -26,4 +28,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Applications returns a ApplicationInformer.
 func (v *version) Applications() ApplicationInformer {
 	return &applicationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ApplicationLists returns a ApplicationListInformer.
+func (v *version) ApplicationLists() ApplicationListInformer {
+	return &applicationListInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

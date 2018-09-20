@@ -8,6 +8,7 @@ TEMP_DIR=`mktemp -d`
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 CODEGEN_PKG=$TEMP_DIR/cgen
 export GOPATH=~/go
+export GO111MODULE=on
 
 git clone -b release-1.11 https://github.com/kubernetes/code-generator $CODEGEN_PKG
 

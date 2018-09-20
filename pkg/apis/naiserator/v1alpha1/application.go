@@ -8,6 +8,24 @@ import (
 	"strconv"
 )
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type Application struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec ApplicationSpec `json:"spec"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type ApplicationList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []Application `json:"items"`
+}
+
 type Healthcheck struct {
 	Liveness  Probe `json:"liveness"`
 	Readiness Probe `json:"readiness"`
@@ -70,14 +88,6 @@ type ApplicationSpec struct {
 	WebProxy        bool                 `json:"webproxy"`
 }
 
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type Application struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec ApplicationSpec `json:"spec"`
-}
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
 	return in
