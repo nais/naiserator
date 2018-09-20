@@ -13,7 +13,6 @@ NAISERATOR_GOPATH=${GOPATH}/src/github.com/nais/naiserator
 
 go get k8s.io/code-generator
 
-rm -rf ${NAISERATOR_GOPATH}/*
 cp -r ./* ${NAISERATOR_GOPATH}/
 
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
