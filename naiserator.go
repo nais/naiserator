@@ -24,7 +24,7 @@ import (
 
 type Naiserator struct {
 	ClientSet kubernetes.Interface
-	AppClient clientV1Alpha1.Clientset
+	AppClient *clientV1Alpha1.Clientset
 }
 
 const LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
@@ -163,7 +163,7 @@ func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
 
 	glog.Infof("%s: setting last synced hash annotation to %x", app.Name, hash)
 	app.Annotations[LastSyncedHashAnnotation] = hash
-	_, err = n.AppClient.Applications(app.Namespace).Update(app)
+	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	return err
 }
 
@@ -171,10 +171,10 @@ func (n *Naiserator) WatchResources() cache.Store {
 	applicationStore, applicationInformer := cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(lo metav1.ListOptions) (result runtime.Object, err error) {
-				return n.AppClient.Applications("").List(lo)
+				return n.AppClient.NaiseratorV1alpha1().Applications("").List(lo)
 			},
 			WatchFunc: func(lo metav1.ListOptions) (watch.Interface, error) {
-				return n.AppClient.Applications("").Watch(lo)
+				return n.AppClient.NaiseratorV1alpha1().Applications("").Watch(lo)
 			},
 		},
 		&v1alpha1.Application{},
