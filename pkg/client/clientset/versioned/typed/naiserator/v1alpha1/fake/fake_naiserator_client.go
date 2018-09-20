@@ -16,10 +16,6 @@ func (c *FakeNaiseratorV1alpha1) Applications(namespace string) v1alpha1.Applica
 	return &FakeApplications{c, namespace}
 }
 
-func (c *FakeNaiseratorV1alpha1) ApplicationLists(namespace string) v1alpha1.ApplicationListInterface {
-	return &FakeApplicationLists{c, namespace}
-}
-
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeNaiseratorV1alpha1) RESTClient() rest.Interface {

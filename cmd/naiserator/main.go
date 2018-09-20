@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/nais/naiserator"
-	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	"github.com/nais/naiserator/pkg/metrics"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -59,7 +59,7 @@ func main() {
 	glog.Info("shutting down")
 }
 
-func createApplicationClient(kubeconfig *rest.Config) *clientV1Alpha1.NaisV1Alpha1Client {
+func createApplicationClient(kubeconfig *rest.Config) *clientV1Alpha1.Clientset {
 	clientSet, err := clientV1Alpha1.NewForConfig(kubeconfig)
 	if err != nil {
 		glog.Fatalf("unable to create new clientset")

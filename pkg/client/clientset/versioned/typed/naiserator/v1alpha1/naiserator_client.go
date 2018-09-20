@@ -12,7 +12,6 @@ import (
 type NaiseratorV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ApplicationsGetter
-	ApplicationListsGetter
 }
 
 // NaiseratorV1alpha1Client is used to interact with features provided by the naiserator.nais.io group.
@@ -22,10 +21,6 @@ type NaiseratorV1alpha1Client struct {
 
 func (c *NaiseratorV1alpha1Client) Applications(namespace string) ApplicationInterface {
 	return newApplications(c, namespace)
-}
-
-func (c *NaiseratorV1alpha1Client) ApplicationLists(namespace string) ApplicationListInterface {
-	return newApplicationLists(c, namespace)
 }
 
 // NewForConfig creates a new NaiseratorV1alpha1Client for the given config.

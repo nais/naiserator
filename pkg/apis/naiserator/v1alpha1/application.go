@@ -105,15 +105,6 @@ func (in *Application) GetOwnerReference() metav1.OwnerReference {
 	}
 }
 
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ApplicationList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-
-	Items []Application `json:"items"`
-}
-
 func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object

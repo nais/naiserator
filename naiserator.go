@@ -8,8 +8,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/golang/glog"
-	clientV1Alpha1 "github.com/nais/naiserator/clientset/v1alpha1"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	"github.com/nais/naiserator/pkg/metrics"
 	r "github.com/nais/naiserator/pkg/resourcecreator"
 	appsv1 "k8s.io/api/apps/v1"
@@ -24,7 +24,7 @@ import (
 
 type Naiserator struct {
 	ClientSet kubernetes.Interface
-	AppClient clientV1Alpha1.NaisV1Alpha1Interface
+	AppClient clientV1Alpha1.Clientset
 }
 
 const LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
