@@ -4,8 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nais/naisd/pkg/test"
-
+	"github.com/nais/naiserator/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 )
