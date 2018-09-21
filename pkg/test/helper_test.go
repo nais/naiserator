@@ -1,9 +1,10 @@
-package test
+package test_test
 
 import (
 	"os"
 	"testing"
 
+	"github.com/nais/naiserator/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +14,7 @@ func TestEnvWrapper(t *testing.T) {
 	os.Setenv("testEnv", "originalValue")
 
 	// Test function has access to env vars set by wrapper
-	EnvWrapper(testEnvVars, func(t *testing.T) {
+	test.EnvWrapper(testEnvVars, func(t *testing.T) {
 		for k, v := range testEnvVars {
 			assert.Equal(t, os.Getenv(k), v)
 		}
