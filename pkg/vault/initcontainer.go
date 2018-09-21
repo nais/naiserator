@@ -2,6 +2,7 @@ package vault
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
 	k8score "k8s.io/api/core/v1"
@@ -9,15 +10,15 @@ import (
 
 const (
 	mountPath = "/var/run/secrets/naisd.io/vault"
-	//EnvVaultAddr is the environment name for looking up the address of the Vault server
+	// EnvVaultAddr is the environment name for looking up the address of the Vault server
 	EnvVaultAddr = "NAISD_VAULT_ADDR" //
-	//EnvInitContainerImage is the environment name for looking up the init container to use
+	// EnvInitContainerImage is the environment name for looking up the init container to use
 	EnvInitContainerImage = "NAISD_VAULT_INIT_CONTAINER_IMAGE"
-	//EnvVaultAuthPath is the environment name for looking up the path to vault kubernetes auth backend
+	// EnvVaultAuthPath is the environment name for looking up the path to vault kubernetes auth backend
 	EnvVaultAuthPath = "NAISD_VAULT_AUTH_PATH"
-	//EnvVaultKVPath is the environment name for looking up the path to Vault KV mount
+	// EnvVaultKVPath is the environment name for looking up the path to Vault KV mount
 	EnvVaultKVPath = "NAISD_VAULT_KV_PATH"
-	//EnvVaultEnabled is the environment name for looking up the enable/disable feature flag
+	// EnvVaultEnabled is the environment name for looking up the enable/disable feature flag
 	EnvVaultEnabled = "NAISD_VAULT_ENABLED"
 )
 
@@ -58,7 +59,7 @@ func init() {
 	viper.BindEnv(EnvVaultAuthPath, EnvVaultAuthPath)
 	viper.BindEnv(EnvVaultKVPath, EnvVaultKVPath)
 
-	//temp feature flag. Disable by default
+	// temp feature flag. Disable by default
 	viper.BindEnv(EnvVaultEnabled, EnvVaultEnabled)
 	viper.SetDefault(EnvVaultEnabled, false)
 
@@ -70,17 +71,17 @@ type initializer struct {
 	config config
 }
 
-//Initializer adds init containers
+// Initializer adds init containers
 type Initializer interface {
 	AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec
 }
 
-//Enabled checks if this Initalizer is enabled
+// Enabled checks if this Initalizer is enabled
 func Enabled() bool {
 	return viper.GetBool(EnvVaultEnabled)
 }
 
-//NewInitializer creates a new Initializer. Err if required env variables are not set.
+// NewInitializer creates a new Initializer. Err if required env variables are not set.
 func NewInitializer(app, ns string) (Initializer, error) {
 	config := config{
 		vaultAddr:          viper.GetString(EnvVaultAddr),
@@ -100,14 +101,14 @@ func NewInitializer(app, ns string) (Initializer, error) {
 	}, nil
 }
 
-//Add init container to pod spec.
+// Add init container to pod spec.
 func (c initializer) AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec {
 	volume, mount := volumeAndMount()
 
-	//Add shared volume to pod
+	// Add shared volume to pod
 	podSpec.Volumes = append(podSpec.Volumes, volume)
 
-	//"Main" container in the pod gets the shared volume mounted.
+	// "Main" container in the pod gets the shared volume mounted.
 	mutatedContainers := make([]k8score.Container, 0, len(podSpec.Containers))
 	for _, containerCopy := range podSpec.Containers {
 		if containerCopy.Name == c.app {
@@ -117,7 +118,7 @@ func (c initializer) AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec 
 	}
 	podSpec.Containers = mutatedContainers
 
-	//Finally add init container which also gets the shared volume mounted.
+	// Finally add init container which also gets the shared volume mounted.
 	podSpec.InitContainers = append(podSpec.InitContainers, c.initContainer(mount))
 
 	return *podSpec
