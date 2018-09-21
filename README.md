@@ -39,6 +39,19 @@ kubectl apply -f examples/nais_example.yaml
 go run cmd/naiserator/main.go --logtostderr --kubeconfig=<your kubeconfig file> --bind-address=127.0.0.1:8080
 ```
 
+### Code generation
+
+In order to use the Kubernetes Go library, we need to use classes that work together with the interfaces in that library.
+Those classes are mostly boilerplate code, and to ensure healthy and happy developers, we use code generators for that.
+
+When needed, run the code generation with:
+
+```
+hack/update-codegen.sh
+git add -A
+git commit -a -m "Update boilerplate k8s API code"
+```
+
 ## Differences from previous nais.yaml
 
 * The `redis` field has been removed ([#6][i6])
