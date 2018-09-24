@@ -2,6 +2,8 @@ package resourcecreator
 
 import (
 	"fmt"
+	"strconv"
+
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
@@ -9,21 +11,20 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"strconv"
 )
 
-func getDeployment(app *nais.Application) *appsv1.Deployment {
+func deployment(app *nais.Application) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
-		ObjectMeta: getObjectMeta(app),
-		Spec:       getDeploymentSpec(app),
+		ObjectMeta: app.CreateObjectMeta(),
+		Spec:       deploymentSpec(app),
 	}
 }
 
-func getDeploymentSpec(app *nais.Application) appsv1.DeploymentSpec {
+func deploymentSpec(app *nais.Application) appsv1.DeploymentSpec {
 	return appsv1.DeploymentSpec{
 		Replicas: int32p(1),
 		Selector: &metav1.LabelSelector{
@@ -45,14 +46,14 @@ func getDeploymentSpec(app *nais.Application) appsv1.DeploymentSpec {
 		ProgressDeadlineSeconds: int32p(300),
 		RevisionHistoryLimit:    int32p(10),
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: getPodObjectMeta(app),
-			Spec:       getPodSpec(app),
+			ObjectMeta: podObjectMeta(app),
+			Spec:       podSpec(app),
 		},
 	}
 }
 
-//TODO mount configmaps
-func getPodSpec(app *nais.Application) corev1.PodSpec {
+// TODO mount configmaps
+func podSpec(app *nais.Application) corev1.PodSpec {
 	podSpec := corev1.PodSpec{
 		Containers: []corev1.Container{
 			{
@@ -61,11 +62,11 @@ func getPodSpec(app *nais.Application) corev1.PodSpec {
 				Ports: []corev1.ContainerPort{
 					{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais.DefaultPortName},
 				},
-				Resources:       getResourceLimits(app.Spec.Resources),
-				LivenessProbe:   getProbe(app.Spec.Healthcheck.Liveness),
-				ReadinessProbe:  getProbe(app.Spec.Healthcheck.Readiness),
+				Resources:       resourceLimits(app.Spec.Resources),
+				LivenessProbe:   probe(app.Spec.Healthcheck.Liveness),
+				ReadinessProbe:  probe(app.Spec.Healthcheck.Readiness),
 				ImagePullPolicy: corev1.PullIfNotPresent,
-				Lifecycle:       getLifeCycle(app.Spec.PreStopHookPath),
+				Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
 			},
 		},
 		RestartPolicy: corev1.RestartPolicyAlways,
@@ -73,7 +74,7 @@ func getPodSpec(app *nais.Application) corev1.PodSpec {
 	}
 
 	if app.Spec.LeaderElection {
-		podSpec.Containers = append(podSpec.Containers, createLeaderElectionContainer(app.Namespace, app.Namespace))
+		podSpec.Containers = append(podSpec.Containers, leaderElectionContainer(app.Namespace, app.Namespace))
 		mainContainer := &podSpec.Containers[0]
 
 		electorPathEnv := corev1.EnvVar{
@@ -96,8 +97,8 @@ func getPodSpec(app *nais.Application) corev1.PodSpec {
 	return podSpec
 }
 
-func getPodObjectMeta(app *nais.Application) metav1.ObjectMeta {
-	objectMeta := getObjectMeta(app)
+func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
+	objectMeta := app.CreateObjectMeta()
 
 	objectMeta.Annotations = map[string]string{
 		"prometheus.io/scrape": strconv.FormatBool(app.Spec.Prometheus.Enabled),
@@ -115,7 +116,7 @@ func getPodObjectMeta(app *nais.Application) metav1.ObjectMeta {
 	return objectMeta
 }
 
-func getResourceLimits(reqs nais.ResourceRequirements) corev1.ResourceRequirements {
+func resourceLimits(reqs nais.ResourceRequirements) corev1.ResourceRequirements {
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    resource.MustParse(reqs.Requests.Cpu),
@@ -128,7 +129,7 @@ func getResourceLimits(reqs nais.ResourceRequirements) corev1.ResourceRequiremen
 	}
 }
 
-func getLifeCycle(path string) *corev1.Lifecycle {
+func lifeCycle(path string) *corev1.Lifecycle {
 	if len(path) > 0 {
 		return &corev1.Lifecycle{
 			PreStop: &corev1.Handler{
@@ -143,7 +144,7 @@ func getLifeCycle(path string) *corev1.Lifecycle {
 	return &corev1.Lifecycle{}
 }
 
-func getProbe(probe nais.Probe) *corev1.Probe {
+func probe(probe nais.Probe) *corev1.Probe {
 	return &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
@@ -158,7 +159,7 @@ func getProbe(probe nais.Probe) *corev1.Probe {
 	}
 }
 
-func createLeaderElectionContainer(name, ns string) corev1.Container {
+func leaderElectionContainer(name, ns string) corev1.Container {
 	return corev1.Container{
 		Name:            "elector",
 		Image:           "gcr.io/google_containers/leader-elector:0.5",

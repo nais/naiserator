@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetService(t *testing.T) {
-	svc := getService(getExampleApp())
+	svc := service(getExampleApp())
 
 	assert.Equal(t, nais.DefaultPort, int(svc.Spec.Ports[0].Port))
 }

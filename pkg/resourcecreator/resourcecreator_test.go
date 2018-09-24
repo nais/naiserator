@@ -1,14 +1,15 @@
 package resourcecreator
 
 import (
+	"strings"
+	"testing"
+
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"strings"
-	"testing"
 )
 
 const (
@@ -50,7 +51,7 @@ const (
 func TestCreateResourceSpecs(t *testing.T) {
 	app := getExampleApp()
 
-	specs, e := GetResources(app)
+	specs, e := Create(app)
 	assert.NoError(t, e)
 
 	svc := get(specs, "service").(*v1.Service)

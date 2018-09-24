@@ -15,7 +15,7 @@ func TestGetDeployment(t *testing.T) {
 	app := getExampleApp()
 
 	setVaultEnv()
-	deploy := getDeployment(app)
+	deploy := deployment(app)
 
 	t.Run("user settings is applied", func(t *testing.T) {
 		assert.Equal(t, int32(app.Spec.Port), deploy.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)

@@ -72,7 +72,7 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) error {
 		return fmt.Errorf("%s: could not merge application struct with defaults", err)
 	}
 
-	resources, err := r.GetResources(app)
+	resources, err := r.Create(app)
 
 	if err != nil {
 		n.reportError("createResourceSpecs", err, app)

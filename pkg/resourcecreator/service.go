@@ -7,15 +7,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func getService(app *nais.Application) *corev1.Service {
+func service(app *nais.Application) *corev1.Service {
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
-		ObjectMeta: getObjectMeta(app),
+		ObjectMeta: app.CreateObjectMeta(),
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
+			Type:     corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": app.Name},
 			Ports: []corev1.ServicePort{
 				{
