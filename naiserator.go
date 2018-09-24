@@ -79,8 +79,8 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) error {
 		return err
 	}
 
-	if err := n.createOrUpdate(resources); err != nil {
-		n.reportError("createOrUpdate(resources)", err, app)
+	if err := n.createOrUpdateMany(resources); err != nil {
+		n.reportError("createOrUpdateMany(resources)", err, app)
 		return err
 	}
 
@@ -94,62 +94,67 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) error {
 	return nil
 }
 
-func (n *Naiserator) createOrUpdate(resources []runtime.Object) error {
+func (n *Naiserator) createOrUpdate(resource runtime.Object) error {
+	switch r := resource.(type) {
+	case *corev1.Service:
+		svcClient := n.ClientSet.CoreV1().Services(r.Namespace)
+		svc, err := svcClient.Get(r.Name, metav1.GetOptions{})
+
+		// we have an existing resource, append resourceversion and update
+		if err == nil {
+			r.ObjectMeta.ResourceVersion = svc.ObjectMeta.ResourceVersion
+			r.Spec.ClusterIP = svc.Spec.ClusterIP // ClusterIP must be retained as the field is immutable
+			if _, err := svcClient.Update(r); err != nil {
+				return fmt.Errorf("unable to update service: %s", err)
+			}
+			return nil
+		}
+
+		// no resources found, creating a new one
+		if errors.IsNotFound(err) {
+			if _, err := svcClient.Create(r); err != nil {
+				return fmt.Errorf("unable to create service: %s", err)
+			}
+			return nil
+		}
+
+		return fmt.Errorf("unable to synchronize service: %s", err)
+
+	case *appsv1.Deployment:
+		deployClient := n.ClientSet.AppsV1().Deployments(r.Namespace)
+		deploy, err := deployClient.Get(r.Name, metav1.GetOptions{})
+
+		// we have an existing resource, append resourceversion and update
+		if err == nil {
+			r.ObjectMeta.ResourceVersion = deploy.ObjectMeta.ResourceVersion
+			if _, err := deployClient.Update(r); err != nil {
+				return fmt.Errorf("unable to update deployment: %s", err)
+			}
+			return nil
+		}
+
+		// no resources found, creating a new one
+		if errors.IsNotFound(err) {
+			if _, err := deployClient.Create(r); err != nil {
+				return fmt.Errorf("unable to create deployment: %s", err)
+			}
+			return nil
+		}
+
+		return fmt.Errorf("unable to synchronize deployment: %s", err)
+
+	default:
+		return fmt.Errorf("unknown type %T\n", r)
+	}
+
+}
+
+func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	var result = &multierror.Error{}
 
 	for _, resource := range resources {
-		switch r := resource.(type) {
-		case *corev1.Service:
-			svcClient := n.ClientSet.CoreV1().Services(r.Namespace)
-			svc, err := svcClient.Get(r.Name, metav1.GetOptions{})
-
-			// we have an existing resource, append resourceversion and update
-			if err == nil {
-				r.ObjectMeta.ResourceVersion = svc.ObjectMeta.ResourceVersion
-				r.Spec.ClusterIP = svc.Spec.ClusterIP // ClusterIP must be retained as the field is immutable
-				if _, err := svcClient.Update(r); err != nil {
-					multierror.Append(result, fmt.Errorf("unable to update service: %s", err))
-				}
-				continue
-			}
-
-			// no resources found, creating a new one
-			if errors.IsNotFound(err) {
-				if _, err := svcClient.Create(r); err != nil {
-					multierror.Append(result, fmt.Errorf("unable to create service: %s", err))
-				}
-				continue
-			}
-
-			multierror.Append(result, fmt.Errorf("unable to synchronize service: %s", err))
-			continue
-		case *appsv1.Deployment:
-			deployClient := n.ClientSet.AppsV1().Deployments(r.Namespace)
-			deploy, err := deployClient.Get(r.Name, metav1.GetOptions{})
-
-			// we have an existing resource, append resourceversion and update
-			if err == nil {
-				r.ObjectMeta.ResourceVersion = deploy.ObjectMeta.ResourceVersion
-				if _, err := deployClient.Update(r); err != nil {
-					multierror.Append(result, fmt.Errorf("unable to update deployment: %s", err))
-				}
-				continue
-			}
-
-			// no resources found, creating a new one
-			if errors.IsNotFound(err) {
-				if _, err := deployClient.Create(r); err != nil {
-					multierror.Append(result, fmt.Errorf("unable to create deployment: %s", err))
-				}
-				continue
-			}
-
-			multierror.Append(result, fmt.Errorf("unable to synchronize deployment: %s", err))
-			continue
-		default:
-			fmt.Printf("unknown type %T\n", r)
-			return nil
-		}
+		err := n.createOrUpdate(resource)
+		multierror.Append(err)
 	}
 
 	return result.ErrorOrNil()
@@ -162,6 +167,9 @@ func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
 	}
 
 	glog.Infof("%s: setting last synced hash annotation to %x", app.Name, hash)
+	if app.Annotations == nil {
+		app.Annotations = make(map[string]string)
+	}
 	app.Annotations[LastSyncedHashAnnotation] = hash
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	return err
