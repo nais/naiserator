@@ -43,7 +43,8 @@ func getAppDefaults() *Application {
 					Timeout:          1,
 				},
 			},
-			Ingress: Ingress{Disabled: false},
+			Ingresses: []string{
+			},
 			Resources: ResourceRequirements{
 				Limits: ResourceSpec{
 					Cpu:    "500m",

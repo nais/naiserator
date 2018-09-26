@@ -58,7 +58,9 @@ git commit -a -m "Update boilerplate k8s API code"
 * The `redis` field has been removed ([#6][i6])
 * The `alerts` field has been removed ([#7][i7])
 * The `fasitResources` field has been removed ([#9][i9])
+* The `ingress` field has been replaced by `ingresses` ([#14][i14])
 
 [i6]: https://github.com/nais/naiserator/issues/6
 [i7]: https://github.com/nais/naiserator/issues/7
 [i9]: https://github.com/nais/naiserator/issues/9
+[i14]: https://github.com/nais/naiserator/issues/14

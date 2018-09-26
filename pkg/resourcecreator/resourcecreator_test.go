@@ -40,7 +40,6 @@ const (
 	PrometheusEnabled         = true
 	IstioEnabled              = true
 	WebProxyEnabled           = true
-	IngressDisabled           = true
 	LeaderElectionEnabled     = true
 	SecretsEnabled            = true
 	PreStopHookPath           = "die"
@@ -123,8 +122,9 @@ func getExampleApp() *nais.Application {
 			Logformat:       LogFormat,
 			WebProxy:        WebProxyEnabled,
 			PreStopHookPath: PreStopHookPath,
-			Ingress: nais.Ingress{
-				Disabled: IngressDisabled,
+			Ingresses: []string{
+				"https://app.nais.adeo.no/",
+				"https://tjenester.nav.no/app",
 			},
 			LeaderElection: LeaderElectionEnabled,
 			Secrets:        SecretsEnabled,

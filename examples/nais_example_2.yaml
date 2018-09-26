@@ -42,8 +42,9 @@ spec:
     requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
       cpu: 200m
       memory: 256Mi
-  ingress:
-    disabled: false # if true, no ingress will be created and application can only be reached from inside cluster
+  ingresses: # List of ingress urls that will route to the application
+  - "https://nais-testapp.nais.adeo.no/"
+  - "https://tjenester.nav.no/nais-testapp"
   logformat: accesslog # Optional. The format of the logs from the container if the logs should be handled differently than plain text or json
   logtransform: dns_loglevel # Optional. The transformation of the logs, if they should be handled differently than plain text or json
   webproxy: false # Optional. Expose web proxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables.

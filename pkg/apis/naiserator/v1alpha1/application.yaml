@@ -88,10 +88,8 @@ spec:
                       type: string
                     memory:
                       type: string
-            ingress:
-              properties:
-                disabled:
-                  type: boolean
+            ingresses:
+              type: array
             logformat:
               type: string
             logtransform:

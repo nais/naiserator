@@ -30,10 +30,6 @@ type Healthcheck struct {
 	Readiness Probe `json:"readiness"`
 }
 
-type Ingress struct {
-	Disabled bool `json:"disabled"`
-}
-
 type IstioConfig struct {
 	Enabled bool `json:"enabled"`
 }
@@ -72,7 +68,7 @@ type ResourceRequirements struct {
 type ApplicationSpec struct {
 	Healthcheck     Healthcheck          `json:"healthcheck"`
 	Image           string               `json:"image"`
-	Ingress         Ingress              `json:"ingress"`
+	Ingresses       []string             `json:"ingresses"`
 	Istio           IstioConfig          `json:"istio"`
 	LeaderElection  bool                 `json:"leaderElection"`
 	Logformat       string               `json:"logformat"`
