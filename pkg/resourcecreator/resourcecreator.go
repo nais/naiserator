@@ -9,6 +9,7 @@ func Create(app *nais.Application) ([]runtime.Object, error) {
 	return []runtime.Object{
 		service(app),
 		deployment(app),
+		serviceAccount(app),
 	}, nil
 }
 
