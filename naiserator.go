@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
-	"k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/golang/glog"
+	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	"github.com/nais/naiserator/pkg/metrics"
 	r "github.com/nais/naiserator/pkg/resourcecreator"
-	appsv1 "k8s.io/api/apps/v1"
+	"github.com/nais/naiserator/updater"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -94,66 +92,11 @@ func (n *Naiserator) synchronize(app *v1alpha1.Application) error {
 	return nil
 }
 
-func (n *Naiserator) createOrUpdate(resource runtime.Object) error {
-	switch r := resource.(type) {
-	case *corev1.Service:
-		svcClient := n.ClientSet.CoreV1().Services(r.Namespace)
-		svc, err := svcClient.Get(r.Name, metav1.GetOptions{})
-
-		// we have an existing resource, append resourceversion and update
-		if err == nil {
-			r.ObjectMeta.ResourceVersion = svc.ObjectMeta.ResourceVersion
-			r.Spec.ClusterIP = svc.Spec.ClusterIP // ClusterIP must be retained as the field is immutable
-			if _, err := svcClient.Update(r); err != nil {
-				return fmt.Errorf("unable to update service: %s", err)
-			}
-			return nil
-		}
-
-		// no resources found, creating a new one
-		if errors.IsNotFound(err) {
-			if _, err := svcClient.Create(r); err != nil {
-				return fmt.Errorf("unable to create service: %s", err)
-			}
-			return nil
-		}
-
-		return fmt.Errorf("unable to synchronize service: %s", err)
-
-	case *appsv1.Deployment:
-		deployClient := n.ClientSet.AppsV1().Deployments(r.Namespace)
-		deploy, err := deployClient.Get(r.Name, metav1.GetOptions{})
-
-		// we have an existing resource, append resourceversion and update
-		if err == nil {
-			r.ObjectMeta.ResourceVersion = deploy.ObjectMeta.ResourceVersion
-			if _, err := deployClient.Update(r); err != nil {
-				return fmt.Errorf("unable to update deployment: %s", err)
-			}
-			return nil
-		}
-
-		// no resources found, creating a new one
-		if errors.IsNotFound(err) {
-			if _, err := deployClient.Create(r); err != nil {
-				return fmt.Errorf("unable to create deployment: %s", err)
-			}
-			return nil
-		}
-
-		return fmt.Errorf("unable to synchronize deployment: %s", err)
-
-	default:
-		return fmt.Errorf("unknown type %T\n", r)
-	}
-
-}
-
 func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	var result = &multierror.Error{}
 
 	for _, resource := range resources {
-		err := n.createOrUpdate(resource)
+		err := updater.Updater(n.ClientSet, resource)()
 		multierror.Append(err)
 	}
 

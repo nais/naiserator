@@ -44,10 +44,11 @@ go run cmd/naiserator/main.go --logtostderr --kubeconfig=<your kubeconfig file> 
 In order to use the Kubernetes Go library, we need to use classes that work together with the interfaces in that library.
 Those classes are mostly boilerplate code, and to ensure healthy and happy developers, we use code generators for that.
 
-When needed, run the code generation with:
+When the CRD changes, or additional Kubernetes resources need to be generated, you have to run code generation:
 
 ```
-hack/update-codegen.sh
+make codegen-crd
+make codegen-updater
 git add -A
 git commit -a -m "Update boilerplate k8s API code"
 ```

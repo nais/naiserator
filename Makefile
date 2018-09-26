@@ -28,5 +28,8 @@ install:
 test:
 	${GO} test ./... --coverprofile=cover.out
 
-codegen:
+codegen-crd:
 	${ROOT_DIR}/hack/update-codegen.sh
+
+codegen-updater:
+	go generate ${ROOT_DIR}/hack/generator/updater.go | goimports > ${ROOT_DIR}/updater/zz_generated.go
