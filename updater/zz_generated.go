@@ -7,13 +7,17 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	typed_apps_v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	typed_autoscaling_v1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
 	typed_core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typed_extensions_v1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
 )
 
 func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) func() error {
@@ -34,7 +38,55 @@ func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) fu
 	}
 }
 
+func serviceAccount(client typed_core_v1.ServiceAccountInterface, old, new *corev1.ServiceAccount) func() error {
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func deployment(client typed_apps_v1.DeploymentInterface, old, new *appsv1.Deployment) func() error {
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
+func ingress(client typed_extensions_v1beta1.IngressInterface, old, new *extensionsv1beta1.Ingress) func() error {
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
+func horizontalPodAutoscaler(client typed_autoscaling_v1.HorizontalPodAutoscalerInterface, old, new *autoscalingv1.HorizontalPodAutoscaler) func() error {
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -64,6 +116,17 @@ func Updater(clientSet kubernetes.Interface, resource runtime.Object) func() err
 		}
 		return service(c, old, new)
 
+	case *corev1.ServiceAccount:
+		c := clientSet.CoreV1().ServiceAccounts(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return serviceAccount(c, nil, new)
+		}
+		return serviceAccount(c, old, new)
+
 	case *appsv1.Deployment:
 		c := clientSet.AppsV1().Deployments(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
@@ -74,6 +137,28 @@ func Updater(clientSet kubernetes.Interface, resource runtime.Object) func() err
 			return deployment(c, nil, new)
 		}
 		return deployment(c, old, new)
+
+	case *extensionsv1beta1.Ingress:
+		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return ingress(c, nil, new)
+		}
+		return ingress(c, old, new)
+
+	case *autoscalingv1.HorizontalPodAutoscaler:
+		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return horizontalPodAutoscaler(c, nil, new)
+		}
+		return horizontalPodAutoscaler(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))

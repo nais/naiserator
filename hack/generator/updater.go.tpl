@@ -8,9 +8,13 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
     corev1 "k8s.io/api/core/v1"
+    autoscalingv1 "k8s.io/api/autoscaling/v1"
+    extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
     typed_core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
     typed_apps_v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+    typed_autoscaling_v1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
+    typed_extensions_v1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
     "k8s.io/apimachinery/pkg/api/errors"
     "k8s.io/apimachinery/pkg/runtime"
     "k8s.io/client-go/kubernetes"
