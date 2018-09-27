@@ -2,7 +2,10 @@ package test
 
 import (
 	"os"
+	"strings"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func EnvWrapper(envVars map[string]string, testFunc func(t *testing.T)) func(t *testing.T) {
@@ -25,4 +28,13 @@ func EnvWrapper(envVars map[string]string, testFunc func(t *testing.T)) func(t *
 
 		}
 	}
+}
+
+func NamedResource(resources []runtime.Object, kind string) runtime.Object {
+	for _, r := range resources {
+		if strings.EqualFold(r.GetObjectKind().GroupVersionKind().Kind, kind) {
+			return r
+		}
+	}
+	panic("no matching resource kind found")
 }

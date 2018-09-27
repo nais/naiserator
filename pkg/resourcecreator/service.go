@@ -7,7 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func service(app *nais.Application) *corev1.Service {
+func Service(app *nais.Application) *corev1.Service {
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",

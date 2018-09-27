@@ -1,4 +1,4 @@
-package resourcecreator
+package resourcecreator_test
 
 import (
 	"os"
@@ -6,16 +6,18 @@ import (
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/nais/naiserator/pkg/vault"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 )
 
 func TestGetDeployment(t *testing.T) {
-	app := getExampleApp()
+	app := fixtures.Application()
 
 	setVaultEnv()
-	deploy := deployment(app)
+	deploy := resourcecreator.Deployment(app)
 
 	t.Run("user settings is applied", func(t *testing.T) {
 		assert.Equal(t, int32(app.Spec.Port), deploy.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
