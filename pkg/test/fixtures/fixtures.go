@@ -52,8 +52,8 @@ func Application() *nais.Application {
 			Image: ImageName,
 			Team:  TeamName,
 			Replicas: nais.Replicas{
-				Min:                    MinReplicas,
-				Max:                    MaxReplicas,
+				Min: MinReplicas,
+				Max: MaxReplicas,
 				CpuThresholdPercentage: CpuThresholdPercentage,
 			},
 			Healthcheck: nais.Healthcheck{

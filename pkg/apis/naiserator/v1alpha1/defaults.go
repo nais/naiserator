@@ -6,7 +6,7 @@ import (
 
 const (
 	DefaultPortName = "http"
-	DefaultPort = 80
+	DefaultPort     = 80
 )
 
 func ApplyDefaults(app *Application) error {
@@ -17,8 +17,8 @@ func getAppDefaults() *Application {
 	return &Application{
 		Spec: ApplicationSpec{
 			Replicas: Replicas{
-				Min:                    2,
-				Max:                    4,
+				Min: 2,
+				Max: 4,
 				CpuThresholdPercentage: 50,
 			},
 			Port: 8080,

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	"github.com/nais/naiserator/pkg/metrics"

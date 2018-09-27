@@ -5,5 +5,3 @@ import "testing"
 func TestApplyDefaults(t *testing.T) {
 
 }
-
-

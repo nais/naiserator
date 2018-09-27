@@ -3,7 +3,6 @@ package vault
 import (
 	"fmt"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
 	k8score "k8s.io/api/core/v1"
 )
