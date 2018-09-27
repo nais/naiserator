@@ -38,7 +38,7 @@ It is no longer needed to have the project checked out in your `$GOPATH`.
 
 local development (assumes [Docker Desktop](https://www.docker.com/products/docker-desktop) or [minikube](https://github.com/kubernetes/minikube)
 ```
-kubectl apply -f api/types/v1alpha1/application.yaml
+kubectl apply -f pkg/apis/naiserator/v1alpha1/application.yaml
 kubectl apply -f examples/nais_example.yaml
 go run cmd/naiserator/main.go --logtostderr --kubeconfig=<your kubeconfig file> --bind-address=127.0.0.1:8080
 ```
