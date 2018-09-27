@@ -7,7 +7,7 @@ func (in *Application) CreateObjectMeta() metav1.ObjectMeta {
 		Name:      in.Name,
 		Namespace: in.Namespace,
 		Labels: map[string]string{
-			"in":   in.Name,
+			"app":   in.Name,
 			"team": in.Spec.Team,
 		},
 		OwnerReferences: in.OwnerReferences(in),
