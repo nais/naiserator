@@ -35,7 +35,7 @@ const (
 	IstioEnabled              = true
 	WebProxyEnabled           = true
 	LeaderElectionEnabled     = true
-	SecretsEnabled            = true
+	SecretsEnabled            = false
 	PreStopHookPath           = "die"
 	LogFormat                 = "accesslog"
 	LogTransform              = "dns_loglevel"
