@@ -98,7 +98,7 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 
 	for _, resource := range resources {
 		err := updater.Updater(n.ClientSet, resource)()
-		multierror.Append(err)
+		result = multierror.Append(result, err)
 	}
 
 	return result.ErrorOrNil()
