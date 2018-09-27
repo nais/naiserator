@@ -23,7 +23,7 @@ import (
 )
 
 func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) func() error {
-	glog.Infof("creating *corev1.Service for %s", new.Name)
+	glog.Infof("creating or updating *corev1.Service for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -42,7 +42,7 @@ func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) fu
 }
 
 func serviceAccount(client typed_core_v1.ServiceAccountInterface, old, new *corev1.ServiceAccount) func() error {
-	glog.Infof("creating *corev1.ServiceAccount for %s", new.Name)
+	glog.Infof("creating or updating *corev1.ServiceAccount for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -59,7 +59,7 @@ func serviceAccount(client typed_core_v1.ServiceAccountInterface, old, new *core
 }
 
 func deployment(client typed_apps_v1.DeploymentInterface, old, new *appsv1.Deployment) func() error {
-	glog.Infof("creating *appsv1.Deployment for %s", new.Name)
+	glog.Infof("creating or updating *appsv1.Deployment for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -76,7 +76,7 @@ func deployment(client typed_apps_v1.DeploymentInterface, old, new *appsv1.Deplo
 }
 
 func ingress(client typed_extensions_v1beta1.IngressInterface, old, new *extensionsv1beta1.Ingress) func() error {
-	glog.Infof("creating *extensionsv1beta1.Ingress for %s", new.Name)
+	glog.Infof("creating or updating *extensionsv1beta1.Ingress for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -93,7 +93,7 @@ func ingress(client typed_extensions_v1beta1.IngressInterface, old, new *extensi
 }
 
 func horizontalPodAutoscaler(client typed_autoscaling_v1.HorizontalPodAutoscalerInterface, old, new *autoscalingv1.HorizontalPodAutoscaler) func() error {
-	glog.Infof("creating *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
+	glog.Infof("creating or updating *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
