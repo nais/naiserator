@@ -11,6 +11,7 @@ func Create(app *nais.Application) ([]runtime.Object, error) {
 		deployment(app),
 		serviceAccount(app),
 		horizontalPodAutoscaler(app),
+		ingress(app),
 	}, nil
 }
 

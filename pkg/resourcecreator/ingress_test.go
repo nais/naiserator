@@ -8,21 +8,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetIngresses(t *testing.T) {
+func TestGetIngress(t *testing.T) {
 	app := getExampleApp()
-	ingresses := ingresses(app)
+	ingress := ingress(app)
 
-	assert.Equal(t, app.Name, ingresses[0].Name)
-	assert.Equal(t, app.Namespace, ingresses[0].Namespace)
-	assert.Equal(t, "app.nais.adeo.no", ingresses[0].Spec.Rules[0].Host)
-	assert.Equal(t, "/", ingresses[0].Spec.Rules[0].HTTP.Paths[0].Path)
-	assert.Equal(t, app.Name, ingresses[0].Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
-	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingresses[0].Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort)
+	assert.Equal(t, app.Name, ingress.Name)
+	assert.Equal(t, app.Namespace, ingress.Namespace)
+	assert.Equal(t, "app.nais.adeo.no", ingress.Spec.Rules[0].Host)
+	assert.Equal(t, "/", ingress.Spec.Rules[0].HTTP.Paths[0].Path)
+	assert.Equal(t, app.Name, ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
+	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort)
 
-	assert.Equal(t, app.Name, ingresses[1].Name)
-	assert.Equal(t, app.Namespace, ingresses[1].Namespace)
-	assert.Equal(t, "tjenester.nav.no", ingresses[1].Spec.Rules[0].Host)
-	assert.Equal(t, "/app", ingresses[1].Spec.Rules[0].HTTP.Paths[0].Path)
-	assert.Equal(t, app.Name, ingresses[1].Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
-	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingresses[1].Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort)
+	assert.Equal(t, app.Name, ingress.Name)
+	assert.Equal(t, app.Namespace, ingress.Namespace)
+	assert.Equal(t, "tjenester.nav.no", ingress.Spec.Rules[1].Host)
+	assert.Equal(t, "/app", ingress.Spec.Rules[1].HTTP.Paths[0].Path)
+	assert.Equal(t, app.Name, ingress.Spec.Rules[1].HTTP.Paths[0].Backend.ServiceName)
+	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort)
 }
