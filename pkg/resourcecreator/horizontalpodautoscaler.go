@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func horizontalPodAutoscaler(app *nais.Application) *autoscalingv1.HorizontalPodAutoscaler {
+func HorizontalPodAutoscaler(app *nais.Application) *autoscalingv1.HorizontalPodAutoscaler {
 	return &autoscalingv1.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",

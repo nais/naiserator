@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func ingress(app *nais.Application) *extensionsv1beta1.Ingress {
+func Ingress(app *nais.Application) *extensionsv1beta1.Ingress {
 	var rules []extensionsv1beta1.IngressRule
 
 	for _, ingress := range app.Spec.Ingresses {

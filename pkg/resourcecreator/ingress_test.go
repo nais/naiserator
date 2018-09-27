@@ -1,7 +1,9 @@
-package resourcecreator
+package resourcecreator_test
 
 import (
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/test/fixtures"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
 
@@ -9,8 +11,8 @@ import (
 )
 
 func TestGetIngress(t *testing.T) {
-	app := getExampleApp()
-	ingress := ingress(app)
+	app := fixtures.Application()
+	ingress := resourcecreator.Ingress(app)
 
 	assert.Equal(t, app.Name, ingress.Name)
 	assert.Equal(t, app.Namespace, ingress.Namespace)
