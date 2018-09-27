@@ -2,12 +2,10 @@ NAME       := naiserator
 TAG        := navikt/${NAME}
 LATEST     := ${TAG}:latest
 KUBECONFIG := ${HOME}/.kube/config
-GO_IMG     := golang:1.11
-GO         := docker run --rm -v ${PWD}:/go/src/github.com/nais/naiserator -w /go/src/github.com/nais/naiserator ${GO_IMG} go
 ROOT_DIR   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 
-.PHONY: build docker local install docker docker-push linux test
+.PHONY: build docker docker-push local install test codegen-crd codegen-updater
 
 build:
 	cd cmd/naiserator && go build
@@ -23,10 +21,10 @@ local:
 	go run cmd/naiserator/main.go --logtostderr --kubeconfig=${KUBECONFIG} --bind-address=127.0.0.1:8080
 
 install:
-	export GO111MODULE=on && go mod vendor	
+	cd cmd/naiserator && go install
 
 test:
-	${GO} test ./... --coverprofile=cover.out
+	go test ./... --coverprofile=cover.out
 
 codegen-crd:
 	${ROOT_DIR}/hack/update-codegen.sh
