@@ -134,3 +134,12 @@ func (in *Application) LastSyncedHash() string {
 	}
 	return a[LastSyncedHashAnnotation]
 }
+
+func (in *Application) SetLastSyncedHash(hash string) {
+	a := in.GetAnnotations()
+	if a == nil {
+		a = make(map[string]string)
+	}
+	a[LastSyncedHashAnnotation] = hash
+}
+

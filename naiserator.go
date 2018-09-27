@@ -25,15 +25,6 @@ type Naiserator struct {
 	AppClient *clientV1Alpha1.Clientset
 }
 
-func setLastSyncedHashAnnotation(app metav1.ObjectMetaAccessor, hash string) {
-	a := app.GetObjectMeta().GetAnnotations()
-	if a == nil {
-		a = make(map[string]string)
-	}
-	a[v1alpha1.LastSyncedHashAnnotation] = hash
-	app.GetObjectMeta().SetAnnotations(a)
-}
-
 // Creates a Kubernetes event.
 func (n *Naiserator) reportEvent(event *corev1.Event) (*corev1.Event, error) {
 	return n.ClientSet.CoreV1().Events(event.Namespace).Create(event)
@@ -69,7 +60,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 		return fmt.Errorf("while persisting resources to Kubernetes: %s", err)
 	}
 
-	setLastSyncedHashAnnotation(app, hash)
+	app.SetLastSyncedHash(hash)
 	glog.Infof("%s: setting new hash %s", app.Name, hash)
 
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
