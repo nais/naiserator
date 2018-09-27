@@ -1,11 +1,12 @@
 package v1alpha1
 
 import (
+	"strconv"
+
 	hash "github.com/mitchellh/hashstructure"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"strconv"
 )
 
 // +genclient
@@ -83,7 +84,6 @@ type ApplicationSpec struct {
 	WebProxy        bool                 `json:"webproxy"`
 }
 
-
 func (in *Application) GetObjectKind() schema.ObjectKind {
 	return in
 }
@@ -115,8 +115,8 @@ func (in Application) Hash() (string, error) {
 	// creating a hash of an Application object
 	relevantValues := struct {
 		TypeMeta metav1.TypeMeta
-		AppSpec ApplicationSpec
-		Labels map[string]string
+		AppSpec  ApplicationSpec
+		Labels   map[string]string
 	}{
 		in.TypeMeta,
 		in.Spec,

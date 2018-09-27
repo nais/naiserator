@@ -1,5 +1,8 @@
 # Naiserator
 
+[![CircleCI](https://circleci.com/gh/nais/naiserator/tree/master.svg?style=svg)](https://circleci.com/gh/nais/naiserator/tree/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nais/naiserator)](https://goreportcard.com/report/github.com/nais/naiserator)
+
 Naiserator is a Kubernetes operator that handles the lifecycle of the `CustomResource` called `nais.io/Application`.
 The main goal of Naiserator is to simplify application deployment by providing a high-level abstraction tailored for the [NAIS-platform](https://nais.io).
 Naiserator supersedes [naisd](https://nais.io).
@@ -11,6 +14,7 @@ Naiserator will generate several resources that work together to form a complete
   * `Service` which points to the application endpoint,
   * `Ingress` adding TLS termination and virtualhost support,
   * `Horizontal pod autoscaler` for automatic application scaling,
+  * `Service account` for granting correct permissions to managed resources.
   
 These resources will remain in Kubernetes until the `Application` resource is deleted.
   
@@ -57,10 +61,10 @@ git commit -a -m "Update boilerplate k8s API code"
 
 * The `redis` field has been removed ([#6][i6])
 * The `alerts` field has been removed ([#7][i7])
-* The `fasitResources` field has been removed ([#9][i9])
-* The `ingress` field has been replaced by `ingresses` ([#14][i14])
+* The `ingress` field has been replaced by `ingresses` and need to specified explicitly ([#14][i14])
+* The `fasitResources` field has been removed ([#15][i15])
 
 [i6]: https://github.com/nais/naiserator/issues/6
 [i7]: https://github.com/nais/naiserator/issues/7
-[i9]: https://github.com/nais/naiserator/issues/9
 [i14]: https://github.com/nais/naiserator/issues/14
+[i15]: https://github.com/nais/naiserator/issues/15
