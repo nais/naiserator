@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	"github.com/nais/naiserator/pkg/metrics"
@@ -19,12 +20,13 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+// Naiserator is a singleton that holds Kubernetes client instances.
 type Naiserator struct {
 	ClientSet kubernetes.Interface
 	AppClient *clientV1Alpha1.Clientset
 }
 
-const LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+const lastSyncedHashAnnotation = "nais.io/lastSyncedHash"
 
 // Creates a Kubernetes event.
 func (n *Naiserator) reportEvent(event *corev1.Event) (*corev1.Event, error) {
@@ -52,7 +54,7 @@ func (n *Naiserator) update(old, new *v1alpha1.Application) error {
 	}
 
 	// something has changed, synchronizing all resources
-	if old.Annotations[LastSyncedHashAnnotation] != hash {
+	if old.Annotations[lastSyncedHashAnnotation] != hash {
 		glog.Infof("%s: changes detected", new.Name)
 		return n.synchronize(new)
 	}
@@ -112,11 +114,13 @@ func (n *Naiserator) setLastSynced(app *v1alpha1.Application) error {
 	if app.Annotations == nil {
 		app.Annotations = make(map[string]string)
 	}
-	app.Annotations[LastSyncedHashAnnotation] = hash
+	app.Annotations[lastSyncedHashAnnotation] = hash
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	return err
 }
 
+// WatchResources is the Naiserator main loop, which
+// synchronizes Application specs to Kubernetes resources indefinitely.
 func (n *Naiserator) WatchResources() cache.Store {
 	applicationStore, applicationInformer := cache.NewInformer(
 		&cache.ListWatch{

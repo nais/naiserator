@@ -3,6 +3,7 @@ package vault
 import (
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
 	k8score "k8s.io/api/core/v1"
 )
@@ -75,7 +76,7 @@ type Initializer interface {
 	AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec
 }
 
-// Enabled checks if this Initalizer is enabled
+// Enabled checks if this Initializer is enabled
 func Enabled() bool {
 	return viper.GetBool(EnvVaultEnabled)
 }

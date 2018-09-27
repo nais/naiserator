@@ -4,6 +4,7 @@ import (
 	"github.com/imdario/mergo"
 )
 
+// Application spec default values
 const (
 	DefaultPortName = "http"
 	DefaultPort     = 80

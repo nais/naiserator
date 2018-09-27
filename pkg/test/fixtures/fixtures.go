@@ -5,6 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Constant values for the variables returned in the Application spec.
 const (
 	Name                      = "app"
 	Namespace                 = "default"
@@ -41,6 +42,7 @@ const (
 	LogTransform              = "dns_loglevel"
 )
 
+// Application returns a nais.io.Application test fixture.
 func Application() *nais.Application {
 	app := &nais.Application{
 		ObjectMeta: metav1.ObjectMeta{
