@@ -91,11 +91,14 @@ func Application() *nais.Application {
 			Istio: nais.IstioConfig{
 				Enabled: IstioEnabled,
 			},
+			Ingresses: []string{
+				"https://app.nais.adeo.no/",
+				"https://tjenester.nav.no/app",
+			},
 			Logtransform:    LogTransform,
 			Logformat:       LogFormat,
 			WebProxy:        WebProxyEnabled,
 			PreStopHookPath: PreStopHookPath,
-			Ingresses:       []string{},
 			LeaderElection:  LeaderElectionEnabled,
 			Secrets:         SecretsEnabled,
 		}}
