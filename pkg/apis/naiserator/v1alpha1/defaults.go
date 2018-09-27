@@ -10,6 +10,7 @@ const (
 	DefaultPort     = 80
 )
 
+// ApplyDefaults sets default values where they are missing from an Application spec.
 func ApplyDefaults(app *Application) error {
 	return mergo.Merge(app, getAppDefaults())
 }
