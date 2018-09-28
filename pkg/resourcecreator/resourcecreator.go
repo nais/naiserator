@@ -10,14 +10,14 @@ import (
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources.
-func Create(app *nais.Application) ([]runtime.Object, error) {
+func Create(app *nais.Application) []runtime.Object {
 	return []runtime.Object{
 		Service(app),
 		Deployment(app),
 		ServiceAccount(app),
 		HorizontalPodAutoscaler(app),
 		Ingress(app),
-	}, nil
+	}
 }
 
 func int32p(i int32) *int32 {

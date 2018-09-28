@@ -9,6 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+const LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Application struct {
@@ -114,11 +116,9 @@ func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object
 	relevantValues := struct {
-		TypeMeta metav1.TypeMeta
 		AppSpec  ApplicationSpec
 		Labels   map[string]string
 	}{
-		in.TypeMeta,
 		in.Spec,
 		in.Labels,
 	}
@@ -126,3 +126,20 @@ func (in Application) Hash() (string, error) {
 	h, err := hash.Hash(relevantValues, nil)
 	return strconv.FormatUint(h, 10), err
 }
+
+func (in *Application) LastSyncedHash() string {
+	a := in.GetAnnotations()
+	if a == nil {
+		a = make(map[string]string)
+	}
+	return a[LastSyncedHashAnnotation]
+}
+
+func (in *Application) SetLastSyncedHash(hash string) {
+	a := in.GetAnnotations()
+	if a == nil {
+		a = make(map[string]string)
+	}
+	a[LastSyncedHashAnnotation] = hash
+}
+
