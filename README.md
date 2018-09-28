@@ -20,14 +20,21 @@ These resources will remain in Kubernetes until the `Application` resource is de
   
 ## Prerequisites
 
-* For deployment, [Kubernetes](https://kubernetes.io/) v1.11.0 or later
-* For development, the [Go](https://golang.org/dl/) programming language, version 1.11 or later
+### Deployment
+
+* [Kubernetes](https://kubernetes.io/) v1.11.0 or later
+
+### Development
+
+* The [Go](https://golang.org/dl/) programming language, version 1.11 or later
+* [Docker Desktop](https://www.docker.com/products/docker-desktop) or other Docker release compatible with Kubernetes
+* Kubernetes, either through [minikube](https://github.com/kubernetes/minikube) or a local cluster
 
 ## Installation
 
-Production builds can, in the future, be installed by:
+You can deploy the most recent release of Naiserator by applying to your cluster:
 ```
-kubectl apply -f kubernetes/naiserator.yml
+kubectl apply -f examples/naiserator.yaml
 ```
 
 ## Development
@@ -36,7 +43,6 @@ kubectl apply -f kubernetes/naiserator.yml
 are used for dependency tracking. Make sure you do `export GO111MODULE=on` before running any Go commands.
 It is no longer needed to have the project checked out in your `$GOPATH`.
 
-local development (assumes [Docker Desktop](https://www.docker.com/products/docker-desktop) or [minikube](https://github.com/kubernetes/minikube)
 ```
 kubectl apply -f pkg/apis/naiserator/v1alpha1/application.yaml
 kubectl apply -f examples/nais_example.yaml
