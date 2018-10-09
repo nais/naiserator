@@ -17,6 +17,12 @@ Naiserator will generate several resources that work together to form a complete
   * `Service account` for granting correct permissions to managed resources.
   
 These resources will remain in Kubernetes until the `Application` resource is deleted.
+
+## Migrating from naisd
+
+In order to switch from naisd to Naiserator, you need to complete a few migration tasks.
+See [migration from naisd to naiserator](doc/migrating.md) for a detailed explanation
+of the steps involved.
   
 ## Prerequisites
 
@@ -62,15 +68,3 @@ make codegen-updater
 git add -A
 git commit -a -m "Update boilerplate k8s API code"
 ```
-
-## Differences from previous nais.yaml
-
-* The `redis` field has been removed ([#6][i6])
-* The `alerts` field has been removed ([#7][i7])
-* The `ingress` field has been replaced by `ingresses` and need to specified explicitly ([#14][i14])
-* The `fasitResources` field has been removed ([#15][i15])
-
-[i6]: https://github.com/nais/naiserator/issues/6
-[i7]: https://github.com/nais/naiserator/issues/7
-[i14]: https://github.com/nais/naiserator/issues/14
-[i15]: https://github.com/nais/naiserator/issues/15
