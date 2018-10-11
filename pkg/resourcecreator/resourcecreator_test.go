@@ -17,7 +17,9 @@ import (
 func TestCreateResourceSpecs(t *testing.T) {
 	app := fixtures.Application()
 
-	specs := resourcecreator.Create(app)
+	specs, err := resourcecreator.Create(app)
+
+	assert.Nil(t, err)
 
 	svc := test.NamedResource(specs, "Service").(*v1.Service)
 	assert.Equal(t, nais.DefaultPort, int(svc.Spec.Ports[0].Port))

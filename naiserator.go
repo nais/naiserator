@@ -54,7 +54,10 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 		return nil
 	}
 
-	resources := r.Create(app)
+	resources, err := r.Create(app)
+	if err != nil {
+		return fmt.Errorf("while creating resources: %s", err)
+	}
 
 	if err := n.createOrUpdateMany(resources); err != nil {
 		return fmt.Errorf("while persisting resources to Kubernetes: %s", err)
