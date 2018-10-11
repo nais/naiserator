@@ -23,13 +23,13 @@ func TestIngress(t *testing.T) {
 	assert.Equal(t, "/", ingress.Spec.Rules[0].HTTP.Paths[0].Path)
 	assert.Equal(t, app.Name, ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
 	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort)
+	assert.Equal(t, "true", ingress.ObjectMeta.Annotations["prometheus.io/scrape"])
+	assert.Equal(t, app.Spec.Healthcheck.Liveness.Path, ingress.ObjectMeta.Annotations["prometheus.io/path"])
 
-	assert.Equal(t, app.Name, ingress.Name)
-	assert.Equal(t, app.Namespace, ingress.Namespace)
 	assert.Equal(t, "tjenester.nav.no", ingress.Spec.Rules[1].Host)
 	assert.Equal(t, "/app", ingress.Spec.Rules[1].HTTP.Paths[0].Path)
 	assert.Equal(t, app.Name, ingress.Spec.Rules[1].HTTP.Paths[0].Backend.ServiceName)
-	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort)
+	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingress.Spec.Rules[1].HTTP.Paths[0].Backend.ServicePort)
 }
 
 func TestIngressFailure(t *testing.T) {
