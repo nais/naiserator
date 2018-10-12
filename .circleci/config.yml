@@ -7,14 +7,23 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
-          name: Build Docker container
-          command: docker build -t navikt/naiserator:canary .
-      - run:
           name: Bump version
+          command: ./bump.sh
+      - run:
+          name: Login to Dockerhub
+          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      - run:
+          name: Build Docker container
+          command: docker build -t navikt/naiserator:latest -t navikt/naiserator:$(cat version) .
+      - run:
+          name: Push latest Docker container
+          command: docker push navikt/naiserator:latest navikt/naiserator:$(cat version)
+      - run:
+          name: Tag version and commit upstream
           command: |
-            version=$(./bump.sh)
+            version=$(cat version)
             git remote set-url origin https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/nais/naiserator
-            git commit version -m "Version ${version} [skip ci]"
+            git commit version -m "Release version ${version} [skip ci]"
             git tag ${version}
             git push
             git push --tags

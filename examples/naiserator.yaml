@@ -50,4 +50,4 @@ spec:
       serviceAccountName: naiserator
       containers:
       - name: naiserator
-        image: navikt/naiserator:canary
+        image: navikt/naiserator:latest
