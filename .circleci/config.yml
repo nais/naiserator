@@ -16,7 +16,7 @@ jobs:
           name: Build Docker container
           command: docker build -t navikt/naiserator:latest -t navikt/naiserator:$(cat version) .
       - run:
-          name: Tag version and commit upstream
+          name: Release new version
           command: |
             version=$(cat version)
             git remote set-url origin https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/nais/naiserator
@@ -29,3 +29,14 @@ jobs:
           command: |
             docker push navikt/naiserator:latest
             docker push navikt/naiserator:$(cat version)
+      - run:
+          name: Deploy new version to Kubernetes
+          command: |
+            version=$(cat version)
+            naisyaml=$(mktemp -d)
+            git clone https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/navikt/nais-yaml $naisyaml
+            cd $naisyaml
+            sed -E -i "s#image: navikt/naiserator:.+#image: navikt/naiserator:${version}#" vars/naiserator.yaml
+            git diff
+            git commit -a -m "Bump Naiserator to version ${version}"
+            git push
