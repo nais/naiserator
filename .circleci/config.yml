@@ -13,6 +13,7 @@ jobs:
           name: Bump version
           command: |
             version=$(./bump.sh)
+            git remote set-url origin https://${GITHUB_API_USER}@${GITHUB_API_TOKEN}@github.com/nais/naiserator
             git commit version -m "Version ${version} [skip ci]"
             git tag ${version}
             git push
