@@ -16,9 +16,6 @@ jobs:
           name: Build Docker container
           command: docker build -t navikt/naiserator:latest -t navikt/naiserator:$(cat version) .
       - run:
-          name: Push latest Docker container
-          command: docker push navikt/naiserator:latest navikt/naiserator:$(cat version)
-      - run:
           name: Tag version and commit upstream
           command: |
             version=$(cat version)
@@ -27,3 +24,8 @@ jobs:
             git tag ${version}
             git push
             git push --tags
+      - run:
+          name: Push Docker container
+          command: |
+            docker push navikt/naiserator:latest
+            docker push navikt/naiserator:$(cat version)
