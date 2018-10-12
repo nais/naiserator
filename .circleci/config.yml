@@ -7,11 +7,13 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
-          name: Login to Dockerhub
-          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
-      - run:
           name: Build Docker container
           command: docker build -t navikt/naiserator:canary .
       - run:
-          name: Push canary Docker container
-          command: docker push navikt/naiserator:canary
+          name: Bump version
+          command: |
+            version=$(./bump.sh)
+            git commit version -m "Version ${version} [skip ci]"
+            git tag ${version}
+            git push
+            git push --tags
