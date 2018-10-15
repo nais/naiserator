@@ -3,7 +3,6 @@ package resourcecreator
 import (
 	"fmt"
 	"net/url"
-	"strconv"
 
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
@@ -71,7 +70,7 @@ func Ingress(app *nais.Application) (*extensionsv1beta1.Ingress, error) {
 	}
 
 	objectMeta := app.CreateObjectMeta()
-	objectMeta.Annotations["prometheus.io/scrape"] = strconv.FormatBool(app.Spec.Prometheus.Enabled)
+	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = app.Spec.Healthcheck.Liveness.Path
 
 	return &extensionsv1beta1.Ingress{
