@@ -1,18 +1,37 @@
-#!/bin/bash -e
-#
-# mkkubeconfig: generate certificate, key and kubeconfig for a user
-#
-# SYNOPSIS: mkkubeconfig SUBJECT CLUSTER-NAME KUBERNETES-APISERVER-URL > kubeconfig.yml
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
 
 print() {
     echo '<.>' $* >&2
 }
 
+help() {
+    echo
+    echo "mkkubeconfig: generate certificate, key and kubeconfig for a machine user."
+    echo
+    echo "This command will connect to your current Kubernetes cluster, and create"
+    echo "a certificate for authentication with the API server. Role bindings will"
+    echo "have to be created separately."
+    echo
+    echo "Syntax: mkkubeconfig <SUBJECT>"
+    echo
+    exit 1
+}
+
 KEY_TYPE="rsa:2048"
 
 subject=$1
-cluster_name=$2
-api_server_url=$3
+if [ "$subject" == "" ] || [ "$subject" == "--help" ] || [ "$subject" == "-h" ]; then
+  help
+fi
+
+cluster_name=`kubectl config view --minify -o=jsonpath='{.clusters[0].name}'`
+api_server_url=`kubectl config view --minify -o=jsonpath='{.clusters[0].cluster.server}'`
+
+print Creating a TLS certificate ${cluster_name} with CN="${subject}"
+print Kubernetes API server is ${api_server_url}
 
 key=`mktemp`
 cert=`mktemp`
