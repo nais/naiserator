@@ -22,7 +22,7 @@ jobs:
           name: Save Docker container
           command: docker save navikt/naiserator:latest -o /tmp/workspace/docker-image.tar
       - persist_to_workspace:
-          root: workspace
+          root: /tmp/workspace
           paths:
             - docker-image.tar
   release:
