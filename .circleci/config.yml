@@ -10,6 +10,9 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
+          name: Create workspace
+          command: mkdir -p /tmp/workspace
+      - run:
           name: Login to Dockerhub
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
@@ -17,7 +20,7 @@ jobs:
           command: docker build -t navikt/naiserator:latest -t navikt/naiserator:$(cat version) .
       - run:
           name: Save Docker container
-          command: docker save navikt/naiserator:latest -o workspace/docker-image.tar
+          command: docker save navikt/naiserator:latest -o /tmp/workspace/docker-image.tar
       - persist_to_workspace:
           root: workspace
           paths:
@@ -28,10 +31,10 @@ jobs:
       - setup_remote_docker
       - checkout
       - attach_workspace:
-          at: workspace
+          at: /tmp/workspace
       - run:
           name: Load Docker container
-          command: docker load -i workspace/docker-image.tar
+          command: docker load -i /tmp/workspace/docker-image.tar
       - run:
           name: Bump version
           command: ./bump.sh
