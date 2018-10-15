@@ -13,9 +13,6 @@ jobs:
           name: Create workspace
           command: mkdir -p /tmp/workspace
       - run:
-          name: Login to Dockerhub
-          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
-      - run:
           name: Build Docker container
           command: docker build -t navikt/naiserator:latest -t navikt/naiserator:$(cat version) .
       - run:
@@ -35,6 +32,9 @@ jobs:
       - run:
           name: Load Docker container
           command: docker load -i /tmp/workspace/docker-image.tar
+      - run:
+          name: Login to Dockerhub
+          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
           name: Bump version
           command: ./bump.sh
