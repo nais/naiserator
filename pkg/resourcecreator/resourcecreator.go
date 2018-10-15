@@ -13,17 +13,20 @@ import (
 
 // Create takes an Application resource and returns a slice of Kubernetes resources.
 func Create(app *nais.Application) ([]runtime.Object, error) {
-	ingress, err := Ingress(app)
-	if err != nil {
-		return nil, fmt.Errorf("while creating ingress: %s", err)
-	}
-	return []runtime.Object{
+	objects := []runtime.Object{
 		Service(app),
 		Deployment(app),
 		ServiceAccount(app),
 		HorizontalPodAutoscaler(app),
-		ingress,
-	}, nil
+	}
+
+	ingress, err := Ingress(app)
+	if err != nil {
+		return nil, fmt.Errorf("while creating ingress: %s", err)
+	}
+	objects = append(objects, ingress)
+
+	return objects, nil
 }
 
 func int32p(i int32) *int32 {

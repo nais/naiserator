@@ -64,6 +64,10 @@ func ingressRules(app *nais.Application, urls []string) ([]extensionsv1beta1.Ing
 
 func Ingress(app *nais.Application) (*extensionsv1beta1.Ingress, error) {
 
+	if len(app.Spec.Ingresses) == 0 {
+		return nil, nil
+	}
+
 	rules, err := ingressRules(app, app.Spec.Ingresses)
 	if err != nil {
 		return nil, err
