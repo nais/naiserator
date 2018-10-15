@@ -14,7 +14,7 @@ jobs:
           command: mkdir -p /tmp/workspace
       - run:
           name: Build Docker container
-          command: docker build -t navikt/naiserator:latest -t navikt/naiserator:$(cat version) .
+          command: docker build -t navikt/naiserator:latest .
       - run:
           name: Save Docker container
           command: docker save navikt/naiserator:latest -o /tmp/workspace/docker-image.tar
@@ -50,6 +50,7 @@ jobs:
       - run:
           name: Push Docker container
           command: |
+            docker tag navikt/naiserator:latest navikt/naiserator:$(cat version)
             docker push navikt/naiserator:latest
             docker push navikt/naiserator:$(cat version)
       - run:
