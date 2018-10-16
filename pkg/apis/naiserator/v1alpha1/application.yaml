@@ -108,5 +108,10 @@ spec:
               properties:
                 files:
                   type: array
-                env:
-                  type: array
+            env:
+              type: array
+              properties:
+                name:
+                  type: string
+                value:
+                  type: string

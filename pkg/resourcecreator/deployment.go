@@ -67,6 +67,7 @@ func podSpec(app *nais.Application) corev1.PodSpec {
 				ReadinessProbe:  probe(app.Spec.Healthcheck.Readiness),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
+				Env:             envVars(app.Spec.Env),
 			},
 		},
 		RestartPolicy: corev1.RestartPolicyAlways,
@@ -95,6 +96,17 @@ func podSpec(app *nais.Application) corev1.PodSpec {
 	}
 
 	return podSpec
+}
+
+// Maps environment variables from ApplicationSpec to the ones we use in PodSpec
+func envVars(vars []nais.EnvVar) []corev1.EnvVar {
+	var newEnvVars []corev1.EnvVar
+
+	for _, envVar := range vars {
+		newEnvVars = append(newEnvVars, corev1.EnvVar{Name: envVar.Name, Value: envVar.Value})
+	}
+
+	return newEnvVars
 }
 
 func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
