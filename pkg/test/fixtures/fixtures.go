@@ -39,6 +39,10 @@ const (
 	PreStopHookPath           = "die"
 	LogFormat                 = "accesslog"
 	LogTransform              = "dns_loglevel"
+	VarName1                  = "varname1"
+	VarValue1                 = "varvalue1"
+	VarName2                  = "varname2"
+	VarValue2                 = "varvalue2"
 )
 
 // Application returns a nais.io.Application test fixture.
@@ -53,8 +57,8 @@ func Application() *nais.Application {
 			Image: ImageName,
 			Team:  TeamName,
 			Replicas: nais.Replicas{
-				Min: MinReplicas,
-				Max: MaxReplicas,
+				Min:                    MinReplicas,
+				Max:                    MaxReplicas,
 				CpuThresholdPercentage: CpuThresholdPercentage,
 			},
 			Healthcheck: nais.Healthcheck{
@@ -101,6 +105,15 @@ func Application() *nais.Application {
 			PreStopHookPath: PreStopHookPath,
 			LeaderElection:  LeaderElectionEnabled,
 			Secrets:         SecretsEnabled,
+			Env: []nais.EnvVar{
+				{
+					Name:  VarName1,
+					Value: VarValue1,
+				},
+				{
+					Name:  VarName2,
+					Value: VarValue2,
+				}},
 		}}
 
 	return app

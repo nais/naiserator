@@ -67,6 +67,11 @@ type ResourceRequirements struct {
 	Requests ResourceSpec `json:"requests"`
 }
 
+type EnvVar struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Healthcheck     Healthcheck          `json:"healthcheck"`
@@ -84,6 +89,7 @@ type ApplicationSpec struct {
 	Secrets         bool                 `json:"secrets"`
 	Team            string               `json:"team"`
 	WebProxy        bool                 `json:"webproxy"`
+	Env             []EnvVar             `json:"env"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
@@ -116,8 +122,8 @@ func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object
 	relevantValues := struct {
-		AppSpec  ApplicationSpec
-		Labels   map[string]string
+		AppSpec ApplicationSpec
+		Labels  map[string]string
 	}{
 		in.Spec,
 		in.Labels,
@@ -142,4 +148,3 @@ func (in *Application) SetLastSyncedHash(hash string) {
 	}
 	a[LastSyncedHashAnnotation] = hash
 }
-

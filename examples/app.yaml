@@ -4,7 +4,7 @@ metadata:
   name: nais-testapp
   namespace: default
 spec:
-  image: navikt/nais-testapp:69.0.0 # Required. Docker image.
+  image: navikt/nais-testapp:65.0.0 # Required. Docker image.
   port: 8080 # Required. The port number which is exposed by the container and should receive HTTP traffic.
   team: aura # Required. Set to the team that owns this application.
   healthcheck: # Required.
@@ -50,5 +50,6 @@ spec:
   configMaps:
     files: # Optional. Specify config maps that will have their data mounted into the container as files.
       - example_files_configmap
-    env: # Optional. Specify config maps that will have their data mounted into the container as environment variables.
-      - example_env_configmap
+  env:
+    - name: MY_CUSTOM_VAR
+      value: some_value
