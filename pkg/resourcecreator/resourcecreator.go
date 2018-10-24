@@ -24,7 +24,9 @@ func Create(app *nais.Application) ([]runtime.Object, error) {
 	if err != nil {
 		return nil, fmt.Errorf("while creating ingress: %s", err)
 	}
-	objects = append(objects, ingress)
+	if ingress != nil {
+		objects = append(objects, ingress)
+	}
 
 	return objects, nil
 }
