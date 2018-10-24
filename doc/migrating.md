@@ -22,6 +22,8 @@ kind: "Application"
 metadata:
   name: nais-testapp
   namespace: default
+  labels:
+    team: teamName
 spec:
   image: navikt/nais-testapp:1.2.3
   team: teamName
