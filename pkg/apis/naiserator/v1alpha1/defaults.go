@@ -45,8 +45,6 @@ func getAppDefaults() *Application {
 					Timeout:          1,
 				},
 			},
-			Ingresses: []string{
-			},
 			Resources: ResourceRequirements{
 				Limits: ResourceSpec{
 					Cpu:    "500m",

@@ -118,6 +118,19 @@ func (in *Application) GetOwnerReference() metav1.OwnerReference {
 	}
 }
 
+// NilFix initializes all slices from their nil defaults.
+//
+// This is done in order to workaround the k8s client serializer
+// which crashes when these fields are uninitialized.
+func (in *Application) NilFix() {
+	if in.Spec.Ingresses == nil {
+		in.Spec.Ingresses = make([]string, 0)
+	}
+	if in.Spec.Env == nil {
+		in.Spec.Env = make([]EnvVar, 0)
+	}
+}
+
 func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object
