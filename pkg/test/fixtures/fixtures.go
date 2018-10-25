@@ -61,21 +61,19 @@ func Application() *nais.Application {
 				Max:                    MaxReplicas,
 				CpuThresholdPercentage: CpuThresholdPercentage,
 			},
-			Healthcheck: nais.Healthcheck{
-				Readiness: nais.Probe{
-					Path:             ReadinessPath,
-					InitialDelay:     ReadinessInitialDelay,
-					FailureThreshold: ReadinessFailureThreshold,
-					Timeout:          ReadinessTimeout,
-					PeriodSeconds:    ReadinessPeriodSeconds,
-				},
-				Liveness: nais.Probe{
-					Path:             LivenessPath,
-					InitialDelay:     LivenessInitialDelay,
-					FailureThreshold: LivenessFailureThreshold,
-					Timeout:          LivenessTimeout,
-					PeriodSeconds:    LivenessPeriodSeconds,
-				},
+			Readiness: nais.Probe{
+				Path:             ReadinessPath,
+				InitialDelay:     ReadinessInitialDelay,
+				FailureThreshold: ReadinessFailureThreshold,
+				Timeout:          ReadinessTimeout,
+				PeriodSeconds:    ReadinessPeriodSeconds,
+			},
+			Liveness: nais.Probe{
+				Path:             LivenessPath,
+				InitialDelay:     LivenessInitialDelay,
+				FailureThreshold: LivenessFailureThreshold,
+				Timeout:          LivenessTimeout,
+				PeriodSeconds:    LivenessPeriodSeconds,
 			},
 			Resources: nais.ResourceRequirements{
 				Requests: nais.ResourceSpec{

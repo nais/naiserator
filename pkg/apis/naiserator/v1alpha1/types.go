@@ -28,11 +28,6 @@ type ApplicationList struct {
 	Items []Application `json:"items"`
 }
 
-type Healthcheck struct {
-	Liveness  Probe `json:"liveness"`
-	Readiness Probe `json:"readiness"`
-}
-
 type IstioConfig struct {
 	Enabled bool `json:"enabled"`
 }
@@ -74,7 +69,8 @@ type EnvVar struct {
 
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
-	Healthcheck     Healthcheck          `json:"healthcheck"`
+	Liveness        Probe                `json:"liveness"`
+	Readiness       Probe                `json:"readiness"`
 	Image           string               `json:"image"`
 	Ingresses       []string             `json:"ingresses"`
 	Istio           IstioConfig          `json:"istio"`
