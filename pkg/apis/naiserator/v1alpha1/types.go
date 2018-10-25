@@ -108,13 +108,11 @@ func (in *Application) GetObjectReference() v1.ObjectReference {
 }
 
 func (in *Application) GetOwnerReference() metav1.OwnerReference {
-	blockOwnerDeletion := true
 	return metav1.OwnerReference{
 		APIVersion:         "v1alpha1",
 		Kind:               "Application",
 		Name:               in.Name,
 		UID:                in.UID,
-		BlockOwnerDeletion: &blockOwnerDeletion,
 	}
 }
 
