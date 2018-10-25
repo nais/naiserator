@@ -2,14 +2,17 @@ package main
 
 import (
 	"flag"
+	"github.com/nais/naiserator"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/golang/glog"
-	"github.com/nais/naiserator"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
 	"github.com/nais/naiserator/pkg/metrics"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -34,13 +37,11 @@ func main() {
 	// register custom types
 	v1alpha1.AddToScheme(scheme.Scheme)
 
-	// make stop channel for exit signals
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	stopCh := StopCh()
 
 	kubeconfig, err := getK8sConfig()
 	if err != nil {
-		glog.Fatalf("unable to initialize kubernetes config")
+		glog.Fatal("unable to initialize kubernetes config")
 	}
 
 	// serve metrics
@@ -51,15 +52,28 @@ func main() {
 		"/alive",
 	)
 
-	n := naiserator.Naiserator{ClientSet: createGenericClient(kubeconfig), AppClient: createApplicationClient(kubeconfig)}
-	n.WatchResources()
+	applicationInformerFactory := createApplicationInformerFactory(kubeconfig)
+	n := naiserator.NewNaiserator(
+		createGenericClientset(kubeconfig),
+		createApplicationClientset(kubeconfig),
+		applicationInformerFactory.Naiserator().V1alpha1().Applications())
 
-	<-s
+	applicationInformerFactory.Start(stopCh)
+	n.Run(stopCh)
+	<-stopCh
 
 	glog.Info("shutting down")
 }
 
-func createApplicationClient(kubeconfig *rest.Config) *clientV1Alpha1.Clientset {
+func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedInformerFactory {
+	config, err := clientset.NewForConfig(kubeconfig)
+	if err != nil {
+		glog.Fatal("unable to create naiserator clientset")
+	}
+	return informers.NewSharedInformerFactory(config, time.Second*30)
+}
+
+func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clientset {
 	clientSet, err := clientV1Alpha1.NewForConfig(kubeconfig)
 	if err != nil {
 		glog.Fatalf("unable to create new clientset")
@@ -68,7 +82,7 @@ func createApplicationClient(kubeconfig *rest.Config) *clientV1Alpha1.Clientset 
 	return clientSet
 }
 
-func createGenericClient(kubeconfig *rest.Config) *kubernetes.Clientset {
+func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
 	clientset, err := kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
 		panic(err.Error())
@@ -85,4 +99,18 @@ func getK8sConfig() (*rest.Config, error) {
 		glog.Infof("using configuration from '%s'", kubeconfig)
 		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
+}
+
+func StopCh() (stopCh <-chan struct{}) {
+	stop := make(chan struct{})
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, []os.Signal{os.Interrupt, syscall.SIGTERM, syscall.SIGINT}...)
+	go func() {
+		<-c
+		close(stop)
+		<-c
+		os.Exit(1) // second signal. Exit directly.
+	}()
+
+	return stop
 }
