@@ -19,8 +19,8 @@ func getAppDefaults() *Application {
 	return &Application{
 		Spec: ApplicationSpec{
 			Replicas: Replicas{
-				Min: 2,
-				Max: 4,
+				Min:                    2,
+				Max:                    4,
 				CpuThresholdPercentage: 50,
 			},
 			Port: 8080,
@@ -29,22 +29,7 @@ func getAppDefaults() *Application {
 				Port:    "http",
 				Path:    "/metrics",
 			},
-			Healthcheck: Healthcheck{
-				Liveness: Probe{
-					Path:             "isAlive",
-					InitialDelay:     20,
-					PeriodSeconds:    10,
-					FailureThreshold: 3,
-					Timeout:          1,
-				},
-				Readiness: Probe{
-					Path:             "isReady",
-					InitialDelay:     20,
-					PeriodSeconds:    10,
-					FailureThreshold: 3,
-					Timeout:          1,
-				},
-			},
+			Ingresses: []string{},
 			Resources: ResourceRequirements{
 				Limits: ResourceSpec{
 					Cpu:    "500m",

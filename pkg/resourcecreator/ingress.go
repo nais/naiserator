@@ -75,7 +75,7 @@ func Ingress(app *nais.Application) (*extensionsv1beta1.Ingress, error) {
 
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
-	objectMeta.Annotations["prometheus.io/path"] = app.Spec.Healthcheck.Liveness.Path
+	objectMeta.Annotations["prometheus.io/path"] = app.Spec.Liveness.Path
 
 	return &extensionsv1beta1.Ingress{
 		TypeMeta: metav1.TypeMeta{

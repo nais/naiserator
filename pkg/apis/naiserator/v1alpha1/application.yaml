@@ -18,10 +18,9 @@ spec:
       properties:
         spec:
           required:
-            - image
-            - team
-            - port
-            - healthcheck
+          - image
+          - team
+          - port
           properties:
             image:
               type: string
@@ -37,35 +36,30 @@ spec:
                   type: integer
             port:
               type: integer
-            healthcheck:
+            liveness:
               required:
-                - liveness
-                - readiness
+              - path
               properties:
-                liveness:
-                  required:
-                    - path
-                  properties:
-                    path:
-                      type: string
-                    initialDelay:
-                      type: integer
-                    timeout:
-                      type: integer
-                    periodSeconds:
-                      type: integer
-                    failureThreshold:
-                      type: integer
-                readiness:
-                  required:
-                    - path
-                  properties:
-                    path:
-                      type: string
-                    initialDelay:
-                      type: integer
-                    timeout:
-                      type: integer
+                path:
+                  type: string
+                initialDelay:
+                  type: integer
+                timeout:
+                  type: integer
+                periodSeconds:
+                  type: integer
+                failureThreshold:
+                  type: integer
+            readiness:
+              required:
+              - path
+              properties:
+                path:
+                  type: string
+                initialDelay:
+                  type: integer
+                timeout:
+                  type: integer
             leaderElection:
               type: boolean
             preStopHookPath:
