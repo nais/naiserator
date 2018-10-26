@@ -2,27 +2,45 @@ package naiserator
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/golang/glog"
 	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	informers "github.com/nais/naiserator/pkg/client/informers/externalversions/naiserator/v1alpha1"
 	r "github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/updater"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 )
 
 // Naiserator is a singleton that holds Kubernetes client instances.
 type Naiserator struct {
-	ClientSet kubernetes.Interface
-	AppClient *clientV1Alpha1.Clientset
+	ClientSet                 kubernetes.Interface
+	AppClient                 *clientV1Alpha1.Clientset
+	ApplicationInformer       informers.ApplicationInformer
+	ApplicationInformerSynced cache.InformerSynced
+}
+
+func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer) *Naiserator {
+	naiserator := Naiserator{
+		ClientSet:                 clientSet,
+		AppClient:                 appClient,
+		ApplicationInformer:       applicationInformer,
+		ApplicationInformerSynced: applicationInformer.Informer().HasSynced}
+
+	applicationInformer.Informer().AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(newPod interface{}) {
+				naiserator.add(newPod)
+			},
+			UpdateFunc: func(oldPod, newPod interface{}) {
+				naiserator.update(oldPod, newPod)
+			},
+		})
+
+	return &naiserator
 }
 
 // Creates a Kubernetes event.
@@ -110,25 +128,9 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	return result.ErrorOrNil()
 }
 
-// WatchResources is the Naiserator main loop, which
-// synchronizes Application specs to Kubernetes resources indefinitely.
-func (n *Naiserator) WatchResources() cache.Store {
-	applicationStore, applicationInformer := cache.NewInformer(
-		&cache.ListWatch{
-			ListFunc: func(lo metav1.ListOptions) (result runtime.Object, err error) {
-				return n.AppClient.NaiseratorV1alpha1().Applications("").List(lo)
-			},
-			WatchFunc: func(lo metav1.ListOptions) (watch.Interface, error) {
-				return n.AppClient.NaiseratorV1alpha1().Applications("").Watch(lo)
-			},
-		},
-		&v1alpha1.Application{},
-		5*time.Minute,
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    n.add,
-			UpdateFunc: n.update,
-		})
-
-	go applicationInformer.Run(wait.NeverStop)
-	return applicationStore
+func (n *Naiserator) Run(stop <-chan struct{}) {
+	if !cache.WaitForCacheSync(stop, n.ApplicationInformerSynced) {
+		glog.Error("timed out waiting for cache sync")
+		return
+	}
 }
