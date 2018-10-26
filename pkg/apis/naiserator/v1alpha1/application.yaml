@@ -21,7 +21,6 @@ spec:
           - image
           - team
           - port
-          - liveness
           properties:
             image:
               type: string

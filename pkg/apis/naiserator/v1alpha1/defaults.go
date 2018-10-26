@@ -29,22 +29,7 @@ func getAppDefaults() *Application {
 				Port:    "http",
 				Path:    "/metrics",
 			},
-			Liveness: Probe{
-				Path:             "isAlive",
-				InitialDelay:     20,
-				PeriodSeconds:    10,
-				FailureThreshold: 3,
-				Timeout:          1,
-			},
-			Readiness: Probe{
-				Path:             "isReady",
-				InitialDelay:     20,
-				PeriodSeconds:    10,
-				FailureThreshold: 3,
-				Timeout:          1,
-			},
-			Ingresses: []string{
-			},
+			Ingresses: []string{},
 			Resources: ResourceRequirements{
 				Limits: ResourceSpec{
 					Cpu:    "500m",
