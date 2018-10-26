@@ -17,3 +17,13 @@ func TestApplication_Hash(t *testing.T) {
 	assert.Equal(t, a1, a2, "matches, as annotations is ignored")
 	assert.NotEqual(t, a2, a3, "must not match ")
 }
+
+func TestNilFix(t *testing.T) {
+	app := v1alpha1.Application{}
+	v1alpha1.ApplyDefaults(&app)
+	assert.Nil(t, app.Spec.Ingresses)
+	assert.Nil(t, app.Spec.Env)
+	app.NilFix()
+	assert.NotNil(t, app.Spec.Ingresses)
+	assert.NotNil(t, app.Spec.Env)
+}

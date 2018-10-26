@@ -104,13 +104,24 @@ func (in *Application) GetObjectReference() v1.ObjectReference {
 }
 
 func (in *Application) GetOwnerReference() metav1.OwnerReference {
-	blockOwnerDeletion := true
 	return metav1.OwnerReference{
 		APIVersion:         "v1alpha1",
 		Kind:               "Application",
 		Name:               in.Name,
 		UID:                in.UID,
-		BlockOwnerDeletion: &blockOwnerDeletion,
+	}
+}
+
+// NilFix initializes all slices from their nil defaults.
+//
+// This is done in order to workaround the k8s client serializer
+// which crashes when these fields are uninitialized.
+func (in *Application) NilFix() {
+	if in.Spec.Ingresses == nil {
+		in.Spec.Ingresses = make([]string, 0)
+	}
+	if in.Spec.Env == nil {
+		in.Spec.Env = make([]EnvVar, 0)
 	}
 }
 

@@ -66,6 +66,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 	app.SetLastSyncedHash(hash)
 	glog.Infof("%s: setting new hash %s", app.Name, hash)
 
+	app.NilFix()
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	if err != nil {
 		return fmt.Errorf("while storing application sync metadata: %s", err)
@@ -86,9 +87,9 @@ func (n *Naiserator) update(old, new interface{}) {
 	glog.Infof("%s: synchronizing application", app.Name)
 
 	if err := n.synchronize(previous, app); err != nil {
-		glog.Errorf("%s: %s", app.Name, err)
+		glog.Errorf("%s: error %s", app.Name, err)
 	} else {
-		glog.Infof("%s: success", app.Name)
+		glog.Infof("%s: synchronized successfully", app.Name)
 	}
 
 	glog.Infof("%s: finished synchronizing", app.Name)
