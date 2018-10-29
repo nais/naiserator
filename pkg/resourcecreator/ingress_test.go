@@ -30,6 +30,11 @@ func TestIngress(t *testing.T) {
 	assert.Equal(t, "/app", ingress.Spec.Rules[1].HTTP.Paths[0].Path)
 	assert.Equal(t, app.Name, ingress.Spec.Rules[1].HTTP.Paths[0].Backend.ServiceName)
 	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingress.Spec.Rules[1].HTTP.Paths[0].Backend.ServicePort)
+
+	assert.Equal(t, "app.foo.bar", ingress.Spec.Rules[2].Host)
+	assert.Equal(t, "/", ingress.Spec.Rules[2].HTTP.Paths[0].Path)
+	assert.Equal(t, app.Name, ingress.Spec.Rules[2].HTTP.Paths[0].Backend.ServiceName)
+	assert.Equal(t, intstr.IntOrString{IntVal: nais.DefaultPort}, ingress.Spec.Rules[2].HTTP.Paths[0].Backend.ServicePort)
 }
 
 func TestIngressFailure(t *testing.T) {

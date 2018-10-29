@@ -17,9 +17,6 @@ func validateUrl(u *url.URL) error {
 	if u.Scheme != "https" {
 		return fmt.Errorf("URL '%s' does not start with 'https://'", u)
 	}
-	if len(u.Path) == 0 && u.Path != "/" {
-		return fmt.Errorf("URL '%s' is missing the path component", u)
-	}
 
 	return nil
 }
@@ -50,6 +47,9 @@ func ingressRules(app *nais.Application, urls []string) ([]extensionsv1beta1.Ing
 		parsedUrl, err := url.Parse(ingress)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+		}
+		if len(parsedUrl.Path) == 0 {
+			parsedUrl.Path = "/"
 		}
 		err = validateUrl(parsedUrl)
 		if err != nil {

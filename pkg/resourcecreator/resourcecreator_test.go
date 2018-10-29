@@ -31,7 +31,7 @@ func TestCreateResourceSpecs(t *testing.T) {
 	assert.Equal(t, fixtures.Name, sa.Name)
 
 	ingress := test.NamedResource(specs, "Ingress").(*extensionsv1beta1.Ingress)
-	assert.Len(t, ingress.Spec.Rules, 2)
+	assert.Len(t, ingress.Spec.Rules, 3)
 
 	hpa := test.NamedResource(specs, "HorizontalPodAutoscaler").(*autoscalingv1.HorizontalPodAutoscaler)
 	assert.Equal(t, fixtures.Name, hpa.Spec.ScaleTargetRef.Name)

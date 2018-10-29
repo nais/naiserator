@@ -96,6 +96,7 @@ func Application() *nais.Application {
 			Ingresses: []string{
 				"https://app.nais.adeo.no/",
 				"https://tjenester.nav.no/app",
+				"https://app.foo.bar",
 			},
 			Logtransform:    LogTransform,
 			Logformat:       LogFormat,
