@@ -106,6 +106,7 @@ func (n *Naiserator) update(old, new interface{}) {
 
 	if err := n.synchronize(previous, app); err != nil {
 		glog.Errorf("%s: error %s", app.Name, err)
+		n.reportError("synchronize", err, app)
 	} else {
 		glog.Infof("%s: synchronized successfully", app.Name)
 	}
