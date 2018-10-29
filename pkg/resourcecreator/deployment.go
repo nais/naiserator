@@ -13,19 +13,27 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Deployment(app *nais.Application) *appsv1.Deployment {
+func Deployment(app *nais.Application) (*appsv1.Deployment, error) {
+	spec, err := deploymentSpec(app)
+	if err != nil {
+		return nil, err
+	}
 	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       deploymentSpec(app),
-	}
+		Spec:       *spec,
+	}, nil
 }
 
-func deploymentSpec(app *nais.Application) appsv1.DeploymentSpec {
-	return appsv1.DeploymentSpec{
+func deploymentSpec(app *nais.Application) (*appsv1.DeploymentSpec, error) {
+	podspec, err := podSpec(app)
+	if err != nil {
+		return nil, err
+	}
+	return &appsv1.DeploymentSpec{
 		Replicas: int32p(1),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.Name},
@@ -47,14 +55,28 @@ func deploymentSpec(app *nais.Application) appsv1.DeploymentSpec {
 		RevisionHistoryLimit:    int32p(10),
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: podObjectMeta(app),
-			Spec:       podSpec(app),
+			Spec:       *podspec,
 		},
-	}
+	}, nil
 }
 
-// TODO mount configmaps
-func podSpec(app *nais.Application) corev1.PodSpec {
-	podSpec := corev1.PodSpec{
+func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
+	var err error
+	podSpec := podSpecBase(app)
+	if app.Spec.LeaderElection {
+		podSpecLeaderElection(app, podSpec)
+	}
+	if app.Spec.Secrets {
+		podSpec, err = podSpecSecrets(app, podSpec)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return podSpec, err
+}
+
+func podSpecBase(app *nais.Application) *corev1.PodSpec {
+	return &corev1.PodSpec{
 		Containers: []corev1.Container{
 			{
 				Name:  app.Name,
@@ -73,29 +95,29 @@ func podSpec(app *nais.Application) corev1.PodSpec {
 		RestartPolicy: corev1.RestartPolicyAlways,
 		DNSPolicy:     corev1.DNSClusterFirst,
 	}
+}
 
-	if app.Spec.LeaderElection {
-		podSpec.Containers = append(podSpec.Containers, leaderElectionContainer(app.Namespace, app.Namespace))
-		mainContainer := &podSpec.Containers[0]
+func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *corev1.PodSpec {
+	podSpec.Containers = append(podSpec.Containers, leaderElectionContainer(app.Namespace, app.Namespace))
+	mainContainer := &podSpec.Containers[0]
 
-		electorPathEnv := corev1.EnvVar{
-			Name:  "ELECTOR_PATH",
-			Value: "localhost:4040",
-		}
-
-		mainContainer.Env = append(mainContainer.Env, electorPathEnv)
+	electorPathEnv := corev1.EnvVar{
+		Name:  "ELECTOR_PATH",
+		Value: "localhost:4040",
 	}
 
-	if app.Spec.Secrets {
-		if initializer, initializerErr := vault.NewInitializer(app.Name, app.Namespace); initializerErr != nil {
-			fmt.Println("ERROR", initializerErr.Error())
-			return corev1.PodSpec{}
-		} else {
-			podSpec = initializer.AddInitContainer(&podSpec)
-		}
-	}
+	mainContainer.Env = append(mainContainer.Env, electorPathEnv)
 
 	return podSpec
+}
+
+func podSpecSecrets(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
+	initializer, err := vault.NewInitializer(app.Name, app.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("while initializing secrets: %s", err)
+	}
+	spec := initializer.AddInitContainer(podSpec)
+	return &spec, nil
 }
 
 // Maps environment variables from ApplicationSpec to the ones we use in PodSpec

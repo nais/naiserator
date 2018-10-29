@@ -15,16 +15,22 @@ import (
 func Create(app *nais.Application) ([]runtime.Object, error) {
 	objects := []runtime.Object{
 		Service(app),
-		Deployment(app),
 		ServiceAccount(app),
 		HorizontalPodAutoscaler(app),
 	}
+
+	deployment, err := Deployment(app)
+	if err != nil {
+		return nil, fmt.Errorf("while creating deployment: %s", err)
+	}
+	objects = append(objects, deployment)
 
 	ingress, err := Ingress(app)
 	if err != nil {
 		return nil, fmt.Errorf("while creating ingress: %s", err)
 	}
 	if ingress != nil {
+		// the application might have no ingresses, in which case nil will be returned.
 		objects = append(objects, ingress)
 	}
 

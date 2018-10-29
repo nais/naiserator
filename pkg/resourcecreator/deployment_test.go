@@ -24,7 +24,8 @@ func TestGetDeployment(t *testing.T) {
 		vault.EnvVaultKVPath:        "d",
 		vault.EnvVaultEnabled:       "e",
 	}, func(t *testing.T) {
-		deploy := resourcecreator.Deployment(app)
+		deploy, err := resourcecreator.Deployment(app)
+		assert.Nil(t, err)
 		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 
 		t.Run("user settings is applied", func(t *testing.T) {
