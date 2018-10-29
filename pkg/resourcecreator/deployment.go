@@ -92,8 +92,9 @@ func podSpecBase(app *nais.Application) *corev1.PodSpec {
 				Env:             envVars(app.Spec.Env),
 			},
 		},
-		RestartPolicy: corev1.RestartPolicyAlways,
-		DNSPolicy:     corev1.DNSClusterFirst,
+		ServiceAccountName: app.Name,
+		RestartPolicy:      corev1.RestartPolicyAlways,
+		DNSPolicy:          corev1.DNSClusterFirst,
 	}
 }
 

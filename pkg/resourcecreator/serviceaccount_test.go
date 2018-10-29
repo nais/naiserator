@@ -1,9 +1,10 @@
 package resourcecreator_test
 
 import (
+	"testing"
+
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
