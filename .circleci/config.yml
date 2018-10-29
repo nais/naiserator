@@ -61,7 +61,7 @@ jobs:
             res="hack/resources"
             static_file="${naisyaml}/templates/zz-generated-naiserator.yaml"
             git clone https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/navikt/nais-yaml $naisyaml
-            cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrolebinding.yaml > $static_file
+            cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrolebinding.yaml pkg/apis/naiserator/v1alpha1/application.yaml > $static_file
             cd $naisyaml
             sed -E -i "s#image: navikt/naiserator:.+#image: navikt/naiserator:${version}#" vars/naiserator.yaml
             git add .
