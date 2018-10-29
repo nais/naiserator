@@ -65,7 +65,7 @@ jobs:
             cd $naisyaml
             sed -E -i "s#image: navikt/naiserator:.+#image: navikt/naiserator:${version}#" vars/naiserator.yaml
             git add .
-            git diff --cached
+            git --no-pager diff --cached
             git commit -a -m "Bump Naiserator to version ${version}"
             git push
 
