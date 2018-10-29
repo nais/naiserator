@@ -40,7 +40,7 @@ of the steps involved.
 
 You can deploy the most recent release of Naiserator by applying to your cluster:
 ```
-kubectl apply -f examples/naiserator.yaml
+kubectl apply -f hack/resources/
 ```
 
 ## Development
@@ -51,8 +51,8 @@ It is no longer needed to have the project checked out in your `$GOPATH`.
 
 ```
 kubectl apply -f pkg/apis/naiserator/v1alpha1/application.yaml
-kubectl apply -f examples/nais_example.yaml
-go run cmd/naiserator/main.go --logtostderr --kubeconfig=<your kubeconfig file> --bind-address=127.0.0.1:8080
+kubectl apply -f examples/app.yaml
+make local
 ```
 
 ### Code generation
