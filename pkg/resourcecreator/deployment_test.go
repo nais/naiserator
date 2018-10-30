@@ -1,10 +1,11 @@
 package resourcecreator_test
 
 import (
-	"github.com/nais/naiserator/pkg/resourcecreator"
-	"github.com/nais/naiserator/pkg/test"
 	"strconv"
 	"testing"
+
+	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/test"
 
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -62,6 +63,7 @@ func TestGetDeployment(t *testing.T) {
 		})
 	}))
 }
+
 func getContainerByName(containers []v1.Container, name string) *v1.Container {
 	for _, v := range containers {
 		if v.Name == name {

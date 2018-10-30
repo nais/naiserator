@@ -2,11 +2,13 @@ package naiserator
 
 import (
 	"fmt"
+
 	"github.com/golang/glog"
 	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/metrics"
 	r "github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/updater"
 	corev1 "k8s.io/api/core/v1"
@@ -81,6 +83,11 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 		return fmt.Errorf("while persisting resources to Kubernetes: %s", err)
 	}
 
+	// At this point, the deployment is complete. All that is left is to register the application hash and cache it,
+	// so that the deployment does not happen again. Thus, we update the metrics before the end of the function.
+	metrics.ResourcesGenerated.Add(float64(len(resources)))
+	metrics.Deployments.Inc()
+
 	app.SetLastSyncedHash(hash)
 	glog.Infof("%s: setting new hash %s", app.Name, hash)
 
@@ -102,9 +109,11 @@ func (n *Naiserator) update(old, new interface{}) {
 		app = new.(*v1alpha1.Application)
 	}
 
+	metrics.ApplicationsProcessed.Inc()
 	glog.Infof("%s: synchronizing application", app.Name)
 
 	if err := n.synchronize(previous, app); err != nil {
+		metrics.ApplicationsFailed.Inc()
 		glog.Errorf("%s: error %s", app.Name, err)
 		n.reportError("synchronize", err, app)
 	} else {
@@ -130,6 +139,7 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 }
 
 func (n *Naiserator) Run(stop <-chan struct{}) {
+	glog.Info("Starting application synchronization")
 	if !cache.WaitForCacheSync(stop, n.ApplicationInformerSynced) {
 		glog.Error("timed out waiting for cache sync")
 		return

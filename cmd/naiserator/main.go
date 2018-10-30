@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/nais/naiserator"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/nais/naiserator"
 
 	"github.com/golang/glog"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
@@ -32,7 +33,7 @@ func init() {
 }
 
 func main() {
-	glog.Info("starting up")
+	glog.Info("Naiserator starting up")
 
 	// register custom types
 	v1alpha1.AddToScheme(scheme.Scheme)
@@ -62,7 +63,7 @@ func main() {
 	n.Run(stopCh)
 	<-stopCh
 
-	glog.Info("shutting down")
+	glog.Info("Naiserator has shut down")
 }
 
 func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedInformerFactory {
@@ -83,12 +84,12 @@ func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clients
 }
 
 func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
-	clientset, err := kubernetes.NewForConfig(kubeconfig)
+	cs, err := kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return clientset
+	return cs
 }
 
 func getK8sConfig() (*rest.Config, error) {
