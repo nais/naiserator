@@ -19,12 +19,9 @@ spec:
         spec:
           required:
           - image
-          - team
           - port
           properties:
             image:
-              type: string
-            team:
               type: string
             replicas:
               properties:

@@ -83,7 +83,6 @@ type ApplicationSpec struct {
 	Replicas        Replicas             `json:"replicas"`
 	Resources       ResourceRequirements `json:"resources"`
 	Secrets         bool                 `json:"secrets"`
-	Team            string               `json:"team"`
 	WebProxy        bool                 `json:"webproxy"`
 	Env             []EnvVar             `json:"env"`
 }
@@ -105,10 +104,10 @@ func (in *Application) GetObjectReference() v1.ObjectReference {
 
 func (in *Application) GetOwnerReference() metav1.OwnerReference {
 	return metav1.OwnerReference{
-		APIVersion:         "v1alpha1",
-		Kind:               "Application",
-		Name:               in.Name,
-		UID:                in.UID,
+		APIVersion: "v1alpha1",
+		Kind:       "Application",
+		Name:       in.Name,
+		UID:        in.UID,
 	}
 }
 

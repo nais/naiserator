@@ -34,7 +34,7 @@ func TestGetDeployment(t *testing.T) {
 			assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
 			assert.Equal(t, app.Name, deploy.Name)
 			assert.Equal(t, app.Namespace, deploy.Namespace)
-			assert.Equal(t, app.Spec.Team, deploy.Labels["team"])
+			assert.Equal(t, app.Labels["team"], deploy.Labels["team"])
 			assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
 			assert.Equal(t, nais.DefaultPortName, appContainer.LivenessProbe.HTTPGet.Port.StrVal)
 			assert.Equal(t, app.Spec.Liveness.Path, appContainer.LivenessProbe.HTTPGet.Path)

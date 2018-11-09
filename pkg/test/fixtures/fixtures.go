@@ -51,11 +51,13 @@ func Application() *nais.Application {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      Name,
 			Namespace: Namespace,
+			Labels: map[string]string{
+				"team": TeamName,
+			},
 		},
 		Spec: nais.ApplicationSpec{
 			Port:  Port,
 			Image: ImageName,
-			Team:  TeamName,
 			Replicas: nais.Replicas{
 				Min:                    MinReplicas,
 				Max:                    MaxReplicas,

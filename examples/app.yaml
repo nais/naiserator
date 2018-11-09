@@ -3,10 +3,11 @@ kind: "Application"
 metadata:
   name: nais-testapp
   namespace: default
+  labels:
+    team: aura # Required. Set to the team that owns this application.
 spec:
   image: navikt/nais-testapp:65.0.0 # Required. Docker image.
   port: 8080 # Required. The port number which is exposed by the container and should receive HTTP traffic.
-  team: aura # Required. Set to the team that owns this application.
   liveness: # HTTP endpoint that signals 200 OK when the application is running.
     path: isalive
     initialDelay: 20
