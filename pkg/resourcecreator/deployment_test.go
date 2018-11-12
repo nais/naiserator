@@ -57,9 +57,17 @@ func TestGetDeployment(t *testing.T) {
 			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
 			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.Containers, "elector"), "contains sidecar for leader election")
 			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks"), "contains vault initcontainer")
-			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
 			assert.Equal(t, app.Spec.Env[0].Name, appContainer.Env[0].Name)
 			assert.Equal(t, app.Spec.Env[0].Value, appContainer.Env[0].Value)
+		})
+
+		t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
+
+			assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PATH, envValue(appContainer.Env, "NAV_TRUSTSTORE_PATH"))
+			assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PASSWORD, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
+			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
+			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
+			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
 		})
 	}))
 }
@@ -72,4 +80,13 @@ func getContainerByName(containers []v1.Container, name string) *v1.Container {
 	}
 
 	return nil
+}
+
+func envValue(envs []v1.EnvVar, name string) string {
+	for _, e := range envs {
+		if e.Name == name {
+			return e.Value
+		}
+	}
+	return ""
 }
