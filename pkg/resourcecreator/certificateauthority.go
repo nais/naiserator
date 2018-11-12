@@ -14,8 +14,9 @@ const (
 	NAV_TRUSTSTORE_PASSWORD       = "changeme" // The contents in this file is not secret
 )
 
-// The following list was copied from https://golang.org/src/crypto/x509/root_linux.go
-// Possible certificate files; stop after finding one.
+// The following list was copied from https://golang.org/src/crypto/x509/root_linux.go.
+// CA injection should work out of the box. Implementations differ across systems, so
+// by mounting the certificates in these places, we increase the chances of successful auto-configuration.
 var certFiles = []string{
 	"/etc/ssl/certs/ca-certificates.crt",                // Debian/Ubuntu/Gentoo etc.
 	"/etc/pki/tls/certs/ca-bundle.crt",                  // Fedora/RHEL 6
@@ -45,6 +46,7 @@ func certificateAuthorityVolumeMounts() []corev1.VolumeMount {
 	return vm
 }
 
+// Configures a Volume to mount files from the CA bundle ConfigMap.
 func certificateAuthorityVolume() corev1.Volume {
 	return corev1.Volume{
 		Name: CA_BUNDLE_CONFIGMAP_NAME,
@@ -58,6 +60,7 @@ func certificateAuthorityVolume() corev1.Volume {
 	}
 }
 
+// Insert the CA configuration into a PodSpec.
 func podSpecCertificateAuthority(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	envs := []corev1.EnvVar{
 		{
