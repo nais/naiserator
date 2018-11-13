@@ -62,10 +62,15 @@ func deploymentSpec(app *nais.Application) (*appsv1.DeploymentSpec, error) {
 
 func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 	var err error
+
 	podSpec := podSpecBase(app)
+
 	if app.Spec.LeaderElection {
 		podSpecLeaderElection(app, podSpec)
 	}
+
+	podSpec = podSpecCertificateAuthority(podSpec)
+
 	if app.Spec.Secrets {
 		podSpec, err = podSpecSecrets(app, podSpec)
 		if err != nil {
