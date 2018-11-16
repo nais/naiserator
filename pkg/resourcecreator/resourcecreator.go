@@ -12,14 +12,14 @@ import (
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources.
-func Create(app *nais.Application) ([]runtime.Object, error) {
+func Create(app *nais.Application, opts ResourceOptions) ([]runtime.Object, error) {
 	objects := []runtime.Object{
 		Service(app),
 		ServiceAccount(app),
 		HorizontalPodAutoscaler(app),
 	}
 
-	deployment, err := Deployment(app)
+	deployment, err := Deployment(app, opts)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}

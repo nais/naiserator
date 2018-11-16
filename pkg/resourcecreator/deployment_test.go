@@ -25,7 +25,8 @@ func TestGetDeployment(t *testing.T) {
 		vault.EnvVaultKVPath:        "d",
 		vault.EnvVaultEnabled:       "e",
 	}, func(t *testing.T) {
-		deploy, err := resourcecreator.Deployment(app)
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 

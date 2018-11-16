@@ -17,7 +17,8 @@ import (
 func TestCreateResourceSpecs(t *testing.T) {
 	app := fixtures.Application()
 
-	specs, err := resourcecreator.Create(app)
+	opts := resourcecreator.NewResourceOptions()
+	specs, err := resourcecreator.Create(app, opts)
 
 	assert.Nil(t, err)
 
@@ -35,4 +36,17 @@ func TestCreateResourceSpecs(t *testing.T) {
 
 	hpa := test.NamedResource(specs, "HorizontalPodAutoscaler").(*autoscalingv1.HorizontalPodAutoscaler)
 	assert.Equal(t, fixtures.Name, hpa.Spec.ScaleTargetRef.Name)
+}
+
+func TestNumReplicas(t *testing.T) {
+	app := fixtures.Application()
+
+	opts := resourcecreator.NewResourceOptions()
+	opts.NumReplicas = 42
+	specs, err := resourcecreator.Create(app, opts)
+
+	assert.Nil(t, err)
+
+	deploy := test.NamedResource(specs, "Deployment").(*appsv1.Deployment)
+	assert.Equal(t, opts.NumReplicas, *deploy.Spec.Replicas)
 }
