@@ -12,6 +12,8 @@ import (
 	r "github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/updater"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -74,7 +76,17 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 		return nil
 	}
 
+	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
+	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
+	// resource and pass the correct number in the resource options.
 	opts := r.NewResourceOptions()
+	deployment, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return fmt.Errorf("while querying existing deployment: %s", err)
+	} else if deployment != nil && deployment.Spec.Replicas != nil {
+		opts.NumReplicas = *deployment.Spec.Replicas
+	}
+
 	resources, err := r.Create(app, opts)
 	if err != nil {
 		return fmt.Errorf("while creating resources: %s", err)
