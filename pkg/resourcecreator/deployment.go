@@ -13,8 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Deployment(app *nais.Application) (*appsv1.Deployment, error) {
-	spec, err := deploymentSpec(app)
+func Deployment(app *nais.Application, opts ResourceOptions) (*appsv1.Deployment, error) {
+	spec, err := deploymentSpec(app, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -28,13 +28,13 @@ func Deployment(app *nais.Application) (*appsv1.Deployment, error) {
 	}, nil
 }
 
-func deploymentSpec(app *nais.Application) (*appsv1.DeploymentSpec, error) {
+func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.DeploymentSpec, error) {
 	podspec, err := podSpec(app)
 	if err != nil {
 		return nil, err
 	}
 	return &appsv1.DeploymentSpec{
-		Replicas: int32p(1),
+		Replicas: int32p(opts.NumReplicas),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.Name},
 		},

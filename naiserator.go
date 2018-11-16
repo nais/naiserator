@@ -74,7 +74,8 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 		return nil
 	}
 
-	resources, err := r.Create(app)
+	opts := r.NewResourceOptions()
+	resources, err := r.Create(app, opts)
 	if err != nil {
 		return fmt.Errorf("while creating resources: %s", err)
 	}
