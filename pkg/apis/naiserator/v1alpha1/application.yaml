@@ -101,8 +101,13 @@ spec:
                   type: array
             env:
               type: array
-              properties:
-                name:
-                  type: string
-                value:
-                  type: string
+              items:
+                type: object
+                required:
+                  - name
+                  - value
+                properties:
+                  name:
+                    type: string
+                  value:
+                    type: string
