@@ -21,7 +21,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 ## Migrating from naisd
 
 In order to switch from naisd to Naiserator, you need to complete a few migration tasks.
-See [migration from naisd to naiserator](doc/migrating.md) for a detailed explanation
+See [migration from naisd to naiserator](https://github.com/nais/doc/blob/master/content/deploy/migrating_from_naisd.md) for a detailed explanation
 of the steps involved.
   
 ## Prerequisites
