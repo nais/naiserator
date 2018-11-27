@@ -55,7 +55,7 @@ func (n *Naiserator) reportEvent(event *corev1.Event) (*corev1.Event, error) {
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
 func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Application) {
 	glog.Error(err)
-	ev := app.CreateEvent(source, err.Error())
+	ev := app.CreateEvent(source, err.Error(), "Warning")
 	_, err = n.reportEvent(ev)
 	if err != nil {
 		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
@@ -108,6 +108,11 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	if err != nil {
 		return fmt.Errorf("while storing application sync metadata: %s", err)
+	}
+
+	_, err = n.reportEvent(app.CreateEvent("synchronize", fmt.Sprintf("successfully synchronized application resources (hash = %s)", hash), "Normal"))
+	if err != nil {
+		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
 
 	return nil
