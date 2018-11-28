@@ -1,92 +1,42 @@
 #!/bin/bash
 
-set -o errexit
-set -o pipefail
+TEAMNAME="${1}"
+CLUSTER_NAME="${2}"
+LDAP_USERNAME="${3}"
+LDAP_PASSWORD="${4}"
 
-print() {
-    echo '<.>' $* >&2
-}
+print_help() {
+  cat <<EOF
 
-help() {
-    echo
-    echo "mkkubeconfig: generate certificate, key and kubeconfig for a machine user."
-    echo
-    echo "This command will connect to your current Kubernetes cluster, and create"
-    echo "a certificate for authentication with the API server. Role bindings will"
-    echo "have to be created separately."
-    echo
-    echo "Syntax: mkkubeconfig <SUBJECT>"
-    echo
-    exit 1
-}
+This script will create a service user for a team, generate a valid kubeconfig with it's token and put it into Vault.
 
-KEY_TYPE="rsa:2048"
+usage: ./create_serviceuser.sh [team_name] [cluster_name] [ldap_username] [ldap_password]
 
-subject=$1
-if [ "$subject" == "" ] || [ "$subject" == "--help" ] || [ "$subject" == "-h" ]; then
-  help
-fi
+team_name         name of the team that will use the service user
+cluster_name      name of the cluster that the user will be used
+ldap_username     valid ldap username (for putting kubeconfig into Vault)
+ldap_password     valid ldap password (for putting kubeconfig into Vault)
 
-kubeconfig=`mktemp`
-current_context=`kubectl config current-context`
-
-for cluster_name in preprod-fss preprod-sbs prod-fss prod-sbs; do
-
-  kubectl config set current-context $cluster_name >&2
-
-  cluster_name=`kubectl config view --minify -o=jsonpath='{.clusters[0].name}'`
-  api_server_url=`kubectl config view --minify -o=jsonpath='{.clusters[0].cluster.server}'`
-  credentials_name="${cluster_name}-${subject}"
-
-  print Creating a TLS certificate in ${cluster_name} with CN="${subject}"
-  print Kubernetes API server is ${api_server_url}
-
-  key=`mktemp`
-  cert=`mktemp`
-  csr=`mktemp`
-  kubecsr=`mktemp`
-
-  print Creating a new private key and certificate signing request
-  openssl req -new -newkey $KEY_TYPE -keyout $key -nodes -out $csr -subj "/CN=${subject}" >&2
-
-  print Request certificate signing through a Kubernetes resource
-  cat > $kubecsr <<EOF
-apiVersion: certificates.k8s.io/v1beta1
-kind: CertificateSigningRequest
-metadata:
-  name: ${subject}
-spec:
-  groups:
-    - system:authenticated
-  request: $(base64 < ${csr} | tr -d '\n')
-  usages:
-    - digital signature
-    - key encipherment
-    - client auth
 EOF
+}
 
-  kubectl create -n default -f $kubecsr >&2
+if [[ "${1}" == "-h" || "${1}" == "--help"  || "${#}" -lt "4" ]]; then print_help && exit 0; fi
 
-  print Signing the certificate using the Kubernetes CA
-  kubectl certificate approve $subject -n default >&2
+# create service account, and get token from secret
+kubectl create serviceaccount serviceuser-${TEAMNAME}
+TOKEN=$(kubectl get secret $(kubectl get serviceaccount serviceuser-${TEAMNAME} -o=jsonpath='{.secrets[0].name}') -o=jsonpath='{.data.token}' | base64 --decode)
 
-  print Downloading the signed certificate and delete it from Kubernetes
-  kubectl get csr $subject -o jsonpath='{.status.certificate}' | base64 --decode > $cert
-  kubectl delete csr $subject >&2
+# generate a valid JSON kubeconfig with service account token and cluster info
+TMP_KUBECONFIG=$(mktemp)
+kubectl config --kubeconfig=${TMP_KUBECONFIG} set-credentials service-user --token=${TOKEN}
+kubectl config --kubeconfig=${TMP_KUBECONFIG} set-cluster ${CLUSTER_NAME} --server=https://apiserver.${CLUSTER_NAME}.nais.io^
+kubectl config --kubeconfig=${TMP_KUBECONFIG} set-context ${CLUSTER_NAME} --user=service-user
+kubectl config --kubeconfig=${TMP_KUBECONFIG} use-context ${CLUSTER_NAME}
+JSON_KUBECONFIG=$(mktemp)
+kubectl config --kubeconfig=${TMP_KUBECONFIG} view -o=json > ${JSON_KUBECONFIG}
 
-  kubectl --kubeconfig $kubeconfig config set-cluster $cluster_name --server $api_server_url --insecure-skip-tls-verify >&2
-  kubectl --kubeconfig $kubeconfig config set-credentials $credentials_name --client-key $key --client-certificate $cert --embed-certs >&2
-  kubectl --kubeconfig $kubeconfig config set-context $cluster_name --cluster $cluster_name --user $credentials_name --namespace default >&2
-  kubectl --kubeconfig $kubeconfig config set current-context $cluster_name >&2
-
-  rm -f $key $cert $csr $kubecsr
-done
-
-kubectl config set-context $current_context >&2
-
-print
-print Your kubeconfig is ready:
-print
-echo '# vi: se ft=yaml:'
-echo '---'
-cat $kubeconfig
+# wrap kubeconfig and output unwrap token
+VAULT_TOKEN=$(curl -s -XPOST -d "{\"password\": \"${LDAP_PASSWORD}\"}" https://vault.adeo.no/v1/auth/ldap/login/${LDAP_USERNAME} | jq .auth.client_token | tr -d '"')
+UNWRAP_TOKEN=$(curl -s -XPOST -H "X-Vault-Token: ${VAULT_TOKEN}" -H "X-Vault-Wrap-TTL: 24h" --data @${JSON_KUBECONFIG} https://vault.adeo.no/v1/sys/wrapping/wrap | jq .wrap_info.token | tr -d '"')
+echo "To get a working kubeconfig for your service account, go to https://vault.adeo.no/ui/vault/tools/unwrap and enter this unwrap token:"
+echo "${UNWRAP_TOKEN}"
