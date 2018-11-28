@@ -38,5 +38,5 @@ kubectl config --kubeconfig=${TMP_KUBECONFIG} view -o=json > ${JSON_KUBECONFIG}
 # wrap kubeconfig and output unwrap token
 VAULT_TOKEN=$(curl -s -XPOST -d "{\"password\": \"${LDAP_PASSWORD}\"}" https://vault.adeo.no/v1/auth/ldap/login/${LDAP_USERNAME} | jq .auth.client_token | tr -d '"')
 UNWRAP_TOKEN=$(curl -s -XPOST -H "X-Vault-Token: ${VAULT_TOKEN}" -H "X-Vault-Wrap-TTL: 24h" --data @${JSON_KUBECONFIG} https://vault.adeo.no/v1/sys/wrapping/wrap | jq .wrap_info.token | tr -d '"')
-echo "To get a working kubeconfig for your service account, go to https://vault.adeo.no/ui/vault/tools/unwrap and enter this unwrap token:"
+echo "To get a working kubeconfig for your service account, go to https://vault.adeo.no/ui/vault/tools/unwrap and enter the following unwrap token (note: only usable once, and will be deleted after 24 hours):"
 echo "${UNWRAP_TOKEN}"
