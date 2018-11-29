@@ -2,8 +2,6 @@
 
 TEAMNAME="${1}"
 CLUSTER_NAME="${2}"
-LDAP_USERNAME="${3}"
-LDAP_PASSWORD="${4}"
 
 print_help() {
   cat <<EOF
@@ -22,7 +20,7 @@ if [[ "${1}" == "-h" || "${1}" == "--help"  || "${#}" -ne "2" ]]; then print_hel
 
 for prog in kubectl jq base64 curl; do
     which $prog >/dev/null 2>&1
-    if test $? -ne 0; then
+    if [[ $? -ne 0 ]]; then
         echo "Cannot find '$prog' in path, please install it to continue"
         exit 1
     fi
@@ -38,7 +36,7 @@ TOKEN=$(kubectl --namespace default get secret $(kubectl --namespace default get
 TMP_KUBECONFIG=$(mktemp)
 k="kubectl config --kubeconfig=${TMP_KUBECONFIG}"
 ${k} set-credentials service-user --token=${TOKEN}
-${k} set-cluster ${CLUSTER_NAME} --server=https://apiserver.${CLUSTER_NAME}.nais.io --insecure-skip-tls-verify
+${k} set-cluster ${CLUSTER_NAME} --server=https://${CLUSTER_NAME}-apiserver.adeo.no:6443 --insecure-skip-tls-verify
 ${k} set-context ${CLUSTER_NAME} --user=service-user --cluster=${CLUSTER_NAME} --namespace default
 ${k} use-context ${CLUSTER_NAME}
 JSON_KUBECONFIG=$(mktemp)
