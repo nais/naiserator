@@ -1,6 +1,7 @@
 package resourcecreator_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -16,13 +17,13 @@ import (
 
 func TestGetDeployment(t *testing.T) {
 	app := fixtures.Application()
-	app.Spec.Secrets = true
+	app.Spec.Secrets.Enabled = true
 
 	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
 		vault.EnvVaultAddr:          "a",
 		vault.EnvVaultAuthPath:      "b",
 		vault.EnvInitContainerImage: "c",
-		vault.EnvVaultKVPath:        "d",
+		vault.EnvVaultKVPath:        "/base/kv",
 		vault.EnvVaultEnabled:       "e",
 	}, func(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
@@ -30,7 +31,7 @@ func TestGetDeployment(t *testing.T) {
 		assert.Nil(t, err)
 		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 
-		t.Run("user settings is applied", func(t *testing.T) {
+		t.Run("user settings are applied", func(t *testing.T) {
 
 			assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
 			assert.Equal(t, app.Name, deploy.Name)
@@ -57,9 +58,15 @@ func TestGetDeployment(t *testing.T) {
 			assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
 			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.Containers, "elector"), "contains sidecar for leader election")
-			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks"), "contains vault initcontainer")
+			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0"), "contains vault initcontainer")
 			assert.Equal(t, app.Spec.Env[0].Name, appContainer.Env[0].Name)
 			assert.Equal(t, app.Spec.Env[0].Value, appContainer.Env[0].Value)
+		})
+
+		t.Run("vault KV path is configured correctly", func(t *testing.T) {
+			c := getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
+			kvPath := fmt.Sprintf("/base/kv/%s/%s", app.Namespace, app.Name)
+			assert.Equal(t, kvPath, test.EnvVar(c.Env, "VKS_KV_PATH"))
 		})
 
 		t.Run("certificate authority files and configuration is injected", func(t *testing.T) {

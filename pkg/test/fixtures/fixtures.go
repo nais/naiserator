@@ -105,7 +105,9 @@ func Application() *nais.Application {
 			WebProxy:        WebProxyEnabled,
 			PreStopHookPath: PreStopHookPath,
 			LeaderElection:  LeaderElectionEnabled,
-			Secrets:         SecretsEnabled,
+			Secrets: nais.Secrets{
+				Enabled: SecretsEnabled,
+			},
 			Env: []nais.EnvVar{
 				{
 					Name:  VarName1,

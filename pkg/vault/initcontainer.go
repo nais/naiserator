@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	mountPath = "/var/run/secrets/nais.io/vault"
+	MountPath = "/var/run/secrets/nais.io/vault"
 	// EnvVaultAddr is the environment name for looking up the address of the Vault server
 	EnvVaultAddr = "NAIS_VAULT_ADDR" //
 	// EnvInitContainerImage is the environment name for looking up the init container to use
@@ -22,11 +22,27 @@ const (
 	EnvVaultEnabled = "NAIS_VAULT_ENABLED"
 )
 
+type SecretPath struct {
+	MountPath string
+	KVPath    string
+}
+
 type config struct {
 	vaultAddr          string
 	initContainerImage string
 	authPath           string
-	kvPath             string
+	secretPaths        []SecretPath
+}
+
+type initializer struct {
+	app    string
+	ns     string
+	config config
+}
+
+// Initializer adds init containers
+type Initializer interface {
+	AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec
 }
 
 func (c config) validate() (bool, error) {
@@ -45,8 +61,16 @@ func (c config) validate() (bool, error) {
 		multierror.Append(result, fmt.Errorf("auth path not found in environment. Missing %s", EnvVaultAuthPath))
 	}
 
-	if len(c.kvPath) == 0 {
-		multierror.Append(result, fmt.Errorf("kv path not found in environment. Missing %s", EnvVaultKVPath))
+	for _, p := range c.secretPaths {
+		if len(p.MountPath) == 0 {
+			multierror.Append(result, fmt.Errorf("mount path not specified"))
+			break
+		}
+
+		if len(p.KVPath) == 0 {
+			multierror.Append(result, fmt.Errorf("kv path not found in environment. Missing %s", EnvVaultKVPath))
+			break
+		}
 	}
 
 	return result.ErrorOrNil() == nil, result.ErrorOrNil()
@@ -65,29 +89,22 @@ func init() {
 
 }
 
-type initializer struct {
-	app    string
-	ns     string
-	config config
-}
-
-// Initializer adds init containers
-type Initializer interface {
-	AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec
-}
-
 // Enabled checks if this Initializer is enabled
 func Enabled() bool {
 	return viper.GetBool(EnvVaultEnabled)
 }
 
+func DefaultKVPath() string {
+	return viper.GetString(EnvVaultKVPath)
+}
+
 // NewInitializer creates a new Initializer. Err if required env variables are not set.
-func NewInitializer(app, ns string) (Initializer, error) {
+func NewInitializer(app, ns string, secretPaths []SecretPath) (Initializer, error) {
 	config := config{
 		vaultAddr:          viper.GetString(EnvVaultAddr),
 		initContainerImage: viper.GetString(EnvInitContainerImage),
 		authPath:           viper.GetString(EnvVaultAuthPath),
-		kvPath:             viper.GetString(EnvVaultKVPath),
+		secretPaths:        secretPaths,
 	}
 
 	if ok, err := config.validate(); !ok {
@@ -103,29 +120,32 @@ func NewInitializer(app, ns string) (Initializer, error) {
 
 // Add init container to pod spec.
 func (c initializer) AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec {
-	volume, mount := volumeAndMount()
+	for index, paths := range c.config.secretPaths {
+		name := fmt.Sprintf("vault-secrets-%d", index)
+		volume, mount := volumeAndMount(name, paths.MountPath)
 
-	// Add shared volume to pod
-	podSpec.Volumes = append(podSpec.Volumes, volume)
+		// Add shared volume to pod
+		podSpec.Volumes = append(podSpec.Volumes, volume)
 
-	// "Main" container in the pod gets the shared volume mounted.
-	mutatedContainers := make([]k8score.Container, 0, len(podSpec.Containers))
-	for _, containerCopy := range podSpec.Containers {
-		if containerCopy.Name == c.app {
-			containerCopy.VolumeMounts = append(containerCopy.VolumeMounts, mount)
+		// "Main" container in the pod gets the shared volume mounted.
+		mutatedContainers := make([]k8score.Container, 0, len(podSpec.Containers))
+		for _, containerCopy := range podSpec.Containers {
+			if containerCopy.Name == c.app {
+				containerCopy.VolumeMounts = append(containerCopy.VolumeMounts, mount)
+			}
+			mutatedContainers = append(mutatedContainers, containerCopy)
 		}
-		mutatedContainers = append(mutatedContainers, containerCopy)
-	}
-	podSpec.Containers = mutatedContainers
+		podSpec.Containers = mutatedContainers
 
-	// Finally add init container which also gets the shared volume mounted.
-	podSpec.InitContainers = append(podSpec.InitContainers, c.initContainer(mount))
+		// Finally add init container which also gets the shared volume mounted.
+		name = fmt.Sprintf("vks-%d", index)
+		podSpec.InitContainers = append(podSpec.InitContainers, c.initContainer(name, mount, paths))
+	}
 
 	return *podSpec
 }
 
-func volumeAndMount() (k8score.Volume, k8score.VolumeMount) {
-	name := "vault-secrets"
+func volumeAndMount(name, mountPath string) (k8score.Volume, k8score.VolumeMount) {
 	volume := k8score.Volume{
 		Name: name,
 		VolumeSource: k8score.VolumeSource{
@@ -143,17 +163,13 @@ func volumeAndMount() (k8score.Volume, k8score.VolumeMount) {
 	return volume, mount
 }
 
-func (c initializer) kvPath() string {
-	return c.config.kvPath + "/" + c.app + "/" + c.ns
-}
-
 func (c initializer) vaultRole() string {
 	return c.app
 }
 
-func (c initializer) initContainer(mount k8score.VolumeMount) k8score.Container {
+func (c initializer) initContainer(name string, mount k8score.VolumeMount, secretPath SecretPath) k8score.Container {
 	return k8score.Container{
-		Name:         "vks",
+		Name:         name,
 		VolumeMounts: []k8score.VolumeMount{mount},
 		Image:        c.config.initContainerImage,
 		Env: []k8score.EnvVar{
@@ -167,7 +183,7 @@ func (c initializer) initContainer(mount k8score.VolumeMount) k8score.Container 
 			},
 			{
 				Name:  "VKS_KV_PATH",
-				Value: c.kvPath(),
+				Value: secretPath.KVPath,
 			},
 			{
 				Name:  "VKS_VAULT_ROLE",
@@ -175,7 +191,7 @@ func (c initializer) initContainer(mount k8score.VolumeMount) k8score.Container 
 			},
 			{
 				Name:  "VKS_SECRET_DEST_PATH",
-				Value: mountPath,
+				Value: secretPath.MountPath,
 			},
 		},
 	}

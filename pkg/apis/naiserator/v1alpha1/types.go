@@ -1,9 +1,11 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
+	"github.com/nais/naiserator/pkg/vault"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -67,6 +69,16 @@ type EnvVar struct {
 	Value string `json:"value"`
 }
 
+type SecretPath struct {
+	MountPath string `json:"mountPath"`
+	KvPath    string `json:"kvPath"`
+}
+
+type Secrets struct {
+	Enabled bool         `json:"enabled"`
+	Mounts  []SecretPath `json:"paths"`
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Liveness        Probe                `json:"liveness"`
@@ -82,7 +94,7 @@ type ApplicationSpec struct {
 	Prometheus      PrometheusConfig     `json:"prometheus"`
 	Replicas        Replicas             `json:"replicas"`
 	Resources       ResourceRequirements `json:"resources"`
-	Secrets         bool                 `json:"secrets"`
+	Secrets         Secrets              `json:"secrets"`
 	WebProxy        bool                 `json:"webproxy"`
 	Env             []EnvVar             `json:"env"`
 }
@@ -153,4 +165,11 @@ func (in *Application) SetLastSyncedHash(hash string) {
 		a = make(map[string]string)
 	}
 	a[LastSyncedHashAnnotation] = hash
+}
+
+func (in *Application) DefaultSecretPath(base string) SecretPath {
+	return SecretPath{
+		MountPath: vault.MountPath,
+		KvPath: fmt.Sprintf("%s/%s/%s", base, in.Namespace, in.Name),
+	}
 }
