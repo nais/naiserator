@@ -94,7 +94,22 @@ spec:
             webproxy:
               type: boolean
             secrets:
-              type: boolean
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                paths:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - kvPath
+                      - mountPath
+                    properties:
+                      kvPath:
+                        type: string
+                      mountPath:
+                        type: string
             configMaps:
               properties:
                 files:
