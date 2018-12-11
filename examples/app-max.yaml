@@ -24,15 +24,11 @@ spec:
     min: 2 # minimum number of replicas.
     max: 4 # maximum number of replicas.
     cpuThresholdPercentage: 50 # total cpu percentage threshold on deployment, at which point it will increase number of pods if current < max
-  leaderElection: false # Optional. If true, a http endpoint will be available at $ELECTOR_PATH that return the current leader
                         # Compare this value with the $HOSTNAME to see if the current instance is the leader
-  preStopHookPath: "" # Optional. A HTTP GET will be issued to this endpoint at least once before the pod is terminated.
                       # See https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
   prometheus: # Optional.
     enabled: false # if true the pod will be scraped for metrics by prometheus
     path: /metrics # Path to prometheus-metrics
-  istio: # Optional.
-    enabled: false # Optional. When true, envoy-proxy sidecar will be injected into pod and https urls envvars will be rewritten
   resources: # Optional. See: http://kubernetes.io/docs/user-guide/compute-resources/
     limits:
       cpu: 500m # app will have its cpu usage throttled if exceeding this limit
@@ -43,9 +39,6 @@ spec:
   ingresses: # Optional. List of ingress URLs that will route HTTP traffic to the application.
     - "https://nais-testapp.nais.adeo.no/"
     - "https://tjenester.nav.no/nais-testapp"
-  logformat: accesslog # Optional. The format of the logs from the container if the logs should be handled differently than plain text or json
-  logtransform: dns_loglevel # Optional. The transformation of the logs, if they should be handled differently than plain text or json
-  webproxy: false # Optional. Expose web proxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables.
   secrets: false # Optional. If set to true fetch secrets from Secret Service and inject into the pods. todo link to doc.
   configMaps:
     files: # Optional. Specify config maps that will have their data mounted into the container as files.
@@ -53,3 +46,8 @@ spec:
   env:
     - name: MY_CUSTOM_VAR
       value: some_value
+  preStopHookPath: "/stop" # Optional. A HTTP GET will be issued to this endpoint at least once before the pod is terminated.
+  leaderElection: false # Optional. If true, a http endpoint will be available at $ELECTOR_PATH that return the current leader
+  webproxy: false # Optional. Expose web proxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables.
+  logformat: accesslog # Optional. The format of the logs from the container if the logs should be handled differently than plain text or json
+  logtransform: dns_loglevel # Optional. The transformation of the logs, if they should be handled differently than plain text or json
