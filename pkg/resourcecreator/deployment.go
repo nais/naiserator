@@ -82,25 +82,35 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 
 func podSpecBase(app *nais.Application) *corev1.PodSpec {
 	return &corev1.PodSpec{
-		Containers: []corev1.Container{
-			{
-				Name:  app.Name,
-				Image: app.Spec.Image,
-				Ports: []corev1.ContainerPort{
-					{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais.DefaultPortName},
-				},
-				Resources:       resourceLimits(app.Spec.Resources),
-				LivenessProbe:   probe(app.Spec.Liveness),
-				ReadinessProbe:  probe(app.Spec.Readiness),
-				ImagePullPolicy: corev1.PullIfNotPresent,
-				Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
-				Env:             envVars(app.Spec.Env),
-			},
-		},
+		Containers:         []corev1.Container{appContainer(app)},
 		ServiceAccountName: app.Name,
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
 	}
+}
+
+func appContainer(app *nais.Application) corev1.Container {
+	c := corev1.Container{
+		Name:  app.Name,
+		Image: app.Spec.Image,
+		Ports: []corev1.ContainerPort{
+			{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais.DefaultPortName},
+		},
+		Resources:       resourceLimits(app.Spec.Resources),
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
+		Env:             envVars(app.Spec.Env),
+	}
+
+	if app.Spec.Liveness != (nais.Probe{}) {
+		c.LivenessProbe = probe(app.Spec.Liveness)
+	}
+
+	if app.Spec.Readiness != (nais.Probe{}) {
+		c.ReadinessProbe = probe(app.Spec.Readiness)
+	}
+
+	return c
 }
 
 func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *corev1.PodSpec {
