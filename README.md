@@ -63,7 +63,7 @@ spec:
 | spec.resources.requests.cpu | Guaranteed amount of CPU | 200m |
 | spec.resources.requests.memory | Guaranteed amount of memory | 256Mi |
 | spec.ingresses | List of ingress URLs that will route HTTP traffic to the application | | Optional |
-| spec.secrets | If set to true, fetch secrets from [Vault](https://github.com/nais/doc/tree/master/content/secrets) and inject into the pods | False (optional) |
+| spec.secrets | If set to true, fetch secrets from [Vault](https://github.com/nais/doc/tree/master/content/secrets) and inject into the pods | False | Optional | 
 | spec.configMaps.files | List of configMaps that will have their data mounted into the container as files. | | Optional |
 | spec.env | List of name and value that will become environment variables in the container |  | Optional |
 | spec.preStopHookPath | A HTTP GET will be issued to this endpoint at least once before the pod is terminated | /stop | Optional |
