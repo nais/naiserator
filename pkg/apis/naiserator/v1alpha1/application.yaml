@@ -77,14 +77,18 @@ spec:
                   properties:
                     cpu:
                       type: string
+                      pattern: '^\d+m?$'
                     memory:
                       type: string
+                      pattern: '^\d+[MG]i$'
                 requests:
                   properties:
                     cpu:
                       type: string
+                      pattern: '^\d+m?$'
                     memory:
                       type: string
+                      pattern: '^\d+[MG]i$'
             ingresses:
               type: array
             logformat:
