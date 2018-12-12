@@ -25,6 +25,9 @@ jobs:
   release:
     <<: *defaults
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "72:ed:2d:92:44:25:d6:ce:b0:c8:3b:e8:27:32:4c:59"
       - setup_remote_docker
       - checkout
       - attach_workspace:
@@ -42,7 +45,7 @@ jobs:
           name: Release new version
           command: |
             version=$(cat version)
-            git remote set-url origin https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/nais/naiserator
+            #git remote set-url origin https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/nais/naiserator
             git commit version -m "Release version ${version} [skip ci]"
             git tag ${version}
             git push

@@ -32,7 +32,6 @@ func TestGetDeployment(t *testing.T) {
 		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 
 		t.Run("user settings are applied", func(t *testing.T) {
-
 			assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
 			assert.Equal(t, app.Name, deploy.Name)
 			assert.Equal(t, app.Namespace, deploy.Namespace)
@@ -70,14 +69,28 @@ func TestGetDeployment(t *testing.T) {
 		})
 
 		t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
-
 			assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PATH, envValue(appContainer.Env, "NAV_TRUSTSTORE_PATH"))
 			assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PASSWORD, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
 			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
 			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
 			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
 		})
+
 	}))
+}
+
+func TestProbes(t *testing.T) {
+	t.Run("probes are not configured when not set", func(t *testing.T) {
+		app := &nais.Application{}
+		nais.ApplyDefaults(app)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+
+		assert.NoError(t, err)
+		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].ReadinessProbe)
+		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].LivenessProbe)
+	})
 }
 
 func getContainerByName(containers []v1.Container, name string) *v1.Container {
