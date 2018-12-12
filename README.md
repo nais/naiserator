@@ -18,6 +18,60 @@ Naiserator will generate several resources that work together to form a complete
   
 These resources will remain in Kubernetes until the `Application` resource is deleted.
 
+## nais.io/application spec
+### Minimal spec
+```
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: testapp
+  namespace: default
+  labels:
+    team: aura
+spec:
+  image: jhrv/testapp:latest
+  port: 8080 
+  ingresses: 
+    - "https://testapp.nais.preprod.local"
+```
+### Configuration
+| Parameter | Description | Default | Optional |
+| --------- | ----------- | ------- | -------- |
+| metadata.name | Name of the application | | Required |
+| metadata.namespace | Which namespace the application will be deployed to | | Required |
+| metadata.labels.team | [mailnick/tag](https://github.com/nais/doc/blob/master/content/getting-started/teamadministration.md) | | Required |
+| spec.image | Docker image location | | Required |
+| spec.port | The port exposed by the container | | Required |
+| spec.liveness.path | path of the [liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | Required |
+| spec.liveness.initialDelay | Number of seconds after the container has started before liveness probes are initiated | 20 |
+| spec.liveness.timeout | Number of seconds after which the probe times out. | 1 |
+| spec.liveness.periodSeconds | How often (in seconds) to perform the probe | 10 |
+| spec.liveness.failureThreshold | When a Pod starts and the probe fails, Kubernetes will try `failureThreshold` times before giving up. Giving up in case of liveness probe means restarting the Pod. In case of readiness probe the Pod will be marked Unready | 3 |
+| spec.readiness.path | Path of the [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | Required |
+| spec.readiness.initialDelay | Number of seconds after the container has started before readiness probes are initiated | 20 |
+| spec.readiness.timeout | Number of seconds after which the probe times out. | 1 |
+| spec.replicas.min | Minimum number of replicas | 2 |
+| spec.replicas.max | Maximum number of replicas | 4 |
+| spec.cpuThresholdPercentage | Total cpu percentage threshold on deployment, at which point it will increase number of pods if current < max. See [doc](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/) for details
+| spec.prometheus | | Optional |
+| spec.prometheus.enabled | If true, the pod will be scraped for metrics by Prometheus | false |
+| spec.prometheus.path | Path to Prometheus metrics | /metrics |
+| spec.resources| see [guide](http://kubernetes.io/docs/user-guide/compute-resources/) | | Optional |
+| spec.resources.limits.cpu | App will have its cpu usage throttled if exceeding this limit | 500m |
+| spec.resources.limits.memory | App will be killed if exceeding this limit | 512Mi |
+| spec.resources.requests | App is guaranteed the requested resources and will be shceduled on nodes with atleast this amount of resources available | |
+| spec.resources.requests.cpu | Guaranteed amount of CPU | 200m |
+| spec.resources.requests.memory | Guaranteed amount of memory | 256Mi |
+| spec.ingresses | List of ingress URLs that will route HTTP traffic to the application | | Optional |
+| spec.secrets | If set to true, fetch secrets from [Vault](https://github.com/nais/doc/tree/master/content/secrets) and inject into the pods | False (optional) |
+| spec.configMaps.files | List of configMaps that will have their data mounted into the container as files. | | Optional |
+| spec.env | List of name and value that will become environment variables in the container |  | Optional |
+| spec.preStopHookPath | A HTTP GET will be issued to this endpoint at least once before the pod is terminated | /stop | Optional |
+| spec.leaderElection | If true, a http endpoint will be available at `$ELECTOR_PATH` that returns the current leader | False | Optional |
+| spec.webproxy | Expose webproxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables | False | Optional |
+| spec.logformat | The format of the logs from the container if the logs should be handled differently than plain text or json | accesslog | Optional |
+| spec.logtransfrom | The tranormation of the logs, if they should be handled differently than plain text or json | dns_loglevel | Optional |
+
 ## Migrating from naisd
 
 In order to switch from naisd to Naiserator, you need to complete a few migration tasks.
