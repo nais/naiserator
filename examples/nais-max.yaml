@@ -49,5 +49,7 @@ spec:
   preStopHookPath: "/stop" # Optional. A HTTP GET will be issued to this endpoint at least once before the pod is terminated.
   leaderElection: false # Optional. If true, a http endpoint will be available at $ELECTOR_PATH that return the current leader
   webproxy: false # Optional. Expose web proxy configuration to the application using the HTTP_PROXY, HTTPS_PROXY and NO_PROXY environment variables.
-  logformat: accesslog # Optional. The format of the logs from the container if the logs should be handled differently than plain text or json
-  logtransform: dns_loglevel # Optional. The transformation of the logs, if they should be handled differently than plain text or json
+  logformat: accesslog # Optional. The format of the logs from the container. Use this if the container doesn't support json logging and
+                       #           the log should be parsed. Supported formats: access_log, access_log_with_processing_time,
+                       #           accesslog_with_referer_useragent, capnslog, logrus, gokit, redis, glog, simple, influxdb, log15.
+  logtransform: http_loglevel # Optional. For accesslogs, set log_level based on http status code
