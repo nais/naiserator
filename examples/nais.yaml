@@ -8,7 +8,7 @@ metadata:
 spec:
   image: navikt/nais-testapp:latest
   port: 8080 
-   liveness:
+  liveness:
     path: /isalive
   readiness:
     path: /isready
