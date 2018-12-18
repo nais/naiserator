@@ -77,6 +77,14 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 			return nil, err
 		}
 	}
+
+	if app.Spec.WebProxy {
+		podSpec, err = podSpecProxyOpts(podSpec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return podSpec, err
 }
 
