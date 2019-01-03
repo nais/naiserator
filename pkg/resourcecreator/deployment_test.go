@@ -1,7 +1,6 @@
 package resourcecreator_test
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -65,8 +64,7 @@ func TestGetDeployment(t *testing.T) {
 
 		t.Run("vault KV path is configured correctly", func(t *testing.T) {
 			c := getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
-			kvPath := fmt.Sprintf("/base/kv/%s/%s", app.Namespace, app.Name)
-			assert.Equal(t, kvPath, test.EnvVar(c.Env, "VKS_KV_PATH"))
+			assert.Equal(t, "/base/kv/app/default", test.EnvVar(c.Env, "VKS_KV_PATH"))
 		})
 
 		t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
