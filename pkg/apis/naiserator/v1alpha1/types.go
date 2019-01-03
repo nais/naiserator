@@ -74,7 +74,7 @@ type SecretPath struct {
 	KvPath    string `json:"kvPath"`
 }
 
-type Secrets struct {
+type Vault struct {
 	Enabled bool         `json:"enabled"`
 	Mounts  []SecretPath `json:"paths"`
 }
@@ -94,7 +94,8 @@ type ApplicationSpec struct {
 	Prometheus      PrometheusConfig     `json:"prometheus"`
 	Replicas        Replicas             `json:"replicas"`
 	Resources       ResourceRequirements `json:"resources"`
-	Secrets         Secrets              `json:"secrets"`
+	Secrets         bool                 `json:"secrets"`
+	Vault           Vault                `json:"vault"`
 	WebProxy        bool                 `json:"webproxy"`
 	Env             []EnvVar             `json:"env"`
 }
@@ -170,6 +171,6 @@ func (in *Application) SetLastSyncedHash(hash string) {
 func (in *Application) DefaultSecretPath(base string) SecretPath {
 	return SecretPath{
 		MountPath: vault.MountPath,
-		KvPath: fmt.Sprintf("%s/%s/%s", base, in.Namespace, in.Name),
+		KvPath:    fmt.Sprintf("%s/%s/%s", base, in.Namespace, in.Name),
 	}
 }

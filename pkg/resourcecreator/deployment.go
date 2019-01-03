@@ -71,9 +71,9 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 
 	podSpec = podSpecCertificateAuthority(podSpec)
 
-	if app.Spec.Secrets.Enabled {
-		if len(app.Spec.Secrets.Mounts) == 0 {
-			app.Spec.Secrets.Mounts = []nais.SecretPath{
+	if app.Spec.Vault.Enabled || app.Spec.Secrets {
+		if len(app.Spec.Vault.Mounts) == 0 {
+			app.Spec.Vault.Mounts = []nais.SecretPath{
 				app.DefaultSecretPath(vault.DefaultKVPath()),
 			}
 		}
@@ -152,7 +152,7 @@ func toSecretPaths(path []nais.SecretPath) []vault.SecretPath {
 }
 
 func podSpecSecrets(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
-	initializer, err := vault.NewInitializer(app.Name, app.Namespace, toSecretPaths(app.Spec.Secrets.Mounts))
+	initializer, err := vault.NewInitializer(app.Name, app.Namespace, toSecretPaths(app.Spec.Vault.Mounts))
 	if err != nil {
 		return nil, fmt.Errorf("while initializing secrets: %s", err)
 	}

@@ -98,6 +98,8 @@ spec:
             webproxy:
               type: boolean
             secrets:
+              type: boolean
+            vault:
               type: object
               properties:
                 enabled:

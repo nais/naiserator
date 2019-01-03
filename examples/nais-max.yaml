@@ -39,7 +39,7 @@ spec:
   ingresses: # Optional. List of ingress URLs that will route HTTP traffic to the application.
     - "https://nais-testapp.nais.adeo.no/"
     - "https://tjenester.nav.no/nais-testapp"
-  secrets:
+  vault:
     enabled: false # Optional. If set to true, fetch secrets from Secret Service and inject into the pods.
     paths:  # Optional. If specified, will override default values with custom Vault configuration.
       - mountPath: /var/run/secrets/nais.io/vault  # Filesystem path inside the pod where secrets will appear.

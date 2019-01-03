@@ -17,7 +17,7 @@ import (
 
 func TestGetDeployment(t *testing.T) {
 	app := fixtures.Application()
-	app.Spec.Secrets.Enabled = true
+	app.Spec.Vault.Enabled = true
 
 	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
 		vault.EnvVaultAddr:          "a",
