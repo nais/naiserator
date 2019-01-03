@@ -39,7 +39,11 @@ spec:
   ingresses: # Optional. List of ingress URLs that will route HTTP traffic to the application.
     - "https://nais-testapp.nais.adeo.no/"
     - "https://tjenester.nav.no/nais-testapp"
-  secrets: false # Optional. If set to true fetch secrets from Secret Service and inject into the pods. todo link to doc.
+  vault:
+    enabled: false # Optional. If set to true, fetch secrets from Secret Service and inject into the pods.
+    paths:  # Optional. If specified, will override default values with custom Vault configuration.
+      - mountPath: /var/run/secrets/nais.io/vault  # Filesystem path inside the pod where secrets will appear.
+        kvPath: /kv/preprod/fss/namespace/application  # Vault KV path to fetch secrets from.
   configMaps:
     files: # Optional. Specify config maps that will have their data mounted into the container as files.
       - example_files_configmap
