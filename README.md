@@ -50,7 +50,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.secrets | _DEPRECATED_. Synonym to `spec.vault.enabled`. Please use the new syntax. | false | |
 | spec.vault.enabled | If set to true, fetch secrets from [Vault](https://github.com/nais/doc/tree/master/content/secrets) and inject into the pods | false | |
 | spec.vault.paths | Overriding the `paths` array is optional, and will give you fine-grained control over which vault paths that will be mounted on the file system. | | |
-| spec.vault.paths.[].kvPath | Path to Vault key/value store that should be mounted into the file system | /kv/`<environment>`/`<zone>`/`<namespace>`/`<application>` | |
+| spec.vault.paths.[].kvPath | Path to Vault key/value store that should be mounted into the file system | /kv/environment/zone/application/namespace | |
 | spec.vault.paths.[].mountPath | File system path that the secrets will be mounted into | /var/run/secrets/nais.io/vault | |
 | spec.configMaps.files | List of configMaps that will have their contents mounted into the container as files | |
 | spec.env | List of name and value that will become environment variables in the container | |
