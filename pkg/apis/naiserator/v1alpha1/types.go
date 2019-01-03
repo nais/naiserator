@@ -171,6 +171,6 @@ func (in *Application) SetLastSyncedHash(hash string) {
 func (in *Application) DefaultSecretPath(base string) SecretPath {
 	return SecretPath{
 		MountPath: vault.MountPath,
-		KvPath:    fmt.Sprintf("%s/%s/%s", base, in.Namespace, in.Name),
+		KvPath:    fmt.Sprintf("%s/%s/%s", base, in.Name, in.Namespace),
 	}
 }
