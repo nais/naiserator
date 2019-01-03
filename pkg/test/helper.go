@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -37,4 +38,13 @@ func NamedResource(resources []runtime.Object, kind string) runtime.Object {
 		}
 	}
 	panic("no matching resource kind found")
+}
+
+func EnvVar(envVars []v1.EnvVar, key string) string {
+	for _, v := range envVars {
+		if v.Name == key {
+			return v.Value
+		}
+	}
+	return ""
 }

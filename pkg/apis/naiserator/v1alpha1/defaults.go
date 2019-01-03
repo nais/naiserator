@@ -40,5 +40,10 @@ func getAppDefaults() *Application {
 					Memory: "256Mi",
 				},
 			},
-		}}
+			Vault: Vault{
+				Enabled: false,
+				Mounts:  []SecretPath{},
+			},
+		},
+	}
 }
