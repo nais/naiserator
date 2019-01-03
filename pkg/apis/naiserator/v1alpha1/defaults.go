@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"github.com/imdario/mergo"
-	"github.com/nais/naiserator/pkg/vault"
 )
 
 // Application spec default values
@@ -43,20 +42,8 @@ func getAppDefaults() *Application {
 			},
 			Vault: Vault{
 				Enabled: false,
-				Mounts: []SecretPath{
-					{
-						KvPath:    vault.EnvVaultKVPath,
-						MountPath: vault.MountPath,
-					},
-				},
+				Mounts:  []SecretPath{},
 			},
 		},
-	}
-}
-
-func DefaultSecretPath() SecretPath {
-	return SecretPath{
-		MountPath: vault.MountPath,
-		KvPath: vault.EnvVaultKVPath,
 	}
 }
