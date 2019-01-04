@@ -214,7 +214,7 @@ func lifeCycle(path string) *corev1.Lifecycle {
 			},
 		}
 	}
-    //return &corev1.Lifecycle{}
+
 	return &corev1.Lifecycle{
 		PreStop: &corev1.Handler{
 			Exec: &corev1.ExecAction{
