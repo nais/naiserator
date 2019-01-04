@@ -36,6 +36,7 @@ func TestGetDeployment(t *testing.T) {
 			assert.Equal(t, app.Namespace, deploy.Namespace)
 			assert.Equal(t, app.Labels["team"], deploy.Labels["team"])
 			assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
+			assert.Equal(t, app.Spec.PreStopHookPath, appContainer.Lifecycle.PreStop.HTTPGet.Path)
 			assert.Equal(t, nais.DefaultPortName, appContainer.LivenessProbe.HTTPGet.Port.StrVal)
 			assert.Equal(t, app.Spec.Liveness.Path, appContainer.LivenessProbe.HTTPGet.Path)
 			assert.Equal(t, int32(app.Spec.Liveness.PeriodSeconds), appContainer.LivenessProbe.PeriodSeconds)
@@ -77,12 +78,25 @@ func TestProbes(t *testing.T) {
 		app := &nais.Application{}
 		nais.ApplyDefaults(app)
 
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
+		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
 
 		assert.NoError(t, err)
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].ReadinessProbe )
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].LivenessProbe )
+	})
+}
+
+
+func TestLifecycle(t *testing.T) {
+	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
+		app := &nais.Application{}
+		nais.ApplyDefaults(app)
+
+		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
+
+		assert.NoError(t, err)
+		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.HTTPGet)
+		assert.Equal(t, []string{"sleep", "5"}, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.Exec.Command)
 	})
 }
 

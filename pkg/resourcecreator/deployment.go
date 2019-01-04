@@ -198,8 +198,14 @@ func lifeCycle(path string) *corev1.Lifecycle {
 			},
 		}
 	}
-
-	return &corev1.Lifecycle{}
+    //return &corev1.Lifecycle{}
+	return &corev1.Lifecycle{
+		PreStop: &corev1.Handler{
+			Exec: &corev1.ExecAction{
+				Command: []string{"sleep","5"},
+			},
+		},
+	}
 }
 
 func probe(probe nais.Probe) *corev1.Probe {
