@@ -28,6 +28,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "72:ed:2d:92:44:25:d6:ce:b0:c8:3b:e8:27:32:4c:59"
+            - "23:30:b7:2a:e9:44:5f:d9:d0:fd:e9:ce:7b:1d:0a:96"
       - setup_remote_docker
       - checkout
       - attach_workspace:
@@ -63,7 +64,7 @@ jobs:
             naisyaml=$(mktemp -d)
             res="hack/resources"
             static_file="${naisyaml}/templates/zz-generated-naiserator.yaml"
-            git clone https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/navikt/nais-yaml $naisyaml
+            git clone git@github.com:navikt/nais-yaml $naisyaml
             cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrolebinding.yaml pkg/apis/naiserator/v1alpha1/application.yaml > $static_file
             cd $naisyaml
             sed -E -i "s#image: navikt/naiserator:.+#image: navikt/naiserator:${version}#" vars/naiserator.yaml
