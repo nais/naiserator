@@ -28,7 +28,6 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "72:ed:2d:92:44:25:d6:ce:b0:c8:3b:e8:27:32:4c:59"
-            - "23:30:b7:2a:e9:44:5f:d9:d0:fd:e9:ce:7b:1d:0a:96"
       - setup_remote_docker
       - checkout
       - attach_workspace:
@@ -56,6 +55,9 @@ jobs:
             docker tag navikt/naiserator:latest navikt/naiserator:$(cat version)
             docker push navikt/naiserator:latest
             docker push navikt/naiserator:$(cat version)
+      - add_ssh_keys:
+          fingerprints:
+            - "23:30:b7:2a:e9:44:5f:d9:d0:fd:e9:ce:7b:1d:0a:96"
       - run:
           name: Deploy new version to Kubernetes
           command: |
