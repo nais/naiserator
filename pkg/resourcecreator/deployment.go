@@ -73,7 +73,7 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 
 	podSpec = podSpecConfigMapFiles(app, podSpec)
 
-	if app.Spec.Vault.Enabled || app.Spec.Secrets {
+	if vault.Enabled() && (app.Spec.Vault.Enabled || app.Spec.Secrets) {
 		if len(app.Spec.Vault.Mounts) == 0 {
 			app.Spec.Vault.Mounts = []nais.SecretPath{
 				app.DefaultSecretPath(vault.DefaultKVPath()),

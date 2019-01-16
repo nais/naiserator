@@ -24,7 +24,7 @@ func TestGetDeployment(t *testing.T) {
 		vault.EnvVaultAuthPath:      "b",
 		vault.EnvInitContainerImage: "c",
 		vault.EnvVaultKVPath:        "/base/kv",
-		vault.EnvVaultEnabled:       "e",
+		vault.EnvVaultEnabled:       "true",
 	}, func(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
