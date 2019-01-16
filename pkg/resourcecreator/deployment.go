@@ -71,6 +71,8 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 
 	podSpec = podSpecCertificateAuthority(podSpec)
 
+	podSpec = podSpecConfigMapFiles(app, podSpec)
+
 	if app.Spec.Vault.Enabled || app.Spec.Secrets {
 		if len(app.Spec.Vault.Mounts) == 0 {
 			app.Spec.Vault.Mounts = []nais.SecretPath{
@@ -91,6 +93,33 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 	}
 
 	return podSpec, err
+}
+
+func podSpecConfigMapFiles(app *nais.Application, spec *corev1.PodSpec) *corev1.PodSpec {
+	for _, cm := range app.Spec.ConfigMaps.Files {
+		volumeName := fmt.Sprintf("nais-cm-%s", cm)
+
+		volume := corev1.Volume{
+			Name: volumeName,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: cm,
+					},
+				},
+			},
+		}
+
+		volumeMount := corev1.VolumeMount{
+			Name:      volumeName,
+			MountPath: fmt.Sprintf("/var/run/configmaps/%s", cm),
+		}
+
+		spec.Volumes = append(spec.Volumes, volume)
+		spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts, volumeMount)
+	}
+
+	return spec
 }
 
 func podSpecBase(app *nais.Application) *corev1.PodSpec {
@@ -218,7 +247,7 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	return &corev1.Lifecycle{
 		PreStop: &corev1.Handler{
 			Exec: &corev1.ExecAction{
-				Command: []string{"sleep","5"},
+				Command: []string{"sleep", "5"},
 			},
 		},
 	}

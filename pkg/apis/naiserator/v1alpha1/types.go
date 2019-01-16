@@ -79,6 +79,10 @@ type Vault struct {
 	Mounts  []SecretPath `json:"paths"`
 }
 
+type ConfigMaps struct {
+	Files []string
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Liveness        Probe                `json:"liveness"`
@@ -97,6 +101,7 @@ type ApplicationSpec struct {
 	Secrets         bool                 `json:"secrets"`
 	Vault           Vault                `json:"vault"`
 	WebProxy        bool                 `json:"webproxy"`
+	ConfigMaps      ConfigMaps           `json:"configMaps"`
 	Env             []EnvVar             `json:"env"`
 }
 

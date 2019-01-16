@@ -1,6 +1,7 @@
 package resourcecreator_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -78,6 +79,34 @@ func TestGetDeployment(t *testing.T) {
 	}))
 }
 
+func TestConfigMapMounts(t *testing.T) {
+	t.Run("configMaps are mounted into the container", func(t *testing.T) {
+		app := fixtures.Application()
+		app.Spec.ConfigMaps.Files = []string{
+			"foo",
+			"bar",
+		}
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+
+		for _, cm := range app.Spec.ConfigMaps.Files {
+			name := fmt.Sprintf("nais-cm-%s", cm)
+			volume := getVolumeByName(deploy.Spec.Template.Spec.Volumes, name)
+			volumeMount := getVolumeMountByName(appContainer.VolumeMounts, name)
+
+			assert.NotNil(t, volume)
+			assert.NotNil(t, volumeMount)
+			assert.NotNil(t, volume.ConfigMap)
+
+			assert.Equal(t, volume.ConfigMap.LocalObjectReference.Name, cm)
+			assert.Equal(t, volume.Name, volumeMount.Name)
+			assert.Len(t, volume.ConfigMap.Items, 0)
+		}
+	})
+}
+
 func TestProbes(t *testing.T) {
 	t.Run("probes are not configured when not set", func(t *testing.T) {
 		app := &nais.Application{}
@@ -90,7 +119,6 @@ func TestProbes(t *testing.T) {
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].LivenessProbe)
 	})
 }
-
 
 func TestLifecycle(t *testing.T) {
 	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
@@ -107,6 +135,26 @@ func TestLifecycle(t *testing.T) {
 
 func getContainerByName(containers []v1.Container, name string) *v1.Container {
 	for _, v := range containers {
+		if v.Name == name {
+			return &v
+		}
+	}
+
+	return nil
+}
+
+func getVolumeByName(volumes []v1.Volume, name string) *v1.Volume {
+	for _, v := range volumes {
+		if v.Name == name {
+			return &v
+		}
+	}
+
+	return nil
+}
+
+func getVolumeMountByName(volumeMounts []v1.VolumeMount, name string) *v1.VolumeMount {
+	for _, v := range volumeMounts {
 		if v.Name == name {
 			return &v
 		}
