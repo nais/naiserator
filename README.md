@@ -52,7 +52,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.vault.paths | Overriding the `paths` array is optional, and will give you fine-grained control over which vault paths that will be mounted on the file system. | | |
 | spec.vault.paths.[].kvPath | Path to Vault key/value store that should be mounted into the file system | /kv/environment/zone/application/namespace | |
 | spec.vault.paths.[].mountPath | File system path that the secrets will be mounted into | /var/run/secrets/nais.io/vault | |
-| spec.configMaps.files | List of configMaps that will have their contents mounted into the container as files | |
+| spec.configMaps.files | List of ConfigMap resources that will have their contents mounted into the container as files. Files appear as `/var/run/configmaps/<name>/<key>`. | |
 | spec.env | List of name and value that will become environment variables in the container | |
 | spec.preStopHookPath | A HTTP GET will be issued to this endpoint at least once before the pod is terminated | /stop | |
 | spec.leaderElection | If true, a HTTP endpoint will be available at `$ELECTOR_PATH` that returns the current leader | false | |
