@@ -2,6 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
@@ -11,6 +12,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+)
+
+// default environment variables
+const (
+	NaisAppName     = "NAIS_APP_NAME"
+	NaisNamespace   = "NAIS_NAMESPACE"
+	NaisAppImage    = "NAIS_APP_IMAGE"
+	NaisClusterName = "NAIS_CLUSTER_NAME"
 )
 
 func Deployment(app *nais.Application, opts ResourceOptions) (*appsv1.Deployment, error) {
@@ -29,7 +38,7 @@ func Deployment(app *nais.Application, opts ResourceOptions) (*appsv1.Deployment
 }
 
 func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.DeploymentSpec, error) {
-	podspec, err := podSpec(app)
+	podSpec, err := podSpec(app)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +64,7 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 		RevisionHistoryLimit:    int32p(10),
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: podObjectMeta(app),
-			Spec:       *podspec,
+			Spec:       *podSpec,
 		},
 	}, nil
 }
@@ -112,7 +121,7 @@ func appContainer(app *nais.Application) corev1.Container {
 		Resources:       resourceLimits(app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
-		Env:             envVars(app.Spec.Env),
+		Env:             envVars(app),
 	}
 
 	if app.Spec.Liveness != (nais.Probe{}) {
@@ -160,11 +169,20 @@ func podSpecSecrets(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.Pod
 	return &spec, nil
 }
 
-// Maps environment variables from ApplicationSpec to the ones we use in PodSpec
-func envVars(vars []nais.EnvVar) []corev1.EnvVar {
-	var newEnvVars []corev1.EnvVar
+func defaultEnvVars(app *nais.Application) []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{Name: NaisAppName, Value: app.ObjectMeta.Name},
+		{Name: NaisNamespace, Value: app.ObjectMeta.Namespace},
+		{Name: NaisAppImage, Value: app.Spec.Image},
+		{Name: NaisClusterName, Value: os.Getenv(NaisClusterName)},
+	}
+}
 
-	for _, envVar := range vars {
+// Maps environment variables from ApplicationSpec to the ones we use in PodSpec
+func envVars(app *nais.Application) []corev1.EnvVar {
+	newEnvVars := defaultEnvVars(app)
+
+	for _, envVar := range app.Spec.Env {
 		newEnvVars = append(newEnvVars, corev1.EnvVar{Name: envVar.Name, Value: envVar.Value})
 	}
 
@@ -218,7 +236,7 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	return &corev1.Lifecycle{
 		PreStop: &corev1.Handler{
 			Exec: &corev1.ExecAction{
-				Command: []string{"sleep","5"},
+				Command: []string{"sleep", "5"},
 			},
 		},
 	}

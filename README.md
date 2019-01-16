@@ -62,6 +62,16 @@ These resources will remain in Kubernetes until the `Application` resource is de
 
 In the [examples directory](./examples) you can see a [typical `nais.yaml` file](./examples/nais.yaml)
 
+## Default environment variables
+
+These environment variables will be injected into your application container
+
+| variable          | example         | source                            |
+| ----------------- | --------------- | --------------------------------- |
+| NAIS_APP_NAME     | myapp           | metadata.name from nais.yaml      |
+| NAIS_NAMESPACE    | default         | metadata.namespace from nais.yaml |
+| NAIS_APP_IMAGE    | navikt/myapp:69 | spec.image from nais.yaml         |
+| NAIS_CLUSTER_NAME | prod-fss        | naiserator runtime context        |
 
 ## Migrating from naisd
 

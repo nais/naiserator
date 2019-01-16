@@ -19,11 +19,12 @@ func TestGetDeployment(t *testing.T) {
 	app.Spec.Vault.Enabled = true
 
 	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
-		vault.EnvVaultAddr:          "a",
-		vault.EnvVaultAuthPath:      "b",
-		vault.EnvInitContainerImage: "c",
-		vault.EnvVaultKVPath:        "/base/kv",
-		vault.EnvVaultEnabled:       "e",
+		vault.EnvVaultAddr:              "a",
+		vault.EnvVaultAuthPath:          "b",
+		vault.EnvInitContainerImage:     "c",
+		vault.EnvVaultKVPath:            "/base/kv",
+		vault.EnvVaultEnabled:           "e",
+		resourcecreator.NaisClusterName: "some_cluster",
 	}, func(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
@@ -58,8 +59,14 @@ func TestGetDeployment(t *testing.T) {
 			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
 			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.Containers, "elector"), "contains sidecar for leader election")
 			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0"), "contains vault initcontainer")
-			assert.Equal(t, app.Spec.Env[0].Name, appContainer.Env[0].Name)
-			assert.Equal(t, app.Spec.Env[0].Value, appContainer.Env[0].Value)
+			assert.Equal(t, app.Spec.Env[0].Value, envValue(appContainer.Env, app.Spec.Env[0].Name))
+		})
+
+		t.Run("default environment variables is applied", func(t *testing.T) {
+			assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppName))
+			assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespace))
+			assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImage))
+			assert.Equal(t, "some_cluster", envValue(appContainer.Env, resourcecreator.NaisClusterName))
 		})
 
 		t.Run("vault KV path is configured correctly", func(t *testing.T) {
@@ -90,7 +97,6 @@ func TestProbes(t *testing.T) {
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].LivenessProbe)
 	})
 }
-
 
 func TestLifecycle(t *testing.T) {
 	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
