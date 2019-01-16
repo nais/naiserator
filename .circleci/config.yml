@@ -25,11 +25,11 @@ jobs:
   release:
     <<: *defaults
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "72:ed:2d:92:44:25:d6:ce:b0:c8:3b:e8:27:32:4c:59"
       - setup_remote_docker
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "23:30:b7:2a:e9:44:5f:d9:d0:fd:e9:ce:7b:1d:0a:96"
       - attach_workspace:
           at: /tmp/workspace
       - run:
@@ -39,29 +39,16 @@ jobs:
           name: Login to Dockerhub
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
-          name: Bump version
-          command: ./bump.sh
-      - run:
-          name: Release new version
-          command: |
-            version=$(cat version)
-            git commit version -m "Release version ${version} [skip ci]"
-            git tag ${version}
-            git push
-            git push --tags
-      - run:
           name: Push Docker container
           command: |
-            docker tag navikt/naiserator:latest navikt/naiserator:$(cat version)
+            version=$(./version.sh)
+            docker tag navikt/naiserator:latest navikt/naiserator:${version}
             docker push navikt/naiserator:latest
-            docker push navikt/naiserator:$(cat version)
-      - add_ssh_keys:
-          fingerprints:
-            - "23:30:b7:2a:e9:44:5f:d9:d0:fd:e9:ce:7b:1d:0a:96"
+            docker push navikt/naiserator:${version}
       - run:
           name: Deploy new version to Kubernetes
           command: |
-            version=$(cat version)
+            version=$(./version.sh)
             naisyaml=$(mktemp -d)
             res="hack/resources"
             static_file="${naisyaml}/templates/zz-generated-naiserator.yaml"
