@@ -80,7 +80,7 @@ type Vault struct {
 }
 
 type ConfigMaps struct {
-	Files []string
+	Files []string `json:"files"`
 }
 
 // ApplicationSpec used to be called nais manifest.
