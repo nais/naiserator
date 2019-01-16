@@ -46,7 +46,6 @@ jobs:
           name: Release new version
           command: |
             version=$(cat version)
-            #git remote set-url origin https://${GITHUB_API_USER}:${GITHUB_API_TOKEN}@github.com/nais/naiserator
             git commit version -m "Release version ${version} [skip ci]"
             git tag ${version}
             git push
