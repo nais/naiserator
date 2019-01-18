@@ -42,8 +42,8 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 		return nil, err
 	}
 
-	strategy := appsv1.DeploymentStrategy(nil)
-	if app.Spec.Strategy != nais.Strategy(nil) {
+	var strategy appsv1.DeploymentStrategy
+	if app.Spec.Strategy != *new(nais.Strategy) {
 		app.Spec.Strategy = nais.Strategy{
 			Type: nais.DeploymentStrategyRollingUpdate,
 		}
