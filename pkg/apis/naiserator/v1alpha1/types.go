@@ -83,6 +83,10 @@ type ConfigMaps struct {
 	Files []string `json:"files"`
 }
 
+type Strategy struct {
+	Type string `json:"type"`
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Liveness        Probe                `json:"liveness"`
@@ -103,6 +107,7 @@ type ApplicationSpec struct {
 	WebProxy        bool                 `json:"webproxy"`
 	ConfigMaps      ConfigMaps           `json:"configMaps"`
 	Env             []EnvVar             `json:"env"`
+	Strategy        Strategy             `json:"strategy"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
