@@ -2,9 +2,6 @@ package resourcecreator
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
@@ -12,6 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"os"
+	"strconv"
 )
 
 // default environment variables
@@ -42,12 +41,14 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 	if err != nil {
 		return nil, err
 	}
-	return &appsv1.DeploymentSpec{
-		Replicas: int32p(opts.NumReplicas),
-		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{"app": app.Name},
-		},
-		Strategy: appsv1.DeploymentStrategy{
+
+	var strategy appsv1.DeploymentStrategy
+	if app.Spec.Strategy.Type == nais.DeploymentStrategyRecreate {
+		strategy = appsv1.DeploymentStrategy{
+			Type: appsv1.RecreateDeploymentStrategyType,
+		}
+	} else if app.Spec.Strategy.Type == nais.DeploymentStrategyRollingUpdate {
+		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RollingUpdateDeploymentStrategyType,
 			RollingUpdate: &appsv1.RollingUpdateDeployment{
 				MaxUnavailable: &intstr.IntOrString{
@@ -59,7 +60,15 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 					IntVal: int32(1),
 				},
 			},
+		}
+	}
+
+	return &appsv1.DeploymentSpec{
+		Replicas: int32p(opts.NumReplicas),
+		Selector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{"app": app.Name},
 		},
+		Strategy: strategy,
 		ProgressDeadlineSeconds: int32p(300),
 		RevisionHistoryLimit:    int32p(10),
 		Template: corev1.PodTemplateSpec{

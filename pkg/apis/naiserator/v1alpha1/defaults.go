@@ -8,6 +8,8 @@ import (
 const (
 	DefaultPortName = "http"
 	DefaultPort     = 80
+	DeploymentStrategyRollingUpdate = "RollingUpdate"
+	DeploymentStrategyRecreate = "Recreate"
 )
 
 // ApplyDefaults sets default values where they are missing from an Application spec.
@@ -24,6 +26,9 @@ func getAppDefaults() *Application {
 				CpuThresholdPercentage: 50,
 			},
 			Port: 8080,
+			Strategy: Strategy{
+				Type: DeploymentStrategyRollingUpdate,
+			},
 			Prometheus: PrometheusConfig{
 				Enabled: false,
 				Port:    "http",
