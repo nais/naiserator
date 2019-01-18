@@ -33,6 +33,11 @@ spec:
                   type: integer
             port:
               type: integer
+            strategy:
+              type: string
+              enum:
+                - "Recreate"
+                - "RollingUpdate"
             liveness:
               required:
               - path
