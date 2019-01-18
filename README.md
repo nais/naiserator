@@ -27,6 +27,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | metadata.labels.team | [mailnick/tag](https://github.com/nais/doc/blob/master/content/getting-started/teamadministration.md) | | x |
 | spec.image | Docker image location, including version | | x |
 | spec.port | The HTTP port exposed by the container | | x |
+| spec.strategy.type | Specifies the strategy used to replace old Pods by new ones | RollingUpdate |
 | spec.liveness.path | Path of the [liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | x |
 | spec.liveness.initialDelay | Number of seconds after the container has started before liveness probes are initiated | 20 |
 | spec.liveness.timeout | Number of seconds after which the probe times out | 1 |
