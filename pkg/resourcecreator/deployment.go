@@ -42,25 +42,13 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 	if err != nil {
 		return nil, err
 	}
-	deploymentSpec := &appsv1.DeploymentSpec{
-		Replicas: int32p(opts.NumReplicas),
-		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{"app": app.Name},
-		},
-		ProgressDeadlineSeconds: int32p(300),
-		RevisionHistoryLimit:    int32p(10),
-		Template: corev1.PodTemplateSpec{
-			ObjectMeta: podObjectMeta(app),
-			Spec:       *podSpec,
-		},
-	}
-
+	strategy := appsv1.DeploymentStrategy(nil)
 	if app.Spec.Strategy != nais.Strategy(nil) && app.Spec.Strategy.Type == "recreate" {
-		deploymentSpec.Strategy = appsv1.DeploymentStrategy{
+		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RecreateDeploymentStrategyType,
 		}
 	} else {
-		deploymentSpec.Strategy = appsv1.DeploymentStrategy{
+		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RollingUpdateDeploymentStrategyType,
 			RollingUpdate: &appsv1.RollingUpdateDeployment{
 				MaxUnavailable: &intstr.IntOrString{
@@ -75,7 +63,19 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 		}
 	}
 
-	return deploymentSpec, nil
+	return &appsv1.DeploymentSpec{
+		Replicas: int32p(opts.NumReplicas),
+		Selector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{"app": app.Name},
+		},
+		Strategy: strategy,
+		ProgressDeadlineSeconds: int32p(300),
+		RevisionHistoryLimit:    int32p(10),
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: podObjectMeta(app),
+			Spec:       *podSpec,
+		},
+	}, nil
 }
 
 func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
