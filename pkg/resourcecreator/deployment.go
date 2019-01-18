@@ -2,9 +2,6 @@ package resourcecreator
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
@@ -12,6 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"os"
+	"strconv"
 )
 
 // default environment variables
@@ -42,12 +41,19 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 	if err != nil {
 		return nil, err
 	}
+
 	strategy := appsv1.DeploymentStrategy(nil)
-	if app.Spec.Strategy != nais.Strategy(nil) && app.Spec.Strategy.Type == "recreate" {
+	if app.Spec.Strategy != nais.Strategy(nil) {
+		app.Spec.Strategy = nais.Strategy{
+			Type: nais.DeploymentStrategyRollingUpdate,
+		}
+	}
+
+	if app.Spec.Strategy.Type == nais.DeploymentStrategyRecreate {
 		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RecreateDeploymentStrategyType,
 		}
-	} else {
+	} else if app.Spec.Strategy.Type == nais.DeploymentStrategyRollingUpdate {
 		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RollingUpdateDeploymentStrategyType,
 			RollingUpdate: &appsv1.RollingUpdateDeployment{
