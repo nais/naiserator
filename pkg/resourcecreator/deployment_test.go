@@ -114,6 +114,30 @@ func TestConfigMapMounts(t *testing.T) {
 	})
 }
 
+func TestWebproxy(t *testing.T) {
+	const httpProxy = "http://proxy.addr:1234"
+	const noProxy = "noproxy,foo,bar"
+
+	t.Run("webproxy configuration is injected into the container env", test.EnvWrapper(map[string]string{
+		resourcecreator.PodHttpProxyEnv: httpProxy,
+		resourcecreator.PodNoProxyEnv:   noProxy,
+	}, func(t *testing.T) {
+		app := fixtures.Application()
+		app.Spec.WebProxy = true
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+
+		assert.Equal(t, httpProxy, envValue(appContainer.Env, "HTTP_PROXY"))
+		assert.Equal(t, httpProxy, envValue(appContainer.Env, "HTTPS_PROXY"))
+		assert.Equal(t, noProxy, envValue(appContainer.Env, "NO_PROXY"))
+		assert.Equal(t, httpProxy, envValue(appContainer.Env, "http_proxy"))
+		assert.Equal(t, httpProxy, envValue(appContainer.Env, "https_proxy"))
+		assert.Equal(t, noProxy, envValue(appContainer.Env, "no_proxy"))
+	}))
+}
+
 func TestProbes(t *testing.T) {
 	t.Run("probes are not configured when not set", func(t *testing.T) {
 		app := &nais.Application{}
