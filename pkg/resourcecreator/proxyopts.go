@@ -14,8 +14,8 @@ const PodNoProxyEnv = "NAIS_POD_NO_PROXY"
 
 func podSpecProxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	var err error
-	for _, container := range podSpec.Containers {
-		container.Env, err = ProxyEnvironmentVariables(container.Env)
+	for i := range podSpec.Containers {
+		podSpec.Containers[i].Env, err = ProxyEnvironmentVariables(podSpec.Containers[i].Env)
 		if err != nil {
 			return nil, fmt.Errorf("while injecting proxy options into container: %s", err)
 		}
