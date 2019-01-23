@@ -6,10 +6,10 @@ import (
 
 // Application spec default values
 const (
-	DefaultPortName = "http"
-	DefaultPort     = 80
+	DefaultPortName                 = "http"
+	DefaultPort                     = 80
 	DeploymentStrategyRollingUpdate = "RollingUpdate"
-	DeploymentStrategyRecreate = "Recreate"
+	DeploymentStrategyRecreate      = "Recreate"
 )
 
 // ApplyDefaults sets default values where they are missing from an Application spec.
@@ -49,6 +49,9 @@ func getAppDefaults() *Application {
 				Enabled: false,
 				Mounts:  []SecretPath{},
 			},
+		},
+		Service: ServiceSpec{
+			Port: DefaultPort,
 		},
 	}
 }

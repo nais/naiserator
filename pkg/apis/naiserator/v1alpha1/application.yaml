@@ -156,3 +156,7 @@ spec:
                     type: string
                   value:
                     type: string
+            service:
+              properties:
+                port:
+                  type: integer
