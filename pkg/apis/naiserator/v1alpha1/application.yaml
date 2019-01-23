@@ -106,6 +106,7 @@ spec:
             logformat:
               type: string
               enum:
+                - ""
                 - "access_log"
                 - "access_log_with_processing_time"
                 - "accesslog_with_referer_useragent"
