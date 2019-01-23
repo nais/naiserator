@@ -98,6 +98,18 @@ spec:
               type: array
             logformat:
               type: string
+              enum:
+                - "access_log"
+                - "access_log_with_processing_time"
+                - "accesslog_with_referer_useragent"
+                - "capnslog"
+                - "logrus"
+                - "gokit"
+                - "redis"
+                - "glog"
+                - "simple"
+                - "influxdb"
+                - "log15"
             logtransform:
               type: string
             webproxy:
