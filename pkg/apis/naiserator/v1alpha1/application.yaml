@@ -14,10 +14,6 @@ spec:
     shortNames:
     - app
   additionalPrinterColumns:
-    - name: Replicas
-      type: integer
-      description: The number of jobs launched by the CronJob
-      JSONPath: .spec.replicas
     - name: Age
       type: date
       JSONPath: .metadata.creationTimestamp
