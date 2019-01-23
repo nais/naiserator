@@ -141,7 +141,8 @@ func TestWebproxy(t *testing.T) {
 func TestProbes(t *testing.T) {
 	t.Run("probes are not configured when not set", func(t *testing.T) {
 		app := &nais.Application{}
-		nais.ApplyDefaults(app)
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
 		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
 
@@ -154,7 +155,8 @@ func TestProbes(t *testing.T) {
 func TestLifecycle(t *testing.T) {
 	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
 		app := &nais.Application{}
-		nais.ApplyDefaults(app)
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
 		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
 
