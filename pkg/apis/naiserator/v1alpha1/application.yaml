@@ -23,7 +23,7 @@ spec:
       JSONPath: .metadata.creationTimestamp
     - name: Team
       type: string
-      JSONPath: .spec.team
+      JSONPath: .metadata.labels.team
   validation:
     openAPIV3Schema:
       properties:
