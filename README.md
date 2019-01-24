@@ -60,7 +60,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.webproxy | Expose web proxy configuration to the application using the `$HTTP_PROXY`, `$HTTPS_PROXY` and `$NO_PROXY` environment variables | false | |
 | spec.logformat | Format of the logs from the container, if not in plain text or JSON | accesslog | |
 | spec.logtransform | The transformation of the logs, if they should be handled differently than plain text or JSON | dns_loglevel | |
-| service.port | Port for the default service | 80 |
+| spec.service.port | Port for the default service | 80 |
 
 In the [examples directory](./examples) you can see a [typical `nais.yaml` file](./examples/nais.yaml)
 

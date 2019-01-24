@@ -21,7 +21,7 @@ func Service(app *nais.Application) *corev1.Service {
 				{
 					Name:     nais.DefaultPortName,
 					Protocol: corev1.ProtocolTCP,
-					Port:     app.Service.Port,
+					Port:     app.Spec.Service.Port,
 					TargetPort: intstr.IntOrString{
 						Type:   intstr.String,
 						StrVal: nais.DefaultPortName,

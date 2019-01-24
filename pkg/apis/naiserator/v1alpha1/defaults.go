@@ -49,9 +49,9 @@ func getAppDefaults() *Application {
 				Enabled: false,
 				Mounts:  []SecretPath{},
 			},
-		},
-		Service: ServiceSpec{
-			Port: DefaultPort,
+			Service: Service{
+				Port: DefaultPort,
+			},
 		},
 	}
 }

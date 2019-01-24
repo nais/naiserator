@@ -120,9 +120,9 @@ func Application() *nais.Application {
 					Name:  VarName2,
 					Value: VarValue2,
 				}},
-		},
-		Service: nais.ServiceSpec{
-			Port: nais.DefaultPort,
+			Service: nais.Service{
+				Port: nais.DefaultPort,
+			},
 		},
 	}
 
