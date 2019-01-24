@@ -12,6 +12,7 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/nais/naiserator/pkg/vault"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 )
 
@@ -141,7 +142,8 @@ func TestWebproxy(t *testing.T) {
 func TestProbes(t *testing.T) {
 	t.Run("probes are not configured when not set", func(t *testing.T) {
 		app := &nais.Application{}
-		nais.ApplyDefaults(app)
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
 		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
 
@@ -154,13 +156,40 @@ func TestProbes(t *testing.T) {
 func TestLifecycle(t *testing.T) {
 	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
 		app := &nais.Application{}
-		nais.ApplyDefaults(app)
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
 		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
 
 		assert.NoError(t, err)
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.HTTPGet)
 		assert.Equal(t, []string{"sleep", "5"}, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.Exec.Command)
+	})
+}
+
+func TestDeploymentStrategy(t *testing.T) {
+	t.Run("default deployment strategy is RollingUpdate", func(t *testing.T) {
+		app := &nais.Application{}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+		assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, appsv1.DeploymentStrategyType(app.Spec.Strategy.Type))
+
+		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
+
+		assert.NoError(t, err)
+		assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, appsv1.DeploymentStrategyType(deploy.Spec.Strategy.Type))
+	})
+
+	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {
+		app := &nais.Application{}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		app.Spec.Strategy.Type = nais.DeploymentStrategyRecreate
+		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
+
+		assert.NoError(t, err)
+		assert.Equal(t, appsv1.RecreateDeploymentStrategyType, appsv1.DeploymentStrategyType(deploy.Spec.Strategy.Type))
 	})
 }
 
