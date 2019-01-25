@@ -19,7 +19,7 @@ type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ApplicationSpec `json:"spec"`
+	Spec    ApplicationSpec `json:"spec"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -87,6 +87,10 @@ type Strategy struct {
 	Type string `json:"type"`
 }
 
+type Service struct {
+	Port int32 `json:"port"`
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Liveness        Probe                `json:"liveness"`
@@ -108,6 +112,7 @@ type ApplicationSpec struct {
 	ConfigMaps      ConfigMaps           `json:"configMaps"`
 	Env             []EnvVar             `json:"env"`
 	Strategy        Strategy             `json:"strategy"`
+	Service         Service              `json:"service"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {

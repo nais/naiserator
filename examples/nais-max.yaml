@@ -59,3 +59,5 @@ spec:
                        #           the log should be parsed. Supported formats: accesslog, accesslog_with_processing_time,
                        #           accesslog_with_referer_useragent, capnslog, logrus, gokit, redis, glog, simple, influxdb, log15.
   logtransform: http_loglevel # Optional. For accesslogs, set log_level based on http status code
+  service:
+    port: 80 # default service-port

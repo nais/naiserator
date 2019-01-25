@@ -58,6 +58,9 @@ func Application() *nais.Application {
 		Spec: nais.ApplicationSpec{
 			Port:  Port,
 			Image: ImageName,
+			Strategy: nais.Strategy{
+				Type: nais.DeploymentStrategyRollingUpdate,
+			},
 			Replicas: nais.Replicas{
 				Min:                    MinReplicas,
 				Max:                    MaxReplicas,
@@ -117,7 +120,11 @@ func Application() *nais.Application {
 					Name:  VarName2,
 					Value: VarValue2,
 				}},
-		}}
+			Service: nais.Service{
+				Port: nais.DefaultPort,
+			},
+		},
+	}
 
 	return app
 }
