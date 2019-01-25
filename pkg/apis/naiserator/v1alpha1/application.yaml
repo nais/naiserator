@@ -23,6 +23,16 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
+        metadata:
+          required:
+            - labels
+          properties:
+            labels:
+              required:
+                - name
+              properties:
+                name:
+                  type: string
         spec:
           required:
           - image
