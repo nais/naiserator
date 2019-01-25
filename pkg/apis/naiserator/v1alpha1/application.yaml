@@ -36,7 +36,6 @@ spec:
         spec:
           required:
           - image
-          - port
           properties:
             image:
               type: string
