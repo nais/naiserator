@@ -38,7 +38,7 @@ func main() {
 	// register custom types
 	err := v1alpha1.AddToScheme(scheme.Scheme)
 	if err != nil {
-		glog.Fatalf("unable to add scheme: %s", scheme.Scheme)
+		glog.Fatal("unable to add scheme")
 	}
 
 	stopCh := StopCh()
