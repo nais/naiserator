@@ -46,12 +46,18 @@ func init() {
 }
 
 func isAlive(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Alive.")
+	_, err := fmt.Fprintf(w, "Alive.")
+	if err != nil {
+		glog.Error("Failing when responding with Alive", err)
+	}
 	HttpRequests.Inc()
 }
 
 func isReady(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Ready.")
+	_, err := fmt.Fprintf(w, "Ready.")
+	if err != nil {
+		glog.Error("Failing when responding with Ready", err)
+	}
 	HttpRequests.Inc()
 }
 
