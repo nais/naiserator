@@ -20,7 +20,8 @@ func TestApplication_Hash(t *testing.T) {
 
 func TestNilFix(t *testing.T) {
 	app := v1alpha1.Application{}
-	v1alpha1.ApplyDefaults(&app)
+	err := v1alpha1.ApplyDefaults(&app)
+	assert.NoError(t, err)
 	assert.Nil(t, app.Spec.Ingresses)
 	assert.Nil(t, app.Spec.Env)
 	app.NilFix()
