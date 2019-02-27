@@ -1,7 +1,6 @@
 NAME       := naiserator
 TAG        := navikt/${NAME}
 LATEST     := ${TAG}:latest
-KUBECONFIG := ${HOME}/.kube/config
 ROOT_DIR   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 
