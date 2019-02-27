@@ -50,10 +50,13 @@ spec:
             port:
               type: integer
             strategy:
-              type: string
-              enum:
-                - "Recreate"
-                - "RollingUpdate"
+              required:
+                - type
+              properties:
+                type: string
+                enum:
+                  - "Recreate"
+                  - "RollingUpdate"
             liveness:
               required:
               - path
