@@ -53,10 +53,11 @@ spec:
               required:
                 - type
               properties:
-                type: string
-                enum:
-                  - "Recreate"
-                  - "RollingUpdate"
+                type:
+                  type: string
+                  enum:
+                    - "Recreate"
+                    - "RollingUpdate"
             liveness:
               required:
               - path
