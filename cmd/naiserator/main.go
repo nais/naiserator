@@ -36,7 +36,10 @@ func main() {
 	glog.Info("Naiserator starting up")
 
 	// register custom types
-	v1alpha1.AddToScheme(scheme.Scheme)
+	err := v1alpha1.AddToScheme(scheme.Scheme)
+	if err != nil {
+		glog.Fatalf("unable to add scheme: %s", scheme.Scheme)
+	}
 
 	stopCh := StopCh()
 
