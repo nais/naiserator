@@ -8,13 +8,12 @@ import (
 	"time"
 
 	"github.com/nais/naiserator"
-
-	"github.com/golang/glog"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
 	"github.com/nais/naiserator/pkg/metrics"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -33,19 +32,22 @@ func init() {
 }
 
 func main() {
-	glog.Info("Naiserator starting up")
+	log.SetFormatter(&log.JSONFormatter{
+		TimestampFormat: time.RFC3339Nano,
+	})
+	log.Info("Naiserator starting up")
 
 	// register custom types
 	err := v1alpha1.AddToScheme(scheme.Scheme)
 	if err != nil {
-		glog.Fatal("unable to add scheme")
+		log.Fatal("unable to add scheme")
 	}
 
 	stopCh := StopCh()
 
 	kubeconfig, err := getK8sConfig()
 	if err != nil {
-		glog.Fatal("unable to initialize kubernetes config")
+		log.Fatal("unable to initialize kubernetes config")
 	}
 
 	// serve metrics
@@ -66,13 +68,13 @@ func main() {
 	n.Run(stopCh)
 	<-stopCh
 
-	glog.Info("Naiserator has shut down")
+	log.Info("Naiserator has shut down")
 }
 
 func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedInformerFactory {
 	config, err := clientset.NewForConfig(kubeconfig)
 	if err != nil {
-		glog.Fatal("unable to create naiserator clientset")
+		log.Fatal("unable to create naiserator clientset")
 	}
 	return informers.NewSharedInformerFactory(config, time.Second*30)
 }
@@ -80,7 +82,7 @@ func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedI
 func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clientset {
 	clientSet, err := clientV1Alpha1.NewForConfig(kubeconfig)
 	if err != nil {
-		glog.Fatalf("unable to create new clientset")
+		log.Fatalf("unable to create new clientset")
 	}
 
 	return clientSet
@@ -97,10 +99,10 @@ func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
 
 func getK8sConfig() (*rest.Config, error) {
 	if kubeconfig == "" {
-		glog.Infof("using in-cluster configuration")
+		log.Infof("using in-cluster configuration")
 		return rest.InClusterConfig()
 	} else {
-		glog.Infof("using configuration from '%s'", kubeconfig)
+		log.Infof("using configuration from '%s'", kubeconfig)
 		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
 }

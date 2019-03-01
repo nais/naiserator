@@ -5,8 +5,8 @@ package updater
 
 import (
     "fmt"
-	"github.com/golang/glog"
 
+    log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
     corev1 "k8s.io/api/core/v1"
     autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -24,7 +24,7 @@ import (
 {{range .}}
 
 func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
-    glog.Infof("creating or updating {{ .Type }} for %s", new.Name)
+    log.Infof("creating or updating {{ .Type }} for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)

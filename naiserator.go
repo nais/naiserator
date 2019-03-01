@@ -3,7 +3,7 @@ package naiserator
 import (
 	"fmt"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
@@ -54,11 +54,11 @@ func (n *Naiserator) reportEvent(event *corev1.Event) (*corev1.Event, error) {
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
 func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Application) {
-	glog.Error(err)
+	log.Error(err)
 	ev := app.CreateEvent(source, err.Error(), "Warning")
 	_, err = n.reportEvent(ev)
 	if err != nil {
-		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
+		log.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
 }
 
@@ -72,7 +72,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 		return fmt.Errorf("while hashing application spec: %s", err)
 	}
 	if app.LastSyncedHash() == hash {
-		glog.Infof("%s: no changes", app.Name)
+		log.Infof("%s: no changes", app.Name)
 		return nil
 	}
 
@@ -102,7 +102,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 	metrics.Deployments.Inc()
 
 	app.SetLastSyncedHash(hash)
-	glog.Infof("%s: setting new hash %s", app.Name, hash)
+	log.Infof("%s: setting new hash %s", app.Name, hash)
 
 	app.NilFix()
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
@@ -112,7 +112,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 
 	_, err = n.reportEvent(app.CreateEvent("synchronize", fmt.Sprintf("successfully synchronized application resources (hash = %s)", hash), "Normal"))
 	if err != nil {
-		glog.Errorf("While creating an event for this error, another error occurred: %s", err)
+		log.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
 
 	return nil
@@ -128,17 +128,17 @@ func (n *Naiserator) update(old, new interface{}) {
 	}
 
 	metrics.ApplicationsProcessed.Inc()
-	glog.Infof("%s: synchronizing application", app.Name)
+	log.Infof("%s: synchronizing application", app.Name)
 
 	if err := n.synchronize(previous, app); err != nil {
 		metrics.ApplicationsFailed.Inc()
-		glog.Errorf("%s: error %s", app.Name, err)
+		log.Errorf("%s: error %s", app.Name, err)
 		n.reportError("synchronize", err, app)
 	} else {
-		glog.Infof("%s: synchronized successfully", app.Name)
+		log.Infof("%s: synchronized successfully", app.Name)
 	}
 
-	glog.Infof("%s: finished synchronizing", app.Name)
+	log.Infof("%s: finished synchronizing", app.Name)
 }
 
 func (n *Naiserator) add(app interface{}) {
@@ -157,9 +157,9 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 }
 
 func (n *Naiserator) Run(stop <-chan struct{}) {
-	glog.Info("Starting application synchronization")
+	log.Info("Starting application synchronization")
 	if !cache.WaitForCacheSync(stop, n.ApplicationInformerSynced) {
-		glog.Error("timed out waiting for cache sync")
+		log.Error("timed out waiting for cache sync")
 		return
 	}
 }
