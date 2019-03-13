@@ -174,3 +174,22 @@ spec:
               properties:
                 port:
                   type: integer
+            accessPolicy:
+              properties:
+                allowAllIngress:
+                  type: boolean
+                allowAllEgress:
+                  type: boolean
+                ingress:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - application
+                    properties:
+                      application:
+                        type: string
+                      namespace:
+                        type: string
+                egress:
+                  type: array

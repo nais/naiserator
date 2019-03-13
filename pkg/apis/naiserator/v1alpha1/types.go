@@ -91,6 +91,18 @@ type Service struct {
 	Port int32 `json:"port"`
 }
 
+type AccessPolicyIngress struct {
+	Application string `json:"application"`
+	Namespace   string `json:"namespace"`
+}
+
+type AccessPolicy struct {
+	AllowAllIngress bool                  `json:"allowAllIngress"`
+	AllowAllEgress  bool                  `json:"allowAllEgress"`
+	Ingress         []AccessPolicyIngress `json:"ingress"`
+	Egress          []string              `json:"egress"`
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Liveness        Probe                `json:"liveness"`
@@ -113,6 +125,7 @@ type ApplicationSpec struct {
 	Env             []EnvVar             `json:"env"`
 	Strategy        Strategy             `json:"strategy"`
 	Service         Service              `json:"service"`
+	AccessPolicy    AccessPolicy         `json:"accessPolicy"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {

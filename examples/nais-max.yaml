@@ -61,3 +61,14 @@ spec:
   logtransform: http_loglevel # Optional. For accesslogs, set log_level based on http status code
   service:
     port: 80 # default service-port
+  accessPolicy:
+    AllowAllIngress: false # optional, opens up for all inbound access
+    AllowAllEgress: false # optional, opens up for all outbound access
+    ingress:
+      - application: app1
+      - application: app2
+        namespace: q1 # optional, defaults to 'metadata.namespace'
+      - application: app3
+        namespace: t1
+    egress:
+      - www.external-application.com
