@@ -14,6 +14,7 @@ import (
 // Create takes an Application resource and returns a slice of Kubernetes resources.
 func Create(app *nais.Application, opts ResourceOptions) ([]runtime.Object, error) {
 	objects := []runtime.Object{
+		NetworkPolicy(app),
 		Service(app),
 		ServiceAccount(app),
 		HorizontalPodAutoscaler(app),
