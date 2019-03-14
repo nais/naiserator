@@ -45,7 +45,7 @@ spec:
     enabled: false # Optional. If set to true, fetch secrets from Secret Service and inject into the pods.
     paths:  # Optional. If specified, will override default values with custom Vault configuration.
       - mountPath: /var/run/secrets/nais.io/vault  # Filesystem path inside the pod where secrets will appear.
-        kvPath: /kv/preprod/fss/namespace/application  # Vault KV path to fetch secrets from.
+        kvPath: /kv/preprod/fss/application/namespace  # Vault KV path to fetch secrets from.
   configMaps:
     files: # Optional. Specify config maps that will have their data mounted into the container as files.
       - example_files_configmap
