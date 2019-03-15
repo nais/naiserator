@@ -181,15 +181,23 @@ spec:
                 allowAllEgress:
                   type: boolean
                 ingress:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - application
-                    properties:
-                      application:
-                        type: string
-                      namespace:
-                        type: string
+                  properties:
+                    allowAll:
+                      type: boolean
+                    rules:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - application
+                        properties:
+                          application:
+                            type: string
+                          namespace:
+                            type: string
                 egress:
-                  type: array
+                  properties:
+                    allowAll:
+                      type: boolean
+                    rules:
+                      type: array

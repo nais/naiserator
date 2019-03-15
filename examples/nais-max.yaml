@@ -62,13 +62,15 @@ spec:
   service:
     port: 80 # default service-port
   accessPolicy:
-    AllowAllIngress: false # optional, opens up for all inbound access
-    AllowAllEgress: false # optional, opens up for all outbound access
     ingress:
-      - application: app1
-      - application: app2
-        namespace: q1 # optional, defaults to 'metadata.namespace'
-      - application: app3
-        namespace: t1
+      allowAll: false # optional, opens up for all inbound access
+      rules:
+        - application: app1
+        - application: app2
+          namespace: q1 # optional, defaults to 'metadata.namespace'
+        - application: app3
+          namespace: t1
     egress:
-      - www.external-application.com
+      allowAll: false # optional, opens up for all outbound access
+      rules:
+        - www.external-application.com

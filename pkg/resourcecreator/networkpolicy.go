@@ -34,7 +34,7 @@ func getDefaultNetworkPolicy(app *nais.Application) *networking.NetworkPolicy {
 }
 
 func addNetworkPolicyIngressRules(networkPolicy *networking.NetworkPolicy, app *nais.Application) {
-	for _, ingress := range app.Spec.AccessPolicy.Ingress {
+	for _, ingress := range app.Spec.AccessPolicy.Ingress.Rules {
 		networkPolicyPeer := networking.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -74,13 +74,13 @@ func allowAll(allowedPolicyType networking.PolicyType, networkPolicy *networking
 
 func NetworkPolicy(app *nais.Application) (networkPolicy *networking.NetworkPolicy) {
 	networkPolicy = getDefaultNetworkPolicy(app)
-	if len(app.Spec.AccessPolicy.Ingress) > 0 {
+	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
 		addNetworkPolicyIngressRules(networkPolicy, app)
 	}
-	if len(app.Spec.AccessPolicy.Egress) > 0 || app.Spec.AccessPolicy.AllowAllEgress {
+	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 || app.Spec.AccessPolicy.Egress.AllowAll {
 		allowAll(networking.PolicyTypeEgress, networkPolicy)
 	}
-	if app.Spec.AccessPolicy.AllowAllIngress {
+	if app.Spec.AccessPolicy.Ingress.AllowAll {
 		allowAll(networking.PolicyTypeIngress, networkPolicy)
 	}
 

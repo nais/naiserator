@@ -91,16 +91,24 @@ type Service struct {
 	Port int32 `json:"port"`
 }
 
-type AccessPolicyIngress struct {
+type AccessPolicyIngressRule struct {
 	Application string `json:"application"`
 	Namespace   string `json:"namespace"`
 }
 
+type AccessPolicyIngress struct {
+	AllowAll bool                      `json:"allowAll"`
+	Rules    []AccessPolicyIngressRule `json:"rules"`
+}
+
+type AccessPolicyEgress struct {
+	AllowAll bool     `json:"allowAll"`
+	Rules    []string `josn:"rules"`
+}
+
 type AccessPolicy struct {
-	AllowAllIngress bool                  `json:"allowAllIngress"`
-	AllowAllEgress  bool                  `json:"allowAllEgress"`
-	Ingress         []AccessPolicyIngress `json:"ingress"`
-	Egress          []string              `json:"egress"`
+	Ingress         AccessPolicyIngress `json:"ingress"`
+	Egress          AccessPolicyEgress  `json:"egress"`
 }
 
 // ApplicationSpec used to be called nais manifest.
