@@ -18,7 +18,7 @@ func TestCreateResourceSpecs(t *testing.T) {
 	app := fixtures.Application()
 
 	opts := resourcecreator.NewResourceOptions()
-	specs, err := resourcecreator.Create(app, opts)
+	specs, err := resourcecreator.Create(app, opts, false)
 
 	assert.Nil(t, err)
 
@@ -43,7 +43,7 @@ func TestNumReplicas(t *testing.T) {
 
 	opts := resourcecreator.NewResourceOptions()
 	opts.NumReplicas = 42
-	specs, err := resourcecreator.Create(app, opts)
+	specs, err := resourcecreator.Create(app, opts, false)
 
 	assert.Nil(t, err)
 
