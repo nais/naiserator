@@ -2,6 +2,7 @@ package vault
 
 import (
 	"fmt"
+	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
@@ -21,16 +22,11 @@ const (
 	EnvVaultEnabled = "NAIS_VAULT_ENABLED"
 )
 
-type SecretPath struct {
-	MountPath string
-	KVPath    string
-}
-
 type config struct {
 	vaultAddr          string
 	initContainerImage string
 	authPath           string
-	secretPaths        []SecretPath
+	secretPaths        []nais.SecretPath
 }
 
 type initializer struct {
@@ -66,7 +62,7 @@ func (c config) validate() (bool, error) {
 			break
 		}
 
-		if len(p.KVPath) == 0 {
+		if len(p.KvPath) == 0 {
 			multierror.Append(result, fmt.Errorf("kv path not found in environment. Missing %s", EnvVaultKVPath))
 			break
 		}
@@ -98,12 +94,12 @@ func DefaultKVPath() string {
 }
 
 // NewInitializer creates a new Initializer. Err if required env variables are not set.
-func NewInitializer(app, ns string, secretPaths []SecretPath) (Initializer, error) {
+func NewInitializer(app *nais.Application) (Initializer, error) {
 	config := config{
 		vaultAddr:          viper.GetString(EnvVaultAddr),
 		initContainerImage: viper.GetString(EnvInitContainerImage),
 		authPath:           viper.GetString(EnvVaultAuthPath),
-		secretPaths:        secretPaths,
+		secretPaths:        app.Spec.Vault.Mounts,
 	}
 
 	if ok, err := config.validate(); !ok {
@@ -111,8 +107,8 @@ func NewInitializer(app, ns string, secretPaths []SecretPath) (Initializer, erro
 	}
 
 	return initializer{
-		app:    app,
-		ns:     ns,
+		app:    app.Name,
+		ns:     app.Namespace,
 		config: config,
 	}, nil
 }
@@ -166,7 +162,7 @@ func (c initializer) vaultRole() string {
 	return c.app
 }
 
-func (c initializer) initContainer(name string, mount k8score.VolumeMount, secretPath SecretPath) k8score.Container {
+func (c initializer) initContainer(name string, mount k8score.VolumeMount, secretPath nais.SecretPath) k8score.Container {
 	return k8score.Container{
 		Name:         name,
 		VolumeMounts: []k8score.VolumeMount{mount},
@@ -182,7 +178,7 @@ func (c initializer) initContainer(name string, mount k8score.VolumeMount, secre
 			},
 			{
 				Name:  "VKS_KV_PATH",
-				Value: secretPath.KVPath,
+				Value: secretPath.KvPath,
 			},
 			{
 				Name:  "VKS_VAULT_ROLE",

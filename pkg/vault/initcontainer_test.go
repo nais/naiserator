@@ -1,6 +1,8 @@
 package vault_test
 
 import (
+	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"os"
 	"testing"
 
@@ -38,19 +40,24 @@ func TestNewInitializer(t *testing.T) {
 	const appName = "app"
 
 	t.Run("Initializer mutates podspec correctly", test.EnvWrapper(envVars, func(t *testing.T) {
+		app := fixtures.Application()
+		app.Name = appName
+		app.Namespace = "namespace"
+		app.Spec.Vault.Enabled = true
 
-		paths := []vault.SecretPath{
+		paths := []v1alpha1.SecretPath{
 			{
 				MountPath: "/first/mount/path",
-				KVPath:    "/first/kv/path",
+				KvPath:    "/first/kv/path",
 			},
 			{
 				MountPath: "/second/mount/path",
-				KVPath:    "/second/kv/path",
+				KvPath:    "/second/kv/path",
 			},
 		}
+		app.Spec.Vault.Mounts = paths
 
-		i, err = vault.NewInitializer(appName, "namespace", paths)
+		i, err = vault.NewInitializer(app)
 		assert.NoError(t, err)
 
 		podSpec := v1.PodSpec{
@@ -85,7 +92,7 @@ func TestNewInitializer(t *testing.T) {
 			assert.Equal(t, envVars[vault.EnvVaultAddr], test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_VAULT_ADDR"))
 			assert.Equal(t, envVars[vault.EnvVaultAuthPath], test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_AUTH_PATH"))
 			assert.Equal(t, appName, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_VAULT_ROLE"))
-			assert.Equal(t, paths[i].KVPath, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_KV_PATH"))
+			assert.Equal(t, paths[i].KvPath, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_KV_PATH"))
 			assert.Equal(t, paths[i].MountPath, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_SECRET_DEST_PATH"))
 			assert.Equal(t, paths[i].MountPath, mutatedPodSpec.InitContainers[i].VolumeMounts[0].MountPath)
 		}
