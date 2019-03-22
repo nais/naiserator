@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	MountPath = "/var/run/secrets/nais.io/vault"
 	// EnvVaultAddr is the environment name for looking up the address of the Vault server
 	EnvVaultAddr = "NAIS_VAULT_ADDR" //
 	// EnvInitContainerImage is the environment name for looking up the init container to use

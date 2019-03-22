@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
-	"github.com/nais/naiserator/pkg/vault"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -185,7 +184,7 @@ func (in *Application) SetLastSyncedHash(hash string) {
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {
 	return SecretPath{
-		MountPath: vault.MountPath,
+		MountPath: DefaultVaultMountPath,
 		KvPath:    fmt.Sprintf("%s/%s/%s", base, in.Name, in.Namespace),
 	}
 }

@@ -10,6 +10,7 @@ const (
 	DefaultPort                     = 80
 	DeploymentStrategyRollingUpdate = "RollingUpdate"
 	DeploymentStrategyRecreate      = "Recreate"
+	DefaultVaultMountPath           = "/var/run/secrets/nais.io/vault"
 )
 
 // ApplyDefaults sets default values where they are missing from an Application spec.
