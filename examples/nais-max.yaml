@@ -43,6 +43,7 @@ spec:
     - "https://tjenester.nav.no/nais-testapp"
   vault:
     enabled: false # Optional. If set to true, fetch secrets from Secret Service and inject into the pods.
+    sidecar: false # Optional. If set to true, will extend tokens time to live
     paths:  # Optional. If specified, will override default values with custom Vault configuration.
       - mountPath: /var/run/secrets/nais.io/vault  # Filesystem path inside the pod where secrets will appear.
         kvPath: /kv/preprod/fss/application/namespace  # Vault KV path to fetch secrets from.

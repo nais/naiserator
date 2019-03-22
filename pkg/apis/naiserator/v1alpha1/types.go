@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
-	"github.com/nais/naiserator/pkg/vault"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -19,7 +18,7 @@ type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec    ApplicationSpec `json:"spec"`
+	Spec ApplicationSpec `json:"spec"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -76,6 +75,7 @@ type SecretPath struct {
 
 type Vault struct {
 	Enabled bool         `json:"enabled"`
+	Sidecar bool         `json:"sidecar"`
 	Mounts  []SecretPath `json:"paths"`
 }
 
@@ -185,7 +185,7 @@ func (in *Application) SetLastSyncedHash(hash string) {
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {
 	return SecretPath{
-		MountPath: vault.MountPath,
+		MountPath: DefaultVaultMountPath,
 		KvPath:    fmt.Sprintf("%s/%s/%s", base, in.Name, in.Namespace),
 	}
 }

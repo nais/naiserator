@@ -142,6 +142,8 @@ spec:
               properties:
                 enabled:
                   type: boolean
+                sidecar:
+                  type: boolean
                 paths:
                   type: array
                   items:
