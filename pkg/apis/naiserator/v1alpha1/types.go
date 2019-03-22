@@ -75,6 +75,7 @@ type SecretPath struct {
 
 type Vault struct {
 	Enabled bool         `json:"enabled"`
+	Sidecar bool         `json:"sidecar"`
 	Mounts  []SecretPath `json:"paths"`
 }
 

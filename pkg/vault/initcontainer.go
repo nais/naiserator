@@ -3,6 +3,7 @@ package vault
 import (
 	"fmt"
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"strconv"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
@@ -27,6 +28,7 @@ type config struct {
 	initContainerImage string
 	authPath           string
 	secretPaths        []nais.SecretPath
+	sidecar            bool
 }
 
 type initializer struct {
@@ -37,7 +39,7 @@ type initializer struct {
 
 // Initializer adds init containers
 type Initializer interface {
-	AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec
+	AddVaultContainers(podSpec *k8score.PodSpec) k8score.PodSpec
 }
 
 func (c config) validate() (bool, error) {
@@ -100,6 +102,7 @@ func NewInitializer(app *nais.Application) (Initializer, error) {
 		initContainerImage: viper.GetString(EnvInitContainerImage),
 		authPath:           viper.GetString(EnvVaultAuthPath),
 		secretPaths:        app.Spec.Vault.Mounts,
+		sidecar:            app.Spec.Vault.Sidecar,
 	}
 
 	if ok, err := config.validate(); !ok {
@@ -114,10 +117,10 @@ func NewInitializer(app *nais.Application) (Initializer, error) {
 }
 
 // Add init container to pod spec.
-func (c initializer) AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec {
+func (c initializer) AddVaultContainers(podSpec *k8score.PodSpec) k8score.PodSpec {
 	for index, paths := range c.config.secretPaths {
-		name := fmt.Sprintf("vault-secrets-%d", index)
-		volume, mount := volumeAndMount(name, paths.MountPath)
+		volumeName := fmt.Sprintf("vault-secrets-%d", index)
+		volume, mount := volumeAndMount(volumeName, paths.MountPath)
 
 		// Add shared volume to pod
 		podSpec.Volumes = append(podSpec.Volumes, volume)
@@ -133,8 +136,12 @@ func (c initializer) AddInitContainer(podSpec *k8score.PodSpec) k8score.PodSpec 
 		podSpec.Containers = mutatedContainers
 
 		// Finally add init container which also gets the shared volume mounted.
-		name = fmt.Sprintf("vks-%d", index)
-		podSpec.InitContainers = append(podSpec.InitContainers, c.initContainer(name, mount, paths))
+		initContainerName := fmt.Sprintf("vks-%d", index)
+		podSpec.InitContainers = append(podSpec.InitContainers, c.vaultContainer(initContainerName, mount, paths))
+		if c.config.sidecar {
+			sidecarName := fmt.Sprintf("vks-%d-sidecar", index)
+			podSpec.Containers = append(podSpec.Containers, c.vaultContainer(sidecarName, mount, paths))
+		}
 	}
 
 	return *podSpec
@@ -162,7 +169,7 @@ func (c initializer) vaultRole() string {
 	return c.app
 }
 
-func (c initializer) initContainer(name string, mount k8score.VolumeMount, secretPath nais.SecretPath) k8score.Container {
+func (c initializer) vaultContainer(name string, mount k8score.VolumeMount, secretPath nais.SecretPath) k8score.Container {
 	return k8score.Container{
 		Name:         name,
 		VolumeMounts: []k8score.VolumeMount{mount},
@@ -188,7 +195,10 @@ func (c initializer) initContainer(name string, mount k8score.VolumeMount, secre
 				Name:  "VKS_SECRET_DEST_PATH",
 				Value: secretPath.MountPath,
 			},
+			{
+				Name: "VKS_IS_SIDECAR",
+				Value: strconv.FormatBool(c.config.sidecar),
+			},
 		},
 	}
-
 }

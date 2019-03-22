@@ -68,7 +68,7 @@ func TestNewInitializer(t *testing.T) {
 			},
 		}
 
-		mutatedPodSpec := i.AddInitContainer(&podSpec)
+		mutatedPodSpec := i.AddVaultContainers(&podSpec)
 
 		// Verify that the correct number of objects have been created
 		assert.Len(t, mutatedPodSpec.Containers, 1)

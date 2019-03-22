@@ -192,7 +192,8 @@ func podSpecSecrets(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.Pod
 	if err != nil {
 		return nil, fmt.Errorf("while initializing secrets: %s", err)
 	}
-	spec := initializer.AddInitContainer(podSpec)
+	spec := initializer.AddVaultContainers(podSpec)
+
 	return &spec, nil
 }
 
