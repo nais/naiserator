@@ -2,40 +2,13 @@ package resourcecreator
 
 import (
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
-	networking "k8s.io/api/networking/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// getDefaultNetworkPolicy creates a NetworkPolicy with default deny all ingress and egress
-func getDefaultNetworkPolicy(app *nais.Application) *networking.NetworkPolicy {
-	return &networking.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      app.Name,
-			Namespace: app.Namespace,
-		},
-		Spec: networking.NetworkPolicySpec{
-			PolicyTypes: []networking.PolicyType{
-				networking.PolicyTypeIngress,
-				networking.PolicyTypeEgress,
-			},
-			PodSelector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": app.Name,
-				},
-			},
-			Ingress: []networking.NetworkPolicyIngressRule{},
-			Egress: []networking.NetworkPolicyEgressRule{},
-		},
-	}
-}
-
-func addNetworkPolicyIngressRules(networkPolicy *networking.NetworkPolicy, app *nais.Application) {
+func addNetworkPolicyIngressRules(app *nais.Application) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, ingress := range app.Spec.AccessPolicy.Ingress.Rules {
-		networkPolicyPeer := networking.NetworkPolicyPeer{
+		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": ingress.Application,
@@ -51,38 +24,103 @@ func addNetworkPolicyIngressRules(networkPolicy *networking.NetworkPolicy, app *
 			}
 		}
 
-		networkPolicy.Spec.Ingress = append(networkPolicy.Spec.Ingress, networking.NetworkPolicyIngressRule{
-			From: []networking.NetworkPolicyPeer{
-				networkPolicyPeer,
-			},
-		})
-	}
-}
-
-// allowAll removes a given PolicyType from an NetworkPolicy, which again
-// opens up for all traffic of that policy type
-func allowAll(allowedPolicyType networking.PolicyType, networkPolicy *networking.NetworkPolicy) {
-	policies := networkPolicy.Spec.PolicyTypes
-	for index, policyType := range policies {
-		if policyType == allowedPolicyType {
-			policies[index] = policies[len(policies)-1]
-			networkPolicy.Spec.PolicyTypes = policies[:len(policies)-1]
-			return
-		}
-	}
-}
-
-func NetworkPolicy(app *nais.Application) (networkPolicy *networking.NetworkPolicy) {
-	networkPolicy = getDefaultNetworkPolicy(app)
-	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		addNetworkPolicyIngressRules(networkPolicy, app)
-	}
-	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 || app.Spec.AccessPolicy.Egress.AllowAll {
-		allowAll(networking.PolicyTypeEgress, networkPolicy)
-	}
-	if app.Spec.AccessPolicy.Ingress.AllowAll {
-		allowAll(networking.PolicyTypeIngress, networkPolicy)
+		networkPolicy = append(networkPolicy, networkPolicyPeer)
 	}
 
 	return
 }
+
+
+func ingressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyIngressRule {
+	if app.Spec.AccessPolicy.Ingress.AllowAll {
+		return &[]networkingv1.NetworkPolicyIngressRule{{}} // æh funker dette?
+	}
+
+	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+		policies := networkingv1.NetworkPolicyIngressRule{
+			From: addNetworkPolicyIngressRules(app),
+		}
+		return &[]networkingv1.NetworkPolicyIngressRule{policies}
+	}
+
+	return &[]networkingv1.NetworkPolicyIngressRule{}
+}
+
+
+func addNetworkPolicyEgressRules(app *nais.Application) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+	for _, egress := range app.Spec.AccessPolicy.Egress.Rules {
+		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
+			PodSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": egress.Application,
+				},
+			},
+		}
+
+		if egress.Namespace != "" {
+			networkPolicyPeer.NamespaceSelector = &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"name": egress.Namespace,
+				},
+			}
+		}
+
+		networkPolicy = append(networkPolicy, networkPolicyPeer)
+	}
+
+	return
+}
+
+func egressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyEgressRule {
+	if app.Spec.AccessPolicy.Ingress.AllowAll {
+		return &[]networkingv1.NetworkPolicyEgressRule{{}} // æh funker dette?
+	}
+
+	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+		policies := networkingv1.NetworkPolicyEgressRule{
+			To: addNetworkPolicyEgressRules(app),
+		}
+		return &[]networkingv1.NetworkPolicyEgressRule{policies}
+	}
+
+	return &[]networkingv1.NetworkPolicyEgressRule{}
+}
+
+func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
+	ingressPolicy := ingressPolicy(app)
+	egressPolicy := egressPolicy(app)
+
+	return &networkingv1.NetworkPolicySpec{
+		PodSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app": app.Name,
+			},
+		},
+		PolicyTypes: []networkingv1.PolicyType{
+			networkingv1.PolicyTypeIngress,
+			networkingv1.PolicyTypeEgress,
+		},
+		Ingress: *ingressPolicy,
+		Egress: *egressPolicy,
+	}
+
+}
+
+
+
+func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
+	spec := networkPolicySpec(app)
+
+	return &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      app.Name,
+			Namespace: app.Namespace,
+		},
+		Spec: *spec,
+	}
+}
+
