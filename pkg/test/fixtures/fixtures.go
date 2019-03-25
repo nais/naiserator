@@ -32,7 +32,6 @@ const (
 	PrometheusPath            = "metrics"
 	PrometheusPort            = "http"
 	PrometheusEnabled         = true
-	IstioEnabled              = true
 	WebProxyEnabled           = true
 	LeaderElectionEnabled     = true
 	SecretsEnabled            = false
@@ -43,6 +42,7 @@ const (
 	VarValue1                 = "varvalue1"
 	VarName2                  = "varname2"
 	VarValue2                 = "varvalue2"
+	AccessPolicyApp           = "allowedAccessApp"
 )
 
 // Application returns a nais.io.Application test fixture.
@@ -95,9 +95,6 @@ func Application() *nais.Application {
 				Port:    PrometheusPort,
 				Enabled: PrometheusEnabled,
 			},
-			Istio: nais.IstioConfig{
-				Enabled: IstioEnabled,
-			},
 			Ingresses: []string{
 				"https://app.nais.adeo.no/",
 				"https://tjenester.nav.no/app",
@@ -122,6 +119,24 @@ func Application() *nais.Application {
 				}},
 			Service: nais.Service{
 				Port: nais.DefaultPort,
+			},
+			AccessPolicy: nais.AccessPolicy {
+				Ingress: nais.AccessPolicyIngress{
+					AllowAll: false,
+					Rules: []nais.AccessPolicyIngressRule {
+						{
+							Application: AccessPolicyApp,
+						},
+					},
+				},
+				Egress:  nais.AccessPolicyEgress{
+					AllowAll: false,
+					Rules: []nais.AccessPolicyEgressRule {
+						{
+							Application: AccessPolicyApp,
+						},
+					},
+				},
 			},
 		},
 	}

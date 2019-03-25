@@ -30,10 +30,6 @@ type ApplicationList struct {
 	Items []Application `json:"items"`
 }
 
-type IstioConfig struct {
-	Enabled bool `json:"enabled"`
-}
-
 type Probe struct {
 	Path             string `json:"path"`
 	InitialDelay     int    `json:"initialDelay"`
@@ -122,7 +118,6 @@ type ApplicationSpec struct {
 	Readiness       Probe                `json:"readiness"`
 	Image           string               `json:"image"`
 	Ingresses       []string             `json:"ingresses"`
-	Istio           IstioConfig          `json:"istio"`
 	LeaderElection  bool                 `json:"leaderElection"`
 	Logformat       string               `json:"logformat"`
 	Logtransform    string               `json:"logtransform"`
