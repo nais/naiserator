@@ -96,6 +96,11 @@ type AccessPolicyIngressRule struct {
 	Namespace   string `json:"namespace"`
 }
 
+type AccessPolicyEgressRule struct {
+	Application string `json:"application"`
+	Namespace   string `json:"namespace"`
+}
+
 type AccessPolicyIngress struct {
 	AllowAll bool                      `json:"allowAll"`
 	Rules    []AccessPolicyIngressRule `json:"rules"`
@@ -103,7 +108,7 @@ type AccessPolicyIngress struct {
 
 type AccessPolicyEgress struct {
 	AllowAll bool     `json:"allowAll"`
-	Rules    []string `josn:"rules"`
+	Rules    []AccessPolicyEgressRule `json:"rules"`
 }
 
 type AccessPolicy struct {

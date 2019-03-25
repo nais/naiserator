@@ -201,3 +201,12 @@ spec:
                       type: boolean
                     rules:
                       type: array
+                      items:
+                        type: object
+                        required:
+                          - application
+                        properties:
+                          application:
+                            type: string
+                          namespace:
+                            type: string
