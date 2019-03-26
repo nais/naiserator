@@ -105,7 +105,7 @@ spec:
                       pattern: '^\d+m?$'
                     memory:
                       type: string
-                      pattern: '^\d+[MG]i$'
+                      pattern: '^\d+[KMG]i$'
                 requests:
                   properties:
                     cpu:
@@ -113,7 +113,7 @@ spec:
                       pattern: '^\d+m?$'
                     memory:
                       type: string
-                      pattern: '^\d+[MG]i$'
+                      pattern: '^\d+[KMG]i$'
             ingresses:
               type: array
             logformat:
