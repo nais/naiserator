@@ -72,11 +72,11 @@ func addNetworkPolicyEgressRules(app *nais.Application) (networkPolicy []network
 }
 
 func egressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyEgressRule {
-	if app.Spec.AccessPolicy.Ingress.AllowAll {
+	if app.Spec.AccessPolicy.Egress.AllowAll {
 		return &[]networkingv1.NetworkPolicyEgressRule{{}} // æh funker dette?
 	}
 
-	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 {
 		policies := networkingv1.NetworkPolicyEgressRule{
 			To: addNetworkPolicyEgressRules(app),
 		}
@@ -111,10 +111,10 @@ func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
 func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 	spec := networkPolicySpec(app)
 
-	return &networkingv1.NetworkPolicy{
+	np := networkingv1.NetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "NetworkPolicy",
-			APIVersion: "v1",
+			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
@@ -122,5 +122,7 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 		},
 		Spec: *spec,
 	}
+
+	return &np
 }
 

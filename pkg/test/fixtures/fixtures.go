@@ -124,17 +124,11 @@ func Application() *nais.Application {
 				Ingress: nais.AccessPolicyIngress{
 					AllowAll: false,
 					Rules: []nais.AccessPolicyIngressRule {
-						{
-							Application: AccessPolicyApp,
-						},
 					},
 				},
 				Egress:  nais.AccessPolicyEgress{
 					AllowAll: false,
 					Rules: []nais.AccessPolicyEgressRule {
-						{
-							Application: AccessPolicyApp,
-						},
 					},
 				},
 			},
