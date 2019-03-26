@@ -92,10 +92,6 @@ spec:
                   type: boolean
                 path:
                   type: string
-            istio:
-              properties:
-                enabled:
-                  type: boolean
             resources:
               properties:
                 limits:
