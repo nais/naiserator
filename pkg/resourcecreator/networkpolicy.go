@@ -64,9 +64,6 @@ func egressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyEgressRule
 }
 
 func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
-	ingressPolicy := ingressPolicy(app)
-	egressPolicy := egressPolicy(app)
-
 	return &networkingv1.NetworkPolicySpec{
 		PodSelector: metav1.LabelSelector{
 			MatchLabels: map[string]string{
@@ -77,8 +74,8 @@ func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
 			networkingv1.PolicyTypeIngress,
 			networkingv1.PolicyTypeEgress,
 		},
-		Ingress: *ingressPolicy,
-		Egress: *egressPolicy,
+		Ingress: *ingressPolicy(app),
+		Egress: *egressPolicy(app),
 	}
 
 }
