@@ -33,14 +33,15 @@ func addNetworkPolicyIngressRules(app *nais.Application) (networkPolicy []networ
 
 func ingressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyIngressRule {
 	if app.Spec.AccessPolicy.Ingress.AllowAll {
-		return &[]networkingv1.NetworkPolicyIngressRule{{}} // æh funker dette?
+		return &[]networkingv1.NetworkPolicyIngressRule{{}}
 	}
 
 	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		policies := networkingv1.NetworkPolicyIngressRule{
-			From: addNetworkPolicyIngressRules(app),
+		return &[]networkingv1.NetworkPolicyIngressRule{
+			{
+				From: addNetworkPolicyIngressRules(app),
+			},
 		}
-		return &[]networkingv1.NetworkPolicyIngressRule{policies}
 	}
 
 	return &[]networkingv1.NetworkPolicyIngressRule{}
@@ -73,14 +74,15 @@ func addNetworkPolicyEgressRules(app *nais.Application) (networkPolicy []network
 
 func egressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyEgressRule {
 	if app.Spec.AccessPolicy.Egress.AllowAll {
-		return &[]networkingv1.NetworkPolicyEgressRule{{}} // æh funker dette?
+		return &[]networkingv1.NetworkPolicyEgressRule{{}}
 	}
 
 	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 {
-		policies := networkingv1.NetworkPolicyEgressRule{
-			To: addNetworkPolicyEgressRules(app),
+		return &[]networkingv1.NetworkPolicyEgressRule{
+			{
+				To: addNetworkPolicyEgressRules(app),
+			},
 		}
-		return &[]networkingv1.NetworkPolicyEgressRule{policies}
 	}
 
 	return &[]networkingv1.NetworkPolicyEgressRule{}
@@ -109,9 +111,7 @@ func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
 
 
 func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
-	spec := networkPolicySpec(app)
-
-	np := networkingv1.NetworkPolicy{
+	return &networkingv1.NetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "NetworkPolicy",
 			APIVersion: "networking.k8s.io/v1",
@@ -120,9 +120,7 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 			Name:      app.Name,
 			Namespace: app.Namespace,
 		},
-		Spec: *spec,
+		Spec: *networkPolicySpec(app),
 	}
-
-	return &np
 }
 
