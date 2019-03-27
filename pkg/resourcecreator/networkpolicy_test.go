@@ -31,7 +31,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("Allowed app in egress rule sets network policy pod selector to allowed app", func(t *testing.T) {
 		app := fixtures.Application()
-		app.Spec.AccessPolicy.Egress.Rules = append(app.Spec.AccessPolicy.Egress.Rules, v1alpha1.AccessPolicyEgressRule{Application: fixtures.AccessPolicyApp})
+		app.Spec.AccessPolicy.Egress.Rules = append(app.Spec.AccessPolicy.Egress.Rules, v1alpha1.AccessPolicyGressRule{Application: fixtures.AccessPolicyApp})
 		networkPolicy := NetworkPolicy(app)
 
 		matchLabels := map[string]string{

@@ -87,24 +87,19 @@ type Service struct {
 	Port int32 `json:"port"`
 }
 
-type AccessPolicyIngressRule struct {
-	Application string `json:"application"`
-	Namespace   string `json:"namespace"`
-}
-
-type AccessPolicyEgressRule struct {
+type AccessPolicyGressRule struct {
 	Application string `json:"application"`
 	Namespace   string `json:"namespace"`
 }
 
 type AccessPolicyIngress struct {
-	AllowAll bool                      `json:"allowAll"`
-	Rules    []AccessPolicyIngressRule `json:"rules"`
+	AllowAll bool                    `json:"allowAll"`
+	Rules    []AccessPolicyGressRule `json:"rules"`
 }
 
 type AccessPolicyEgress struct {
-	AllowAll bool     `json:"allowAll"`
-	Rules    []AccessPolicyEgressRule `json:"rules"`
+	AllowAll bool                    `json:"allowAll"`
+	Rules    []AccessPolicyGressRule `json:"rules"`
 }
 
 type AccessPolicy struct {

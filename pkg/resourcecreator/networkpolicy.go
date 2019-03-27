@@ -6,20 +6,20 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func addNetworkPolicyIngressRules(app *nais.Application) (networkPolicy []networkingv1.NetworkPolicyPeer) {
-	for _, ingress := range app.Spec.AccessPolicy.Ingress.Rules {
+func addNetworkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+	for _, gress := range rules {
 		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": ingress.Application,
+					"app": gress.Application,
 				},
 			},
 		}
 
-		if ingress.Namespace != "" {
+		if gress.Namespace != "" {
 			networkPolicyPeer.NamespaceSelector = &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"name": ingress.Namespace,
+					"name": gress.Namespace,
 				},
 			}
 		}
@@ -39,37 +39,12 @@ func ingressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyIngressRu
 	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
 		return &[]networkingv1.NetworkPolicyIngressRule{
 			{
-				From: addNetworkPolicyIngressRules(app),
+				From: addNetworkPolicyGressRules(app.Spec.AccessPolicy.Ingress.Rules),
 			},
 		}
 	}
 
 	return &[]networkingv1.NetworkPolicyIngressRule{}
-}
-
-
-func addNetworkPolicyEgressRules(app *nais.Application) (networkPolicy []networkingv1.NetworkPolicyPeer) {
-	for _, egress := range app.Spec.AccessPolicy.Egress.Rules {
-		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
-			PodSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": egress.Application,
-				},
-			},
-		}
-
-		if egress.Namespace != "" {
-			networkPolicyPeer.NamespaceSelector = &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"name": egress.Namespace,
-				},
-			}
-		}
-
-		networkPolicy = append(networkPolicy, networkPolicyPeer)
-	}
-
-	return
 }
 
 func egressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyEgressRule {
@@ -80,7 +55,7 @@ func egressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyEgressRule
 	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 {
 		return &[]networkingv1.NetworkPolicyEgressRule{
 			{
-				To: addNetworkPolicyEgressRules(app),
+				To: addNetworkPolicyGressRules(app.Spec.AccessPolicy.Egress.Rules),
 			},
 		}
 	}
