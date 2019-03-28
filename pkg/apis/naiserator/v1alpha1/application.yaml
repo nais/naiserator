@@ -64,6 +64,8 @@ spec:
               properties:
                 path:
                   type: string
+                port:
+                  type: integer
                 initialDelay:
                   type: integer
                 timeout:
@@ -78,6 +80,8 @@ spec:
               properties:
                 path:
                   type: string
+                port:
+                  type: integer
                 initialDelay:
                   type: integer
                 timeout:

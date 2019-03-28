@@ -35,6 +35,7 @@ type IstioConfig struct {
 
 type Probe struct {
 	Path             string `json:"path"`
+	Port             int `json:"port"`
 	InitialDelay     int    `json:"initialDelay"`
 	PeriodSeconds    int    `json:"periodSeconds"`
 	FailureThreshold int    `json:"failureThreshold"`

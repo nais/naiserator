@@ -270,8 +270,8 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	}
 }
 
-func probe(probe nais.Probe) *corev1.Probe {
-	return &corev1.Probe{
+func probe(probe nais.Probe) (k8sprobe *corev1.Probe) {
+	k8sprobe = &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: probe.Path,
@@ -283,6 +283,12 @@ func probe(probe nais.Probe) *corev1.Probe {
 		FailureThreshold:    int32(probe.FailureThreshold),
 		TimeoutSeconds:      int32(probe.Timeout),
 	}
+
+	if probe.Port != 0 {
+		k8sprobe.Handler.HTTPGet.Port = intstr.FromInt(probe.Port)
+	}
+
+	return
 }
 
 func leaderElectionContainer(name, ns string) corev1.Container {

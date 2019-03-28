@@ -16,11 +16,13 @@ const (
 	MaxReplicas               = 2
 	CpuThresholdPercentage    = 69
 	ReadinessPath             = "isready"
+	ReadinessPort             = 8080
 	ReadinessInitialDelay     = 1
 	ReadinessTimeout          = 2
 	ReadinessFailureThreshold = 3
 	ReadinessPeriodSeconds    = 4
 	LivenessPath              = "isalive"
+	LivenessPort              = 8080
 	LivenessInitialDelay      = 5
 	LivenessTimeout           = 6
 	LivenessFailureThreshold  = 7
@@ -68,6 +70,7 @@ func Application() *nais.Application {
 			},
 			Readiness: nais.Probe{
 				Path:             ReadinessPath,
+				Port:             ReadinessPort,
 				InitialDelay:     ReadinessInitialDelay,
 				FailureThreshold: ReadinessFailureThreshold,
 				Timeout:          ReadinessTimeout,
@@ -75,6 +78,7 @@ func Application() *nais.Application {
 			},
 			Liveness: nais.Probe{
 				Path:             LivenessPath,
+				Port:             LivenessPort,
 				InitialDelay:     LivenessInitialDelay,
 				FailureThreshold: LivenessFailureThreshold,
 				Timeout:          LivenessTimeout,

@@ -29,11 +29,13 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.port | The HTTP port exposed by the container | | x |
 | spec.strategy.type | Specifies the strategy used to replace old Pods by new ones | RollingUpdate |
 | spec.liveness.path | Path of the [liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | x |
+| spec.liveness.port | Port for probe | spec.port |
 | spec.liveness.initialDelay | Number of seconds after the container has started before liveness probes are initiated | 20 |
 | spec.liveness.timeout | Number of seconds after which the probe times out | 1 |
 | spec.liveness.periodSeconds | How often (in seconds) to perform the probe | 10 |
 | spec.liveness.failureThreshold | When a Pod starts and the probe fails, Kubernetes will try `failureThreshold` times before giving up. Giving up in case of liveness probe means restarting the Pod. In case of readiness probe the Pod will be marked Unready | 3 |
 | spec.readiness.path | Path of the [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | x |
+| spec.readiness.port | Port for probe | spec.port |
 | spec.readiness.initialDelay | Number of seconds after the container has started before readiness probes are initiated | 20 |
 | spec.readiness.timeout | Number of seconds after which the probe times out | 1 |
 | spec.replicas.min | Minimum number of replicas | 2 |

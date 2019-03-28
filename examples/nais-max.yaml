@@ -12,6 +12,7 @@ spec:
     type: RollingUpdate # Recreate and RollingUpdate allowed. Defaults to RollingUpdate
   liveness: # HTTP endpoint that signals 200 OK when the application is running.
     path: isalive
+    port: http
     initialDelay: 20
     timeout: 1
     periodSeconds: 5     # How often (in seconds) to perform the probe. Default to 10 seconds
@@ -20,6 +21,7 @@ spec:
                          # Defaults to 3
   readiness: # HTTP endpoint that signals 200 OK when it is okay to start routing traffic to the application.
     path: isready
+    port: http
     initialDelay: 20
     timeout: 1
   replicas: # Optional. Set min = max to disable autoscaling.
