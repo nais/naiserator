@@ -151,6 +151,12 @@ func (in *Application) NilFix() {
 	if in.Spec.Env == nil {
 		in.Spec.Env = make([]EnvVar, 0)
 	}
+	if in.Spec.Vault.Mounts == nil {
+		in.Spec.Vault.Mounts = make([]SecretPath, 0)
+	}
+	if in.Spec.ConfigMaps.Files == nil {
+		in.Spec.ConfigMaps.Files = make([]string, 0)
+	}
 }
 
 func (in Application) Hash() (string, error) {
