@@ -3,9 +3,12 @@ package v1alpha1
 import (
 	"time"
 
+	"github.com/nais/naiserator/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const eventMaxLen = 1024
 
 func (in *Application) CreateEvent(reason, message, typeStr string) *corev1.Event {
 	return &corev1.Event{
@@ -19,8 +22,8 @@ func (in *Application) CreateEvent(reason, message, typeStr string) *corev1.Even
 		Reason:              reason,
 		InvolvedObject:      in.GetObjectReference(),
 		Source:              corev1.EventSource{Component: "naiserator"},
-		Message:             message,
-		EventTime: metav1.MicroTime{Time: time.Now()},
-		Type: typeStr,
+		Message:             util.StrTrimMiddle(message, eventMaxLen),
+		EventTime:           metav1.MicroTime{Time: time.Now()},
+		Type:                typeStr,
 	}
 }
