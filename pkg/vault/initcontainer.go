@@ -137,10 +137,10 @@ func (c initializer) AddVaultContainers(podSpec *k8score.PodSpec) k8score.PodSpe
 
 		// Finally add init container which also gets the shared volume mounted.
 		initContainerName := fmt.Sprintf("vks-%d", index)
-		podSpec.InitContainers = append(podSpec.InitContainers, c.vaultContainer(initContainerName, mount, paths))
+		podSpec.InitContainers = append(podSpec.InitContainers, c.vaultContainer(initContainerName, mount, paths, false))
 		if c.config.sidecar {
 			sidecarName := fmt.Sprintf("vks-%d-sidecar", index)
-			podSpec.Containers = append(podSpec.Containers, c.vaultContainer(sidecarName, mount, paths))
+			podSpec.Containers = append(podSpec.Containers, c.vaultContainer(sidecarName, mount, paths, true))
 		}
 	}
 
@@ -169,7 +169,7 @@ func (c initializer) vaultRole() string {
 	return c.app
 }
 
-func (c initializer) vaultContainer(name string, mount k8score.VolumeMount, secretPath nais.SecretPath) k8score.Container {
+func (c initializer) vaultContainer(name string, mount k8score.VolumeMount, secretPath nais.SecretPath, isSidecar bool) k8score.Container {
 	return k8score.Container{
 		Name:         name,
 		VolumeMounts: []k8score.VolumeMount{mount},
@@ -197,7 +197,7 @@ func (c initializer) vaultContainer(name string, mount k8score.VolumeMount, secr
 			},
 			{
 				Name: "VKS_IS_SIDECAR",
-				Value: strconv.FormatBool(c.config.sidecar),
+				Value: strconv.FormatBool(isSidecar),
 			},
 		},
 	}
