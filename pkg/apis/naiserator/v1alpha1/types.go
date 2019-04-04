@@ -33,9 +33,13 @@ type IstioConfig struct {
 	Enabled bool `json:"enabled"`
 }
 
+type SecureLogs struct {
+	Enabled bool `json:"enabled"`
+}
+
 type Probe struct {
 	Path             string `json:"path"`
-	Port             int `json:"port"`
+	Port             int    `json:"port"`
 	InitialDelay     int    `json:"initialDelay"`
 	PeriodSeconds    int    `json:"periodSeconds"`
 	FailureThreshold int    `json:"failureThreshold"`
@@ -102,6 +106,7 @@ type ApplicationSpec struct {
 	LeaderElection  bool                 `json:"leaderElection"`
 	Logformat       string               `json:"logformat"`
 	Logtransform    string               `json:"logtransform"`
+	SecureLogs      SecureLogs           `json:"secureLogs"`
 	Port            int                  `json:"port"`
 	PreStopHookPath string               `json:"preStopHookPath"`
 	Prometheus      PrometheusConfig     `json:"prometheus"`
