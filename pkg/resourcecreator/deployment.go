@@ -86,7 +86,7 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 	podSpec := podSpecBase(app)
 
 	if app.Spec.LeaderElection {
-		podSpecLeaderElection(app, podSpec)
+		podSpec = podSpecLeaderElection(app, podSpec)
 	}
 
 	podSpec = podSpecCertificateAuthority(podSpec)
@@ -179,9 +179,10 @@ func appContainer(app *nais.Application) corev1.Container {
 	return c
 }
 
-func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *corev1.PodSpec {
-	podSpec.Containers = append(podSpec.Containers, leaderElectionContainer(app.Namespace, app.Namespace))
-	mainContainer := &podSpec.Containers[0]
+func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {
+	spec = podSpec.DeepCopy()
+	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Namespace, app.Namespace))
+	mainContainer := spec.Containers[0].DeepCopy()
 
 	electorPathEnv := corev1.EnvVar{
 		Name:  "ELECTOR_PATH",
@@ -189,8 +190,9 @@ func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *core
 	}
 
 	mainContainer.Env = append(mainContainer.Env, electorPathEnv)
+	spec.Containers[0] = *mainContainer
 
-	return podSpec
+	return spec
 }
 
 func podSpecSecureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
@@ -338,6 +340,6 @@ func leaderElectionContainer(name, ns string) corev1.Container {
 			ContainerPort: 4040,
 			Protocol:      corev1.ProtocolTCP,
 		}},
-		Args: []string{"--election=" + name, "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", ns)},
+		Args: []string{fmt.Sprintf("--election=%s", name), "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", ns)},
 	}
 }
