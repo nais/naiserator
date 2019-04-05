@@ -20,7 +20,9 @@ func Volumes() []corev1.Volume {
 			Name: "secure-logs-config",
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
-
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secure-logs",
+					},
 				},
 			},
 		},
