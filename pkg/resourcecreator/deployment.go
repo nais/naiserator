@@ -3,6 +3,7 @@ package resourcecreator
 import (
 	"fmt"
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/securelogs"
 	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -68,7 +69,7 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.Name},
 		},
-		Strategy: strategy,
+		Strategy:                strategy,
 		ProgressDeadlineSeconds: int32p(300),
 		RevisionHistoryLimit:    int32p(10),
 		Template: corev1.PodTemplateSpec{
@@ -108,6 +109,10 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if app.Spec.SecureLogs.Enabled {
+		podSpec = podSpecSecureLogs(podSpec)
 	}
 
 	return podSpec, err
@@ -185,6 +190,24 @@ func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *core
 	mainContainer.Env = append(mainContainer.Env, electorPathEnv)
 
 	return podSpec
+}
+
+func podSpecSecureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
+	spec := podSpec.DeepCopy()
+	spec.Containers = append(spec.Containers, securelogs.FluentdSidecar())
+	spec.Containers = append(spec.Containers, securelogs.ConfigmapReloadSidecar())
+
+	spec.Volumes = append(spec.Volumes, securelogs.Volumes()...)
+
+	volumeMount := corev1.VolumeMount{
+		Name:      "secure-logs",
+		MountPath: "/secure-logs",
+	}
+	mainContainer := spec.Containers[0].DeepCopy()
+	mainContainer.VolumeMounts = append(mainContainer.VolumeMounts, volumeMount)
+	spec.Containers[0] = *mainContainer
+
+	return spec
 }
 
 func podSpecSecrets(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {

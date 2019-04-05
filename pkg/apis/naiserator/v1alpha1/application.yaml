@@ -137,6 +137,11 @@ spec:
                 - "log15"
             logtransform:
               type: string
+            secureLogs:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
             webproxy:
               type: boolean
             secrets:

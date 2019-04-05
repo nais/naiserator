@@ -210,6 +210,23 @@ func TestDeploymentStrategy(t *testing.T) {
 	})
 }
 
+func TestEnableSecureLogs(t *testing.T) {
+	t.Run("", func(t *testing.T) {
+		app := fixtures.Application()
+		app.Spec.LeaderElection = false
+		app.Spec.SecureLogs.Enabled = true
+
+		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
+
+		assert.NoError(t, err)
+		assert.NotNil(t, deployment)
+
+		spec := deployment.Spec.Template.Spec
+		assert.Len(t, spec.Volumes, 3)
+		assert.Len(t, spec.Containers, 3)
+	})
+}
+
 func getContainerByName(containers []v1.Container, name string) *v1.Container {
 	for _, v := range containers {
 		if v.Name == name {
