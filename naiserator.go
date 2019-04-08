@@ -3,7 +3,6 @@ package naiserator
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
@@ -11,6 +10,7 @@ import (
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/updater"
+	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -64,7 +64,7 @@ func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Applica
 	}
 }
 
-func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
+func (n *Naiserator) synchronize(logger *log.Entry, previous, app *v1alpha1.Application) error {
 	if err := v1alpha1.ApplyDefaults(app); err != nil {
 		return fmt.Errorf("while applying default values to application spec: %s", err)
 	}
@@ -74,7 +74,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 		return fmt.Errorf("while hashing application spec: %s", err)
 	}
 	if app.LastSyncedHash() == hash {
-		log.Infof("%s: no changes", app.Name)
+		logger.Infof("%s: no changes", app.Name)
 		return nil
 	}
 
@@ -104,7 +104,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 	metrics.Deployments.Inc()
 
 	app.SetLastSyncedHash(hash)
-	log.Infof("%s: setting new hash %s", app.Name, hash)
+	logger.Infof("%s: setting new hash %s", app.Name, hash)
 
 	app.NilFix()
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
@@ -114,7 +114,7 @@ func (n *Naiserator) synchronize(previous, app *v1alpha1.Application) error {
 
 	_, err = n.reportEvent(app.CreateEvent("synchronize", fmt.Sprintf("successfully synchronized application resources (hash = %s)", hash), "Normal"))
 	if err != nil {
-		log.Errorf("While creating an event for this error, another error occurred: %s", err)
+		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
 
 	return nil
@@ -129,18 +129,24 @@ func (n *Naiserator) update(old, new interface{}) {
 		app = new.(*v1alpha1.Application)
 	}
 
-	metrics.ApplicationsProcessed.Inc()
-	log.Infof("%s: synchronizing application", app.Name)
+	logger := log.WithFields(log.Fields{
+		"namespace":       app.Namespace,
+		"apiversion":      app.APIVersion,
+		"resourceversion": app.ResourceVersion,
+	})
 
-	if err := n.synchronize(previous, app); err != nil {
+	metrics.ApplicationsProcessed.Inc()
+	logger.Infof("%s: synchronizing application", app.Name)
+
+	if err := n.synchronize(logger, previous, app); err != nil {
 		metrics.ApplicationsFailed.Inc()
-		log.Errorf("%s: error %s", app.Name, err)
+		logger.Errorf("%s: error %s", app.Name, err)
 		n.reportError("synchronize", err, app)
 	} else {
-		log.Infof("%s: synchronized successfully", app.Name)
+		logger.Infof("%s: synchronized successfully", app.Name)
 	}
 
-	log.Infof("%s: finished synchronizing", app.Name)
+	logger.Infof("%s: finished synchronizing", app.Name)
 }
 
 func (n *Naiserator) add(app interface{}) {

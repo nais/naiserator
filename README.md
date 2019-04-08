@@ -29,11 +29,13 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.port | The HTTP port exposed by the container | | x |
 | spec.strategy.type | Specifies the strategy used to replace old Pods by new ones | RollingUpdate |
 | spec.liveness.path | Path of the [liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | x |
+| spec.liveness.port | Port for probe | spec.port |
 | spec.liveness.initialDelay | Number of seconds after the container has started before liveness probes are initiated | 20 |
 | spec.liveness.timeout | Number of seconds after which the probe times out | 1 |
 | spec.liveness.periodSeconds | How often (in seconds) to perform the probe | 10 |
 | spec.liveness.failureThreshold | When a Pod starts and the probe fails, Kubernetes will try `failureThreshold` times before giving up. Giving up in case of liveness probe means restarting the Pod. In case of readiness probe the Pod will be marked Unready | 3 |
 | spec.readiness.path | Path of the [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | x |
+| spec.readiness.port | Port for probe | spec.port |
 | spec.readiness.initialDelay | Number of seconds after the container has started before readiness probes are initiated | 20 |
 | spec.readiness.timeout | Number of seconds after which the probe times out | 1 |
 | spec.replicas.min | Minimum number of replicas | 2 |
@@ -50,6 +52,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.ingresses | List of ingress URLs that will route HTTP traffic to the application | |
 | spec.secrets | _DEPRECATED_. Synonym to `spec.vault.enabled`. Please use the new syntax. | false | |
 | spec.vault.enabled | If set to true, fetch secrets from [Vault](https://github.com/nais/doc/tree/master/content/secrets) and inject into the pods | false | |
+| spec.vault.sidecar | If set to true, will extend tokens time to live | false | |
 | spec.vault.paths | Overriding the `paths` array is optional, and will give you fine-grained control over which vault paths that will be mounted on the file system. | | |
 | spec.vault.paths.[].kvPath | Path to Vault key/value store that should be mounted into the file system | /kv/environment/zone/application/namespace | |
 | spec.vault.paths.[].mountPath | File system path that the secrets will be mounted into | /var/run/secrets/nais.io/vault | |
@@ -60,6 +63,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.webproxy | Expose web proxy configuration to the application using the `$HTTP_PROXY`, `$HTTPS_PROXY` and `$NO_PROXY` environment variables | false | |
 | spec.logformat | Format of the logs from the container, if not in plain text or JSON | accesslog | |
 | spec.logtransform | The transformation of the logs, if they should be handled differently than plain text or JSON | dns_loglevel | |
+| spec.secureLogs.enabled | If true, mount a volume for secure logs in the pod | false | |
 | spec.service.port | Port for the default service | 80 |
 
 In the [examples directory](./examples) you can see a [typical `nais.yaml` file](./examples/nais.yaml)

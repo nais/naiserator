@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
-	"github.com/nais/naiserator/pkg/vault"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,8 +29,13 @@ type ApplicationList struct {
 	Items []Application `json:"items"`
 }
 
+type SecureLogs struct {
+	Enabled bool `json:"enabled"`
+}
+
 type Probe struct {
 	Path             string `json:"path"`
+	Port             int    `json:"port"`
 	InitialDelay     int    `json:"initialDelay"`
 	PeriodSeconds    int    `json:"periodSeconds"`
 	FailureThreshold int    `json:"failureThreshold"`
@@ -72,6 +76,7 @@ type SecretPath struct {
 
 type Vault struct {
 	Enabled bool         `json:"enabled"`
+	Sidecar bool         `json:"sidecar"`
 	Mounts  []SecretPath `json:"paths"`
 }
 
@@ -116,6 +121,7 @@ type ApplicationSpec struct {
 	LeaderElection  bool                 `json:"leaderElection"`
 	Logformat       string               `json:"logformat"`
 	Logtransform    string               `json:"logtransform"`
+	SecureLogs      SecureLogs           `json:"secureLogs"`
 	Port            int                  `json:"port"`
 	PreStopHookPath string               `json:"preStopHookPath"`
 	Prometheus      PrometheusConfig     `json:"prometheus"`
@@ -166,6 +172,12 @@ func (in *Application) NilFix() {
 	if in.Spec.Env == nil {
 		in.Spec.Env = make([]EnvVar, 0)
 	}
+	if in.Spec.Vault.Mounts == nil {
+		in.Spec.Vault.Mounts = make([]SecretPath, 0)
+	}
+	if in.Spec.ConfigMaps.Files == nil {
+		in.Spec.ConfigMaps.Files = make([]string, 0)
+	}
 }
 
 func (in Application) Hash() (string, error) {
@@ -201,7 +213,7 @@ func (in *Application) SetLastSyncedHash(hash string) {
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {
 	return SecretPath{
-		MountPath: vault.MountPath,
+		MountPath: DefaultVaultMountPath,
 		KvPath:    fmt.Sprintf("%s/%s/%s", base, in.Name, in.Namespace),
 	}
 }

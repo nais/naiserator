@@ -37,7 +37,7 @@ require (
 	github.com/spf13/viper v1.1.0
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
-	golang.org/x/tools v0.0.0-20190320215829-36c10c0a621f // indirect
+	golang.org/x/tools v0.0.0-20190404132500-923d25813098 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/api v0.0.0-20180712090710-2d6f90ab1293 // kubernetes-1.11.2
 	k8s.io/apimachinery v0.0.0-20180621070125-103fd098999d // kubernetes-1.11.2

@@ -64,6 +64,8 @@ spec:
               properties:
                 path:
                   type: string
+                port:
+                  type: integer
                 initialDelay:
                   type: integer
                 timeout:
@@ -78,6 +80,8 @@ spec:
               properties:
                 path:
                   type: string
+                port:
+                  type: integer
                 initialDelay:
                   type: integer
                 timeout:
@@ -101,7 +105,7 @@ spec:
                       pattern: '^\d+m?$'
                     memory:
                       type: string
-                      pattern: '^\d+[MG]i$'
+                      pattern: '^\d+[KMG]i$'
                 requests:
                   properties:
                     cpu:
@@ -109,7 +113,7 @@ spec:
                       pattern: '^\d+m?$'
                     memory:
                       type: string
-                      pattern: '^\d+[MG]i$'
+                      pattern: '^\d+[KMG]i$'
             ingresses:
               type: array
             logformat:
@@ -129,6 +133,11 @@ spec:
                 - "log15"
             logtransform:
               type: string
+            secureLogs:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
             webproxy:
               type: boolean
             secrets:
@@ -137,6 +146,8 @@ spec:
               type: object
               properties:
                 enabled:
+                  type: boolean
+                sidecar:
                   type: boolean
                 paths:
                   type: array

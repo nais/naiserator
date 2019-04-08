@@ -3,6 +3,7 @@ package resourcecreator
 import (
 	"fmt"
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/securelogs"
 	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -68,7 +69,7 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.Name},
 		},
-		Strategy: strategy,
+		Strategy:                strategy,
 		ProgressDeadlineSeconds: int32p(300),
 		RevisionHistoryLimit:    int32p(10),
 		Template: corev1.PodTemplateSpec{
@@ -108,6 +109,10 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if app.Spec.SecureLogs.Enabled {
+		podSpec = podSpecSecureLogs(podSpec)
 	}
 
 	return podSpec, err
@@ -187,23 +192,31 @@ func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *core
 	return podSpec
 }
 
-func toSecretPaths(path []nais.SecretPath) []vault.SecretPath {
-	vp := make([]vault.SecretPath, len(path))
-	for i, p := range path {
-		vp[i] = vault.SecretPath{
-			KVPath:    p.KvPath,
-			MountPath: p.MountPath,
-		}
+func podSpecSecureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
+	spec := podSpec.DeepCopy()
+	spec.Containers = append(spec.Containers, securelogs.FluentdSidecar())
+	spec.Containers = append(spec.Containers, securelogs.ConfigmapReloadSidecar())
+
+	spec.Volumes = append(spec.Volumes, securelogs.Volumes()...)
+
+	volumeMount := corev1.VolumeMount{
+		Name:      "secure-logs",
+		MountPath: "/secure-logs",
 	}
-	return vp
+	mainContainer := spec.Containers[0].DeepCopy()
+	mainContainer.VolumeMounts = append(mainContainer.VolumeMounts, volumeMount)
+	spec.Containers[0] = *mainContainer
+
+	return spec
 }
 
 func podSpecSecrets(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
-	initializer, err := vault.NewInitializer(app.Name, app.Namespace, toSecretPaths(app.Spec.Vault.Mounts))
+	initializer, err := vault.NewInitializer(app)
 	if err != nil {
 		return nil, fmt.Errorf("while initializing secrets: %s", err)
 	}
-	spec := initializer.AddInitContainer(podSpec)
+	spec := initializer.AddVaultContainers(podSpec)
+
 	return &spec, nil
 }
 
@@ -232,7 +245,7 @@ func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 
 	objectMeta.Annotations = map[string]string{
 		"prometheus.io/scrape": strconv.FormatBool(app.Spec.Prometheus.Enabled),
-		"prometheus.io/port":   nais.DefaultPortName,
+		"prometheus.io/port":   strconv.Itoa(nais.DefaultPort),
 		"prometheus.io/path":   app.Spec.Prometheus.Path,
 	}
 	if len(app.Spec.Logformat) > 0 {
@@ -280,8 +293,8 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	}
 }
 
-func probe(probe nais.Probe) *corev1.Probe {
-	return &corev1.Probe{
+func probe(probe nais.Probe) (k8sprobe *corev1.Probe) {
+	k8sprobe = &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: probe.Path,
@@ -293,6 +306,12 @@ func probe(probe nais.Probe) *corev1.Probe {
 		FailureThreshold:    int32(probe.FailureThreshold),
 		TimeoutSeconds:      int32(probe.Timeout),
 	}
+
+	if probe.Port != 0 {
+		k8sprobe.Handler.HTTPGet.Port = intstr.FromInt(probe.Port)
+	}
+
+	return
 }
 
 func leaderElectionContainer(name, ns string) corev1.Container {
