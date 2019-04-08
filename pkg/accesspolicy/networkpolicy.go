@@ -1,4 +1,4 @@
-package resourcecreator
+package accesspolicy
 
 import (
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
