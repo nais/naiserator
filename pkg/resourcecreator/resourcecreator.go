@@ -22,6 +22,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions, accessPolicy
 
 	if accessPolicy {
 		objects = append(objects, accesspolicy.NetworkPolicy(app))
+//		objects = append(objects, accesspolicy.Istio(app)...)
 	}
 
 	deployment, err := Deployment(app, resourceOptions)

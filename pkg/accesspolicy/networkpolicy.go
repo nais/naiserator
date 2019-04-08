@@ -91,6 +91,9 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
 			Namespace: app.Namespace,
+			Labels: map[string]string{
+				"team": app.Labels["team"],
+			},
 		},
 		Spec: *networkPolicySpec(app),
 	}
