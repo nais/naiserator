@@ -8,8 +8,8 @@ import (
 // Application spec default values
 const (
 	DefaultPortName                 = "http"
-	DefaultPort                     = 80
-	DefaultServicePort              = 8080
+	DefaultServicePort              = 80
+	DefaultAppPort                  = 8080
 	DeploymentStrategyRollingUpdate = "RollingUpdate"
 	DeploymentStrategyRecreate      = "Recreate"
 	DefaultVaultMountPath           = "/var/run/secrets/nais.io/vault"
@@ -28,13 +28,13 @@ func getAppDefaults() *Application {
 				Max:                    4,
 				CpuThresholdPercentage: 50,
 			},
-			Port: DefaultServicePort,
+			Port: DefaultAppPort,
 			Strategy: Strategy{
 				Type: DeploymentStrategyRollingUpdate,
 			},
 			Prometheus: PrometheusConfig{
 				Enabled: false,
-				Port:    strconv.Itoa(DefaultServicePort),
+				Port:    strconv.Itoa(DefaultAppPort),
 				Path:    "/metrics",
 			},
 			Ingresses: []string{},
@@ -53,7 +53,7 @@ func getAppDefaults() *Application {
 				Mounts:  []SecretPath{},
 			},
 			Service: Service{
-				Port: DefaultPort,
+				Port: DefaultServicePort,
 			},
 		},
 	}
