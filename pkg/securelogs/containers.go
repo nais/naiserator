@@ -79,7 +79,7 @@ func ConfigmapReloadSidecar() corev1.Container {
 			{
 				Name:      "secure-logs-config",
 				MountPath: "/config",
-				readOnly: true,
+				readOnly:  true,
 			},
 		},
 	}
