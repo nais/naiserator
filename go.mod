@@ -55,4 +55,4 @@ require (
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7 // indirect
 )
 
-replace github.com/golang/sync v0.0.0-20190227155943-e225da77a7e6 => golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6
+replace github.com/golang/sync => golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
