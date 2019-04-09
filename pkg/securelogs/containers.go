@@ -78,7 +78,8 @@ func ConfigmapReloadSidecar() corev1.Container {
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "secure-logs-config",
-				MountPath: "/fluentd/etc",
+				MountPath: "/config",
+				readOnly: true
 			},
 		},
 	}
