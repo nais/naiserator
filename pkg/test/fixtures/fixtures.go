@@ -32,7 +32,7 @@ const (
 	LimitCpu                  = "500m"
 	LimitMemory               = "512Mi"
 	PrometheusPath            = "metrics"
-	PrometheusPort            = "80"
+	PrometheusPort            = "8080"
 	PrometheusEnabled         = true
 	IstioEnabled              = true
 	WebProxyEnabled           = true
