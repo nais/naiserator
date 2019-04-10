@@ -39,26 +39,14 @@ func Istio(app *nais.Application) []runtime.Object {
 				Kind:       "ServiceRole",
 				APIVersion: IstioAPIVersion,
 			},
-			ObjectMeta: k8s_meta.ObjectMeta{
-				Name:      app.Name,
-				Namespace: app.Namespace,
-				Labels: map[string]string{
-					"team": app.Labels["team"],
-				},
-			},
+			ObjectMeta: app.CreateObjectMeta(),
 			Spec: structs.Map(getDefaultServiceRole()),
 		}, &istio_crd.ServiceRoleBinding{
 			TypeMeta: k8s_meta.TypeMeta{
 				Kind:       "ServiceRoleBinding",
 				APIVersion: IstioAPIVersion,
 			},
-			ObjectMeta: k8s_meta.ObjectMeta{
-				Name:      app.Name,
-				Namespace: app.Namespace,
-				Labels: map[string]string{
-					"team": app.Labels["team"],
-				},
-			},
+			ObjectMeta: app.CreateObjectMeta(),
 			Spec: structs.Map(getDefaultServiceRoleBinding(app.Name)),
 		},
 	}

@@ -88,13 +88,7 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 			Kind:       "NetworkPolicy",
 			APIVersion: "networking.k8s.io/v1",
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      app.Name,
-			Namespace: app.Namespace,
-			Labels: map[string]string{
-				"team": app.Labels["team"],
-			},
-		},
+		ObjectMeta: app.CreateObjectMeta(),
 		Spec: *networkPolicySpec(app),
 	}
 }
