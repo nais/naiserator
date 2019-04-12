@@ -37,7 +37,7 @@ type serviceRoles struct {
 }
 
 // newServiceRoles returns a ServiceRoles
-func newServiceRoles(c *IstioV1alpha1Client, namespace string) *serviceRoles {
+func newServiceRoles(c *RbacV1alpha1Client, namespace string) *serviceRoles {
 	return &serviceRoles{
 		client: c.RESTClient(),
 		ns:     namespace,

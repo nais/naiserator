@@ -14,13 +14,13 @@ import (
 
 // FakeServiceRoles implements ServiceRoleInterface
 type FakeServiceRoles struct {
-	Fake *FakeIstioV1alpha1
+	Fake *FakeRbacV1alpha1
 	ns   string
 }
 
-var servicerolesResource = schema.GroupVersionResource{Group: "istio", Version: "v1alpha1", Resource: "serviceroles"}
+var servicerolesResource = schema.GroupVersionResource{Group: "rbac.istio.io", Version: "v1alpha1", Resource: "serviceroles"}
 
-var servicerolesKind = schema.GroupVersionKind{Group: "istio", Version: "v1alpha1", Kind: "ServiceRole"}
+var servicerolesKind = schema.GroupVersionKind{Group: "rbac.istio.io", Version: "v1alpha1", Kind: "ServiceRole"}
 
 // Get takes name of the serviceRole, and returns the corresponding serviceRole object, and an error if there is any.
 func (c *FakeServiceRoles) Get(name string, options v1.GetOptions) (result *v1alpha1.ServiceRole, err error) {

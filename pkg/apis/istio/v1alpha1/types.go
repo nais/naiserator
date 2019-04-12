@@ -14,4 +14,33 @@ type ServiceRole struct {
 }
 
 type ServiceRoleSpec struct {
+	Rules []*AccessRule
+}
+
+type AccessRule struct {
+	Services []string
+	Methods  []string
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type ServiceRoleBinding struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec ServiceRoleBindingSpec `json:"spec"`
+}
+
+type ServiceRoleBindingSpec struct {
+	Subjects []*Subject
+	RoleRef *RoleRef
+}
+
+type Subject struct {
+	User string
+}
+
+type RoleRef struct {
+	Kind string
+	Name string
 }

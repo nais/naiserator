@@ -5,8 +5,8 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
-	naiserator_v1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	istio_v1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
+	v1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -37,13 +37,15 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=istio, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("serviceroles"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Istio().V1alpha1().ServiceRoles().Informer()}, nil
-
-		// Group=naiserator.nais.io, Version=v1alpha1
-	case naiserator_v1alpha1.SchemeGroupVersion.WithResource("applications"):
+	// Group=naiserator.nais.io, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Naiserator().V1alpha1().Applications().Informer()}, nil
+
+		// Group=rbac.istio.io, Version=v1alpha1
+	case istio_v1alpha1.SchemeGroupVersion.WithResource("serviceroles"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoles().Informer()}, nil
+	case istio_v1alpha1.SchemeGroupVersion.WithResource("servicerolebindings"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoleBindings().Informer()}, nil
 
 	}
 

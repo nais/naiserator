@@ -8,17 +8,21 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeIstioV1alpha1 struct {
+type FakeRbacV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeIstioV1alpha1) ServiceRoles(namespace string) v1alpha1.ServiceRoleInterface {
+func (c *FakeRbacV1alpha1) ServiceRoles(namespace string) v1alpha1.ServiceRoleInterface {
 	return &FakeServiceRoles{c, namespace}
+}
+
+func (c *FakeRbacV1alpha1) ServiceRoleBindings(namespace string) v1alpha1.ServiceRoleBindingInterface {
+	return &FakeServiceRoleBindings{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeIstioV1alpha1) RESTClient() rest.Interface {
+func (c *FakeRbacV1alpha1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

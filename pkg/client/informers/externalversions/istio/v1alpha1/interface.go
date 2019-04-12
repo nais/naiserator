@@ -10,6 +10,8 @@ import (
 type Interface interface {
 	// ServiceRoles returns a ServiceRoleInformer.
 	ServiceRoles() ServiceRoleInformer
+	// ServiceRoleBindings returns a ServiceRoleBindingInformer.
+	ServiceRoleBindings() ServiceRoleBindingInformer
 }
 
 type version struct {
@@ -26,4 +28,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ServiceRoles returns a ServiceRoleInformer.
 func (v *version) ServiceRoles() ServiceRoleInformer {
 	return &serviceRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ServiceRoleBindings returns a ServiceRoleBindingInformer.
+func (v *version) ServiceRoleBindings() ServiceRoleBindingInformer {
+	return &serviceRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

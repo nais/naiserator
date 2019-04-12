@@ -1,19 +1,17 @@
 package accesspolicy
 
 import (
-	"github.com/fatih/structs"
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
-	istio "istio.io/api/rbac/v1alpha1"
-	istio_crd "istio.io/istio/pilot/pkg/config/kube/crd"
+	istio_crd "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const IstioAPIVersion = "v1alpha1"
 
-func getDefaultServiceRole() *istio.ServiceRole {
-	return &istio.ServiceRole{
-		Rules: []*istio.AccessRule{
+func getDefaultServiceRole() istio_crd.ServiceRoleSpec {
+	return istio_crd.ServiceRoleSpec{
+		Rules: []*istio_crd.AccessRule{
 			{
 				Services: []string{""},
 				Methods:  []string{"*"},
@@ -22,10 +20,10 @@ func getDefaultServiceRole() *istio.ServiceRole {
 	}
 }
 
-func getDefaultServiceRoleBinding(appName string) *istio.ServiceRoleBinding {
-	return &istio.ServiceRoleBinding{
-		Subjects: []*istio.Subject{{User: ""}},
-		RoleRef: &istio.RoleRef{
+func getDefaultServiceRoleBinding(appName string) istio_crd.ServiceRoleBindingSpec {
+	return istio_crd.ServiceRoleBindingSpec{
+		Subjects: []*istio_crd.Subject{{User: ""}},
+		RoleRef: &istio_crd.RoleRef{
 			Kind: "RoleRef",
 			Name: appName,
 		},
@@ -40,14 +38,14 @@ func Istio(app *nais.Application) []runtime.Object {
 				APIVersion: IstioAPIVersion,
 			},
 			ObjectMeta: app.CreateObjectMeta(),
-			Spec: structs.Map(getDefaultServiceRole()),
+			Spec: getDefaultServiceRole(),
 		}, &istio_crd.ServiceRoleBinding{
 			TypeMeta: k8s_meta.TypeMeta{
 				Kind:       "ServiceRoleBinding",
 				APIVersion: IstioAPIVersion,
 			},
 			ObjectMeta: app.CreateObjectMeta(),
-			Spec: structs.Map(getDefaultServiceRoleBinding(app.Name)),
+			Spec: getDefaultServiceRoleBinding(app.Name),
 		},
 	}
 }
