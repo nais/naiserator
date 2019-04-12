@@ -23,7 +23,7 @@ func TestCreateResourceSpecs(t *testing.T) {
 	assert.Nil(t, err)
 
 	svc := test.NamedResource(specs, "Service").(*v1.Service)
-	assert.Equal(t, nais.DefaultPort, int(svc.Spec.Ports[0].Port))
+	assert.Equal(t, nais.DefaultServicePort, int(svc.Spec.Ports[0].Port))
 
 	deploy := test.NamedResource(specs, "Deployment").(*appsv1.Deployment)
 	assert.Equal(t, fixtures.ImageName, deploy.Spec.Template.Spec.Containers[0].Image)

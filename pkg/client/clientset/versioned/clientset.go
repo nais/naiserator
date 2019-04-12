@@ -3,6 +3,7 @@
 package versioned
 
 import (
+	istiov1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/naiserator/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -11,6 +12,9 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	IstioV1alpha1() istiov1alpha1.IstioV1alpha1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Istio() istiov1alpha1.IstioV1alpha1Interface
 	NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Naiserator() naiseratorv1alpha1.NaiseratorV1alpha1Interface
@@ -20,7 +24,19 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
+	istioV1alpha1      *istiov1alpha1.IstioV1alpha1Client
 	naiseratorV1alpha1 *naiseratorv1alpha1.NaiseratorV1alpha1Client
+}
+
+// IstioV1alpha1 retrieves the IstioV1alpha1Client
+func (c *Clientset) IstioV1alpha1() istiov1alpha1.IstioV1alpha1Interface {
+	return c.istioV1alpha1
+}
+
+// Deprecated: Istio retrieves the default version of IstioClient.
+// Please explicitly pick a version.
+func (c *Clientset) Istio() istiov1alpha1.IstioV1alpha1Interface {
+	return c.istioV1alpha1
 }
 
 // NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client
@@ -50,6 +66,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.istioV1alpha1, err = istiov1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.naiseratorV1alpha1, err = naiseratorv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -66,6 +86,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.istioV1alpha1 = istiov1alpha1.NewForConfigOrDie(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
@@ -75,6 +96,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.istioV1alpha1 = istiov1alpha1.New(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)

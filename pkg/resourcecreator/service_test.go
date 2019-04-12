@@ -11,7 +11,7 @@ import (
 func TestGetService(t *testing.T) {
 	t.Run("Check if default port is used", func(t *testing.T) {
 		svc := resourcecreator.Service(fixtures.Application())
-		assert.Equal(t, nais.DefaultPort, int(svc.Spec.Ports[0].Port))
+		assert.Equal(t, nais.DefaultServicePort, int(svc.Spec.Ports[0].Port))
 	})
 
 	t.Run("check if correct port is used when set", func(t *testing.T) {

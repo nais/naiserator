@@ -31,7 +31,7 @@ func ingressRule(app *nais.Application, u *url.URL) extensionsv1beta1.IngressRul
 						Path: u.Path,
 						Backend: extensionsv1beta1.IngressBackend{
 							ServiceName: app.Name,
-							ServicePort: intstr.IntOrString{IntVal: nais.DefaultPort},
+							ServicePort: intstr.IntOrString{IntVal: nais.DefaultServicePort},
 						},
 					},
 				},

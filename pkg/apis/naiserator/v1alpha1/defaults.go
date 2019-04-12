@@ -2,12 +2,14 @@ package v1alpha1
 
 import (
 	"github.com/imdario/mergo"
+	"strconv"
 )
 
 // Application spec default values
 const (
 	DefaultPortName                 = "http"
-	DefaultPort                     = 80
+	DefaultServicePort              = 80
+	DefaultAppPort                  = 8080
 	DeploymentStrategyRollingUpdate = "RollingUpdate"
 	DeploymentStrategyRecreate      = "Recreate"
 	DefaultVaultMountPath           = "/var/run/secrets/nais.io/vault"
@@ -26,13 +28,13 @@ func getAppDefaults() *Application {
 				Max:                    4,
 				CpuThresholdPercentage: 50,
 			},
-			Port: 8080,
+			Port: DefaultAppPort,
 			Strategy: Strategy{
 				Type: DeploymentStrategyRollingUpdate,
 			},
 			Prometheus: PrometheusConfig{
 				Enabled: false,
-				Port:    "http",
+				Port:    strconv.Itoa(DefaultAppPort),
 				Path:    "/metrics",
 			},
 			Ingresses: []string{},
@@ -51,7 +53,7 @@ func getAppDefaults() *Application {
 				Mounts:  []SecretPath{},
 			},
 			Service: Service{
-				Port: DefaultPort,
+				Port: DefaultServicePort,
 			},
 		},
 	}

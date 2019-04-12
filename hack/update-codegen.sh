@@ -18,7 +18,7 @@ git clone -b release-1.11 https://github.com/kubernetes/code-generator $CODEGEN_
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   github.com/nais/naiserator/pkg/client github.com/nais/naiserator/pkg/apis \
-  naiserator:v1alpha1 \
+  "naiserator:v1alpha1 istio:v1alpha1" \
   --output-base ${TEMP_DIR} \
   --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.go.txt
 

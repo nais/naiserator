@@ -3,26 +3,24 @@ package fixtures
 import (
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strconv"
 )
 
 // Constant values for the variables returned in the Application spec.
 const (
 	Name                      = "app"
 	Namespace                 = "default"
-	Port                      = 8080
 	ImageName                 = "user/image:version"
 	TeamName                  = "pandas"
 	MinReplicas               = 1
 	MaxReplicas               = 2
 	CpuThresholdPercentage    = 69
 	ReadinessPath             = "isready"
-	ReadinessPort             = 8080
 	ReadinessInitialDelay     = 1
 	ReadinessTimeout          = 2
 	ReadinessFailureThreshold = 3
 	ReadinessPeriodSeconds    = 4
 	LivenessPath              = "isalive"
-	LivenessPort              = 8080
 	LivenessInitialDelay      = 5
 	LivenessTimeout           = 6
 	LivenessFailureThreshold  = 7
@@ -32,7 +30,6 @@ const (
 	LimitCpu                  = "500m"
 	LimitMemory               = "512Mi"
 	PrometheusPath            = "metrics"
-	PrometheusPort            = "80"
 	PrometheusEnabled         = true
 	WebProxyEnabled           = true
 	LeaderElectionEnabled     = true
@@ -58,7 +55,7 @@ func Application() *nais.Application {
 			},
 		},
 		Spec: nais.ApplicationSpec{
-			Port:  Port,
+			Port:  nais.DefaultAppPort,
 			Image: ImageName,
 			Strategy: nais.Strategy{
 				Type: nais.DeploymentStrategyRollingUpdate,
@@ -70,7 +67,7 @@ func Application() *nais.Application {
 			},
 			Readiness: nais.Probe{
 				Path:             ReadinessPath,
-				Port:             ReadinessPort,
+				Port:             nais.DefaultAppPort,
 				InitialDelay:     ReadinessInitialDelay,
 				FailureThreshold: ReadinessFailureThreshold,
 				Timeout:          ReadinessTimeout,
@@ -78,7 +75,7 @@ func Application() *nais.Application {
 			},
 			Liveness: nais.Probe{
 				Path:             LivenessPath,
-				Port:             LivenessPort,
+				Port:             nais.DefaultAppPort,
 				InitialDelay:     LivenessInitialDelay,
 				FailureThreshold: LivenessFailureThreshold,
 				Timeout:          LivenessTimeout,
@@ -96,7 +93,7 @@ func Application() *nais.Application {
 			},
 			Prometheus: nais.PrometheusConfig{
 				Path:    PrometheusPath,
-				Port:    PrometheusPort,
+				Port:    strconv.Itoa(nais.DefaultAppPort),
 				Enabled: PrometheusEnabled,
 			},
 			Ingresses: []string{
@@ -122,7 +119,7 @@ func Application() *nais.Application {
 					Value: VarValue2,
 				}},
 			Service: nais.Service{
-				Port: nais.DefaultPort,
+				Port: nais.DefaultServicePort,
 			},
 			AccessPolicy: nais.AccessPolicy {
 				Ingress: nais.AccessPolicyIngress{

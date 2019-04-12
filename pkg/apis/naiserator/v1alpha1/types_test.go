@@ -27,5 +27,5 @@ func TestNilFix(t *testing.T) {
 	app.NilFix()
 	assert.NotNil(t, app.Spec.Ingresses)
 	assert.NotNil(t, app.Spec.Env)
-	assert.Equal(t, int32(v1alpha1.DefaultPort), app.Spec.Service.Port)
+	assert.Equal(t, int32(v1alpha1.DefaultServicePort), app.Spec.Service.Port)
 }

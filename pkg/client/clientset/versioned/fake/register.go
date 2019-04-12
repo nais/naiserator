@@ -3,6 +3,7 @@
 package fake
 
 import (
+	istiov1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,5 +35,6 @@ func init() {
 // After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
 // correctly.
 func AddToScheme(scheme *runtime.Scheme) {
+	istiov1alpha1.AddToScheme(scheme)
 	naiseratorv1alpha1.AddToScheme(scheme)
 }
