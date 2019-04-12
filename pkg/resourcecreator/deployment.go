@@ -27,12 +27,20 @@ func Deployment(app *nais.Application, opts ResourceOptions) (*appsv1.Deployment
 	if err != nil {
 		return nil, err
 	}
+
+	objectMeta := app.CreateObjectMeta()
+	if val, ok := app.Annotations["kubernetes.io/change-cause"]; ok {
+		objectMeta.Annotations = map[string]string{
+			"kubernetes.io/change-cause": val,
+		}
+	}
+
 	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		Spec:       *spec,
 	}, nil
 }

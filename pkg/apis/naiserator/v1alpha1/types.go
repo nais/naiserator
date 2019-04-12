@@ -168,11 +168,13 @@ func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object
 	relevantValues := struct {
-		AppSpec ApplicationSpec
-		Labels  map[string]string
+		AppSpec     ApplicationSpec
+		Labels      map[string]string
+		Annotations map[string]string
 	}{
 		in.Spec,
 		in.Labels,
+		in.Annotations,
 	}
 
 	h, err := hash.Hash(relevantValues, nil)
