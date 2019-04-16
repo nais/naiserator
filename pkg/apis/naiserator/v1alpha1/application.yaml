@@ -175,12 +175,23 @@ spec:
                 type: object
                 required:
                   - name
-                  - value
                 properties:
                   name:
                     type: string
                   value:
                     type: string
+                  valueFrom:
+                    type: object
+                    required:
+                      - fieldRef
+                    properties:
+                      fieldRef:
+                        type: object
+                        required:
+                          - fieldPath
+                        properties:
+                          fieldPath:
+                            type: string
             service:
               properties:
                 port:
