@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -68,9 +68,18 @@ type ResourceRequirements struct {
 	Requests ResourceSpec `json:"requests"`
 }
 
+type ObjectFieldSelector struct {
+	FieldPath string `json:"fieldPath"`
+}
+
+type EnvVarSource struct {
+	FieldRef ObjectFieldSelector `json:"fieldRef"`
+}
+
 type EnvVar struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name      string       `json:"name"`
+	Value     string       `json:"value"`
+	ValueFrom EnvVarSource `json:"valueFrom"`
 }
 
 type SecretPath struct {
