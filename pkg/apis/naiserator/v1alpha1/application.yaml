@@ -192,6 +192,16 @@ spec:
                         properties:
                           fieldPath:
                             type: string
+                            # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#envvarsource-v1-core
+                            enum:
+                              - "metadata.name"
+                              - "metadata.namespace"
+                              - "metadata.labels"
+                              - "metadata.annotations"
+                              - "spec.nodeName"
+                              - "spec.serviceAccountName"
+                              - "status.hostIP"
+                              - "status.podIP"
             service:
               properties:
                 port:
