@@ -13,7 +13,7 @@ import (
 	"github.com/nais/naiserator/pkg/vault"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 )
 
 func TestGetDeployment(t *testing.T) {
@@ -21,11 +21,11 @@ func TestGetDeployment(t *testing.T) {
 	app.Spec.Vault.Enabled = true
 
 	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
-		vault.EnvVaultAddr:              "a",
-		vault.EnvVaultAuthPath:          "b",
-		vault.EnvInitContainerImage:     "c",
-		vault.EnvVaultKVPath:            "/base/kv",
-		vault.EnvVaultEnabled:           "true",
+		vault.EnvVaultAddr:          "a",
+		vault.EnvVaultAuthPath:      "b",
+		vault.EnvInitContainerImage: "c",
+		vault.EnvVaultKVPath:        "/base/kv",
+		vault.EnvVaultEnabled:       "true",
 		resourcecreator.NaisClusterName: "some_cluster",
 	}, func(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
@@ -224,32 +224,6 @@ func TestEnableSecureLogs(t *testing.T) {
 		spec := deployment.Spec.Template.Spec
 		assert.Len(t, spec.Volumes, 3)
 		assert.Len(t, spec.Containers, 3)
-	})
-}
-
-func TestEnvVarSource(t *testing.T) {
-	t.Run("when valueFrom.fieldRef.fieldPath is set it should be used", func(t *testing.T) {
-		app := fixtures.Application()
-		app.Spec.Env = append(app.Spec.Env, nais.EnvVar{
-			Name: "podIP",
-			ValueFrom: nais.EnvVarSource{
-				FieldRef: nais.ObjectFieldSelector{FieldPath: "status.podIP"},
-			},
-		})
-
-		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
-		assert.NoError(t, err)
-		assert.NotNil(t, deployment)
-
-		appContainer := getContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
-
-		for _, e := range appContainer.Env {
-			if e.Name == "podIP" {
-				assert.Equal(t, "status.podIP", e.ValueFrom.FieldRef.FieldPath)
-				assert.Equal(t, "", e.Value)
-			}
-		}
-
 	})
 }
 
