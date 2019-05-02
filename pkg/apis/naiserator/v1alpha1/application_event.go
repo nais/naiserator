@@ -24,6 +24,8 @@ func (in *Application) CreateEvent(reason, message, typeStr string) *corev1.Even
 		Source:              corev1.EventSource{Component: "naiserator"},
 		Message:             util.StrTrimMiddle(message, eventMaxLen),
 		EventTime:           metav1.MicroTime{Time: time.Now()},
+		FirstTimestamp:      metav1.Time{Time: time.Now()},
+		LastTimestamp:       metav1.Time{Time: time.Now()},
 		Type:                typeStr,
 	}
 }
