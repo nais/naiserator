@@ -194,6 +194,7 @@ spec:
                             type: string
                             # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#envvarsource-v1-core
                             enum:
+                              - ""
                               - "metadata.name"
                               - "metadata.namespace"
                               - "metadata.labels"
