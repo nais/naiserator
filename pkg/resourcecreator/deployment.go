@@ -2,6 +2,9 @@ package resourcecreator
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/securelogs"
 	"github.com/nais/naiserator/pkg/vault"
@@ -10,8 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"os"
-	"strconv"
 )
 
 // default environment variables
@@ -234,7 +235,16 @@ func envVars(app *nais.Application) []corev1.EnvVar {
 	newEnvVars := defaultEnvVars(app)
 
 	for _, envVar := range app.Spec.Env {
-		newEnvVars = append(newEnvVars, corev1.EnvVar{Name: envVar.Name, Value: envVar.Value})
+		if envVar.ValueFrom.FieldRef.FieldPath != "" {
+			newEnvVars = append(newEnvVars, corev1.EnvVar{
+				Name: envVar.Name,
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{FieldPath: envVar.ValueFrom.FieldRef.FieldPath},
+				},
+			})
+		} else {
+			newEnvVars = append(newEnvVars, corev1.EnvVar{Name: envVar.Name, Value: envVar.Value})
+		}
 	}
 
 	return newEnvVars
