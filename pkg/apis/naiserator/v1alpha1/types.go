@@ -202,6 +202,7 @@ func (in *Application) SetLastSyncedHash(hash string) {
 		a = make(map[string]string)
 	}
 	a[LastSyncedHashAnnotation] = hash
+	in.SetAnnotations(a)
 }
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {
