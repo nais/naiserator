@@ -5,7 +5,7 @@ package externalversions
 import (
 	"fmt"
 
-	istio_v1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
+	istiov1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 	v1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -42,9 +42,9 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Naiserator().V1alpha1().Applications().Informer()}, nil
 
 		// Group=rbac.istio.io, Version=v1alpha1
-	case istio_v1alpha1.SchemeGroupVersion.WithResource("serviceroles"):
+	case istiov1alpha1.SchemeGroupVersion.WithResource("serviceroles"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoles().Informer()}, nil
-	case istio_v1alpha1.SchemeGroupVersion.WithResource("servicerolebindings"):
+	case istiov1alpha1.SchemeGroupVersion.WithResource("servicerolebindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoleBindings().Informer()}, nil
 
 	}

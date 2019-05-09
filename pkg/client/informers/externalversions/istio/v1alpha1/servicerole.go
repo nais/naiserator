@@ -5,7 +5,7 @@ package v1alpha1
 import (
 	time "time"
 
-	istio_v1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
+	istiov1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 	versioned "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/nais/naiserator/pkg/client/listers/istio/v1alpha1"
@@ -54,7 +54,7 @@ func NewFilteredServiceRoleInformer(client versioned.Interface, namespace string
 				return client.RbacV1alpha1().ServiceRoles(namespace).Watch(options)
 			},
 		},
-		&istio_v1alpha1.ServiceRole{},
+		&istiov1alpha1.ServiceRole{},
 		resyncPeriod,
 		indexers,
 	)
@@ -65,7 +65,7 @@ func (f *serviceRoleInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *serviceRoleInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&istio_v1alpha1.ServiceRole{}, f.defaultInformer)
+	return f.factory.InformerFor(&istiov1alpha1.ServiceRole{}, f.defaultInformer)
 }
 
 func (f *serviceRoleInformer) Lister() v1alpha1.ServiceRoleLister {

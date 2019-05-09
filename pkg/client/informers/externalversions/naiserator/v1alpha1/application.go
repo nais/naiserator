@@ -5,7 +5,7 @@ package v1alpha1
 import (
 	time "time"
 
-	naiserator_v1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	versioned "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/nais/naiserator/pkg/client/listers/naiserator/v1alpha1"
@@ -54,7 +54,7 @@ func NewFilteredApplicationInformer(client versioned.Interface, namespace string
 				return client.NaiseratorV1alpha1().Applications(namespace).Watch(options)
 			},
 		},
-		&naiserator_v1alpha1.Application{},
+		&naiseratorv1alpha1.Application{},
 		resyncPeriod,
 		indexers,
 	)
@@ -65,7 +65,7 @@ func (f *applicationInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *applicationInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&naiserator_v1alpha1.Application{}, f.defaultInformer)
+	return f.factory.InformerFor(&naiseratorv1alpha1.Application{}, f.defaultInformer)
 }
 
 func (f *applicationInformer) Lister() v1alpha1.ApplicationLister {

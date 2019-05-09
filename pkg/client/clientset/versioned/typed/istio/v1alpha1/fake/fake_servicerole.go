@@ -103,7 +103,7 @@ func (c *FakeServiceRoles) DeleteCollection(options *v1.DeleteOptions, listOptio
 // Patch applies the patch and returns the patched serviceRole.
 func (c *FakeServiceRoles) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.ServiceRole, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(servicerolesResource, c.ns, name, data, subresources...), &v1alpha1.ServiceRole{})
+		Invokes(testing.NewPatchSubresourceAction(servicerolesResource, c.ns, name, pt, data, subresources...), &v1alpha1.ServiceRole{})
 
 	if obj == nil {
 		return nil, err

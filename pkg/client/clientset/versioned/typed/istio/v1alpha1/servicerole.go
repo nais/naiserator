@@ -3,6 +3,8 @@
 package v1alpha1
 
 import (
+	"time"
+
 	v1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 	scheme "github.com/nais/naiserator/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,11 +61,16 @@ func (c *serviceRoles) Get(name string, options v1.GetOptions) (result *v1alpha1
 
 // List takes label and field selectors, and returns the list of ServiceRoles that match those selectors.
 func (c *serviceRoles) List(opts v1.ListOptions) (result *v1alpha1.ServiceRoleList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1alpha1.ServiceRoleList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("serviceroles").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Do().
 		Into(result)
 	return
@@ -71,11 +78,16 @@ func (c *serviceRoles) List(opts v1.ListOptions) (result *v1alpha1.ServiceRoleLi
 
 // Watch returns a watch.Interface that watches the requested serviceRoles.
 func (c *serviceRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("serviceroles").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Watch()
 }
 
@@ -117,10 +129,15 @@ func (c *serviceRoles) Delete(name string, options *v1.DeleteOptions) error {
 
 // DeleteCollection deletes a collection of objects.
 func (c *serviceRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	var timeout time.Duration
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("serviceroles").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Timeout(timeout).
 		Body(options).
 		Do().
 		Error()

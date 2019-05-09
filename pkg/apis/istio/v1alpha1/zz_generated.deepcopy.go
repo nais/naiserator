@@ -144,22 +144,17 @@ func (in *ServiceRoleBindingSpec) DeepCopyInto(out *ServiceRoleBindingSpec) {
 		in, out := &in.Subjects, &out.Subjects
 		*out = make([]*Subject, len(*in))
 		for i := range *in {
-			if (*in)[i] == nil {
-				(*out)[i] = nil
-			} else {
-				(*out)[i] = new(Subject)
-				(*in)[i].DeepCopyInto((*out)[i])
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(Subject)
+				**out = **in
 			}
 		}
 	}
 	if in.RoleRef != nil {
 		in, out := &in.RoleRef, &out.RoleRef
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(RoleRef)
-			**out = **in
-		}
+		*out = new(RoleRef)
+		**out = **in
 	}
 	return
 }
@@ -214,11 +209,10 @@ func (in *ServiceRoleSpec) DeepCopyInto(out *ServiceRoleSpec) {
 		in, out := &in.Rules, &out.Rules
 		*out = make([]*AccessRule, len(*in))
 		for i := range *in {
-			if (*in)[i] == nil {
-				(*out)[i] = nil
-			} else {
-				(*out)[i] = new(AccessRule)
-				(*in)[i].DeepCopyInto((*out)[i])
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(AccessRule)
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}

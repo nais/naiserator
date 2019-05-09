@@ -10,7 +10,7 @@ CODEGEN_PKG=$TEMP_DIR/cgen
 export GOPATH=~/go
 export GO111MODULE=on
 
-git clone -b release-1.11 https://github.com/kubernetes/code-generator $CODEGEN_PKG
+git clone -b kubernetes-1.13.1 https://github.com/kubernetes/code-generator $CODEGEN_PKG
 
 # generate the code with:
 # --output-base    because this script should also be able to run inside the vendor dir of
