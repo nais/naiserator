@@ -1,4 +1,4 @@
-package accesspolicy
+package resourcecreator
 
 import (
 	"encoding/json"
