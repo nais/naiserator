@@ -14,6 +14,6 @@ func TestIstio(t *testing.T) {
 
 		some, err := json.Marshal(obj)
 		assert.NoError(t, err)
-		assert.Equal(t, "", string(some))
+		assert.NotEmpty(t, string(some))
 	})
 }
