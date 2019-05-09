@@ -11,6 +11,7 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,6 +20,7 @@ import (
 	typed_autoscaling_v1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
 	typed_core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	typed_extensions_v1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	typed_networking_v1 "k8s.io/client-go/kubernetes/typed/networking/v1"
 )
 
 func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) func() error {
@@ -108,6 +110,23 @@ func horizontalPodAutoscaler(client typed_autoscaling_v1.HorizontalPodAutoscaler
 	}
 }
 
+func networkPolicy(client typed_networking_v1.NetworkPolicyInterface, old, new *networkingv1.NetworkPolicy) func() error {
+	log.Infof("creating or updating *networkingv1.NetworkPolicy for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func Updater(clientSet kubernetes.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -165,6 +184,17 @@ func Updater(clientSet kubernetes.Interface, resource runtime.Object) func() err
 			return horizontalPodAutoscaler(c, nil, new)
 		}
 		return horizontalPodAutoscaler(c, old, new)
+
+	case *networkingv1.NetworkPolicy:
+		c := clientSet.NetworkingV1().NetworkPolicies(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return networkPolicy(c, nil, new)
+		}
+		return networkPolicy(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))

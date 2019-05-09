@@ -29,10 +29,6 @@ type ApplicationList struct {
 	Items []Application `json:"items"`
 }
 
-type IstioConfig struct {
-	Enabled bool `json:"enabled"`
-}
-
 type SecureLogs struct {
 	Enabled bool `json:"enabled"`
 }
@@ -105,13 +101,32 @@ type Service struct {
 	Port int32 `json:"port"`
 }
 
+type AccessPolicyGressRule struct {
+	Application string `json:"application"`
+	Namespace   string `json:"namespace"`
+}
+
+type AccessPolicyIngress struct {
+	AllowAll bool                    `json:"allowAll"`
+	Rules    []AccessPolicyGressRule `json:"rules"`
+}
+
+type AccessPolicyEgress struct {
+	AllowAll bool                    `json:"allowAll"`
+	Rules    []AccessPolicyGressRule `json:"rules"`
+}
+
+type AccessPolicy struct {
+	Ingress         AccessPolicyIngress `json:"ingress"`
+	Egress          AccessPolicyEgress  `json:"egress"`
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Liveness        Probe                `json:"liveness"`
 	Readiness       Probe                `json:"readiness"`
 	Image           string               `json:"image"`
 	Ingresses       []string             `json:"ingresses"`
-	Istio           IstioConfig          `json:"istio"`
 	LeaderElection  bool                 `json:"leaderElection"`
 	Logformat       string               `json:"logformat"`
 	Logtransform    string               `json:"logtransform"`
@@ -128,6 +143,7 @@ type ApplicationSpec struct {
 	Env             []EnvVar             `json:"env"`
 	Strategy        Strategy             `json:"strategy"`
 	Service         Service              `json:"service"`
+	AccessPolicy    AccessPolicy         `json:"accessPolicy"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {

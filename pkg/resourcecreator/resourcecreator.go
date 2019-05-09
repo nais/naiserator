@@ -6,20 +6,24 @@ package resourcecreator
 
 import (
 	"fmt"
-
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources.
-func Create(app *nais.Application, opts ResourceOptions) ([]runtime.Object, error) {
+func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.Object, error) {
 	objects := []runtime.Object{
 		Service(app),
 		ServiceAccount(app),
 		HorizontalPodAutoscaler(app),
 	}
 
-	deployment, err := Deployment(app, opts)
+	if resourceOptions.AccessPolicy {
+		objects = append(objects, NetworkPolicy(app))
+		objects = append(objects, Istio(app)...)
+	}
+
+	deployment, err := Deployment(app, resourceOptions)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
