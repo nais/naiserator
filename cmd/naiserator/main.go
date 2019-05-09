@@ -21,15 +21,15 @@ import (
 )
 
 var (
-	kubeconfig   string
-	bindAddr     string
-	accessPolicy bool
+	kubeconfig         string
+	bindAddr           string
+	enableAccessPolicy bool
 )
 
 func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "path to Kubernetes config file")
 	flag.StringVar(&bindAddr, "bind-address", ":8080", "ip:port where http requests are served")
-	flag.BoolVar(&accessPolicy, "access-policy", false, "enable access policy with Istio and NetworkPolicies")
+	flag.BoolVar(&enableAccessPolicy, "enable-access-policy", false, "enable access policy with Istio and NetworkPolicies")
 	flag.Parse()
 }
 
@@ -65,7 +65,7 @@ func main() {
 		createGenericClientset(kubeconfig),
 		createApplicationClientset(kubeconfig),
 		applicationInformerFactory.Naiserator().V1alpha1().Applications(),
-		accessPolicy)
+		enableAccessPolicy)
 
 	applicationInformerFactory.Start(stopCh)
 	n.Run(stopCh)

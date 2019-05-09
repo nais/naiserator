@@ -25,16 +25,16 @@ type Naiserator struct {
 	AppClient                 *clientV1Alpha1.Clientset
 	ApplicationInformer       informers.ApplicationInformer
 	ApplicationInformerSynced cache.InformerSynced
-	accessPolicy              bool
+	enableAccessPolicy        bool
 }
 
-func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, accessPolicy bool) *Naiserator {
+func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, enableAccessPolicy bool) *Naiserator {
 	naiserator := Naiserator{
 		ClientSet:                 clientSet,
 		AppClient:                 appClient,
 		ApplicationInformer:       applicationInformer,
 		ApplicationInformerSynced: applicationInformer.Informer().HasSynced,
-		accessPolicy:              accessPolicy}
+		enableAccessPolicy:        enableAccessPolicy}
 
 	applicationInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
@@ -88,8 +88,9 @@ func (n *Naiserator) synchronize(logger *log.Entry, previous, app *v1alpha1.Appl
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
 		resourceOptions.NumReplicas = *deployment.Spec.Replicas
 	}
+	resourceOptions.AccessPolicy = n.enableAccessPolicy
 
-	resources, err := resourcecreator.Create(app, resourceOptions, n.accessPolicy)
+	resources, err := resourcecreator.Create(app, resourceOptions)
 	if err != nil {
 		return fmt.Errorf("while creating resources: %s", err)
 	}

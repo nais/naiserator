@@ -11,14 +11,14 @@ import (
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources.
-func Create(app *nais.Application, resourceOptions ResourceOptions, accessPolicy bool) ([]runtime.Object, error) {
+func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.Object, error) {
 	objects := []runtime.Object{
 		Service(app),
 		ServiceAccount(app),
 		HorizontalPodAutoscaler(app),
 	}
 
-	if accessPolicy {
+	if resourceOptions.AccessPolicy {
 		objects = append(objects, NetworkPolicy(app))
 		objects = append(objects, Istio(app)...)
 	}
