@@ -96,10 +96,6 @@ spec:
                   type: boolean
                 path:
                   type: string
-            istio:
-              properties:
-                enabled:
-                  type: boolean
             resources:
               properties:
                 limits:
@@ -207,3 +203,39 @@ spec:
               properties:
                 port:
                   type: integer
+            accessPolicy:
+              properties:
+                allowAllIngress:
+                  type: boolean
+                allowAllEgress:
+                  type: boolean
+                ingress:
+                  properties:
+                    allowAll:
+                      type: boolean
+                    rules:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - application
+                        properties:
+                          application:
+                            type: string
+                          namespace:
+                            type: string
+                egress:
+                  properties:
+                    allowAll:
+                      type: boolean
+                    rules:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - application
+                        properties:
+                          application:
+                            type: string
+                          namespace:
+                            type: string

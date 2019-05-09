@@ -25,14 +25,16 @@ type Naiserator struct {
 	AppClient                 *clientV1Alpha1.Clientset
 	ApplicationInformer       informers.ApplicationInformer
 	ApplicationInformerSynced cache.InformerSynced
+	enableAccessPolicy        bool
 }
 
-func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer) *Naiserator {
+func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, enableAccessPolicy bool) *Naiserator {
 	naiserator := Naiserator{
 		ClientSet:                 clientSet,
 		AppClient:                 appClient,
 		ApplicationInformer:       applicationInformer,
-		ApplicationInformerSynced: applicationInformer.Informer().HasSynced}
+		ApplicationInformerSynced: applicationInformer.Informer().HasSynced,
+		enableAccessPolicy:        enableAccessPolicy}
 
 	applicationInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
@@ -79,15 +81,16 @@ func (n *Naiserator) synchronize(logger *log.Entry, previous, app *v1alpha1.Appl
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
 	// resource and pass the correct number in the resource options.
-	opts := resourcecreator.NewResourceOptions()
+	resourceOptions := resourcecreator.NewResourceOptions()
 	deployment, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("while querying existing deployment: %s", err)
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
-		opts.NumReplicas = *deployment.Spec.Replicas
+		resourceOptions.NumReplicas = *deployment.Spec.Replicas
 	}
+	resourceOptions.AccessPolicy = n.enableAccessPolicy
 
-	resources, err := resourcecreator.Create(app, opts)
+	resources, err := resourcecreator.Create(app, resourceOptions)
 	if err != nil {
 		return fmt.Errorf("while creating resources: %s", err)
 	}

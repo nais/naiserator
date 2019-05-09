@@ -10,7 +10,7 @@ CODEGEN_PKG=$TEMP_DIR/cgen
 export GOPATH=~/go
 export GO111MODULE=on
 
-git clone -b release-1.11 https://github.com/kubernetes/code-generator $CODEGEN_PKG
+git clone -b kubernetes-1.13.1 https://github.com/kubernetes/code-generator $CODEGEN_PKG
 
 # generate the code with:
 # --output-base    because this script should also be able to run inside the vendor dir of
@@ -18,7 +18,7 @@ git clone -b release-1.11 https://github.com/kubernetes/code-generator $CODEGEN_
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   github.com/nais/naiserator/pkg/client github.com/nais/naiserator/pkg/apis \
-  naiserator:v1alpha1 \
+  "naiserator:v1alpha1 istio:v1alpha1" \
   --output-base ${TEMP_DIR} \
   --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.go.txt
 

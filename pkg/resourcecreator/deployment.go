@@ -23,8 +23,8 @@ const (
 	NaisClusterName = "NAIS_CLUSTER_NAME"
 )
 
-func Deployment(app *nais.Application, opts ResourceOptions) (*appsv1.Deployment, error) {
-	spec, err := deploymentSpec(app, opts)
+func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {
+	spec, err := deploymentSpec(app, resourceOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func Deployment(app *nais.Application, opts ResourceOptions) (*appsv1.Deployment
 	}, nil
 }
 
-func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.DeploymentSpec, error) {
+func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.DeploymentSpec, error) {
 	podSpec, err := podSpec(app)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func deploymentSpec(app *nais.Application, opts ResourceOptions) (*appsv1.Deploy
 	}
 
 	return &appsv1.DeploymentSpec{
-		Replicas: int32p(opts.NumReplicas),
+		Replicas: int32p(resourceOptions.NumReplicas),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.Name},
 		},

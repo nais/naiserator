@@ -66,3 +66,16 @@ spec:
     enabled: false # Optional. If true, mount a volume for secure logs in the pod
   service:
     port: 80 # default service-port
+  accessPolicy:
+    ingress:
+      allowAll: false # optional, opens up for all inbound access
+      rules:
+        - application: app1
+        - application: app2
+          namespace: q1 # optional, defaults to 'metadata.namespace'
+        - application: app3
+          namespace: t1
+    egress:
+      allowAll: false # optional, opens up for all outbound access
+      rules:
+        - www.external-application.com

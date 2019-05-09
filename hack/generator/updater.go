@@ -47,6 +47,12 @@ var i = []Service{
 		Type:       "*autoscalingv1.HorizontalPodAutoscaler",
 		ClientType: "AutoscalingV1().HorizontalPodAutoscalers",
 	},
+	{
+		Name:       "networkPolicy",
+		Interface:  "typed_networking_v1.NetworkPolicyInterface",
+		Type:       "*networkingv1.NetworkPolicy",
+		ClientType: "NetworkingV1().NetworkPolicies",
+	},
 }
 
 func main() {
