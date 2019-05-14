@@ -14,4 +14,4 @@ FROM alpine:3.9
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /src/cmd/naiserator/naiserator /app/naiserator
-CMD ["/app/naiserator"]
+CMD ["/app/naiserator", "--access-policy-enabled=$ACCESS_POLICY_ENABLED"]
