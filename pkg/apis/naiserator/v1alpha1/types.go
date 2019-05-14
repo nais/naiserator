@@ -187,6 +187,12 @@ func (in *Application) NilFix() {
 	if in.Spec.ConfigMaps.Files == nil {
 		in.Spec.ConfigMaps.Files = make([]string, 0)
 	}
+	if in.Spec.AccessPolicy.Ingress.Rules == nil {
+		in.Spec.AccessPolicy.Ingress.Rules = make([]AccessPolicyGressRule, 0)
+	}
+	if in.Spec.AccessPolicy.Egress.Rules == nil {
+		in.Spec.AccessPolicy.Egress.Rules = make([]AccessPolicyGressRule, 0)
+	}
 }
 
 func (in Application) Hash() (string, error) {
