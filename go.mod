@@ -38,5 +38,3 @@ require (
 	k8s.io/kube-openapi v0.0.0-20190401085232-94e1e7b7574c // indirect
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7 // indirect
 )
-
-replace github.com/golang/sync => golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
