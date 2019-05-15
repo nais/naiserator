@@ -5,7 +5,10 @@ package updater
 
 import (
 	"fmt"
+	"github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 
+	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -127,7 +130,41 @@ func networkPolicy(client typed_networking_v1.NetworkPolicyInterface, old, new *
 	}
 }
 
-func Updater(clientSet kubernetes.Interface, resource runtime.Object) func() error {
+func serviceRole(client istio_v1alpha1.ServiceRoleInterface, old, new *v1alpha1.ServiceRole) func() error {
+	log.Infof("creating or updating *v1alpha1.ServiceRole for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
+func serviceRoleBinding(client istio_v1alpha1.ServiceRoleBindingInterface, old, new *v1alpha1.ServiceRoleBinding) func() error {
+	log.Infof("creating or updating *v1alpha1.ServiceRoleBinding for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
+func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -195,6 +232,28 @@ func Updater(clientSet kubernetes.Interface, resource runtime.Object) func() err
 			return networkPolicy(c, nil, new)
 		}
 		return networkPolicy(c, old, new)
+
+	case *v1alpha1.ServiceRole:
+		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return serviceRole(c, nil, new)
+		}
+		return serviceRole(c, old, new)
+
+	case *v1alpha1.ServiceRoleBinding:
+		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return serviceRoleBinding(c, nil, new)
+		}
+		return serviceRoleBinding(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
