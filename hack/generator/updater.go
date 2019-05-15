@@ -1,6 +1,8 @@
 package main
 
 import (
+	//	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
+	//	"k8s.io/client-go/kubernetes/typed/networking/v1"
 	"os"
 	"text/template"
 )
@@ -12,7 +14,7 @@ type Service struct {
 	Interface     string // Kubernetes client interface for using REST.
 	Type          string // Real type of the object being modified.
 	TransformFunc string // Optional name of function that will be called to copy the old object into the new.
-	ClientType    string // Function to call on the clientset to get a REST client
+	Client        string // Function to call on the clientset to get a REST client
 }
 
 var i = []Service{
@@ -21,37 +23,49 @@ var i = []Service{
 		Interface:     "typed_core_v1.ServiceInterface",
 		Type:          "*corev1.Service",
 		TransformFunc: "CopyService",
-		ClientType:    "CoreV1().Services",
+		Client:        "clientSet.CoreV1().Services",
 	},
 	{
-		Name:       "serviceAccount",
-		Interface:  "typed_core_v1.ServiceAccountInterface",
-		Type:       "*corev1.ServiceAccount",
-		ClientType: "CoreV1().ServiceAccounts",
+		Name:      "serviceAccount",
+		Interface: "typed_core_v1.ServiceAccountInterface",
+		Type:      "*corev1.ServiceAccount",
+		Client:    "clientSet.CoreV1().ServiceAccounts",
 	},
 	{
-		Name:       "deployment",
-		Interface:  "typed_apps_v1.DeploymentInterface",
-		Type:       "*appsv1.Deployment",
-		ClientType: "AppsV1().Deployments",
+		Name:      "deployment",
+		Interface: "typed_apps_v1.DeploymentInterface",
+		Type:      "*appsv1.Deployment",
+		Client:    "clientSet.AppsV1().Deployments",
 	},
 	{
-		Name:       "ingress",
-		Interface:  "typed_extensions_v1beta1.IngressInterface",
-		Type:       "*extensionsv1beta1.Ingress",
-		ClientType: "ExtensionsV1beta1().Ingresses",
+		Name:      "ingress",
+		Interface: "typed_extensions_v1beta1.IngressInterface",
+		Type:      "*extensionsv1beta1.Ingress",
+		Client:    "clientSet.ExtensionsV1beta1().Ingresses",
 	},
 	{
-		Name:       "horizontalPodAutoscaler",
-		Interface:  "typed_autoscaling_v1.HorizontalPodAutoscalerInterface",
-		Type:       "*autoscalingv1.HorizontalPodAutoscaler",
-		ClientType: "AutoscalingV1().HorizontalPodAutoscalers",
+		Name:      "horizontalPodAutoscaler",
+		Interface: "typed_autoscaling_v1.HorizontalPodAutoscalerInterface",
+		Type:      "*autoscalingv1.HorizontalPodAutoscaler",
+		Client:    "clientSet.AutoscalingV1().HorizontalPodAutoscalers",
 	},
 	{
-		Name:       "networkPolicy",
-		Interface:  "typed_networking_v1.NetworkPolicyInterface",
-		Type:       "*networkingv1.NetworkPolicy",
-		ClientType: "NetworkingV1().NetworkPolicies",
+		Name:      "networkPolicy",
+		Interface: "typed_networking_v1.NetworkPolicyInterface",
+		Type:      "*networkingv1.NetworkPolicy",
+		Client:    "clientSet.NetworkingV1().NetworkPolicies",
+	},
+	{
+		Name:      "serviceRole",
+		Interface: "istio_v1alpha1.ServiceRoleInterface",
+		Type:      "*v1alpha1.ServiceRole",
+		Client:    "customClient.RbacV1alpha1().ServiceRoles",
+	},
+	{
+		Name:      "serviceRoleBinding",
+		Interface: "istio_v1alpha1.ServiceRoleBindingInterface",
+		Type:      "*v1alpha1.ServiceRoleBinding",
+		Client:    "customClient.RbacV1alpha1().ServiceRoleBindings",
 	},
 }
 
