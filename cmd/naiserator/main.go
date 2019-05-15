@@ -80,6 +80,7 @@ func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedI
 	if err != nil {
 		log.Fatal("unable to create naiserator clientset")
 	}
+	
 	return informers.NewSharedInformerFactory(config, time.Second*30)
 }
 
@@ -139,5 +140,6 @@ func getEnv(key string, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
+	
 	return fallback
 }
