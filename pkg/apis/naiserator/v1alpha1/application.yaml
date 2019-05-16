@@ -116,6 +116,8 @@ spec:
                       pattern: '^\d+[KMG]i$'
             ingresses:
               type: array
+              items:
+                type: string
             logformat:
               type: string
               enum:

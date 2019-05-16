@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -29,7 +30,7 @@ var (
 func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "path to Kubernetes config file")
 	flag.StringVar(&bindAddr, "bind-address", ":8080", "ip:port where http requests are served")
-	flag.BoolVar(&accessPolicyEnabled, "access-policy-enabled", false, "enable access policy with Istio and NetworkPolicies")
+	flag.BoolVar(&accessPolicyEnabled, "access-policy-enabled", ensureBool(getEnv("ACCESS_POLICY_ENABLED", "false")), "enable access policy with Istio and NetworkPolicies")
 	flag.Parse()
 }
 
@@ -79,6 +80,7 @@ func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedI
 	if err != nil {
 		log.Fatal("unable to create naiserator clientset")
 	}
+	
 	return informers.NewSharedInformerFactory(config, time.Second*30)
 }
 
@@ -122,4 +124,22 @@ func StopCh() (stopCh <-chan struct{}) {
 	}()
 
 	return stop
+}
+
+func ensureBool(str string) bool {
+	bool, err := strconv.ParseBool(str)
+
+	if err != nil {
+		log.Errorf("unable to parse boolean \"%s\", defaulting to false", str)
+	}
+
+	return bool
+}
+
+func getEnv(key string, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	
+	return fallback
 }
