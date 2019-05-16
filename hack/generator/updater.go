@@ -1,8 +1,6 @@
 package main
 
 import (
-	//	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
-	//	"k8s.io/client-go/kubernetes/typed/networking/v1"
 	"os"
 	"text/template"
 )
