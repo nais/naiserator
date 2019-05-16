@@ -4,30 +4,30 @@
 package updater
 
 import (
-    "fmt"
+	"fmt"
 
-    log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
-    corev1 "k8s.io/api/core/v1"
-    autoscalingv1 "k8s.io/api/autoscaling/v1"
-    extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
-    networkingv1 "k8s.io/api/networking/v1"
-    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-    typed_core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
-    typed_apps_v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-    typed_autoscaling_v1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
-    typed_extensions_v1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
-    typed_networking_v1 "k8s.io/client-go/kubernetes/typed/networking/v1"
-    "k8s.io/apimachinery/pkg/api/errors"
-    "k8s.io/apimachinery/pkg/runtime"
-    "k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/api/core/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	typed_core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typed_apps_v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	typed_autoscaling_v1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
+	typed_extensions_v1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	typed_networking_v1 "k8s.io/client-go/kubernetes/typed/networking/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
 	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
 )
 
 {{range .}}
 
 func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
-    log.Infof("creating or updating {{ .Type }} for %s", new.Name)
+	log.Infof("creating or updating {{ .Type }} for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -37,8 +37,8 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 
 	CopyMeta(old, new)
 	{{if .TransformFunc}}
-	    {{.TransformFunc}}(old, new)
-    {{end}}
+		{{.TransformFunc}}(old, new)
+	{{end}}
 
 	return func() error {
 		_, err := client.Update(new)
