@@ -181,7 +181,7 @@ func appContainer(app *nais.Application) corev1.Container {
 
 func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {
 	spec = podSpec.DeepCopy()
-	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Namespace, app.Namespace))
+	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Name, app.Namespace))
 	mainContainer := spec.Containers[0].DeepCopy()
 
 	electorPathEnv := corev1.EnvVar{
@@ -326,7 +326,7 @@ func probe(probe nais.Probe) (k8sprobe *corev1.Probe) {
 	return
 }
 
-func leaderElectionContainer(name, ns string) corev1.Container {
+func leaderElectionContainer(name, namespace string) corev1.Container {
 	return corev1.Container{
 		Name:            "elector",
 		Image:           "gcr.io/google_containers/leader-elector:0.5",
@@ -340,6 +340,6 @@ func leaderElectionContainer(name, ns string) corev1.Container {
 			ContainerPort: 4040,
 			Protocol:      corev1.ProtocolTCP,
 		}},
-		Args: []string{fmt.Sprintf("--election=%s", name), "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", ns)},
+		Args: []string{fmt.Sprintf("--election=%s", name), "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", namespace)},
 	}
 }
