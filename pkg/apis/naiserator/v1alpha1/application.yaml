@@ -91,6 +91,7 @@ spec:
             preStopHookPath:
               type: string
             prometheus:
+              type: object
               properties:
                 enabled:
                   type: boolean
