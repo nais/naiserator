@@ -170,11 +170,11 @@ func (in Application) Hash() (string, error) {
 	relevantValues := struct {
 		AppSpec     ApplicationSpec
 		Labels      map[string]string
-		Annotations map[string]string
+		ChangeCause string
 	}{
 		in.Spec,
 		in.Labels,
-		in.Annotations,
+		in.Annotations["kubernetes.io/change-cause"],
 	}
 
 	h, err := hash.Hash(relevantValues, nil)
