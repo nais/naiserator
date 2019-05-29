@@ -39,18 +39,17 @@ type ServiceRoleBinding struct {
 	Spec ServiceRoleBindingSpec `json:"spec"`
 }
 
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type ServiceRoleBindingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []ServiceRoleBinding`json:"items"`
+	Items []ServiceRoleBinding `json:"items"`
 }
 
 type ServiceRoleBindingSpec struct {
 	Subjects []*Subject `json:"subjects"`
-	RoleRef *RoleRef `json:"roleRef"`
+	RoleRef  *RoleRef   `json:"roleRef"`
 }
 
 type Subject struct {
@@ -60,4 +59,14 @@ type Subject struct {
 type RoleRef struct {
 	Kind string `json:"kind"`
 	Name string `json:"name"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type VirtualService struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+}
+
+type VirtualServiceSpec struct {
+	Hosts []string `json:"hosts"`
 }
