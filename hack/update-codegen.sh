@@ -18,7 +18,7 @@ git clone -b kubernetes-1.13.1 https://github.com/kubernetes/code-generator $COD
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   github.com/nais/naiserator/pkg/client github.com/nais/naiserator/pkg/apis \
-  "naiserator:v1alpha1 rbac.istio.io:v1alpha1" \
+  "naiserator:v1alpha1 rbac.istio.io:v1alpha1 networking.istio.io:v1alpha3" \
   --output-base ${TEMP_DIR} \
   --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.go.txt
 
