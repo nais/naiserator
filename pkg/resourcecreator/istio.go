@@ -11,19 +11,23 @@ import (
 const IstioAPIVersion = "v1alpha1"
 
 
-func getServicePath(rule nais.AccessPolicyGressRule) string {
-	return fmt.Sprintf("%s.%s.svc.cluster.local", rule.Application, rule.Namespace)
+func getServicePath(rule nais.AccessPolicyGressRule, appNamespace string) string {
+	namespace := rule.Namespace
+	if len(namespace) == 0 {
+		namespace = appNamespace
+	}
+	return fmt.Sprintf("%s.%s.svc.cluster.local", rule.Application, namespace)
 }
 
 // If Services is set to [“*”], it refers to all services in the namespace defined in metadata.
-func getAccessRules(rules []nais.AccessPolicyGressRule, allowAll bool) (accessRules []*istio_crd.AccessRule) {
+func getAccessRules(rules []nais.AccessPolicyGressRule, allowAll bool, appNamespace string) (accessRules []*istio_crd.AccessRule) {
 	services := []string{}
 
 	if allowAll {
 		services = []string{"*"}
 	} else {
 		for _, gress := range rules {
-			services = append(services, getServicePath(gress))
+			services = append(services, getServicePath(gress, appNamespace))
 		}
 	}
 
@@ -36,7 +40,7 @@ func getAccessRules(rules []nais.AccessPolicyGressRule, allowAll bool) (accessRu
 
 func getServiceRoleSpec(app *nais.Application) istio_crd.ServiceRoleSpec {
 	return istio_crd.ServiceRoleSpec{
-		Rules: getAccessRules(app.Spec.AccessPolicy.Ingress.Rules, app.Spec.AccessPolicy.Ingress.AllowAll),
+		Rules: getAccessRules(app.Spec.AccessPolicy.Ingress.Rules, app.Spec.AccessPolicy.Ingress.AllowAll, app.Namespace),
 	}
 }
 
