@@ -3,8 +3,8 @@
 package versioned
 
 import (
-	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/naiserator/v1alpha1"
+	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -12,31 +12,20 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Rbac() rbacv1alpha1.RbacV1alpha1Interface
 	NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Naiserator() naiseratorv1alpha1.NaiseratorV1alpha1Interface
+	RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Rbac() rbacv1alpha1.RbacV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	rbacV1alpha1       *rbacv1alpha1.RbacV1alpha1Client
 	naiseratorV1alpha1 *naiseratorv1alpha1.NaiseratorV1alpha1Client
-}
-
-// RbacV1alpha1 retrieves the RbacV1alpha1Client
-func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
-	return c.rbacV1alpha1
-}
-
-// Deprecated: Rbac retrieves the default version of RbacClient.
-// Please explicitly pick a version.
-func (c *Clientset) Rbac() rbacv1alpha1.RbacV1alpha1Interface {
-	return c.rbacV1alpha1
+	rbacV1alpha1       *rbacv1alpha1.RbacV1alpha1Client
 }
 
 // NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client
@@ -48,6 +37,17 @@ func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1In
 // Please explicitly pick a version.
 func (c *Clientset) Naiserator() naiseratorv1alpha1.NaiseratorV1alpha1Interface {
 	return c.naiseratorV1alpha1
+}
+
+// RbacV1alpha1 retrieves the RbacV1alpha1Client
+func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
+	return c.rbacV1alpha1
+}
+
+// Deprecated: Rbac retrieves the default version of RbacClient.
+// Please explicitly pick a version.
+func (c *Clientset) Rbac() rbacv1alpha1.RbacV1alpha1Interface {
+	return c.rbacV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -66,11 +66,11 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.rbacV1alpha1, err = rbacv1alpha1.NewForConfig(&configShallowCopy)
+	cs.naiseratorV1alpha1, err = naiseratorv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
-	cs.naiseratorV1alpha1, err = naiseratorv1alpha1.NewForConfig(&configShallowCopy)
+	cs.rbacV1alpha1, err = rbacv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +86,8 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.rbacV1alpha1 = rbacv1alpha1.NewForConfigOrDie(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.NewForConfigOrDie(c)
+	cs.rbacV1alpha1 = rbacv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -96,8 +96,8 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.rbacV1alpha1 = rbacv1alpha1.New(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.New(c)
+	cs.rbacV1alpha1 = rbacv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

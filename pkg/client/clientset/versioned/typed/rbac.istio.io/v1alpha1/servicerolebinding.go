@@ -5,7 +5,7 @@ package v1alpha1
 import (
 	"time"
 
-	v1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
+	v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	scheme "github.com/nais/naiserator/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"

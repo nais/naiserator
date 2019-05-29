@@ -2,7 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
-	istio_crd "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
+	istio_crd "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

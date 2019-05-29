@@ -5,10 +5,10 @@ package v1alpha1
 import (
 	time "time"
 
-	istiov1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
+	rbacistioiov1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	versioned "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/nais/naiserator/pkg/client/listers/istio/v1alpha1"
+	v1alpha1 "github.com/nais/naiserator/pkg/client/listers/rbac.istio.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -54,7 +54,7 @@ func NewFilteredServiceRoleBindingInformer(client versioned.Interface, namespace
 				return client.RbacV1alpha1().ServiceRoleBindings(namespace).Watch(options)
 			},
 		},
-		&istiov1alpha1.ServiceRoleBinding{},
+		&rbacistioiov1alpha1.ServiceRoleBinding{},
 		resyncPeriod,
 		indexers,
 	)
@@ -65,7 +65,7 @@ func (f *serviceRoleBindingInformer) defaultInformer(client versioned.Interface,
 }
 
 func (f *serviceRoleBindingInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&istiov1alpha1.ServiceRoleBinding{}, f.defaultInformer)
+	return f.factory.InformerFor(&rbacistioiov1alpha1.ServiceRoleBinding{}, f.defaultInformer)
 }
 
 func (f *serviceRoleBindingInformer) Lister() v1alpha1.ServiceRoleBindingLister {

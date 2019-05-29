@@ -5,10 +5,10 @@ package updater
 
 import (
 	"fmt"
-	"github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 
+	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
-	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
+	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
