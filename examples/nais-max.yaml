@@ -68,7 +68,7 @@ spec:
     port: 80 # default service-port
   accessPolicy:
     ingress:
-      allowAll: false # optional, opens up for all inbound access
+      allowAll: false # optional, opens up for all inbound access in app.namespace
       rules:
         - application: app1
         - application: app2
