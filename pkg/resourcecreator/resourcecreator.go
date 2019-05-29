@@ -6,6 +6,7 @@ package resourcecreator
 
 import (
 	"fmt"
+
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -21,6 +22,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 	if resourceOptions.AccessPolicy {
 		objects = append(objects, NetworkPolicy(app))
 		objects = append(objects, Istio(app)...)
+		objects = append(objects, VirtualService(app))
 	}
 
 	deployment, err := Deployment(app, resourceOptions)
