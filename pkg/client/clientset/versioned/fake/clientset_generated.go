@@ -4,10 +4,10 @@ package fake
 
 import (
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
-	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1"
-	fakerbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/istio/v1alpha1/fake"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/naiserator/v1alpha1"
 	fakenaiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/naiserator/v1alpha1/fake"
+	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
+	fakerbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -57,16 +57,6 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// RbacV1alpha1 retrieves the RbacV1alpha1Client
-func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
-	return &fakerbacv1alpha1.FakeRbacV1alpha1{Fake: &c.Fake}
-}
-
-// Rbac retrieves the RbacV1alpha1Client
-func (c *Clientset) Rbac() rbacv1alpha1.RbacV1alpha1Interface {
-	return &fakerbacv1alpha1.FakeRbacV1alpha1{Fake: &c.Fake}
-}
-
 // NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client
 func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface {
 	return &fakenaiseratorv1alpha1.FakeNaiseratorV1alpha1{Fake: &c.Fake}
@@ -75,4 +65,14 @@ func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1In
 // Naiserator retrieves the NaiseratorV1alpha1Client
 func (c *Clientset) Naiserator() naiseratorv1alpha1.NaiseratorV1alpha1Interface {
 	return &fakenaiseratorv1alpha1.FakeNaiseratorV1alpha1{Fake: &c.Fake}
+}
+
+// RbacV1alpha1 retrieves the RbacV1alpha1Client
+func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
+	return &fakerbacv1alpha1.FakeRbacV1alpha1{Fake: &c.Fake}
+}
+
+// Rbac retrieves the RbacV1alpha1Client
+func (c *Clientset) Rbac() rbacv1alpha1.RbacV1alpha1Interface {
+	return &fakerbacv1alpha1.FakeRbacV1alpha1{Fake: &c.Fake}
 }

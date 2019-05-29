@@ -3,8 +3,8 @@
 package fake
 
 import (
-	rbacv1alpha1 "github.com/nais/naiserator/pkg/apis/istio/v1alpha1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	rbacv1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -16,8 +16,8 @@ var scheme = runtime.NewScheme()
 var codecs = serializer.NewCodecFactory(scheme)
 var parameterCodec = runtime.NewParameterCodec(scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
-	rbacv1alpha1.AddToScheme,
 	naiseratorv1alpha1.AddToScheme,
+	rbacv1alpha1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

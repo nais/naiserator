@@ -4,7 +4,7 @@ package rbac
 
 import (
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/nais/naiserator/pkg/client/informers/externalversions/istio/v1alpha1"
+	v1alpha1 "github.com/nais/naiserator/pkg/client/informers/externalversions/rbac.istio.io/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.
