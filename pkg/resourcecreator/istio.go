@@ -41,10 +41,6 @@ func getServiceRoleSpec(app *nais.Application) istio_crd.ServiceRoleSpec {
 }
 
 func getDefaultServiceRoleBinding(appName string, namespace string) istio_crd.ServiceRoleBindingSpec {
-	if len(namespace) > 0 {
-		namespace = "irbac"
-	}
-
 	return istio_crd.ServiceRoleBindingSpec{
 		Subjects: []*istio_crd.Subject{{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, appName)}},
 		RoleRef: &istio_crd.RoleRef{
