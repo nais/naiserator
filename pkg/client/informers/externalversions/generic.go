@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	v1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbacistioiov1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -40,6 +41,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=naiserator.nais.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Naiserator().V1alpha1().Applications().Informer()}, nil
+
+		// Group=networking.istio.io, Version=v1alpha3
+	case v1alpha3.SchemeGroupVersion.WithResource("virtualservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().VirtualServices().Informer()}, nil
 
 		// Group=rbac.istio.io, Version=v1alpha1
 	case rbacistioiov1alpha1.SchemeGroupVersion.WithResource("serviceroles"):

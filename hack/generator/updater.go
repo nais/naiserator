@@ -65,6 +65,12 @@ var i = []Service{
 		Type:      "*v1alpha1.ServiceRoleBinding",
 		Client:    "customClient.RbacV1alpha1().ServiceRoleBindings",
 	},
+	{
+		Name:      "virtualService",
+		Interface: "typed_networking_istio_io_v1alpha3.VirtualServiceInterface",
+		Type:      "*networking_istio_io_v1alpha3.VirtualService",
+		Client:    "customClient.NetworkingV1alpha3().VirtualServices",
+	},
 }
 
 func main() {

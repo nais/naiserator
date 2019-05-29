@@ -17,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -78,9 +79,9 @@ func main() {
 func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedInformerFactory {
 	config, err := clientset.NewForConfig(kubeconfig)
 	if err != nil {
-		log.Fatal("unable to create naiserator clientset")
+		log.Fatalf("unable to create naiserator clientset: %s", err)
 	}
-	
+
 	return informers.NewSharedInformerFactory(config, time.Second*30)
 }
 
@@ -140,6 +141,6 @@ func getEnv(key string, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
-	
+
 	return fallback
 }
