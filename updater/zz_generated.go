@@ -6,8 +6,10 @@ package updater
 import (
 	"fmt"
 
+	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -164,6 +166,23 @@ func serviceRoleBinding(client istio_v1alpha1.ServiceRoleBindingInterface, old, 
 	}
 }
 
+func virtualService(client typed_networking_istio_io_v1alpha3.VirtualServiceInterface, old, new *networking_istio_io_v1alpha3.VirtualService) func() error {
+	log.Infof("creating or updating *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -254,6 +273,17 @@ func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Client
 			return serviceRoleBinding(c, nil, new)
 		}
 		return serviceRoleBinding(c, old, new)
+
+	case *networking_istio_io_v1alpha3.VirtualService:
+		c := customClient.NetworkingV1alpha3().VirtualServices(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return virtualService(c, nil, new)
+		}
+		return virtualService(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
