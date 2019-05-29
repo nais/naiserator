@@ -52,7 +52,7 @@ func getDefaultServiceRoleBinding(appName string, namespace string) istio_crd.Se
 
 func Istio(app *nais.Application) []runtime.Object {
 	if len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
-		return []runtime.Object{}
+		return nil
 	}
 
 	return []runtime.Object{
