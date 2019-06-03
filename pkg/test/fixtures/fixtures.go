@@ -1,9 +1,10 @@
 package fixtures
 
 import (
+	"strconv"
+
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
 )
 
 // Constant values for the variables returned in the Application spec.
@@ -43,6 +44,10 @@ const (
 	VarValue2                 = "varvalue2"
 	AccessPolicyApp           = "allowedAccessApp"
 )
+
+const ApplicationName = "myapplication"
+const ApplicationNamespace = "mynamespace"
+const ApplicationTeam = "myteam"
 
 // Application returns a nais.io.Application test fixture.
 func Application() *nais.Application {
@@ -121,13 +126,13 @@ func Application() *nais.Application {
 			Service: nais.Service{
 				Port: nais.DefaultServicePort,
 			},
-			AccessPolicy: nais.AccessPolicy {
+			AccessPolicy: nais.AccessPolicy{
 				Ingress: nais.AccessPolicyIngress{
 					AllowAll: false,
 					Rules: []nais.AccessPolicyGressRule{
 					},
 				},
-				Egress:  nais.AccessPolicyEgress{
+				Egress: nais.AccessPolicyEgress{
 					AllowAll: false,
 					Rules: []nais.AccessPolicyGressRule{
 					},
@@ -137,4 +142,27 @@ func Application() *nais.Application {
 	}
 
 	return app
+}
+
+// MinimalApplication returns the absolute minimum application that might live in a Kubernetes cluster.
+func MinimalFailingApplication() *nais.Application {
+	return &nais.Application{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ApplicationName,
+			Namespace: ApplicationNamespace,
+		},
+	}
+}
+
+// MinimalApplication returns the absolute minimum configuration needed to create a full set of Kubernetes resources.
+func MinimalApplication() *nais.Application {
+	return &nais.Application{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ApplicationName,
+			Namespace: ApplicationNamespace,
+			Labels: map[string]string{
+				"team": ApplicationTeam,
+			},
+		},
+	}
 }

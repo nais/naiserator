@@ -7,19 +7,15 @@ import (
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
-
-const ApplicationName = "myapplication"
-const ApplicationNamespace = "mynamespace"
-const ApplicationTeam = "myteam"
 
 type realObjects struct {
 	deployment         *v1.Deployment
@@ -59,27 +55,6 @@ func getRealObjects(resources []runtime.Object) (o realObjects) {
 	return
 }
 
-func minimalFailingApplication() *nais.Application {
-	return &nais.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ApplicationName,
-			Namespace: ApplicationNamespace,
-		},
-	}
-}
-
-func minimalApplication() *nais.Application {
-	return &nais.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ApplicationName,
-			Namespace: ApplicationNamespace,
-			Labels: map[string]string{
-				"team": ApplicationTeam,
-			},
-		},
-	}
-}
-
 // Test that a specified application spec results in the correct Kubernetes resources.
 func TestCreate(t *testing.T) {
 	t.Run("default application spec merges into empty struct", func(t *testing.T) {
@@ -89,7 +64,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("application spec needs required parameters", func(t *testing.T) {
-		app := minimalFailingApplication()
+		app := fixtures.MinimalFailingApplication()
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -100,7 +75,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("team label and application name is propagated to created resources", func(t *testing.T) {
-		app := minimalApplication()
+		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -116,7 +91,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("all basic resource types are created from an application spec", func(t *testing.T) {
-		app := minimalApplication()
+		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -133,7 +108,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {
-		app := minimalApplication()
+		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []string{"https://foo.bar/baz"}
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
@@ -147,7 +122,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("erroneous ingress uris create errors", func(t *testing.T) {
-		app := minimalApplication()
+		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []string{"gopher://lol"}
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
@@ -159,7 +134,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("istio resources are omitted when access policy creation is disabled", func(t *testing.T) {
-		app := minimalApplication()
+		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -175,7 +150,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
-		app := minimalApplication()
+		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		err := nais.ApplyDefaults(app)
