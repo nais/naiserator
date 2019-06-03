@@ -16,9 +16,7 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-func TestGetDeployment(t *testing.T) {
-	app := fixtures.Application()
-	app.Spec.Vault.Enabled = true
+func TestDeployment(t *testing.T) {
 
 	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
 		vault.EnvVaultAddr:              "a",
@@ -28,6 +26,8 @@ func TestGetDeployment(t *testing.T) {
 		vault.EnvVaultEnabled:           "true",
 		resourcecreator.NaisClusterName: "some_cluster",
 	}, func(t *testing.T) {
+		app := fixtures.Application()
+		app.Spec.Vault.Enabled = true
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
@@ -76,25 +76,30 @@ func TestGetDeployment(t *testing.T) {
 			assert.Equal(t, "/base/kv/app/default", test.EnvVar(c.Env, "VKS_KV_PATH"))
 		})
 
-		t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
-			assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PATH, envValue(appContainer.Env, "NAV_TRUSTSTORE_PATH"))
-			assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PASSWORD, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
-			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
-			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
-			assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
-		})
 	}))
-}
 
-func TestLivenessProbe(t *testing.T) {
-	app := fixtures.Application()
-	app.Spec.Liveness.Port = 0
-	opts := resourcecreator.NewResourceOptions()
-	deploy, err := resourcecreator.Deployment(app, opts)
-	assert.Nil(t, err)
-	appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+	t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
+		app := fixtures.Application()
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+
+		assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PATH, envValue(appContainer.Env, "NAV_TRUSTSTORE_PATH"))
+		assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PASSWORD, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
+		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
+		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
+		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
+	})
 
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
+		app := fixtures.Application()
+		app.Spec.Liveness.Port = 0
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+
 		assert.Equal(t, nais.DefaultPortName, appContainer.LivenessProbe.HTTPGet.Port.StrVal)
 		assert.Equal(t, app.Spec.Liveness.Path, appContainer.LivenessProbe.HTTPGet.Path)
 		assert.Equal(t, int32(app.Spec.Liveness.PeriodSeconds), appContainer.LivenessProbe.PeriodSeconds)
@@ -102,9 +107,7 @@ func TestLivenessProbe(t *testing.T) {
 		assert.Equal(t, int32(app.Spec.Liveness.FailureThreshold), appContainer.LivenessProbe.FailureThreshold)
 		assert.Equal(t, int32(app.Spec.Liveness.InitialDelay), appContainer.LivenessProbe.InitialDelaySeconds)
 	})
-}
 
-func TestConfigMapMounts(t *testing.T) {
 	t.Run("configMaps are mounted into the container", func(t *testing.T) {
 		app := fixtures.Application()
 		app.Spec.ConfigMaps.Files = []string{
@@ -130,11 +133,6 @@ func TestConfigMapMounts(t *testing.T) {
 			assert.Len(t, volume.ConfigMap.Items, 0)
 		}
 	})
-}
-
-func TestWebproxy(t *testing.T) {
-	const httpProxy = "http://proxy.addr:1234"
-	const noProxy = "noproxy,foo,bar"
 
 	t.Run("webproxy configuration is injected into the container env", test.EnvWrapper(map[string]string{
 		resourcecreator.PodHttpProxyEnv: httpProxy,
@@ -154,9 +152,7 @@ func TestWebproxy(t *testing.T) {
 		assert.Equal(t, httpProxy, envValue(appContainer.Env, "https_proxy"))
 		assert.Equal(t, noProxy, envValue(appContainer.Env, "no_proxy"))
 	}))
-}
 
-func TestProbes(t *testing.T) {
 	t.Run("probes are not configured when not set", func(t *testing.T) {
 		app := &nais.Application{}
 		err := nais.ApplyDefaults(app)
@@ -168,9 +164,7 @@ func TestProbes(t *testing.T) {
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].ReadinessProbe)
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].LivenessProbe)
 	})
-}
 
-func TestLifecycle(t *testing.T) {
 	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
 		app := &nais.Application{}
 		err := nais.ApplyDefaults(app)
@@ -182,9 +176,7 @@ func TestLifecycle(t *testing.T) {
 		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.HTTPGet)
 		assert.Equal(t, []string{"sleep", "5"}, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.Exec.Command)
 	})
-}
 
-func TestDeploymentStrategy(t *testing.T) {
 	t.Run("default deployment strategy is RollingUpdate", func(t *testing.T) {
 		app := &nais.Application{}
 		err := nais.ApplyDefaults(app)
@@ -208,10 +200,8 @@ func TestDeploymentStrategy(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, appsv1.RecreateDeploymentStrategyType, appsv1.DeploymentStrategyType(deploy.Spec.Strategy.Type))
 	})
-}
 
-func TestEnableSecureLogs(t *testing.T) {
-	t.Run("", func(t *testing.T) {
+	t.Run("ensure that secure logging sidecar is created when requesting secure logs in app spec", func(t *testing.T) {
 		app := fixtures.Application()
 		app.Spec.LeaderElection = false
 		app.Spec.SecureLogs.Enabled = true
@@ -225,9 +215,7 @@ func TestEnableSecureLogs(t *testing.T) {
 		assert.Len(t, spec.Volumes, 3)
 		assert.Len(t, spec.Containers, 3)
 	})
-}
 
-func TestEnvVarSource(t *testing.T) {
 	t.Run("when valueFrom.fieldRef.fieldPath is set it should be used", func(t *testing.T) {
 		app := fixtures.Application()
 		app.Spec.Env = append(app.Spec.Env, nais.EnvVar{
