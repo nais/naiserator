@@ -9,6 +9,9 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	corev1 "k8s.io/api/core/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -20,6 +23,10 @@ const ApplicationTeam = "myteam"
 
 type realObjects struct {
 	deployment         *v1.Deployment
+	service            *corev1.Service
+	serviceAccount     *corev1.ServiceAccount
+	hpa                *autoscalingv1.HorizontalPodAutoscaler
+	ingress            *extensionsv1beta1.Ingress
 	networkPolicy      *networkingv1.NetworkPolicy
 	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
 	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
@@ -32,6 +39,14 @@ func getRealObjects(resources []runtime.Object) realObjects {
 		switch v := r.(type) {
 		case *v1.Deployment:
 			real.deployment = v
+		case *corev1.Service:
+			real.service = v
+		case *corev1.ServiceAccount:
+			real.serviceAccount = v
+		case *autoscalingv1.HorizontalPodAutoscaler:
+			real.hpa = v
+		case *extensionsv1beta1.Ingress:
+			real.ingress = v
 		case *networkingv1.NetworkPolicy:
 			real.networkPolicy = v
 		case *rbac_istio_io_v1alpha1.ServiceRole:
@@ -99,6 +114,22 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, app.Namespace, objects.deployment.Namespace)
 		assert.Equal(t, app.Name, objects.deployment.Labels["app"])
 		assert.Equal(t, app.Labels["team"], objects.deployment.Labels["team"])
+	})
+
+	t.Run("all basic resource types are created from an application spec", func(t *testing.T) {
+		app := minimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.hpa)
+		assert.NotNil(t, objects.service)
+		assert.NotNil(t, objects.serviceAccount)
+		assert.NotNil(t, objects.deployment)
 	})
 
 	t.Run("istio resources are omitted when access policy creation is disabled", func(t *testing.T) {
