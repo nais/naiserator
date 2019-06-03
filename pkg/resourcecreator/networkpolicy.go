@@ -30,7 +30,6 @@ func addNetworkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPoli
 	return
 }
 
-
 func ingressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyIngressRule {
 	if app.Spec.AccessPolicy.Ingress.AllowAll {
 		return &[]networkingv1.NetworkPolicyIngressRule{{}}
@@ -75,12 +74,10 @@ func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
 			networkingv1.PolicyTypeEgress,
 		},
 		Ingress: *ingressPolicy(app),
-		Egress: *egressPolicy(app),
+		Egress:  *egressPolicy(app),
 	}
 
 }
-
-
 
 func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
@@ -89,7 +86,6 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec: *networkPolicySpec(app),
+		Spec:       *networkPolicySpec(app),
 	}
 }
-

@@ -27,9 +27,9 @@ func VirtualService(app *nais.Application) *istio.VirtualService {
 			},
 			Hosts: hosts,
 			HTTP: []istio.HTTPRoute{
-				istio.HTTPRoute{
+				{
 					Route: []istio.HTTPRouteDestination{
-						istio.HTTPRouteDestination{
+						{
 							Destination: istio.Destination{
 								Host: app.Name,
 								Port: istio.PortSelector{
