@@ -130,6 +130,21 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.service)
 		assert.NotNil(t, objects.serviceAccount)
 		assert.NotNil(t, objects.deployment)
+		assert.Nil(t, objects.ingress)
+	})
+
+	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {
+		app := minimalApplication()
+		app.Spec.Ingresses = []string{"https://foo.bar/baz"}
+		opts := resourcecreator.NewResourceOptions()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.ingress)
 	})
 
 	t.Run("istio resources are omitted when access policy creation is disabled", func(t *testing.T) {
