@@ -147,6 +147,18 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.ingress)
 	})
 
+	t.Run("erroneous ingress uris create errors", func(t *testing.T) {
+		app := minimalApplication()
+		app.Spec.Ingresses = []string{"gopher://lol"}
+		opts := resourcecreator.NewResourceOptions()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.Error(t, err)
+		assert.Nil(t, resources)
+	})
+
 	t.Run("istio resources are omitted when access policy creation is disabled", func(t *testing.T) {
 		app := minimalApplication()
 		opts := resourcecreator.NewResourceOptions()
