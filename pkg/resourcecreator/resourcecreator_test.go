@@ -33,31 +33,30 @@ type realObjects struct {
 	virtualService     *networking_istio_io_v1alpha3.VirtualService
 }
 
-func getRealObjects(resources []runtime.Object) realObjects {
-	real := realObjects{}
+func getRealObjects(resources []runtime.Object) (o realObjects) {
 	for _, r := range resources {
 		switch v := r.(type) {
 		case *v1.Deployment:
-			real.deployment = v
+			o.deployment = v
 		case *corev1.Service:
-			real.service = v
+			o.service = v
 		case *corev1.ServiceAccount:
-			real.serviceAccount = v
+			o.serviceAccount = v
 		case *autoscalingv1.HorizontalPodAutoscaler:
-			real.hpa = v
+			o.hpa = v
 		case *extensionsv1beta1.Ingress:
-			real.ingress = v
+			o.ingress = v
 		case *networkingv1.NetworkPolicy:
-			real.networkPolicy = v
+			o.networkPolicy = v
 		case *rbac_istio_io_v1alpha1.ServiceRole:
-			real.serviceRole = v
+			o.serviceRole = v
 		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
-			real.serviceRoleBinding = v
+			o.serviceRoleBinding = v
 		case *networking_istio_io_v1alpha3.VirtualService:
-			real.virtualService = v
+			o.virtualService = v
 		}
 	}
-	return real
+	return
 }
 
 func minimalFailingApplication() *nais.Application {
