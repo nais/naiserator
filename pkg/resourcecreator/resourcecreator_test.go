@@ -6,7 +6,21 @@ import (
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const ApplicationName = "myapplication"
+const ApplicationNamespace = "mynamespace"
+
+func minimalApplication() *nais.Application {
+	return &nais.Application{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ApplicationName,
+			Namespace: ApplicationNamespace,
+		},
+	}
+
+}
 
 // Test that a specified application spec results in the correct Kubernetes resources.
 func TestCreate(t *testing.T) {
@@ -17,7 +31,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("application spec needs required parameters", func(t *testing.T) {
-		app := &nais.Application{}
+		app := minimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
