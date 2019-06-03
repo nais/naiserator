@@ -138,8 +138,11 @@ func TestDeployment(t *testing.T) {
 		resourcecreator.PodHttpProxyEnv: httpProxy,
 		resourcecreator.PodNoProxyEnv:   noProxy,
 	}, func(t *testing.T) {
-		app := fixtures.Application()
+		app := fixtures.MinimalApplication()
 		app.Spec.WebProxy = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
@@ -154,7 +157,7 @@ func TestDeployment(t *testing.T) {
 	}))
 
 	t.Run("probes are not configured when not set", func(t *testing.T) {
-		app := &nais.Application{}
+		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -166,7 +169,7 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
-		app := &nais.Application{}
+		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -178,7 +181,7 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("default deployment strategy is RollingUpdate", func(t *testing.T) {
-		app := &nais.Application{}
+		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 		assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, appsv1.DeploymentStrategyType(app.Spec.Strategy.Type))
@@ -190,7 +193,7 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {
-		app := &nais.Application{}
+		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -202,9 +205,11 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("ensure that secure logging sidecar is created when requesting secure logs in app spec", func(t *testing.T) {
-		app := fixtures.Application()
+		app := fixtures.MinimalApplication()
 		app.Spec.LeaderElection = false
 		app.Spec.SecureLogs.Enabled = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
 		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
 
@@ -217,13 +222,15 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("when valueFrom.fieldRef.fieldPath is set it should be used", func(t *testing.T) {
-		app := fixtures.Application()
+		app := fixtures.MinimalApplication()
 		app.Spec.Env = append(app.Spec.Env, nais.EnvVar{
 			Name: "podIP",
 			ValueFrom: nais.EnvVarSource{
 				FieldRef: nais.ObjectFieldSelector{FieldPath: "status.podIP"},
 			},
 		})
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
 		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
 		assert.NoError(t, err)
