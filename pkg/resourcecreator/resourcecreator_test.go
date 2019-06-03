@@ -4,9 +4,12 @@ import (
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
+	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/apps/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -16,7 +19,11 @@ const ApplicationNamespace = "mynamespace"
 const ApplicationTeam = "myteam"
 
 type realObjects struct {
-	deployment *v1.Deployment
+	deployment         *v1.Deployment
+	networkPolicy      *networkingv1.NetworkPolicy
+	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
+	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
+	virtualService     *networking_istio_io_v1alpha3.VirtualService
 }
 
 func getRealObjects(resources []runtime.Object) realObjects {
@@ -25,6 +32,14 @@ func getRealObjects(resources []runtime.Object) realObjects {
 		switch v := r.(type) {
 		case *v1.Deployment:
 			real.deployment = v
+		case *networkingv1.NetworkPolicy:
+			real.networkPolicy = v
+		case *rbac_istio_io_v1alpha1.ServiceRole:
+			real.serviceRole = v
+		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
+			real.serviceRoleBinding = v
+		case *networking_istio_io_v1alpha3.VirtualService:
+			real.virtualService = v
 		}
 	}
 	return real
@@ -84,6 +99,38 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, app.Namespace, objects.deployment.Namespace)
 		assert.Equal(t, app.Name, objects.deployment.Labels["app"])
 		assert.Equal(t, app.Labels["team"], objects.deployment.Labels["team"])
+	})
 
+	t.Run("istio resources are omitted when access policy creation is disabled", func(t *testing.T) {
+		app := minimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.Nil(t, objects.virtualService)
+		assert.Nil(t, objects.serviceRoleBinding)
+		assert.Nil(t, objects.serviceRole)
+		assert.Nil(t, objects.networkPolicy)
+	})
+
+	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
+		app := minimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		opts.AccessPolicy = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.virtualService)
+		assert.NotNil(t, objects.serviceRoleBinding)
+		assert.NotNil(t, objects.serviceRole)
+		assert.NotNil(t, objects.networkPolicy)
 	})
 }
