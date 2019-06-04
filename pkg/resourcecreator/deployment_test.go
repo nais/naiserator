@@ -37,9 +37,6 @@ func TestDeployment(t *testing.T) {
 			assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
 			assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
 			assert.Equal(t, app.Spec.PreStopHookPath, appContainer.Lifecycle.PreStop.HTTPGet.Path)
-			assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
-			assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
-			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
 		})
 
 		t.Run("vault KV path is configured correctly", func(t *testing.T) {
@@ -71,6 +68,23 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImage))
 		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterName))
 	}))
+
+	t.Run("prometheus is set up correctly", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Prometheus.Path = "/my/metrics"
+		app.Spec.Prometheus.Port = "1234"
+		app.Spec.Prometheus.Enabled = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
+		assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
+		assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
+	})
 
 	t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
@@ -321,11 +335,11 @@ func TestDeployment(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Env = []nais.EnvVar{
 			{
-				Name: "foo",
+				Name:  "foo",
 				Value: "bar",
 			},
 			{
-				Name: "bar",
+				Name:  "bar",
 				Value: "baz",
 			},
 		}
