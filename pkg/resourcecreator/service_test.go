@@ -1,11 +1,12 @@
 package resourcecreator_test
 
 import (
+	"testing"
+
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestGetService(t *testing.T) {

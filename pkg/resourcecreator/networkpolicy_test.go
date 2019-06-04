@@ -1,11 +1,12 @@
 package resourcecreator
 
 import (
+	"testing"
+
 	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	networking "k8s.io/api/networking/v1"
-	"testing"
 )
 
 func TestNetworkPolicy(t *testing.T) {
@@ -41,4 +42,3 @@ func TestNetworkPolicy(t *testing.T) {
 		assert.Equal(t, matchLabels, networkPolicy.Spec.Egress[0].To[0].PodSelector.MatchLabels)
 	})
 }
-

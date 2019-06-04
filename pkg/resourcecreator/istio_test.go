@@ -2,9 +2,10 @@ package resourcecreator
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestIstio(t *testing.T) {

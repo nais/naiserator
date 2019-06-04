@@ -5,10 +5,9 @@ import (
 	"strconv"
 	"testing"
 
+	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test"
-
-	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/nais/naiserator/pkg/vault"
 	"github.com/stretchr/testify/assert"
