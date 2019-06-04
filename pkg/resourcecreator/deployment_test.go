@@ -15,6 +15,8 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+const clusterName = "my.test.cluster.local"
+
 func TestDeployment(t *testing.T) {
 
 	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
@@ -23,7 +25,7 @@ func TestDeployment(t *testing.T) {
 		vault.EnvInitContainerImage:     "c",
 		vault.EnvVaultKVPath:            "/base/kv",
 		vault.EnvVaultEnabled:           "true",
-		resourcecreator.NaisClusterName: "some_cluster",
+		resourcecreator.NaisClusterName: clusterName,
 	}, func(t *testing.T) {
 		app := fixtures.Application()
 		app.Spec.Vault.Enabled = true
@@ -63,18 +65,33 @@ func TestDeployment(t *testing.T) {
 			assert.Equal(t, app.Spec.Env[0].Value, envValue(appContainer.Env, app.Spec.Env[0].Name))
 		})
 
-		t.Run("default environment variables is applied", func(t *testing.T) {
-			assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppName))
-			assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespace))
-			assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImage))
-			assert.Equal(t, "some_cluster", envValue(appContainer.Env, resourcecreator.NaisClusterName))
-		})
-
 		t.Run("vault KV path is configured correctly", func(t *testing.T) {
 			c := getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
 			assert.Equal(t, "/base/kv/app/default", test.EnvVar(c.Env, "VKS_KV_PATH"))
 		})
 
+	}))
+
+	t.Run("reflection environment variables are set in the application container", test.EnvWrapper(map[string]string{
+		resourcecreator.NaisClusterName: clusterName,
+	}, func(t *testing.T) {
+
+		app := fixtures.MinimalApplication()
+		app.Spec.Image = "docker/image:latest"
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+
+		assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppName))
+		assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespace))
+		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImage))
+		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterName))
 	}))
 
 	t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
