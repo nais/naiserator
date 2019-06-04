@@ -26,7 +26,7 @@ func TestDeployment(t *testing.T) {
 		vault.EnvVaultKVPath:        "/base/kv",
 		vault.EnvVaultEnabled:       "true",
 	}, func(t *testing.T) {
-		app := fixtures.Application()
+		app := fixtures.MinimalApplication()
 		app.Spec.Vault.Enabled = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -37,7 +37,7 @@ func TestDeployment(t *testing.T) {
 
 		c := getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
 		assert.NotNil(t, c, "contains vault initcontainer")
-		assert.Equal(t, "/base/kv/app/default", test.EnvVar(c.Env, "VKS_KV_PATH"))
+		assert.Equal(t, "/base/kv/myapplication/mynamespace", test.EnvVar(c.Env, "VKS_KV_PATH"))
 
 		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
