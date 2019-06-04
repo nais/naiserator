@@ -1,10 +1,11 @@
 package vault_test
 
 import (
-	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	"os"
 	"testing"
+
+	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/test/fixtures"
 
 	"github.com/nais/naiserator/pkg/test"
 	"github.com/nais/naiserator/pkg/vault"
@@ -36,16 +37,15 @@ func TestFeatureFlagging(t *testing.T) {
 func TestNewInitializer(t *testing.T) {
 
 	var i vault.Initializer
-	var err error
 	const appName = "app"
 
 	t.Run("Initializer mutates podspec correctly", test.EnvWrapper(envVars, func(t *testing.T) {
-		app := fixtures.Application()
+		app := fixtures.MinimalApplication()
 		app.Name = appName
 		app.Namespace = "namespace"
 		app.Spec.Vault.Enabled = true
 
-		paths := []v1alpha1.SecretPath{
+		paths := []nais.SecretPath{
 			{
 				MountPath: "/first/mount/path",
 				KvPath:    "/first/kv/path",
@@ -56,6 +56,8 @@ func TestNewInitializer(t *testing.T) {
 			},
 		}
 		app.Spec.Vault.Mounts = paths
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
 		i, err = vault.NewInitializer(app)
 		assert.NoError(t, err)

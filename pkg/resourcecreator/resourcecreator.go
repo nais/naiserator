@@ -13,6 +13,11 @@ import (
 
 // Create takes an Application resource and returns a slice of Kubernetes resources.
 func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.Object, error) {
+	team, ok := app.Labels["team"]
+	if !ok || len(team) == 0 {
+		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
+	}
+
 	objects := []runtime.Object{
 		Service(app),
 		ServiceAccount(app),

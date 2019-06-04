@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetServiceAccount(t *testing.T) {
-	app := fixtures.Application()
+	app := fixtures.MinimalApplication()
 	svcAcc := resourcecreator.ServiceAccount(app)
 
 	assert.Equal(t, app.Name, svcAcc.Name)

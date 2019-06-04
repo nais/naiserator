@@ -88,6 +88,8 @@ func (n *Naiserator) synchronize(logger *log.Entry, previous, app *v1alpha1.Appl
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
 		resourceOptions.NumReplicas = *deployment.Spec.Replicas
 	}
+
+	// AccessPolicy ensures that Istio resources are created.
 	resourceOptions.AccessPolicy = n.enableAccessPolicy
 
 	resources, err := resourcecreator.Create(app, resourceOptions)
