@@ -43,7 +43,6 @@ func TestDeployment(t *testing.T) {
 			assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
 			assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
-			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.Containers, "elector"), "contains sidecar for leader election")
 			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0"), "contains vault initcontainer")
 			assert.Equal(t, app.Spec.Env[0].Value, envValue(appContainer.Env, app.Spec.Env[0].Name))
 		})
@@ -92,6 +91,22 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
+	})
+
+	t.Run("leader election sidecar is injected when LE is requested", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.LeaderElection = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+		leaderElectionContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, "elector")
+		assert.NotNil(t, leaderElectionContainer)
 	})
 
 	t.Run("resource requests and limits are set up correctly", func(t *testing.T) {

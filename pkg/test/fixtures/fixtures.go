@@ -31,10 +31,6 @@ const (
 	LimitCpu                  = "500m"
 	LimitMemory               = "512Mi"
 	PrometheusPath            = "metrics"
-	PrometheusEnabled         = true
-	WebProxyEnabled           = true
-	LeaderElectionEnabled     = true
-	SecretsEnabled            = false
 	PreStopHookPath           = "die"
 	LogFormat                 = "accesslog"
 	LogTransform              = "dns_loglevel"
@@ -98,20 +94,15 @@ func Application() *nais.Application {
 			Prometheus: nais.PrometheusConfig{
 				Path:    PrometheusPath,
 				Port:    strconv.Itoa(nais.DefaultAppPort),
-				Enabled: PrometheusEnabled,
-			},
-			Ingresses: []string{
-				"https://app.nais.adeo.no/",
-				"https://tjenester.nav.no/app",
-				"https://app.foo.bar",
+				Enabled: true,
 			},
 			Logtransform:    LogTransform,
 			Logformat:       LogFormat,
-			WebProxy:        WebProxyEnabled,
+			WebProxy:        true,
 			PreStopHookPath: PreStopHookPath,
-			LeaderElection:  LeaderElectionEnabled,
+			LeaderElection:  true,
 			Vault: nais.Vault{
-				Enabled: SecretsEnabled,
+				Enabled: false,
 			},
 			Env: []nais.EnvVar{
 				{
