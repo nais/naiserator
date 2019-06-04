@@ -257,7 +257,7 @@ func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 
 	objectMeta.Annotations = map[string]string{
 		"prometheus.io/scrape": strconv.FormatBool(app.Spec.Prometheus.Enabled),
-		"prometheus.io/port":   strconv.Itoa(app.Spec.Port),
+		"prometheus.io/port":   app.Spec.Prometheus.Port,
 		"prometheus.io/path":   app.Spec.Prometheus.Path,
 	}
 	if len(app.Spec.Logformat) > 0 {
