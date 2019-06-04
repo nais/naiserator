@@ -19,7 +19,7 @@ const clusterName = "my.test.cluster.local"
 
 func TestDeployment(t *testing.T) {
 
-	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
+	t.Run("vault integration is set up correctly", test.EnvWrapper(map[string]string{
 		vault.EnvVaultAddr:          "a",
 		vault.EnvVaultAuthPath:      "b",
 		vault.EnvInitContainerImage: "c",
@@ -28,23 +28,19 @@ func TestDeployment(t *testing.T) {
 	}, func(t *testing.T) {
 		app := fixtures.Application()
 		app.Spec.Vault.Enabled = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
+
+		c := getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
+		assert.NotNil(t, c, "contains vault initcontainer")
+		assert.Equal(t, "/base/kv/app/default", test.EnvVar(c.Env, "VKS_KV_PATH"))
+
 		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-
-		t.Run("user settings are applied", func(t *testing.T) {
-			assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
-			assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
-			assert.Equal(t, app.Spec.PreStopHookPath, appContainer.Lifecycle.PreStop.HTTPGet.Path)
-		})
-
-		t.Run("vault KV path is configured correctly", func(t *testing.T) {
-			c := getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
-			assert.NotNil(t, c, "contains vault initcontainer")
-			assert.Equal(t, "/base/kv/app/default", test.EnvVar(c.Env, "VKS_KV_PATH"))
-		})
-
+		assert.NotNil(t, appContainer)
 	}))
 
 	t.Run("reflection environment variables are set in the application container", test.EnvWrapper(map[string]string{
@@ -68,6 +64,21 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImage))
 		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterName))
 	}))
+
+	t.Run("misc settings are applied", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+
+		assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
+		assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
+	})
 
 	t.Run("prometheus is set up correctly", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
