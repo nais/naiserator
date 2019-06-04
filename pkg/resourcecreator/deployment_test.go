@@ -20,12 +20,11 @@ const clusterName = "my.test.cluster.local"
 func TestDeployment(t *testing.T) {
 
 	t.Run("Test deployment with vault", test.EnvWrapper(map[string]string{
-		vault.EnvVaultAddr:              "a",
-		vault.EnvVaultAuthPath:          "b",
-		vault.EnvInitContainerImage:     "c",
-		vault.EnvVaultKVPath:            "/base/kv",
-		vault.EnvVaultEnabled:           "true",
-		resourcecreator.NaisClusterName: clusterName,
+		vault.EnvVaultAddr:          "a",
+		vault.EnvVaultAuthPath:      "b",
+		vault.EnvInitContainerImage: "c",
+		vault.EnvVaultKVPath:        "/base/kv",
+		vault.EnvVaultEnabled:       "true",
 	}, func(t *testing.T) {
 		app := fixtures.Application()
 		app.Spec.Vault.Enabled = true
@@ -41,18 +40,6 @@ func TestDeployment(t *testing.T) {
 			assert.Equal(t, app.Labels["team"], deploy.Labels["team"])
 			assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
 			assert.Equal(t, app.Spec.PreStopHookPath, appContainer.Lifecycle.PreStop.HTTPGet.Path)
-			assert.Equal(t, int32(app.Spec.Liveness.Port), appContainer.LivenessProbe.HTTPGet.Port.IntVal)
-			assert.Equal(t, app.Spec.Liveness.Path, appContainer.LivenessProbe.HTTPGet.Path)
-			assert.Equal(t, int32(app.Spec.Liveness.PeriodSeconds), appContainer.LivenessProbe.PeriodSeconds)
-			assert.Equal(t, int32(app.Spec.Liveness.Timeout), appContainer.LivenessProbe.TimeoutSeconds)
-			assert.Equal(t, int32(app.Spec.Liveness.FailureThreshold), appContainer.LivenessProbe.FailureThreshold)
-			assert.Equal(t, int32(app.Spec.Liveness.InitialDelay), appContainer.LivenessProbe.InitialDelaySeconds)
-			assert.Equal(t, int32(app.Spec.Readiness.Port), appContainer.ReadinessProbe.HTTPGet.Port.IntVal)
-			assert.Equal(t, app.Spec.Readiness.Path, appContainer.ReadinessProbe.HTTPGet.Path)
-			assert.Equal(t, int32(app.Spec.Readiness.PeriodSeconds), appContainer.ReadinessProbe.PeriodSeconds)
-			assert.Equal(t, int32(app.Spec.Readiness.Timeout), appContainer.ReadinessProbe.TimeoutSeconds)
-			assert.Equal(t, int32(app.Spec.Readiness.FailureThreshold), appContainer.ReadinessProbe.FailureThreshold)
-			assert.Equal(t, int32(app.Spec.Readiness.InitialDelay), appContainer.ReadinessProbe.InitialDelaySeconds)
 			assert.Equal(t, app.Spec.Resources.Limits.Cpu, appContainer.Resources.Limits.Cpu().String())
 			assert.Equal(t, app.Spec.Resources.Limits.Memory, appContainer.Resources.Limits.Memory().String())
 			assert.Equal(t, app.Spec.Resources.Requests.Cpu, appContainer.Resources.Requests.Cpu().String())
@@ -155,6 +142,34 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, int32(app.Spec.Liveness.Timeout), appContainer.LivenessProbe.TimeoutSeconds)
 		assert.Equal(t, int32(app.Spec.Liveness.FailureThreshold), appContainer.LivenessProbe.FailureThreshold)
 		assert.Equal(t, int32(app.Spec.Liveness.InitialDelay), appContainer.LivenessProbe.InitialDelaySeconds)
+	})
+
+	t.Run("readiness configuration is set up correctly", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Readiness = nais.Probe{
+			Path:             "/probe/path",
+			Port:             12399,
+			Timeout:          12,
+			FailureThreshold: 33,
+			InitialDelay:     44,
+			PeriodSeconds:    55,
+		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+
+		assert.Equal(t, app.Spec.Readiness.Path, appContainer.ReadinessProbe.HTTPGet.Path)
+		assert.Equal(t, int32(app.Spec.Readiness.Port), appContainer.ReadinessProbe.HTTPGet.Port.IntVal)
+		assert.Equal(t, int32(app.Spec.Readiness.PeriodSeconds), appContainer.ReadinessProbe.PeriodSeconds)
+		assert.Equal(t, int32(app.Spec.Readiness.Timeout), appContainer.ReadinessProbe.TimeoutSeconds)
+		assert.Equal(t, int32(app.Spec.Readiness.FailureThreshold), appContainer.ReadinessProbe.FailureThreshold)
+		assert.Equal(t, int32(app.Spec.Readiness.InitialDelay), appContainer.ReadinessProbe.InitialDelaySeconds)
 	})
 
 	t.Run("configMaps are mounted into the container", func(t *testing.T) {
