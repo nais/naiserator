@@ -40,10 +40,6 @@ func TestDeployment(t *testing.T) {
 			assert.Equal(t, app.Labels["team"], deploy.Labels["team"])
 			assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
 			assert.Equal(t, app.Spec.PreStopHookPath, appContainer.Lifecycle.PreStop.HTTPGet.Path)
-			assert.Equal(t, app.Spec.Resources.Limits.Cpu, appContainer.Resources.Limits.Cpu().String())
-			assert.Equal(t, app.Spec.Resources.Limits.Memory, appContainer.Resources.Limits.Memory().String())
-			assert.Equal(t, app.Spec.Resources.Requests.Cpu, appContainer.Resources.Requests.Cpu().String())
-			assert.Equal(t, app.Spec.Resources.Requests.Memory, appContainer.Resources.Requests.Memory().String())
 			assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
 			assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
@@ -96,6 +92,28 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
+	})
+
+	t.Run("resource requests and limits are set up correctly", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Resources.Limits.Cpu = "150m"
+		app.Spec.Resources.Limits.Memory = "2G"
+		app.Spec.Resources.Requests.Cpu = "100m"
+		app.Spec.Resources.Requests.Memory = "512M"
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+
+		assert.Equal(t, app.Spec.Resources.Limits.Cpu, appContainer.Resources.Limits.Cpu().String())
+		assert.Equal(t, app.Spec.Resources.Limits.Memory, appContainer.Resources.Limits.Memory().String())
+		assert.Equal(t, app.Spec.Resources.Requests.Cpu, appContainer.Resources.Requests.Cpu().String())
+		assert.Equal(t, app.Spec.Resources.Requests.Memory, appContainer.Resources.Requests.Memory().String())
 	})
 
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
