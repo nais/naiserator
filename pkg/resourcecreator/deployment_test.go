@@ -35,19 +35,16 @@ func TestDeployment(t *testing.T) {
 
 		t.Run("user settings are applied", func(t *testing.T) {
 			assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
-			assert.Equal(t, app.Name, deploy.Name)
-			assert.Equal(t, app.Namespace, deploy.Namespace)
-			assert.Equal(t, app.Labels["team"], deploy.Labels["team"])
 			assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
 			assert.Equal(t, app.Spec.PreStopHookPath, appContainer.Lifecycle.PreStop.HTTPGet.Path)
 			assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
 			assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
-			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0"), "contains vault initcontainer")
 		})
 
 		t.Run("vault KV path is configured correctly", func(t *testing.T) {
 			c := getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
+			assert.NotNil(t, c, "contains vault initcontainer")
 			assert.Equal(t, "/base/kv/app/default", test.EnvVar(c.Env, "VKS_KV_PATH"))
 		})
 
