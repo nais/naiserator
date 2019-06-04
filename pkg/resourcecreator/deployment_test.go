@@ -78,7 +78,10 @@ func TestDeployment(t *testing.T) {
 	}))
 
 	t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
-		app := fixtures.Application()
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
@@ -92,15 +95,45 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
-		app := fixtures.Application()
-		app.Spec.Liveness.Port = 0
+		app := fixtures.MinimalApplication()
+		app.Spec.Liveness = nais.Probe{
+			Path: "/probe/path",
+		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
+
 		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, nais.DefaultPortName, appContainer.LivenessProbe.HTTPGet.Port.StrVal)
+	})
+
+	t.Run("liveness configuration is set up correctly", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Liveness = nais.Probe{
+			Path:             "/probe/path",
+			Port:             12399,
+			Timeout:          12,
+			FailureThreshold: 33,
+			InitialDelay:     44,
+			PeriodSeconds:    55,
+		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+
 		assert.Equal(t, app.Spec.Liveness.Path, appContainer.LivenessProbe.HTTPGet.Path)
+		assert.Equal(t, int32(app.Spec.Liveness.Port), appContainer.LivenessProbe.HTTPGet.Port.IntVal)
 		assert.Equal(t, int32(app.Spec.Liveness.PeriodSeconds), appContainer.LivenessProbe.PeriodSeconds)
 		assert.Equal(t, int32(app.Spec.Liveness.Timeout), appContainer.LivenessProbe.TimeoutSeconds)
 		assert.Equal(t, int32(app.Spec.Liveness.FailureThreshold), appContainer.LivenessProbe.FailureThreshold)
@@ -108,11 +141,14 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("configMaps are mounted into the container", func(t *testing.T) {
-		app := fixtures.Application()
+		app := fixtures.MinimalApplication()
 		app.Spec.ConfigMaps.Files = []string{
 			"foo",
 			"bar",
 		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
 		opts := resourcecreator.NewResourceOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
