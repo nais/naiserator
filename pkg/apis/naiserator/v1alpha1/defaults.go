@@ -1,8 +1,9 @@
 package v1alpha1
 
 import (
-	"github.com/imdario/mergo"
 	"strconv"
+
+	"github.com/imdario/mergo"
 )
 
 // Application spec default values
