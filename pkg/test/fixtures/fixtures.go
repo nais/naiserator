@@ -42,7 +42,6 @@ const (
 	VarValue1                 = "varvalue1"
 	VarName2                  = "varname2"
 	VarValue2                 = "varvalue2"
-	AccessPolicyApp           = "allowedAccessApp"
 )
 
 const ApplicationName = "myapplication"
