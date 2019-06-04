@@ -44,7 +44,6 @@ func TestDeployment(t *testing.T) {
 			assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 			assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
 			assert.NotNil(t, getContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0"), "contains vault initcontainer")
-			assert.Equal(t, app.Spec.Env[0].Value, envValue(appContainer.Env, app.Spec.Env[0].Name))
 		})
 
 		t.Run("vault KV path is configured correctly", func(t *testing.T) {
@@ -321,7 +320,33 @@ func TestDeployment(t *testing.T) {
 		assert.Len(t, spec.Containers, 3)
 	})
 
-	t.Run("when valueFrom.fieldRef.fieldPath is set it should be used", func(t *testing.T) {
+	t.Run("environment variables are injected", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Env = []nais.EnvVar{
+			{
+				Name: "foo",
+				Value: "bar",
+			},
+			{
+				Name: "bar",
+				Value: "baz",
+			},
+		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+
+		assert.Equal(t, "bar", envValue(appContainer.Env, "foo"))
+		assert.Equal(t, "baz", envValue(appContainer.Env, "bar"))
+	})
+
+	t.Run("environment variables uses valueFrom.fieldRef.fieldPath if set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Env = append(app.Spec.Env, nais.EnvVar{
 			Name: "podIP",
