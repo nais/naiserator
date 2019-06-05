@@ -69,9 +69,13 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 
 }
 
-func ServiceRole(app *nais.Application) *istio_crd.ServiceRole{
+func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+		return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
+	}
+
 	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	return &istio_crd.ServiceRole{
@@ -81,7 +85,7 @@ func ServiceRole(app *nais.Application) *istio_crd.ServiceRole{
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec:       getServiceRoleSpec(app),
-	}
+	}, nil
 }
 
 
