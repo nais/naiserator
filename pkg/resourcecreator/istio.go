@@ -53,9 +53,14 @@ func getDefaultServiceRoleBinding(appName string, namespace string) istio_crd.Se
 	}
 }
 
-func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
+func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, error) {
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+		return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
+	}
+
+
 	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	return &istio_crd.ServiceRoleBinding{
@@ -65,8 +70,7 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec:       getDefaultServiceRoleBinding(app.Name, app.Namespace),
-	}
-
+	}, nil
 }
 
 func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
