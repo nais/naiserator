@@ -161,6 +161,25 @@ func TestCreate(t *testing.T) {
 
 		objects := getRealObjects(resources)
 		assert.NotNil(t, objects.virtualService)
+		assert.Nil(t, objects.serviceRoleBinding)
+		assert.Nil(t, objects.serviceRole)
+		assert.NotNil(t, objects.networkPolicy)
+	})
+
+	t.Run("servicerole and servicerolebinding resources are created when access policy creation is enabled", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		opts.AccessPolicy = true
+		app.Spec.AccessPolicy.Ingress.AllowAll = true
+
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.virtualService)
 		assert.NotNil(t, objects.serviceRoleBinding)
 		assert.NotNil(t, objects.serviceRole)
 		assert.NotNil(t, objects.networkPolicy)
