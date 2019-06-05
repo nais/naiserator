@@ -117,8 +117,14 @@ type AccessPolicyEgress struct {
 }
 
 type AccessPolicy struct {
-	Ingress         AccessPolicyIngress `json:"ingress"`
-	Egress          AccessPolicyEgress  `json:"egress"`
+	Ingress AccessPolicyIngress `json:"ingress"`
+	Egress  AccessPolicyEgress  `json:"egress"`
+}
+
+type Secret struct {
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	MountPath string `json:"mountPath"`
 }
 
 // ApplicationSpec used to be called nais manifest.
@@ -136,7 +142,7 @@ type ApplicationSpec struct {
 	Prometheus      PrometheusConfig     `json:"prometheus"`
 	Replicas        Replicas             `json:"replicas"`
 	Resources       ResourceRequirements `json:"resources"`
-	Secrets         bool                 `json:"secrets"`
+	Secrets         []Secret             `json:"secrets"`
 	Vault           Vault                `json:"vault"`
 	WebProxy        bool                 `json:"webproxy"`
 	ConfigMaps      ConfigMaps           `json:"configMaps"`
