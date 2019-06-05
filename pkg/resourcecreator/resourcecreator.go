@@ -35,7 +35,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		if serviceRole != nil {
 			objects = append(objects, serviceRole)
 		}
-		serviceRoleBinding := ServiceRoleBinding(app)
+		serviceRoleBinding, err := ServiceRoleBinding(app)
+		if err != nil {
+			return nil, fmt.Errorf("while creating access policies: %s", err)
+		}
+
 		if serviceRoleBinding != nil {
 			objects = append(objects, serviceRoleBinding)
 		}
