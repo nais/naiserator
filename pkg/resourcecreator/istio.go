@@ -2,13 +2,13 @@ package resourcecreator
 
 import (
 	"fmt"
+
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
 	istio_crd "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const IstioAPIVersion = "v1alpha1"
-
 
 func getServicePath(rule nais.AccessPolicyGressRule, appNamespace string) string {
 	namespace := rule.Namespace
@@ -32,10 +32,9 @@ func getAccessRules(rules []nais.AccessPolicyGressRule, allowAll bool, appNamesp
 
 	return []*istio_crd.AccessRule{{
 		Services: services,
-		Methods: []string{"*"},
+		Methods:  []string{"*"},
 	}}
 }
-
 
 func getServiceRoleSpec(app *nais.Application) istio_crd.ServiceRoleSpec {
 	return istio_crd.ServiceRoleSpec{
@@ -54,12 +53,10 @@ func getDefaultServiceRoleBinding(appName string, namespace string) istio_crd.Se
 }
 
 func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, error) {
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
-	}
-
-
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
+	if !app.Spec.AccessPolicy.Ingress.AllowAll {
+		if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+			return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
+		}
 		return nil, nil
 	}
 
@@ -74,11 +71,10 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 }
 
 func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
-	}
-
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
+	if !app.Spec.AccessPolicy.Ingress.AllowAll {
+		if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+			return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
+		}
 		return nil, nil
 	}
 
@@ -91,5 +87,3 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 		Spec:       getServiceRoleSpec(app),
 	}, nil
 }
-
-
