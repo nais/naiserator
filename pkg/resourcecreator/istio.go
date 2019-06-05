@@ -2,10 +2,9 @@ package resourcecreator
 
 import (
 	"fmt"
-	istio_crd "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	istio_crd "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const IstioAPIVersion = "v1alpha1"
@@ -54,27 +53,34 @@ func getDefaultServiceRoleBinding(appName string, namespace string) istio_crd.Se
 	}
 }
 
-func Istio(app *nais.Application) []runtime.Object {
-	if len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
+func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
 		return nil
 	}
 
-	return []runtime.Object{
-		&istio_crd.ServiceRole{
-			TypeMeta: k8s_meta.TypeMeta{
-				Kind:       "ServiceRole",
-				APIVersion: IstioAPIVersion,
-			},
-			ObjectMeta: app.CreateObjectMeta(),
-			Spec:       getServiceRoleSpec(app),
-		}, &istio_crd.ServiceRoleBinding{
-			TypeMeta: k8s_meta.TypeMeta{
-				Kind:       "ServiceRoleBinding",
-				APIVersion: IstioAPIVersion,
-			},
-			ObjectMeta: app.CreateObjectMeta(),
-			Spec:       getDefaultServiceRoleBinding(app.Name, app.Namespace),
+	return &istio_crd.ServiceRoleBinding{
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "ServiceRoleBinding",
+			APIVersion: IstioAPIVersion,
 		},
+		ObjectMeta: app.CreateObjectMeta(),
+		Spec:       getDefaultServiceRoleBinding(app.Name, app.Namespace),
+	}
+
+}
+
+func ServiceRole(app *nais.Application) *istio_crd.ServiceRole{
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
+		return nil
+	}
+
+	return &istio_crd.ServiceRole{
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "ServiceRole",
+			APIVersion: IstioAPIVersion,
+		},
+		ObjectMeta: app.CreateObjectMeta(),
+		Spec:       getServiceRoleSpec(app),
 	}
 }
 
