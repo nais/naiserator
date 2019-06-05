@@ -61,7 +61,7 @@ func certificateAuthorityVolume() corev1.Volume {
 }
 
 // Insert the CA configuration into a PodSpec.
-func podSpecCertificateAuthority(podSpec *corev1.PodSpec) *corev1.PodSpec {
+func caBundle(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	envs := []corev1.EnvVar{
 		{
 			Name:  "NAV_TRUSTSTORE_PATH",
