@@ -15,7 +15,7 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		obj := ServiceRole(app)
+		obj, err := ServiceRole(app)
 
 		some, err := json.Marshal(obj)
 		assert.NoError(t, err)

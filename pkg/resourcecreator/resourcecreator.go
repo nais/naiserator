@@ -28,7 +28,10 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		objects = append(objects, NetworkPolicy(app))
 		objects = append(objects, VirtualService(app))
 
-		serviceRole := ServiceRole(app)
+		serviceRole, err := ServiceRole(app)
+		if err != nil {
+			return nil, fmt.Errorf("while creating access policies: %s", err)
+		}
 		if serviceRole != nil {
 			objects = append(objects, serviceRole)
 		}
