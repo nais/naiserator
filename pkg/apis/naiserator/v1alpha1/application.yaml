@@ -155,6 +155,7 @@ spec:
                   type:
                     type: string
                     enum:
+                      - ""
                       - "env"
                       - "files"
                   mountPath:

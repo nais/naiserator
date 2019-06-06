@@ -10,7 +10,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+const (
+	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+	SecretTypeEnv   = "env"
+	SecretTypeFile  = "files"
+	DefaultSecretType = SecretTypeEnv
+	DefaultSecretMountPath = "/var/run/secrets"
+)
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -186,6 +192,9 @@ func (in *Application) NilFix() {
 	}
 	if in.Spec.Env == nil {
 		in.Spec.Env = make([]EnvVar, 0)
+	}
+	if in.Spec.Secrets == nil {
+		in.Spec.Secrets = make([]Secret, 0)
 	}
 	if in.Spec.Vault.Mounts == nil {
 		in.Spec.Vault.Mounts = make([]SecretPath, 0)

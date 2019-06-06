@@ -83,6 +83,8 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 	var err error
 
+	ApplySecretDefaults(&app.Spec.Secrets)
+
 	podSpec := podSpecBase(app)
 
 	if app.Spec.LeaderElection {
@@ -117,6 +119,20 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 	}
 
 	return podSpec, err
+}
+
+func ApplySecretDefaults(secretsRef *[]nais.Secret) {
+   secrets := *secretsRef
+	for i, secret := range secrets {
+		if len(secret.Type) == 0 {
+			secrets[i].Type = nais.DefaultSecretType
+			continue
+		}
+
+		if secret.Type == nais.SecretTypeFile && len(secret.MountPath) == 0 {
+			secrets[i].MountPath = nais.DefaultSecretMountPath
+		}
+	}
 }
 
 func podSpecConfigMapFiles(app *nais.Application, spec *corev1.PodSpec) *corev1.PodSpec {
@@ -166,6 +182,7 @@ func appContainer(app *nais.Application) corev1.Container {
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
 		Env:             envVars(app),
+		EnvFrom:         envFrom(app.Spec.Secrets),
 	}
 
 	if app.Spec.Liveness != (nais.Probe{}) {
@@ -177,6 +194,21 @@ func appContainer(app *nais.Application) corev1.Container {
 	}
 
 	return c
+}
+
+func envFrom(secrets []nais.Secret) []corev1.EnvFromSource {
+	var envFromSources []corev1.EnvFromSource
+	for _, secret := range secrets {
+		if secret.Type == nais.SecretTypeEnv {
+			envFromSources = append(envFromSources, corev1.EnvFromSource{
+				SecretRef: &corev1.SecretEnvSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secret.Name,
+					}}})
+		}
+	}
+
+	return envFromSources
 }
 
 func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {

@@ -393,6 +393,32 @@ func TestDeployment(t *testing.T) {
 		}
 
 	})
+
+	t.Run("secret defaults is applied", func(t *testing.T) {
+		secrets := []nais.Secret{{Name: "mysecret"}, {Name: "myothersecret", Type: nais.SecretTypeFile}}
+		resourcecreator.ApplySecretDefaults(&secrets)
+
+		assert.Equal(t, nais.DefaultSecretType, secrets[0].Type)
+		assert.Equal(t, nais.DefaultSecretMountPath, secrets[1].MountPath)
+	})
+
+	t.Run("secrets are correctly configured", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		app.Spec.Secrets = []nais.Secret{{Name: "mysecret", Type: nais.SecretTypeEnv}, {Name: "myothersecret", Type: nais.SecretTypeEnv}}
+
+		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
+		assert.NoError(t, err)
+		assert.NotNil(t, deployment)
+
+		appContainer := getContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+
+		assert.Equal(t, len(app.Spec.Secrets), len(appContainer.EnvFrom))
+		assert.Equal(t, "mysecret", appContainer.EnvFrom[0].SecretRef.Name)
+		assert.Equal(t, "myothersecret", appContainer.EnvFrom[1].SecretRef.Name)
+	})
 }
 
 func getContainerByName(containers []v1.Container, name string) *v1.Container {
