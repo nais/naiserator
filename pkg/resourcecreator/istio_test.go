@@ -13,6 +13,10 @@ import (
 )
 
 func TestIstio(t *testing.T) {
+
+	otherApplication := "a"
+	otherNamespace := "othernamespace"
+
 	t.Run("no service role resource created and no error when no access policy rules is defined and allow all is false", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
@@ -29,7 +33,7 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 		app.Spec.AccessPolicy.Ingress.AllowAll = true
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{"a", ""}}
+		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
 
 		serviceRole, err := resourcecreator.ServiceRole(app)
 
@@ -63,13 +67,13 @@ func TestIstio(t *testing.T) {
 		app.Spec.AccessPolicy.Ingress.AllowAll = false
 
 
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{"a", ""}}
+		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
 
 		serviceRole, err := resourcecreator.ServiceRole(app)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRole)
-		assert.Equal(t, []*v1alpha1.AccessRule([]*v1alpha1.AccessRule{{[]string{ fmt.Sprintf("%s.%s.svc.cluster.local", "a", app.Namespace)}, []string{"*"}}}), serviceRole.Spec.Rules)
+		assert.Equal(t, []*v1alpha1.AccessRule([]*v1alpha1.AccessRule{{[]string{ fmt.Sprintf("%s.%s.svc.cluster.local", otherApplication, app.Namespace)}, []string{"*"}}}), serviceRole.Spec.Rules)
 	})
 
 	t.Run("access policy with specified namespace creates access rule with specified namespace", func(t *testing.T) {
@@ -78,15 +82,42 @@ func TestIstio(t *testing.T) {
 		assert.NoError(t, err)
 		app.Spec.AccessPolicy.Ingress.AllowAll = false
 
-
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{"a", "namespace"}}
+		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, otherNamespace}}
 
 		serviceRole, err := resourcecreator.ServiceRole(app)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRole)
-		assert.Equal(t, []*v1alpha1.AccessRule([]*v1alpha1.AccessRule{{[]string{ fmt.Sprintf("%s.%s.svc.cluster.local", "a", "namespace")}, []string{"*"}}}), serviceRole.Spec.Rules)
+		assert.Equal(t, []*v1alpha1.AccessRule([]*v1alpha1.AccessRule{{[]string{ fmt.Sprintf("%s.%s.svc.cluster.local", otherApplication, otherNamespace)}, []string{"*"}}}), serviceRole.Spec.Rules)
 	})
 
+
+	t.Run("access policy with specified namespace creates serviceRoleBinding with specified namespace", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, otherNamespace}}
+
+		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRoleBinding)
+		assert.Equal(t, []*v1alpha1.Subject([]*v1alpha1.Subject{{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", otherNamespace, otherApplication)}}), serviceRoleBinding.Spec.Subjects)
+	})
+
+	t.Run("access policy without specified namespace creates serviceRoleBinding with application namespace", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
+
+		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRoleBinding)
+		assert.Equal(t, []*v1alpha1.Subject([]*v1alpha1.Subject{{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", app.Namespace, otherApplication)}}), serviceRoleBinding.Spec.Subjects)
+	})
 
 }
