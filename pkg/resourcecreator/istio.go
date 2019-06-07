@@ -42,12 +42,28 @@ func getServiceRoleSpec(app *nais.Application) istio_crd.ServiceRoleSpec {
 	}
 }
 
-func getDefaultServiceRoleBinding(appName string, namespace string) istio_crd.ServiceRoleBindingSpec {
+func getServiceRoleBindingSubjects(policy *nais.AccessPolicyIngress, appNamespace string) (subjects []*istio_crd.Subject) {
+	if policy.AllowAll {
+		return []*istio_crd.Subject{{User: "*"}}
+	}
+
+	for _, rule := range policy.Rules {
+		namespace := appNamespace
+		if rule.Namespace != "" {
+			namespace = rule.Namespace
+		}
+		subjects = append(subjects, &istio_crd.Subject{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s",  namespace, rule.Application)})
+	}
+
+	return
+}
+
+func getServiceRoleBinding(app *nais.Application) istio_crd.ServiceRoleBindingSpec {
 	return istio_crd.ServiceRoleBindingSpec{
-		Subjects: []*istio_crd.Subject{{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, appName)}},
+		Subjects: getServiceRoleBindingSubjects(&app.Spec.AccessPolicy.Ingress, app.Namespace),
 		RoleRef: &istio_crd.RoleRef{
 			Kind: "ServiceRole",
-			Name: appName,
+			Name: app.Namespace,
 		},
 	}
 }
@@ -66,7 +82,7 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 			APIVersion: IstioAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       getDefaultServiceRoleBinding(app.Name, app.Namespace),
+		Spec:       getServiceRoleBinding(app),
 	}, nil
 }
 
