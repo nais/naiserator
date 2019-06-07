@@ -117,7 +117,9 @@ func TestIstio(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRoleBinding)
-		assert.Equal(t, []*v1alpha1.Subject([]*v1alpha1.Subject{{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", app.Namespace, otherApplication)}}), serviceRoleBinding.Spec.Subjects)
+		s := fmt.Sprintf("cluster.local/ns/%s/sa/%s", app.Namespace, otherApplication)
+		assert.Equal(t, s, serviceRoleBinding.Spec.Subjects[0].User)
+		assert.Len(t, serviceRoleBinding.Spec.Subjects, 1)
 	})
 
 }
