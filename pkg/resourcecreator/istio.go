@@ -53,13 +53,13 @@ func getDefaultServiceRoleBinding(appName string, namespace string) istio_crd.Se
 }
 
 func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, error) {
-	if !app.Spec.AccessPolicy.Ingress.AllowAll {
-		if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-			return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
-		}
-		return nil, nil
+	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
 	}
 
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
+		return nil, nil
+	}
 	return &istio_crd.ServiceRoleBinding{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRoleBinding",
@@ -71,10 +71,11 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 }
 
 func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
-	if !app.Spec.AccessPolicy.Ingress.AllowAll {
-		if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-			return nil, fmt.Errorf("cannot have ingress rules with allowAll = True")
-		}
+	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
+	}
+
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
 		return nil, nil
 	}
 
