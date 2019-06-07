@@ -80,6 +80,20 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
 	})
 
+	t.Run("prometheus port defaults to application port", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Prometheus.Enabled = true
+		app.Spec.Port = 12345
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		assert.Equal(t, strconv.Itoa(app.Spec.Port), deploy.Spec.Template.Annotations["prometheus.io/port"])
+	})
+
 	t.Run("prometheus is set up correctly", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Prometheus.Path = "/my/metrics"
