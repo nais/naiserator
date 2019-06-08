@@ -221,6 +221,8 @@ spec:
               properties:
                 port:
                   type: integer
+            caBundle:
+              type: boolean
             accessPolicy:
               properties:
                 allowAllIngress:

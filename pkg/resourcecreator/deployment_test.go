@@ -97,7 +97,7 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
 	})
 
-	t.Run("certificate authority files and configuration is injected", func(t *testing.T) {
+	t.Run("certificate authority files and configuration is set according to spec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -112,6 +112,16 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
+
+		app.Spec.CaBundle = false
+		deploy, err = resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+		appContainer = getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		assert.Empty(t, envValue(appContainer.Env, "NAV_TRUSTSTORE_PATH"))
+		assert.Empty(t, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
+		assert.Empty(t, appContainer.VolumeMounts)
+		assert.Empty(t, deploy.Spec.Template.Spec.Volumes)
+
 	})
 
 	t.Run("leader election sidecar is injected when LE is requested", func(t *testing.T) {

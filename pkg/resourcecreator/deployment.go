@@ -91,7 +91,9 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 		podSpec = podSpecLeaderElection(app, podSpec)
 	}
 
-	podSpec = podSpecCertificateAuthority(podSpec)
+	if app.Spec.CaBundle {
+		podSpec = podSpecCertificateAuthority(podSpec)
+	}
 
 	podSpec = podSpecConfigMapFiles(app, podSpec)
 

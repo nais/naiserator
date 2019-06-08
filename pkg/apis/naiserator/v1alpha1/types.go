@@ -155,6 +155,7 @@ type ApplicationSpec struct {
 	Env             []EnvVar             `json:"env"`
 	Strategy        Strategy             `json:"strategy"`
 	Service         Service              `json:"service"`
+	CaBundle        bool			     `json:"caBundle"`
 	AccessPolicy    AccessPolicy         `json:"accessPolicy"`
 }
 

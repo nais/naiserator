@@ -56,6 +56,7 @@ func getAppDefaults() *Application {
 			Service: Service{
 				Port: DefaultServicePort,
 			},
+			CaBundle: true,
 		},
 	}
 }
