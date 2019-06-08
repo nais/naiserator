@@ -127,7 +127,7 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
 
-		app.Spec.CaBundle = false
+		app.Spec.SkipCaBundle = true
 		deploy, err = resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 		appContainer = getContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
@@ -135,7 +135,6 @@ func TestDeployment(t *testing.T) {
 		assert.Empty(t, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
 		assert.Empty(t, appContainer.VolumeMounts)
 		assert.Empty(t, deploy.Spec.Template.Spec.Volumes)
-
 	})
 
 	t.Run("leader election sidecar is injected when LE is requested", func(t *testing.T) {

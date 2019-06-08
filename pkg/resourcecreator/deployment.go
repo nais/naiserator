@@ -91,7 +91,7 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 		podSpec = podSpecLeaderElection(app, podSpec)
 	}
 
-	if app.Spec.CaBundle {
+	if !app.Spec.SkipCaBundle {
 		podSpec = podSpecCertificateAuthority(podSpec)
 	}
 

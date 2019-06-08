@@ -221,7 +221,7 @@ spec:
               properties:
                 port:
                   type: integer
-            caBundle:
+            skipCaBundle:
               type: boolean
             accessPolicy:
               properties:
