@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"strconv"
-
 	"github.com/imdario/mergo"
 )
 
@@ -34,9 +32,7 @@ func getAppDefaults() *Application {
 				Type: DeploymentStrategyRollingUpdate,
 			},
 			Prometheus: PrometheusConfig{
-				Enabled: false,
-				Port:    strconv.Itoa(DefaultAppPort),
-				Path:    "/metrics",
+				Path: "/metrics",
 			},
 			Ingresses: []string{},
 			Resources: ResourceRequirements{
