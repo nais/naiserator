@@ -50,14 +50,17 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.resources.requests.cpu | Guaranteed amount of CPU | 200m |
 | spec.resources.requests.memory | Guaranteed amount of memory | 256Mi |
 | spec.ingresses | List of ingress URLs that will route HTTP traffic to the application | |
-| spec.secrets | _DEPRECATED_. Synonym to `spec.vault.enabled`. Please use the new syntax. | false | |
+| spec.secrets[].name | Name of secret (must exist in namespace) | | x |
+| spec.secrets[].type | How the secrets is exposed to the pod. Valid options is `env` and `files`. Selecting `env` will expose all variables in secret as environment variables and `files` will expose the secrets as files under `spec.secrets[].mountPath` | `env` | |
+| spec.secrets[].mountPath | Path to where secret files will be mounted (only valid for secret type `files`) | /var/run/secrets | |
 | spec.vault.enabled | If set to true, fetch secrets from [Vault](https://github.com/nais/doc/tree/master/content/secrets) and inject into the pods | false | |
 | spec.vault.sidecar | If set to true, will extend tokens time to live | false | |
 | spec.vault.paths | Overriding the `paths` array is optional, and will give you fine-grained control over which vault paths that will be mounted on the file system. | | |
 | spec.vault.paths.[].kvPath | Path to Vault key/value store that should be mounted into the file system | /kv/environment/zone/application/namespace | |
 | spec.vault.paths.[].mountPath | File system path that the secrets will be mounted into | /var/run/secrets/nais.io/vault | |
 | spec.configMaps.files | List of ConfigMap resources that will have their contents mounted into the container as files. Files appear as `/var/run/configmaps/<name>/<key>`. | |
-| spec.env | List of name and value that will become environment variables in the container | |
+| spec.env[].name | Environment variable name | | x |
+| spec.env[].value | Environment variable value | | x |
 | spec.preStopHookPath | A HTTP GET will be issued to this endpoint at least once before the pod is terminated | /stop | |
 | spec.leaderElection | If true, a HTTP endpoint will be available at `$ELECTOR_PATH` that returns the current leader | false | |
 | spec.webproxy | Expose web proxy configuration to the application using the `$HTTP_PROXY`, `$HTTPS_PROXY` and `$NO_PROXY` environment variables | false | |
