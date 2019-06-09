@@ -12,7 +12,7 @@ import (
 const PodHttpProxyEnv = "NAIS_POD_HTTP_PROXY"
 const PodNoProxyEnv = "NAIS_POD_NO_PROXY"
 
-func podSpecProxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
+func proxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	var err error
 	for i := range podSpec.Containers {
 		podSpec.Containers[i].Env, err = ProxyEnvironmentVariables(podSpec.Containers[i].Env)

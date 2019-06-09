@@ -12,10 +12,10 @@ import (
 
 const (
 	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
-	SecretTypeEnv   = "env"
-	SecretTypeFile  = "files"
-	DefaultSecretType = SecretTypeEnv
-	DefaultSecretMountPath = "/var/run/secrets"
+	SecretTypeEnv            = "env"
+	SecretTypeFiles          = "files"
+	DefaultSecretType        = SecretTypeEnv
+	DefaultSecretMountPath   = "/var/run/secrets"
 )
 
 // +genclient
