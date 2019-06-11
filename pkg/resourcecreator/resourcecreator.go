@@ -35,13 +35,24 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		if serviceRole != nil {
 			objects = append(objects, serviceRole)
 		}
+
 		serviceRoleBinding, err := ServiceRoleBinding(app)
 		if err != nil {
 			return nil, fmt.Errorf("while creating access policies: %s", err)
 		}
-
 		if serviceRoleBinding != nil {
 			objects = append(objects, serviceRoleBinding)
+		}
+
+	} else {
+
+		ingress, err := Ingress(app)
+		if err != nil {
+			return nil, fmt.Errorf("while creating ingress: %s", err)
+		}
+		if ingress != nil {
+			// the application might have no ingresses, in which case nil will be returned.
+			objects = append(objects, ingress)
 		}
 	}
 
@@ -50,15 +61,6 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
 	objects = append(objects, deployment)
-
-	ingress, err := Ingress(app)
-	if err != nil {
-		return nil, fmt.Errorf("while creating ingress: %s", err)
-	}
-	if ingress != nil {
-		// the application might have no ingresses, in which case nil will be returned.
-		objects = append(objects, ingress)
-	}
 
 	return objects, nil
 }
