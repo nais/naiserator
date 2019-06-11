@@ -30,36 +30,36 @@ func addNetworkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPoli
 	return
 }
 
-func ingressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyIngressRule {
+func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
 	if app.Spec.AccessPolicy.Ingress.AllowAll {
-		return &[]networkingv1.NetworkPolicyIngressRule{{}}
+		return []networkingv1.NetworkPolicyIngressRule{{}}
 	}
 
 	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return &[]networkingv1.NetworkPolicyIngressRule{
+		return []networkingv1.NetworkPolicyIngressRule{
 			{
 				From: addNetworkPolicyGressRules(app.Spec.AccessPolicy.Ingress.Rules),
 			},
 		}
 	}
 
-	return &[]networkingv1.NetworkPolicyIngressRule{}
+	return []networkingv1.NetworkPolicyIngressRule{}
 }
 
-func egressPolicy(app *nais.Application) *[]networkingv1.NetworkPolicyEgressRule {
+func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule {
 	if app.Spec.AccessPolicy.Egress.AllowAll {
-		return &[]networkingv1.NetworkPolicyEgressRule{{}}
+		return []networkingv1.NetworkPolicyEgressRule{{}}
 	}
 
 	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 {
-		return &[]networkingv1.NetworkPolicyEgressRule{
+		return []networkingv1.NetworkPolicyEgressRule{
 			{
 				To: addNetworkPolicyGressRules(app.Spec.AccessPolicy.Egress.Rules),
 			},
 		}
 	}
 
-	return &[]networkingv1.NetworkPolicyEgressRule{}
+	return []networkingv1.NetworkPolicyEgressRule{}
 }
 
 func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
@@ -73,8 +73,8 @@ func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
 			networkingv1.PolicyTypeIngress,
 			networkingv1.PolicyTypeEgress,
 		},
-		Ingress: *ingressPolicy(app),
-		Egress:  *egressPolicy(app),
+		Ingress: ingressPolicy(app),
+		Egress:  egressPolicy(app),
 	}
 
 }
