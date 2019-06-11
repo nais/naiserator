@@ -53,4 +53,24 @@ func TestNetworkPolicy(t *testing.T) {
 
 		assert.Equal(t, matchLabels, networkPolicy.Spec.Egress[0].To[0].PodSelector.MatchLabels)
 	})
+
+	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Ingress.AllowAll = true
+		app.Spec.Ingresses = []string{
+			"https://gief.api.plz",
+		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		networkPolicy := resourcecreator.NetworkPolicy(app)
+		assert.NotNil(t, networkPolicy)
+		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 2)
+
+		podMatch := map[string]string{"istio": "ingressgateway",}
+		namespaceMatch := map[string]string{"namespace": "istio-system",}
+
+		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[0].From[1].PodSelector.MatchLabels)
+		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[0].From[1].NamespaceSelector.MatchLabels)
+	})
 }
