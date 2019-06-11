@@ -129,7 +129,7 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 
 func secrets(application *nais.Application, podSpecRef *corev1.PodSpec) *corev1.PodSpec {
 	spec := podSpecRef.DeepCopy()
-	appContainer := GetContainerByName(&spec.Containers, application.Name)
+	appContainer := GetContainerByName(spec.Containers, application.Name)
 
 	for _, s := range application.Spec.Secrets {
 		if s.Type == nais.SecretTypeEnv {
@@ -413,8 +413,7 @@ func leaderElectionContainer(name, namespace string) corev1.Container {
 	}
 }
 
-func GetContainerByName(containersRef *[]corev1.Container, name string) *corev1.Container {
-	containers := *containersRef
+func GetContainerByName(containers []corev1.Container, name string) *corev1.Container {
 	for i, v := range containers {
 		if v.Name == name {
 			return &containers[i]
