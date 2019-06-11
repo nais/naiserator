@@ -1,9 +1,10 @@
-package resourcecreator
+package resourcecreator_test
 
 import (
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	networking "k8s.io/api/networking/v1"
@@ -18,7 +19,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app)
 
 		assert.Empty(t, networkPolicy.Spec.Egress[0].To)
 		assert.Empty(t, networkPolicy.Spec.Egress[0].Ports)
@@ -32,7 +33,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app)
 
 		assert.Equal(t, []networking.NetworkPolicyEgressRule{}, networkPolicy.Spec.Egress)
 		assert.Equal(t, []networking.NetworkPolicyIngressRule{}, networkPolicy.Spec.Ingress)
@@ -44,7 +45,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app)
 
 		matchLabels := map[string]string{
 			"app": accessPolicyApp,
