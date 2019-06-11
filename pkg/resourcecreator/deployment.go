@@ -175,7 +175,6 @@ func ApplySecretDefaults(secretsRef *[]nais.Secret) {
 	for i, secret := range secrets {
 		if len(secret.Type) == 0 {
 			secrets[i].Type = nais.DefaultSecretType
-			continue
 		}
 
 		if secret.Type == nais.SecretTypeFiles && len(secret.MountPath) == 0 {
