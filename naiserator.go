@@ -64,7 +64,7 @@ func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Applica
 	}
 }
 
-func (n *Naiserator) synchronize(logger *log.Entry, previous, app *v1alpha1.Application) error {
+func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) error {
 	if err := v1alpha1.ApplyDefaults(app); err != nil {
 		return fmt.Errorf("while applying default values to application spec: %s", err)
 	}
@@ -124,10 +124,7 @@ func (n *Naiserator) synchronize(logger *log.Entry, previous, app *v1alpha1.Appl
 }
 
 func (n *Naiserator) update(old, new interface{}) {
-	var app, previous *v1alpha1.Application
-	if old != nil {
-		previous = old.(*v1alpha1.Application)
-	}
+	var app *v1alpha1.Application
 	if new != nil {
 		app = new.(*v1alpha1.Application)
 	}
@@ -141,7 +138,7 @@ func (n *Naiserator) update(old, new interface{}) {
 	metrics.ApplicationsProcessed.Inc()
 	logger.Infof("%s: synchronizing application", app.Name)
 
-	if err := n.synchronize(logger, previous, app); err != nil {
+	if err := n.synchronize(logger, app); err != nil {
 		metrics.ApplicationsFailed.Inc()
 		logger.Errorf("%s: error %s", app.Name, err)
 		n.reportError("synchronize", err, app)

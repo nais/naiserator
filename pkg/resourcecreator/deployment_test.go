@@ -414,18 +414,61 @@ func TestDeployment(t *testing.T) {
 				assert.Equal(t, "", e.Value)
 			}
 		}
-
 	})
-}
 
-func getContainerByName(containers []v1.Container, name string) *v1.Container {
-	for _, v := range containers {
-		if v.Name == name {
-			return &v
+	t.Run("secret defaults is applied", func(t *testing.T) {
+		secrets := []nais.Secret{
+			{
+				Name: "mysecret",
+			},
+			{
+				Name: "myothersecret",
+				Type: nais.SecretTypeFiles,
+			}}
+
+		resourcecreator.ApplySecretDefaults(&secrets)
+
+		assert.Equal(t, nais.DefaultSecretType, secrets[0].Type)
+		assert.Equal(t, nais.DefaultSecretMountPath, secrets[1].MountPath)
+	})
+
+	t.Run("secrets are correctly configured", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		envSecretName := "envsecret"
+		fileSecretName := "filesecret"
+		fileSecretMountPath := "/my/path"
+
+		app.Spec.Secrets = []nais.Secret{
+			{
+				Name: envSecretName,
+				Type: nais.SecretTypeEnv,
+			},
+			{
+				Name:      fileSecretName,
+				Type:      nais.SecretTypeFiles,
+				MountPath: fileSecretMountPath,
+			},
 		}
-	}
 
-	return nil
+		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
+		assert.NoError(t, err)
+		assert.NotNil(t, deployment)
+
+		appContainer := resourcecreator.GetContainerByName(&deployment.Spec.Template.Spec.Containers, app.Name)
+		secretVolumeMount := getVolumeMountByName(appContainer.VolumeMounts, fileSecretName)
+		secretVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, fileSecretName)
+
+		assert.Equal(t, 1, len(appContainer.EnvFrom))
+		assert.Equal(t, envSecretName, appContainer.EnvFrom[0].SecretRef.Name)
+		assert.Equal(t, fileSecretName, secretVolumeMount.Name)
+		assert.Equal(t, fileSecretMountPath, secretVolumeMount.MountPath)
+		assert.True(t, appContainer.VolumeMounts[0].ReadOnly)
+		assert.Equal(t, fileSecretName, secretVolume.Name)
+		assert.Equal(t, fileSecretName, secretVolume.Secret.SecretName)
+	})
 }
 
 func getVolumeByName(volumes []v1.Volume, name string) *v1.Volume {

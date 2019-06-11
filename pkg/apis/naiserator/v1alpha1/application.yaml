@@ -144,7 +144,22 @@ spec:
             webproxy:
               type: boolean
             secrets:
-              type: boolean
+              type: array
+              items:
+                type: object
+                required:
+                  - name
+                properties:
+                  name:
+                    type: string
+                  type:
+                    type: string
+                    enum:
+                      - ""
+                      - "env"
+                      - "files"
+                  mountPath:
+                    type: string
             vault:
               type: object
               properties:
