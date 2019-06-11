@@ -89,7 +89,9 @@ func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
 		podSpec = podSpecLeaderElection(app, podSpec)
 	}
 
-	podSpec = podSpecCertificateAuthority(podSpec)
+	if !app.Spec.SkipCaBundle {
+		podSpec = caBundle(podSpec)
+	}
 
 	podSpec = podSpecConfigMapFiles(app, podSpec)
 
@@ -347,4 +349,15 @@ func leaderElectionContainer(name, namespace string) corev1.Container {
 		}},
 		Args: []string{fmt.Sprintf("--election=%s", name), "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", namespace)},
 	}
+}
+
+func GetContainerByName(containersRef *[]corev1.Container, name string) *corev1.Container {
+	containers := *containersRef
+	for i, v := range containers {
+		if v.Name == name {
+			return &containers[i]
+		}
+	}
+
+	return nil
 }
