@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func addNetworkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+func networkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, gress := range rules {
 		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
@@ -31,19 +31,38 @@ func addNetworkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPoli
 }
 
 func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
+	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
+
 	if app.Spec.AccessPolicy.Ingress.AllowAll {
-		return []networkingv1.NetworkPolicyIngressRule{{}}
+		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
+
+		})
+	} else if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
+			From: networkPolicyGressRules(app.Spec.AccessPolicy.Ingress.Rules),
+		})
 	}
 
-	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return []networkingv1.NetworkPolicyIngressRule{
-			{
-				From: addNetworkPolicyGressRules(app.Spec.AccessPolicy.Ingress.Rules),
+	if len(app.Spec.Ingresses) > 0 {
+		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
+			From: []networkingv1.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"istio": "ingressgateway",
+						},
+					},
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"name": "istio-system",
+						},
+					},
+				},
 			},
-		}
+		})
 	}
 
-	return []networkingv1.NetworkPolicyIngressRule{}
+	return rules
 }
 
 func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule {
@@ -54,7 +73,7 @@ func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule 
 	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 {
 		return []networkingv1.NetworkPolicyEgressRule{
 			{
-				To: addNetworkPolicyGressRules(app.Spec.AccessPolicy.Egress.Rules),
+				To: networkPolicyGressRules(app.Spec.AccessPolicy.Egress.Rules),
 			},
 		}
 	}

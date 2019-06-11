@@ -56,6 +56,25 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
+		app.Spec.Ingresses = []string{
+			"https://gief.api.plz",
+		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		networkPolicy := resourcecreator.NetworkPolicy(app)
+		assert.NotNil(t, networkPolicy)
+		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
+
+		podMatch := map[string]string{"istio": "ingressgateway"}
+		namespaceMatch := map[string]string{"name": "istio-system"}
+
+		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[0].From[0].PodSelector.MatchLabels)
+		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector.MatchLabels)
+	})
+
+	t.Run("specifying ingresses when all traffic is allowed still creates an explicit rule for istio ingress gateway", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
 		app.Spec.AccessPolicy.Ingress.AllowAll = true
 		app.Spec.Ingresses = []string{
 			"https://gief.api.plz",
@@ -65,12 +84,14 @@ func TestNetworkPolicy(t *testing.T) {
 
 		networkPolicy := resourcecreator.NetworkPolicy(app)
 		assert.NotNil(t, networkPolicy)
-		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 2)
+		assert.Len(t, networkPolicy.Spec.Ingress, 2)
+		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 0)
+		assert.Len(t, networkPolicy.Spec.Ingress[1].From, 1)
 
-		podMatch := map[string]string{"istio": "ingressgateway",}
-		namespaceMatch := map[string]string{"namespace": "istio-system",}
+		podMatch := map[string]string{"istio": "ingressgateway"}
+		namespaceMatch := map[string]string{"name": "istio-system"}
 
-		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[0].From[1].PodSelector.MatchLabels)
-		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[0].From[1].NamespaceSelector.MatchLabels)
+		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[1].From[0].PodSelector.MatchLabels)
+		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[1].From[0].NamespaceSelector.MatchLabels)
 	})
 }
