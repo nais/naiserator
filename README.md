@@ -65,6 +65,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.logtransform | The transformation of the logs, if they should be handled differently than plain text or JSON | dns_loglevel | |
 | spec.secureLogs.enabled | If true, mount a volume for secure logs in the pod | false | |
 | spec.service.port | Port for the default service | 80 |
+| spec.skipCaBundle | If true, no certificate authority bundle will be injected | false | |
 
 In the [examples directory](./examples) you can see a [typical `nais.yaml` file](./examples/nais.yaml)
 

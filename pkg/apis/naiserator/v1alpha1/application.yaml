@@ -206,6 +206,8 @@ spec:
               properties:
                 port:
                   type: integer
+            skipCaBundle:
+              type: boolean
             accessPolicy:
               properties:
                 allowAllIngress:
