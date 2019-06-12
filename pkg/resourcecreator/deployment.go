@@ -154,6 +154,7 @@ func podSpecBase(app *nais.Application) *corev1.PodSpec {
 		ServiceAccountName: app.Name,
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
+		ImagePullSecrets:   []corev1.LocalObjectReference{{Name: "gpr-credentials"}},
 	}
 }
 
