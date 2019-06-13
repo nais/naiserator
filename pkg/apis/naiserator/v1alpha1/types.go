@@ -200,11 +200,13 @@ func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object
 	relevantValues := struct {
-		AppSpec ApplicationSpec
-		Labels  map[string]string
+		AppSpec     ApplicationSpec
+		Labels      map[string]string
+		ChangeCause string
 	}{
 		in.Spec,
 		in.Labels,
+		in.Annotations["kubernetes.io/change-cause"],
 	}
 
 	h, err := hash.Hash(relevantValues, nil)
