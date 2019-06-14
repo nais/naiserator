@@ -78,7 +78,7 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 			Subjects: getServiceRoleBindingSubjects(rules, app.Namespace, app.Spec.AccessPolicy.Ingress.AllowAll),
 			RoleRef: &istio_crd.RoleRef{
 				Kind: "ServiceRole",
-				Name: app.Namespace,
+				Name: app.Name,
 			},
 		},
 	}, nil
