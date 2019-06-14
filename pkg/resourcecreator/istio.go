@@ -93,14 +93,6 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 		return nil, nil
 	}
 
-	rules := app.Spec.AccessPolicy.Ingress.Rules
-	if len(app.Spec.Ingresses) > 0 {
-		rules = append(rules, nais.AccessPolicyGressRule{
-			Namespace:   "istio-system",
-			Application: "istio-ingressgateway",
-		})
-	}
-
 	return &istio_crd.ServiceRole{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRole",
@@ -108,7 +100,7 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio_crd.ServiceRoleSpec{
-			Rules: getAccessRules(rules, app.Spec.AccessPolicy.Ingress.AllowAll, app.Namespace),
+			Rules: getAccessRules(app.Spec.AccessPolicy.Ingress.Rules, app.Spec.AccessPolicy.Ingress.AllowAll, app.Namespace),
 		},
 	}, nil
 }

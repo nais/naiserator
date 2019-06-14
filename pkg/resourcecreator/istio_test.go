@@ -137,14 +137,6 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRole, err := resourcecreator.ServiceRole(app)
-		assert.NoError(t, err)
-		assert.NotNil(t, serviceRole)
-
-		for _, rule := range serviceRole.Spec.Rules {
-			assert.Contains(t, rule.Services, "istio-ingressgateway.istio-system.svc.cluster.local")
-		}
-
 		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRoleBinding)
@@ -160,14 +152,6 @@ func TestIstio(t *testing.T) {
 		app.Spec.AccessPolicy.Ingress.AllowAll = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
-
-		serviceRole, err := resourcecreator.ServiceRole(app)
-		assert.NoError(t, err)
-		assert.NotNil(t, serviceRole)
-
-		for _, rule := range serviceRole.Spec.Rules {
-			assert.NotContains(t, rule.Services, "istio-ingressgateway.istio-system.svc.cluster.local")
-		}
 
 		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
 		assert.NoError(t, err)
