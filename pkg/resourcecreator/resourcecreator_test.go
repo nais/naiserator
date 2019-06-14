@@ -160,7 +160,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.NotNil(t, objects.virtualService)
+		assert.Nil(t, objects.virtualService)
 		assert.Nil(t, objects.serviceRoleBinding)
 		assert.Nil(t, objects.serviceRole)
 		assert.NotNil(t, objects.networkPolicy)
@@ -170,6 +170,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
+		app.Spec.Ingresses = []string{"https://foo.bar"}
 		app.Spec.AccessPolicy.Ingress.AllowAll = true
 
 		err := nais.ApplyDefaults(app)

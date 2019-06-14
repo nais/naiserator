@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
-
+	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -126,6 +126,54 @@ func TestIstio(t *testing.T) {
 		user := fmt.Sprintf("cluster.local/ns/%s/sa/%s", app.Namespace, otherApplication)
 		assert.Equal(t, user, serviceRoleBinding.Spec.Subjects[0].User)
 		assert.Len(t, serviceRoleBinding.Spec.Subjects, 1)
+	})
+
+	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Ingress.AllowAll = true
+		app.Spec.Ingresses = []string{
+			"https://gief.api.plz",
+		}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		serviceRole, err := resourcecreator.ServiceRole(app)
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRole)
+
+		for _, rule := range serviceRole.Spec.Rules {
+			assert.Contains(t, rule.Services, "istio-ingressgateway.istio-system.svc.cluster.local")
+		}
+
+		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRoleBinding)
+		subject := rbac_istio_io_v1alpha1.Subject{
+			User: "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account",
+		}
+
+		assert.Contains(t, serviceRoleBinding.Spec.Subjects, &subject)
+	})
+
+	t.Run("omitting ingresses denies traffic from istio ingress gateway", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Ingress.AllowAll = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		serviceRole, err := resourcecreator.ServiceRole(app)
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRole)
+
+		for _, rule := range serviceRole.Spec.Rules {
+			assert.NotContains(t, rule.Services, "istio-ingressgateway.istio-system.svc.cluster.local")
+		}
+
+		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRoleBinding)
+
+		assert.NotContains(t, serviceRoleBinding.Spec.Subjects, "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account")
 	})
 
 }
