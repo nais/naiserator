@@ -10,7 +10,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+const (
+	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+	SecretTypeEnv            = "env"
+	SecretTypeFiles          = "files"
+	DefaultSecretType        = SecretTypeEnv
+	DefaultSecretMountPath   = "/var/run/secrets"
+)
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -121,6 +127,12 @@ type AccessPolicy struct {
 	Egress  AccessPolicyEgress  `json:"egress"`
 }
 
+type Secret struct {
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	MountPath string `json:"mountPath"`
+}
+
 // ApplicationSpec used to be called nais manifest.
 type ApplicationSpec struct {
 	Liveness        Probe                `json:"liveness"`
@@ -136,7 +148,7 @@ type ApplicationSpec struct {
 	Prometheus      PrometheusConfig     `json:"prometheus"`
 	Replicas        Replicas             `json:"replicas"`
 	Resources       ResourceRequirements `json:"resources"`
-	Secrets         bool                 `json:"secrets"`
+	Secrets         []Secret             `json:"secrets"`
 	Vault           Vault                `json:"vault"`
 	WebProxy        bool                 `json:"webproxy"`
 	ConfigMaps      ConfigMaps           `json:"configMaps"`
@@ -181,6 +193,9 @@ func (in *Application) NilFix() {
 	}
 	if in.Spec.Env == nil {
 		in.Spec.Env = make([]EnvVar, 0)
+	}
+	if in.Spec.Secrets == nil {
+		in.Spec.Secrets = make([]Secret, 0)
 	}
 	if in.Spec.Vault.Mounts == nil {
 		in.Spec.Vault.Mounts = make([]SecretPath, 0)

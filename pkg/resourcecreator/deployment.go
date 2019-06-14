@@ -49,7 +49,7 @@ func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1
 }
 
 func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.DeploymentSpec, error) {
-	podSpec, err := podSpec(app)
+	podSpec, err := podSpec(resourceOptions, app)
 	if err != nil {
 		return nil, err
 	}
@@ -90,48 +90,110 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 	}, nil
 }
 
-func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
+func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.PodSpec, error) {
 	var err error
+
+	ApplySecretDefaults(&app.Spec.Secrets)
 
 	podSpec := podSpecBase(app)
 
+	if resourceOptions.NativeSecrets && len(app.Spec.Secrets) > 0 {
+		podSpec = secrets(app, podSpec)
+	}
+
 	if app.Spec.LeaderElection {
-		podSpec = podSpecLeaderElection(app, podSpec)
+		podSpec = leaderElection(app, podSpec)
 	}
 
 	if !app.Spec.SkipCaBundle {
 		podSpec = caBundle(podSpec)
 	}
 
-	podSpec = podSpecConfigMapFiles(app, podSpec)
+	podSpec = configMapFiles(app, podSpec)
 
-	if vault.Enabled() && (app.Spec.Vault.Enabled || app.Spec.Secrets) {
+	if vault.Enabled() && app.Spec.Vault.Enabled {
 		if len(app.Spec.Vault.Mounts) == 0 {
 			app.Spec.Vault.Mounts = []nais.SecretPath{
 				app.DefaultSecretPath(vault.DefaultKVPath()),
 			}
 		}
-		podSpec, err = podSpecSecrets(app, podSpec)
+		podSpec, err = vaultSidecar(app, podSpec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if app.Spec.WebProxy {
-		podSpec, err = podSpecProxyOpts(podSpec)
+		podSpec, err = proxyOpts(podSpec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if app.Spec.SecureLogs.Enabled {
-		podSpec = podSpecSecureLogs(podSpec)
+		podSpec = secureLogs(podSpec)
 	}
 
 	return podSpec, err
 }
 
-func podSpecConfigMapFiles(app *nais.Application, spec *corev1.PodSpec) *corev1.PodSpec {
+func secrets(application *nais.Application, podSpecRef *corev1.PodSpec) *corev1.PodSpec {
+	spec := podSpecRef.DeepCopy()
+	appContainer := GetContainerByName(spec.Containers, application.Name)
+
+	for _, s := range application.Spec.Secrets {
+		if s.Type == nais.SecretTypeEnv {
+			appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(s))
+			continue
+		}
+
+		if s.Type == nais.SecretTypeFiles {
+			spec.Volumes = append(spec.Volumes, secretVolume(s))
+			appContainer.VolumeMounts = append(appContainer.VolumeMounts, secretVolumeMount(s))
+			continue
+		}
+	}
+
+	return spec
+}
+
+func secretVolumeMount(secret nais.Secret) corev1.VolumeMount {
+	return corev1.VolumeMount{
+		Name:      secret.Name,
+		ReadOnly:  true,
+		MountPath: secret.MountPath}
+}
+
+func secretVolume(secret nais.Secret) corev1.Volume {
+	return corev1.Volume{
+		Name: secret.Name,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: secret.Name}}}
+}
+
+func envFromSecret(secret nais.Secret) corev1.EnvFromSource {
+	return corev1.EnvFromSource{
+		SecretRef: &corev1.SecretEnvSource{
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: secret.Name,
+			}}}
+}
+
+func ApplySecretDefaults(secretsRef *[]nais.Secret) {
+	secrets := *secretsRef
+	for i, secret := range secrets {
+		if len(secret.Type) == 0 {
+			secrets[i].Type = nais.DefaultSecretType
+		}
+
+		if secret.Type == nais.SecretTypeFiles && len(secret.MountPath) == 0 {
+			secrets[i].MountPath = nais.DefaultSecretMountPath
+		}
+	}
+}
+
+func configMapFiles(app *nais.Application, spec *corev1.PodSpec) *corev1.PodSpec {
 	for _, cm := range app.Spec.ConfigMaps.Files {
 		volumeName := fmt.Sprintf("nais-cm-%s", cm)
 
@@ -192,7 +254,7 @@ func appContainer(app *nais.Application) corev1.Container {
 	return c
 }
 
-func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {
+func leaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {
 	spec = podSpec.DeepCopy()
 	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Name, app.Namespace))
 	mainContainer := spec.Containers[0].DeepCopy()
@@ -208,7 +270,7 @@ func podSpecLeaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec
 	return spec
 }
 
-func podSpecSecureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
+func secureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	spec := podSpec.DeepCopy()
 	spec.Containers = append(spec.Containers, securelogs.FluentdSidecar())
 	spec.Containers = append(spec.Containers, securelogs.ConfigmapReloadSidecar())
@@ -226,7 +288,7 @@ func podSpecSecureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	return spec
 }
 
-func podSpecSecrets(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
+func vaultSidecar(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	initializer, err := vault.NewInitializer(app)
 	if err != nil {
 		return nil, fmt.Errorf("while initializing secrets: %s", err)
@@ -362,8 +424,7 @@ func leaderElectionContainer(name, namespace string) corev1.Container {
 	}
 }
 
-func GetContainerByName(containersRef *[]corev1.Container, name string) *corev1.Container {
-	containers := *containersRef
+func GetContainerByName(containers []corev1.Container, name string) *corev1.Container {
 	for i, v := range containers {
 		if v.Name == name {
 			return &containers[i]

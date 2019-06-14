@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/nais/naiserator/pkg/resourcecreator"
 	"os"
 	"os/signal"
 	"strconv"
@@ -23,15 +24,17 @@ import (
 )
 
 var (
-	kubeconfig          string
-	bindAddr            string
-	accessPolicyEnabled bool
+	kubeconfig           string
+	bindAddr             string
+	accessPolicyEnabled  bool
+	nativeSecretsEnabled bool
 )
 
 func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "path to Kubernetes config file")
 	flag.StringVar(&bindAddr, "bind-address", ":8080", "ip:port where http requests are served")
 	flag.BoolVar(&accessPolicyEnabled, "access-policy-enabled", ensureBool(getEnv("ACCESS_POLICY_ENABLED", "false")), "enable access policy with Istio and NetworkPolicies")
+	flag.BoolVar(&nativeSecretsEnabled, "native-secrets-enabled", ensureBool(getEnv("NATIVE_SECRETS_ENABLED", "false")), "enable use of native secrets")
 	flag.Parse()
 }
 
@@ -62,12 +65,16 @@ func main() {
 		"/alive",
 	)
 
+	resourceOptions := resourcecreator.NewResourceOptions()
+	resourceOptions.AccessPolicy = accessPolicyEnabled
+	resourceOptions.NativeSecrets = nativeSecretsEnabled
+
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig)
 	n := naiserator.NewNaiserator(
 		createGenericClientset(kubeconfig),
 		createApplicationClientset(kubeconfig),
 		applicationInformerFactory.Naiserator().V1alpha1().Applications(),
-		accessPolicyEnabled)
+		resourceOptions)
 
 	applicationInformerFactory.Start(stopCh)
 	n.Run(stopCh)
