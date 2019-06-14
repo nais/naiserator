@@ -24,10 +24,9 @@ func getAccessRules(rules []nais.AccessPolicyGressRule, allowAll bool, appNamesp
 
 	if allowAll {
 		services = []string{"*"}
-	} else {
-		for _, gress := range rules {
-			services = append(services, getServicePath(gress, appNamespace))
-		}
+	}
+	for _, gress := range rules {
+		services = append(services, getServicePath(gress, appNamespace))
 	}
 
 	return []*istio_crd.AccessRule{{
@@ -36,36 +35,20 @@ func getAccessRules(rules []nais.AccessPolicyGressRule, allowAll bool, appNamesp
 	}}
 }
 
-func getServiceRoleSpec(app *nais.Application) istio_crd.ServiceRoleSpec {
-	return istio_crd.ServiceRoleSpec{
-		Rules: getAccessRules(app.Spec.AccessPolicy.Ingress.Rules, app.Spec.AccessPolicy.Ingress.AllowAll, app.Namespace),
-	}
-}
-
-func getServiceRoleBindingSubjects(policy *nais.AccessPolicyIngress, appNamespace string) (subjects []*istio_crd.Subject) {
-	if policy.AllowAll {
-		return []*istio_crd.Subject{{User: "*"}}
+func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string, allowAll bool) (subjects []*istio_crd.Subject) {
+	if allowAll {
+		subjects = append(subjects, &istio_crd.Subject{User: "*"})
 	}
 
-	for _, rule := range policy.Rules {
+	for _, rule := range rules {
 		namespace := appNamespace
 		if rule.Namespace != "" {
 			namespace = rule.Namespace
 		}
-		subjects = append(subjects, &istio_crd.Subject{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s",  namespace, rule.Application)})
+		subjects = append(subjects, &istio_crd.Subject{User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)})
 	}
 
 	return
-}
-
-func getServiceRoleBinding(app *nais.Application) istio_crd.ServiceRoleBindingSpec {
-	return istio_crd.ServiceRoleBindingSpec{
-		Subjects: getServiceRoleBindingSubjects(&app.Spec.AccessPolicy.Ingress, app.Namespace),
-		RoleRef: &istio_crd.RoleRef{
-			Kind: "ServiceRole",
-			Name: app.Namespace,
-		},
-	}
 }
 
 func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, error) {
@@ -76,13 +59,28 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
 		return nil, nil
 	}
+
+	rules := app.Spec.AccessPolicy.Ingress.Rules
+	if len(app.Spec.Ingresses) > 0 {
+		rules = append(rules, nais.AccessPolicyGressRule{
+			Namespace:   "istio-system",
+			Application: "istio-ingressgateway-service-account",
+		})
+	}
+
 	return &istio_crd.ServiceRoleBinding{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRoleBinding",
 			APIVersion: IstioAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       getServiceRoleBinding(app),
+		Spec: istio_crd.ServiceRoleBindingSpec{
+			Subjects: getServiceRoleBindingSubjects(rules, app.Namespace, app.Spec.AccessPolicy.Ingress.AllowAll),
+			RoleRef: &istio_crd.RoleRef{
+				Kind: "ServiceRole",
+				Name: app.Namespace,
+			},
+		},
 	}, nil
 }
 
@@ -95,12 +93,22 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 		return nil, nil
 	}
 
+	rules := app.Spec.AccessPolicy.Ingress.Rules
+	if len(app.Spec.Ingresses) > 0 {
+		rules = append(rules, nais.AccessPolicyGressRule{
+			Namespace:   "istio-system",
+			Application: "istio-ingressgateway",
+		})
+	}
+
 	return &istio_crd.ServiceRole{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRole",
 			APIVersion: IstioAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       getServiceRoleSpec(app),
+		Spec: istio_crd.ServiceRoleSpec{
+			Rules: getAccessRules(rules, app.Spec.AccessPolicy.Ingress.AllowAll, app.Namespace),
+		},
 	}, nil
 }
