@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	kubeconfig          string
-	bindAddr            string
-	accessPolicyEnabled bool
+	kubeconfig           string
+	bindAddr             string
+	accessPolicyEnabled  bool
 	nativeSecretsEnabled bool
 )
 
