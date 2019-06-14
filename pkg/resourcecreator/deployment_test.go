@@ -453,7 +453,7 @@ func TestDeployment(t *testing.T) {
 			},
 		}
 
-		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
+		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: true})
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
 
@@ -468,6 +468,24 @@ func TestDeployment(t *testing.T) {
 		assert.True(t, appContainer.VolumeMounts[0].ReadOnly)
 		assert.Equal(t, fileSecretName, secretVolume.Name)
 		assert.Equal(t, fileSecretName, secretVolume.Secret.SecretName)
+	})
+
+	t.Run("secrets are not configured when feature flag for secrets is false", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		app.Spec.Secrets = []nais.Secret{
+			{
+				Name: "envsecret",
+				Type: nais.SecretTypeEnv,
+			},
+		}
+
+		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: false})
+		assert.NoError(t, err)
+		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		assert.Equal(t, 0, len(appContainer.EnvFrom))
 	})
 }
 

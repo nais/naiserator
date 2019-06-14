@@ -39,7 +39,7 @@ func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1
 }
 
 func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.DeploymentSpec, error) {
-	podSpec, err := podSpec(app)
+	podSpec, err := podSpec(resourceOptions, app)
 	if err != nil {
 		return nil, err
 	}
@@ -80,14 +80,14 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 	}, nil
 }
 
-func podSpec(app *nais.Application) (*corev1.PodSpec, error) {
+func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.PodSpec, error) {
 	var err error
 
 	ApplySecretDefaults(&app.Spec.Secrets)
 
 	podSpec := podSpecBase(app)
 
-	if len(app.Spec.Secrets) > 0 {
+	if resourceOptions.NativeSecrets && len(app.Spec.Secrets) > 0 {
 		podSpec = secrets(app, podSpec)
 	}
 

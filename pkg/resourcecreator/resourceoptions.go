@@ -2,8 +2,9 @@ package resourcecreator
 
 // ResourceOptions defines customizations for resource objects.
 type ResourceOptions struct {
-	NumReplicas  int32
-	AccessPolicy bool
+	NumReplicas   int32
+	AccessPolicy  bool
+	NativeSecrets bool
 }
 
 // NewResourceOptions creates a struct with the default resource options.

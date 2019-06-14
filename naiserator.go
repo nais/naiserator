@@ -25,16 +25,16 @@ type Naiserator struct {
 	AppClient                 *clientV1Alpha1.Clientset
 	ApplicationInformer       informers.ApplicationInformer
 	ApplicationInformerSynced cache.InformerSynced
-	enableAccessPolicy        bool
+	ResourceOptions           resourcecreator.ResourceOptions
 }
 
-func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, enableAccessPolicy bool) *Naiserator {
+func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, resourceOptions resourcecreator.ResourceOptions) *Naiserator {
 	naiserator := Naiserator{
 		ClientSet:                 clientSet,
 		AppClient:                 appClient,
 		ApplicationInformer:       applicationInformer,
 		ApplicationInformerSynced: applicationInformer.Informer().HasSynced,
-		enableAccessPolicy:        enableAccessPolicy}
+		ResourceOptions:           resourceOptions}
 
 	applicationInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
@@ -81,18 +81,14 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
 	// resource and pass the correct number in the resource options.
-	resourceOptions := resourcecreator.NewResourceOptions()
 	deployment, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("while querying existing deployment: %s", err)
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
-		resourceOptions.NumReplicas = *deployment.Spec.Replicas
+		n.ResourceOptions.NumReplicas = *deployment.Spec.Replicas
 	}
 
-	// AccessPolicy ensures that Istio resources are created.
-	resourceOptions.AccessPolicy = n.enableAccessPolicy
-
-	resources, err := resourcecreator.Create(app, resourceOptions)
+	resources, err := resourcecreator.Create(app, n.ResourceOptions)
 	if err != nil {
 		return fmt.Errorf("while creating resources: %s", err)
 	}
