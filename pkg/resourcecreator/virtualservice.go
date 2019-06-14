@@ -17,6 +17,10 @@ const (
 )
 
 func VirtualService(app *nais.Application) *istio.VirtualService {
+	if len(app.Spec.Ingresses) == 0 {
+		return nil
+	}
+
 	hosts := make([]string, len(app.Spec.Ingresses))
 
 	for i := range app.Spec.Ingresses {
