@@ -93,6 +93,8 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 		return nil, nil
 	}
 
+	servicePath := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
+
 	return &istio_crd.ServiceRole{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRole",
@@ -100,7 +102,12 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio_crd.ServiceRoleSpec{
-			Rules: getAccessRules(app.Spec.AccessPolicy.Ingress.Rules, app.Spec.AccessPolicy.Ingress.AllowAll, app.Namespace),
+			Rules: []*istio_crd.AccessRule{
+				{
+					Methods:  []string{"*"},
+					Services: []string{servicePath},
+				},
+			},
 		},
 	}, nil
 }

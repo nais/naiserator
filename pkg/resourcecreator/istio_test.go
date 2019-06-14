@@ -45,7 +45,7 @@ func TestIstio(t *testing.T) {
 		assert.Nil(t, serviceRoleBinding)
 	})
 
-	t.Run("access policy with allow all returns servicerole and binding with * as access rule", func(t *testing.T) {
+	t.Run("access policy with no specified namespace creates access rule with app namespace", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -56,41 +56,7 @@ func TestIstio(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRole)
 
-		assert.Equal(t, "*", serviceRole.Spec.Rules[0].Services[0])
-		assert.Len(t, serviceRole.Spec.Rules, 1)
-	})
-
-	t.Run("access policy with no specified namespace creates access rule with app namespace", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Ingress.AllowAll = false
-
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
-
-		serviceRole, err := resourcecreator.ServiceRole(app)
-
-		assert.NoError(t, err)
-		assert.NotNil(t, serviceRole)
-
-		service := fmt.Sprintf("%s.%s.svc.cluster.local", otherApplication, app.Namespace)
-		assert.Equal(t, service, serviceRole.Spec.Rules[0].Services[0])
-		assert.Len(t, serviceRole.Spec.Rules, 1)
-	})
-
-	t.Run("access policy with specified namespace creates access rule with specified namespace", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Ingress.AllowAll = false
-
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, otherNamespace}}
-
-		serviceRole, err := resourcecreator.ServiceRole(app)
-
-		assert.NoError(t, err)
-		assert.NotNil(t, serviceRole)
-		service := fmt.Sprintf("%s.%s.svc.cluster.local", otherApplication, otherNamespace)
+		service := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
 		assert.Equal(t, service, serviceRole.Spec.Rules[0].Services[0])
 		assert.Len(t, serviceRole.Spec.Rules, 1)
 	})
