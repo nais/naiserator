@@ -50,9 +50,9 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.resources.requests.cpu | Guaranteed amount of CPU | 200m |
 | spec.resources.requests.memory | Guaranteed amount of memory | 256Mi |
 | spec.ingresses | List of ingress URLs that will route HTTP traffic to the application | |
-| spec.secrets[].name | Name of secret (must exist in namespace) | | x |
-| spec.secrets[].type | How the secrets is exposed to the pod. Valid options is `env` and `files`. Selecting `env` will expose all variables in secret as environment variables and `files` will expose the secrets as files under `spec.secrets[].mountPath` | `env` | |
-| spec.secrets[].mountPath | Path to where secret files will be mounted (only valid for secret type `files`) | /var/run/secrets | |
+| spec.secrets[].name | (GCP only, not available on-prem) Name of secret (must exist in namespace) | | x |
+| spec.secrets[].type | (GCP only, not available on-prem) How the secrets is exposed to the pod. Valid options is `env` and `files`. Selecting `env` will expose all variables in secret as environment variables and `files` will expose the secrets as files under `spec.secrets[].mountPath` | `env` | |
+| spec.secrets[].mountPath | (GCP only, not available on-prem) Path to where secret files will be mounted (only valid for secret type `files`) | /var/run/secrets | |
 | spec.vault.enabled | If set to true, fetch secrets from [Vault](https://github.com/nais/doc/tree/master/content/secrets) and inject into the pods | false | |
 | spec.vault.sidecar | If set to true, will extend tokens time to live | false | |
 | spec.vault.paths | Overriding the `paths` array is optional, and will give you fine-grained control over which vault paths that will be mounted on the file system. | | |
