@@ -56,16 +56,23 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
 	}
 
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
-		return nil, nil
-	}
-
 	rules := app.Spec.AccessPolicy.Ingress.Rules
 	if len(app.Spec.Ingresses) > 0 {
 		rules = append(rules, nais.AccessPolicyGressRule{
 			Namespace:   "istio-system",
 			Application: "istio-ingressgateway-service-account",
 		})
+	}
+
+	if app.Spec.Prometheus.Enabled {
+		rules = append(rules, nais.AccessPolicyGressRule{
+			Namespace:   "istio-system",
+			Application: "default",
+		})
+	}
+
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(rules) == 0 {
+		return nil, nil
 	}
 
 	return &istio_crd.ServiceRoleBinding{
