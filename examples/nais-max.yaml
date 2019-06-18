@@ -67,7 +67,7 @@ spec:
   service:
     port: 80 # default service-port
   accessPolicy: # creates rules for ingress and egress traffic. Currently supported in GKE only.
-    ingress:
+    inbound:
       allowAll: false # optional, if true opens up for all inbound access in app.namespace.
       rules:
         - application: app1
@@ -75,10 +75,11 @@ spec:
           namespace: q1 # optional, defaults to 'metadata.namespace'
         - application: app3
           namespace: t1
-    egress:
+    outbound:
       allowAll: false # optional, opens up for all outbound access
       rules:
         - application: app1
         - application: app2
           namespace: q1 # optional, defaults to 'metadata.namespace'
+      external:
         - www.external-application.com
