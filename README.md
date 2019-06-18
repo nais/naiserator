@@ -70,14 +70,13 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.service.port | Port for the default service | 80 |
 | spec.skipCaBundle | If true, no certificate authority bundle will be injected | false | |
 | spec.accessPolicy| Default will not allow any traffic to or from application. Access policy is currently supported in GKE clusters, only. Read more in our [documentation](https://github.com/nais/doc/tree/master/content/drafts/istio-rbac.md) |  | |
-| spec.accessPolicy.ingress.allowAll| If true, allow all incoming traffic in the same namespace to application | false | |
-| spec.accessPolicy.ingress.rules | List of services to allow traffic from |  |
-| spec.accessPolicy.ingress.rules[].application | Name of the application to allow traffic from |  | x |
-| spec.accessPolicy.ingress.rules | Namespace to application to allow traffic from | metadata.namespace |
-| spec.accessPolicy.egress.allowAll| If true, allow all outgoing traffic from application | false | |
-| spec.accessPolicy.egress.rules | List of services to allow traffic to |  |
-| spec.accessPolicy.egress.rules[].application | Name of the other service to allow traffic to |  | x |
-| spec.accessPolicy.v.rules | Namespace to service to allow traffic to | metadata.namespace |
+| spec.accessPolicy.inbound.rules | List of services to allow traffic from |  |
+| spec.accessPolicy.inbound.rules[].application | Name of the application to allow traffic from |  | x |
+| spec.accessPolicy.inbound.rules | Namespace to application to allow traffic from | metadata.namespace |
+| spec.accessPolicy.outbound.rules | List of services to allow traffic to |  |
+| spec.accessPolicy.outbound.rules[].application | Name of the other service to allow traffic to |  | x |
+| spec.accessPolicy.outbound.external | List of services outside cluster to allow traffic to |  |
+| spec.accessPolicy.outbound.external[].host | URL to service outside cluster |  |  x |
 
 In the [examples directory](./examples) you can see a [typical `nais.yaml` file](./examples/nais.yaml)
 
