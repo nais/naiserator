@@ -10,7 +10,7 @@ import (
 
 const (
 	// All calls to virtual services will be sent to the same gateway
-	VirtualServiceDefaultGateway = "ingress-gateway"
+	VirtualServiceDefaultGateway = "ingress-gateway.istio-system.svc.cluster.local"
 
 	// The total weight of all routes must equal 100
 	VirtualServiceTotalWeight int32 = 100
