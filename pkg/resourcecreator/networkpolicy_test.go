@@ -13,23 +13,9 @@ import (
 const accessPolicyApp = "allowedAccessApp"
 
 func TestNetworkPolicy(t *testing.T) {
-	t.Run("allow all policy sets rules to empty object", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Egress.AllowAll = true
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		networkPolicy := resourcecreator.NetworkPolicy(app)
-
-		assert.Empty(t, networkPolicy.Spec.Egress[0].To)
-		assert.Empty(t, networkPolicy.Spec.Egress[0].Ports)
-
-	})
 
 	t.Run("default deny all sets rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Egress.AllowAll = false
-		app.Spec.AccessPolicy.Ingress.AllowAll = false
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -75,17 +61,17 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("specifying ingresses when all traffic is allowed still creates an explicit rule for istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
 		app.Spec.Ingresses = []string{
 			"https://gief.api.plz",
 		}
+		app.Spec.AccessPolicy.Ingress.Rules = append(app.Spec.AccessPolicy.Ingress.Rules, nais.AccessPolicyGressRule{Application: "*"})
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		networkPolicy := resourcecreator.NetworkPolicy(app)
 		assert.NotNil(t, networkPolicy)
 		assert.Len(t, networkPolicy.Spec.Ingress, 2)
-		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 0)
+		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
 		assert.Len(t, networkPolicy.Spec.Ingress[1].From, 1)
 
 		podMatch := map[string]string{"istio": "ingressgateway"}

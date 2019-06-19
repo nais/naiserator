@@ -15,11 +15,7 @@ const (
 	IstioPrometheusServiceAccount = "default"
 )
 
-func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string, allowAll bool) (subjects []*istio_crd.Subject) {
-	if allowAll {
-		subjects = append(subjects, &istio_crd.Subject{User: "*"})
-	}
-
+func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string) (subjects []*istio_crd.Subject) {
 	for _, rule := range rules {
 		namespace := appNamespace
 		if rule.Namespace != "" {
@@ -31,9 +27,9 @@ func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamesp
 	return
 }
 
-func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, error) {
-	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
+func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
+	if len(app.Spec.AccessPolicy.Ingress.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
+		return nil
 	}
 
 	rules := app.Spec.AccessPolicy.Ingress.Rules
@@ -52,9 +48,6 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		})
 	}
 
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(rules) == 0 {
-		return nil, nil
-	}
 
 	return &istio_crd.ServiceRoleBinding{
 		TypeMeta: k8s_meta.TypeMeta{
@@ -63,22 +56,18 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio_crd.ServiceRoleBindingSpec{
-			Subjects: getServiceRoleBindingSubjects(rules, app.Namespace, app.Spec.AccessPolicy.Ingress.AllowAll),
+			Subjects: getServiceRoleBindingSubjects(rules, app.Namespace),
 			RoleRef: &istio_crd.RoleRef{
 				Kind: "ServiceRole",
 				Name: app.Name,
 			},
 		},
-	}, nil
+	}
 }
 
-func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
-	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
-	}
-
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
-		return nil, nil
+func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
+	if len(app.Spec.AccessPolicy.Ingress.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
+		return nil
 	}
 
 	servicePath := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
@@ -97,5 +86,5 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 				},
 			},
 		},
-	}, nil
+	}
 }

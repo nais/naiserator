@@ -113,12 +113,10 @@ type AccessPolicyGressRule struct {
 }
 
 type AccessPolicyIngress struct {
-	AllowAll bool                    `json:"allowAll"`
 	Rules    []AccessPolicyGressRule `json:"rules"`
 }
 
 type AccessPolicyEgress struct {
-	AllowAll bool                    `json:"allowAll"`
 	Rules    []AccessPolicyGressRule `json:"rules"`
 }
 

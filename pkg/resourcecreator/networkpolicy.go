@@ -33,11 +33,7 @@ func networkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy 
 func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
-	if app.Spec.AccessPolicy.Ingress.AllowAll {
-		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-
-		})
-	} else if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
+	if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
 			From: networkPolicyGressRules(app.Spec.AccessPolicy.Ingress.Rules),
 		})
@@ -66,10 +62,6 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 }
 
 func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule {
-	if app.Spec.AccessPolicy.Egress.AllowAll {
-		return []networkingv1.NetworkPolicyEgressRule{{}}
-	}
-
 	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 {
 		return []networkingv1.NetworkPolicyEgressRule{
 			{
