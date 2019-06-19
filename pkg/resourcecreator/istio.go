@@ -8,7 +8,12 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const IstioAPIVersion = "v1alpha1"
+const (
+	IstioAPIVersion =  "v1alpha1"
+	IstioNamespace = "istio-system"
+	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
+	IstioPrometheusServiceAccount = "default"
+)
 
 func getServicePath(rule nais.AccessPolicyGressRule, appNamespace string) string {
 	namespace := rule.Namespace
@@ -56,16 +61,24 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
 	}
 
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
-		return nil, nil
-	}
-
 	rules := app.Spec.AccessPolicy.Ingress.Rules
+
 	if len(app.Spec.Ingresses) > 0 {
 		rules = append(rules, nais.AccessPolicyGressRule{
-			Namespace:   "istio-system",
-			Application: "istio-ingressgateway-service-account",
+			Namespace:   IstioNamespace,
+			Application: IstioIngressGatewayServiceAccount,
 		})
+	}
+
+	if app.Spec.Prometheus.Enabled {
+		rules = append(rules, nais.AccessPolicyGressRule{
+			Namespace:   IstioNamespace,
+			Application: IstioPrometheusServiceAccount,
+		})
+	}
+
+	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(rules) == 0 {
+		return nil, nil
 	}
 
 	return &istio_crd.ServiceRoleBinding{
