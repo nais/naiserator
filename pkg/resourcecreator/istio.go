@@ -28,12 +28,11 @@ func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamesp
 }
 
 func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
-	if len(app.Spec.AccessPolicy.Ingress.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
+	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
 		return nil
 	}
 
-	rules := app.Spec.AccessPolicy.Ingress.Rules
-
+	rules := app.Spec.AccessPolicy.Inbound.Rules
 	if len(app.Spec.Ingresses) > 0 {
 		rules = append(rules, nais.AccessPolicyGressRule{
 			Namespace:   IstioNamespace,
@@ -66,7 +65,7 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 }
 
 func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
-	if len(app.Spec.AccessPolicy.Ingress.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
+	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
 		return nil
 	}
 

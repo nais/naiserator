@@ -112,17 +112,17 @@ type AccessPolicyGressRule struct {
 	Namespace   string `json:"namespace"`
 }
 
-type AccessPolicyIngress struct {
+type AccessPolicyInbound struct {
 	Rules    []AccessPolicyGressRule `json:"rules"`
 }
 
-type AccessPolicyEgress struct {
+type AccessPolicyOutbound struct {
 	Rules    []AccessPolicyGressRule `json:"rules"`
 }
 
 type AccessPolicy struct {
-	Ingress AccessPolicyIngress `json:"ingress"`
-	Egress  AccessPolicyEgress  `json:"egress"`
+	Inbound  AccessPolicyInbound  `json:"inbound"`
+	Outbound AccessPolicyOutbound `json:"outbound"`
 }
 
 type Secret struct {
@@ -201,11 +201,11 @@ func (in *Application) NilFix() {
 	if in.Spec.ConfigMaps.Files == nil {
 		in.Spec.ConfigMaps.Files = make([]string, 0)
 	}
-	if in.Spec.AccessPolicy.Ingress.Rules == nil {
-		in.Spec.AccessPolicy.Ingress.Rules = make([]AccessPolicyGressRule, 0)
+	if in.Spec.AccessPolicy.Inbound.Rules == nil {
+		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyGressRule, 0)
 	}
-	if in.Spec.AccessPolicy.Egress.Rules == nil {
-		in.Spec.AccessPolicy.Egress.Rules = make([]AccessPolicyGressRule, 0)
+	if in.Spec.AccessPolicy.Outbound.Rules == nil {
+		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyGressRule, 0)
 	}
 }
 

@@ -27,7 +27,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("allowed app in egress rule sets network policy pod selector to allowed app", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Egress.Rules = append(app.Spec.AccessPolicy.Egress.Rules, nais.AccessPolicyGressRule{Application: accessPolicyApp})
+		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais.AccessPolicyGressRule{Application: accessPolicyApp})
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -64,7 +64,7 @@ func TestNetworkPolicy(t *testing.T) {
 		app.Spec.Ingresses = []string{
 			"https://gief.api.plz",
 		}
-		app.Spec.AccessPolicy.Ingress.Rules = append(app.Spec.AccessPolicy.Ingress.Rules, nais.AccessPolicyGressRule{Application: "*"})
+		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais.AccessPolicyGressRule{Application: "*"})
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
