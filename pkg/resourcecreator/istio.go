@@ -28,10 +28,6 @@ func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamesp
 }
 
 func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
-	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
-		return nil
-	}
-
 	rules := app.Spec.AccessPolicy.Inbound.Rules
 	if len(app.Spec.Ingresses) > 0 {
 		rules = append(rules, nais.AccessPolicyGressRule{
@@ -47,6 +43,9 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 		})
 	}
 
+	if len(rules) == 0 && len(app.Spec.Ingresses) == 0 {
+		return nil
+	}
 
 	return &istio_crd.ServiceRoleBinding{
 		TypeMeta: k8s_meta.TypeMeta{

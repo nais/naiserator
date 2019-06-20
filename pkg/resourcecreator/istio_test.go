@@ -114,13 +114,8 @@ func TestIstio(t *testing.T) {
 
 		serviceRoleBinding  := resourcecreator.ServiceRoleBinding(app)
 		assert.NoError(t, err)
-		assert.NotNil(t, serviceRoleBinding)
+		assert.Nil(t, serviceRoleBinding)
 
-		subject := rbac_istio_io_v1alpha1.Subject{
-			User: "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account",
-		}
-
-		assert.NotContains(t, serviceRoleBinding.Spec.Subjects, &subject)
 	})
 
 	t.Run("prometheus enabled adds istio system default service account to servicerolebinding", func(t *testing.T) {
@@ -129,8 +124,7 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
-		assert.NoError(t, err)
+		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 		assert.NotNil(t, serviceRoleBinding)
 
 		subject := rbac_istio_io_v1alpha1.Subject{
