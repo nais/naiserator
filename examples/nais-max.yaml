@@ -79,3 +79,22 @@ spec:
       allowAll: false # optional, opens up for all outbound access
       rules:
         - www.external-application.com
+
+  skipCaBundle: false # optional, if true we don't mount any CA Bundles into the application
+  accessPolicy:
+    inbound:
+      allowIngressTraffic: true # configures access from istio-ingressgateway in istio-system namespace
+      rules:
+        - application: app1 # allows access from application a in same namespace
+        - application: app2
+          namespace: q1 # optional, defaults to 'metadata.namespace'
+        - application: app3
+          namespace: t1
+        - application: * # we should consider if this is actually needed, or if rules should be explicit
+          namespace: t1 # opens up for all inbound access from 't1' namespace
+    outbound:
+      rules: # is this needed?
+        - application: app4
+          namespace: ... 
+      external: # cluster external hosts application needs to access
+        - host: www.external-application.com
