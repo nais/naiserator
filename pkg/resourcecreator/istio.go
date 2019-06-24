@@ -9,36 +9,11 @@ import (
 )
 
 const (
-	IstioAPIVersion =  "v1alpha1"
-	IstioNamespace = "istio-system"
+	IstioAPIVersion                   = "v1alpha1"
+	IstioNamespace                    = "istio-system"
 	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
-	IstioPrometheusServiceAccount = "default"
+	IstioPrometheusServiceAccount     = "default"
 )
-
-func getServicePath(rule nais.AccessPolicyGressRule, appNamespace string) string {
-	namespace := rule.Namespace
-	if len(namespace) == 0 {
-		namespace = appNamespace
-	}
-	return fmt.Sprintf("%s.%s.svc.cluster.local", rule.Application, namespace)
-}
-
-// If Services is set to [“*”], it refers to all services in the namespace defined in metadata.
-func getAccessRules(rules []nais.AccessPolicyGressRule, allowAll bool, appNamespace string) (accessRules []*istio_crd.AccessRule) {
-	services := []string{}
-
-	if allowAll {
-		services = []string{"*"}
-	}
-	for _, gress := range rules {
-		services = append(services, getServicePath(gress, appNamespace))
-	}
-
-	return []*istio_crd.AccessRule{{
-		Services: services,
-		Methods:  []string{"*"},
-	}}
-}
 
 func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string, allowAll bool) (subjects []*istio_crd.Subject) {
 	if allowAll {
