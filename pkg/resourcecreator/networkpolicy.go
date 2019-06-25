@@ -8,12 +8,16 @@ import (
 
 func networkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, gress := range rules {
-		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
-			PodSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": gress.Application,
-				},
+		selector := &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app": gress.Application,
 			},
+		}
+		if gress.Application == "*" {
+			selector = &metav1.LabelSelector{}
+		}
+		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
+			PodSelector: selector,
 		}
 
 		if gress.Namespace != "" {

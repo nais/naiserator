@@ -80,4 +80,18 @@ func TestNetworkPolicy(t *testing.T) {
 		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[1].From[0].PodSelector.MatchLabels)
 		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[1].From[0].NamespaceSelector.MatchLabels)
 	})
+	t.Run("all all traffic inside namespace sets from rule to to empty podspec", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+
+		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais.AccessPolicyGressRule{Application: "*"})
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		networkPolicy := resourcecreator.NetworkPolicy(app)
+		assert.NotNil(t, networkPolicy)
+
+		podMatch := map[string]string{}
+
+		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[0].From[0].PodSelector.MatchLabels)
+	})
 }
