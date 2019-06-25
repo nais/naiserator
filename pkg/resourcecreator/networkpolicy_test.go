@@ -7,6 +7,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 	networking "k8s.io/api/networking/v1"
 )
 
@@ -90,8 +91,8 @@ func TestNetworkPolicy(t *testing.T) {
 		networkPolicy := resourcecreator.NetworkPolicy(app)
 		assert.NotNil(t, networkPolicy)
 
-		podMatch := map[string]string{}
-
-		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[0].From[0].PodSelector.MatchLabels)
+		yamlres, err := yaml.Marshal(networkPolicy)
+		assert.NotNil(t, yamlres)
+		assert.Empty(t, networkPolicy.Spec.Ingress[0].From[0].PodSelector)
 	})
 }
