@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	IstioAPIVersion =  "v1alpha1"
-	IstioNamespace = "istio-system"
+	IstioAPIVersion                   = "v1alpha1"
+	IstioNamespace                    = "istio-system"
 	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
-	IstioPrometheusServiceAccount = "default"
+	IstioPrometheusServiceAccount     = "istio-prometheus-service-account"
 )
 
 func getServicePath(rule nais.AccessPolicyGressRule, appNamespace string) string {
@@ -70,13 +70,6 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		})
 	}
 
-	if app.Spec.Prometheus.Enabled {
-		rules = append(rules, nais.AccessPolicyGressRule{
-			Namespace:   IstioNamespace,
-			Application: IstioPrometheusServiceAccount,
-		})
-	}
-
 	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(rules) == 0 {
 		return nil, nil
 	}
@@ -96,6 +89,32 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		},
 	}, nil
 }
+
+func ServiceRoleBindingPrometheus(app *nais.Application) ( serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding, err error) {
+	if !app.Spec.Prometheus.Enabled {
+		return nil, nil
+	}
+
+	serviceRoleBindingPrometheus, err = ServiceRoleBinding(app)
+	if err != nil || (err == nil && serviceRoleBindingPrometheus == nil )  {
+		return nil, err
+	}
+
+	serviceRoleBindingPrometheus.ObjectMeta.Name += "-prometheus"
+
+	serviceRoleBindingPrometheus.Spec.RoleRef.Name = serviceRoleBindingPrometheus.ObjectMeta.Name
+
+	serviceRoleBindingPrometheus.Spec = istio_crd.ServiceRoleBindingSpec{
+		Subjects: []*istio_crd.Subject{
+			{
+				User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioPrometheusServiceAccount),
+			},
+		},
+	}
+
+	return
+}
+
 
 func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
@@ -119,8 +138,35 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 				{
 					Methods:  []string{"*"},
 					Services: []string{servicePath},
+					Paths: 	  []string{"*"},
 				},
 			},
 		},
 	}, nil
+}
+
+func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_crd.ServiceRole, err error) {
+	if !app.Spec.Prometheus.Enabled {
+		return nil, nil
+	}
+
+	serviceRolePrometheus, err = ServiceRole(app)
+	if err != nil || (err == nil && serviceRolePrometheus == nil) {
+		return nil, err
+	}
+
+	serviceRolePrometheus.ObjectMeta.Name += "-prometheus"
+
+	servicePath := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
+
+	serviceRolePrometheus.Spec.Rules = []*istio_crd.AccessRule{
+		{
+			Methods: []string{"GET"},
+			Services: []string{servicePath},
+			Paths: []string{app.Spec.Prometheus.Path},
+		},
+	}
+
+	return
+
 }
