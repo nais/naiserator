@@ -126,23 +126,24 @@ func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_
 		return nil, nil
 	}
 
-	serviceRolePrometheus, err = ServiceRole(app)
-	if err != nil || serviceRolePrometheus == nil {
-		return nil, err
-	}
-
-	serviceRolePrometheus.ObjectMeta.Name += "-prometheus"
+	name := fmt.Sprintf("%s-prometheus", app.Name)
 
 	servicePath := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
 
-	serviceRolePrometheus.Spec.Rules = []*istio_crd.AccessRule{
-		{
-			Methods:  []string{"GET"},
-			Services: []string{servicePath},
-			Paths:    []string{app.Spec.Prometheus.Path},
+	return &istio_crd.ServiceRole{
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "ServiceRole",
+			APIVersion: IstioAPIVersion,
 		},
-	}
-
-	return
-
+		ObjectMeta: app.CreateObjectMetaWithName(name),
+		Spec: istio_crd.ServiceRoleSpec{
+			Rules: []*istio_crd.AccessRule{
+				{
+					Methods:  []string{"GET"},
+					Services: []string{servicePath},
+					Paths:    []string{app.Spec.Prometheus.Path},
+				},
+			},
+		},
+	}, nil
 }
