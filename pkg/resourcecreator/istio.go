@@ -70,22 +70,26 @@ func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingProm
 		return nil, nil
 	}
 
-	serviceRoleBindingPrometheus, err = ServiceRoleBinding(app)
-	if err != nil || serviceRoleBindingPrometheus == nil {
-		return nil, err
-	}
+	name := fmt.Sprintf("%s-prometheus", app.Name)
 
-	serviceRoleBindingPrometheus.ObjectMeta.Name += "-prometheus"
-
-	serviceRoleBindingPrometheus.Spec.RoleRef.Name = serviceRoleBindingPrometheus.ObjectMeta.Name
-
-	serviceRoleBindingPrometheus.Spec.Subjects = []*istio_crd.Subject{
-		{
-			User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioPrometheusServiceAccount),
+	return &istio_crd.ServiceRoleBinding{
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "ServiceRoleBinding",
+			APIVersion: IstioAPIVersion,
 		},
-	}
-
-	return
+		ObjectMeta: app.CreateObjectMetaWithName(name),
+		Spec: istio_crd.ServiceRoleBindingSpec{
+			Subjects: []*istio_crd.Subject{
+				{
+					User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioPrometheusServiceAccount),
+				},
+			},
+			RoleRef: &istio_crd.RoleRef{
+				Kind: "ServiceRole",
+				Name: name,
+			},
+		},
+	}, nil
 }
 
 func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
