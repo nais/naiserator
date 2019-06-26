@@ -130,20 +130,38 @@ func TestIstio(t *testing.T) {
 		assert.NotContains(t, serviceRoleBinding.Spec.Subjects, &subject)
 	})
 
-	t.Run("prometheus enabled adds istio system default service account to servicerolebinding", func(t *testing.T) {
+	t.Run("no service role and no service role binding created for prometheus, when disabled ", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Prometheus.Enabled = true
+		app.Spec.Prometheus.Enabled = false
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		serviceRolePrometheus, err := resourcecreator.ServiceRolePrometheus(app)
 		assert.NoError(t, err)
-		assert.NotNil(t, serviceRoleBinding)
+		assert.Nil(t, serviceRolePrometheus)
 
-		subject := rbac_istio_io_v1alpha1.Subject{
-			User: "cluster.local/ns/istio-system/sa/default",
-		}
+		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
+		assert.NoError(t, err)
+		assert.Nil(t, serviceRoleBindingPrometheus)
 
-		assert.Contains(t, serviceRoleBinding.Spec.Subjects, &subject)
 	})
+
+	t.Run("service role and service role binding created, with matching naming. When prometheus is enabled", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Prometheus.Enabled = true
+		app.Spec.AccessPolicy.Ingress.AllowAll = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		serviceRolePrometheus, err := resourcecreator.ServiceRolePrometheus(app)
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRolePrometheus)
+
+		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
+		assert.NoError(t, err)
+		assert.NotNil(t, serviceRoleBindingPrometheus)
+
+		assert.Equal(t, serviceRolePrometheus.ObjectMeta.Name, serviceRoleBindingPrometheus.ObjectMeta.Name)
+	})
+
 }

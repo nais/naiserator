@@ -17,14 +17,14 @@ spec:
   replicas:
     min: 2
     max: 4
-  ingresses: 
+  ingresses:
     - "https://nais-testapp.nais.preprod.local"
   env:
     - name: MY_CUSTOM_VAR
       value: some_value
   resources:
     limits:
-      cpu: 500m 
+      cpu: 500m
       memory: 512Mi
     requests:
       cpu: 200m

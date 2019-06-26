@@ -15,6 +15,12 @@ func (in *Application) CreateObjectMeta() metav1.ObjectMeta {
 	}
 }
 
+func (in *Application) CreateObjectMetaWithName(name string) metav1.ObjectMeta {
+	m := in.CreateObjectMeta()
+	m.Name = name
+	return m
+}
+
 func (in *Application) OwnerReferences(app *Application) []metav1.OwnerReference {
 	return []metav1.OwnerReference{app.GetOwnerReference()}
 }
