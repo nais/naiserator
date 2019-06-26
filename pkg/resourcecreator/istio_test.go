@@ -138,7 +138,7 @@ func TestIstio(t *testing.T) {
 
 		serviceRolePrometheus, err := resourcecreator.ServiceRolePrometheus(app)
 		assert.NoError(t, err)
-		assert.Nil(t,serviceRolePrometheus)
+		assert.Nil(t, serviceRolePrometheus)
 
 		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.NoError(t, err)
@@ -153,16 +153,15 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-
 		serviceRolePrometheus, err := resourcecreator.ServiceRolePrometheus(app)
 		assert.NoError(t, err)
-		assert.NotNil(t,serviceRolePrometheus)
+		assert.NotNil(t, serviceRolePrometheus)
 
 		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRoleBindingPrometheus)
 
-		assert.Equal(t,serviceRolePrometheus.ObjectMeta.Name, serviceRoleBindingPrometheus.ObjectMeta.Name)
+		assert.Equal(t, serviceRolePrometheus.ObjectMeta.Name, serviceRoleBindingPrometheus.ObjectMeta.Name)
 	})
 
 }

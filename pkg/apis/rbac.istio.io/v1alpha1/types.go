@@ -28,7 +28,7 @@ type ServiceRoleSpec struct {
 type AccessRule struct {
 	Services []string `json:"services"`
 	Methods  []string `json:"methods"`
-	Paths 	 []string `json:"Paths"`
+	Paths    []string `json:"paths"`
 }
 
 // +genclient

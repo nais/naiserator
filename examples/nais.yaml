@@ -6,9 +6,8 @@ metadata:
   labels:
     team: aura
 spec:
-  skipCaBundle: true
-  image: navikt/nais-testapp:local
-  port: 8080
+  image: navikt/nais-testapp:latest
+  port: 8080 
   liveness:
     path: /isalive
   readiness:

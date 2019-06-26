@@ -90,13 +90,13 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 	}, nil
 }
 
-func ServiceRoleBindingPrometheus(app *nais.Application) ( serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding, err error) {
+func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding, err error) {
 	if !app.Spec.Prometheus.Enabled {
 		return nil, nil
 	}
 
 	serviceRoleBindingPrometheus, err = ServiceRoleBinding(app)
-	if err != nil || serviceRoleBindingPrometheus == nil  {
+	if err != nil || serviceRoleBindingPrometheus == nil {
 		return nil, err
 	}
 
@@ -112,7 +112,6 @@ func ServiceRoleBindingPrometheus(app *nais.Application) ( serviceRoleBindingPro
 
 	return
 }
-
 
 func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
@@ -136,7 +135,7 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 				{
 					Methods:  []string{"*"},
 					Services: []string{servicePath},
-					Paths: 	  []string{"*"},
+					Paths:    []string{"*"},
 				},
 			},
 		},
@@ -159,9 +158,9 @@ func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_
 
 	serviceRolePrometheus.Spec.Rules = []*istio_crd.AccessRule{
 		{
-			Methods: []string{"GET"},
+			Methods:  []string{"GET"},
 			Services: []string{servicePath},
-			Paths: []string{app.Spec.Prometheus.Path},
+			Paths:    []string{app.Spec.Prometheus.Path},
 		},
 	}
 
