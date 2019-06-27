@@ -78,7 +78,7 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		return nil
 	}
 
-	if err := n.removeOrphanIngresses(app); err != nil {
+	if err := n.removeOrphanIngresses(logger, app); err != nil {
 		return fmt.Errorf("while removing old resources: %s", err)
 	}
 
@@ -164,16 +164,16 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	return result.ErrorOrNil()
 }
 
-func (n *Naiserator) removeOrphanIngresses(app *v1alpha1.Application, logger *log.Entry) error {
+func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Application) error {
 
 	if len(app.Spec.Ingresses) == 0 {
-		err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name,&v1.DeleteOptions{})
+		err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name, &v1.DeleteOptions{})
 
 		if errors.IsNotFound(err) {
 			return nil
 		}
 
-		logger.Info("%s: Successfully deleted ingresses", app.Name)
+		logger.Infof("%s: Successfully deleted ingresses", app.Name)
 
 		return err
 	}
