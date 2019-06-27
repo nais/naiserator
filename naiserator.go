@@ -78,6 +78,10 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		return nil
 	}
 
+	if err := n.removeOrphanIngresses(app); err != nil {
+		return fmt.Errorf("while removing old resources: %s", err)
+	}
+
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
 	// resource and pass the correct number in the resource options.
@@ -134,10 +138,6 @@ func (n *Naiserator) update(old, new interface{}) {
 	metrics.ApplicationsProcessed.Inc()
 	logger.Infof("%s: synchronizing application", app.Name)
 
-	if err := n.cleanupFutureRemovedResources(old,new); err != nil {
-		logger.Errorf("%s: error %s", app.Name, err)
-	}
-
 	if err := n.synchronize(logger, app); err != nil {
 		metrics.ApplicationsFailed.Inc()
 		logger.Errorf("%s: error %s", app.Name, err)
@@ -164,21 +164,18 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	return result.ErrorOrNil()
 }
 
-func (n *Naiserator) cleanupFutureRemovedResources(old, new interface{}) error {
-	var oldApp,newApp *v1alpha1.Application
+func (n *Naiserator) removeOrphanIngresses(app *v1alpha1.Application, logger *log.Entry) error {
 
-	if old == nil || new == nil {
-		return fmt.Errorf("while checking if both version of the app are available")
-	}
+	if len(app.Spec.Ingresses) == 0 {
+		err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name,&v1.DeleteOptions{})
 
-	oldApp, newApp = old.(*v1alpha1.Application), new.(*v1alpha1.Application)
-
-	if len(newApp.Spec.Ingresses) == 0 && len(oldApp.Spec.Ingresses) != len(newApp.Spec.Ingresses) {
-		err := n.ClientSet.ExtensionsV1beta1().Ingresses(oldApp.Namespace).Delete(oldApp.Name,&v1.DeleteOptions{})
-
-		if err != nil {
-			return err
+		if errors.IsNotFound(err) {
+			return nil
 		}
+
+		logger.Info("%s: Successfully deleted ingresses", app.Name)
+
+		return err
 	}
 
 	return nil
