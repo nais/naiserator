@@ -134,6 +134,10 @@ func (n *Naiserator) update(old, new interface{}) {
 	metrics.ApplicationsProcessed.Inc()
 	logger.Infof("%s: synchronizing application", app.Name)
 
+	if err := n.cleanupFutureRemovedResources(old,new); err != nil {
+		logger.Errorf("%s: error %s", app.Name, err)
+	}
+
 	if err := n.synchronize(logger, app); err != nil {
 		metrics.ApplicationsFailed.Inc()
 		logger.Errorf("%s: error %s", app.Name, err)
@@ -158,6 +162,26 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	}
 
 	return result.ErrorOrNil()
+}
+
+func (n *Naiserator) cleanupFutureRemovedResources(old, new interface{}) error {
+	var oldApp,newApp *v1alpha1.Application
+
+	if old == nil || new == nil {
+		return fmt.Errorf("while checking if both version of the app are available")
+	}
+
+	oldApp, newApp = old.(*v1alpha1.Application), new.(*v1alpha1.Application)
+
+	if len(newApp.Spec.Ingresses) == 0 && len(oldApp.Spec.Ingresses) != len(newApp.Spec.Ingresses) {
+		err := n.ClientSet.ExtensionsV1beta1().Ingresses(oldApp.Namespace).Delete(oldApp.Name,&v1.DeleteOptions{})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (n *Naiserator) Run(stop <-chan struct{}) {
