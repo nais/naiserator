@@ -165,7 +165,6 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 }
 
 func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Application) error {
-
 	if len(app.Spec.Ingresses) == 0 {
 		err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name, &v1.DeleteOptions{})
 
@@ -173,7 +172,7 @@ func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Appl
 			return nil
 		}
 
-		logger.Infof("%s: Successfully deleted ingresses", app.Name)
+		logger.Infof("Successfully deleted orphan ingresses for application: %s", app.Name)
 
 		return err
 	}
