@@ -165,19 +165,19 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 }
 
 func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Application) error {
-	if len(app.Spec.Ingresses) == 0 {
-		err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name, &v1.DeleteOptions{})
-
-		if errors.IsNotFound(err) {
-			return nil
-		}
-
-		logger.Infof("Successfully deleted orphan ingresses for application: %s", app.Name)
-
-		return err
+	if len(app.Spec.Ingresses) > 0 {
+		return nil
 	}
 
-	return nil
+	err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name, &v1.DeleteOptions{})
+
+	if errors.IsNotFound(err) {
+		return nil
+	}
+
+	logger.Infof("%s: successfully deleted orphan ingresses", app.Name)
+
+	return err
 }
 
 func (n *Naiserator) Run(stop <-chan struct{}) {
