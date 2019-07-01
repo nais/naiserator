@@ -88,7 +88,9 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("while querying existing deployment: %s", err)
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
-		n.ResourceOptions.NumReplicas = max(*deployment.Spec.Replicas, n.ResourceOptions.NumReplicas)
+		n.ResourceOptions.NumReplicas = max(1, *deployment.Spec.Replicas)
+	} else {
+		n.ResourceOptions.NumReplicas = max(1, int32(app.Spec.Replicas.Min))
 	}
 
 	resources, err := resourcecreator.Create(app, n.ResourceOptions)
