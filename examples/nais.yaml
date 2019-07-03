@@ -6,7 +6,7 @@ metadata:
   labels:
     team: aura
 spec:
-  image: navikt/nais-testapp:latest
+  image: navikt/nais-testapp:1
   port: 8080 
   liveness:
     path: /isalive
