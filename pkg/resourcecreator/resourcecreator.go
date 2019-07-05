@@ -42,18 +42,12 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 			objects = append(objects, serviceRoleBinding)
 		}
 
-		serviceRolePrometheus, err := ServiceRolePrometheus(app)
-		if err != nil {
-			return nil, fmt.Errorf("while creating access policies: %s", err)
-		}
+		serviceRolePrometheus := ServiceRolePrometheus(app)
 		if serviceRolePrometheus != nil {
 			objects = append(objects, serviceRolePrometheus)
 		}
 
-		serviceRoleBindingPrometheus, err := ServiceRoleBindingPrometheus(app)
-		if err != nil {
-			return nil, fmt.Errorf("while creating access policies: %s", err)
-		}
+		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
 		if serviceRoleBindingPrometheus != nil {
 			objects = append(objects, serviceRoleBindingPrometheus)
 		}

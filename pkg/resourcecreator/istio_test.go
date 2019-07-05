@@ -124,31 +124,27 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRolePrometheus, err := resourcecreator.ServiceRolePrometheus(app)
-		assert.NoError(t, err)
+		serviceRolePrometheus := resourcecreator.ServiceRolePrometheus(app)
 		assert.Nil(t, serviceRolePrometheus)
 
-		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
-		assert.NoError(t, err)
+		serviceRoleBindingPrometheus := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.Nil(t, serviceRoleBindingPrometheus)
 
 	})
 
-	t.Run("service role and service role binding created, with matching naming. When prometheus is enabled", func(t *testing.T) {
+	t.Run("service role and service role binding created, with matching naming, when prometheus is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Prometheus.Enabled = true
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 		assert.NotNil(t, serviceRoleBinding)
 
-		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
-		assert.NoError(t, err)
+		serviceRoleBindingPrometheus := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.NotNil(t, serviceRoleBindingPrometheus)
 
-		assert.Equal(t, serviceRolePrometheus.ObjectMeta.Name, serviceRoleBindingPrometheus.ObjectMeta.Name)
+		assert.Equal(t, serviceRoleBindingPrometheus.ObjectMeta.Name, serviceRoleBindingPrometheus.ObjectMeta.Name)
 	})
 
 }

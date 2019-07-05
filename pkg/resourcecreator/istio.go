@@ -60,12 +60,12 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 				Name: app.Name,
 			},
 		},
-	}, nil
+	}
 }
 
-func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding, err error) {
+func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding) {
 	if !app.Spec.Prometheus.Enabled {
-		return nil, nil
+		return nil
 	}
 
 	name := fmt.Sprintf("%s-prometheus", app.Name)
@@ -87,7 +87,7 @@ func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingProm
 				Name: name,
 			},
 		},
-	}, nil
+	}
 }
 
 func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
@@ -112,12 +112,12 @@ func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
 				},
 			},
 		},
-	}, nil
+	}
 }
 
-func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_crd.ServiceRole, err error) {
+func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_crd.ServiceRole) {
 	if !app.Spec.Prometheus.Enabled {
-		return nil, nil
+		return nil
 	}
 
 	name := fmt.Sprintf("%s-prometheus", app.Name)
