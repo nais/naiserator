@@ -81,11 +81,16 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
 	// resource and pass the correct number in the resource options.
+	//
+	// The number of replicas is set to whichever is highest: the current number of replicas (which might be zero),
+	// or the default number of replicas.
 	deployment, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("while querying existing deployment: %s", err)
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
-		n.ResourceOptions.NumReplicas = *deployment.Spec.Replicas
+		n.ResourceOptions.NumReplicas = max(1, *deployment.Spec.Replicas)
+	} else {
+		n.ResourceOptions.NumReplicas = max(1, int32(app.Spec.Replicas.Min))
 	}
 
 	resources, err := resourcecreator.Create(app, n.ResourceOptions)
@@ -166,4 +171,11 @@ func (n *Naiserator) Run(stop <-chan struct{}) {
 		log.Error("timed out waiting for cache sync")
 		return
 	}
+}
+
+func max(a, b int32) int32 {
+	if a < b {
+		return a
+	}
+	return b
 }

@@ -117,7 +117,7 @@ It is no longer needed to have the project checked out in your `$GOPATH`.
 
 ```
 kubectl apply -f pkg/apis/naiserator/v1alpha1/application.yaml
-kubectl apply -f examples/app.yaml
+kubectl apply -f examples/nais.yaml
 make local
 ```
 

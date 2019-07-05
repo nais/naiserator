@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	IstioAPIVersion =  "v1alpha1"
-	IstioNamespace = "istio-system"
+	IstioAPIVersion                   = "v1alpha1"
+	IstioNamespace                    = "istio-system"
 	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
-	IstioPrometheusServiceAccount = "default"
+	IstioPrometheusServiceAccount     = "istio-prometheus-service-account"
 )
 
 func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string) (subjects []*istio_crd.Subject) {
@@ -60,7 +60,34 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 				Name: app.Name,
 			},
 		},
+	}, nil
+}
+
+func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding, err error) {
+	if !app.Spec.Prometheus.Enabled {
+		return nil, nil
 	}
+
+	name := fmt.Sprintf("%s-prometheus", app.Name)
+
+	return &istio_crd.ServiceRoleBinding{
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "ServiceRoleBinding",
+			APIVersion: IstioAPIVersion,
+		},
+		ObjectMeta: app.CreateObjectMetaWithName(name),
+		Spec: istio_crd.ServiceRoleBindingSpec{
+			Subjects: []*istio_crd.Subject{
+				{
+					User: fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioPrometheusServiceAccount),
+				},
+			},
+			RoleRef: &istio_crd.RoleRef{
+				Kind: "ServiceRole",
+				Name: name,
+			},
+		},
+	}, nil
 }
 
 func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
@@ -81,6 +108,34 @@ func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
 				{
 					Methods:  []string{"*"},
 					Services: []string{servicePath},
+					Paths:    []string{"*"},
+				},
+			},
+		},
+	}, nil
+}
+
+func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_crd.ServiceRole, err error) {
+	if !app.Spec.Prometheus.Enabled {
+		return nil, nil
+	}
+
+	name := fmt.Sprintf("%s-prometheus", app.Name)
+
+	servicePath := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
+
+	return &istio_crd.ServiceRole{
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "ServiceRole",
+			APIVersion: IstioAPIVersion,
+		},
+		ObjectMeta: app.CreateObjectMetaWithName(name),
+		Spec: istio_crd.ServiceRoleSpec{
+			Rules: []*istio_crd.AccessRule{
+				{
+					Methods:  []string{"GET"},
+					Services: []string{servicePath},
+					Paths:    []string{app.Spec.Prometheus.Path},
 				},
 			},
 		},
