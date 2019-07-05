@@ -49,12 +49,12 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 				{
 					PodSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
-							"istio": "ingressgateway",
+							"istio": IstioIngressGatewayLabelValue,
 						},
 					},
 					NamespaceSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
-							"name": "istio-system",
+							"name": IstioNamespace,
 						},
 					},
 				},
