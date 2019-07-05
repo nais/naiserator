@@ -13,6 +13,7 @@ const (
 	IstioNamespace                    = "istio-system"
 	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
 	IstioPrometheusServiceAccount     = "istio-prometheus-service-account"
+	IstioIngressGatewayLabelValue     = "ingressgateway"
 )
 
 func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string) (subjects []*istio_crd.Subject) {
