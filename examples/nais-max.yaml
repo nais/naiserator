@@ -66,24 +66,6 @@ spec:
     enabled: false # Optional. If true, mount a volume for secure logs in the pod
   service:
     port: 80 # default service-port
-  accessPolicy: # creates rules for ingress and egress traffic. Currently supported in GKE only.
-    inbound:
-      allowAll: false # optional, if true opens up for all inbound access in app.namespace.
-      rules:
-        - application: app1
-        - application: app2
-          namespace: q1 # optional, defaults to 'metadata.namespace'
-        - application: app3
-          namespace: t1
-    outbound:
-      allowAll: false # optional, opens up for all outbound access
-      rules:
-        - application: app1
-        - application: app2
-          namespace: q1 # optional, defaults to 'metadata.namespace'
-      external:
-        - www.external-application.com
-
   skipCaBundle: false # optional, if true we don't mount any CA Bundles into the application
   accessPolicy:
     inbound:
@@ -92,13 +74,14 @@ spec:
         - application: app1 # allows access from application a in same namespace
         - application: app2
           namespace: q1 # optional, defaults to 'metadata.namespace'
-        - application: app3
-          namespace: t1
-        - application: * # we should consider if this is actually needed, or if rules should be explicit
+        - application: * # accept inbound traffic from all pods in namespace t1
           namespace: t1 # opens up for all inbound access from 't1' namespace
     outbound:
-      rules: # is this needed?
-        - application: app4
-          namespace: ... 
+      rules: # rules for traffic from this application to other
+        - application: app4 # allow traffic from this application to app4 in the same namespace
+        - application: app1
+          namespace: q1
+        - application: * # allow traffic from this app to all apps in the t1 namespace
+          namespace: t1
       external: # cluster external hosts application needs to access
         - host: www.external-application.com
