@@ -69,7 +69,7 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | spec.secureLogs.enabled | If true, mount a volume for secure logs in the pod | false | |
 | spec.service.port | Port for the default service | 80 |
 | spec.skipCaBundle | If true, no certificate authority bundle will be injected | false | |
-| spec.accessPolicy| Default will not allow any traffic to or from application. Access policy is currently supported in GKE clusters, only. Read more in our [documentation](https://github.com/nais/doc/tree/master/content/drafts/istio-rbac.md) |  | |
+| spec.accessPolicy| Default will not allow any traffic to or from application. Access policy is currently supported in GKE clusters, only. Read more in our [documentation](https://github.com/nais/doc/tree/master/content/drafts/access-policies.md) |  | |
 | spec.accessPolicy.inbound.rules | List of services to allow traffic from |  |
 | spec.accessPolicy.inbound.rules[].application | Name of the application to allow traffic from |  | x |
 | spec.accessPolicy.inbound.rules | Namespace to application to allow traffic from | metadata.namespace |
