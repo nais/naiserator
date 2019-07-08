@@ -21,6 +21,11 @@ func (in *AccessRule) DeepCopyInto(out *AccessRule) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Paths != nil {
+		in, out := &in.Paths, &out.Paths
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

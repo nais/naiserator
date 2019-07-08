@@ -171,7 +171,6 @@ func TestCreate(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		app.Spec.Ingresses = []string{"https://foo.bar"}
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
 
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)

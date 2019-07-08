@@ -13,13 +13,10 @@ const (
 	IstioNamespace                    = "istio-system"
 	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
 	IstioPrometheusServiceAccount     = "istio-prometheus-service-account"
+	IstioIngressGatewayLabelValue     = "ingressgateway"
 )
 
-func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string, allowAll bool) (subjects []*istio_crd.Subject) {
-	if allowAll {
-		subjects = append(subjects, &istio_crd.Subject{User: "*"})
-	}
-
+func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string) (subjects []*istio_crd.Subject) {
 	for _, rule := range rules {
 		namespace := appNamespace
 		if rule.Namespace != "" {
@@ -31,13 +28,8 @@ func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamesp
 	return
 }
 
-func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, error) {
-	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
-	}
-
-	rules := app.Spec.AccessPolicy.Ingress.Rules
-
+func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
+	rules := app.Spec.AccessPolicy.Inbound.Rules
 	if len(app.Spec.Ingresses) > 0 {
 		rules = append(rules, nais.AccessPolicyGressRule{
 			Namespace:   IstioNamespace,
@@ -45,8 +37,15 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		})
 	}
 
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(rules) == 0 {
-		return nil, nil
+	if app.Spec.Prometheus.Enabled {
+		rules = append(rules, nais.AccessPolicyGressRule{
+			Namespace:   IstioNamespace,
+			Application: IstioPrometheusServiceAccount,
+		})
+	}
+
+	if len(rules) == 0 && len(app.Spec.Ingresses) == 0 {
+		return nil
 	}
 
 	return &istio_crd.ServiceRoleBinding{
@@ -56,18 +55,18 @@ func ServiceRoleBinding(app *nais.Application) (*istio_crd.ServiceRoleBinding, e
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio_crd.ServiceRoleBindingSpec{
-			Subjects: getServiceRoleBindingSubjects(rules, app.Namespace, app.Spec.AccessPolicy.Ingress.AllowAll),
+			Subjects: getServiceRoleBindingSubjects(rules, app.Namespace),
 			RoleRef: &istio_crd.RoleRef{
 				Kind: "ServiceRole",
 				Name: app.Name,
 			},
 		},
-	}, nil
+	}
 }
 
-func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding, err error) {
+func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding) {
 	if !app.Spec.Prometheus.Enabled {
-		return nil, nil
+		return nil
 	}
 
 	name := fmt.Sprintf("%s-prometheus", app.Name)
@@ -89,16 +88,12 @@ func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingProm
 				Name: name,
 			},
 		},
-	}, nil
+	}
 }
 
-func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
-	if app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		return nil, fmt.Errorf("cannot have access policy rules with allowAll = True")
-	}
-
-	if !app.Spec.AccessPolicy.Ingress.AllowAll && len(app.Spec.AccessPolicy.Ingress.Rules) == 0 {
-		return nil, nil
+func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
+	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
+		return nil
 	}
 
 	servicePath := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
@@ -118,12 +113,12 @@ func ServiceRole(app *nais.Application) (*istio_crd.ServiceRole, error) {
 				},
 			},
 		},
-	}, nil
+	}
 }
 
-func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_crd.ServiceRole, err error) {
+func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_crd.ServiceRole) {
 	if !app.Spec.Prometheus.Enabled {
-		return nil, nil
+		return nil
 	}
 
 	name := fmt.Sprintf("%s-prometheus", app.Name)
@@ -145,5 +140,5 @@ func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_
 				},
 			},
 		},
-	}, nil
+	}
 }

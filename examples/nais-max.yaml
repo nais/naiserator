@@ -69,7 +69,6 @@ spec:
   skipCaBundle: false # optional, if true we don't mount any CA Bundles into the application
   accessPolicy:
     inbound:
-      allowIngressTraffic: true # configures access from istio-ingressgateway in istio-system namespace
       rules:
         - application: app1 # allows access from application a in same namespace
         - application: app2
@@ -84,4 +83,5 @@ spec:
         - application: * # allow traffic from this app to all apps in the t1 namespace
           namespace: t1
       external: # cluster external hosts application needs to access
-        - host: www.external-application.com
+        - host: www.external-application.com  
+ 
