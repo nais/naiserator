@@ -21,9 +21,8 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRole, err := resourcecreator.ServiceRole(app)
+		serviceRole := resourcecreator.ServiceRole(app)
 
-		assert.NoError(t, err)
 		assert.Nil(t, serviceRole)
 	})
 
@@ -31,29 +30,25 @@ func TestIstio(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
 
-		serviceRole, err := resourcecreator.ServiceRole(app)
+		serviceRole := resourcecreator.ServiceRole(app)
 
-		assert.Error(t, err)
-		assert.Nil(t, serviceRole)
+		assert.NotNil(t, serviceRole)
 
-		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 
-		assert.Error(t, err)
-		assert.Nil(t, serviceRoleBinding)
+		assert.NotNil(t, serviceRoleBinding)
 	})
 
 	t.Run("access policy with no specified namespace creates access rule with app namespace", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{"*", app.Namespace}}
 
-		serviceRole, err := resourcecreator.ServiceRole(app)
+		serviceRole := resourcecreator.ServiceRole(app)
 
-		assert.NoError(t, err)
 		assert.NotNil(t, serviceRole)
 
 		service := fmt.Sprintf("%s.%s.svc.cluster.local", app.Name, app.Namespace)
@@ -66,9 +61,9 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, otherNamespace}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{otherApplication, otherNamespace}}
 
-		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRoleBinding)
@@ -83,9 +78,9 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		app.Spec.AccessPolicy.Ingress.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
 
-		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRoleBinding)
@@ -96,14 +91,13 @@ func TestIstio(t *testing.T) {
 
 	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
 		app.Spec.Ingresses = []string{
 			"https://gief.api.plz",
 		}
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 		assert.NoError(t, err)
 		assert.NotNil(t, serviceRoleBinding)
 		subject := rbac_istio_io_v1alpha1.Subject{
@@ -115,19 +109,13 @@ func TestIstio(t *testing.T) {
 
 	t.Run("omitting ingresses denies traffic from istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRoleBinding, err := resourcecreator.ServiceRoleBinding(app)
+		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 		assert.NoError(t, err)
-		assert.NotNil(t, serviceRoleBinding)
+		assert.Nil(t, serviceRoleBinding)
 
-		subject := rbac_istio_io_v1alpha1.Subject{
-			User: "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account",
-		}
-
-		assert.NotContains(t, serviceRoleBinding.Spec.Subjects, &subject)
 	})
 
 	t.Run("no service role and no service role binding created for prometheus, when disabled ", func(t *testing.T) {
@@ -136,32 +124,27 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRolePrometheus, err := resourcecreator.ServiceRolePrometheus(app)
-		assert.NoError(t, err)
+		serviceRolePrometheus := resourcecreator.ServiceRolePrometheus(app)
 		assert.Nil(t, serviceRolePrometheus)
 
-		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
-		assert.NoError(t, err)
+		serviceRoleBindingPrometheus := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.Nil(t, serviceRoleBindingPrometheus)
 
 	})
 
-	t.Run("service role and service role binding created, with matching naming. When prometheus is enabled", func(t *testing.T) {
+	t.Run("service role and service role binding created, with matching naming, when prometheus is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Prometheus.Enabled = true
-		app.Spec.AccessPolicy.Ingress.AllowAll = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceRolePrometheus, err := resourcecreator.ServiceRolePrometheus(app)
-		assert.NoError(t, err)
-		assert.NotNil(t, serviceRolePrometheus)
+		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
+		assert.NotNil(t, serviceRoleBinding)
 
-		serviceRoleBindingPrometheus, err := resourcecreator.ServiceRoleBindingPrometheus(app)
-		assert.NoError(t, err)
+		serviceRoleBindingPrometheus := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.NotNil(t, serviceRoleBindingPrometheus)
 
-		assert.Equal(t, serviceRolePrometheus.ObjectMeta.Name, serviceRoleBindingPrometheus.ObjectMeta.Name)
+		assert.Equal(t, serviceRoleBindingPrometheus.ObjectMeta.Name, serviceRoleBindingPrometheus.ObjectMeta.Name)
 	})
 
 }

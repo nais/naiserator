@@ -16,6 +16,10 @@ func networkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy 
 			},
 		}
 
+		if gress.Application == "*" {
+			networkPolicyPeer = networkingv1.NetworkPolicyPeer{PodSelector: &metav1.LabelSelector{}}
+		}
+
 		if gress.Namespace != "" {
 			networkPolicyPeer.NamespaceSelector = &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -33,13 +37,9 @@ func networkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy 
 func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
-	if app.Spec.AccessPolicy.Ingress.AllowAll {
+	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-
-		})
-	} else if len(app.Spec.AccessPolicy.Ingress.Rules) > 0 {
-		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-			From: networkPolicyGressRules(app.Spec.AccessPolicy.Ingress.Rules),
+			From: networkPolicyGressRules(app.Spec.AccessPolicy.Inbound.Rules),
 		})
 	}
 
@@ -49,12 +49,12 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 				{
 					PodSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
-							"istio": "ingressgateway",
+							"istio": IstioIngressGatewayLabelValue,
 						},
 					},
 					NamespaceSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
-							"name": "istio-system",
+							"name": IstioNamespace,
 						},
 					},
 				},
@@ -66,14 +66,10 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 }
 
 func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule {
-	if app.Spec.AccessPolicy.Egress.AllowAll {
-		return []networkingv1.NetworkPolicyEgressRule{{}}
-	}
-
-	if len(app.Spec.AccessPolicy.Egress.Rules) > 0 {
+	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
 		return []networkingv1.NetworkPolicyEgressRule{
 			{
-				To: networkPolicyGressRules(app.Spec.AccessPolicy.Egress.Rules),
+				To: networkPolicyGressRules(app.Spec.AccessPolicy.Outbound.Rules),
 			},
 		}
 	}
@@ -81,8 +77,8 @@ func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule 
 	return []networkingv1.NetworkPolicyEgressRule{}
 }
 
-func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
-	return &networkingv1.NetworkPolicySpec{
+func networkPolicySpec(app *nais.Application) networkingv1.NetworkPolicySpec {
+	return networkingv1.NetworkPolicySpec{
 		PodSelector: metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"app": app.Name,
@@ -105,6 +101,6 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       *networkPolicySpec(app),
+		Spec:       networkPolicySpec(app),
 	}
 }
