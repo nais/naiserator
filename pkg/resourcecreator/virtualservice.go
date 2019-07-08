@@ -30,7 +30,7 @@ func VirtualService(app *nais.Application) *istio.VirtualService {
 	return &istio.VirtualService{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "VirtualService",
-			APIVersion: "v1alpha3",
+			APIVersion: IstioNetworkingAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio.VirtualServiceSpec{

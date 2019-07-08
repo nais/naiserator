@@ -24,7 +24,7 @@ func ServiceEntry(app *nais.Application) *istio.ServiceEntry {
 	return &istio.ServiceEntry{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceEntry",
-			APIVersion: "v1alpha3",
+			APIVersion: IstioNetworkingAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio.ServiceEntrySpec{

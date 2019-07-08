@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	IstioAPIVersion                   = "v1alpha1"
+	IstioRBACAPIVersion               = "rbac.istio.io/v1alpha1"
+	IstioNetworkingAPIVersion         = "networking.istio.io/v1alpha3"
 	IstioNamespace                    = "istio-system"
 	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
 	IstioPrometheusServiceAccount     = "istio-prometheus-service-account"
@@ -51,7 +52,7 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 	return &istio_crd.ServiceRoleBinding{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRoleBinding",
-			APIVersion: IstioAPIVersion,
+			APIVersion: IstioRBACAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio_crd.ServiceRoleBindingSpec{
@@ -74,7 +75,7 @@ func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingProm
 	return &istio_crd.ServiceRoleBinding{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRoleBinding",
-			APIVersion: IstioAPIVersion,
+			APIVersion: IstioRBACAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMetaWithName(name),
 		Spec: istio_crd.ServiceRoleBindingSpec{
@@ -101,7 +102,7 @@ func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
 	return &istio_crd.ServiceRole{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRole",
-			APIVersion: IstioAPIVersion,
+			APIVersion: IstioRBACAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio_crd.ServiceRoleSpec{
@@ -128,7 +129,7 @@ func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_
 	return &istio_crd.ServiceRole{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRole",
-			APIVersion: IstioAPIVersion,
+			APIVersion: IstioRBACAPIVersion,
 		},
 		ObjectMeta: app.CreateObjectMetaWithName(name),
 		Spec: istio_crd.ServiceRoleSpec{
