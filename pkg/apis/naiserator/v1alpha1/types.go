@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -107,17 +107,22 @@ type Service struct {
 	Port int32 `json:"port"`
 }
 
+type AccessPolicyExternalRule struct {
+	Host string `json:"host"`
+}
+
 type AccessPolicyGressRule struct {
 	Application string `json:"application"`
 	Namespace   string `json:"namespace"`
 }
 
 type AccessPolicyInbound struct {
-	Rules    []AccessPolicyGressRule `json:"rules"`
+	Rules []AccessPolicyGressRule `json:"rules"`
 }
 
 type AccessPolicyOutbound struct {
-	Rules    []AccessPolicyGressRule `json:"rules"`
+	Rules    []AccessPolicyGressRule    `json:"rules"`
+	External []AccessPolicyExternalRule `json:"external"`
 }
 
 type AccessPolicy struct {

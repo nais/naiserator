@@ -183,6 +183,23 @@ func virtualService(client typed_networking_istio_io_v1alpha3.VirtualServiceInte
 	}
 }
 
+func ServiceEntry(client typed_networking_istio_io_v1alpha3.ServiceEntryInterface, old, new *networking_istio_io_v1alpha3.ServiceEntry) func() error {
+	log.Infof("creating or updating *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -284,6 +301,17 @@ func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Client
 			return virtualService(c, nil, new)
 		}
 		return virtualService(c, old, new)
+
+	case *networking_istio_io_v1alpha3.ServiceEntry:
+		c := customClient.NetworkingV1alpha3().ServiceEntries(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return ServiceEntry(c, nil, new)
+		}
+		return ServiceEntry(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))

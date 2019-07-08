@@ -71,6 +71,12 @@ var i = []Service{
 		Type:      "*networking_istio_io_v1alpha3.VirtualService",
 		Client:    "customClient.NetworkingV1alpha3().VirtualServices",
 	},
+	{
+		Name:      "ServiceEntry",
+		Interface: "typed_networking_istio_io_v1alpha3.ServiceEntryInterface",
+		Type:      "*networking_istio_io_v1alpha3.ServiceEntry",
+		Client:    "customClient.NetworkingV1alpha3().ServiceEntries",
+	},
 }
 
 func main() {
