@@ -8,15 +8,6 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	IstioRBACAPIVersion               = "rbac.istio.io/v1alpha1"
-	IstioNetworkingAPIVersion         = "networking.istio.io/v1alpha3"
-	IstioNamespace                    = "istio-system"
-	IstioIngressGatewayServiceAccount = "istio-ingressgateway-service-account"
-	IstioPrometheusServiceAccount     = "istio-prometheus-service-account"
-	IstioIngressGatewayLabelValue     = "ingressgateway"
-)
-
 func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string) (subjects []*istio_crd.Subject) {
 	for _, rule := range rules {
 		namespace := appNamespace

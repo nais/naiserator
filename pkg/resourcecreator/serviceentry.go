@@ -6,11 +6,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	IstioServiceEntryLocationExternal = "MESH_EXTERNAL"
-	IstioServiceEntryResolutionDNS    = "DNS"
-)
-
 func ServiceEntry(app *nais.Application) *istio.ServiceEntry {
 	if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
 		return nil

@@ -31,7 +31,7 @@ func TestVirtualService(t *testing.T) {
 
 		assert.Equal(t, app.Name, vs.Name)
 		assert.Equal(t, app.Namespace, vs.Namespace)
-		assert.Equal(t, []string{resourcecreator.VirtualServiceDefaultGateway}, vs.Spec.Gateways)
+		assert.Equal(t, []string{resourcecreator.IstioVirtualServiceDefaultGateway}, vs.Spec.Gateways)
 		assert.Equal(t, hosts, vs.Spec.Hosts)
 
 		assert.Len(t, vs.Spec.HTTP, 1)
@@ -39,6 +39,6 @@ func TestVirtualService(t *testing.T) {
 		route := vs.Spec.HTTP[0].Route[0]
 		assert.Equal(t, app.Name, route.Destination.Host)
 		assert.Equal(t, uint32(app.Spec.Service.Port), route.Destination.Port.Number)
-		assert.Equal(t, resourcecreator.VirtualServiceTotalWeight, route.Weight)
+		assert.Equal(t, resourcecreator.IstioVirtualServiceTotalWeight, route.Weight)
 	})
 }

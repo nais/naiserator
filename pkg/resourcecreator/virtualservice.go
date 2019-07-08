@@ -8,14 +8,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	// All calls to virtual services will be sent to the same gateway
-	VirtualServiceDefaultGateway = "ingress-gateway.istio-system.svc.cluster.local"
-
-	// The total weight of all routes must equal 100
-	VirtualServiceTotalWeight int32 = 100
-)
-
 func VirtualService(app *nais.Application) *istio.VirtualService {
 	if len(app.Spec.Ingresses) == 0 {
 		return nil
@@ -35,7 +27,7 @@ func VirtualService(app *nais.Application) *istio.VirtualService {
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio.VirtualServiceSpec{
 			Gateways: []string{
-				VirtualServiceDefaultGateway,
+				IstioVirtualServiceDefaultGateway,
 			},
 			Hosts: hosts,
 			HTTP: []istio.HTTPRoute{
@@ -48,7 +40,7 @@ func VirtualService(app *nais.Application) *istio.VirtualService {
 									Number: uint32(app.Spec.Service.Port),
 								},
 							},
-							Weight: VirtualServiceTotalWeight,
+							Weight: IstioVirtualServiceTotalWeight,
 						},
 					},
 				},

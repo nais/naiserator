@@ -44,7 +44,7 @@ func TestDeployment(t *testing.T) {
 	}))
 
 	t.Run("reflection environment variables are set in the application container", test.EnvWrapper(map[string]string{
-		resourcecreator.NaisClusterName: clusterName,
+		resourcecreator.NaisClusterNameEnv: clusterName,
 	}, func(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
@@ -59,10 +59,10 @@ func TestDeployment(t *testing.T) {
 		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
-		assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppName))
-		assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespace))
-		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImage))
-		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterName))
+		assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppNameEnv))
+		assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespaceEnv))
+		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImageEnv))
+		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterNameEnv))
 	}))
 
 	t.Run("misc settings are applied", func(t *testing.T) {

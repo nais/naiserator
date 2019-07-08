@@ -15,14 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// default environment variables
-const (
-	NaisAppName     = "NAIS_APP_NAME"
-	NaisNamespace   = "NAIS_NAMESPACE"
-	NaisAppImage    = "NAIS_APP_IMAGE"
-	NaisClusterName = "NAIS_CLUSTER_NAME"
-)
-
 func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {
 	spec, err := deploymentSpec(app, resourceOptions)
 	if err != nil {
@@ -300,10 +292,10 @@ func vaultSidecar(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSp
 
 func defaultEnvVars(app *nais.Application) []corev1.EnvVar {
 	return []corev1.EnvVar{
-		{Name: NaisAppName, Value: app.ObjectMeta.Name},
-		{Name: NaisNamespace, Value: app.ObjectMeta.Namespace},
-		{Name: NaisAppImage, Value: app.Spec.Image},
-		{Name: NaisClusterName, Value: os.Getenv(NaisClusterName)},
+		{Name: NaisAppNameEnv, Value: app.ObjectMeta.Name},
+		{Name: NaisNamespaceEnv, Value: app.ObjectMeta.Namespace},
+		{Name: NaisAppImageEnv, Value: app.Spec.Image},
+		{Name: NaisClusterNameEnv, Value: os.Getenv(NaisClusterNameEnv)},
 	}
 }
 
