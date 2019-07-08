@@ -77,8 +77,8 @@ func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule 
 	return []networkingv1.NetworkPolicyEgressRule{}
 }
 
-func networkPolicySpec(app *nais.Application) *networkingv1.NetworkPolicySpec {
-	return &networkingv1.NetworkPolicySpec{
+func networkPolicySpec(app *nais.Application) networkingv1.NetworkPolicySpec {
+	return networkingv1.NetworkPolicySpec{
 		PodSelector: metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"app": app.Name,
@@ -101,6 +101,6 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       *networkPolicySpec(app),
+		Spec:       networkPolicySpec(app),
 	}
 }
