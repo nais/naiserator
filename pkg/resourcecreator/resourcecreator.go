@@ -52,6 +52,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 			objects = append(objects, serviceRoleBindingPrometheus)
 		}
 
+		serviceEntry := ServiceEntry(app)
+		if serviceEntry != nil {
+			objects = append(objects, serviceEntry)
+		}
+
 	} else {
 
 		ingress, err := Ingress(app)
