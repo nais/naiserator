@@ -227,14 +227,8 @@ spec:
               type: boolean
             accessPolicy:
               properties:
-                allowAllIngress:
-                  type: boolean
-                allowAllEgress:
-                  type: boolean
-                ingress:
+                inbound:
                   properties:
-                    allowAll:
-                      type: boolean
                     rules:
                       type: array
                       items:
@@ -246,10 +240,8 @@ spec:
                             type: string
                           namespace:
                             type: string
-                egress:
+                outbound:
                   properties:
-                    allowAll:
-                      type: boolean
                     rules:
                       type: array
                       items:
@@ -260,4 +252,13 @@ spec:
                           application:
                             type: string
                           namespace:
+                            type: string
+                    external:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - host
+                        properties:
+                          host:
                             type: string
