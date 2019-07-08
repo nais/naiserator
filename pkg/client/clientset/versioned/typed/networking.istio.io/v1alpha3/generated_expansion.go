@@ -2,4 +2,6 @@
 
 package v1alpha3
 
+type ServiceEntryExpansion interface{}
+
 type VirtualServiceExpansion interface{}

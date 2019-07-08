@@ -12,6 +12,10 @@ type FakeNetworkingV1alpha3 struct {
 	*testing.Fake
 }
 
+func (c *FakeNetworkingV1alpha3) ServiceEntries(namespace string) v1alpha3.ServiceEntryInterface {
+	return &FakeServiceEntries{c, namespace}
+}
+
 func (c *FakeNetworkingV1alpha3) VirtualServices(namespace string) v1alpha3.VirtualServiceInterface {
 	return &FakeVirtualServices{c, namespace}
 }
