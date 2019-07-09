@@ -9,7 +9,7 @@ import (
 
 	versioned "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
-	naiserator "github.com/nais/naiserator/pkg/client/informers/externalversions/naiserator"
+	naisio "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io"
 	networkingistioio "github.com/nais/naiserator/pkg/client/informers/externalversions/networking.istio.io"
 	rbacistioio "github.com/nais/naiserator/pkg/client/informers/externalversions/rbac.istio.io"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -158,13 +158,13 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Naiserator() naiserator.Interface
+	Naiserator() naisio.Interface
 	Networking() networkingistioio.Interface
 	Rbac() rbacistioio.Interface
 }
 
-func (f *sharedInformerFactory) Naiserator() naiserator.Interface {
-	return naiserator.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Naiserator() naisio.Interface {
+	return naisio.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Networking() networkingistioio.Interface {

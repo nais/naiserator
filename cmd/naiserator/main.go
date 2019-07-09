@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"github.com/nais/naiserator/pkg/resourcecreator"
 	"os"
 	"os/signal"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
 	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/resourcecreator"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"

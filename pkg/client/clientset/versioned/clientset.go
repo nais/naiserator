@@ -3,7 +3,7 @@
 package versioned
 
 import (
-	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/naiserator/v1alpha1"
+	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	discovery "k8s.io/client-go/discovery"

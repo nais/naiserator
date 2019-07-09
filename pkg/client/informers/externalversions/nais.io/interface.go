@@ -4,7 +4,7 @@ package naiserator
 
 import (
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/nais/naiserator/pkg/client/informers/externalversions/naiserator/v1alpha1"
+	v1alpha1 "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.
