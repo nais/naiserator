@@ -78,6 +78,10 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		return nil
 	}
 
+	if err := n.removeOrphanIngresses(logger, app); err != nil {
+		return fmt.Errorf("while removing old resources: %s", err)
+	}
+
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
 	// resource and pass the correct number in the resource options.
@@ -163,6 +167,22 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	}
 
 	return result.ErrorOrNil()
+}
+
+func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Application) error {
+	if len(app.Spec.Ingresses) > 0 {
+		return nil
+	}
+
+	err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name, &v1.DeleteOptions{})
+
+	if errors.IsNotFound(err) {
+		return nil
+	}
+
+	logger.Infof("%s: successfully deleted orphan ingresses", app.Name)
+
+	return err
 }
 
 func (n *Naiserator) Run(stop <-chan struct{}) {
