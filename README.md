@@ -26,22 +26,23 @@ These resources will remain in Kubernetes until the `Application` resource is de
 | metadata.namespace | Which namespace the application will be deployed to | | x |
 | metadata.labels.team | [mailnick/tag](https://github.com/nais/doc/blob/master/content/getting-started/teamadministration.md) | | x |
 | spec.image | Docker image location, including version | | x |
-| spec.port | The HTTP port exposed by the container | | x |
+| spec.port | The HTTP port exposed by the container | 8080 | |
 | spec.strategy.type | Specifies the strategy used to replace old Pods by new ones | RollingUpdate |
 | spec.liveness.path | Path of the [liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | x |
-| spec.liveness.port | Port for probe | spec.port |
+| spec.liveness.port | Port for liveness probe | `.spec.port` |
 | spec.liveness.initialDelay | Number of seconds after the container has started before liveness probes are initiated | 20 |
 | spec.liveness.timeout | Number of seconds after which the probe times out | 1 |
 | spec.liveness.periodSeconds | How often (in seconds) to perform the probe | 10 |
 | spec.liveness.failureThreshold | When a Pod starts and the probe fails, Kubernetes will try `failureThreshold` times before giving up. Giving up in case of liveness probe means restarting the Pod. In case of readiness probe the Pod will be marked Unready | 3 |
 | spec.readiness.path | Path of the [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/) | | x |
-| spec.readiness.port | Port for probe | spec.port |
+| spec.readiness.port | Port for readiness probe | `.spec.port` |
 | spec.readiness.initialDelay | Number of seconds after the container has started before readiness probes are initiated | 20 |
 | spec.readiness.timeout | Number of seconds after which the probe times out | 1 |
 | spec.replicas.min | Minimum number of replicas | 2 |
 | spec.replicas.max | Maximum number of replicas | 4 |
 | spec.cpuThresholdPercentage | Total CPU percentage threshold on deployment, at which point it will increase number of pods if `current < max`. See [container lifecycle hooks documentation](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/) |
 | spec.prometheus.enabled | If true, the pod will be scraped for metrics by Prometheus | false |
+| spec.prometheus.port | Path to Prometheus metrics | `.spec.port` |
 | spec.prometheus.path | Path to Prometheus metrics | /metrics |
 | spec.resources | See [compute resources guide](http://kubernetes.io/docs/user-guide/compute-resources/) | |
 | spec.resources.limits.cpu | App will have its CPU usage throttled if exceeding this limit | 500m |
