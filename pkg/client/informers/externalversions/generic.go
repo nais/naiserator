@@ -5,7 +5,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbacistioiov1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

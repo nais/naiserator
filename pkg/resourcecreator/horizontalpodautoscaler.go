@@ -1,7 +1,7 @@
 package resourcecreator
 
 import (
-	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

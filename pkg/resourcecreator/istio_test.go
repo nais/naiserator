@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"

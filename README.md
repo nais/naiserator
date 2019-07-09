@@ -8,7 +8,7 @@ The main goal of Naiserator is to simplify application deployment by providing a
 Naiserator supersedes [naisd](https://nais.io).
 
 When an `Application` resource is created in Kubernetes (see
-[example application](pkg/apis/naiserator/v1alpha1/application.yaml)),
+[example application](pkg/apis/nais.io/v1alpha1/application.yaml)),
 Naiserator will generate several resources that work together to form a complete deployment:
   * `Deployment` that runs a specified number of application instances,
   * `Service` which points to the application endpoint,
@@ -124,7 +124,7 @@ are used for dependency tracking. Make sure you do `export GO111MODULE=on` befor
 It is no longer needed to have the project checked out in your `$GOPATH`.
 
 ```
-kubectl apply -f pkg/apis/naiserator/v1alpha1/application.yaml
+kubectl apply -f pkg/apis/nais.io/v1alpha1/application.yaml
 kubectl apply -f examples/nais.yaml
 make local
 ```

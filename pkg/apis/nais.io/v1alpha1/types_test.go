@@ -3,7 +3,7 @@ package v1alpha1_test
 import (
 	"testing"
 
-	"github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )

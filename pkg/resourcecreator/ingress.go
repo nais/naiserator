@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"

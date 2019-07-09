@@ -2,7 +2,7 @@ package vault
 
 import (
 	"fmt"
-	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"strconv"
 
 	"github.com/hashicorp/go-multierror"

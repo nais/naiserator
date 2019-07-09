@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	nais "github.com/nais/naiserator/pkg/apis/naiserator/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/securelogs"
 	"github.com/nais/naiserator/pkg/vault"
 	appsv1 "k8s.io/api/apps/v1"
