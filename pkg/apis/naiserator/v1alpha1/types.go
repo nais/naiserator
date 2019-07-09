@@ -18,13 +18,43 @@ const (
 	DefaultSecretMountPath   = "/var/run/secrets"
 )
 
+// Application defines a NAIS application.
+//
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Team",type="string",JSONPath=".metadata.labels.team"
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec ApplicationSpec `json:"spec"`
+}
+
+// ApplicationSpec contains the NAIS manifest.
+type ApplicationSpec struct {
+	AccessPolicy    AccessPolicy         `json:"accessPolicy,omitempty"`
+	ConfigMaps      ConfigMaps           `json:"configMaps,omitempty"`
+	Env             []EnvVar             `json:"env,omitempty"`
+	Image           string               `json:"image"`
+	Ingresses       []string             `json:"ingresses,omitempty"`
+	LeaderElection  bool                 `json:"leaderElection,omitempty"`
+	Liveness        Probe                `json:"liveness,omitempty"`
+	Logformat       string               `json:"logformat,omitempty"`
+	Logtransform    string               `json:"logtransform,omitempty"`
+	Port            int                  `json:"port,omitempty"`
+	PreStopHookPath string               `json:"preStopHookPath,omitempty"`
+	Prometheus      PrometheusConfig     `json:"prometheus,omitempty"`
+	Readiness       Probe                `json:"readiness,omitempty"`
+	Replicas        Replicas             `json:"replicas,omitempty"`
+	Resources       ResourceRequirements `json:"resources,omitempty"`
+	Secrets         []Secret             `json:"secrets,omitempty"`
+	SecureLogs      SecureLogs           `json:"secureLogs,omitempty"`
+	Service         Service              `json:"service,omitempty"`
+	SkipCaBundle    bool                 `json:"skipCaBundle,omitempty"`
+	Strategy        Strategy             `json:"strategy,omitempty"`
+	Vault           Vault                `json:"vault,omitempty"`
+	WebProxy        bool                 `json:"webproxy,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -134,32 +164,6 @@ type Secret struct {
 	Name      string `json:"name"`
 	Type      string `json:"type"`
 	MountPath string `json:"mountPath"`
-}
-
-// ApplicationSpec used to be called nais manifest.
-type ApplicationSpec struct {
-	Liveness        Probe                `json:"liveness"`
-	Readiness       Probe                `json:"readiness"`
-	Image           string               `json:"image"`
-	Ingresses       []string             `json:"ingresses"`
-	LeaderElection  bool                 `json:"leaderElection"`
-	Logformat       string               `json:"logformat"`
-	Logtransform    string               `json:"logtransform"`
-	SecureLogs      SecureLogs           `json:"secureLogs"`
-	Port            int                  `json:"port"`
-	PreStopHookPath string               `json:"preStopHookPath"`
-	Prometheus      PrometheusConfig     `json:"prometheus"`
-	Replicas        Replicas             `json:"replicas"`
-	Resources       ResourceRequirements `json:"resources"`
-	Secrets         []Secret             `json:"secrets"`
-	Vault           Vault                `json:"vault"`
-	WebProxy        bool                 `json:"webproxy"`
-	ConfigMaps      ConfigMaps           `json:"configMaps"`
-	Env             []EnvVar             `json:"env"`
-	Strategy        Strategy             `json:"strategy"`
-	Service         Service              `json:"service"`
-	SkipCaBundle    bool                 `json:"skipCaBundle"`
-	AccessPolicy    AccessPolicy         `json:"accessPolicy"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
