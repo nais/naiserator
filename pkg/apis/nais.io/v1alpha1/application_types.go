@@ -69,38 +69,43 @@ type ApplicationList struct {
 }
 
 type SecureLogs struct {
+	// Whether or not to enable a sidecar container for secure logging.
 	Enabled bool `json:"enabled"`
 }
 
+// Liveness probe and readiness probe definitions.
 type Probe struct {
 	Path             string `json:"path"`
-	Port             int    `json:"port"`
-	InitialDelay     int    `json:"initialDelay"`
-	PeriodSeconds    int    `json:"periodSeconds"`
-	FailureThreshold int    `json:"failureThreshold"`
-	Timeout          int    `json:"timeout"`
+	Port             int    `json:"port,omitempty"`
+	InitialDelay     int    `json:"initialDelay,omitempty"`
+	PeriodSeconds    int    `json:"periodSeconds,omitempty"`
+	FailureThreshold int    `json:"failureThreshold,omitempty"`
+	Timeout          int    `json:"timeout,omitempty"`
 }
 
 type PrometheusConfig struct {
-	Enabled bool   `json:"enabled"`
-	Port    string `json:"port"`
-	Path    string `json:"path"`
+	Enabled bool   `json:"enabled,omitempty"`
+	Port    string `json:"port,omitempty"`
+	Path    string `json:"path,omitempty"`
 }
 
 type Replicas struct {
-	Min                    int `json:"min"`
-	Max                    int `json:"max"`
-	CpuThresholdPercentage int `json:"cpuThresholdPercentage"`
+	// The minimum amount of replicas acceptable for a successful deployment.
+	Min int `json:"min,omitempty"`
+	// The pod autoscaler will scale deployments on demand until this maximum has been reached.
+	Max int `json:"max,omitempty"`
+	// Amount of CPU usage before the autoscaler kicks in.
+	CpuThresholdPercentage int `json:"cpuThresholdPercentage,omitempty"`
 }
 
 type ResourceSpec struct {
-	Cpu    string `json:"cpu"`
-	Memory string `json:"memory"`
+	Cpu    string `json:"cpu,omitempty"`
+	Memory string `json:"memory,omitempty"`
 }
 
 type ResourceRequirements struct {
-	Limits   ResourceSpec `json:"limits"`
-	Requests ResourceSpec `json:"requests"`
+	Limits   ResourceSpec `json:"limits,omitempty"`
+	Requests ResourceSpec `json:"requests,omitempty"`
 }
 
 type ObjectFieldSelector struct {
@@ -113,8 +118,8 @@ type EnvVarSource struct {
 
 type EnvVar struct {
 	Name      string       `json:"name"`
-	Value     string       `json:"value"`
-	ValueFrom EnvVarSource `json:"valueFrom"`
+	Value     string       `json:"value,omitempty"`
+	ValueFrom EnvVarSource `json:"valueFrom,omitempty"`
 }
 
 type SecretPath struct {
@@ -123,13 +128,13 @@ type SecretPath struct {
 }
 
 type Vault struct {
-	Enabled bool         `json:"enabled"`
-	Sidecar bool         `json:"sidecar"`
-	Mounts  []SecretPath `json:"paths"`
+	Enabled bool         `json:"enabled,omitempty"`
+	Sidecar bool         `json:"sidecar,omitempty"`
+	Mounts  []SecretPath `json:"paths,omitempty"`
 }
 
 type ConfigMaps struct {
-	Files []string `json:"files"`
+	Files []string `json:"files,omitempty"`
 }
 
 type Strategy struct {
@@ -146,7 +151,7 @@ type AccessPolicyExternalRule struct {
 
 type AccessPolicyGressRule struct {
 	Application string `json:"application"`
-	Namespace   string `json:"namespace"`
+	Namespace   string `json:"namespace,omitempty"`
 }
 
 type AccessPolicyInbound struct {
@@ -159,14 +164,14 @@ type AccessPolicyOutbound struct {
 }
 
 type AccessPolicy struct {
-	Inbound  AccessPolicyInbound  `json:"inbound"`
-	Outbound AccessPolicyOutbound `json:"outbound"`
+	Inbound  AccessPolicyInbound  `json:"inbound,omitempty"`
+	Outbound AccessPolicyOutbound `json:"outbound,omitempty"`
 }
 
 type Secret struct {
 	Name      string `json:"name"`
-	Type      string `json:"type"`
-	MountPath string `json:"mountPath"`
+	Type      string `json:"type,omitempty"`
+	MountPath string `json:"mountPath,omitempty"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
