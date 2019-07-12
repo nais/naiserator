@@ -26,7 +26,7 @@ test:
 	go test ./... --coverprofile=cover.out
 
 crd:
-	controller-gen crd paths=github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1
+	controller-gen "crd:trivialVersions=true" crd paths=github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1
 
 codegen-crd:
 	${ROOT_DIR}/hack/update-codegen.sh

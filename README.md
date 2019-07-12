@@ -125,7 +125,7 @@ are used for dependency tracking. Make sure you do `export GO111MODULE=on` befor
 It is no longer needed to have the project checked out in your `$GOPATH`.
 
 ```
-kubectl apply -f config/crd
+kubectl apply -f config
 kubectl apply -f examples/nais.yaml
 make local
 ```
