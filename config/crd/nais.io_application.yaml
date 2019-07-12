@@ -478,6 +478,16 @@ spec:
                         fieldRef:
                           properties:
                             fieldPath:
+                              enum:
+                              - ""
+                              - metadata.name
+                              - metadata.namespace
+                              - metadata.labels
+                              - metadata.annotations
+                              - spec.nodeName
+                              - spec.serviceAccountName
+                              - status.hostIP
+                              - status.podIP
                               type: string
                           required:
                           - fieldPath
@@ -516,6 +526,19 @@ spec:
                 - path
                 type: object
               logformat:
+                enum:
+                - ""
+                - accesslog
+                - accesslog_with_processing_time
+                - accesslog_with_referer_useragent
+                - capnslog
+                - logrus
+                - gokit
+                - redis
+                - glog
+                - simple
+                - influxdb
+                - log15
                 type: string
               logtransform:
                 type: string
@@ -569,15 +592,19 @@ spec:
                   limits:
                     properties:
                       cpu:
+                        pattern: ^\d+m?$
                         type: string
                       memory:
+                        pattern: ^\d+[KMG]i$
                         type: string
                     type: object
                   requests:
                     properties:
                       cpu:
+                        pattern: ^\d+m?$
                         type: string
                       memory:
+                        pattern: ^\d+[KMG]i$
                         type: string
                     type: object
                 type: object
@@ -589,6 +616,10 @@ spec:
                     name:
                       type: string
                     type:
+                      enum:
+                      - ""
+                      - env
+                      - files
                       type: string
                   required:
                   - name
@@ -616,6 +647,9 @@ spec:
               strategy:
                 properties:
                   type:
+                    enum:
+                    - Recreate
+                    - RollingUpdate
                     type: string
                 required:
                 - type
