@@ -3,12 +3,12 @@
 [![CircleCI](https://circleci.com/gh/nais/naiserator/tree/master.svg?style=svg)](https://circleci.com/gh/nais/naiserator/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nais/naiserator)](https://goreportcard.com/report/github.com/nais/naiserator)
 
-Naiserator is a Kubernetes operator that handles the lifecycle of the custom resource `nais.io/Application`.
-The main goal of Naiserator is to simplify application deployment by providing a high-level abstraction tailored for the [NAIS platform](https://nais.io).
+Naiserator is a Kubernetes operator that handles the lifecycle of the `CustomResource` called `nais.io/Application`.
+The main goal of Naiserator is to simplify application deployment by providing a high-level abstraction tailored for the [NAIS-platform](https://nais.io).
 Naiserator supersedes [naisd](https://nais.io).
 
 When an `Application` resource is created in Kubernetes (see
-[example application](examples/nais.yaml)),
+[example application](pkg/apis/nais.io/v1alpha1/application.yaml)),
 Naiserator will generate several resources that work together to form a complete deployment:
   * `Deployment` that runs a specified number of application instances,
   * `Service` which points to the application endpoint,
@@ -125,7 +125,7 @@ are used for dependency tracking. Make sure you do `export GO111MODULE=on` befor
 It is no longer needed to have the project checked out in your `$GOPATH`.
 
 ```
-kubectl apply -f config/crd
+kubectl apply -f pkg/apis/nais.io/v1alpha1/application.yaml
 kubectl apply -f examples/nais.yaml
 make local
 ```
@@ -138,7 +138,6 @@ Those classes are mostly boilerplate code, and to ensure healthy and happy devel
 When the CRD changes, or additional Kubernetes resources need to be generated, you have to run code generation:
 
 ```
-make crd
 make codegen-crd
 make codegen-updater
 git add -A
