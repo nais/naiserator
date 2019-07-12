@@ -9,6 +9,9 @@ const (
 	DefaultPortName                 = "http"
 	DefaultServicePort              = 80
 	DefaultAppPort                  = 8080
+	DefaultProbePeriodSeconds       = 10
+	DefaultProbeTimeoutSeconds      = 1
+	DefaultProbeFailureThreshold    = 3
 	DeploymentStrategyRollingUpdate = "RollingUpdate"
 	DeploymentStrategyRecreate      = "Recreate"
 	DefaultVaultMountPath           = "/var/run/secrets/nais.io/vault"
@@ -26,6 +29,11 @@ func getAppDefaults() *Application {
 				Min:                    2,
 				Max:                    4,
 				CpuThresholdPercentage: 50,
+			},
+			Liveness: Probe{
+				PeriodSeconds:    DefaultProbePeriodSeconds,
+				Timeout:          DefaultProbeTimeoutSeconds,
+				FailureThreshold: DefaultProbeFailureThreshold,
 			},
 			Port: DefaultAppPort,
 			Strategy: Strategy{
