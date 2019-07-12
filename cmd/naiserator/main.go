@@ -13,6 +13,7 @@ import (
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
+	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	log "github.com/sirupsen/logrus"
@@ -28,6 +29,8 @@ var (
 	bindAddr             string
 	accessPolicyEnabled  bool
 	nativeSecretsEnabled bool
+
+	kafkaConfig = kafka.DefaultConfig()
 )
 
 func init() {
@@ -35,6 +38,8 @@ func init() {
 	flag.StringVar(&bindAddr, "bind-address", ":8080", "ip:port where http requests are served")
 	flag.BoolVar(&accessPolicyEnabled, "access-policy-enabled", ensureBool(getEnv("ACCESS_POLICY_ENABLED", "false")), "enable access policy with Istio and NetworkPolicies")
 	flag.BoolVar(&nativeSecretsEnabled, "native-secrets-enabled", ensureBool(getEnv("NATIVE_SECRETS_ENABLED", "false")), "enable use of native secrets")
+
+	kafka.SetupFlags(&kafkaConfig)
 	flag.Parse()
 }
 
@@ -42,10 +47,16 @@ func main() {
 	log.SetFormatter(&log.JSONFormatter{
 		TimestampFormat: time.RFC3339Nano,
 	})
+
 	log.Info("Naiserator starting up")
 
+	kafkaClient, err := kafka.NewClient(&kafkaConfig)
+	if err != nil {
+		log.Fatalf("unable to setup kafka: %s", err)
+	}
+
 	// register custom types
-	err := v1alpha1.AddToScheme(scheme.Scheme)
+	err = v1alpha1.AddToScheme(scheme.Scheme)
 	if err != nil {
 		log.Fatal("unable to add scheme")
 	}
@@ -64,6 +75,8 @@ func main() {
 		"/ready",
 		"/alive",
 	)
+
+	go kafkaClient.ProducerLoop()
 
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.AccessPolicy = accessPolicyEnabled

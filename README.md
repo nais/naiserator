@@ -130,6 +130,18 @@ kubectl apply -f examples/nais.yaml
 make local
 ```
 
+### Kafka & Protobuf
+Deployment messages are sent to kafka over protobuf, therefore there's a few prerequisites to develop with this enabled locally.
+1. [Protobuf installed](https://github.com/golang/protobuf)
+2. an instance of kafka to test against.
+    - If you use docker-compose you could just type docker-compose up
+3. Enable kafka by passing the flag `--kafka-enabled=true` to naiserator
+    - The kafka defaults have a lot of presumptions, be sure to check if there are any options you need to specify.
+4. If you need to compile the protobuf definition just run for example;
+    `make proto`
+    - It will download the definitions, compile and place them in the correct packages
+
+
 ### Code generation
 
 In order to use the Kubernetes Go library, we need to use classes that work together with the interfaces in that library.
