@@ -144,3 +144,13 @@ make codegen-updater
 git add -A
 git commit -a -m "Update boilerplate k8s API code"
 ```
+
+### controller-gen
+
+The tool _controller-gen_ is used by `make crd` to generate a CRD YAML file using the Go type specifications in
+`pkg/apis/nais.io/v1alpha1/*_types.go`. This YAML file should not be edited by hand. Any changes needed should
+go directly into the Go file as magic annotations.
+
+Check out the [controller-gen documentation](https://book.kubebuilder.io/reference/generating-crd.html) if unsure.
+
+A known working version of controller-gen is `v0.2.0-beta.3`.
