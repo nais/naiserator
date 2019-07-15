@@ -1,12 +1,14 @@
 package naiserator
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/updater"
@@ -110,6 +112,10 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	// so that the deployment does not happen again. Thus, we update the metrics before the end of the function.
 	metrics.ResourcesGenerated.Add(float64(len(resources)))
 	metrics.Deployments.Inc()
+
+	ctx := context.Background()
+	kafka.Deployment.InitializeAppRollout(ctx, app)
+	go kafka.Deployment.WaitForApplicationRollout(ctx, app, n)
 
 	app.SetLastSyncedHash(hash)
 	logger.Infof("%s: setting new hash %s", app.Name, hash)
