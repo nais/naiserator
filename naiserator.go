@@ -115,10 +115,10 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	metrics.Deployments.Inc()
 
 	ctx := context.Background()
-	kafka.Deployment.InitializeAppRollout(ctx, app)
+	kafka.Deployment.InitializeAppRollout(ctx, app, logger)
 
 	ready := n.checkApplicationReady(ctx, app, logger)
-	go kafka.Deployment.WaitForApplicationRollout(ctx, app, ready)
+	go kafka.Deployment.WaitForApplicationRollout(ctx, app, logger, ready)
 
 	app.SetLastSyncedHash(hash)
 	logger.Infof("%s: setting new hash %s", app.Name, hash)
@@ -204,7 +204,7 @@ func (n *Naiserator) checkApplicationReady(ctx context.Context, app *v1alpha1.Ap
 				deployment, err := n.ClientSet.ExtensionsV1beta1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 				if err != nil {
 					if !errors.IsNotFound(err) {
-						logger.Error("%s: While trying to get Deployment for app: %s", app.Name, err)
+						logger.Errorf("%s: While trying to get Deployment for app: %s", app.Name, err)
 					}
 					continue
 				}

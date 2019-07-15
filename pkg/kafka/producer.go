@@ -72,7 +72,7 @@ func DefaultEvent() *types.Event {
 	}
 }
 
-func (deployment *deployment) InitializeAppRollout(ctx context.Context, app *v1alpha1.Application) {
+func (deployment *deployment) InitializeAppRollout(ctx context.Context, app *v1alpha1.Application, logger *log.Entry) {
 	e := DefaultEvent()
 	setAppContext(e, app)
 	setIndividualContext(e)
@@ -82,17 +82,17 @@ func (deployment *deployment) InitializeAppRollout(ctx context.Context, app *v1a
 	go func() {
 		select {
 		case deployment.EventChan <- e:
-			log.Info("successfully sent deployment Event(Initialized) to channel")
+			logger.Info("successfully sent deployment Event(Initialized) to channel")
 		case <-time.After(1 * time.Minute):
-			log.Errorf("while waiting to send deployment Event to channel: %q", e)
+			logger.Errorf("while waiting to send deployment Event to channel: %q", e)
 			// Reconnect logic?
 		case <-ctx.Done():
-			log.Infof("Cancelled before getting to send deployment Event(Initialized) to channel: %s", ctx.Err())
+			logger.Infof("Cancelled before getting to send deployment Event(Initialized) to channel: %s", ctx.Err())
 		}
 	}()
 }
 
-func (deployment *deployment) WaitForApplicationRollout(ctx context.Context, app *v1alpha1.Application, ready <-chan bool) {
+func (deployment *deployment) WaitForApplicationRollout(ctx context.Context, app *v1alpha1.Application, logger *log.Entry, ready <-chan bool) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
@@ -105,14 +105,14 @@ func (deployment *deployment) WaitForApplicationRollout(ctx context.Context, app
 			e.RolloutStatus = types.RolloutStatus_complete
 			select {
 			case deployment.EventChan <- e:
-				log.Info("successfully sent deployment Event(Successful) to channel")
+				logger.Info("successfully sent deployment Event(Successful) to channel")
 			case <-time.After(1 * time.Minute):
-				log.Errorf("while waiting to send deployment Event to channel: %q", e)
+				logger.Errorf("while waiting to send deployment Event to channel: %q", e)
 				// Reconnect logic?
 			}
 			return
 		case <-ctx.Done():
-			log.Infof("Cancelled before getting to send deployment event(Successful) to channel: %s", ctx.Err())
+			logger.Infof("Cancelled before getting to send deployment event(Successful) to channel: %s", ctx.Err())
 			//send RolouStatus_unknown here?
 			return
 		}
