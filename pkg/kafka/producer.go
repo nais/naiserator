@@ -9,11 +9,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
-	"github.com/nais/naiserator"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	types "github.com/nais/naiserator/pkg/event"
 	log "github.com/sirupsen/logrus"
 )
@@ -86,55 +82,41 @@ func (deployment *deployment) InitializeAppRollout(ctx context.Context, app *v1a
 	go func() {
 		select {
 		case deployment.EventChan <- e:
-			log.Trace("successfully sent deployment Event(Initialized) to channel")
+			log.Info("successfully sent deployment Event(Initialized) to channel")
 		case <-time.After(1 * time.Minute):
 			log.Errorf("while waiting to send deployment Event to channel: %q", e)
 			// Reconnect logic?
 		case <-ctx.Done():
-			log.Tracef("Cancelled before getting to send deployment event to channel: %s", ctx.Err())
+			log.Infof("Cancelled before getting to send deployment Event(Initialized) to channel: %s", ctx.Err())
 		}
 	}()
 }
 
-func (deployment *deployment) WaitForApplicationRollout(ctx context.Context, app *v1alpha1.Application, naiserator *naiserator.Naiserator) {
+func (deployment *deployment) WaitForApplicationRollout(ctx context.Context, app *v1alpha1.Application, ready <-chan bool) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
+	e := DefaultEvent()
+	setAppContext(e, app)
+	setIndividualContext(e)
 	for {
-		rs, err := naiserator.ClientSet.ExtensionsV1beta1().ReplicaSets(app.Namespace).Get(app.Name, v1.GetOptions{})
-
-		if err != nil {
-			fmt.Println(rs.Status, err)
-			if rs.Status.ReadyReplicas == rs.Status.AvailableReplicas {
-				e := DefaultEvent()
-				setAppContext(e, app)
-				setIndividualContext(e)
-
-				e.RolloutStatus = types.RolloutStatus_complete
-
-				select {
-				case deployment.EventChan <- e:
-					log.Trace("successfully sent deployment Event(Successfull) to channel")
-				case <-time.After(1 * time.Minute):
-					log.Errorf("while waiting to send deployment Event to channel: %q", e)
-					// Reconnect logic?
-				case <-ctx.Done():
-					log.Tracef("Cancelled before getting to send deployment event to channel: %s", ctx.Err())
-				}
-			}
-		} else if !errors.IsNotFound(err) {
-			log.Error("%s: While trying to get ReplicaSet for app: %s", app.Name, err)
-		}
-		time.Sleep(5 * time.Second)
-	}
-
-	/*for {
 		select {
-
+		case <-ready:
+			e.RolloutStatus = types.RolloutStatus_complete
+			select {
+			case deployment.EventChan <- e:
+				log.Info("successfully sent deployment Event(Successful) to channel")
+			case <-time.After(1 * time.Minute):
+				log.Errorf("while waiting to send deployment Event to channel: %q", e)
+				// Reconnect logic?
+			}
+			return
 		case <-ctx.Done():
-			log.Tracef("Cancelled while waiting for application rollout: %s", ctx.Err())
+			log.Infof("Cancelled before getting to send deployment event(Successful) to channel: %s", ctx.Err())
+			//send RolouStatus_unknown here?
+			return
 		}
-	}*/
+	}
 }
 
 func (client *Client) ProducerLoop() {
