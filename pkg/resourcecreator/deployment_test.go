@@ -177,6 +177,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
+		app.Spec.Port = 12333
 		app.Spec.Liveness = nais.Probe{
 			Path: "/probe/path",
 		}
@@ -190,7 +191,8 @@ func TestDeployment(t *testing.T) {
 		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
-		assert.Equal(t, nais.DefaultPortName, appContainer.LivenessProbe.HTTPGet.Port.StrVal)
+		assert.Equal(t, app.Spec.Port, appContainer.LivenessProbe.HTTPGet.Port.IntValue())
+		assert.Nil(t, appContainer.ReadinessProbe)
 	})
 
 	t.Run("liveness configuration is set up correctly", func(t *testing.T) {

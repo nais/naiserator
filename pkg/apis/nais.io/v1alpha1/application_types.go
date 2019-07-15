@@ -224,6 +224,9 @@ func (in *Application) NilFix() {
 	if in.Spec.AccessPolicy.Outbound.Rules == nil {
 		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyGressRule, 0)
 	}
+	if in.Spec.AccessPolicy.Outbound.External == nil {
+		in.Spec.AccessPolicy.Outbound.External = make([]AccessPolicyExternalRule, 0)
+	}
 }
 
 func (in Application) Hash() (string, error) {

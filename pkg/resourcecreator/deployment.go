@@ -235,12 +235,12 @@ func appContainer(app *nais.Application) corev1.Container {
 		Env:             envVars(app),
 	}
 
-	if app.Spec.Liveness != (nais.Probe{}) {
-		c.LivenessProbe = probe(app.Spec.Liveness)
+	if len(app.Spec.Liveness.Path) > 0 {
+		c.LivenessProbe = probe(app, app.Spec.Liveness)
 	}
 
-	if app.Spec.Readiness != (nais.Probe{}) {
-		c.ReadinessProbe = probe(app.Spec.Readiness)
+	if len(app.Spec.Readiness.Path) > 0 {
+		c.ReadinessProbe = probe(app, app.Spec.Readiness)
 	}
 
 	return c
@@ -377,12 +377,17 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	}
 }
 
-func probe(probe nais.Probe) (k8sprobe *corev1.Probe) {
+func probe(app *nais.Application, probe nais.Probe) (k8sprobe *corev1.Probe) {
+	port := probe.Port
+	if port == 0 {
+		port = app.Spec.Port
+	}
+
 	k8sprobe = &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: probe.Path,
-				Port: intstr.FromString(nais.DefaultPortName),
+				Port: intstr.FromInt(port),
 			},
 		},
 		InitialDelaySeconds: int32(probe.InitialDelay),
