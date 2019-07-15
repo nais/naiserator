@@ -87,7 +87,8 @@ func main() {
 		createGenericClientset(kubeconfig),
 		createApplicationClientset(kubeconfig),
 		applicationInformerFactory.Naiserator().V1alpha1().Applications(),
-		resourceOptions)
+		resourceOptions,
+		kafkaConfig.Enabled)
 
 	applicationInformerFactory.Start(stopCh)
 	n.Run(stopCh)

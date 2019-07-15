@@ -1,7 +1,6 @@
 package naiserator
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -9,11 +8,14 @@ import (
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/event"
+	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
+	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,21 +24,28 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+const (
+	DeploymentMonitorFrequency = time.Second * 5
+	DeploymentMonitorTimeout   = time.Minute * 5
+)
+
 // Naiserator is a singleton that holds Kubernetes client instances.
 type Naiserator struct {
 	ClientSet                 kubernetes.Interface
+	KafkaEnabled              bool
 	AppClient                 *clientV1Alpha1.Clientset
 	ApplicationInformer       informers.ApplicationInformer
 	ApplicationInformerSynced cache.InformerSynced
 	ResourceOptions           resourcecreator.ResourceOptions
 }
 
-func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, resourceOptions resourcecreator.ResourceOptions) *Naiserator {
+func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Naiserator {
 	naiserator := Naiserator{
 		ClientSet:                 clientSet,
 		AppClient:                 appClient,
 		ApplicationInformer:       applicationInformer,
 		ApplicationInformerSynced: applicationInformer.Informer().HasSynced,
+		KafkaEnabled:              kafkaEnabled,
 		ResourceOptions:           resourceOptions}
 
 	applicationInformer.Informer().AddEventHandler(
@@ -114,11 +123,13 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	metrics.ResourcesGenerated.Add(float64(len(resources)))
 	metrics.Deployments.Inc()
 
-	ctx := context.Background()
-	kafka.Deployment.InitializeAppRollout(ctx, app)
+	if n.KafkaEnabled {
+		// Broadcast a message on Kafka that the deployment is initialized.
+		kafka.Events <- generator.NewDeploymentEvent(*app)
 
-	ready := n.checkApplicationReady(ctx, app, logger)
-	go kafka.Deployment.WaitForApplicationRollout(ctx, app, ready)
+		// Monitor its completion timeline over a designated period
+		go n.MonitorRollout(*app, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
+	}
 
 	app.SetLastSyncedHash(hash)
 	logger.Infof("%s: setting new hash %s", app.Name, hash)
@@ -194,33 +205,40 @@ func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Appl
 	return err
 }
 
-func (n *Naiserator) checkApplicationReady(ctx context.Context, app *v1alpha1.Application, logger *log.Entry) chan bool {
-	ready := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case <-time.After(5 * time.Second):
-				deployment, err := n.ClientSet.ExtensionsV1beta1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
-				if err != nil {
-					if !errors.IsNotFound(err) {
-						logger.Error("%s: While trying to get Deployment for app: %s", app.Name, err)
-					}
-					continue
+func (n *Naiserator) MonitorRollout(app v1alpha1.Application, frequency, timeout time.Duration) {
+	for {
+		select {
+		case <-time.After(frequency):
+			deploy, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
+			if err != nil {
+				if !errors.IsNotFound(err) {
+					log.Error("%s: While trying to get Deployment for app: %s", app.Name, err)
 				}
-
-				if deployment.Status.ReadyReplicas == deployment.Status.AvailableReplicas {
-					ready <- true
-					return
-				}
-			case <-ctx.Done():
-				return
+				continue
 			}
+
+			if deploymentComplete(deploy, &deploy.Status) {
+				event := generator.NewDeploymentEvent(app)
+				event.RolloutStatus = deployment.RolloutStatus_complete
+				kafka.Events <- event
+			}
+
+		case <-time.After(timeout):
+			return
 		}
-	}()
+	}
+}
 
-	return ready
-
+// deploymentComplete considers a deployment to be complete once all of its desired replicas
+// are updated and available, and no old pods are running.
+//
+// Copied verbatim from
+// https://github.com/kubernetes/kubernetes/blob/74bcefc8b2bf88a2f5816336999b524cc48cf6c0/pkg/controller/deployment/util/deployment_util.go#L745
+func deploymentComplete(deployment *apps.Deployment, newStatus *apps.DeploymentStatus) bool {
+	return newStatus.UpdatedReplicas == *(deployment.Spec.Replicas) &&
+		newStatus.Replicas == *(deployment.Spec.Replicas) &&
+		newStatus.AvailableReplicas == *(deployment.Spec.Replicas) &&
+		newStatus.ObservedGeneration >= deployment.Generation
 }
 
 func (n *Naiserator) Run(stop <-chan struct{}) {
