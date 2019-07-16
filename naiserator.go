@@ -25,8 +25,9 @@ import (
 )
 
 const (
-	DeploymentMonitorFrequency = time.Second * 5
-	DeploymentMonitorTimeout   = time.Minute * 5
+	DeploymentMonitorFrequency        = time.Second * 5
+	DeploymentMonitorTimeout          = time.Minute * 5
+	DeploymentCorrelationIDAnnotation = "nais.io/deployment-correlation-id"
 )
 
 // Naiserator is a singleton that holds Kubernetes client instances.
@@ -129,6 +130,10 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		e.Image.Hash = n.ContainerImageHash(*app)
 		kafka.Events <- e
 
+		annotations := app.ObjectMeta.GetAnnotations()
+		annotations[DeploymentCorrelationIDAnnotation] = e.CorrelationID
+		app.ObjectMeta.SetAnnotations(annotations)
+
 		// Monitor its completion timeline over a designated period
 		go n.MonitorRollout(*app, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
@@ -222,6 +227,7 @@ func (n *Naiserator) MonitorRollout(app v1alpha1.Application, frequency, timeout
 			if deploymentComplete(deploy, &deploy.Status) {
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
+				event.CorrelationID = app.Annotations[DeploymentCorrelationIDAnnotation]
 				kafka.Events <- event
 			}
 
