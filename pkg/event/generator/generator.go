@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 )
@@ -15,7 +14,7 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 	return deployment.Event{
 		Application:   app.Name,
 		Cluster:       app.ClusterName,
-		CorrelationID: uuid.New().String(),
+		CorrelationID: app.Annotations["nais.io/deployment-correlation-id"],
 		Environment:   environment(app),
 		Image:         &image,
 		Namespace:     app.Namespace,
