@@ -50,13 +50,16 @@ func main() {
 
 	log.Info("Naiserator starting up")
 
-	kafkaClient, err := kafka.NewClient(&kafkaConfig)
-	if err != nil {
-		log.Fatalf("unable to setup kafka: %s", err)
+	if kafkaConfig.Enabled {
+		kafkaClient, err := kafka.NewClient(&kafkaConfig)
+		if err != nil {
+			log.Fatalf("unable to setup kafka: %s", err)
+		}
+		go kafkaClient.ProducerLoop()
 	}
 
 	// register custom types
-	err = v1alpha1.AddToScheme(scheme.Scheme)
+	err := v1alpha1.AddToScheme(scheme.Scheme)
 	if err != nil {
 		log.Fatal("unable to add scheme")
 	}
@@ -75,8 +78,6 @@ func main() {
 		"/ready",
 		"/alive",
 	)
-
-	go kafkaClient.ProducerLoop()
 
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.AccessPolicy = accessPolicyEnabled
