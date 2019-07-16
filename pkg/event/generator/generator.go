@@ -47,7 +47,5 @@ func containerImage(imageName string) deployment.ContainerImage {
 	return deployment.ContainerImage{
 		Name: parts[0],
 		Tag:  tag,
-		Hash: "TODO",
 	}
 }
-
