@@ -229,6 +229,7 @@ func (n *Naiserator) MonitorRollout(app v1alpha1.Application, frequency, timeout
 				event.RolloutStatus = deployment.RolloutStatus_complete
 				event.CorrelationID = app.Annotations[DeploymentCorrelationIDAnnotation]
 				kafka.Events <- event
+				return
 			}
 
 		case <-time.After(timeout):
