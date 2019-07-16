@@ -6,11 +6,11 @@ import (
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
+	docker "github.com/novln/docker-parser"
 )
 
-
 func NewDeploymentEvent(app nais.Application) deployment.Event {
-	image := containerImage(app.Spec.Image)
+	image := ContainerImage(app.Spec.Image)
 
 	return deployment.Event{
 		Application:   app.Name,
@@ -38,14 +38,22 @@ func environment(app nais.Application) deployment.Environment {
 	return deployment.Environment_development
 }
 
-func containerImage(imageName string) deployment.ContainerImage {
-	parts := strings.SplitN(imageName, ":", 2)
-	tag := "latest"
-	if len(parts) != 1 {
-		tag = parts[1]
+func hashtag(t string) (hash, tag string) {
+	if strings.ContainsRune(t, ':') {
+		return t, ""
 	}
+	return "", t
+}
+
+func ContainerImage(imageName string) deployment.ContainerImage {
+	ref, err := docker.Parse(imageName)
+	if err != nil {
+		return deployment.ContainerImage{}
+	}
+	hash, tag := hashtag(ref.Tag())
 	return deployment.ContainerImage{
-		Name: parts[0],
+		Name: ref.Repository(),
 		Tag:  tag,
+		Hash: hash,
 	}
 }

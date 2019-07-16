@@ -3,7 +3,7 @@ module github.com/nais/naiserator
 require (
 	cloud.google.com/go v0.39.0 // indirect
 	github.com/Shopify/sarama v1.23.0
-	github.com/gogo/protobuf v1.2.1 // indirect
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/google/gofuzz v1.0.0 // indirect
@@ -16,6 +16,7 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mitchellh/hashstructure v1.0.0
+	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.3.0 // indirect
