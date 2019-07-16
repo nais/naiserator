@@ -8,13 +8,14 @@ import (
 	"github.com/nais/naiserator/pkg/event"
 )
 
+
 func NewDeploymentEvent(app nais.Application) deployment.Event {
 	image := containerImage(app.Spec.Image)
 
 	return deployment.Event{
 		Application:   app.Name,
 		Cluster:       app.ClusterName,
-		CorrelationID: app.Annotations["nais.io/deployment-correlation-id"],
+		CorrelationID: app.Annotations[nais.CorrelationIDAnnotation],
 		Environment:   environment(app),
 		Image:         &image,
 		Namespace:     app.Namespace,

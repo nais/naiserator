@@ -14,6 +14,7 @@ import (
 
 const (
 	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+	CorrelationIDAnnotation  = "nais.io/deploymentCorrelationID"
 	SecretTypeEnv            = "env"
 	SecretTypeFiles          = "files"
 	DefaultSecretType        = SecretTypeEnv

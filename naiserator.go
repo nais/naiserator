@@ -95,6 +95,12 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		return fmt.Errorf("while removing old resources: %s", err)
 	}
 
+	deploymentID, err := uuid.NewRandom()
+	if err != nil {
+		return fmt.Errorf("while generating a deployment UUID: %s", err)
+	}
+	app.ObjectMeta.Annotations[v1alpha1.CorrelationIDAnnotation] = deploymentID.String()
+
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
 	// resource and pass the correct number in the resource options.
@@ -125,14 +131,6 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	metrics.Deployments.Inc()
 
 	if n.KafkaEnabled {
-		UUID, err := uuid.NewRandom()
-		if err != nil {
-			return fmt.Errorf("while generating a random UUID: %s", err)
-		}
-		annotations := app.ObjectMeta.GetAnnotations()
-		annotations["nais.io/deployment-correlation-id"] = UUID.String()
-		app.ObjectMeta.SetAnnotations(annotations)
-
 		// Broadcast a message on Kafka that the deployment is initialized.
 		e := generator.NewDeploymentEvent(*app)
 		e.Image.Hash = n.ContainerImageHash(*app)
