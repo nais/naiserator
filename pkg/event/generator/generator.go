@@ -23,7 +23,7 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 		Source:        deployment.System_naiserator,
 		Team:          app.Labels["team"],
 		Timestamp:     time.Now().Unix(),
-		Version:       image.Tag,
+		Version:       image.GetTag(),
 		Platform: &deployment.Platform{
 			Type:    deployment.PlatformType_nais,
 			Variant: "naiserator",
