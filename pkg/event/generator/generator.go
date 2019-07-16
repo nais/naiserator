@@ -14,7 +14,6 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 
 	return deployment.Event{
 		Application:   app.Name,
-		Cluster:       app.ClusterName,
 		CorrelationID: app.Annotations[nais.CorrelationIDAnnotation],
 		Environment:   environment(app),
 		Image:         &image,
@@ -26,7 +25,6 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 		Version:       image.GetTag(),
 		Platform: &deployment.Platform{
 			Type:    deployment.PlatformType_nais,
-			Variant: "naiserator",
 		},
 	}
 }
