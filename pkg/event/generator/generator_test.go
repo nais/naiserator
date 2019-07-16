@@ -3,7 +3,7 @@ package generator_test
 import (
 	"testing"
 
-	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/test"
@@ -83,10 +83,10 @@ func TestContainerImage(t *testing.T) {
 }
 
 func TestNewDeploymentEvent(t *testing.T) {
-	test.EnvWrapper(map[string]string{
-		v1alpha1.NaisClusterNameEnv: "test-cluster",
+	clusterName := "test-cluster"
+	t.Run("Event defaults are picked up from Application correctly", test.EnvWrapper(map[string]string{
+		nais.NaisClusterNameEnv: clusterName,
 	}, func(t *testing.T) {
-
 		app := fixtures.MinimalApplication()
 		app.Spec.Image = "image:version"
 
@@ -94,32 +94,58 @@ func TestNewDeploymentEvent(t *testing.T) {
 
 		assert.Equal(t, deployment.PlatformType_nais, event.GetPlatform().GetType())
 		assert.Empty(t, event.GetPlatform().GetVariant())
-
 		assert.Equal(t, deployment.System_naiserator, event.GetSource())
-
 		assert.Nil(t, event.GetDeployer())
-
 		assert.Equal(t, fixtures.ApplicationTeam, event.GetTeam())
-
 		assert.Equal(t, deployment.RolloutStatus_initialized, event.GetRolloutStatus())
-
 		assert.Equal(t, deployment.Environment_development, event.GetEnvironment())
-
 		assert.Equal(t, fixtures.ApplicationNamespace, event.GetNamespace())
-
-		assert.Equal(t, "test-cluster", event.GetCluster())
-
+		assert.Equal(t, clusterName, event.GetCluster())
 		assert.Equal(t, fixtures.ApplicationName, event.GetApplication())
-
 		assert.Equal(t, "version", event.GetVersion())
 
 		image := event.GetImage()
-		assert.NotNil(t, image)
+		assert.NotEmpty(t, image)
 		assert.Equal(t, deployment.ContainerImage{
 			Name: "docker.io/library/image",
 			Tag:  "version",
 		}, *image)
 
 		assert.True(t, event.GetTimestamp() > 0)
+	}))
+
+	clusterName = "prod-cluster"
+	t.Run("Prod cluster Environment ", test.EnvWrapper(map[string]string{
+		nais.NaisClusterNameEnv: clusterName,
+	}, func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+
+		event := generator.NewDeploymentEvent(*app)
+
+		assert.Equal(t, deployment.Environment_production, event.GetEnvironment())
+	}))
+
+	t.Run("Get correlationID from app annotations", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.ObjectMeta = app.CreateObjectMeta()
+
+		correlationID := "correlation-id"
+		app.Annotations[nais.CorrelationIDAnnotation] = correlationID
+
+		event := generator.NewDeploymentEvent(*app)
+
+		assert.Equal(t, event.CorrelationID, correlationID)
 	})
+
+	t.Run("Get correlationID from app annotations", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+
+		team := "team"
+		app.Labels["team"] = team
+
+		event := generator.NewDeploymentEvent(*app)
+
+		assert.Equal(t, event.Team, team)
+	})
+
 }

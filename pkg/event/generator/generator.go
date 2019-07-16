@@ -33,7 +33,7 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 }
 
 func environment(app nais.Application) deployment.Environment {
-	if strings.HasPrefix(app.ClusterName, "prod-") {
+	if strings.HasPrefix(app.Cluster(), "prod-") {
 		return deployment.Environment_production
 	}
 	return deployment.Environment_development
