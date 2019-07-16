@@ -5,7 +5,6 @@ const (
 	NaisAppNameEnv     = "NAIS_APP_NAME"
 	NaisNamespaceEnv   = "NAIS_NAMESPACE"
 	NaisAppImageEnv    = "NAIS_APP_IMAGE"
-	NaisClusterNameEnv = "NAIS_CLUSTER_NAME"
 )
 
 const (

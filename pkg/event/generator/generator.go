@@ -17,18 +17,18 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 		Platform: &deployment.Platform{
 			Type: deployment.PlatformType_nais,
 		},
-		Source: deployment.System_naiserator,
-
-		Team:          app.Labels["team"],
-		RolloutStatus: deployment.RolloutStatus_initialized,
-		Environment:   environment(app),
-
-		Namespace:   app.Namespace,
-		Cluster:     app.ClusterName,
-		Application: app.Name,
-		Version:     image.GetTag(),
-		Image:       &image,
-		Timestamp:   time.Now().Unix(),
+		Source:          deployment.System_naiserator,
+		Deployer:        nil,
+		Team:            app.Labels["team"],
+		RolloutStatus:   deployment.RolloutStatus_initialized,
+		Environment:     environment(app),
+		SkyaEnvironment: "",
+		Namespace:       app.Namespace,
+		Cluster:         app.Cluster(),
+		Application:     app.Name,
+		Version:         image.GetTag(),
+		Image:           &image,
+		Timestamp:       time.Now().Unix(),
 	}
 }
 

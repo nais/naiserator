@@ -4,6 +4,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
@@ -19,6 +20,7 @@ const (
 	SecretTypeFiles          = "files"
 	DefaultSecretType        = SecretTypeEnv
 	DefaultSecretMountPath   = "/var/run/secrets"
+	NaisClusterNameEnv       = "NAIS_CLUSTER_NAME"
 )
 
 // Application defines a NAIS application.
@@ -245,6 +247,10 @@ func (in Application) Hash() (string, error) {
 
 	h, err := hash.Hash(relevantValues, nil)
 	return strconv.FormatUint(h, 10), err
+}
+
+func (in Application) Cluster() string {
+	return os.Getenv(NaisClusterNameEnv)
 }
 
 func (in *Application) LastSyncedHash() string {

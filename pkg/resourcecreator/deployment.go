@@ -2,7 +2,6 @@ package resourcecreator
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -295,7 +294,7 @@ func defaultEnvVars(app *nais.Application) []corev1.EnvVar {
 		{Name: NaisAppNameEnv, Value: app.ObjectMeta.Name},
 		{Name: NaisNamespaceEnv, Value: app.ObjectMeta.Namespace},
 		{Name: NaisAppImageEnv, Value: app.Spec.Image},
-		{Name: NaisClusterNameEnv, Value: os.Getenv(NaisClusterNameEnv)},
+		{Name: nais.NaisClusterNameEnv, Value: app.Cluster()},
 	}
 }
 
