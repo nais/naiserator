@@ -13,19 +13,22 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 	image := ContainerImage(app.Spec.Image)
 
 	return deployment.Event{
-		Application:   app.Name,
 		CorrelationID: app.Annotations[nais.CorrelationIDAnnotation],
-		Environment:   environment(app),
-		Image:         &image,
-		Namespace:     app.Namespace,
-		RolloutStatus: deployment.RolloutStatus_initialized,
-		Source:        deployment.System_naiserator,
-		Team:          app.Labels["team"],
-		Timestamp:     time.Now().Unix(),
-		Version:       image.GetTag(),
 		Platform: &deployment.Platform{
-			Type:    deployment.PlatformType_nais,
+			Type: deployment.PlatformType_nais,
 		},
+		Source: deployment.System_naiserator,
+
+		Team:          app.Labels["team"],
+		RolloutStatus: deployment.RolloutStatus_initialized,
+		Environment:   environment(app),
+
+		Namespace:   app.Namespace,
+		Cluster:     app.ClusterName,
+		Application: app.Name,
+		Version:     image.GetTag(),
+		Image:       &image,
+		Timestamp:   time.Now().Unix(),
 	}
 }
 
