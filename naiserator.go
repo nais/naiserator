@@ -133,7 +133,6 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	if n.KafkaEnabled {
 		// Broadcast a message on Kafka that the deployment is initialized.
 		e := generator.NewDeploymentEvent(*app)
-		e.Image.Hash = n.ContainerImageHash(*app)
 		kafka.Events <- e
 
 		// Monitor its completion timeline over a designated period
@@ -237,24 +236,6 @@ func (n *Naiserator) MonitorRollout(app v1alpha1.Application, frequency, timeout
 			return
 		}
 	}
-}
-
-func (n *Naiserator) ContainerImageHash(app v1alpha1.Application) string {
-	pods, err := n.ClientSet.CoreV1().Pods(app.Namespace).List(v1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", app.Name),
-	})
-	if err != nil {
-		log.Errorf("%s: while trying to get Pods for app: %s", app.Name, err)
-	}
-
-	for _, pod := range pods.Items {
-		for _, cs := range pod.Status.ContainerStatuses {
-			if cs.Image == app.Spec.Image && len(cs.ImageID) > 64 {
-				return cs.ImageID[len(cs.ImageID)-64:]
-			}
-		}
-	}
-	return ""
 }
 
 // deploymentComplete considers a deployment to be complete once all of its desired replicas
