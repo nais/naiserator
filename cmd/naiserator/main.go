@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/nais/naiserator"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
@@ -44,13 +45,25 @@ func init() {
 }
 
 func main() {
-	log.SetFormatter(&log.JSONFormatter{
+	var err error
+
+	formatter := log.JSONFormatter{
 		TimestampFormat: time.RFC3339Nano,
-	})
+	}
+	log.SetFormatter(&formatter)
 
 	log.Info("Naiserator starting up")
 
 	if kafkaConfig.Enabled {
+		kafkaLogger := log.New()
+		kafkaLogger.Level, err = log.ParseLevel(kafkaConfig.Verbosity)
+		if err != nil {
+			log.Fatal("while setting log level: %s", err)
+		}
+		kafkaLogger.SetLevel(log.GetLevel())
+		kafkaLogger.SetFormatter(&formatter)
+		sarama.Logger = kafkaLogger
+
 		kafkaClient, err := kafka.NewClient(&kafkaConfig)
 		if err != nil {
 			log.Fatalf("unable to setup kafka: %s", err)
@@ -59,7 +72,7 @@ func main() {
 	}
 
 	// register custom types
-	err := v1alpha1.AddToScheme(scheme.Scheme)
+	err = v1alpha1.AddToScheme(scheme.Scheme)
 	if err != nil {
 		log.Fatal("unable to add scheme")
 	}
