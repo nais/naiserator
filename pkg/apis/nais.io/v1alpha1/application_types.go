@@ -4,6 +4,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
@@ -14,10 +15,12 @@ import (
 
 const (
 	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
+	CorrelationIDAnnotation  = "nais.io/deploymentCorrelationID"
 	SecretTypeEnv            = "env"
 	SecretTypeFiles          = "files"
 	DefaultSecretType        = SecretTypeEnv
 	DefaultSecretMountPath   = "/var/run/secrets"
+	NaisClusterNameEnv       = "NAIS_CLUSTER_NAME"
 )
 
 // Application defines a NAIS application.
@@ -210,6 +213,9 @@ func (in *Application) GetOwnerReference() metav1.OwnerReference {
 // This is done in order to workaround the k8s client serializer
 // which crashes when these fields are uninitialized.
 func (in *Application) NilFix() {
+	if in.Annotations == nil {
+		in.Annotations = make(map[string]string)
+	}
 	if in.Spec.Ingresses == nil {
 		in.Spec.Ingresses = make([]string, 0)
 	}
@@ -253,21 +259,23 @@ func (in Application) Hash() (string, error) {
 	return strconv.FormatUint(h, 10), err
 }
 
+func (in Application) Cluster() string {
+	return os.Getenv(NaisClusterNameEnv)
+}
+
 func (in *Application) LastSyncedHash() string {
-	a := in.GetAnnotations()
-	if a == nil {
-		a = make(map[string]string)
-	}
-	return a[LastSyncedHashAnnotation]
+	in.NilFix()
+	return in.Annotations[LastSyncedHashAnnotation]
 }
 
 func (in *Application) SetLastSyncedHash(hash string) {
-	a := in.GetAnnotations()
-	if a == nil {
-		a = make(map[string]string)
-	}
-	a[LastSyncedHashAnnotation] = hash
-	in.SetAnnotations(a)
+	in.NilFix()
+	in.Annotations[LastSyncedHashAnnotation] = hash
+}
+
+func (in *Application) SetCorrelationID(id string) {
+	in.NilFix()
+	in.Annotations[CorrelationIDAnnotation] = id
 }
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {

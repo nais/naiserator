@@ -44,7 +44,7 @@ func TestDeployment(t *testing.T) {
 	}))
 
 	t.Run("reflection environment variables are set in the application container", test.EnvWrapper(map[string]string{
-		resourcecreator.NaisClusterNameEnv: clusterName,
+		nais.NaisClusterNameEnv: clusterName,
 	}, func(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
@@ -62,7 +62,7 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppNameEnv))
 		assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespaceEnv))
 		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImageEnv))
-		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterNameEnv))
+		assert.Equal(t, clusterName, envValue(appContainer.Env, nais.NaisClusterNameEnv))
 	}))
 
 	t.Run("misc settings are applied", func(t *testing.T) {
@@ -177,6 +177,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
+		app.Spec.Port = 12333
 		app.Spec.Liveness = nais.Probe{
 			Path: "/probe/path",
 		}
@@ -190,7 +191,8 @@ func TestDeployment(t *testing.T) {
 		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
-		assert.Equal(t, nais.DefaultPortName, appContainer.LivenessProbe.HTTPGet.Port.StrVal)
+		assert.Equal(t, app.Spec.Port, appContainer.LivenessProbe.HTTPGet.Port.IntValue())
+		assert.Nil(t, appContainer.ReadinessProbe)
 	})
 
 	t.Run("liveness configuration is set up correctly", func(t *testing.T) {
