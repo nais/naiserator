@@ -44,7 +44,7 @@ func DefaultConfig() Config {
 		Enabled:   false,
 		Verbosity: "trace",
 		Brokers:   []string{"localhost:9092"},
-		Topic:     "deploymentStatus",
+		Topic:     "deploymentEvents",
 		ClientID:  defaultGroup,
 		GroupID:   defaultGroup,
 		SASL: SASL{
