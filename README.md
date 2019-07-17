@@ -131,16 +131,14 @@ make local
 ```
 
 ### Kafka & Protobuf
-Deployment messages are sent to kafka over protobuf, therefore there's a few prerequisites to develop with this enabled locally.
-1. [Protobuf installed](https://github.com/golang/protobuf)
-2. an instance of kafka to test against.
-    - If you use docker-compose you could just type docker-compose up
-3. Enable kafka by passing the flag `--kafka-enabled=true` to naiserator
-    - The kafka defaults have a lot of presumptions, be sure to check if there are any options you need to specify.
-4. If you need to compile the protobuf definition just run for example;
-    `make proto`
-    - It will download the definitions, compile and place them in the correct packages
 
+Whenever an Application is synchronized, a [deployment event message](https://github.com/navikt/protos/blob/master/deployment/deployment.proto)
+can be sent to a Kafka topic. There's a few prerequisites to develop with this enabled locally:
+
+1. [Protobuf installed](https://github.com/golang/protobuf)
+2. An instance of kafka to test against. Use `docker-compose up` to bring up a local instance.
+3. Enable this feature by passing `--kafka-enabled=true` when starting Naiserator.
+4. Whenever the Protobuf schema is updated, and you need the new features, update using `make proto`. It will download the definitions, compile and place them in the correct packages.
 
 ### Code generation
 
