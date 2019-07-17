@@ -91,15 +91,16 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		return nil
 	}
 
-	if err := n.removeOrphanIngresses(logger, app); err != nil {
-		return fmt.Errorf("while removing old resources: %s", err)
-	}
-
 	deploymentID, err := uuid.NewRandom()
 	if err != nil {
 		return fmt.Errorf("while generating a deployment UUID: %s", err)
 	}
 	app.SetCorrelationID(deploymentID.String())
+	logger = logger.WithField("correlation-id", deploymentID.String())
+
+	if err := n.removeOrphanIngresses(logger, app); err != nil {
+		return fmt.Errorf("while removing old resources: %s", err)
+	}
 
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
@@ -166,6 +167,7 @@ func (n *Naiserator) update(old, new interface{}) {
 		"namespace":       app.Namespace,
 		"apiversion":      app.APIVersion,
 		"resourceversion": app.ResourceVersion,
+		"application":     app.Name,
 	})
 
 	metrics.ApplicationsProcessed.Inc()
