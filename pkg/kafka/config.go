@@ -16,18 +16,20 @@ type SASL struct {
 }
 
 type TLS struct {
-	Enabled bool
+	Enabled  bool
+	Insecure bool
 }
 
 type Config struct {
-	Enabled   bool
-	Brokers   []string
-	Topic     string
-	ClientID  string
-	GroupID   string
-	Verbosity string
-	TLS       TLS
-	SASL      SASL
+	Enabled      bool
+	Brokers      []string
+	Topic        string
+	ClientID     string
+	GroupID      string
+	Verbosity    string
+	SignatureKey string
+	TLS          TLS
+	SASL         SASL
 }
 
 func DefaultGroupName() string {
@@ -40,12 +42,13 @@ func DefaultGroupName() string {
 func DefaultConfig() Config {
 	defaultGroup := DefaultGroupName()
 	return Config{
-		Enabled:   false,
-		Verbosity: "trace",
-		Brokers:   []string{"localhost:9092"},
-		Topic:     "deploymentStatus",
-		ClientID:  defaultGroup,
-		GroupID:   defaultGroup,
+		Enabled:      false,
+		Verbosity:    "trace",
+		Brokers:      []string{"localhost:9092"},
+		Topic:        "deploymentStatus",
+		SignatureKey: os.Getenv("KAFKA_HMAC_KEY"),
+		ClientID:     defaultGroup,
+		GroupID:      defaultGroup,
 		SASL: SASL{
 			Enabled:   false,
 			Handshake: false,
@@ -66,10 +69,12 @@ func SetupFlags(cfg *Config) {
 	flag.StringVar(&cfg.ClientID, "kafka-client-id", cfg.ClientID, "Kafka client ID.")
 	flag.StringVar(&cfg.GroupID, "kafka-group-id", cfg.GroupID, "Kafka consumer group ID.")
 	flag.StringVar(&cfg.Verbosity, "kafka-log-verbosity", cfg.Verbosity, "Log verbosity for Kafka client.")
+	flag.StringVar(&cfg.SignatureKey, "kafka-hmac-key", cfg.SignatureKey, "Pre-shared key used for Kafka message authentication (HMAC).")
 	flag.BoolVar(&cfg.SASL.Enabled, "kafka-sasl-enabled", cfg.SASL.Enabled, "Enable SASL authentication.")
 	flag.BoolVar(&cfg.SASL.Handshake, "kafka-sasl-handshake", cfg.SASL.Handshake, "Use handshake for SASL authentication.")
 	flag.StringVar(&cfg.SASL.Username, "kafka-sasl-username", cfg.SASL.Username, "Username for Kafka authentication.")
 	flag.StringVar(&cfg.SASL.Password, "kafka-sasl-password", cfg.SASL.Password, "Password for Kafka authentication.")
 	flag.BoolVar(&cfg.TLS.Enabled, "kafka-tls-enabled", cfg.TLS.Enabled, "Use TLS for connecting to Kafka.")
+	flag.BoolVar(&cfg.TLS.Insecure, "kafka-tls-insecure", cfg.TLS.Insecure, "Allow insecure Kafka TLS connections.")
 	flag.BoolVar(&cfg.Enabled, "kafka-enabled", cfg.Enabled, "Enable connection to kafka")
 }

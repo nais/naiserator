@@ -1,14 +1,23 @@
 package kafka
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"github.com/Shopify/sarama"
 )
 
 type Client struct {
+	RecvQ         chan sarama.ConsumerMessage
 	Producer      sarama.SyncProducer
 	ProducerTopic string
+	SignatureKey  string
+}
+
+func tlsConfig(t TLS) *tls.Config {
+	return &tls.Config{
+		InsecureSkipVerify: t.Insecure,
+	}
 }
 
 func NewClient(cfg *Config) (*Client, error) {
@@ -25,6 +34,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	producerCfg.Producer.RequiredAcks = sarama.WaitForAll
 	producerCfg.Producer.Return.Successes = true
 	producerCfg.Net.TLS.Enable = cfg.TLS.Enabled
+	producerCfg.Net.TLS.Config = tlsConfig(cfg.TLS)
 
 	client.Producer, err = sarama.NewSyncProducer(cfg.Brokers, producerCfg)
 	if err != nil {
@@ -32,6 +42,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	}
 
 	client.ProducerTopic = cfg.Topic
+	client.SignatureKey = cfg.SignatureKey
 
 	return client, nil
 }
