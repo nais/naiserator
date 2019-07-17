@@ -11,7 +11,6 @@ type Client struct {
 	RecvQ         chan sarama.ConsumerMessage
 	Producer      sarama.SyncProducer
 	ProducerTopic string
-	SignatureKey  string
 }
 
 func tlsConfig(t TLS) *tls.Config {
@@ -42,7 +41,6 @@ func NewClient(cfg *Config) (*Client, error) {
 	}
 
 	client.ProducerTopic = cfg.Topic
-	client.SignatureKey = cfg.SignatureKey
 
 	return client, nil
 }
