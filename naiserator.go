@@ -99,7 +99,7 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	if err != nil {
 		return fmt.Errorf("while generating a deployment UUID: %s", err)
 	}
-	app.ObjectMeta.Annotations[v1alpha1.CorrelationIDAnnotation] = deploymentID.String()
+	app.SetCorrelationID(deploymentID.String())
 
 	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
 	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
