@@ -58,7 +58,7 @@ func main() {
 		kafkaLogger := log.New()
 		kafkaLogger.Level, err = log.ParseLevel(kafkaConfig.Verbosity)
 		if err != nil {
-			log.Fatal("while setting log level: %s", err)
+			log.Fatalf("while setting log level: %s", err)
 		}
 		kafkaLogger.SetLevel(log.GetLevel())
 		kafkaLogger.SetFormatter(&formatter)
