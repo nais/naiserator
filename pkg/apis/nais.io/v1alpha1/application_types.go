@@ -26,7 +26,7 @@ const (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Team",type="string",JSONPath=".metadata.labels.team"
-// +kubebuilder:resource:path="application",shortName="app"
+// +kubebuilder:resource:path="applications",shortName="app",singular="application"
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
