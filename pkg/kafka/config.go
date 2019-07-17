@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strings"
 )
 
 type SASL struct {
@@ -22,7 +21,7 @@ type TLS struct {
 
 type Config struct {
 	Enabled   bool
-	Brokers   []string
+	Brokers   string
 	Topic     string
 	ClientID  string
 	GroupID   string
@@ -43,7 +42,7 @@ func DefaultConfig() Config {
 	return Config{
 		Enabled:   false,
 		Verbosity: "trace",
-		Brokers:   []string{"localhost:9092"},
+		Brokers:   "localhost:9092",
 		Topic:     "deploymentEvents",
 		ClientID:  defaultGroup,
 		GroupID:   defaultGroup,
@@ -57,12 +56,7 @@ func DefaultConfig() Config {
 }
 
 func SetupFlags(cfg *Config) {
-	var brokers string
-	flag.StringVar(&brokers, "kafka-brokers", brokers, "Comma-separated list of Kafka brokers, HOST:PORT.")
-	if brokers != "" {
-		cfg.Brokers = strings.Split(brokers, ",")
-	}
-
+	flag.StringVar(&cfg.Brokers, "kafka-brokers", cfg.Brokers, "Comma-separated list of Kafka brokers, HOST:PORT.")
 	flag.StringVar(&cfg.Topic, "kafka-topic", cfg.Topic, "Kafka topic for deployment status.")
 	flag.StringVar(&cfg.ClientID, "kafka-client-id", cfg.ClientID, "Kafka client ID.")
 	flag.StringVar(&cfg.GroupID, "kafka-group-id", cfg.GroupID, "Kafka consumer group ID.")
