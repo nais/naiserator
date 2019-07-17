@@ -130,6 +130,16 @@ kubectl apply -f examples/nais.yaml
 make local
 ```
 
+### Kafka & Protobuf
+
+Whenever an Application is synchronized, a [deployment event message](https://github.com/navikt/protos/blob/master/deployment/deployment.proto)
+can be sent to a Kafka topic. There's a few prerequisites to develop with this enabled locally:
+
+1. [Protobuf installed](https://github.com/golang/protobuf)
+2. An instance of kafka to test against. Use `docker-compose up` to bring up a local instance.
+3. Enable this feature by passing `--kafka-enabled=true` when starting Naiserator.
+4. Whenever the Protobuf schema is updated, and you need the new features, update using `make proto`. It will download the definitions, compile and place them in the correct packages.
+
 ### Code generation
 
 In order to use the Kubernetes Go library, we need to use classes that work together with the interfaces in that library.
