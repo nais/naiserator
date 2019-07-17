@@ -10,21 +10,26 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type Message struct {
+	Event  deployment.Event
+	Logger log.Entry
+}
+
 var (
 	// Send deployment events here to dispatch them to Kafka.
-	Events = make(chan deployment.Event, 4096)
+	Events = make(chan Message, 4096)
 )
 
 func (client *Client) ProducerLoop() {
-	for event := range Events {
-		if err := client.send(event); err != nil {
+	for message := range Events {
+		if err := client.send(message); err != nil {
 			log.Errorf("while sending deployment event to kafka: %s", err)
 		}
 	}
 }
 
-func (client *Client) send(event deployment.Event) error {
-	payload, err := proto.Marshal(&event)
+func (client *Client) send(message Message) error {
+	payload, err := proto.Marshal(&message.Event)
 	if err != nil {
 		return fmt.Errorf("while encoding Protobuf: %s", err)
 	}
@@ -40,7 +45,7 @@ func (client *Client) send(event deployment.Event) error {
 		return fmt.Errorf("while sending reply over Kafka: %s", err)
 	}
 
-	log.WithFields(log.Fields{
+	message.Logger.WithFields(log.Fields{
 		"kafka_offset":    offset,
 		"kafka_timestamp": reply.Timestamp,
 		"kafka_topic":     reply.Topic,

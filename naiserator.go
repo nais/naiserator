@@ -133,10 +133,10 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	if n.KafkaEnabled {
 		// Broadcast a message on Kafka that the deployment is initialized.
 		e := generator.NewDeploymentEvent(*app)
-		kafka.Events <- e
+		kafka.Events <- kafka.Message{Event: e, Logger: *logger}
 
 		// Monitor its completion timeline over a designated period
-		go n.MonitorRollout(*app, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
+		go n.MonitorRollout(*app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
 
 	app.SetLastSyncedHash(hash)
@@ -213,7 +213,7 @@ func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Appl
 	return err
 }
 
-func (n *Naiserator) MonitorRollout(app v1alpha1.Application, frequency, timeout time.Duration) {
+func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
 	for {
 		select {
 		case <-time.After(frequency):
@@ -228,7 +228,7 @@ func (n *Naiserator) MonitorRollout(app v1alpha1.Application, frequency, timeout
 			if deploymentComplete(deploy, &deploy.Status) {
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				kafka.Events <- event
+				kafka.Events <- kafka.Message{Event: event, Logger: logger}
 				return
 			}
 
