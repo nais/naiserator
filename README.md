@@ -98,20 +98,11 @@ In order to switch from naisd to Naiserator, you need to complete a few migratio
 See [migration from naisd to naiserator](https://github.com/nais/doc/blob/master/content/deploy/migrating_from_naisd.md) for a detailed explanation
 of the steps involved.
 
-## Prerequisites
-
-### Deployment
+## Deployment
 
 * [Kubernetes](https://kubernetes.io/) v1.11.0 or later
 
-### Development
-
-* The [Go](https://golang.org/dl/) programming language, version 1.11 or later
-* [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
-* [Docker Desktop](https://www.docker.com/products/docker-desktop) or other Docker release compatible with Kubernetes
-* Kubernetes, either through [minikube](https://github.com/kubernetes/minikube) or a local cluster
-
-## Installation
+### Installation
 
 You can deploy the most recent release of Naiserator by applying to your cluster:
 ```
@@ -119,6 +110,11 @@ kubectl apply -f hack/resources/
 ```
 
 ## Development
+
+* The [Go](https://golang.org/dl/) programming language, version 1.11 or later
+* [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
+* [Docker Desktop](https://www.docker.com/products/docker-desktop) or other Docker release compatible with Kubernetes
+* Kubernetes, either through [minikube](https://github.com/kubernetes/minikube) or a local cluster
 
 [Go modules](https://github.com/golang/go/wiki/Modules)
 are used for dependency tracking. Make sure you do `export GO111MODULE=on` before running any Go commands.
@@ -137,8 +133,9 @@ can be sent to a Kafka topic. There's a few prerequisites to develop with this e
 
 1. [Protobuf installed](https://github.com/golang/protobuf)
 2. An instance of kafka to test against. Use `docker-compose up` to bring up a local instance.
-3. Enable this feature by passing `--kafka-enabled=true` when starting Naiserator.
-4. Whenever the Protobuf schema is updated, and you need the new features, update using `make proto`. It will download the definitions, compile and place them in the correct packages.
+3. Enable this feature by passing `-kafka-enabled=true` when starting Naiserator.
+#### Update and compile Protobuf definition
+Whenever the Protobuf definition is updated you can update using `make proto`. It will download the definitions, compile and place them in the correct packages.
 
 ### Code generation
 
