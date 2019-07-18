@@ -6,8 +6,7 @@ ROOT_DIR   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROTOC = $(shell which protoc)
 PROTOC_GEN_GO = $(shell which protoc-gen-go)
 
-
-.PHONY: build docker docker-push local install test codegen-crd codegen-updater proto
+.PHONY: build docker docker-push local install test crd codegen-crd codegen-updater proto
 
 build:
 	cd cmd/naiserator && go build
@@ -27,6 +26,9 @@ install:
 
 test:
 	go test ./... --coverprofile=cover.out
+
+crd:
+	controller-gen "crd:trivialVersions=true" crd paths=github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1
 
 codegen-crd:
 	${ROOT_DIR}/hack/update-codegen.sh

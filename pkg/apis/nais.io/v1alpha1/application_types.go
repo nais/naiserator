@@ -29,7 +29,7 @@ const (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Team",type="string",JSONPath=".metadata.labels.team"
-// +kubebuilder:resource:path="application",shortName="app"
+// +kubebuilder:resource:path="applications",shortName="app",singular="application"
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -46,7 +46,6 @@ type ApplicationSpec struct {
 	Ingresses       []string             `json:"ingresses,omitempty"`
 	LeaderElection  bool                 `json:"leaderElection,omitempty"`
 	Liveness        Probe                `json:"liveness,omitempty"`
-	Logformat       string               `json:"logformat,omitempty"`
 	Logtransform    string               `json:"logtransform,omitempty"`
 	Port            int                  `json:"port,omitempty"`
 	PreStopHookPath string               `json:"preStopHookPath,omitempty"`
@@ -61,6 +60,9 @@ type ApplicationSpec struct {
 	Strategy        Strategy             `json:"strategy,omitempty"`
 	Vault           Vault                `json:"vault,omitempty"`
 	WebProxy        bool                 `json:"webproxy,omitempty"`
+
+	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
+	Logformat string `json:"logformat,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -102,7 +104,9 @@ type Replicas struct {
 }
 
 type ResourceSpec struct {
-	Cpu    string `json:"cpu,omitempty"`
+	// +kubebuilder:validation:Pattern=^\d+m?$
+	Cpu string `json:"cpu,omitempty"`
+	// +kubebuilder:validation:Pattern=^\d+[KMG]i$
 	Memory string `json:"memory,omitempty"`
 }
 
@@ -112,6 +116,7 @@ type ResourceRequirements struct {
 }
 
 type ObjectFieldSelector struct {
+	// +kubebuilder:validation:Enum="";metadata.name;metadata.namespace;metadata.labels;metadata.annotations;spec.nodeName;spec.serviceAccountName;status.hostIP;status.podIP
 	FieldPath string `json:"fieldPath"`
 }
 
@@ -141,6 +146,7 @@ type ConfigMaps struct {
 }
 
 type Strategy struct {
+	// +kubebuilder:validation:Enum=Recreate;RollingUpdate
 	Type string `json:"type"`
 }
 
@@ -172,7 +178,8 @@ type AccessPolicy struct {
 }
 
 type Secret struct {
-	Name      string `json:"name"`
+	Name string `json:"name"`
+	// +kubebuilder:validation:Enum="";env;files
 	Type      string `json:"type,omitempty"`
 	MountPath string `json:"mountPath,omitempty"`
 }
