@@ -13,6 +13,9 @@ spec:
   - JSONPath: .metadata.labels.team
     name: Team
     type: string
+  - JSONPath: .status.deploymentRolloutStatus
+    name: Status
+    type: string
   group: nais.io
   names:
     kind: Application
@@ -672,6 +675,30 @@ spec:
               type: boolean
           required:
           - image
+          type: object
+        status:
+          description: ApplicationStatus contains different NAIS status properties
+          properties:
+            correlationID:
+              type: string
+            deploymentRolloutStatus:
+              type: string
+            lastError:
+              properties:
+                message:
+                  type: string
+                timestamp:
+                  type: integer
+              type: object
+            lastSuccess:
+              properties:
+                message:
+                  type: string
+                timestamp:
+                  type: integer
+              type: object
+            lastSyncedHash:
+              type: string
           type: object
       required:
       - spec

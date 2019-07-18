@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
+	deployment "github.com/nais/naiserator/pkg/event"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -29,12 +30,14 @@ const (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Team",type="string",JSONPath=".metadata.labels.team"
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.deploymentRolloutStatus"
 // +kubebuilder:resource:path="applications",shortName="app",singular="application"
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ApplicationSpec `json:"spec"`
+	Spec   ApplicationSpec   `json:"spec"`
+	Status ApplicationStatus `json:"status,omitempty"`
 }
 
 // ApplicationSpec contains the NAIS manifest.
@@ -63,6 +66,20 @@ type ApplicationSpec struct {
 
 	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
 	Logformat string `json:"logformat,omitempty"`
+}
+
+// ApplicationStatus contains different NAIS status properties
+type ApplicationStatus struct {
+	CorrelationID           string `json:"correlationID,omitempty"`
+	DeploymentRolloutStatus string `json:"deploymentRolloutStatus,omitempty"`
+	LastError               Entry  `json:"lastError,omitempty"`
+	LastSuccess             Entry  `json:"lastSuccess,omitempty"`
+	LastSyncedHash          string `json:"lastSyncedHash,omitempty"`
+}
+
+type Entry struct {
+	Message   string `json:"message,omitempty"`
+	Timestamp int    `json:"timestamp,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -271,11 +288,23 @@ func (in *Application) LastSyncedHash() string {
 func (in *Application) SetLastSyncedHash(hash string) {
 	in.NilFix()
 	in.Annotations[LastSyncedHashAnnotation] = hash
+	in.Status.LastSyncedHash = hash
 }
 
 func (in *Application) SetCorrelationID(id string) {
 	in.NilFix()
 	in.Annotations[CorrelationIDAnnotation] = id
+	in.Status.CorrelationID = id
+}
+
+func (in *Application) SetDeploymentRolloutStatus(i int32) {
+	in.NilFix()
+	in.Status.DeploymentRolloutStatus = deployment.RolloutStatus_name[i]
+}
+
+func (in *Application) SetRolloutStatus(i int32) {
+	in.NilFix()
+	in.Status.DeploymentRolloutStatus = deployment.RolloutStatus_name[i]
 }
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {

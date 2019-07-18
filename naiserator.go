@@ -108,11 +108,11 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	//
 	// The number of replicas is set to whichever is highest: the current number of replicas (which might be zero),
 	// or the default number of replicas.
-	deployment, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
+	deploymentResource, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("while querying existing deployment: %s", err)
-	} else if deployment != nil && deployment.Spec.Replicas != nil {
-		n.ResourceOptions.NumReplicas = max(1, *deployment.Spec.Replicas)
+	} else if deploymentResource != nil && deploymentResource.Spec.Replicas != nil {
+		n.ResourceOptions.NumReplicas = max(1, *deploymentResource.Spec.Replicas)
 	} else {
 		n.ResourceOptions.NumReplicas = max(1, int32(app.Spec.Replicas.Min))
 	}
@@ -133,11 +133,13 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 
 	if n.KafkaEnabled {
 		// Broadcast a message on Kafka that the deployment is initialized.
-		e := generator.NewDeploymentEvent(*app)
-		kafka.Events <- kafka.Message{Event: e, Logger: *logger}
+		event := generator.NewDeploymentEvent(*app)
+		kafka.Events <- kafka.Message{Event: event, Logger: *logger}
+
+		app.SetRolloutStatus(int32(event.RolloutStatus))
 
 		// Monitor its completion timeline over a designated period
-		go n.MonitorRollout(*app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
+		go n.MonitorRollout(app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
 
 	app.SetLastSyncedHash(hash)
@@ -215,7 +217,7 @@ func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Appl
 	return err
 }
 
-func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
+func (n *Naiserator) MonitorRollout(app *v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
 	for {
 		select {
 		case <-time.After(frequency):
@@ -228,12 +230,24 @@ func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, 
 			}
 
 			if deploymentComplete(deploy, &deploy.Status) {
-				event := generator.NewDeploymentEvent(app)
+				event := generator.NewDeploymentEvent(*app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
 				kafka.Events <- kafka.Message{Event: event, Logger: logger}
+
+				// During this time the app has been updates, so we need to aquire the newest version before proceeding
+				app, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
+				if err != nil {
+					logger.Errorf("while trying to get newest version of Application %s: %s", app.Name, err)
+					return
+				}
+
+				app.SetRolloutStatus(int32(event.RolloutStatus))
+				_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
+				if err != nil {
+					logger.Errorf("while storing application sync status: %s", err)
+				}
 				return
 			}
-
 		case <-time.After(timeout):
 			return
 		}
