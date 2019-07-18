@@ -3,6 +3,7 @@ package kafka
 import (
 	"crypto/tls"
 	"fmt"
+	"strings"
 
 	"github.com/Shopify/sarama"
 )
@@ -35,7 +36,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	producerCfg.Net.TLS.Enable = cfg.TLS.Enabled
 	producerCfg.Net.TLS.Config = tlsConfig(cfg.TLS)
 
-	client.Producer, err = sarama.NewSyncProducer(cfg.Brokers, producerCfg)
+	client.Producer, err = sarama.NewSyncProducer(strings.Split(cfg.Brokers, ","), producerCfg)
 	if err != nil {
 		return nil, fmt.Errorf("while setting up Kafka producer: %s", err)
 	}
