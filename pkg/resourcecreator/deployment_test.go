@@ -35,7 +35,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		c := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
+		c := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-init-default")
 		assert.NotNil(t, c, "contains vault initcontainer")
 		assert.Equal(t, "/base/kv/myapplication/mynamespace", test.EnvVar(c.Env, "VKS_KV_PATH"))
 
