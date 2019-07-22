@@ -136,10 +136,10 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		event := generator.NewDeploymentEvent(*app)
 		kafka.Events <- kafka.Message{Event: event, Logger: *logger}
 
-		app.SetRolloutStatus(int32(event.RolloutStatus))
+		app.SetDeploymentRolloutStatus(event.RolloutStatus)
 
 		// Monitor its completion timeline over a designated period
-		go n.MonitorRollout(app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
+		go n.MonitorRollout(*app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
 
 	app.SetLastSyncedHash(hash)
@@ -217,7 +217,7 @@ func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Appl
 	return err
 }
 
-func (n *Naiserator) MonitorRollout(app *v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
+func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
 	for {
 		select {
 		case <-time.After(frequency):
@@ -230,19 +230,20 @@ func (n *Naiserator) MonitorRollout(app *v1alpha1.Application, logger log.Entry,
 			}
 
 			if deploymentComplete(deploy, &deploy.Status) {
-				event := generator.NewDeploymentEvent(*app)
+				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
 				kafka.Events <- kafka.Message{Event: event, Logger: logger}
 
-				// During this time the app has been updates, so we need to aquire the newest version before proceeding
-				app, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
+				// During this time the app has been updated, so we need to acquire the newest version before proceeding
+				var updatedApp *v1alpha1.Application
+				updatedApp, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
 				if err != nil {
 					logger.Errorf("while trying to get newest version of Application %s: %s", app.Name, err)
 					return
 				}
 
-				app.SetRolloutStatus(int32(event.RolloutStatus))
-				_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
+				updatedApp.SetDeploymentRolloutStatus(event.RolloutStatus)
+				_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(updatedApp)
 				if err != nil {
 					logger.Errorf("while storing application sync status: %s", err)
 				}

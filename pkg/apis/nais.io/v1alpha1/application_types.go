@@ -297,14 +297,8 @@ func (in *Application) SetCorrelationID(id string) {
 	in.Status.CorrelationID = id
 }
 
-func (in *Application) SetDeploymentRolloutStatus(i int32) {
-	in.NilFix()
-	in.Status.DeploymentRolloutStatus = deployment.RolloutStatus_name[i]
-}
-
-func (in *Application) SetRolloutStatus(i int32) {
-	in.NilFix()
-	in.Status.DeploymentRolloutStatus = deployment.RolloutStatus_name[i]
+func (in *Application) SetDeploymentRolloutStatus(rolloutStatus deployment.RolloutStatus) {
+	in.Status.DeploymentRolloutStatus = deployment.RolloutStatus_name[int32(rolloutStatus)]
 }
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {
