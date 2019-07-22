@@ -71,14 +71,6 @@ type ApplicationSpec struct {
 type ApplicationStatus struct {
 	CorrelationID           string `json:"correlationID,omitempty"`
 	DeploymentRolloutStatus string `json:"deploymentRolloutStatus,omitempty"`
-	LastError               Entry  `json:"lastError,omitempty"`
-	LastSuccess             Entry  `json:"lastSuccess,omitempty"`
-	LastSyncedHash          string `json:"lastSyncedHash,omitempty"`
-}
-
-type Entry struct {
-	Message   string `json:"message,omitempty"`
-	Timestamp int    `json:"timestamp,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -287,7 +279,6 @@ func (in *Application) LastSyncedHash() string {
 func (in *Application) SetLastSyncedHash(hash string) {
 	in.NilFix()
 	in.Annotations[LastSyncedHashAnnotation] = hash
-	in.Status.LastSyncedHash = hash
 }
 
 func (in *Application) SetCorrelationID(id string) {

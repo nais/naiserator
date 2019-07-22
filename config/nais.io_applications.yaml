@@ -683,22 +683,6 @@ spec:
               type: string
             deploymentRolloutStatus:
               type: string
-            lastError:
-              properties:
-                message:
-                  type: string
-                timestamp:
-                  type: integer
-              type: object
-            lastSuccess:
-              properties:
-                message:
-                  type: string
-                timestamp:
-                  type: integer
-              type: object
-            lastSyncedHash:
-              type: string
           type: object
       required:
       - spec
