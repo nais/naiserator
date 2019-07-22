@@ -16,7 +16,6 @@ import (
 
 const (
 	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
-	CorrelationIDAnnotation  = "nais.io/deploymentCorrelationID"
 	SecretTypeEnv            = "env"
 	SecretTypeFiles          = "files"
 	DefaultSecretType        = SecretTypeEnv
@@ -292,13 +291,11 @@ func (in *Application) SetLastSyncedHash(hash string) {
 }
 
 func (in *Application) SetCorrelationID(id string) {
-	in.NilFix()
-	in.Annotations[CorrelationIDAnnotation] = id
 	in.Status.CorrelationID = id
 }
 
 func (in *Application) SetDeploymentRolloutStatus(rolloutStatus deployment.RolloutStatus) {
-	in.Status.DeploymentRolloutStatus = deployment.RolloutStatus_name[int32(rolloutStatus)]
+	in.Status.DeploymentRolloutStatus = rolloutStatus.String()
 }
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {
