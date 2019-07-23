@@ -84,6 +84,18 @@ func (c *FakeApplications) Update(application *v1alpha1.Application) (result *v1
 	return obj.(*v1alpha1.Application), err
 }
 
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *FakeApplications) UpdateStatus(application *v1alpha1.Application) (*v1alpha1.Application, error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(applicationsResource, "status", c.ns, application), &v1alpha1.Application{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Application), err
+}
+
 // Delete takes name of the application and deletes it. Returns an error if one occurs.
 func (c *FakeApplications) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.

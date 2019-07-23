@@ -130,7 +130,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		app.ObjectMeta = app.CreateObjectMeta()
 
 		correlationID := "correlation-id"
-		app.Annotations[nais.CorrelationIDAnnotation] = correlationID
+		app.Status.CorrelationID = correlationID
 
 		event := generator.NewDeploymentEvent(*app)
 

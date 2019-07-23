@@ -10,9 +10,7 @@ func (in *Application) CreateObjectMeta() metav1.ObjectMeta {
 			"app":  in.Name,
 			"team": in.Labels["team"],
 		},
-		Annotations: map[string]string{
-			CorrelationIDAnnotation: in.Annotations[CorrelationIDAnnotation],
-		},
+		Annotations:     map[string]string{},
 		OwnerReferences: in.OwnerReferences(in),
 	}
 }

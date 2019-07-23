@@ -13,7 +13,7 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 	image := ContainerImage(app.Spec.Image)
 
 	return deployment.Event{
-		CorrelationID: app.Annotations[nais.CorrelationIDAnnotation],
+		CorrelationID: app.Status.CorrelationID,
 		Platform: &deployment.Platform{
 			Type: deployment.PlatformType_nais,
 		},

@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
+	deployment "github.com/nais/naiserator/pkg/event"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -15,7 +16,6 @@ import (
 
 const (
 	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
-	CorrelationIDAnnotation  = "nais.io/deploymentCorrelationID"
 	SecretTypeEnv            = "env"
 	SecretTypeFiles          = "files"
 	DefaultSecretType        = SecretTypeEnv
@@ -29,12 +29,14 @@ const (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Team",type="string",JSONPath=".metadata.labels.team"
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.deploymentRolloutStatus"
 // +kubebuilder:resource:path="applications",shortName="app",singular="application"
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ApplicationSpec `json:"spec"`
+	Spec   ApplicationSpec   `json:"spec"`
+	Status ApplicationStatus `json:"status,omitempty"`
 }
 
 // ApplicationSpec contains the NAIS manifest.
@@ -63,6 +65,12 @@ type ApplicationSpec struct {
 
 	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
 	Logformat string `json:"logformat,omitempty"`
+}
+
+// ApplicationStatus contains different NAIS status properties
+type ApplicationStatus struct {
+	CorrelationID           string `json:"correlationID,omitempty"`
+	DeploymentRolloutStatus string `json:"deploymentRolloutStatus,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -274,8 +282,11 @@ func (in *Application) SetLastSyncedHash(hash string) {
 }
 
 func (in *Application) SetCorrelationID(id string) {
-	in.NilFix()
-	in.Annotations[CorrelationIDAnnotation] = id
+	in.Status.CorrelationID = id
+}
+
+func (in *Application) SetDeploymentRolloutStatus(rolloutStatus deployment.RolloutStatus) {
+	in.Status.DeploymentRolloutStatus = rolloutStatus.String()
 }
 
 func (in *Application) DefaultSecretPath(base string) SecretPath {
