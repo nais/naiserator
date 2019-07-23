@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	docker "github.com/novln/docker-parser"
@@ -11,6 +12,7 @@ import (
 
 func NewDeploymentEvent(app nais.Application) deployment.Event {
 	image := ContainerImage(app.Spec.Image)
+	ts := convertTimestamp(time.Now())
 
 	return deployment.Event{
 		CorrelationID: app.Status.CorrelationID,
@@ -28,7 +30,14 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 		Application:     app.Name,
 		Version:         image.GetTag(),
 		Image:           &image,
-		Timestamp:       time.Now().Unix(),
+		Timestamp:       &ts,
+	}
+}
+
+func convertTimestamp(t time.Time) timestamp.Timestamp {
+	return timestamp.Timestamp{
+		Seconds: int64(t.Second()),
+		Nanos:   int32(t.Nanosecond()),
 	}
 }
 

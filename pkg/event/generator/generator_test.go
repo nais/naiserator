@@ -111,7 +111,8 @@ func TestNewDeploymentEvent(t *testing.T) {
 			Tag:  "version",
 		}, *image)
 
-		assert.True(t, event.GetTimestamp() > 0)
+		assert.True(t, event.GetTimestampAsTime().Second() > 0)
+		assert.True(t, event.GetTimestampAsTime().Nanosecond() > 0)
 	}))
 
 	clusterName = "prod-cluster"
