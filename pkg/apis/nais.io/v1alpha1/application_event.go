@@ -27,5 +27,6 @@ func (in *Application) CreateEvent(reason, message, typeStr string) *corev1.Even
 		FirstTimestamp:      metav1.Time{Time: time.Now()},
 		LastTimestamp:       metav1.Time{Time: time.Now()},
 		Type:                typeStr,
+		Count:               1,
 	}
 }
