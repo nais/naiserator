@@ -36,8 +36,8 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 
 func convertTimestamp(t time.Time) timestamp.Timestamp {
 	return timestamp.Timestamp{
-		Seconds: int64(t.Second()),
-		Nanos:   int32(t.Nanosecond()),
+		Seconds: int64(t.Unix()),
+		Nanos:   int32(t.UnixNano()),
 	}
 }
 
