@@ -103,7 +103,12 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	podSpec = configMapFiles(app, podSpec)
 
 	if vault.Enabled() && app.Spec.Vault.Enabled {
-		podSpec, err = vaultContainers(app, podSpec)
+		if len(app.Spec.Vault.Mounts) == 0 {
+			app.Spec.Vault.Mounts = []nais.SecretPath{
+				app.DefaultSecretPath(vault.DefaultKVPath()),
+			}
+		}
+		podSpec, err = vaultSidecar(app, podSpec)
 		if err != nil {
 			return nil, err
 		}
@@ -274,12 +279,12 @@ func secureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	return spec
 }
 
-func vaultContainers(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
+func vaultSidecar(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	initializer, err := vault.NewInitializer(app)
 	if err != nil {
 		return nil, fmt.Errorf("while initializing secrets: %s", err)
 	}
-	spec := initializer.AddVaultContainers(app, podSpec)
+	spec := initializer.AddVaultContainers(podSpec)
 
 	return &spec, nil
 }
