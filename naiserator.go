@@ -63,15 +63,29 @@ func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Cli
 }
 
 // Creates a Kubernetes event.
-func (n *Naiserator) reportEvent(event *corev1.Event) (*corev1.Event, error) {
-	return n.ClientSet.CoreV1().Events(event.Namespace).Create(event)
+func (n *Naiserator) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, error) {
+	events, err := n.ClientSet.CoreV1().Events(reportedEvent.Namespace).List(v1.ListOptions{
+		FieldSelector: fmt.Sprintf("involvedObject.name=%s,involvedObject.uid=%s", reportedEvent.InvolvedObject.Name, reportedEvent.InvolvedObject.UID),
+	})
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, fmt.Errorf("while getting events for app %s, got error: %s", reportedEvent.InvolvedObject.Name, err)
+	}
+
+	for _, event := range events.Items {
+		if event.Message == reportedEvent.Message {
+			event.Count++
+			event.LastTimestamp = reportedEvent.LastTimestamp
+			return n.ClientSet.CoreV1().Events(event.Namespace).Update(&event)
+		}
+	}
+
+	return n.ClientSet.CoreV1().Events(reportedEvent.Namespace).Create(reportedEvent)
 }
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
 func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Application) {
 	log.Error(err)
-	ev := app.CreateEvent(source, err.Error(), "Warning")
-	_, err = n.reportEvent(ev)
+	_, err = n.reportEvent(app.CreateEvent(source, err.Error(), "Warning"))
 	if err != nil {
 		log.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
@@ -151,7 +165,7 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		return fmt.Errorf("while storing application sync metadata: %s", err)
 	}
 
-	_, err = n.reportEvent(app.CreateEvent("synchronize", fmt.Sprintf("successfully synchronized application resources (hash = %s)", hash), "Normal"))
+	_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
 	if err != nil {
 		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
