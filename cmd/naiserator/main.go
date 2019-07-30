@@ -106,7 +106,7 @@ func main() {
 
 	err = n.UpdateIstioAdmin()
 	if err != nil {
-		log.Fatal("unable to apply istio admin privileges to clusterrole: %s", err)
+		log.Fatalf("unable to update istio admin privileges to clusterrole: %s", err)
 	}
 
 	applicationInformerFactory.Start(stopCh)
