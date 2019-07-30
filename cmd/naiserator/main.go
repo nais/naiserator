@@ -104,11 +104,6 @@ func main() {
 		resourceOptions,
 		kafkaConfig.Enabled)
 
-	err = n.UpdateIstioAdmin()
-	if err != nil {
-		log.Fatalf("unable to update istio admin privileges to clusterrole: %s", err)
-	}
-
 	applicationInformerFactory.Start(stopCh)
 	n.Run(stopCh)
 	<-stopCh
