@@ -2,6 +2,7 @@ package naiserator
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,6 +29,8 @@ import (
 const (
 	DeploymentMonitorFrequency = time.Second * 5
 	DeploymentMonitorTimeout   = time.Minute * 5
+
+	NaisAggregateToAdmin = "nais.io/aggregate-to-admin"
 )
 
 // Naiserator is a singleton that holds Kubernetes client instances.
@@ -213,6 +216,22 @@ func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
 	}
 
 	return result.ErrorOrNil()
+}
+
+func (n *Naiserator) UpdateIstioAdmin() error {
+	clusterrole, err := n.ClientSet.RbacV1().ClusterRoles().Get("naiserator-admin-istio", v1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	clusterrole.Labels[NaisAggregateToAdmin] = strconv.FormatBool(n.ResourceOptions.AccessPolicy)
+
+	_, err = n.ClientSet.RbacV1().ClusterRoles().Update(clusterrole)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Application) error {

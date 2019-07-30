@@ -1,0 +1,82 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: naiserator
+  name: naiserator-admin
+aggregationRule:
+  clusterRoleSelectors:
+    - matchLabels:
+        nais.io/aggregate-to-admin: "true"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: naiserator
+    nais.io/aggregate-to-admin: "true"
+  name: naiserator-admin-base
+rules:
+- apiGroups:
+    - '*'
+  resources:
+    - 'applications'
+    - 'deployments'
+    - 'horizontalpodautoscalers'
+    - 'ingresses'
+    - 'serviceaccounts'
+    - 'services'
+  verbs:
+    - 'get'
+    - 'create'
+    - 'update'
+- apiGroups:
+    - '*'
+  resources:
+    - 'applications'
+  verbs:
+    - 'watch'
+    - 'list'
+- apiGroups:
+    - '*'
+  resources:
+    - 'ingresses'
+  verbs:
+    - 'delete'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: naiserator
+    nais.io/aggregate-to-admin: "false"
+  name: naiserator-admin-istio
+rules:
+  - apiGroups:
+      - '*'
+    resources:
+      - 'networkpolicies'
+      - 'serviceroles'
+      - 'servicerolebindings'
+      - 'virtualservices'
+      - 'serviceentries'
+    verbs:
+      - 'get'
+      - 'create'
+      - 'update'
+  - apiGroups:
+      - '*'
+    resources:
+      - 'applications'
+    verbs:
+      - 'watch'
+      - 'list'
+  - apiGroups:
+      - '*'
+    resources:
+      - 'ingresses'
+    verbs:
+      - 'delete'
+
