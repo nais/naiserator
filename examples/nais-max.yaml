@@ -66,6 +66,12 @@ spec:
     enabled: false # Optional. If true, mount a volume for secure logs in the pod
   service:
     port: 80 # default service-port
+  secrets:
+    - name: my-secret
+      type: env
+    - name: my-secret-file
+      type: file
+      mountPath: /var/run/secrets
   skipCaBundle: false # optional, if true we don't mount any CA Bundles into the application
   accessPolicy:
     inbound:
