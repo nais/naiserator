@@ -363,7 +363,7 @@ func TestDeployment(t *testing.T) {
 		assert.NotNil(t, deployment)
 
 		spec := deployment.Spec.Template.Spec
-		assert.Len(t, spec.Volumes, 3)
+		assert.Len(t, spec.Volumes, 4)
 		assert.Len(t, spec.Containers, 3)
 	})
 
