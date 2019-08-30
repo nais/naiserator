@@ -29,8 +29,7 @@ func VirtualServices(app *nais.Application) (vses []*istio.VirtualService, err e
 
 func virtualService(ingress *url.URL, app *nais.Application) *istio.VirtualService {
 	objectMeta := app.CreateObjectMeta()
-	uuid, _ := uuid.NewRandom()
-	objectMeta.Name = fmt.Sprintf("%s-%s-%s", app.Name, strings.ReplaceAll(ingress.Hostname(), ".", "-"), uuid.String())
+	objectMeta.Name = fmt.Sprintf("%s-%s-%s", app.Name, strings.ReplaceAll(ingress.Hostname(), ".", "-"), shortUUID())
 	return &istio.VirtualService{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "VirtualService",
@@ -89,4 +88,9 @@ func domain(ingress *url.URL) string {
 	parts := strings.Split(ingress.Hostname(), ".")
 
 	return parts[len(parts)-2] + "-" + parts[len(parts)-1]
+}
+
+func shortUUID() string {
+	uuid, _ := uuid.NewRandom()
+	return strings.Split(uuid.String(), "-")[0]
 }
