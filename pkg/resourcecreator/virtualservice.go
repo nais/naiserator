@@ -29,7 +29,7 @@ func VirtualServices(app *nais.Application) (vses []*istio.VirtualService, err e
 
 func virtualService(ingress *url.URL, app *nais.Application) *istio.VirtualService {
 	objectMeta := app.CreateObjectMeta()
-	objectMeta.Name = fmt.Sprintf("%s-%s-%s", app.Name, strings.ReplaceAll(ingress.Hostname(), ".", "-"), shortUUID())
+	objectMeta.Name = fmt.Sprintf("%s-%s", app.Name, strings.ReplaceAll(ingress.Hostname(), ".", "-"))
 	return &istio.VirtualService{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "VirtualService",
