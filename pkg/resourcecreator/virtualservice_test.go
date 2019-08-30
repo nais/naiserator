@@ -3,6 +3,7 @@ package resourcecreator_test
 import (
 	"fmt"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"strings"
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -34,7 +35,7 @@ func TestVirtualService(t *testing.T) {
 		assert.Equal(t, app.Name, route.Destination.Host)
 		assert.Equal(t, uint32(app.Spec.Service.Port), route.Destination.Port.Number)
 		assert.Equal(t, resourcecreator.IstioVirtualServiceTotalWeight, route.Weight)
-		assert.Equal(t, app.Name, vses[0].Name)
+		assert.True(t, strings.HasPrefix(vses[0].Name, app.Name + "-first-host-no"))
 		assert.Equal(t, app.Namespace, vses[0].Namespace)
 	})
 }

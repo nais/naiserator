@@ -2,6 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,12 +28,15 @@ func VirtualServices(app *nais.Application) (vses []*istio.VirtualService, err e
 }
 
 func virtualService(ingress *url.URL, app *nais.Application) *istio.VirtualService {
+	objectMeta := app.CreateObjectMeta()
+	uuid, _ := uuid.NewRandom()
+	objectMeta.Name = fmt.Sprintf("%s-%s-%s", app.Name, strings.ReplaceAll(ingress.Hostname(), ".", "-"), uuid.String())
 	return &istio.VirtualService{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "VirtualService",
 			APIVersion: IstioNetworkingAPIVersion,
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		Spec: istio.VirtualServiceSpec{
 			Gateways: []string{
 				fmt.Sprintf(IstioGatewayPrefix, domain(ingress)),
