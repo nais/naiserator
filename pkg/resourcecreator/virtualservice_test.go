@@ -1,10 +1,11 @@
 package resourcecreator_test
 
 import (
+	"fmt"
+	"github.com/nais/naiserator/pkg/resourcecreator"
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,12 +14,9 @@ func TestVirtualService(t *testing.T) {
 
 	t.Run("virtualservice created according to spec", func(t *testing.T) {
 		ingresses := []string{
-			"https://first.host",
-			"https://second.host",
-		}
-		hosts := []string{
-			"first.host",
-			"second.host",
+			"https://first.host.no",
+			"https://second.host.no",
+			"https://another.domain.tk",
 		}
 
 		app := fixtures.MinimalApplication()
@@ -26,19 +24,17 @@ func TestVirtualService(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		vs := resourcecreator.VirtualService(app)
-		assert.NotNil(t, vs)
+		vses,err  := resourcecreator.VirtualServices(app)
+		assert.Len(t, vses, 3)
 
-		assert.Equal(t, app.Name, vs.Name)
-		assert.Equal(t, app.Namespace, vs.Namespace)
-		assert.Equal(t, []string{resourcecreator.IstioVirtualServiceDefaultGateway}, vs.Spec.Gateways)
-		assert.Equal(t, hosts, vs.Spec.Hosts)
-
-		assert.Len(t, vs.Spec.HTTP, 1)
-		assert.Len(t, vs.Spec.HTTP[0].Route, 1)
-		route := vs.Spec.HTTP[0].Route[0]
+		assert.Equal(t, fmt.Sprintf(resourcecreator.IstioGatewayPrefix, "host-no"), vses[0].Spec.Gateways[0])
+		assert.Len(t, vses[0].Spec.HTTP, 1)
+		assert.Len(t, vses[0].Spec.HTTP[0].Route, 1)
+		route := vses[0].Spec.HTTP[0].Route[0]
 		assert.Equal(t, app.Name, route.Destination.Host)
 		assert.Equal(t, uint32(app.Spec.Service.Port), route.Destination.Port.Number)
 		assert.Equal(t, resourcecreator.IstioVirtualServiceTotalWeight, route.Weight)
+		assert.Equal(t, app.Name, vses[0].Name)
+		assert.Equal(t, app.Namespace, vses[0].Namespace)
 	})
 }
