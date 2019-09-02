@@ -6,24 +6,24 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func networkPolicyGressRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
-	for _, gress := range rules {
+func networkPolicyRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+	for _, rule := range rules {
 		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": gress.Application,
+					"app": rule.Application,
 				},
 			},
 		}
 
-		if gress.Application == "*" {
+		if rule.Application == "*" {
 			networkPolicyPeer = networkingv1.NetworkPolicyPeer{PodSelector: &metav1.LabelSelector{}}
 		}
 
-		if gress.Namespace != "" {
+		if rule.Namespace != "" {
 			networkPolicyPeer.NamespaceSelector = &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"name": gress.Namespace,
+					"name": rule.Namespace,
 				},
 			}
 		}
@@ -39,7 +39,7 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-			From: networkPolicyGressRules(app.Spec.AccessPolicy.Inbound.Rules),
+			From: networkPolicyRules(app.Spec.AccessPolicy.Inbound.Rules),
 		})
 	}
 
@@ -69,7 +69,7 @@ func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule 
 	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
 		return []networkingv1.NetworkPolicyEgressRule{
 			{
-				To: networkPolicyGressRules(app.Spec.AccessPolicy.Outbound.Rules),
+				To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules),
 			},
 		}
 	}
