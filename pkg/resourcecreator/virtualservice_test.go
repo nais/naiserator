@@ -12,12 +12,11 @@ import (
 )
 
 func TestVirtualService(t *testing.T) {
-
 	t.Run("virtualservice created according to spec", func(t *testing.T) {
 		ingresses := []string{
-			"https://first.host.no",
+			"first.host.no",
 			"https://second.host.no",
-			"https://another.domain.tk",
+			"http://another.domain.tk",
 		}
 
 		app := fixtures.MinimalApplication()

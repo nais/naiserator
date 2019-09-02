@@ -2,7 +2,6 @@ package resourcecreator
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -88,9 +87,4 @@ func domain(ingress *url.URL) string {
 	parts := strings.Split(ingress.Hostname(), ".")
 
 	return parts[len(parts)-2] + "-" + parts[len(parts)-1]
-}
-
-func shortUUID() string {
-	uuid, _ := uuid.NewRandom()
-	return strings.Split(uuid.String(), "-")[0]
 }
