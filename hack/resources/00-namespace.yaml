@@ -3,3 +3,5 @@ kind: Namespace
 apiVersion: v1
 metadata:
   name: nais
+  labels:
+    name: nais
