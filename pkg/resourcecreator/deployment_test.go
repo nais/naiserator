@@ -126,9 +126,9 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, resourcecreator.CA_BUNDLE_JKS_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_JKS_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
 		assert.Equal(t, resourcecreator.CA_BUNDLE_JKS_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, appContainer.VolumeMounts[1].Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[1].Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[1].ConfigMap.Name)
+		assert.Equal(t, resourcecreator.CA_BUNDLE_PEM_CONFIGMAP_NAME, appContainer.VolumeMounts[1].Name)
+		assert.Equal(t, resourcecreator.CA_BUNDLE_PEM_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[1].Name)
+		assert.Equal(t, resourcecreator.CA_BUNDLE_PEM_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[1].ConfigMap.Name)
 
 		app.Spec.SkipCaBundle = true
 		deploy, err = resourcecreator.Deployment(app, opts)

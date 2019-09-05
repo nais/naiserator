@@ -7,7 +7,7 @@ import (
 // These constants refer to a ConfigMap that has already been applied to the cluster.
 // The source filenames refer to a PEM bundle and a JKS keystore, respectively.
 const (
-	CA_BUNDLE_CONFIGMAP_NAME      = "ca-bundle-pem"
+	CA_BUNDLE_PEM_CONFIGMAP_NAME  = "ca-bundle-pem"
 	CA_BUNDLE_PEM_SOURCE_FILENAME = "ca-bundle.pem"
 	CA_BUNDLE_JKS_CONFIGMAP_NAME  = "ca-bundle-jks"
 	CA_BUNDLE_JKS_SOURCE_FILENAME = "ca-bundle.jks"
@@ -38,7 +38,7 @@ func certificateAuthorityVolumeMounts() []corev1.VolumeMount {
 
 	for _, path := range certFiles {
 		vm = append(vm, corev1.VolumeMount{
-			Name:      CA_BUNDLE_CONFIGMAP_NAME,
+			Name:      CA_BUNDLE_PEM_CONFIGMAP_NAME,
 			MountPath: path,
 			SubPath:   CA_BUNDLE_PEM_SOURCE_FILENAME,
 		})
@@ -78,7 +78,7 @@ func caBundle(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	mainContainer.Env = append(mainContainer.Env, envs...)
 	mainContainer.VolumeMounts = append(mainContainer.VolumeMounts, certificateAuthorityVolumeMounts()...)
 
-	podSpec.Volumes = append(podSpec.Volumes, certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_CONFIGMAP_NAME))
+	podSpec.Volumes = append(podSpec.Volumes, certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_PEM_CONFIGMAP_NAME))
 
 	return podSpec
 }
