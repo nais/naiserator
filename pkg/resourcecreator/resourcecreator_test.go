@@ -26,7 +26,7 @@ type realObjects struct {
 	networkPolicy      *networkingv1.NetworkPolicy
 	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
 	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
-	virtualService     *networking_istio_io_v1alpha3.VirtualService
+	virtualServices    []*networking_istio_io_v1alpha3.VirtualService
 }
 
 func getRealObjects(resources []runtime.Object) (o realObjects) {
@@ -49,7 +49,7 @@ func getRealObjects(resources []runtime.Object) (o realObjects) {
 		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
 			o.serviceRoleBinding = v
 		case *networking_istio_io_v1alpha3.VirtualService:
-			o.virtualService = v
+			o.virtualServices = append(o.virtualServices, v)
 		}
 	}
 	return
@@ -143,7 +143,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.Nil(t, objects.virtualService)
+		assert.Nil(t, objects.virtualServices)
 		assert.Nil(t, objects.serviceRoleBinding)
 		assert.Nil(t, objects.serviceRole)
 		assert.Nil(t, objects.networkPolicy)
@@ -151,6 +151,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
+		app.Spec.Ingresses = []string{"host.domain.tld"}
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		err := nais.ApplyDefaults(app)
@@ -160,9 +161,9 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.Nil(t, objects.virtualService)
-		assert.Nil(t, objects.serviceRoleBinding)
-		assert.Nil(t, objects.serviceRole)
+		assert.Len(t, objects.virtualServices, 1)
+		assert.NotNil(t, objects.serviceRoleBinding)
+		assert.NotNil(t, objects.serviceRole)
 		assert.NotNil(t, objects.networkPolicy)
 	})
 
@@ -179,7 +180,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.NotNil(t, objects.virtualService)
+		assert.NotNil(t, objects.virtualServices)
 		assert.NotNil(t, objects.serviceRoleBinding)
 		assert.NotNil(t, objects.serviceRole)
 		assert.NotNil(t, objects.networkPolicy)
