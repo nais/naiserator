@@ -30,6 +30,12 @@ var certFiles = []string{
 func certificateAuthorityVolumeMounts() []corev1.VolumeMount {
 	vm := make([]corev1.VolumeMount, 0)
 
+	vm = append(vm, corev1.VolumeMount{
+		Name:      CA_BUNDLE_JKS_CONFIGMAP_NAME,
+		MountPath: NAV_TRUSTSTORE_PATH,
+		SubPath:   CA_BUNDLE_JKS_SOURCE_FILENAME,
+	})
+
 	for _, path := range certFiles {
 		vm = append(vm, corev1.VolumeMount{
 			Name:      CA_BUNDLE_CONFIGMAP_NAME,
@@ -37,12 +43,6 @@ func certificateAuthorityVolumeMounts() []corev1.VolumeMount {
 			SubPath:   CA_BUNDLE_PEM_SOURCE_FILENAME,
 		})
 	}
-
-	vm = append(vm, corev1.VolumeMount{
-		Name:      CA_BUNDLE_JKS_CONFIGMAP_NAME,
-		MountPath: NAV_TRUSTSTORE_PATH,
-		SubPath:   CA_BUNDLE_JKS_SOURCE_FILENAME,
-	})
 
 	return vm
 }
@@ -78,7 +78,7 @@ func caBundle(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	mainContainer.Env = append(mainContainer.Env, envs...)
 	mainContainer.VolumeMounts = append(mainContainer.VolumeMounts, certificateAuthorityVolumeMounts()...)
 
-	podSpec.Volumes = append(podSpec.Volumes, certificateAuthorityVolume(CA_BUNDLE_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME))
+	podSpec.Volumes = append(podSpec.Volumes, certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_CONFIGMAP_NAME))
 
 	return podSpec
 }
