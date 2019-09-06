@@ -22,7 +22,7 @@ func FluentdSidecar() corev1.Container {
 				ReadOnly:  true,
 			},
 			{
-				Name:      "ca-bundle",
+				Name:      "ca-bundle-pem",
 				MountPath: "/etc/pki/tls/certs/ca-bundle.crt",
 				SubPath:   "ca-bundle.pem",
 				ReadOnly:  true,
