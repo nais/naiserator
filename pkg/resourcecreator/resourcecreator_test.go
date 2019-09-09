@@ -15,6 +15,7 @@ import (
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 type realObjects struct {
@@ -27,6 +28,8 @@ type realObjects struct {
 	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
 	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
 	virtualServices    []*networking_istio_io_v1alpha3.VirtualService
+	role               *rbacv1.Role
+	rolebinding        *rbacv1.RoleBinding
 }
 
 func getRealObjects(resources []runtime.Object) (o realObjects) {
@@ -50,6 +53,10 @@ func getRealObjects(resources []runtime.Object) (o realObjects) {
 			o.serviceRoleBinding = v
 		case *networking_istio_io_v1alpha3.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)
+		case *rbacv1.Role:
+			o.role = v
+		case *rbacv1.RoleBinding:
+			o.rolebinding = v
 		}
 	}
 	return
@@ -184,5 +191,22 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.serviceRoleBinding)
 		assert.NotNil(t, objects.serviceRole)
 		assert.NotNil(t, objects.networkPolicy)
+	})
+
+	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.LeaderElection = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.role)
+		assert.Equal(t, app.Name, objects.role.Name)
+		assert.NotNil(t, objects.rolebinding)
+		assert.Equal(t, app.Name, objects.rolebinding.Name)
 	})
 }

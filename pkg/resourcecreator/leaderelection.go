@@ -3,10 +3,56 @@ package resourcecreator
 import (
 	"fmt"
 
+	rbacv1 "k8s.io/api/rbac/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
+
+func LeaderElectionRoleBinding(app *nais.Application) *rbacv1.RoleBinding {
+	return &rbacv1.RoleBinding{
+		ObjectMeta: app.CreateObjectMeta(),
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     app.Name,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      app.Name,
+				Namespace: app.Namespace,
+			},
+		},
+	}
+}
+
+func LeaderElectionRole(app *nais.Application) *rbacv1.Role {
+	return &rbacv1.Role{
+		ObjectMeta: app.CreateObjectMeta(),
+		Rules: []rbacv1.PolicyRule{
+			{
+				ResourceNames: []string{
+					app.Name,
+				},
+				APIGroups: []string{
+					"",
+				},
+				Resources: []string{
+					"endpoints",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+					"create",
+					"update",
+					"patch",
+				},
+			},
+		},
+	}
+}
 
 func LeaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {
 	spec = podSpec.DeepCopy()
