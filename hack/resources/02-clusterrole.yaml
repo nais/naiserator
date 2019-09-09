@@ -14,6 +14,8 @@ rules:
       - 'horizontalpodautoscalers'
       - 'ingresses'
       - 'networkpolicies'
+      - 'roles'
+      - 'rolebindings'
       - 'serviceaccounts'
       - 'services'
       - 'serviceroles'
