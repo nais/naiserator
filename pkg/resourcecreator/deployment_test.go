@@ -338,7 +338,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
 
 		assert.NoError(t, err)
-		assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, appsv1.DeploymentStrategyType(deploy.Spec.Strategy.Type))
+		assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, deploy.Spec.Strategy.Type)
 	})
 
 	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {
@@ -350,7 +350,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
 
 		assert.NoError(t, err)
-		assert.Equal(t, appsv1.RecreateDeploymentStrategyType, appsv1.DeploymentStrategyType(deploy.Spec.Strategy.Type))
+		assert.Equal(t, appsv1.RecreateDeploymentStrategyType, deploy.Spec.Strategy.Type)
 	})
 
 	t.Run("ensure that secure logging sidecar is created when requesting secure logs in app spec", func(t *testing.T) {
