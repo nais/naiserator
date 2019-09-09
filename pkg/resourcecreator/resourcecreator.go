@@ -24,6 +24,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		HorizontalPodAutoscaler(app),
 	}
 
+	if app.Spec.LeaderElection {
+		objects = append(objects, LeaderElectionRole(app))
+		objects = append(objects, LeaderElectionRoleBinding(app))
+	}
+
 	if resourceOptions.AccessPolicy {
 		objects = append(objects, NetworkPolicy(app))
 
