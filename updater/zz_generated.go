@@ -17,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,6 +27,7 @@ import (
 	typed_core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	typed_extensions_v1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
 	typed_networking_v1 "k8s.io/client-go/kubernetes/typed/networking/v1"
+	typed_rbac_v1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
 )
 
 func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) func() error {
@@ -200,6 +202,40 @@ func ServiceEntry(client typed_networking_istio_io_v1alpha3.ServiceEntryInterfac
 	}
 }
 
+func Role(client typed_rbac_v1.RoleInterface, old, new *rbacv1.Role) func() error {
+	log.Infof("creating or updating *rbacv1.Role for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
+func RoleBinding(client typed_rbac_v1.RoleBindingInterface, old, new *rbacv1.RoleBinding) func() error {
+	log.Infof("creating or updating *rbacv1.RoleBinding for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -312,6 +348,28 @@ func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Client
 			return ServiceEntry(c, nil, new)
 		}
 		return ServiceEntry(c, old, new)
+
+	case *rbacv1.Role:
+		c := clientSet.RbacV1().Roles(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return Role(c, nil, new)
+		}
+		return Role(c, old, new)
+
+	case *rbacv1.RoleBinding:
+		c := clientSet.RbacV1().RoleBindings(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return RoleBinding(c, nil, new)
+		}
+		return RoleBinding(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))

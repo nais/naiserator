@@ -77,6 +77,18 @@ var i = []Service{
 		Type:      "*networking_istio_io_v1alpha3.ServiceEntry",
 		Client:    "customClient.NetworkingV1alpha3().ServiceEntries",
 	},
+	{
+		Name:      "Role",
+		Interface: "typed_rbac_v1.RoleInterface",
+		Type:      "*rbacv1.Role",
+		Client:    "clientSet.RbacV1().Roles",
+	},
+	{
+		Name:      "RoleBinding",
+		Interface: "typed_rbac_v1.RoleBindingInterface",
+		Type:      "*rbacv1.RoleBinding",
+		Client:    "clientSet.RbacV1().RoleBindings",
+	},
 }
 
 func main() {
