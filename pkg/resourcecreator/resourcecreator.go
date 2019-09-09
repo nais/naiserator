@@ -27,8 +27,13 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 	if resourceOptions.AccessPolicy {
 		objects = append(objects, NetworkPolicy(app))
 
-		vs := VirtualService(app)
-		if vs != nil {
+		vses, err := VirtualServices(app)
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
+		}
+
+		for _, vs := range vses {
 			objects = append(objects, vs)
 		}
 

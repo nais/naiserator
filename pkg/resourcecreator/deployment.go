@@ -93,7 +93,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	if app.Spec.LeaderElection {
-		podSpec = leaderElection(app, podSpec)
+		podSpec = LeaderElection(app, podSpec)
 	}
 
 	if !app.Spec.SkipCaBundle {
@@ -245,22 +245,6 @@ func appContainer(app *nais.Application) corev1.Container {
 	return c
 }
 
-func leaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {
-	spec = podSpec.DeepCopy()
-	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Name, app.Namespace))
-	mainContainer := spec.Containers[0].DeepCopy()
-
-	electorPathEnv := corev1.EnvVar{
-		Name:  "ELECTOR_PATH",
-		Value: "localhost:4040",
-	}
-
-	mainContainer.Env = append(mainContainer.Env, electorPathEnv)
-	spec.Containers[0] = *mainContainer
-
-	return spec
-}
-
 func secureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	spec := podSpec.DeepCopy()
 	spec.Containers = append(spec.Containers, securelogs.FluentdSidecar())
@@ -400,24 +384,6 @@ func probe(app *nais.Application, probe nais.Probe) (k8sprobe *corev1.Probe) {
 	}
 
 	return
-}
-
-func leaderElectionContainer(name, namespace string) corev1.Container {
-	return corev1.Container{
-		Name:            "elector",
-		Image:           "gcr.io/google_containers/leader-elector:0.5",
-		ImagePullPolicy: corev1.PullIfNotPresent,
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU: resource.MustParse("100m"),
-			},
-		},
-		Ports: []corev1.ContainerPort{{
-			ContainerPort: 4040,
-			Protocol:      corev1.ProtocolTCP,
-		}},
-		Args: []string{fmt.Sprintf("--election=%s", name), "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", namespace)},
-	}
 }
 
 func GetContainerByName(containers []corev1.Container, name string) *corev1.Container {
