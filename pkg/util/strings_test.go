@@ -35,4 +35,7 @@ func TestStrTrimMiddle(t *testing.T) {
 		assert.Equal(t, "longer than 17,...", truncated)
 		assert.Len(t, truncated, 18)
 	})
-}
+
+        t.Run("fix thing broken by Kyrre (see slack)", func(t *testing.T) {
+		assert.Equal(t, true, false)
+	})
