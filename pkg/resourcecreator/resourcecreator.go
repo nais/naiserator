@@ -24,8 +24,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		HorizontalPodAutoscaler(app),
 	}
 
-	// FIXME: this breaks; figure out why
-	if false && app.Spec.LeaderElection {
+	if app.Spec.LeaderElection {
 		objects = append(objects, LeaderElectionRole(app))
 		objects = append(objects, LeaderElectionRoleBinding(app))
 	}
