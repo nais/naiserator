@@ -1,4 +1,4 @@
-package naiserator
+package synchronizer
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ type Naiserator struct {
 	ResourceOptions           resourcecreator.ResourceOptions
 }
 
-func NewNaiserator(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Naiserator {
+func New(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Naiserator {
 	naiserator := Naiserator{
 		ClientSet:                 clientSet,
 		AppClient:                 appClient,

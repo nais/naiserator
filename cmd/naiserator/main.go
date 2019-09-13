@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/nais/naiserator"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
@@ -17,6 +16,7 @@ import (
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/synchronizer"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -97,7 +97,7 @@ func main() {
 	resourceOptions.NativeSecrets = nativeSecretsEnabled
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig)
-	n := naiserator.NewNaiserator(
+	n := synchronizer.New(
 		createGenericClientset(kubeconfig),
 		createApplicationClientset(kubeconfig),
 		applicationInformerFactory.Naiserator().V1alpha1().Applications(),
