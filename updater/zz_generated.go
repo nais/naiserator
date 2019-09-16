@@ -236,7 +236,7 @@ func RoleBinding(client typed_rbac_v1.RoleBindingInterface, old, new *rbacv1.Rol
 	}
 }
 
-func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrUpdate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -376,79 +376,303 @@ func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Client
 	}
 }
 
-func Deleter(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrRecreate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
 		c := clientSet.CoreV1().Services(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *corev1.Service for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *corev1.Service for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *corev1.ServiceAccount:
 		c := clientSet.CoreV1().ServiceAccounts(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *corev1.ServiceAccount for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *corev1.ServiceAccount for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *appsv1.Deployment:
 		c := clientSet.AppsV1().Deployments(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *appsv1.Deployment for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *appsv1.Deployment for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *extensionsv1beta1.Ingress:
 		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *extensionsv1beta1.Ingress for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *extensionsv1beta1.Ingress for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *autoscalingv1.HorizontalPodAutoscaler:
 		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *networkingv1.NetworkPolicy:
 		c := clientSet.NetworkingV1().NetworkPolicies(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *networkingv1.NetworkPolicy for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *networkingv1.NetworkPolicy for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *v1alpha1.ServiceRole:
 		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *v1alpha1.ServiceRole for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *v1alpha1.ServiceRole for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *v1alpha1.ServiceRoleBinding:
 		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *v1alpha1.ServiceRoleBinding for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *v1alpha1.ServiceRoleBinding for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *networking_istio_io_v1alpha3.VirtualService:
 		c := customClient.NetworkingV1alpha3().VirtualServices(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *networking_istio_io_v1alpha3.ServiceEntry:
 		c := customClient.NetworkingV1alpha3().ServiceEntries(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *rbacv1.Role:
 		c := clientSet.RbacV1().Roles(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *rbacv1.Role for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *rbacv1.Role for %s", new.Name)
+			_, err = c.Create(new)
+			return err
 		}
 
 	case *rbacv1.RoleBinding:
 		c := clientSet.RbacV1().RoleBindings(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+			log.Infof("pre-deleting *rbacv1.RoleBinding for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *rbacv1.RoleBinding for %s", new.Name)
+			_, err = c.Create(new)
+			return err
+		}
+
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
+func DeleteIfExists(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+
+	case *corev1.Service:
+		c := clientSet.CoreV1().Services(new.Namespace)
+		return func() error {
+			log.Infof("deleting *corev1.Service for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *corev1.ServiceAccount:
+		c := clientSet.CoreV1().ServiceAccounts(new.Namespace)
+		return func() error {
+			log.Infof("deleting *corev1.ServiceAccount for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *appsv1.Deployment:
+		c := clientSet.AppsV1().Deployments(new.Namespace)
+		return func() error {
+			log.Infof("deleting *appsv1.Deployment for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *extensionsv1beta1.Ingress:
+		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
+		return func() error {
+			log.Infof("deleting *extensionsv1beta1.Ingress for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *autoscalingv1.HorizontalPodAutoscaler:
+		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(new.Namespace)
+		return func() error {
+			log.Infof("deleting *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *networkingv1.NetworkPolicy:
+		c := clientSet.NetworkingV1().NetworkPolicies(new.Namespace)
+		return func() error {
+			log.Infof("deleting *networkingv1.NetworkPolicy for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *v1alpha1.ServiceRole:
+		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
+		return func() error {
+			log.Infof("deleting *v1alpha1.ServiceRole for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *v1alpha1.ServiceRoleBinding:
+		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
+		return func() error {
+			log.Infof("deleting *v1alpha1.ServiceRoleBinding for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *networking_istio_io_v1alpha3.VirtualService:
+		c := customClient.NetworkingV1alpha3().VirtualServices(new.Namespace)
+		return func() error {
+			log.Infof("deleting *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *networking_istio_io_v1alpha3.ServiceEntry:
+		c := customClient.NetworkingV1alpha3().ServiceEntries(new.Namespace)
+		return func() error {
+			log.Infof("deleting *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *rbacv1.Role:
+		c := clientSet.RbacV1().Roles(new.Namespace)
+		return func() error {
+			log.Infof("deleting *rbacv1.Role for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *rbacv1.RoleBinding:
+		c := clientSet.RbacV1().RoleBindings(new.Namespace)
+		return func() error {
+			log.Infof("deleting *rbacv1.RoleBinding for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
 		}
 
 	default:

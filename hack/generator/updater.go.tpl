@@ -54,7 +54,7 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 
 {{end}}
 
-func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrUpdate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
@@ -73,13 +73,39 @@ func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Client
 	}
 }
 
-func Deleter(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrRecreate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
 		c := {{.Client}}(new.Namespace)
 		return func() error {
-			return c.Delete(new.Name, &metav1.DeleteOptions{})
+            log.Infof("pre-deleting {{ .Type }} for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+            log.Infof("creating new {{ .Type }} for %s", new.Name)
+            _, err = c.Create(new)
+            return err
+		}
+	{{end}}
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
+func DeleteIfExists(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+	{{range .}}
+		case {{.Type}}:
+		c := {{.Client}}(new.Namespace)
+		return func() error {
+            log.Infof("deleting {{ .Type }} for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
 		}
 	{{end}}
 	default:

@@ -210,7 +210,7 @@ func (n *Naiserator) createOrUpdateMany(resourceOperations []resourcecreator.Res
 		if resop.Operation != resourcecreator.OperationCreateOrUpdate {
 			continue
 		}
-		err := updater.Updater(n.ClientSet, n.AppClient, resop.Resource)()
+		err := updater.CreateOrUpdate(n.ClientSet, n.AppClient, resop.Resource)()
 		result = multierror.Append(result, err)
 	}
 
