@@ -10,6 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,6 +67,20 @@ func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Client
 			return {{.Name}}(c, nil, new)
 		}
 		return {{.Name}}(c, old, new)
+	{{end}}
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
+func Deleter(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+	{{range .}}
+		case {{.Type}}:
+		c := {{.Client}}(new.Namespace)
+		return func() error {
+			return c.Delete(new.Name, &metav1.DeleteOptions{})
+		}
 	{{end}}
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
