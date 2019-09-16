@@ -11,26 +11,42 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Create takes an Application resource and returns a slice of Kubernetes resources.
-func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.Object, error) {
+// Operation defines what should be done with a resource.
+type Operation int
+
+const (
+	OperationCreateOrUpdate Operation = iota
+	OperationCreateOrRecreate
+	OperationDeleteIfExists
+)
+
+// ResourceOperation is the combination of a Kubernetes resource and what operation to perform on it.
+type ResourceOperation struct {
+	Resource  runtime.Object
+	Operation Operation
+}
+
+// Create takes an Application resource and returns a slice of Kubernetes resources
+// along with information about what to do with these resources.
+func Create(app *nais.Application, resourceOptions ResourceOptions) ([]ResourceOperation, error) {
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	objects := []runtime.Object{
-		Service(app),
-		ServiceAccount(app),
-		HorizontalPodAutoscaler(app),
+	objects := []ResourceOperation{
+		{Service(app), OperationCreateOrUpdate},
+		{ServiceAccount(app), OperationCreateOrUpdate},
+		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 
 	if app.Spec.LeaderElection {
-		objects = append(objects, LeaderElectionRole(app))
-		objects = append(objects, LeaderElectionRoleBinding(app))
+		objects = append(objects, ResourceOperation{LeaderElectionRole(app), OperationCreateOrUpdate})
+		objects = append(objects, ResourceOperation{LeaderElectionRoleBinding(app), OperationCreateOrUpdate})
 	}
 
 	if resourceOptions.AccessPolicy {
-		objects = append(objects, NetworkPolicy(app))
+		objects = append(objects, ResourceOperation{NetworkPolicy(app), OperationCreateOrUpdate})
 
 		vses, err := VirtualServices(app)
 
@@ -39,32 +55,32 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		}
 
 		for _, vs := range vses {
-			objects = append(objects, vs)
+			objects = append(objects, ResourceOperation{vs, OperationCreateOrUpdate})
 		}
 
 		serviceRole := ServiceRole(app)
 		if serviceRole != nil {
-			objects = append(objects, serviceRole)
+			objects = append(objects, ResourceOperation{serviceRole, OperationCreateOrUpdate})
 		}
 
 		serviceRoleBinding := ServiceRoleBinding(app)
 		if serviceRoleBinding != nil {
-			objects = append(objects, serviceRoleBinding)
+			objects = append(objects, ResourceOperation{serviceRoleBinding, OperationCreateOrUpdate})
 		}
 
 		serviceRolePrometheus := ServiceRolePrometheus(app)
 		if serviceRolePrometheus != nil {
-			objects = append(objects, serviceRolePrometheus)
+			objects = append(objects, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
 		}
 
 		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
 		if serviceRoleBindingPrometheus != nil {
-			objects = append(objects, serviceRoleBindingPrometheus)
+			objects = append(objects, ResourceOperation{serviceRoleBindingPrometheus, OperationCreateOrUpdate})
 		}
 
 		serviceEntry := ServiceEntry(app)
 		if serviceEntry != nil {
-			objects = append(objects, serviceEntry)
+			objects = append(objects, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
 		}
 
 	} else {
@@ -75,7 +91,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		}
 		if ingress != nil {
 			// the application might have no ingresses, in which case nil will be returned.
-			objects = append(objects, ingress)
+			objects = append(objects, ResourceOperation{ingress, OperationCreateOrUpdate})
 		}
 	}
 
@@ -83,7 +99,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	objects = append(objects, deployment)
+	objects = append(objects, ResourceOperation{deployment, OperationCreateOrUpdate})
 
 	return objects, nil
 }

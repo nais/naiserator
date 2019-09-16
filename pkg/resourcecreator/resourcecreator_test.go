@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
@@ -32,9 +31,9 @@ type realObjects struct {
 	rolebinding        *rbacv1.RoleBinding
 }
 
-func getRealObjects(resources []runtime.Object) (o realObjects) {
+func getRealObjects(resources []resourcecreator.ResourceOperation) (o realObjects) {
 	for _, r := range resources {
-		switch v := r.(type) {
+		switch v := r.Resource.(type) {
 		case *v1.Deployment:
 			o.deployment = v
 		case *corev1.Service:

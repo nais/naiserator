@@ -20,7 +20,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 )
@@ -204,11 +203,14 @@ func (n *Naiserator) add(app interface{}) {
 	n.update(nil, app)
 }
 
-func (n *Naiserator) createOrUpdateMany(resources []runtime.Object) error {
+func (n *Naiserator) createOrUpdateMany(resourceOperations []resourcecreator.ResourceOperation) error {
 	var result = &multierror.Error{}
 
-	for _, resource := range resources {
-		err := updater.Updater(n.ClientSet, n.AppClient, resource)()
+	for _, resop := range resourceOperations {
+		if resop.Operation != resourcecreator.OperationCreateOrUpdate {
+			continue
+		}
+		err := updater.Updater(n.ClientSet, n.AppClient, resop.Resource)()
 		result = multierror.Append(result, err)
 	}
 
