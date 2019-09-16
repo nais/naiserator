@@ -8,23 +8,7 @@ import (
 	"fmt"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
-
-// Operation defines what should be done with a resource.
-type Operation int
-
-const (
-	OperationCreateOrUpdate Operation = iota
-	OperationCreateOrRecreate
-	OperationDeleteIfExists
-)
-
-// ResourceOperation is the combination of a Kubernetes resource and what operation to perform on it.
-type ResourceOperation struct {
-	Resource  runtime.Object
-	Operation Operation
-}
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
