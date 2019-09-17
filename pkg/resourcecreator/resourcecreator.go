@@ -26,7 +26,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	if app.Spec.LeaderElection {
 		objects = append(objects, ResourceOperation{LeaderElectionRole(app), OperationCreateOrUpdate})
-		objects = append(objects, ResourceOperation{LeaderElectionRoleBinding(app), OperationCreateOrUpdate})
+		objects = append(objects, ResourceOperation{LeaderElectionRoleBinding(app), OperationCreateOrRecreate})
 	}
 
 	if resourceOptions.AccessPolicy {
