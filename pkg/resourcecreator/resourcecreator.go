@@ -73,10 +73,15 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingress: %s", err)
 		}
-		if ingress != nil {
-			// the application might have no ingresses, in which case nil will be returned.
-			objects = append(objects, ResourceOperation{ingress, OperationCreateOrUpdate})
+
+		// Kubernetes doesn't support ingress resources without any rules. This means we must
+		// delete the old resource if it exists.
+		operation := OperationCreateOrUpdate
+		if len(app.Spec.Ingresses) == 0 {
+			operation = OperationDeleteIfExists
 		}
+
+		objects = append(objects, ResourceOperation{ingress, operation})
 	}
 
 	deployment, err := Deployment(app, resourceOptions)

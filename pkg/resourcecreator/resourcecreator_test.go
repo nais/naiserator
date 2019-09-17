@@ -31,7 +31,7 @@ type realObjects struct {
 	rolebinding        *rbacv1.RoleBinding
 }
 
-func getRealObjects(resources []resourcecreator.ResourceOperation) (o realObjects) {
+func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
 	for _, r := range resources {
 		switch v := r.Resource.(type) {
 		case *v1.Deployment:
@@ -105,12 +105,16 @@ func TestCreate(t *testing.T) {
 		resources, err := resourcecreator.Create(app, opts)
 		assert.NoError(t, err)
 
-		objects := getRealObjects(resources)
+		objects := getRealObjects(resources.Extract(resourcecreator.OperationCreateOrUpdate))
 		assert.NotNil(t, objects.hpa)
 		assert.NotNil(t, objects.service)
 		assert.NotNil(t, objects.serviceAccount)
 		assert.NotNil(t, objects.deployment)
 		assert.Nil(t, objects.ingress)
+
+		// Test that the Ingress is deleted
+		objects = getRealObjects(resources.Extract(resourcecreator.OperationDeleteIfExists))
+		assert.NotNil(t, objects.ingress)
 	})
 
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {

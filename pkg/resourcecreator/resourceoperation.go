@@ -20,3 +20,14 @@ type ResourceOperation struct {
 }
 
 type ResourceOperations []ResourceOperation
+
+// Return a new slice of ResourceOperations where only one type of operation matches.
+func (r *ResourceOperations) Extract(operation Operation) ResourceOperations {
+	results := make(ResourceOperations, 0)
+	for _, rop := range *r {
+		if rop.Operation == operation {
+			results = append(results, rop)
+		}
+	}
+	return results
+}

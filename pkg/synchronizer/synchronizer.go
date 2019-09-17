@@ -115,10 +115,6 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		ResourceOptions: n.ResourceOptions,
 	}
 
-	if err := n.removeOrphanIngresses(logger, app); err != nil {
-		return fmt.Errorf("while removing old resources: %s", err)
-	}
-
 	deploymentResource, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("while querying existing deployment: %s", err)
@@ -223,22 +219,6 @@ func (n *Naiserator) ClusterOperations(rollout Rollout) []func() error {
 	}
 
 	return funcs
-}
-
-func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Application) error {
-	if len(app.Spec.Ingresses) > 0 {
-		return nil
-	}
-
-	err := n.ClientSet.ExtensionsV1beta1().Ingresses(app.Namespace).Delete(app.Name, &v1.DeleteOptions{})
-
-	if errors.IsNotFound(err) {
-		return nil
-	}
-
-	logger.Infof("%s: successfully deleted orphan ingresses", app.Name)
-
-	return err
 }
 
 func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
