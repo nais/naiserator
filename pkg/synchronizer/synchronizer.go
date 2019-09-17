@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-multierror"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io/v1alpha1"
@@ -111,37 +110,38 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	app.SetCorrelationID(deploymentID.String())
 	logger = logger.WithField("correlation-id", deploymentID.String())
 
+	rollout := Rollout{
+		App:             *app,
+		ResourceOptions: n.ResourceOptions,
+	}
+
 	if err := n.removeOrphanIngresses(logger, app); err != nil {
 		return fmt.Errorf("while removing old resources: %s", err)
 	}
 
-	// If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
-	// number of replicas, which is set to one by default. To avoid this, we need to check the existing deployment
-	// resource and pass the correct number in the resource options.
-	//
-	// The number of replicas is set to whichever is highest: the current number of replicas (which might be zero),
-	// or the default number of replicas.
 	deploymentResource, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("while querying existing deployment: %s", err)
-	} else if deploymentResource != nil && deploymentResource.Spec.Replicas != nil {
-		n.ResourceOptions.NumReplicas = max(1, *deploymentResource.Spec.Replicas)
 	} else {
-		n.ResourceOptions.NumReplicas = max(1, int32(app.Spec.Replicas.Min))
+		rollout.SetCurrentDeployment(deploymentResource)
 	}
 
-	resources, err := resourcecreator.Create(app, n.ResourceOptions)
+	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
 	if err != nil {
 		return fmt.Errorf("while creating resources: %s", err)
 	}
 
-	if err := n.createOrUpdateMany(resources); err != nil {
-		return fmt.Errorf("while persisting resources to Kubernetes: %s", err)
+	operations := n.ClusterOperations(rollout)
+
+	for _, fn := range operations {
+		if err := fn(); err != nil {
+			return fmt.Errorf("while persisting resources to Kubernetes: %s", err)
+		}
+		metrics.ResourcesGenerated.Inc()
 	}
 
 	// At this point, the deployment is complete. All that is left is to register the application hash and cache it,
 	// so that the deployment does not happen again. Thus, we update the metrics before the end of the function.
-	metrics.ResourcesGenerated.Add(float64(len(resources)))
 	metrics.Deployments.Inc()
 
 	if n.KafkaEnabled {
@@ -203,18 +203,26 @@ func (n *Naiserator) add(app interface{}) {
 	n.update(nil, app)
 }
 
-func (n *Naiserator) createOrUpdateMany(resourceOperations []resourcecreator.ResourceOperation) error {
-	var result = &multierror.Error{}
+// ClusterOperations generates a set of functions that will perform the rollout in the cluster.
+func (n *Naiserator) ClusterOperations(rollout Rollout) []func() error {
+	var fn func() error
 
-	for _, resop := range resourceOperations {
-		if resop.Operation != resourcecreator.OperationCreateOrUpdate {
-			continue
+	funcs := make([]func() error, 0)
+
+	for _, rop := range rollout.ResourceOperations {
+		switch rop.Operation {
+		case resourcecreator.OperationCreateOrUpdate:
+			fn = updater.CreateOrUpdate(n.ClientSet, n.AppClient, rop.Resource)
+		case resourcecreator.OperationCreateOrRecreate:
+			fn = updater.CreateOrRecreate(n.ClientSet, n.AppClient, rop.Resource)
+		case resourcecreator.OperationDeleteIfExists:
+			fn = updater.DeleteIfExists(n.ClientSet, n.AppClient, rop.Resource)
 		}
-		err := updater.CreateOrUpdate(n.ClientSet, n.AppClient, resop.Resource)()
-		result = multierror.Append(result, err)
+
+		funcs = append(funcs, fn)
 	}
 
-	return result.ErrorOrNil()
+	return funcs
 }
 
 func (n *Naiserator) removeOrphanIngresses(logger *log.Entry, app *v1alpha1.Application) error {

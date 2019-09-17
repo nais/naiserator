@@ -12,13 +12,13 @@ import (
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func Create(app *nais.Application, resourceOptions ResourceOptions) ([]ResourceOperation, error) {
+func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOperations, error) {
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	objects := []ResourceOperation{
+	objects := ResourceOperations{
 		{Service(app), OperationCreateOrUpdate},
 		{ServiceAccount(app), OperationCreateOrUpdate},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},

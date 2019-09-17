@@ -19,3 +19,4 @@ type ResourceOperation struct {
 	Operation Operation
 }
 
+type ResourceOperations []ResourceOperation
