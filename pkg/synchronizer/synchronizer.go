@@ -146,9 +146,6 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 		kafka.Events <- kafka.Message{Event: event, Logger: *logger}
 
 		app.SetDeploymentRolloutStatus(event.RolloutStatus)
-
-		// Monitor its completion timeline over a designated period
-		go n.MonitorRollout(*app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
 
 	app.SetLastSyncedHash(hash)
@@ -158,6 +155,11 @@ func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) e
 	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	if err != nil {
 		return fmt.Errorf("while storing application sync metadata: %s", err)
+	}
+
+	if n.KafkaEnabled {
+		// Monitor completion timeline over a designated period
+		go n.MonitorRollout(*app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
 
 	_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
