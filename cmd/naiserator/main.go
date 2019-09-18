@@ -19,7 +19,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -94,8 +93,8 @@ func run() error {
 	)
 
 	resourceOptions := resourcecreator.NewResourceOptions()
-	resourceOptions.AccessPolicy = viper.GetBool("features.access-policy")
-	resourceOptions.NativeSecrets = viper.GetBool("features.native-secrets")
+	resourceOptions.AccessPolicy = cfg.Features.AccessPolicy
+	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig)
 	n := synchronizer.New(

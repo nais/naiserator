@@ -8,6 +8,7 @@ import (
 
 	hash "github.com/mitchellh/hashstructure"
 	"github.com/nais/naiserator/pkg/event"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -267,7 +268,7 @@ func (in Application) Hash() (string, error) {
 }
 
 func (in Application) Cluster() string {
-	return viper.GetString("cluster-name")
+	return viper.GetString(config.ClusterName)
 }
 
 func (in *Application) LastSyncedHash() string {

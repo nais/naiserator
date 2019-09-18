@@ -61,6 +61,23 @@ var (
 	redactKeys = []string{}
 )
 
+const (
+	Bind                           = "bind"
+	ClusterName                    = "cluster-name"
+	FeaturesAccessPolicy           = "features.access-policy"
+	FeaturesNativeSecrets          = "features.native-secrets"
+	FeaturesVault                  = "features.vault"
+	KubeConfig                     = "kubeconfig"
+	ProxyAddress                   = "proxy.address"
+	ProxyExclude                   = "proxy.exclude"
+	SecurelogsConfigMapReloadImage = "securelogs.configmap-reload-image"
+	SecurelogsFluentdImage         = "securelogs.fluentd-image"
+	VaultAddress                   = "vault.address"
+	VaultAuthPath                  = "vault.auth-path"
+	VaultInitContainerImage        = "vault.init-container-image"
+	VaultKvPath                    = "vault.kv-path"
+)
+
 func init() {
 	// Automatically read configuration options from environment variables.
 	// i.e. --proxy.address will be configurable using NAISERATOR_PROXY_ADDRESS.
@@ -75,24 +92,24 @@ func init() {
 	viper.AddConfigPath("/etc")
 
 	// Provide command-line flags
-	flag.String("kubeconfig", "", "path to Kubernetes config file")
-	flag.String("bind", "127.0.0.1:8080", "ip:port where http requests are served")
-	flag.String("cluster-name", "cluster-name-unconfigured", "cluster name as presented to deployed applications")
+	flag.String(KubeConfig, "", "path to Kubernetes config file")
+	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
+	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
 
-	flag.Bool("features.access-policy", false, "enable access policy with Istio and NetworkPolicies")
-	flag.Bool("features.native-secrets", false, "enable use of native secrets")
-	flag.Bool("features.vault", false, "enable use of vault secret injection")
+	flag.Bool(FeaturesAccessPolicy, false, "enable access policy with Istio and NetworkPolicies")
+	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
+	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 
-	flag.String("securelogs.fluentd-image", "", "Docker image used for secure log fluentd sidecar")
-	flag.String("securelogs.configmap-reload-image", "", "Docker image used for secure log configmap reload sidecar")
+	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
+	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")
 
-	flag.String("proxy.address", "", "HTTPS?_PROXY environment variable injected into containers")
-	flag.StringSlice("proxy.exclude", []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
+	flag.String(ProxyAddress, "", "HTTPS?_PROXY environment variable injected into containers")
+	flag.StringSlice(ProxyExclude, []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
 
-	flag.String("vault.address", "", "address of the Vault server")
-	flag.String("vault.init-container-image", "", "Docker image of init container to use to read secrets from Vault")
-	flag.String("vault.auth-path", "", "path to vault kubernetes auth backend")
-	flag.String("vault.kv-path", "", "path to Vault KV mount")
+	flag.String(VaultAddress, "", "address of the Vault server")
+	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
+	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
+	flag.String(VaultKvPath, "", "path to Vault KV mount")
 }
 
 // Print out all configuration options except secret stuff.

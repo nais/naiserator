@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
@@ -64,19 +65,19 @@ func (c config) validate() (bool, error) {
 
 // Enabled checks if this Initializer is enabled
 func Enabled() bool {
-	return viper.GetBool("features.vault")
+	return viper.GetBool(config2.FeaturesVault)
 }
 
 func DefaultKVPath() string {
-	return viper.GetString("vault.kv-path")
+	return viper.GetString(config2.VaultKvPath)
 }
 
 // NewInitializer creates a new Initializer. Err if required env variables are not set.
 func NewInitializer(app *nais.Application) (Initializer, error) {
 	config := config{
-		vaultAddr:          viper.GetString("vault.address"),
-		initContainerImage: viper.GetString("vault.init-container-image"),
-		authPath:           viper.GetString("vault.auth-path"),
+		vaultAddr:          viper.GetString(config2.VaultAddress),
+		initContainerImage: viper.GetString(config2.VaultInitContainerImage),
+		authPath:           viper.GetString(config2.VaultAuthPath),
 		secretPaths:        app.Spec.Vault.Mounts,
 		sidecar:            app.Spec.Vault.Sidecar,
 	}
