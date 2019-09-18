@@ -3,13 +3,14 @@ package resourcecreator_test
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/nais/naiserator/pkg/vault"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
@@ -19,13 +20,14 @@ const clusterName = "my.test.cluster.local"
 
 func TestDeployment(t *testing.T) {
 
-	t.Run("vault integration is set up correctly", test.EnvWrapper(map[string]string{
-		vault.EnvVaultAddr:          "a",
-		vault.EnvVaultAuthPath:      "b",
-		vault.EnvInitContainerImage: "c",
-		vault.EnvVaultKVPath:        "/base/kv",
-		vault.EnvVaultEnabled:       "true",
-	}, func(t *testing.T) {
+	t.Run("vault integration is set up correctly", func(t *testing.T) {
+		viper.Reset()
+		viper.Set("features.vault", true)
+		viper.Set("vault.address", "adr")
+		viper.Set("vault.auth-path", "authpath")
+		viper.Set("vault.kv-path", "/base/kv")
+		viper.Set("vault.init-container-image", "image")
+
 		app := fixtures.MinimalApplication()
 		app.Spec.Vault.Enabled = true
 		err := nais.ApplyDefaults(app)
@@ -41,11 +43,12 @@ func TestDeployment(t *testing.T) {
 
 		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
-	}))
+	})
 
-	t.Run("reflection environment variables are set in the application container", test.EnvWrapper(map[string]string{
-		nais.NaisClusterNameEnv: clusterName,
-	}, func(t *testing.T) {
+	viper.Reset()
+	viper.Set("cluster-name", clusterName)
+
+	t.Run("reflection environment variables are set in the application container", func(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 		app.Spec.Image = "docker/image:latest"
@@ -62,8 +65,8 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppNameEnv))
 		assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespaceEnv))
 		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImageEnv))
-		assert.Equal(t, clusterName, envValue(appContainer.Env, nais.NaisClusterNameEnv))
-	}))
+		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterNameEnv))
+	})
 
 	t.Run("misc settings are applied", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
@@ -283,10 +286,10 @@ func TestDeployment(t *testing.T) {
 		}
 	})
 
-	t.Run("webproxy configuration is injected into the container env", test.EnvWrapper(map[string]string{
-		resourcecreator.PodHttpProxyEnv: httpProxy,
-		resourcecreator.PodNoProxyEnv:   noProxy,
-	}, func(t *testing.T) {
+	t.Run("webproxy configuration is injected into the container env", func(t *testing.T) {
+		viper.Reset()
+		viper.Set("proxy.address", httpProxy)
+		viper.Set("proxy.exclude", noProxy)
 		app := fixtures.MinimalApplication()
 		app.Spec.WebProxy = true
 		err := nais.ApplyDefaults(app)
@@ -297,13 +300,15 @@ func TestDeployment(t *testing.T) {
 		assert.Nil(t, err)
 		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 
+		nprox := strings.Join(noProxy, ",")
+
 		assert.Equal(t, httpProxy, envValue(appContainer.Env, "HTTP_PROXY"))
 		assert.Equal(t, httpProxy, envValue(appContainer.Env, "HTTPS_PROXY"))
-		assert.Equal(t, noProxy, envValue(appContainer.Env, "NO_PROXY"))
+		assert.Equal(t, nprox, envValue(appContainer.Env, "NO_PROXY"))
 		assert.Equal(t, httpProxy, envValue(appContainer.Env, "http_proxy"))
 		assert.Equal(t, httpProxy, envValue(appContainer.Env, "https_proxy"))
-		assert.Equal(t, noProxy, envValue(appContainer.Env, "no_proxy"))
-	}))
+		assert.Equal(t, nprox, envValue(appContainer.Env, "no_proxy"))
+	})
 
 	t.Run("probes are not configured when not set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()

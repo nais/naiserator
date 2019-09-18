@@ -4,11 +4,12 @@ package v1alpha1
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	hash "github.com/mitchellh/hashstructure"
-	deployment "github.com/nais/naiserator/pkg/event"
+	"github.com/nais/naiserator/pkg/event"
+	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/spf13/viper"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -20,7 +21,6 @@ const (
 	SecretTypeFiles          = "files"
 	DefaultSecretType        = SecretTypeEnv
 	DefaultSecretMountPath   = "/var/run/secrets"
-	NaisClusterNameEnv       = "NAIS_CLUSTER_NAME"
 )
 
 // Application defines a NAIS application.
@@ -268,7 +268,7 @@ func (in Application) Hash() (string, error) {
 }
 
 func (in Application) Cluster() string {
-	return os.Getenv(NaisClusterNameEnv)
+	return viper.GetString(config.ClusterName)
 }
 
 func (in *Application) LastSyncedHash() string {

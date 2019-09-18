@@ -2,25 +2,14 @@ package vault
 
 import (
 	"fmt"
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"strconv"
+
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
 	k8score "k8s.io/api/core/v1"
-)
-
-const (
-	// EnvVaultAddr is the environment name for looking up the address of the Vault server
-	EnvVaultAddr = "NAIS_VAULT_ADDR" //
-	// EnvInitContainerImage is the environment name for looking up the init container to use
-	EnvInitContainerImage = "NAIS_VAULT_INIT_CONTAINER_IMAGE"
-	// EnvVaultAuthPath is the environment name for looking up the path to vault kubernetes auth backend
-	EnvVaultAuthPath = "NAIS_VAULT_AUTH_PATH"
-	// EnvVaultKVPath is the environment name for looking up the path to Vault KV mount
-	EnvVaultKVPath = "NAIS_VAULT_KV_PATH"
-	// EnvVaultEnabled is the environment name for looking up the enable/disable feature flag
-	EnvVaultEnabled = "NAIS_VAULT_ENABLED"
 )
 
 type config struct {
@@ -47,15 +36,15 @@ func (c config) validate() (bool, error) {
 	var result = &multierror.Error{}
 
 	if len(c.vaultAddr) == 0 {
-		multierror.Append(result, fmt.Errorf("vault address not found in environment. Missing %s", EnvVaultAddr))
+		multierror.Append(result, fmt.Errorf("vault address not found in environment"))
 	}
 
 	if len(c.initContainerImage) == 0 {
-		multierror.Append(result, fmt.Errorf("vault address not found in environment. Missing %s", EnvInitContainerImage))
+		multierror.Append(result, fmt.Errorf("vault init container image not found in environment"))
 	}
 
 	if len(c.authPath) == 0 {
-		multierror.Append(result, fmt.Errorf("auth path not found in environment. Missing %s", EnvVaultAuthPath))
+		multierror.Append(result, fmt.Errorf("vault auth path not found in environment"))
 	}
 
 	for _, p := range c.secretPaths {
@@ -65,7 +54,7 @@ func (c config) validate() (bool, error) {
 		}
 
 		if len(p.KvPath) == 0 {
-			multierror.Append(result, fmt.Errorf("kv path not found in environment. Missing %s", EnvVaultKVPath))
+			multierror.Append(result, fmt.Errorf("vault kv path not found in environment"))
 			break
 		}
 	}
@@ -74,33 +63,21 @@ func (c config) validate() (bool, error) {
 
 }
 
-func init() {
-	viper.BindEnv(EnvVaultAddr, EnvVaultAddr)
-	viper.BindEnv(EnvInitContainerImage, EnvInitContainerImage)
-	viper.BindEnv(EnvVaultAuthPath, EnvVaultAuthPath)
-	viper.BindEnv(EnvVaultKVPath, EnvVaultKVPath)
-
-	// temp feature flag. Disable by default
-	viper.BindEnv(EnvVaultEnabled, EnvVaultEnabled)
-	viper.SetDefault(EnvVaultEnabled, false)
-
-}
-
 // Enabled checks if this Initializer is enabled
 func Enabled() bool {
-	return viper.GetBool(EnvVaultEnabled)
+	return viper.GetBool(config2.FeaturesVault)
 }
 
 func DefaultKVPath() string {
-	return viper.GetString(EnvVaultKVPath)
+	return viper.GetString(config2.VaultKvPath)
 }
 
 // NewInitializer creates a new Initializer. Err if required env variables are not set.
 func NewInitializer(app *nais.Application) (Initializer, error) {
 	config := config{
-		vaultAddr:          viper.GetString(EnvVaultAddr),
-		initContainerImage: viper.GetString(EnvInitContainerImage),
-		authPath:           viper.GetString(EnvVaultAuthPath),
+		vaultAddr:          viper.GetString(config2.VaultAddress),
+		initContainerImage: viper.GetString(config2.VaultInitContainerImage),
+		authPath:           viper.GetString(config2.VaultAuthPath),
 		secretPaths:        app.Spec.Vault.Mounts,
 		sidecar:            app.Spec.Vault.Sidecar,
 	}
@@ -196,7 +173,7 @@ func (c initializer) vaultContainer(name string, mount k8score.VolumeMount, secr
 				Value: secretPath.MountPath,
 			},
 			{
-				Name: "VKS_IS_SIDECAR",
+				Name:  "VKS_IS_SIDECAR",
 				Value: strconv.FormatBool(isSidecar),
 			},
 		},

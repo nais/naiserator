@@ -278,7 +278,7 @@ func defaultEnvVars(app *nais.Application) []corev1.EnvVar {
 		{Name: NaisAppNameEnv, Value: app.ObjectMeta.Name},
 		{Name: NaisNamespaceEnv, Value: app.ObjectMeta.Namespace},
 		{Name: NaisAppImageEnv, Value: app.Spec.Image},
-		{Name: nais.NaisClusterNameEnv, Value: app.Cluster()},
+		{Name: NaisClusterNameEnv, Value: app.Cluster()},
 	}
 }
 

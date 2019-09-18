@@ -3,11 +3,10 @@ package generator_test
 import (
 	"testing"
 
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
-	"github.com/nais/naiserator/pkg/test"
 	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -83,10 +82,10 @@ func TestContainerImage(t *testing.T) {
 }
 
 func TestNewDeploymentEvent(t *testing.T) {
-	clusterName := "test-cluster"
-	t.Run("Event defaults are picked up from Application correctly", test.EnvWrapper(map[string]string{
-		nais.NaisClusterNameEnv: clusterName,
-	}, func(t *testing.T) {
+	t.Run("Event defaults are picked up from Application correctly", func(t *testing.T) {
+		clusterName := "test-cluster"
+		viper.Set("cluster-name", clusterName)
+
 		app := fixtures.MinimalApplication()
 		app.Spec.Image = "image:version"
 
@@ -113,18 +112,18 @@ func TestNewDeploymentEvent(t *testing.T) {
 
 		assert.True(t, event.GetTimestampAsTime().Unix() > 0)
 		assert.True(t, event.GetTimestampAsTime().UnixNano() > 0)
-	}))
+	})
 
-	clusterName = "prod-cluster"
-	t.Run("Prod cluster Environment ", test.EnvWrapper(map[string]string{
-		nais.NaisClusterNameEnv: clusterName,
-	}, func(t *testing.T) {
+	t.Run("Prod cluster Environment", func(t *testing.T) {
+		clusterName := "prod-cluster"
+		viper.Set("cluster-name", clusterName)
+
 		app := fixtures.MinimalApplication()
 
 		event := generator.NewDeploymentEvent(*app)
 
 		assert.Equal(t, deployment.Environment_production, event.GetEnvironment())
-	}))
+	})
 
 	t.Run("Get correlationID from app annotations", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
