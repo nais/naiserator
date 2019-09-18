@@ -110,6 +110,8 @@ func init() {
 	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
 	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
 	flag.String(VaultKvPath, "", "path to Vault KV mount")
+
+	kafka.SetupFlags()
 }
 
 // Print out all configuration options except secret stuff.
