@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/nais/naiserator/pkg/proxyopts"
+	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -35,8 +36,9 @@ func proxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 // Instead, JVM must be started with a specific set of command-line options. These are also
 // provided as environment variables, for convenience.
 func ProxyEnvironmentVariables(envVars []corev1.EnvVar) ([]corev1.EnvVar, error) {
-	proxyURL := getEnvDualCase(PodHttpProxyEnv)
-	noProxy := getEnvDualCase(PodNoProxyEnv)
+	excludedHosts := viper.GetStringSlice("proxy.exclude")
+	proxyURL := viper.GetString("proxy.address")
+	noProxy := strings.Join(excludedHosts, ",")
 
 	// Set non-JVM environment variables
 	if len(proxyURL) > 0 {

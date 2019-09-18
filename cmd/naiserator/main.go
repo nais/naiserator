@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"strconv"
@@ -18,6 +18,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -25,26 +26,18 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-var (
-	kubeconfig           string
-	bindAddr             string
-	accessPolicyEnabled  bool
-	nativeSecretsEnabled bool
+func main() {
+	err := run()
 
-	kafkaConfig = kafka.DefaultConfig()
-)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
 
-func init() {
-	flag.StringVar(&kubeconfig, "kubeconfig", "", "path to Kubernetes config file")
-	flag.StringVar(&bindAddr, "bind-address", ":8080", "ip:port where http requests are served")
-	flag.BoolVar(&accessPolicyEnabled, "access-policy-enabled", ensureBool(getEnv("ACCESS_POLICY_ENABLED", "false")), "enable access policy with Istio and NetworkPolicies")
-	flag.BoolVar(&nativeSecretsEnabled, "native-secrets-enabled", ensureBool(getEnv("NATIVE_SECRETS_ENABLED", "false")), "enable use of native secrets")
-
-	kafka.SetupFlags(&kafkaConfig)
-	flag.Parse()
+	log.Info("Naiserator shutting down")
 }
 
-func main() {
+func run() error {
 	var err error
 
 	formatter := log.JSONFormatter{
@@ -54,9 +47,16 @@ func main() {
 
 	log.Info("Naiserator starting up")
 
-	if kafkaConfig.Enabled {
+	config, err := configuration()
+	if err != nil {
+		return err
+	}
+
+	printConfig([]string{})
+
+	if config.Kafka.Enabled {
 		kafkaLogger := log.New()
-		kafkaLogger.Level, err = log.ParseLevel(kafkaConfig.Verbosity)
+		kafkaLogger.Level, err = log.ParseLevel(config.Kafka.LogVerbosity)
 		if err != nil {
 			log.Fatalf("while setting log level: %s", err)
 		}
@@ -64,7 +64,7 @@ func main() {
 		kafkaLogger.SetFormatter(&formatter)
 		sarama.Logger = kafkaLogger
 
-		kafkaClient, err := kafka.NewClient(&kafkaConfig)
+		kafkaClient, err := kafka.NewClient(&config.Kafka)
 		if err != nil {
 			log.Fatalf("unable to setup kafka: %s", err)
 		}
@@ -74,27 +74,27 @@ func main() {
 	// register custom types
 	err = v1alpha1.AddToScheme(scheme.Scheme)
 	if err != nil {
-		log.Fatal("unable to add scheme")
+		return fmt.Errorf("unable to add scheme: %s", err)
 	}
 
 	stopCh := StopCh()
 
 	kubeconfig, err := getK8sConfig()
 	if err != nil {
-		log.Fatal("unable to initialize kubernetes config")
+		return fmt.Errorf("unable to initialize kubernetes config: %s", err)
 	}
 
 	// serve metrics
 	go metrics.Serve(
-		bindAddr,
+		viper.GetString("bind"),
 		"/metrics",
 		"/ready",
 		"/alive",
 	)
 
 	resourceOptions := resourcecreator.NewResourceOptions()
-	resourceOptions.AccessPolicy = accessPolicyEnabled
-	resourceOptions.NativeSecrets = nativeSecretsEnabled
+	resourceOptions.AccessPolicy = viper.GetBool("features.access-policy")
+	resourceOptions.NativeSecrets = viper.GetBool("features.native-secrets")
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig)
 	n := synchronizer.New(
@@ -102,13 +102,13 @@ func main() {
 		createApplicationClientset(kubeconfig),
 		applicationInformerFactory.Naiserator().V1alpha1().Applications(),
 		resourceOptions,
-		kafkaConfig.Enabled)
+		config.Kafka.Enabled)
 
 	applicationInformerFactory.Start(stopCh)
 	n.Run(stopCh)
 	<-stopCh
 
-	log.Info("Naiserator has shut down")
+	return nil
 }
 
 func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedInformerFactory {
@@ -139,6 +139,7 @@ func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
 }
 
 func getK8sConfig() (*rest.Config, error) {
+	kubeconfig := viper.GetString("kubeconfig")
 	if kubeconfig == "" {
 		log.Infof("using in-cluster configuration")
 		return rest.InClusterConfig()

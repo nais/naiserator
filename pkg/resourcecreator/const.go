@@ -1,9 +1,10 @@
 package resourcecreator
 
 const (
-	NaisAppNameEnv   = "NAIS_APP_NAME"
-	NaisNamespaceEnv = "NAIS_NAMESPACE"
-	NaisAppImageEnv  = "NAIS_APP_IMAGE"
+	NaisAppNameEnv     = "NAIS_APP_NAME"
+	NaisNamespaceEnv   = "NAIS_NAMESPACE"
+	NaisAppImageEnv    = "NAIS_APP_IMAGE"
+	NaisClusterNameEnv = "NAIS_CLUSTER_NAME"
 
 	IstioNetworkingAPIVersion               = "networking.istio.io/v1alpha3"         // API version of the Networking resources
 	IstioRBACAPIVersion                     = "rbac.istio.io/v1alpha1"               // API version of the RBAC resources
