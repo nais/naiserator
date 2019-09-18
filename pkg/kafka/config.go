@@ -21,14 +21,14 @@ type TLS struct {
 }
 
 type Config struct {
-	Enabled      bool   `json:"enabled"`
-	Brokers      string `json:"brokers"`
-	Topic        string `json:"topic"`
-	ClientID     string `json:"client-id"`
-	GroupID      string `json:"group-id"`
-	LogVerbosity string `json:"log-verbosity"`
-	TLS          TLS    `json:"tls"`
-	SASL         SASL   `json:"sasl"`
+	Enabled      bool     `json:"enabled"`
+	Brokers      []string `json:"brokers"`
+	Topic        string   `json:"topic"`
+	ClientID     string   `json:"client-id"`
+	GroupID      string   `json:"group-id"`
+	LogVerbosity string   `json:"log-verbosity"`
+	TLS          TLS      `json:"tls"`
+	SASL         SASL     `json:"sasl"`
 }
 
 func DefaultGroupName() string {

@@ -23,13 +23,9 @@ type Features struct {
 	Vault         bool `json:"vault"`
 }
 
-type Images struct {
-	Fluentd         string `json:"fluentd"`
-	ConfigMapReload string `json:"configmapreload"`
-}
-
 type Securelogs struct {
-	Images Images `json:"images"`
+	FluentdImage         string `json:"fluentd-image"`
+	ConfigMapReloadImage string `json:"configmap-reload-image"`
 }
 
 type Proxy struct {
