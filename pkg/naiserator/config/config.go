@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"sort"
@@ -83,10 +83,10 @@ func init() {
 	flag.Bool("features.native-secrets", false, "enable use of native secrets")
 	flag.Bool("features.vault", false, "enable use of vault secret injection")
 
-	flag.String("securelogs.images.fluentd", "", "docker image used for secure log fluentd sidecar")
-	flag.String("securelogs.images.configmapreload", "", "docker image used for secure log configmap reload sidecar")
+	flag.String("securelogs.fluentd-image", "", "Docker image used for secure log fluentd sidecar")
+	flag.String("securelogs.configmap-reload-image", "", "Docker image used for secure log configmap reload sidecar")
 
-	flag.String("proxy.address", "http://webproxy.nais:8088", "HTTPS?_PROXY environment variable injected into containers")
+	flag.String("proxy.address", "", "HTTPS?_PROXY environment variable injected into containers")
 	flag.StringSlice("proxy.exclude", []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
 
 	flag.String("vault.address", "", "address of the Vault server")
@@ -96,7 +96,7 @@ func init() {
 }
 
 // Print out all configuration options except secret stuff.
-func printConfig(redacted []string) {
+func Print(redacted []string) {
 	ok := func(key string) bool {
 		for _, forbiddenKey := range redacted {
 			if forbiddenKey == key {
@@ -124,7 +124,7 @@ func decoderHook(dc *mapstructure.DecoderConfig) {
 	dc.ErrorUnused = true
 }
 
-func configuration() (*Config, error) {
+func New() (*Config, error) {
 	var err error
 	var cfg Config
 

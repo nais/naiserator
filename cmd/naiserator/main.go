@@ -15,6 +15,7 @@ import (
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	log "github.com/sirupsen/logrus"
@@ -47,16 +48,16 @@ func run() error {
 
 	log.Info("Naiserator starting up")
 
-	config, err := configuration()
+	cfg, err := config.New()
 	if err != nil {
 		return err
 	}
 
-	printConfig([]string{})
+	config.Print([]string{})
 
-	if config.Kafka.Enabled {
+	if cfg.Kafka.Enabled {
 		kafkaLogger := log.New()
-		kafkaLogger.Level, err = log.ParseLevel(config.Kafka.LogVerbosity)
+		kafkaLogger.Level, err = log.ParseLevel(cfg.Kafka.LogVerbosity)
 		if err != nil {
 			log.Fatalf("while setting log level: %s", err)
 		}
@@ -64,7 +65,7 @@ func run() error {
 		kafkaLogger.SetFormatter(&formatter)
 		sarama.Logger = kafkaLogger
 
-		kafkaClient, err := kafka.NewClient(&config.Kafka)
+		kafkaClient, err := kafka.NewClient(&cfg.Kafka)
 		if err != nil {
 			log.Fatalf("unable to setup kafka: %s", err)
 		}
@@ -79,14 +80,14 @@ func run() error {
 
 	stopCh := StopCh()
 
-	kubeconfig, err := getK8sConfig()
+	kubeconfig, err := getK8sConfig(cfg.Kubeconfig)
 	if err != nil {
 		return fmt.Errorf("unable to initialize kubernetes config: %s", err)
 	}
 
 	// serve metrics
 	go metrics.Serve(
-		viper.GetString("bind"),
+		cfg.Bind,
 		"/metrics",
 		"/ready",
 		"/alive",
@@ -102,7 +103,7 @@ func run() error {
 		createApplicationClientset(kubeconfig),
 		applicationInformerFactory.Naiserator().V1alpha1().Applications(),
 		resourceOptions,
-		config.Kafka.Enabled)
+		cfg.Kafka.Enabled)
 
 	applicationInformerFactory.Start(stopCh)
 	n.Run(stopCh)
@@ -138,8 +139,8 @@ func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
 	return cs
 }
 
-func getK8sConfig() (*rest.Config, error) {
-	kubeconfig := viper.GetString("kubeconfig")
+func getK8sConfig(configPath string) (*rest.Config, error) {
+	kubeconfig := configPath
 	if kubeconfig == "" {
 		log.Infof("using in-cluster configuration")
 		return rest.InClusterConfig()

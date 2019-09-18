@@ -8,7 +8,7 @@ import (
 func FluentdSidecar() corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-fluentd",
-		Image:           viper.GetString("securelogs.images.fluentd"),
+		Image:           viper.GetString("securelogs.fluentd-image"),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		VolumeMounts: []corev1.VolumeMount{
 			{
