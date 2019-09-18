@@ -52,7 +52,10 @@ func run() error {
 		return err
 	}
 
-	config.Print([]string{})
+	config.Print([]string{
+		"kafka.sasl.username",
+		"kafka.sasl.password",
+	})
 
 	if cfg.Kafka.Enabled {
 		kafkaLogger := log.New()
