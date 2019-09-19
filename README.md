@@ -10,13 +10,23 @@ Naiserator supersedes [naisd](https://nais.io).
 When an `Application` resource is created in Kubernetes (see
 [example application](https://github.com/nais/doc/blob/master/content/deploy/examples/nais-manifest/nais.yaml)),
 Naiserator will generate several resources that work together to form a complete deployment:
-  * `Deployment` that runs a specified number of application instances,
-  * `Service` which points to the application endpoint,
-  * `Ingress` adding TLS termination and virtualhost support,
-  * `Horizontal pod autoscaler` for automatic application scaling,
-  * `Service account` for granting correct permissions to managed resources.
+  * `Deployment` that runs a specified number of application instances
+  * `Service` which points to the application endpoint
+  * `Horizontal pod autoscaler` for automatic application scaling
+  * `Service account` for granting correct permissions to managed resources
+
+Optionally, if enabled in the application manifest, the following resources:
+  * `Ingress` adding TLS termination and virtualhost support
+  * _Leader election_ sidecar which decides a cluster leader from available pods. This feature also creates a `Role` and `Role binding`.
+
+If Istio support is enabled with `--features.access-policy`:
+  * `NetworkPolicy`
+  * A set of `VirtualService`
+  * `ServiceRole` and `ServiceRoleBinding` resources
+  * `ServiceEntry`
 
 These resources will remain in Kubernetes until the `Application` resource is deleted.
+Any unneeded resources will be automatically deleted if disabled by feature flags or is lacking in a application manifest.
 
 ## `nais.io/Application` spec
 
