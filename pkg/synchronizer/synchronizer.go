@@ -50,7 +50,7 @@ func New(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, ap
 	applicationInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(newPod interface{}) {
-				naiserator.add(newPod)
+				naiserator.update(nil, newPod)
 			},
 			UpdateFunc: func(oldPod, newPod interface{}) {
 				naiserator.update(oldPod, newPod)
@@ -195,10 +195,6 @@ func (n *Naiserator) update(old, new interface{}) {
 	}
 
 	logger.Infof("%s: finished synchronizing", app.Name)
-}
-
-func (n *Naiserator) add(app interface{}) {
-	n.update(nil, app)
 }
 
 // ClusterOperations generates a set of functions that will perform the rollout in the cluster.
