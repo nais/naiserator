@@ -26,6 +26,7 @@ rules:
       - 'get'
       - 'create'
       - 'update'
+      - 'delete'
   - apiGroups:
       - '*'
     resources:
@@ -33,9 +34,3 @@ rules:
     verbs:
       - 'watch'
       - 'list'
-  - apiGroups:
-      - '*'
-    resources:
-      - 'ingresses'
-    verbs:
-      - 'delete'
