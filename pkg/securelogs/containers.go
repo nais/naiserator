@@ -1,15 +1,15 @@
 package securelogs
 
 import (
-	"os"
-
+	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 )
 
 func FluentdSidecar() corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-fluentd",
-		Image:           os.Getenv("NAIS_SECURELOGS_FLUENTDIMAGE"),
+		Image:           viper.GetString(config.SecurelogsFluentdImage),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		VolumeMounts: []corev1.VolumeMount{
 			{
@@ -68,7 +68,7 @@ func FluentdSidecar() corev1.Container {
 func ConfigmapReloadSidecar() corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-configmap-reload",
-		Image:           os.Getenv("NAIS_SECURELOGS_CONFIGMAPRELOADIMAGE"),
+		Image:           viper.GetString(config.SecurelogsConfigMapReloadImage),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Args: []string{
 			"--volume-dir=/config",

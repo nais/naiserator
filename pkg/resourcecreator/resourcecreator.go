@@ -8,24 +8,37 @@ import (
 	"fmt"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Create takes an Application resource and returns a slice of Kubernetes resources.
-func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.Object, error) {
+// Create takes an Application resource and returns a slice of Kubernetes resources
+// along with information about what to do with these resources.
+func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOperations, error) {
+	var operation Operation
+
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	objects := []runtime.Object{
-		Service(app),
-		ServiceAccount(app),
-		HorizontalPodAutoscaler(app),
+	objects := ResourceOperations{
+		{Service(app), OperationCreateOrUpdate},
+		{ServiceAccount(app), OperationCreateOrUpdate},
+		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
+	}
+
+	leRole := LeaderElectionRole(app)
+	leRoleBinding := LeaderElectionRoleBinding(app)
+
+	if app.Spec.LeaderElection {
+		objects = append(objects, ResourceOperation{leRole, OperationCreateOrUpdate})
+		objects = append(objects, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
+	} else {
+		objects = append(objects, ResourceOperation{leRole, OperationDeleteIfExists})
+		objects = append(objects, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
 	if resourceOptions.AccessPolicy {
-		objects = append(objects, NetworkPolicy(app))
+		objects = append(objects, ResourceOperation{NetworkPolicy(app), OperationCreateOrUpdate})
 
 		vses, err := VirtualServices(app)
 
@@ -34,32 +47,32 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		}
 
 		for _, vs := range vses {
-			objects = append(objects, vs)
+			objects = append(objects, ResourceOperation{vs, OperationCreateOrUpdate})
 		}
 
 		serviceRole := ServiceRole(app)
 		if serviceRole != nil {
-			objects = append(objects, serviceRole)
+			objects = append(objects, ResourceOperation{serviceRole, OperationCreateOrUpdate})
 		}
 
 		serviceRoleBinding := ServiceRoleBinding(app)
 		if serviceRoleBinding != nil {
-			objects = append(objects, serviceRoleBinding)
+			objects = append(objects, ResourceOperation{serviceRoleBinding, OperationCreateOrUpdate})
 		}
 
 		serviceRolePrometheus := ServiceRolePrometheus(app)
 		if serviceRolePrometheus != nil {
-			objects = append(objects, serviceRolePrometheus)
+			objects = append(objects, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
 		}
 
 		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
 		if serviceRoleBindingPrometheus != nil {
-			objects = append(objects, serviceRoleBindingPrometheus)
+			objects = append(objects, ResourceOperation{serviceRoleBindingPrometheus, OperationCreateOrUpdate})
 		}
 
 		serviceEntry := ServiceEntry(app)
 		if serviceEntry != nil {
-			objects = append(objects, serviceEntry)
+			objects = append(objects, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
 		}
 
 	} else {
@@ -68,17 +81,22 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) ([]runtime.O
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingress: %s", err)
 		}
-		if ingress != nil {
-			// the application might have no ingresses, in which case nil will be returned.
-			objects = append(objects, ingress)
+
+		// Kubernetes doesn't support ingress resources without any rules. This means we must
+		// delete the old resource if it exists.
+		operation = OperationCreateOrUpdate
+		if len(app.Spec.Ingresses) == 0 {
+			operation = OperationDeleteIfExists
 		}
+
+		objects = append(objects, ResourceOperation{ingress, operation})
 	}
 
 	deployment, err := Deployment(app, resourceOptions)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	objects = append(objects, deployment)
+	objects = append(objects, ResourceOperation{deployment, OperationCreateOrUpdate})
 
 	return objects, nil
 }

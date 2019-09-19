@@ -14,7 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 type realObjects struct {
@@ -27,11 +27,13 @@ type realObjects struct {
 	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
 	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
 	virtualServices    []*networking_istio_io_v1alpha3.VirtualService
+	role               *rbacv1.Role
+	rolebinding        *rbacv1.RoleBinding
 }
 
-func getRealObjects(resources []runtime.Object) (o realObjects) {
+func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
 	for _, r := range resources {
-		switch v := r.(type) {
+		switch v := r.Resource.(type) {
 		case *v1.Deployment:
 			o.deployment = v
 		case *corev1.Service:
@@ -50,6 +52,10 @@ func getRealObjects(resources []runtime.Object) (o realObjects) {
 			o.serviceRoleBinding = v
 		case *networking_istio_io_v1alpha3.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)
+		case *rbacv1.Role:
+			o.role = v
+		case *rbacv1.RoleBinding:
+			o.rolebinding = v
 		}
 	}
 	return
@@ -99,12 +105,16 @@ func TestCreate(t *testing.T) {
 		resources, err := resourcecreator.Create(app, opts)
 		assert.NoError(t, err)
 
-		objects := getRealObjects(resources)
+		objects := getRealObjects(resources.Extract(resourcecreator.OperationCreateOrUpdate))
 		assert.NotNil(t, objects.hpa)
 		assert.NotNil(t, objects.service)
 		assert.NotNil(t, objects.serviceAccount)
 		assert.NotNil(t, objects.deployment)
 		assert.Nil(t, objects.ingress)
+
+		// Test that the Ingress is deleted
+		objects = getRealObjects(resources.Extract(resourcecreator.OperationDeleteIfExists))
+		assert.NotNil(t, objects.ingress)
 	})
 
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {
@@ -184,5 +194,22 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.serviceRoleBinding)
 		assert.NotNil(t, objects.serviceRole)
 		assert.NotNil(t, objects.networkPolicy)
+	})
+
+	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.LeaderElection = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.role)
+		assert.Equal(t, app.Name, objects.role.Name)
+		assert.NotNil(t, objects.rolebinding)
+		assert.Equal(t, app.Name, objects.rolebinding.Name)
 	})
 }

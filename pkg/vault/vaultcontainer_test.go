@@ -1,11 +1,11 @@
 package vault_test
 
 import (
-	"os"
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/spf13/viper"
 
 	"github.com/nais/naiserator/pkg/test"
 	"github.com/nais/naiserator/pkg/vault"
@@ -13,24 +13,15 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-var envVars = map[string]string{
-	vault.EnvVaultAuthPath:      "authpath",
-	vault.EnvInitContainerImage: "image",
-	vault.EnvVaultAddr:          "adr",
-}
-
 func TestFeatureFlagging(t *testing.T) {
 	t.Run("Vault should by default be disabled", func(t *testing.T) {
+		viper.Reset()
 		assert.False(t, vault.Enabled())
 	})
 
 	t.Run("Feature flag is configured through env variables", func(t *testing.T) {
-		os.Setenv(vault.EnvVaultEnabled, "true")
-
+		viper.Set("features.vault", true)
 		assert.True(t, vault.Enabled())
-
-		os.Unsetenv(vault.EnvVaultEnabled)
-
 	})
 }
 
@@ -39,7 +30,13 @@ func TestNewInitializer(t *testing.T) {
 	var i vault.Initializer
 	const appName = "app"
 
-	t.Run("Initializer mutates podspec correctly", test.EnvWrapper(envVars, func(t *testing.T) {
+	viper.Reset()
+	viper.Set("features.vault", true)
+	viper.Set("vault.address", "adr")
+	viper.Set("vault.auth-path", "authpath")
+	viper.Set("vault.init-container-image", "img")
+
+	t.Run("Initializer mutates podspec correctly", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Name = appName
 		app.Namespace = "namespace"
@@ -90,14 +87,14 @@ func TestNewInitializer(t *testing.T) {
 
 		// Verify that both vault init container has correct configuration
 		for i := range paths {
-			assert.Equal(t, envVars[vault.EnvInitContainerImage], mutatedPodSpec.InitContainers[i].Image)
-			assert.Equal(t, envVars[vault.EnvVaultAddr], test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_VAULT_ADDR"))
-			assert.Equal(t, envVars[vault.EnvVaultAuthPath], test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_AUTH_PATH"))
+			assert.Equal(t, "img", mutatedPodSpec.InitContainers[i].Image)
+			assert.Equal(t, "adr", test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_VAULT_ADDR"))
+			assert.Equal(t, "authpath", test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_AUTH_PATH"))
 			assert.Equal(t, appName, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_VAULT_ROLE"))
 			assert.Equal(t, paths[i].KvPath, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_KV_PATH"))
 			assert.Equal(t, paths[i].MountPath, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_SECRET_DEST_PATH"))
 			assert.Equal(t, paths[i].MountPath, mutatedPodSpec.InitContainers[i].VolumeMounts[0].MountPath)
 		}
 
-	}))
+	})
 }

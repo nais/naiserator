@@ -10,6 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +22,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
+	typed_rbac_v1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
 	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
@@ -51,7 +54,7 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 
 {{end}}
 
-func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrUpdate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
@@ -64,6 +67,46 @@ func Updater(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Client
 			return {{.Name}}(c, nil, new)
 		}
 		return {{.Name}}(c, old, new)
+	{{end}}
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
+func CreateOrRecreate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+	{{range .}}
+		case {{.Type}}:
+		c := {{.Client}}(new.Namespace)
+		return func() error {
+            log.Infof("pre-deleting {{ .Type }} for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+            log.Infof("creating new {{ .Type }} for %s", new.Name)
+            _, err = c.Create(new)
+            return err
+		}
+	{{end}}
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
+func DeleteIfExists(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+	{{range .}}
+		case {{.Type}}:
+		c := {{.Client}}(new.Namespace)
+		return func() error {
+            log.Infof("deleting {{ .Type }} for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
 	{{end}}
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
