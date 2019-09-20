@@ -29,5 +29,6 @@ rules:
       - 'create'
       - 'update'
       - 'delete'
+      - 'patch'
       - 'list'
       - 'watch'
