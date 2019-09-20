@@ -24,6 +24,7 @@ require (
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/procfs v0.0.0-20190403104016-ea9eea638872 // indirect
+	github.com/sebdah/goldie v0.0.0-20190531093107-d313ffb52c77
 	github.com/sirupsen/logrus v1.4.1
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
