@@ -9,6 +9,7 @@ import (
 	hash "github.com/mitchellh/hashstructure"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -265,6 +266,16 @@ func (in Application) Hash() (string, error) {
 
 	h, err := hash.Hash(relevantValues, nil)
 	return strconv.FormatUint(h, 10), err
+}
+
+func (in *Application) LogFields() log.Fields {
+	return log.Fields{
+		"namespace":       in.GetNamespace(),
+		"apiversion":      in.APIVersion,
+		"resourceversion": in.GetResourceVersion(),
+		"application":     in.GetName(),
+		"correlation-id":  in.Status.CorrelationID,
+	}
 }
 
 func (in Application) Cluster() string {

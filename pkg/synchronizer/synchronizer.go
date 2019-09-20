@@ -30,6 +30,7 @@ const (
 
 // Naiserator is a singleton that holds Kubernetes client instances.
 type Naiserator struct {
+	workQueue                 chan v1alpha1.Application
 	ClientSet                 kubernetes.Interface
 	KafkaEnabled              bool
 	AppClient                 *clientV1Alpha1.Clientset
@@ -40,6 +41,7 @@ type Naiserator struct {
 
 func New(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Naiserator {
 	naiserator := Naiserator{
+		workQueue:                 make(chan v1alpha1.Application, 1024),
 		ClientSet:                 clientSet,
 		AppClient:                 appClient,
 		ApplicationInformer:       applicationInformer,
@@ -50,10 +52,10 @@ func New(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, ap
 	applicationInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(newPod interface{}) {
-				naiserator.update(nil, newPod)
+				naiserator.watchCallback(newPod)
 			},
 			UpdateFunc: func(oldPod, newPod interface{}) {
-				naiserator.update(oldPod, newPod)
+				naiserator.watchCallback(newPod)
 			},
 		})
 
@@ -82,119 +84,166 @@ func (n *Naiserator) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, er
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
 func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Application) {
-	log.Error(err)
+	log.WithFields(app.LogFields()).Error(err)
 	_, err = n.reportEvent(app.CreateEvent(source, err.Error(), "Warning"))
 	if err != nil {
 		log.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
 }
 
-func (n *Naiserator) synchronize(logger *log.Entry, app *v1alpha1.Application) error {
-	if err := v1alpha1.ApplyDefaults(app); err != nil {
-		return fmt.Errorf("while applying default values to application spec: %s", err)
-	}
-
-	hash, err := app.Hash()
-	if err != nil {
-		return fmt.Errorf("while hashing application spec: %s", err)
-	}
-	if app.LastSyncedHash() == hash {
-		logger.Infof("%s: no changes", app.Name)
-		return nil
-	}
-
-	deploymentID, err := uuid.NewRandom()
-	if err != nil {
-		return fmt.Errorf("while generating a deployment UUID: %s", err)
-	}
-	app.SetCorrelationID(deploymentID.String())
-	logger = logger.WithField("correlation-id", deploymentID.String())
-
-	rollout := Rollout{
-		App:             *app,
-		ResourceOptions: n.ResourceOptions,
-	}
-
-	deploymentResource, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return fmt.Errorf("while querying existing deployment: %s", err)
-	} else {
-		rollout.SetCurrentDeployment(deploymentResource)
-	}
-
-	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
-	if err != nil {
-		return fmt.Errorf("while creating resources: %s", err)
-	}
-
-	operations := n.ClusterOperations(rollout)
-
-	for _, fn := range operations {
-		if err := fn(); err != nil {
-			return fmt.Errorf("while persisting resources to Kubernetes: %s", err)
+// Process work queue
+func (n *Naiserator) Main() {
+	for app := range n.workQueue {
+		rollout, err := n.Prepare(app)
+		if err != nil {
+			n.reportError("prepare", err, &app)
+			continue
 		}
-		metrics.ResourcesGenerated.Inc()
-	}
 
-	// At this point, the deployment is complete. All that is left is to register the application hash and cache it,
-	// so that the deployment does not happen again. Thus, we update the metrics before the end of the function.
-	metrics.Deployments.Inc()
+		if rollout == nil {
+			log.Debugf("%s: no changes")
+			continue
+		}
 
-	if n.KafkaEnabled {
-		// Broadcast a message on Kafka that the deployment is initialized.
-		event := generator.NewDeploymentEvent(*app)
-		kafka.Events <- kafka.Message{Event: event, Logger: *logger}
+		logger := *log.WithFields(app.LogFields())
+		logger.Infof("starting synchronization")
 
+		err = n.Sync(*rollout)
+		if err != nil {
+			n.reportError("synchronize", err, &app)
+			continue
+		}
+
+		// Synchronization OK
+		metrics.ApplicationsProcessed.Inc()
+		metrics.Deployments.Inc()
+
+		_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
+		if err != nil {
+			log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
+		}
+
+		// Create new deployment event
+		event := generator.NewDeploymentEvent(app)
 		app.SetDeploymentRolloutStatus(event.RolloutStatus)
-	}
 
-	app.SetLastSyncedHash(hash)
-	logger.Infof("%s: setting new hash %s", app.Name, hash)
+		err = n.UpdateStatus(app, *rollout)
+		if err != nil {
+			n.reportError("main", err, &app)
+		}
 
-	app.NilFix()
-	_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
-	if err != nil {
-		return fmt.Errorf("while storing application sync metadata: %s", err)
-	}
-
-	if n.KafkaEnabled {
 		// Monitor completion timeline over a designated period
-		go n.MonitorRollout(*app, *logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
-	}
+		if n.KafkaEnabled {
+			kafka.Events <- kafka.Message{Event: event, Logger: logger}
+			go n.MonitorRollout(app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
+		}
 
-	_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
+		logger.Infof("successful synchronization")
+	}
+}
+
+// Update application status and persist to cluster
+func (n *Naiserator) UpdateStatus(app v1alpha1.Application, rollout Rollout) error {
+	app.SetCorrelationID(rollout.App.Status.CorrelationID)
+	app.SetLastSyncedHash(rollout.App.LastSyncedHash())
+	// app.NilFix()  // FIXME unneeded?????
+
+	_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(&app)
 	if err != nil {
-		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
+		return fmt.Errorf("persist application: %s", err)
 	}
 
 	return nil
 }
 
-func (n *Naiserator) update(old, new interface{}) {
+func (n *Naiserator) Sync(rollout Rollout) error {
+
+	commits := n.ClusterOperations(rollout)
+
+	for _, fn := range commits {
+		if err := fn(); err != nil {
+			metrics.ApplicationsFailed.Inc()
+			return fmt.Errorf("persisting resource to Kubernetes: %s", err)
+		}
+		metrics.ResourcesGenerated.Inc()
+	}
+
+	return nil
+}
+
+// Prepare converts a NAIS application spec into a Rollout object.
+// This is a read-only operation
+// The Rollout object contains callback functions that commits changes in the cluster.
+func (n *Naiserator) Prepare(app v1alpha1.Application) (*Rollout, error) {
+	if err := v1alpha1.ApplyDefaults(&app); err != nil {
+		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
+	}
+
+	hash, err := app.Hash()
+	if err != nil {
+		return nil, fmt.Errorf("BUG: create application hash: %s", err)
+	}
+
+	// Skip processing if application didn't change since last synchronization.
+	if app.LastSyncedHash() == hash {
+		return nil, nil
+	}
+	app.SetLastSyncedHash(hash)
+
+	deploymentID, err := uuid.NewRandom()
+	if err != nil {
+		return nil, fmt.Errorf("BUG: generate deployment correlation ID: %s", err)
+	}
+	app.SetCorrelationID(deploymentID.String())
+
+	// Make a query to Kubernetes for this application's previous deployment.
+	// The number of replicas is significant, so we need to carry it over to match
+	// this next rollout.
+	previousDeployment, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, fmt.Errorf("query existing deployment: %s", err)
+	}
+
+	rollout := &Rollout{
+		App:             &app,
+		ResourceOptions: n.ResourceOptions,
+	}
+	rollout.SetCurrentDeployment(previousDeployment)
+	rollout.ResourceOperations, err = resourcecreator.Create(&app, rollout.ResourceOptions)
+	if err != nil {
+		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
+	}
+
+	return rollout, nil
+}
+
+func (n *Naiserator) Enqueue(app *v1alpha1.Application) {
+	// Create a copy of the application with defaults applied.
+	// This copy is used as a basis for creating resources.
+	// The original application resource must be persisted back with the rollout status,
+	// and preserving it in its original state without defaults is preferred.
+	n.workQueue <- *app.DeepCopy()
+}
+
+// This function is passed to the Application resource watcher.
+// It will be called once for every application resource, which
+// must be type cast from interface{} to Application.
+func (n *Naiserator) watchCallback(unstructured interface{}) {
 	var app *v1alpha1.Application
-	if new != nil {
-		app = new.(*v1alpha1.Application)
+	var ok bool
+
+	if unstructured == nil {
+		return
 	}
 
-	logger := log.WithFields(log.Fields{
-		"namespace":       app.Namespace,
-		"apiversion":      app.APIVersion,
-		"resourceversion": app.ResourceVersion,
-		"application":     app.Name,
-	})
-
-	metrics.ApplicationsProcessed.Inc()
-	logger.Infof("%s: synchronizing application", app.Name)
-
-	if err := n.synchronize(logger, app); err != nil {
-		metrics.ApplicationsFailed.Inc()
-		logger.Errorf("%s: error %s", app.Name, err)
-		n.reportError("synchronize", err, app)
-	} else {
-		logger.Infof("%s: synchronized successfully", app.Name)
+	app, ok = unstructured.(*v1alpha1.Application)
+	if !ok {
+		// type cast failed; discard
+		log.Errorf("watchCallback encountered invalid Application resource of type %T", unstructured)
+		return
 	}
 
-	logger.Infof("%s: finished synchronizing", app.Name)
+	n.Enqueue(app)
 }
 
 // ClusterOperations generates a set of functions that will perform the rollout in the cluster.
