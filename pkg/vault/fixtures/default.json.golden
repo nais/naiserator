@@ -1,0 +1,108 @@
+{
+  "volumes": [
+    {
+      "name": "vault-secrets-0",
+      "emptyDir": {
+        "medium": "Memory"
+      }
+    },
+    {
+      "name": "vault-secrets-1",
+      "emptyDir": {
+        "medium": "Memory"
+      }
+    }
+  ],
+  "initContainers": [
+    {
+      "name": "vks-0",
+      "image": "img",
+      "env": [
+        {
+          "name": "VKS_VAULT_ADDR",
+          "value": "adr"
+        },
+        {
+          "name": "VKS_AUTH_PATH",
+          "value": "authpath"
+        },
+        {
+          "name": "VKS_KV_PATH",
+          "value": "/first/kv/path"
+        },
+        {
+          "name": "VKS_VAULT_ROLE",
+          "value": "app"
+        },
+        {
+          "name": "VKS_SECRET_DEST_PATH",
+          "value": "/first/mount/path"
+        },
+        {
+          "name": "VKS_IS_SIDECAR",
+          "value": "false"
+        }
+      ],
+      "resources": {},
+      "volumeMounts": [
+        {
+          "name": "vault-secrets-0",
+          "mountPath": "/first/mount/path"
+        }
+      ]
+    },
+    {
+      "name": "vks-1",
+      "image": "img",
+      "env": [
+        {
+          "name": "VKS_VAULT_ADDR",
+          "value": "adr"
+        },
+        {
+          "name": "VKS_AUTH_PATH",
+          "value": "authpath"
+        },
+        {
+          "name": "VKS_KV_PATH",
+          "value": "/second/kv/path"
+        },
+        {
+          "name": "VKS_VAULT_ROLE",
+          "value": "app"
+        },
+        {
+          "name": "VKS_SECRET_DEST_PATH",
+          "value": "/second/mount/path"
+        },
+        {
+          "name": "VKS_IS_SIDECAR",
+          "value": "false"
+        }
+      ],
+      "resources": {},
+      "volumeMounts": [
+        {
+          "name": "vault-secrets-1",
+          "mountPath": "/second/mount/path"
+        }
+      ]
+    }
+  ],
+  "containers": [
+    {
+      "name": "app",
+      "resources": {},
+      "volumeMounts": [
+        {
+          "name": "vault-secrets-0",
+          "mountPath": "/first/mount/path"
+        },
+        {
+          "name": "vault-secrets-1",
+          "mountPath": "/second/mount/path"
+        }
+      ]
+    }
+  ]
+}
