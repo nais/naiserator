@@ -271,7 +271,6 @@ func (in Application) Hash() (string, error) {
 func (in *Application) LogFields() log.Fields {
 	return log.Fields{
 		"namespace":       in.GetNamespace(),
-		"apiversion":      in.APIVersion,
 		"resourceversion": in.GetResourceVersion(),
 		"application":     in.GetName(),
 		"correlation-id":  in.Status.CorrelationID,

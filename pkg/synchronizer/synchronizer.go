@@ -84,61 +84,74 @@ func (n *Naiserator) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, er
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
 func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Application) {
-	log.WithFields(app.LogFields()).Error(err)
+	logger := log.WithFields(app.LogFields())
+	logger.Error(err)
 	_, err = n.reportEvent(app.CreateEvent(source, err.Error(), "Warning"))
 	if err != nil {
-		log.Errorf("While creating an event for this error, another error occurred: %s", err)
+		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
+	}
+}
+
+// Process work queue
+func (n *Naiserator) Process(app v1alpha1.Application) {
+	rollout, err := n.Prepare(app)
+	if err != nil {
+		n.reportError("prepare", err, &app)
+		return
+	}
+
+	logger := *log.WithFields(app.LogFields())
+
+	if rollout == nil {
+		logger.Debugf("no changes")
+		return
+	}
+
+	logger = *log.WithFields(rollout.App.LogFields())
+	logger.Debugf("starting synchronization")
+
+	err = n.Sync(*rollout)
+	if err != nil {
+		n.reportError("synchronize", err, &app)
+		return
+	}
+
+	// Synchronization OK
+	logger.Debugf("successful synchronization")
+	metrics.ApplicationsProcessed.Inc()
+	metrics.Deployments.Inc()
+
+	_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
+	if err != nil {
+		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
+	}
+
+	// Create new deployment event
+	event := generator.NewDeploymentEvent(app)
+	app.SetDeploymentRolloutStatus(event.RolloutStatus)
+
+	// Update Application resource with deployment event
+	err = n.UpdateStatus(app, *rollout)
+	if err != nil {
+		n.reportError("main", err, &app)
+	} else {
+		logger.Debugf("persisted Application status")
+	}
+
+	// If Kafka is enabled, we can send out a signal when the deployment is complete.
+	// To do this we need to monitor the rollout status over a designated period.
+	if n.KafkaEnabled {
+		kafka.Events <- kafka.Message{Event: event, Logger: logger}
+		go n.MonitorRollout(app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
 }
 
 // Process work queue
 func (n *Naiserator) Main() {
+	log.Info("Main loop consuming from work queue")
+
 	for app := range n.workQueue {
-		rollout, err := n.Prepare(app)
-		if err != nil {
-			n.reportError("prepare", err, &app)
-			continue
-		}
-
-		if rollout == nil {
-			log.Debugf("%s: no changes")
-			continue
-		}
-
-		logger := *log.WithFields(app.LogFields())
-		logger.Infof("starting synchronization")
-
-		err = n.Sync(*rollout)
-		if err != nil {
-			n.reportError("synchronize", err, &app)
-			continue
-		}
-
-		// Synchronization OK
-		metrics.ApplicationsProcessed.Inc()
-		metrics.Deployments.Inc()
-
-		_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
-		if err != nil {
-			log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
-		}
-
-		// Create new deployment event
-		event := generator.NewDeploymentEvent(app)
-		app.SetDeploymentRolloutStatus(event.RolloutStatus)
-
-		err = n.UpdateStatus(app, *rollout)
-		if err != nil {
-			n.reportError("main", err, &app)
-		}
-
-		// Monitor completion timeline over a designated period
-		if n.KafkaEnabled {
-			kafka.Events <- kafka.Message{Event: event, Logger: logger}
-			go n.MonitorRollout(app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
-		}
-
-		logger.Infof("successful synchronization")
+		n.Process(app)
 	}
 }
 
@@ -269,13 +282,15 @@ func (n *Naiserator) ClusterOperations(rollout Rollout) []func() error {
 }
 
 func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
+	logger.Debugf("monitoring rollout status")
+
 	for {
 		select {
 		case <-time.After(frequency):
 			deploy, err := n.ClientSet.AppsV1().Deployments(app.Namespace).Get(app.Name, v1.GetOptions{})
 			if err != nil {
 				if !errors.IsNotFound(err) {
-					log.Errorf("%s: While trying to get Deployment for app: %s", app.Name, err)
+					logger.Errorf("monitor rollout: failed to query Deployment: %s", err)
 				}
 				continue
 			}
@@ -289,14 +304,14 @@ func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, 
 				var updatedApp *v1alpha1.Application
 				updatedApp, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
 				if err != nil {
-					logger.Errorf("while trying to get newest version of Application %s: %s", app.Name, err)
+					logger.Errorf("monitor rollout: get newest version of Application: %s", err)
 					return
 				}
 
 				updatedApp.SetDeploymentRolloutStatus(event.RolloutStatus)
 				_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(updatedApp)
 				if err != nil {
-					logger.Errorf("while storing application sync status: %s", err)
+					logger.Errorf("monitor rollout: store application sync status: %s", err)
 				}
 				return
 			}

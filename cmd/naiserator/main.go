@@ -44,6 +44,7 @@ func run() error {
 		TimestampFormat: time.RFC3339Nano,
 	}
 	log.SetFormatter(&formatter)
+	log.SetLevel(log.DebugLevel)
 
 	log.Info("Naiserator starting up")
 
@@ -108,6 +109,7 @@ func run() error {
 		cfg.Kafka.Enabled)
 
 	applicationInformerFactory.Start(stopCh)
+	go n.Main()
 	n.Run(stopCh)
 	<-stopCh
 
