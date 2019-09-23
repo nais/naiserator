@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
-	informers "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
@@ -20,7 +19,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 )
 
 const (
@@ -28,42 +26,30 @@ const (
 	DeploymentMonitorTimeout   = time.Minute * 5
 )
 
-// Naiserator is a singleton that holds Kubernetes client instances.
-type Naiserator struct {
-	workQueue                 chan v1alpha1.Application
-	ClientSet                 kubernetes.Interface
-	KafkaEnabled              bool
-	AppClient                 *clientV1Alpha1.Clientset
-	ApplicationInformer       informers.ApplicationInformer
-	ApplicationInformerSynced cache.InformerSynced
-	ResourceOptions           resourcecreator.ResourceOptions
+// Synchronizer creates child resources from Application resources in the cluster.
+// If the child resources does not match the Application spec, the resources are updated.
+type Synchronizer struct {
+	workQueue       chan v1alpha1.Application
+	ClientSet       kubernetes.Interface
+	KafkaEnabled    bool
+	AppClient       *clientV1Alpha1.Clientset
+	ResourceOptions resourcecreator.ResourceOptions
 }
 
-func New(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, applicationInformer informers.ApplicationInformer, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Naiserator {
-	naiserator := Naiserator{
-		workQueue:                 make(chan v1alpha1.Application, 1024),
-		ClientSet:                 clientSet,
-		AppClient:                 appClient,
-		ApplicationInformer:       applicationInformer,
-		ApplicationInformerSynced: applicationInformer.Informer().HasSynced,
-		KafkaEnabled:              kafkaEnabled,
-		ResourceOptions:           resourceOptions}
-
-	applicationInformer.Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc: func(newPod interface{}) {
-				naiserator.watchCallback(newPod)
-			},
-			UpdateFunc: func(oldPod, newPod interface{}) {
-				naiserator.watchCallback(newPod)
-			},
-		})
+func New(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Synchronizer {
+	naiserator := Synchronizer{
+		workQueue:       make(chan v1alpha1.Application, 1024),
+		ClientSet:       clientSet,
+		AppClient:       appClient,
+		KafkaEnabled:    kafkaEnabled,
+		ResourceOptions: resourceOptions,
+	}
 
 	return &naiserator
 }
 
 // Creates a Kubernetes event.
-func (n *Naiserator) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, error) {
+func (n *Synchronizer) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, error) {
 	events, err := n.ClientSet.CoreV1().Events(reportedEvent.Namespace).List(v1.ListOptions{
 		FieldSelector: fmt.Sprintf("involvedObject.name=%s,involvedObject.uid=%s", reportedEvent.InvolvedObject.Name, reportedEvent.InvolvedObject.UID),
 	})
@@ -83,7 +69,7 @@ func (n *Naiserator) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, er
 }
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
-func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Application) {
+func (n *Synchronizer) reportError(source string, err error, app *v1alpha1.Application) {
 	logger := log.WithFields(app.LogFields())
 	logger.Error(err)
 	_, err = n.reportEvent(app.CreateEvent(source, err.Error(), "Warning"))
@@ -93,7 +79,7 @@ func (n *Naiserator) reportError(source string, err error, app *v1alpha1.Applica
 }
 
 // Process work queue
-func (n *Naiserator) Process(app v1alpha1.Application) {
+func (n *Synchronizer) Process(app v1alpha1.Application) {
 	rollout, err := n.Prepare(app)
 	if err != nil {
 		n.reportError("prepare", err, &app)
@@ -147,7 +133,7 @@ func (n *Naiserator) Process(app v1alpha1.Application) {
 }
 
 // Process work queue
-func (n *Naiserator) Main() {
+func (n *Synchronizer) Main() {
 	log.Info("Main loop consuming from work queue")
 
 	for app := range n.workQueue {
@@ -156,7 +142,7 @@ func (n *Naiserator) Main() {
 }
 
 // Update application status and persist to cluster
-func (n *Naiserator) UpdateStatus(app v1alpha1.Application, rollout Rollout) error {
+func (n *Synchronizer) UpdateStatus(app v1alpha1.Application, rollout Rollout) error {
 	app.SetCorrelationID(rollout.App.Status.CorrelationID)
 	app.SetLastSyncedHash(rollout.App.LastSyncedHash())
 	// app.NilFix()  // FIXME unneeded?????
@@ -169,7 +155,7 @@ func (n *Naiserator) UpdateStatus(app v1alpha1.Application, rollout Rollout) err
 	return nil
 }
 
-func (n *Naiserator) Sync(rollout Rollout) error {
+func (n *Synchronizer) Sync(rollout Rollout) error {
 
 	commits := n.ClusterOperations(rollout)
 
@@ -187,7 +173,7 @@ func (n *Naiserator) Sync(rollout Rollout) error {
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
-func (n *Naiserator) Prepare(app v1alpha1.Application) (*Rollout, error) {
+func (n *Synchronizer) Prepare(app v1alpha1.Application) (*Rollout, error) {
 	if err := v1alpha1.ApplyDefaults(&app); err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
@@ -230,7 +216,7 @@ func (n *Naiserator) Prepare(app v1alpha1.Application) (*Rollout, error) {
 	return rollout, nil
 }
 
-func (n *Naiserator) Enqueue(app *v1alpha1.Application) {
+func (n *Synchronizer) Enqueue(app *v1alpha1.Application) {
 	// Create a copy of the application with defaults applied.
 	// This copy is used as a basis for creating resources.
 	// The original application resource must be persisted back with the rollout status,
@@ -238,29 +224,8 @@ func (n *Naiserator) Enqueue(app *v1alpha1.Application) {
 	n.workQueue <- *app.DeepCopy()
 }
 
-// This function is passed to the Application resource watcher.
-// It will be called once for every application resource, which
-// must be type cast from interface{} to Application.
-func (n *Naiserator) watchCallback(unstructured interface{}) {
-	var app *v1alpha1.Application
-	var ok bool
-
-	if unstructured == nil {
-		return
-	}
-
-	app, ok = unstructured.(*v1alpha1.Application)
-	if !ok {
-		// type cast failed; discard
-		log.Errorf("watchCallback encountered invalid Application resource of type %T", unstructured)
-		return
-	}
-
-	n.Enqueue(app)
-}
-
 // ClusterOperations generates a set of functions that will perform the rollout in the cluster.
-func (n *Naiserator) ClusterOperations(rollout Rollout) []func() error {
+func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 	var fn func() error
 
 	funcs := make([]func() error, 0)
@@ -281,7 +246,7 @@ func (n *Naiserator) ClusterOperations(rollout Rollout) []func() error {
 	return funcs
 }
 
-func (n *Naiserator) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
+func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
 	logger.Debugf("monitoring rollout status")
 
 	for {
@@ -331,14 +296,6 @@ func deploymentComplete(deployment *apps.Deployment, newStatus *apps.DeploymentS
 		newStatus.Replicas == *(deployment.Spec.Replicas) &&
 		newStatus.AvailableReplicas == *(deployment.Spec.Replicas) &&
 		newStatus.ObservedGeneration >= deployment.Generation
-}
-
-func (n *Naiserator) Run(stop <-chan struct{}) {
-	log.Info("Starting application synchronization")
-	if !cache.WaitForCacheSync(stop, n.ApplicationInformerSynced) {
-		log.Error("timed out waiting for cache sync")
-		return
-	}
 }
 
 func max(a, b int32) int32 {

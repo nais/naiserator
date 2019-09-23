@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
+	"github.com/nais/naiserator/pkg/informer"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -34,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("Naiserator shutting down")
+	log.Info("Synchronizer shutting down")
 }
 
 func run() error {
@@ -46,7 +46,7 @@ func run() error {
 	log.SetFormatter(&formatter)
 	log.SetLevel(log.DebugLevel)
 
-	log.Info("Naiserator starting up")
+	log.Info("Synchronizer starting up")
 
 	cfg, err := config.New()
 	if err != nil {
@@ -101,17 +101,27 @@ func run() error {
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig)
-	n := synchronizer.New(
-		createGenericClientset(kubeconfig),
-		createApplicationClientset(kubeconfig),
-		applicationInformerFactory.Naiserator().V1alpha1().Applications(),
-		resourceOptions,
-		cfg.Kafka.Enabled)
+	applicationClientset := createApplicationClientset(kubeconfig)
+	genericClientset := createGenericClientset(kubeconfig)
 
-	applicationInformerFactory.Start(stopCh)
-	go n.Main()
-	n.Run(stopCh)
+	syncer := synchronizer.New(
+		genericClientset,
+		applicationClientset,
+		resourceOptions,
+		cfg.Kafka.Enabled,
+	)
+
+	inf := informer.New(syncer, applicationInformerFactory)
+
+	err = inf.Run()
+	if err != nil {
+		return fmt.Errorf("unable to start informer: %s", err)
+	}
+
+	go syncer.Main()
 	<-stopCh
+
+	inf.Stop()
 
 	return nil
 }
@@ -128,7 +138,7 @@ func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedI
 func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clientset {
 	clientSet, err := clientV1Alpha1.NewForConfig(kubeconfig)
 	if err != nil {
-		log.Fatalf("unable to create new clientset")
+		log.Fatalf("unable to create application clientset: %s", err)
 	}
 
 	return clientSet
@@ -137,7 +147,7 @@ func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clients
 func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
 	cs, err := kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
-		panic(err.Error())
+		log.Fatalf("unable to create generic clientset: %s", err)
 	}
 
 	return cs
@@ -166,22 +176,4 @@ func StopCh() (stopCh <-chan struct{}) {
 	}()
 
 	return stop
-}
-
-func ensureBool(str string) bool {
-	bool, err := strconv.ParseBool(str)
-
-	if err != nil {
-		log.Errorf("unable to parse boolean \"%s\", defaulting to false", str)
-	}
-
-	return bool
-}
-
-func getEnv(key string, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-
-	return fallback
 }
