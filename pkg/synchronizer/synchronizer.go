@@ -32,11 +32,11 @@ type Synchronizer struct {
 	workQueue       chan v1alpha1.Application
 	ClientSet       kubernetes.Interface
 	KafkaEnabled    bool
-	AppClient       *clientV1Alpha1.Clientset
+	AppClient       clientV1Alpha1.Interface
 	ResourceOptions resourcecreator.ResourceOptions
 }
 
-func New(clientSet kubernetes.Interface, appClient *clientV1Alpha1.Clientset, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Synchronizer {
+func New(clientSet kubernetes.Interface, appClient clientV1Alpha1.Interface, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Synchronizer {
 	naiserator := Synchronizer{
 		workQueue:       make(chan v1alpha1.Application, 1024),
 		ClientSet:       clientSet,

@@ -236,7 +236,7 @@ func RoleBinding(client typed_rbac_v1.RoleBindingInterface, old, new *rbacv1.Rol
 	}
 }
 
-func CreateOrUpdate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -376,7 +376,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient *clientV1Alpha1
 	}
 }
 
-func CreateOrRecreate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -540,7 +540,7 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient *clientV1Alph
 	}
 }
 
-func DeleteIfExists(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
