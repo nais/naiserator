@@ -30,7 +30,7 @@ Any unneeded resources will be automatically deleted if disabled by feature flag
 
 ## `nais.io/Application` spec
 
-The entire specification for the manifest is documented in our [nais.io/doc](https://github.com/nais/doc/blob/master/content/deploy/nais-manifest.md).
+The entire specification for the manifest is documented in our [nais.io/doc](https://doc.nais.io/in-depth/nais-manifest).
 
 ## Deployment
 
