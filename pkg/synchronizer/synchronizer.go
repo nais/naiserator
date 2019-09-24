@@ -145,7 +145,6 @@ func (n *Synchronizer) Main() {
 func (n *Synchronizer) UpdateStatus(app v1alpha1.Application, rollout Rollout) error {
 	app.SetCorrelationID(rollout.App.Status.CorrelationID)
 	app.SetLastSyncedHash(rollout.App.LastSyncedHash())
-	// app.NilFix()  // FIXME unneeded?????
 
 	_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(&app)
 	if err != nil {
