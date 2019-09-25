@@ -79,10 +79,10 @@ func (n *Synchronizer) reportError(source string, err error, app *v1alpha1.Appli
 }
 
 // Process work queue
-func (n *Synchronizer) Process(app v1alpha1.Application) {
+func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	rollout, err := n.Prepare(app)
 	if err != nil {
-		n.reportError("prepare", err, &app)
+		n.reportError("prepare", err, app)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (n *Synchronizer) Process(app v1alpha1.Application) {
 
 	err = n.Sync(*rollout)
 	if err != nil {
-		n.reportError("synchronize", err, &app)
+		n.reportError("synchronize", err, app)
 		return
 	}
 
@@ -113,13 +113,13 @@ func (n *Synchronizer) Process(app v1alpha1.Application) {
 	}
 
 	// Create new deployment event
-	event := generator.NewDeploymentEvent(app)
+	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus)
 
 	// Update Application resource with deployment event
 	err = n.UpdateStatus(app, *rollout)
 	if err != nil {
-		n.reportError("main", err, &app)
+		n.reportError("main", err, app)
 	} else {
 		logger.Debugf("persisted Application status")
 	}
@@ -128,7 +128,7 @@ func (n *Synchronizer) Process(app v1alpha1.Application) {
 	// To do this we need to monitor the rollout status over a designated period.
 	if n.KafkaEnabled {
 		kafka.Events <- kafka.Message{Event: event, Logger: logger}
-		go n.MonitorRollout(app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
+		go n.MonitorRollout(*app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
 }
 
@@ -137,16 +137,13 @@ func (n *Synchronizer) Main() {
 	log.Info("Main loop consuming from work queue")
 
 	for app := range n.workQueue {
-		n.Process(app)
+		n.Process(&app)
 	}
 }
 
 // Update application status and persist to cluster
-func (n *Synchronizer) UpdateStatus(app v1alpha1.Application, rollout Rollout) error {
-	app.SetCorrelationID(rollout.App.Status.CorrelationID)
-	app.SetLastSyncedHash(rollout.App.LastSyncedHash())
-
-	_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(&app)
+func (n *Synchronizer) UpdateStatus(app *v1alpha1.Application, rollout Rollout) error {
+	_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	if err != nil {
 		return fmt.Errorf("persist application: %s", err)
 	}
@@ -172,8 +169,8 @@ func (n *Synchronizer) Sync(rollout Rollout) error {
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
-func (n *Synchronizer) Prepare(app v1alpha1.Application) (*Rollout, error) {
-	if err := v1alpha1.ApplyDefaults(&app); err != nil {
+func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
+	if err := v1alpha1.ApplyDefaults(app); err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
 
@@ -203,11 +200,11 @@ func (n *Synchronizer) Prepare(app v1alpha1.Application) (*Rollout, error) {
 	}
 
 	rollout := &Rollout{
-		App:             &app,
+		App:             app,
 		ResourceOptions: n.ResourceOptions,
 	}
 	rollout.SetCurrentDeployment(previousDeployment)
-	rollout.ResourceOperations, err = resourcecreator.Create(&app, rollout.ResourceOptions)
+	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
 	}

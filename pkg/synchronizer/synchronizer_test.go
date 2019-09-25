@@ -74,7 +74,7 @@ func TestSynchronizer(t *testing.T) {
 
 	// Run synchronization processing.
 	// This will attempt to store numerous resources in Kubernetes.
-	syncer.Process(*app)
+	syncer.Process(app)
 
 	// Test that the Application was updated successfully after processing,
 	// and that the hash is present.
