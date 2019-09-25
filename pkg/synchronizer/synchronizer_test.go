@@ -3,7 +3,6 @@ package synchronizer_test
 import (
 	"testing"
 
-	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	nais_fake "github.com/nais/naiserator/pkg/client/clientset/versioned/fake"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
@@ -66,12 +65,6 @@ func TestSynchronizer(t *testing.T) {
 		t.Fatalf("BUG: error creating ingress for testing: %s", err)
 	}
 
-	// Create a hash from the persisted resource, having applied the default values
-	hashAppCopy := app.DeepCopy()
-	assert.NoError(t, v1alpha1.ApplyDefaults(hashAppCopy))
-	hash, err := hashAppCopy.Hash()
-	assert.NoError(t, err)
-
 	// Run synchronization processing.
 	// This will attempt to store numerous resources in Kubernetes.
 	syncer.Process(app)
@@ -81,7 +74,7 @@ func TestSynchronizer(t *testing.T) {
 	persistedApp, err := appClient.Naiserator().Applications(namespace).Get(name, metav1.GetOptions{})
 	assert.NotNil(t, persistedApp)
 	assert.NoError(t, err)
-	assert.Equalf(t, hash, persistedApp.LastSyncedHash(), "Application resource hash in Kubernetes doesn't match local version")
+	assert.Equalf(t, app.LastSyncedHash(), persistedApp.LastSyncedHash(), "Application resource hash in Kubernetes doesn't match local version")
 
 	// Test that a base resource set was created successfully
 	testResource(clientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{}))
