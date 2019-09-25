@@ -237,6 +237,8 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 			fn = updater.CreateOrRecreate(n.ClientSet, n.AppClient, rop.Resource)
 		case resourcecreator.OperationDeleteIfExists:
 			fn = updater.DeleteIfExists(n.ClientSet, n.AppClient, rop.Resource)
+		default:
+			log.Fatalf("BUG: no such operation %d", rop.Operation)
 		}
 
 		funcs = append(funcs, fn)
