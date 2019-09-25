@@ -27,7 +27,7 @@ If Istio support is enabled with `--features.access-policy`:
 These resources will remain in Kubernetes until the `Application` resource is deleted.
 Any unneeded resources will be automatically deleted if disabled by feature flags or is lacking in a application manifest.
 
-## `nais.io/Application` spec
+## Documentation
 
 The entire specification for the manifest is documented in our [doc.nais.io](https://doc.nais.io/in-depth/nais-manifest).
 
