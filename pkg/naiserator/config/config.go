@@ -3,6 +3,7 @@ package config
 import (
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/nais/naiserator/pkg/kafka"
 	log "github.com/sirupsen/logrus"
@@ -15,6 +16,10 @@ import (
 type Log struct {
 	Format string `json:"format"`
 	Level  string `json:"level"`
+}
+
+type Informer struct {
+	FullSyncInterval time.Duration `json:"full-sync-interval"`
 }
 
 type Features struct {
@@ -42,6 +47,7 @@ type Vault struct {
 
 type Config struct {
 	Bind        string       `json:"bind"`
+	Informer    Informer     `json:"informer"`
 	Kubeconfig  string       `json:"kubeconfig"`
 	ClusterName string       `json:"cluster-name"`
 	Log         Log          `json:"log"`
@@ -58,20 +64,21 @@ var (
 )
 
 const (
-	Bind                           = "bind"
-	ClusterName                    = "cluster-name"
-	FeaturesAccessPolicy           = "features.access-policy"
-	FeaturesNativeSecrets          = "features.native-secrets"
-	FeaturesVault                  = "features.vault"
-	KubeConfig                     = "kubeconfig"
-	ProxyAddress                   = "proxy.address"
-	ProxyExclude                   = "proxy.exclude"
-	SecurelogsConfigMapReloadImage = "securelogs.configmap-reload-image"
-	SecurelogsFluentdImage         = "securelogs.fluentd-image"
-	VaultAddress                   = "vault.address"
-	VaultAuthPath                  = "vault.auth-path"
-	VaultInitContainerImage        = "vault.init-container-image"
-	VaultKvPath                    = "vault.kv-path"
+	Bind                                = "bind"
+	ClusterName                         = "cluster-name"
+	FeaturesAccessPolicy                = "features.access-policy"
+	FeaturesNativeSecrets               = "features.native-secrets"
+	FeaturesVault                       = "features.vault"
+	InformerFullSynchronizationInterval = "informer.full-sync-interval"
+	KubeConfig                          = "kubeconfig"
+	ProxyAddress                        = "proxy.address"
+	ProxyExclude                        = "proxy.exclude"
+	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
+	SecurelogsFluentdImage              = "securelogs.fluentd-image"
+	VaultAddress                        = "vault.address"
+	VaultAuthPath                       = "vault.auth-path"
+	VaultInitContainerImage             = "vault.init-container-image"
+	VaultKvPath                         = "vault.kv-path"
 )
 
 func init() {
@@ -95,6 +102,8 @@ func init() {
 	flag.Bool(FeaturesAccessPolicy, false, "enable access policy with Istio and NetworkPolicies")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
+
+	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
 
 	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
 	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")

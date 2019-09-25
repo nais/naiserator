@@ -100,7 +100,7 @@ func run() error {
 	resourceOptions.AccessPolicy = cfg.Features.AccessPolicy
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 
-	applicationInformerFactory := createApplicationInformerFactory(kubeconfig)
+	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
 	applicationClientset := createApplicationClientset(kubeconfig)
 	genericClientset := createGenericClientset(kubeconfig)
 
@@ -126,13 +126,13 @@ func run() error {
 	return nil
 }
 
-func createApplicationInformerFactory(kubeconfig *rest.Config) informers.SharedInformerFactory {
+func createApplicationInformerFactory(kubeconfig *rest.Config, interval time.Duration) informers.SharedInformerFactory {
 	config, err := clientset.NewForConfig(kubeconfig)
 	if err != nil {
 		log.Fatalf("unable to create naiserator clientset: %s", err)
 	}
 
-	return informers.NewSharedInformerFactory(config, time.Second*30)
+	return informers.NewSharedInformerFactory(config, interval)
 }
 
 func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clientset {
