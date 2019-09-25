@@ -19,6 +19,7 @@ type Log struct {
 
 type Features struct {
 	AccessPolicy  bool `json:"access-policy"`
+	AccessPolicyIPExcept []string `json:"access-policy-ip-except"`
 	NativeSecrets bool `json:"native-secrets"`
 	Vault         bool `json:"vault"`
 }
@@ -61,6 +62,7 @@ const (
 	Bind                           = "bind"
 	ClusterName                    = "cluster-name"
 	FeaturesAccessPolicy           = "features.access-policy"
+	FeaturesAccessPolicyKubeletIP  = "features.access-policy-kubelet-ip"
 	FeaturesNativeSecrets          = "features.native-secrets"
 	FeaturesVault                  = "features.vault"
 	KubeConfig                     = "kubeconfig"
@@ -93,6 +95,7 @@ func init() {
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
 
 	flag.Bool(FeaturesAccessPolicy, false, "enable access policy with Istio and NetworkPolicies")
+	flag.StringSlice(FeaturesAccessPolicyKubeletIP, []string{""}, "network policy ip block cidr except ranges")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 

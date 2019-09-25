@@ -4,6 +4,7 @@ package resourcecreator
 type ResourceOptions struct {
 	NumReplicas   int32
 	AccessPolicy  bool
+	AccessPolicyExceptIPs []string
 	NativeSecrets bool
 }
 
