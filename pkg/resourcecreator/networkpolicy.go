@@ -6,6 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+
 func networkPolicyRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules {
 		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
@@ -75,6 +76,57 @@ func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule 
 	}
 
 	return []networkingv1.NetworkPolicyEgressRule{}
+}
+
+func labelSelector (labelName string, labelValue string) *metav1.LabelSelector{
+	return &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			labelName: labelValue,
+		},
+	}
+}
+
+func DefaultAllowPolicy(app *nais.Application, ipBlockExceptIPs []string) *networkingv1.NetworkPolicy {
+	return &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
+		ObjectMeta: app.CreateObjectMeta(),
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": app.Name,
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeEgress,
+			},
+			Egress: []networkingv1.NetworkPolicyEgressRule{
+				{
+					To: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector:       labelSelector("istio", "pilot"),
+							NamespaceSelector: labelSelector("name", "istio-system"),
+						},
+						{
+							PodSelector:       labelSelector("istio", "mixer"),
+							NamespaceSelector: labelSelector("name", "istio-system"),
+						},
+						{
+							PodSelector:       labelSelector("k8s-app", "kube-dns"), // blir denne podselector på samme namespace eller i alle?
+						},
+						{
+							IPBlock: &networkingv1.IPBlock{
+								CIDR:   "0.0.0.0./0",
+								Except: ipBlockExceptIPs, // nullsjekk
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func networkPolicySpec(app *nais.Application) networkingv1.NetworkPolicySpec {
