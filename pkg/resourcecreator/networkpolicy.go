@@ -114,7 +114,7 @@ func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
 	}
 }
 
-func DefaultAllowPolicy(app *nais.Application, ipBlockExceptIPs []string) *networkingv1.NetworkPolicy {
+func DefaultAllowPolicy(app *nais.Application, ipBlockExceptCIDRs []string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		TypeMeta: typeMeta(),
 		ObjectMeta: app.CreateObjectMeta(),
@@ -146,7 +146,7 @@ func DefaultAllowPolicy(app *nais.Application, ipBlockExceptIPs []string) *netwo
 						{
 							IPBlock: &networkingv1.IPBlock{
 								CIDR:   NetworkPolicyDefaultEgressAllowIPBlock,
-								Except: ipBlockExceptIPs,
+								Except: ipBlockExceptCIDRs,
 							},
 						},
 					},

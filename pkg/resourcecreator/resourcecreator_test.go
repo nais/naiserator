@@ -217,7 +217,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
-		opts.AccessPolicyExceptIPs = []string{ "101.0.0.0/8"}
+		opts.AccessPolicyNotAllowedCIDRs = []string{"101.0.0.0/8"}
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 

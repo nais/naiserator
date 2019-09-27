@@ -98,7 +98,7 @@ func run() error {
 
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.AccessPolicy = cfg.Features.AccessPolicy
-	resourceOptions.AccessPolicyExceptIPs = cfg.Features.AccessPolicyIPExcept
+	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
