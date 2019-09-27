@@ -23,7 +23,7 @@ type realObjects struct {
 	serviceAccount     *corev1.ServiceAccount
 	hpa                *autoscalingv1.HorizontalPodAutoscaler
 	ingress            *extensionsv1beta1.Ingress
-	networkPolicy      *networkingv1.NetworkPolicy
+	networkPolicy      []*networkingv1.NetworkPolicy
 	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
 	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
 	virtualServices    []*networking_istio_io_v1alpha3.VirtualService
@@ -45,7 +45,7 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 		case *extensionsv1beta1.Ingress:
 			o.ingress = v
 		case *networkingv1.NetworkPolicy:
-			o.networkPolicy = v
+			o.networkPolicy = append(o.networkPolicy, v)
 		case *rbac_istio_io_v1alpha1.ServiceRole:
 			o.serviceRole = v
 		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
@@ -211,5 +211,23 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, app.Name, objects.role.Name)
 		assert.NotNil(t, objects.rolebinding)
 		assert.Equal(t, app.Name, objects.rolebinding.Name)
+	})
+
+	t.Run("default network policy that allows egress to resources in kube-system and istio-system is created for app", func (t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		opts.AccessPolicy = true
+		opts.AccessPolicyExceptIPs = []string{ "101.0.0.0/8"}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.networkPolicy)
+
+		assert.Len(t, objects.networkPolicy, 2)
+		assert.NotEmpty(t, objects.networkPolicy[1].Spec.Egress)
 	})
 }

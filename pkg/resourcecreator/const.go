@@ -16,4 +16,6 @@ const (
 	IstioServiceEntryResolutionDNS          = "DNS"                                  // Service entry lookup type
 	IstioGatewayPrefix                      = "istio-system/ingress-gateway-%s"
 	IstioVirtualServiceTotalWeight    int32 = 100 // The total weight of all routes must equal 100
+
+	NetworkPolicyDefaultEgressAllowIPBlock   = "0.0.0.0/0" //The default IP block CIDR for the default allow network policies per app
 )
