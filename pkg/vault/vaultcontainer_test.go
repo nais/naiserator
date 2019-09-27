@@ -7,11 +7,12 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/spf13/viper"
 
-	"github.com/nais/naiserator/pkg/test"
 	"github.com/nais/naiserator/pkg/vault"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 )
+
 
 func TestFeatureFlagging(t *testing.T) {
 	t.Run("Vault should by default be disabled", func(t *testing.T) {
@@ -69,32 +70,7 @@ func TestNewInitializer(t *testing.T) {
 
 		mutatedPodSpec := i.AddVaultContainers(&podSpec)
 
-		// Verify that the correct number of objects have been created
-		assert.Len(t, mutatedPodSpec.Containers, 1)
-		assert.Len(t, mutatedPodSpec.InitContainers, 2)
-
-		// Verify unique names on all volumes and mounts
-		assert.Equal(t, "vault-secrets-0", mutatedPodSpec.Volumes[0].Name)
-		assert.Equal(t, "vault-secrets-1", mutatedPodSpec.Volumes[1].Name)
-		assert.Equal(t, "vks-0", mutatedPodSpec.InitContainers[0].Name)
-		assert.Equal(t, "vks-1", mutatedPodSpec.InitContainers[1].Name)
-
-		// Verify that the main container has two vault secret paths mounted
-		assert.Equal(t, "/first/mount/path", mutatedPodSpec.Containers[0].VolumeMounts[0].MountPath)
-		assert.Equal(t, "/second/mount/path", mutatedPodSpec.Containers[0].VolumeMounts[1].MountPath)
-		assert.Equal(t, v1.StorageMedium("Memory"), mutatedPodSpec.Volumes[0].EmptyDir.Medium)
-		assert.Equal(t, v1.StorageMedium("Memory"), mutatedPodSpec.Volumes[1].EmptyDir.Medium)
-
-		// Verify that both vault init container has correct configuration
-		for i := range paths {
-			assert.Equal(t, "img", mutatedPodSpec.InitContainers[i].Image)
-			assert.Equal(t, "adr", test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_VAULT_ADDR"))
-			assert.Equal(t, "authpath", test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_AUTH_PATH"))
-			assert.Equal(t, appName, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_VAULT_ROLE"))
-			assert.Equal(t, paths[i].KvPath, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_KV_PATH"))
-			assert.Equal(t, paths[i].MountPath, test.EnvVar(mutatedPodSpec.InitContainers[i].Env, "VKS_SECRET_DEST_PATH"))
-			assert.Equal(t, paths[i].MountPath, mutatedPodSpec.InitContainers[i].VolumeMounts[0].MountPath)
-		}
+		goldie.AssertJson(t,"default.json", mutatedPodSpec)
 
 	})
 }

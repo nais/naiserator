@@ -13,6 +13,8 @@ import (
 // Create takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
 func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOperations, error) {
+	var operation Operation
+
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
@@ -24,9 +26,15 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 
+	leRole := LeaderElectionRole(app)
+	leRoleBinding := LeaderElectionRoleBinding(app)
+
 	if app.Spec.LeaderElection {
-		objects = append(objects, ResourceOperation{LeaderElectionRole(app), OperationCreateOrUpdate})
-		objects = append(objects, ResourceOperation{LeaderElectionRoleBinding(app), OperationCreateOrRecreate})
+		objects = append(objects, ResourceOperation{leRole, OperationCreateOrUpdate})
+		objects = append(objects, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
+	} else {
+		objects = append(objects, ResourceOperation{leRole, OperationDeleteIfExists})
+		objects = append(objects, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
 	if resourceOptions.AccessPolicy {
@@ -76,7 +84,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 		// Kubernetes doesn't support ingress resources without any rules. This means we must
 		// delete the old resource if it exists.
-		operation := OperationCreateOrUpdate
+		operation = OperationCreateOrUpdate
 		if len(app.Spec.Ingresses) == 0 {
 			operation = OperationDeleteIfExists
 		}

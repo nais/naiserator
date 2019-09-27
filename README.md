@@ -7,20 +7,29 @@ Naiserator is a Kubernetes operator that handles the lifecycle of the custom res
 The main goal of Naiserator is to simplify application deployment by providing a high-level abstraction tailored for the [NAIS platform](https://nais.io).
 Naiserator supersedes [naisd](https://nais.io).
 
-When an `Application` resource is created in Kubernetes (see
-[example application](https://github.com/nais/doc/blob/master/content/deploy/examples/nais-manifest/nais.yaml)),
+When an `Application` resource is created in Kubernetes,
 Naiserator will generate several resources that work together to form a complete deployment:
-  * `Deployment` that runs a specified number of application instances,
-  * `Service` which points to the application endpoint,
-  * `Ingress` adding TLS termination and virtualhost support,
-  * `Horizontal pod autoscaler` for automatic application scaling,
-  * `Service account` for granting correct permissions to managed resources.
+  * `Deployment` that runs a specified number of application instances
+  * `Service` which points to the application endpoint
+  * `Horizontal pod autoscaler` for automatic application scaling
+  * `Service account` for granting correct permissions to managed resources
+
+Optionally, if enabled in the application manifest, the following resources:
+  * `Ingress` adding TLS termination and virtualhost support
+  * _Leader election_ sidecar which decides a cluster leader from available pods. This feature also creates a `Role` and `Role binding`.
+
+If Istio support is enabled with `--features.access-policy`:
+  * `NetworkPolicy`
+  * A set of `VirtualService`
+  * `ServiceRole` and `ServiceRoleBinding` resources
+  * `ServiceEntry`
 
 These resources will remain in Kubernetes until the `Application` resource is deleted.
+Any unneeded resources will be automatically deleted if disabled by feature flags or is lacking in a application manifest.
 
-## `nais.io/Application` spec
+## Documentation
 
-The entire specification for the manifest is documented in our [nais.io/doc](https://github.com/nais/doc/blob/master/content/deploy/nais-manifest.md).
+The entire specification for the manifest is documented in our [doc.nais.io](https://doc.nais.io/in-depth/nais-manifest).
 
 ## Deployment
 
@@ -58,6 +67,7 @@ can be sent to a Kafka topic. There's a few prerequisites to develop with this e
 1. [Protobuf installed](https://github.com/golang/protobuf)
 2. An instance of kafka to test against. Use `docker-compose up` to bring up a local instance.
 3. Enable this feature by passing `-kafka-enabled=true` when starting Naiserator.
+
 #### Update and compile Protobuf definition
 Whenever the Protobuf definition is updated you can update using `make proto`. It will download the definitions, compile and place them in the correct packages.
 
