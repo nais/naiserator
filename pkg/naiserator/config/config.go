@@ -23,9 +23,10 @@ type Informer struct {
 }
 
 type Features struct {
-	AccessPolicy  bool `json:"access-policy"`
-	NativeSecrets bool `json:"native-secrets"`
-	Vault         bool `json:"vault"`
+	AccessPolicy                bool     `json:"access-policy"`
+	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
+	NativeSecrets               bool     `json:"native-secrets"`
+	Vault                       bool     `json:"vault"`
 }
 
 type Securelogs struct {
@@ -67,6 +68,7 @@ const (
 	Bind                                = "bind"
 	ClusterName                         = "cluster-name"
 	FeaturesAccessPolicy                = "features.access-policy"
+	AccessPolicyNotAllowedCIDRs         = "features.access-policy-kubelet-ip"
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesVault                       = "features.vault"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
@@ -100,6 +102,7 @@ func init() {
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
 
 	flag.Bool(FeaturesAccessPolicy, false, "enable access policy with Istio and NetworkPolicies")
+	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 

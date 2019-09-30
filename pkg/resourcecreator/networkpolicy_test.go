@@ -95,4 +95,25 @@ func TestNetworkPolicy(t *testing.T) {
 		assert.NotNil(t, yamlres)
 		assert.Empty(t, networkPolicy.Spec.Ingress[0].From[0].PodSelector)
 	})
+
+	t.Run("default network policy rule is contains egress rules", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		ips := []string{"12.0.0.0/12", "123.0.0.0/12"}
+		networkPolicy := resourcecreator.DefaultAllowPolicy(app, ips)
+		assert.NotNil(t, networkPolicy)
+		assert.Len(t, networkPolicy.Spec.Ingress, 0)
+		assert.Len(t, networkPolicy.Spec.Egress, 1)
+		assert.Len(t, networkPolicy.Spec.Egress[0].To, 4)
+
+		podMatch := map[string]string{"istio": "pilot"}
+		namespaceMatch := map[string]string{"name": "istio-system"}
+
+		assert.Equal(t, podMatch, networkPolicy.Spec.Egress[0].To[0].PodSelector.MatchLabels)
+		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Egress[0].To[0].NamespaceSelector.MatchLabels)
+		assert.Equal(t, ips, networkPolicy.Spec.Egress[0].To[3].IPBlock.Except)
+		assert.Equal(t, resourcecreator.NetworkPolicyDefaultEgressAllowIPBlock, networkPolicy.Spec.Egress[0].To[3].IPBlock.CIDR)
+	})
 }
