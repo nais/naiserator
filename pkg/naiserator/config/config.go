@@ -68,7 +68,7 @@ const (
 	Bind                                = "bind"
 	ClusterName                         = "cluster-name"
 	FeaturesAccessPolicy                = "features.access-policy"
-	AccessPolicyNotAllowedCIDRs         = "features.access-policy-kubelet-ip"
+	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesVault                       = "features.vault"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
