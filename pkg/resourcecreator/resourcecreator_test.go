@@ -23,7 +23,7 @@ type realObjects struct {
 	serviceAccount     *corev1.ServiceAccount
 	hpa                *autoscalingv1.HorizontalPodAutoscaler
 	ingress            *extensionsv1beta1.Ingress
-	networkPolicy      []*networkingv1.NetworkPolicy
+	networkPolicy      *networkingv1.NetworkPolicy
 	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
 	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
 	virtualServices    []*networking_istio_io_v1alpha3.VirtualService
@@ -45,7 +45,7 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 		case *extensionsv1beta1.Ingress:
 			o.ingress = v
 		case *networkingv1.NetworkPolicy:
-			o.networkPolicy = append(o.networkPolicy, v)
+			o.networkPolicy = v
 		case *rbac_istio_io_v1alpha1.ServiceRole:
 			o.serviceRole = v
 		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
@@ -227,7 +227,7 @@ func TestCreate(t *testing.T) {
 		objects := getRealObjects(resources)
 		assert.NotNil(t, objects.networkPolicy)
 
-		assert.Len(t, objects.networkPolicy, 1)
-		assert.NotEmpty(t, objects.networkPolicy[0].Spec.Egress)
+		assert.NotNil(t, objects.networkPolicy)
+		assert.NotEmpty(t, objects.networkPolicy.Spec.Egress)
 	})
 }
