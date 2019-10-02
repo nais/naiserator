@@ -227,7 +227,7 @@ func TestCreate(t *testing.T) {
 		objects := getRealObjects(resources)
 		assert.NotNil(t, objects.networkPolicy)
 
-		assert.Len(t, objects.networkPolicy, 2)
-		assert.NotEmpty(t, objects.networkPolicy[1].Spec.Egress)
+		assert.Len(t, objects.networkPolicy, 1)
+		assert.NotEmpty(t, objects.networkPolicy[0].Spec.Egress)
 	})
 }

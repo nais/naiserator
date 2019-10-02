@@ -12,17 +12,18 @@ import (
 )
 
 const accessPolicyApp = "allowedAccessApp"
+var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 
 func TestNetworkPolicy(t *testing.T) {
 
-	t.Run("default deny all sets rules to empty slice", func(t *testing.T) {
+	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 
-		assert.Equal(t, []networking.NetworkPolicyEgressRule{}, networkPolicy.Spec.Egress)
+		assert.Len(t, networkPolicy.Spec.Egress, 1)
 		assert.Equal(t, []networking.NetworkPolicyIngressRule{}, networkPolicy.Spec.Ingress)
 	})
 
@@ -32,13 +33,24 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 
 		matchLabels := map[string]string{
 			"app": accessPolicyApp,
 		}
 
-		assert.Equal(t, matchLabels, networkPolicy.Spec.Egress[0].To[0].PodSelector.MatchLabels)
+		assert.Equal(t, matchLabels, networkPolicy.Spec.Egress[1].To[0].PodSelector.MatchLabels)
+	})
+
+	t.Run("allowed app in egress rule sets egress app rules and default rules", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais.AccessPolicyGressRule{Application: accessPolicyApp})
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
+
+		assert.Len(t, networkPolicy.Spec.Egress, 2)
 	})
 
 	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
@@ -49,7 +61,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 		assert.NotNil(t, networkPolicy)
 		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
 
@@ -69,7 +81,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 		assert.NotNil(t, networkPolicy)
 		assert.Len(t, networkPolicy.Spec.Ingress, 2)
 		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
@@ -88,7 +100,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 		assert.NotNil(t, networkPolicy)
 
 		yamlres, err := yaml.Marshal(networkPolicy)
@@ -101,8 +113,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		ips := []string{"12.0.0.0/12", "123.0.0.0/12"}
-		networkPolicy := resourcecreator.DefaultAllowPolicy(app, ips)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 		assert.NotNil(t, networkPolicy)
 		assert.Len(t, networkPolicy.Spec.Ingress, 0)
 		assert.Len(t, networkPolicy.Spec.Egress, 1)
@@ -113,7 +124,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 		assert.Equal(t, podMatch, networkPolicy.Spec.Egress[0].To[0].PodSelector.MatchLabels)
 		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Egress[0].To[0].NamespaceSelector.MatchLabels)
-		assert.Equal(t, ips, networkPolicy.Spec.Egress[0].To[3].IPBlock.Except)
+		assert.Equal(t, defaultIps, networkPolicy.Spec.Egress[0].To[3].IPBlock.Except)
 		assert.Equal(t, resourcecreator.NetworkPolicyDefaultEgressAllowIPBlock, networkPolicy.Spec.Egress[0].To[3].IPBlock.CIDR)
 	})
 }
