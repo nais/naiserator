@@ -167,17 +167,17 @@ type AccessPolicyExternalRule struct {
 	Host string `json:"host"`
 }
 
-type AccessPolicyGressRule struct {
+type AccessPolicyRule struct {
 	Application string `json:"application"`
 	Namespace   string `json:"namespace,omitempty"`
 }
 
 type AccessPolicyInbound struct {
-	Rules []AccessPolicyGressRule `json:"rules"`
+	Rules []AccessPolicyRule `json:"rules"`
 }
 
 type AccessPolicyOutbound struct {
-	Rules    []AccessPolicyGressRule    `json:"rules"`
+	Rules    []AccessPolicyRule         `json:"rules"`
 	External []AccessPolicyExternalRule `json:"external"`
 }
 
@@ -241,10 +241,10 @@ func (in *Application) NilFix() {
 		in.Spec.ConfigMaps.Files = make([]string, 0)
 	}
 	if in.Spec.AccessPolicy.Inbound.Rules == nil {
-		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyGressRule, 0)
+		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyRule, 0)
 	}
 	if in.Spec.AccessPolicy.Outbound.Rules == nil {
-		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyGressRule, 0)
+		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyRule, 0)
 	}
 	if in.Spec.AccessPolicy.Outbound.External == nil {
 		in.Spec.AccessPolicy.Outbound.External = make([]AccessPolicyExternalRule, 0)

@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func networkPolicyRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+func networkPolicyRules(rules []nais.AccessPolicyRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules {
 		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
@@ -35,7 +35,7 @@ func networkPolicyRules(rules []nais.AccessPolicyGressRule) (networkPolicy []net
 }
 
 func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
-	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
+    rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
@@ -69,7 +69,7 @@ func egressPolicy(app *nais.Application, ipBlockExceptCIDRs []string) []networki
 	defaultRules := defaultAllowEgress(ipBlockExceptCIDRs)
 	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
 		appRules := networkingv1.NetworkPolicyEgressRule{
-				To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules),
+			To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules),
 		}
 		return append(defaultRules, appRules)
 	}
@@ -105,7 +105,7 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 	}
 }
 
-func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolicyEgressRule{
+func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolicyEgressRule {
 	return []networkingv1.NetworkPolicyEgressRule{
 		{
 			To: []networkingv1.NetworkPolicyPeer{
@@ -118,13 +118,12 @@ func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolic
 					NamespaceSelector: labelSelector("name", IstioNamespace),
 				},
 				{
-					PodSelector:       labelSelector("k8s-app", "kube-dns"),
+					PodSelector: labelSelector("k8s-app", "kube-dns"),
 					NamespaceSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							// select in all namespaces since labels on kube-system is regularly deleted in GCP
 						},
 					},
-
 				},
 				{
 					IPBlock: &networkingv1.IPBlock{
@@ -139,7 +138,7 @@ func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolic
 
 func NetworkPolicy(app *nais.Application, ipBlockExceptCIDRs []string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
-		TypeMeta: typeMeta(),
+		TypeMeta:   typeMeta(),
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec:       networkPolicySpec(app, ipBlockExceptCIDRs),
 	}
