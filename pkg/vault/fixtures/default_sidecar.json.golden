@@ -7,7 +7,18 @@
       }
     }
   ],
-  "initContainers": [
+  "containers": [
+    {
+      "name": "fasit",
+      "resources": {},
+      "volumeMounts": [
+        {
+          "name": "vault-volume",
+          "mountPath": "/var/run/secrets/nais.io/vault",
+          "subPath": "vault/var/run/secrets/nais.io/vault"
+        }
+      ]
+    },
     {
       "name": "vks",
       "image": "navikt/vault-sidekick:v0.3.10-98a7e32",
@@ -17,8 +28,7 @@
         "-renew-token",
         "-vault=https://vault.adeo.no",
         "-save-token=/var/run/secrets/nais.io/vault/vault_token",
-        "-cn=secret:/fasit/default:dir=/var/run/secrets/nais.io/vault,fmt=flatten",
-        "-one-shot"
+        "-cn=secret:/fasit/default:dir=/var/run/secrets/nais.io/vault,fmt=flatten"
       ],
       "env": [
         {
@@ -34,19 +44,6 @@
           "value": "/kubernetes/preprod/fss"
         }
       ],
-      "resources": {},
-      "volumeMounts": [
-        {
-          "name": "vault-volume",
-          "mountPath": "/var/run/secrets/nais.io/vault",
-          "subPath": "vault/var/run/secrets/nais.io/vault"
-        }
-      ]
-    }
-  ],
-  "containers": [
-    {
-      "name": "fasit",
       "resources": {},
       "volumeMounts": [
         {
