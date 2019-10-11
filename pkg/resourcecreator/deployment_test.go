@@ -8,7 +8,6 @@ import (
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
-	"github.com/nais/naiserator/pkg/test"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -37,9 +36,8 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		c := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
+		c := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks")
 		assert.NotNil(t, c, "contains vault initcontainer")
-		assert.Equal(t, "/base/kv/myapplication/mynamespace", test.EnvVar(c.Env, "VKS_KV_PATH"))
 
 		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
