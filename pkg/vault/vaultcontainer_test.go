@@ -54,7 +54,7 @@ func TestNewInitializer(t *testing.T) {
 			{"user specified secrets", "user_secrets.json", []nais.SecretPath{
 				{
 					KvPath:    "/serviceuser/data/test/srvfasit",
-					MountPath: "/credential/srvfasit",
+					MountPath: "/secrets/credential/srvfasit",
 				},
 				{
 					KvPath:    "/certificate/data/dev/fasit-keystore",
