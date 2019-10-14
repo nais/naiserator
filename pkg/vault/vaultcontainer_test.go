@@ -38,8 +38,9 @@ func TestNewInitializer(t *testing.T) {
 	viper.Reset()
 	viper.Set("features.vault", true)
 	viper.Set("vault.address", "https://vault.adeo.no")
-	viper.Set("vault.auth-path", "/kubernetes/preprod/fss")
-	viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-98a7e32")
+	viper.Set("vault.kv-path", "/kv/preprod/fss")
+	viper.Set("vault.auth-path", "auth/kubernetes/preprod/fss/login") //todo Breaking change with nais-yaml setupjjjjjjjjj
+	viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-d122b16")
 
 	t.Run("Initializer mutates podspec correctly", func(t *testing.T) {
 		tests := []struct {
@@ -52,22 +53,22 @@ func TestNewInitializer(t *testing.T) {
 			{"default with sidecaar", "default_sidecar.json", nil, true},
 			{"user specified secrets", "user_secrets.json", []nais.SecretPath{
 				{
-					MountPath: "/serviceuser/data/test/srvfasit",
-					KvPath:    "secrets/credential/srvfasit",
+					KvPath:    "/serviceuser/data/test/srvfasit",
+					MountPath: "/credential/srvfasit",
 				},
 				{
-					MountPath: "/certificate/data/dev/fasit-keystore",
-					KvPath:    "secrets/certificate/fasit-keystore",
+					KvPath:    "/certificate/data/dev/fasit-keystore",
+					MountPath: "/secrets/certificate/fasit-keystore",
 				},
 			}, false},
 			{"user specified secrets as sidecar ", "user_secrets_sidecar.json", []nais.SecretPath{
 				{
-					MountPath: "/serviceuser/data/test/srvfasit",
-					KvPath:    "secrets/credential/srvfasit",
+					KvPath:    "/serviceuser/data/test/srvfasit",
+					MountPath: "/secrets/credential/srvfasit",
 				},
 				{
-					MountPath: "/certificate/data/dev/fasit-keystore",
-					KvPath:    "secrets/certificate/fasit-keystore",
+					KvPath:    "/certificate/data/dev/fasit-keystore",
+					MountPath: "/secrets/certificate/fasit-keystore",
 				},
 			}, true},
 		}
@@ -85,7 +86,8 @@ func TestNewInitializer(t *testing.T) {
 			podSpec := v1.PodSpec{
 				Containers: []v1.Container{
 					{
-						Name: appName,
+						Name:  appName,
+						Image: "oyvindio/debug",
 					},
 				},
 			}

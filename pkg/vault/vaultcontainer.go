@@ -43,6 +43,18 @@ func (c config) validate() (bool, error) {
 		multierror.Append(result, fmt.Errorf("vault auth path not found in environment"))
 	}
 
+	for _, p := range c.app.Spec.Vault.Mounts {
+		if len(p.MountPath) == 0 {
+			multierror.Append(result, fmt.Errorf("mount path not specified"))
+			break
+		}
+
+		if len(p.KvPath) == 0 {
+			multierror.Append(result, fmt.Errorf("vault kv path not specified"))
+			break
+		}
+	}
+
 	return result.ErrorOrNil() == nil, result.ErrorOrNil()
 
 }
@@ -93,7 +105,7 @@ func (c config) addVaultContainer(spec *k8score.PodSpec, paths []nais.SecretPath
 	args := c.createVaultContainerArgs(m)
 
 	container := k8score.Container{
-		Name:         "vks",
+		Name:         "vks-0",
 		VolumeMounts: volumeMounts,
 		Args:         args,
 		Image:        c.initContainerImage,
@@ -167,7 +179,7 @@ func createVolumeMounts(paths map[string]string) []k8score.VolumeMount {
 		})
 	}
 
-	//Adding default vault mount it it does not exists
+	//Adding default vault mount if it does not exists
 	if _, exists := paths[nais.DefaultVaultMountPath]; !exists {
 		volumeMounts = append(volumeMounts, k8score.VolumeMount{
 			Name:      "vault-volume",
