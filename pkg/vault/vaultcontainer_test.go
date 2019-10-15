@@ -40,7 +40,7 @@ func TestVaultContainerCreation(t *testing.T) {
 	viper.Set("vault.address", "https://vault.adeo.no")
 	viper.Set("vault.kv-path", "/kv/preprod/fss")
 	viper.Set("vault.auth-path-new", "auth/kubernetes/preprod/fss/login") //todo Breaking change with nais-yaml
-	viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-d122b16")
+	viper.Set("vault.init-container-image-new", "navikt/vault-sidekick:v0.3.10-d122b16")
 
 	t.Run("Initializer mutates podspec correctly", func(t *testing.T) {
 		tests := []struct {
