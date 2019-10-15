@@ -8,7 +8,7 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamespace string) (subjects []*istio_crd.Subject) {
+func getServiceRoleBindingSubjects(rules []nais.AccessPolicyRule, appNamespace string) (subjects []*istio_crd.Subject) {
 	for _, rule := range rules {
 		namespace := appNamespace
 		if rule.Namespace != "" {
@@ -23,14 +23,14 @@ func getServiceRoleBindingSubjects(rules []nais.AccessPolicyGressRule, appNamesp
 func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 	rules := app.Spec.AccessPolicy.Inbound.Rules
 	if len(app.Spec.Ingresses) > 0 {
-		rules = append(rules, nais.AccessPolicyGressRule{
+		rules = append(rules, nais.AccessPolicyRule{
 			Namespace:   IstioNamespace,
 			Application: IstioIngressGatewayServiceAccount,
 		})
 	}
 
 	if app.Spec.Prometheus.Enabled {
-		rules = append(rules, nais.AccessPolicyGressRule{
+		rules = append(rules, nais.AccessPolicyRule{
 			Namespace:   IstioNamespace,
 			Application: IstioPrometheusServiceAccount,
 		})

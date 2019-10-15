@@ -54,7 +54,7 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 
 {{end}}
 
-func CreateOrUpdate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
@@ -73,7 +73,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient *clientV1Alpha1
 	}
 }
 
-func CreateOrRecreate(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
@@ -94,7 +94,7 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient *clientV1Alph
 	}
 }
 
-func DeleteIfExists(clientSet kubernetes.Interface, customClient *clientV1Alpha1.Clientset, resource runtime.Object) func() error {
+func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:

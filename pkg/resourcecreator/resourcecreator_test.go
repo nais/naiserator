@@ -212,4 +212,22 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.rolebinding)
 		assert.Equal(t, app.Name, objects.rolebinding.Name)
 	})
+
+	t.Run("default network policy that allows egress to resources in kube-system and istio-system is created for app", func (t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		opts.AccessPolicy = true
+		opts.AccessPolicyNotAllowedCIDRs = []string{"101.0.0.0/8"}
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.networkPolicy)
+
+		assert.NotNil(t, objects.networkPolicy)
+		assert.NotEmpty(t, objects.networkPolicy.Spec.Egress)
+	})
 }

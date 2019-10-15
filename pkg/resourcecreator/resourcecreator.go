@@ -38,8 +38,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	}
 
 	if resourceOptions.AccessPolicy {
-		objects = append(objects, ResourceOperation{NetworkPolicy(app), OperationCreateOrUpdate})
-
+		objects = append(objects, ResourceOperation{NetworkPolicy(app, resourceOptions.AccessPolicyNotAllowedCIDRs), OperationCreateOrUpdate})
 		vses, err := VirtualServices(app)
 
 		if err != nil {

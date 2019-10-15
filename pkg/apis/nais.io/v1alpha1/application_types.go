@@ -9,6 +9,7 @@ import (
 	hash "github.com/mitchellh/hashstructure"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -166,17 +167,17 @@ type AccessPolicyExternalRule struct {
 	Host string `json:"host"`
 }
 
-type AccessPolicyGressRule struct {
+type AccessPolicyRule struct {
 	Application string `json:"application"`
 	Namespace   string `json:"namespace,omitempty"`
 }
 
 type AccessPolicyInbound struct {
-	Rules []AccessPolicyGressRule `json:"rules"`
+	Rules []AccessPolicyRule `json:"rules"`
 }
 
 type AccessPolicyOutbound struct {
-	Rules    []AccessPolicyGressRule    `json:"rules"`
+	Rules    []AccessPolicyRule         `json:"rules"`
 	External []AccessPolicyExternalRule `json:"external"`
 }
 
@@ -240,10 +241,10 @@ func (in *Application) NilFix() {
 		in.Spec.ConfigMaps.Files = make([]string, 0)
 	}
 	if in.Spec.AccessPolicy.Inbound.Rules == nil {
-		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyGressRule, 0)
+		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyRule, 0)
 	}
 	if in.Spec.AccessPolicy.Outbound.Rules == nil {
-		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyGressRule, 0)
+		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyRule, 0)
 	}
 	if in.Spec.AccessPolicy.Outbound.External == nil {
 		in.Spec.AccessPolicy.Outbound.External = make([]AccessPolicyExternalRule, 0)
@@ -265,6 +266,15 @@ func (in Application) Hash() (string, error) {
 
 	h, err := hash.Hash(relevantValues, nil)
 	return strconv.FormatUint(h, 10), err
+}
+
+func (in *Application) LogFields() log.Fields {
+	return log.Fields{
+		"namespace":       in.GetNamespace(),
+		"resourceversion": in.GetResourceVersion(),
+		"application":     in.GetName(),
+		"correlation-id":  in.Status.CorrelationID,
+	}
 }
 
 func (in Application) Cluster() string {

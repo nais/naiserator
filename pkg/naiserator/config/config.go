@@ -3,6 +3,7 @@ package config
 import (
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/nais/naiserator/pkg/kafka"
 	log "github.com/sirupsen/logrus"
@@ -17,10 +18,15 @@ type Log struct {
 	Level  string `json:"level"`
 }
 
+type Informer struct {
+	FullSyncInterval time.Duration `json:"full-sync-interval"`
+}
+
 type Features struct {
-	AccessPolicy  bool `json:"access-policy"`
-	NativeSecrets bool `json:"native-secrets"`
-	Vault         bool `json:"vault"`
+	AccessPolicy                bool     `json:"access-policy"`
+	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
+	NativeSecrets               bool     `json:"native-secrets"`
+	Vault                       bool     `json:"vault"`
 }
 
 type Securelogs struct {
@@ -42,6 +48,7 @@ type Vault struct {
 
 type Config struct {
 	Bind        string       `json:"bind"`
+	Informer    Informer     `json:"informer"`
 	Kubeconfig  string       `json:"kubeconfig"`
 	ClusterName string       `json:"cluster-name"`
 	Log         Log          `json:"log"`
@@ -58,20 +65,22 @@ var (
 )
 
 const (
-	Bind                           = "bind"
-	ClusterName                    = "cluster-name"
-	FeaturesAccessPolicy           = "features.access-policy"
-	FeaturesNativeSecrets          = "features.native-secrets"
-	FeaturesVault                  = "features.vault"
-	KubeConfig                     = "kubeconfig"
-	ProxyAddress                   = "proxy.address"
-	ProxyExclude                   = "proxy.exclude"
-	SecurelogsConfigMapReloadImage = "securelogs.configmap-reload-image"
-	SecurelogsFluentdImage         = "securelogs.fluentd-image"
-	VaultAddress                   = "vault.address"
-	VaultAuthPath                  = "vault.auth-path-new"
-	VaultInitContainerImage        = "vault.init-container-image"
-	VaultKvPath                    = "vault.kv-path"
+	Bind                                = "bind"
+	ClusterName                         = "cluster-name"
+	FeaturesAccessPolicy                = "features.access-policy"
+	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
+	FeaturesNativeSecrets               = "features.native-secrets"
+	FeaturesVault                       = "features.vault"
+	InformerFullSynchronizationInterval = "informer.full-sync-interval"
+	KubeConfig                          = "kubeconfig"
+	ProxyAddress                        = "proxy.address"
+	ProxyExclude                        = "proxy.exclude"
+	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
+	SecurelogsFluentdImage              = "securelogs.fluentd-image"
+	VaultAddress                        = "vault.address"
+	VaultAuthPath                       = "vault.auth-path-new"
+	VaultInitContainerImage             = "vault.init-container-image"
+	VaultKvPath                         = "vault.kv-path"
 )
 
 func init() {
@@ -93,8 +102,11 @@ func init() {
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
 
 	flag.Bool(FeaturesAccessPolicy, false, "enable access policy with Istio and NetworkPolicies")
+	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
+
+	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
 
 	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
 	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")

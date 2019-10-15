@@ -30,7 +30,7 @@ func TestIstio(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, ""}}
 
 		serviceRole := resourcecreator.ServiceRole(app)
 
@@ -45,7 +45,7 @@ func TestIstio(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{"*", app.Namespace}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"*", app.Namespace}}
 
 		serviceRole := resourcecreator.ServiceRole(app)
 
@@ -61,7 +61,7 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{otherApplication, otherNamespace}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace}}
 
 		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 
@@ -78,7 +78,7 @@ func TestIstio(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyGressRule{{otherApplication, ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, ""}}
 
 		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
 

@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func networkPolicyRules(rules []nais.AccessPolicyGressRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+func networkPolicyRules(rules []nais.AccessPolicyRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules {
 		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
@@ -35,7 +35,7 @@ func networkPolicyRules(rules []nais.AccessPolicyGressRule) (networkPolicy []net
 }
 
 func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
-	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
+    rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
@@ -65,42 +65,81 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 	return rules
 }
 
-func egressPolicy(app *nais.Application) []networkingv1.NetworkPolicyEgressRule {
+func egressPolicy(app *nais.Application, ipBlockExceptCIDRs []string) []networkingv1.NetworkPolicyEgressRule {
+	defaultRules := defaultAllowEgress(ipBlockExceptCIDRs)
 	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
-		return []networkingv1.NetworkPolicyEgressRule{
-			{
-				To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules),
-			},
+		appRules := networkingv1.NetworkPolicyEgressRule{
+			To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules),
 		}
+		return append(defaultRules, appRules)
 	}
 
-	return []networkingv1.NetworkPolicyEgressRule{}
+	return defaultRules
 }
 
-func networkPolicySpec(app *nais.Application) networkingv1.NetworkPolicySpec {
+func networkPolicySpec(app *nais.Application, ipBlockExceptCIDRs []string) networkingv1.NetworkPolicySpec {
 	return networkingv1.NetworkPolicySpec{
-		PodSelector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app": app.Name,
-			},
-		},
+		PodSelector: *labelSelector("app", app.Name),
 		PolicyTypes: []networkingv1.PolicyType{
 			networkingv1.PolicyTypeIngress,
 			networkingv1.PolicyTypeEgress,
 		},
 		Ingress: ingressPolicy(app),
-		Egress:  egressPolicy(app),
+		Egress:  egressPolicy(app, ipBlockExceptCIDRs),
 	}
 
 }
 
-func NetworkPolicy(app *nais.Application) *networkingv1.NetworkPolicy {
-	return &networkingv1.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
+func typeMeta() metav1.TypeMeta {
+	return metav1.TypeMeta{
+		Kind:       "NetworkPolicy",
+		APIVersion: "networking.k8s.io/v1",
+	}
+}
+
+func labelSelector(label string, value string) *metav1.LabelSelector {
+	return &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			label: value,
 		},
+	}
+}
+
+func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolicyEgressRule {
+	return []networkingv1.NetworkPolicyEgressRule{
+		{
+			To: []networkingv1.NetworkPolicyPeer{
+				{
+					PodSelector:       labelSelector("istio", "pilot"),
+					NamespaceSelector: labelSelector("name", IstioNamespace),
+				},
+				{
+					PodSelector:       labelSelector("istio", "mixer"),
+					NamespaceSelector: labelSelector("name", IstioNamespace),
+				},
+				{
+					PodSelector: labelSelector("k8s-app", "kube-dns"),
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							// select in all namespaces since labels on kube-system is regularly deleted in GCP
+						},
+					},
+				},
+				{
+					IPBlock: &networkingv1.IPBlock{
+						CIDR:   NetworkPolicyDefaultEgressAllowIPBlock,
+						Except: ipBlockExceptCIDRs,
+					},
+				},
+			},
+		},
+	}
+}
+
+func NetworkPolicy(app *nais.Application, ipBlockExceptCIDRs []string) *networkingv1.NetworkPolicy {
+	return &networkingv1.NetworkPolicy{
+		TypeMeta:   typeMeta(),
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       networkPolicySpec(app),
+		Spec:       networkPolicySpec(app, ipBlockExceptCIDRs),
 	}
 }
