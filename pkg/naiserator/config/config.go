@@ -69,7 +69,7 @@ const (
 	SecurelogsConfigMapReloadImage = "securelogs.configmap-reload-image"
 	SecurelogsFluentdImage         = "securelogs.fluentd-image"
 	VaultAddress                   = "vault.address"
-	VaultAuthPath                  = "vault.auth-path"
+	VaultAuthPath                  = "vault.auth-path-new"
 	VaultInitContainerImage        = "vault.init-container-image"
 	VaultKvPath                    = "vault.kv-path"
 )

@@ -23,7 +23,7 @@ func TestDeployment(t *testing.T) {
 		viper.Reset()
 		viper.Set("features.vault", true)
 		viper.Set("vault.address", "adr")
-		viper.Set("vault.auth-path", "authpath")
+		viper.Set("vault.auth-path-new", "authpath")
 		viper.Set("vault.kv-path", "/base/kv")
 		viper.Set("vault.init-container-image", "image")
 
