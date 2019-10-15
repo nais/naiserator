@@ -92,17 +92,25 @@ func (c config) AddVaultContainer(podSpec *k8score.PodSpec) (*k8score.PodSpec, e
 	}
 }
 
-func (c config) addVaultContainer(spec *k8score.PodSpec, paths []nais.SecretPath) (*k8score.PodSpec, error) {
+func valideSecretPaths(paths []nais.SecretPath) error {
 	m := make(map[string]string, len(paths))
 	for _, s := range paths {
 		if old, exists := m[s.MountPath]; exists {
-			return nil, fmt.Errorf("illegal to mount multiple Vault secrets: %s and %s to the same  path: %s", s.KvPath, old, s.MountPath)
+			return fmt.Errorf("illegal to mount multiple Vault secrets: %s and %s to the same  path: %s", s.KvPath, old, s.MountPath)
 		}
 		m[s.MountPath] = s.KvPath
 	}
+	return nil
+}
 
-	volumeMounts := createVolumeMounts(m)
-	args := c.createVaultContainerArgs(m)
+func (c config) addVaultContainer(spec *k8score.PodSpec, paths []nais.SecretPath) (*k8score.PodSpec, error) {
+
+	if err := valideSecretPaths(paths); err != nil {
+		return nil, err
+	}
+
+	volumeMounts := createVolumeMounts(paths)
+	args := c.createVaultContainerArgs(paths)
 
 	container := k8score.Container{
 		Name:         "vks-0",
@@ -148,7 +156,7 @@ func (c config) addVaultContainer(spec *k8score.PodSpec, paths []nais.SecretPath
 	return spec, nil
 }
 
-func (c config) createVaultContainerArgs(paths map[string]string) []string {
+func (c config) createVaultContainerArgs(paths []nais.SecretPath) []string {
 
 	args := []string{
 		"-v=10",
@@ -158,8 +166,8 @@ func (c config) createVaultContainerArgs(paths map[string]string) []string {
 		fmt.Sprintf("-save-token=%s", defaultVaultTokenFileName()),
 	}
 
-	for mountPath, secretPath := range paths {
-		args = append(args, fmt.Sprintf("-cn=secret:%s:dir=%s,fmt=flatten", secretPath, mountPath))
+	for _, path := range paths {
+		args = append(args, fmt.Sprintf("-cn=secret:%s:dir=%s,fmt=flatten", path.KvPath, path.MountPath))
 	}
 	if !c.app.Spec.Vault.Sidecar {
 		args = append(args, "-one-shot")
@@ -168,19 +176,27 @@ func (c config) createVaultContainerArgs(paths map[string]string) []string {
 	return args
 }
 
-func createVolumeMounts(paths map[string]string) []k8score.VolumeMount {
+func createVolumeMounts(paths []nais.SecretPath) []k8score.VolumeMount {
 
 	volumeMounts := make([]k8score.VolumeMount, 0, len(paths))
-	for mountPath := range paths {
+	for _, path := range paths {
 		volumeMounts = append(volumeMounts, k8score.VolumeMount{
 			Name:      "vault-volume",
-			MountPath: mountPath,
-			SubPath:   filepath.Join("vault", mountPath), //Just to make sure subpath does not start with "/"
+			MountPath: path.MountPath,
+			SubPath:   filepath.Join("vault", path.MountPath), //Just to make sure subpath does not start with "/"
 		})
 	}
 
 	//Adding default vault mount if it does not exists
-	if _, exists := paths[nais.DefaultVaultMountPath]; !exists {
+	var defaultMountExist = false
+	for _, path := range paths {
+		if filepath.Clean(nais.DefaultVaultMountPath) == filepath.Clean(path.MountPath) {
+			defaultMountExist = true
+			break
+		}
+	}
+
+	if !defaultMountExist {
 		volumeMounts = append(volumeMounts, k8score.VolumeMount{
 			Name:      "vault-volume",
 			MountPath: nais.DefaultVaultMountPath,
