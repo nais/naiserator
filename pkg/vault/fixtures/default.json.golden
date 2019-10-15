@@ -9,16 +9,15 @@
   ],
   "initContainers": [
     {
-      "name": "vks-0",
+      "name": "vks-init",
       "image": "navikt/vault-sidekick:v0.3.10-d122b16",
       "args": [
         "-v=10",
         "-logtostderr",
-        "-renew-token",
+        "-one-shot",
         "-vault=https://vault.adeo.no",
         "-save-token=/var/run/secrets/nais.io/vault/vault_token",
-        "-cn=secret:/kv/preprod/fss/fasit/default:dir=/var/run/secrets/nais.io/vault,fmt=flatten",
-        "-one-shot"
+        "-cn=secret:/kv/preprod/fss/fasit/default:dir=/var/run/secrets/nais.io/vault,fmt=flatten"
       ],
       "env": [
         {

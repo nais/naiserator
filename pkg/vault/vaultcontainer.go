@@ -109,12 +109,45 @@ func (c config) addVaultContainer(spec *k8score.PodSpec, paths []nais.SecretPath
 		return nil, err
 	}
 
-	volumeMounts := createVolumeMounts(paths)
-	args := c.createVaultContainerArgs(paths)
+	spec.InitContainers = append(spec.InitContainers, c.createInitContainer(paths))
 
-	container := k8score.Container{
-		Name:         "vks-0",
-		VolumeMounts: volumeMounts,
+	if c.app.Spec.Vault.Sidecar {
+		spec.Containers = append([]k8score.Container{c.createSideCarContainer()}, spec.Containers...)
+	}
+
+	spec.Volumes = append(spec.Volumes, k8score.Volume{
+		Name: "vault-volume",
+		VolumeSource: k8score.VolumeSource{
+			EmptyDir: &k8score.EmptyDirVolumeSource{
+				Medium: k8score.StorageMediumMemory,
+			},
+		},
+	})
+
+	for i := range spec.Containers {
+		if spec.Containers[i].Name == c.app.Name {
+			spec.Containers[i].VolumeMounts = append(spec.Containers[i].VolumeMounts, createInitContainerMounts(paths)...)
+		}
+	}
+	return spec, nil
+}
+
+func (c config) createInitContainer(paths []nais.SecretPath) k8score.Container {
+	args := []string{
+		"-v=10",
+		"-logtostderr",
+		"-one-shot",
+		fmt.Sprintf("-vault=%s", c.vaultAddr),
+		fmt.Sprintf("-save-token=%s", defaultVaultTokenFileName()),
+	}
+
+	for _, path := range paths {
+		args = append(args, fmt.Sprintf("-cn=secret:%s:dir=%s,fmt=flatten", path.KvPath, path.MountPath))
+	}
+
+	return k8score.Container{
+		Name:         "vks-init",
+		VolumeMounts: createInitContainerMounts(paths),
 		Args:         args,
 		Image:        c.initContainerImage,
 		Env: []k8score.EnvVar{
@@ -132,51 +165,36 @@ func (c config) addVaultContainer(spec *k8score.PodSpec, paths []nais.SecretPath
 			},
 		},
 	}
-
-	if c.app.Spec.Vault.Sidecar {
-		spec.Containers = append(spec.Containers, container)
-	} else {
-		spec.InitContainers = append(spec.InitContainers, container)
-	}
-
-	spec.Volumes = append(spec.Volumes, k8score.Volume{
-		Name: "vault-volume",
-		VolumeSource: k8score.VolumeSource{
-			EmptyDir: &k8score.EmptyDirVolumeSource{
-				Medium: k8score.StorageMediumMemory,
-			},
-		},
-	})
-
-	for i := range spec.Containers {
-		if spec.Containers[i].Name == c.app.Name {
-			spec.Containers[i].VolumeMounts = append(spec.Containers[i].VolumeMounts, volumeMounts...)
-		}
-	}
-	return spec, nil
 }
-
-func (c config) createVaultContainerArgs(paths []nais.SecretPath) []string {
-
+func (c config) createSideCarContainer() k8score.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
 		"-renew-token",
 		fmt.Sprintf("-vault=%s", c.vaultAddr),
-		fmt.Sprintf("-save-token=%s", defaultVaultTokenFileName()),
 	}
 
-	for _, path := range paths {
-		args = append(args, fmt.Sprintf("-cn=secret:%s:dir=%s,fmt=flatten", path.KvPath, path.MountPath))
-	}
-	if !c.app.Spec.Vault.Sidecar {
-		args = append(args, "-one-shot")
+	return k8score.Container{
+		Name:         "vks-sidecar",
+		VolumeMounts: []k8score.VolumeMount{createDefaultMount()},
+		Args:         args,
+		Image:        c.initContainerImage,
+		Env: []k8score.EnvVar{
+			{
+				Name:  "VAULT_AUTH_METHOD",
+				Value: "token",
+			},
+
+			{
+				Name:  "VAULT_TOKEN_FILE",
+				Value: defaultVaultTokenFileName(),
+			},
+		},
 	}
 
-	return args
 }
 
-func createVolumeMounts(paths []nais.SecretPath) []k8score.VolumeMount {
+func createInitContainerMounts(paths []nais.SecretPath) []k8score.VolumeMount {
 
 	volumeMounts := make([]k8score.VolumeMount, 0, len(paths))
 	for _, path := range paths {
@@ -197,13 +215,17 @@ func createVolumeMounts(paths []nais.SecretPath) []k8score.VolumeMount {
 	}
 
 	if !defaultMountExist {
-		volumeMounts = append(volumeMounts, k8score.VolumeMount{
-			Name:      "vault-volume",
-			MountPath: nais.DefaultVaultMountPath,
-			SubPath:   filepath.Join("vault", nais.DefaultVaultMountPath), //Just to make sure subpath does not start with "/"
-		})
+		volumeMounts = append(volumeMounts, createDefaultMount())
 	}
 	return volumeMounts
+}
+
+func createDefaultMount() k8score.VolumeMount {
+	return k8score.VolumeMount{
+		Name:      "vault-volume",
+		MountPath: nais.DefaultVaultMountPath,
+		SubPath:   filepath.Join("vault", nais.DefaultVaultMountPath), //Just to make sure subpath does not start with "/"
+	}
 }
 
 func (in config) defaultSecretPath() nais.SecretPath {
