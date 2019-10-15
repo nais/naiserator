@@ -36,7 +36,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		c := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-0")
+		c := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-init")
 		assert.NotNil(t, c, "contains vault initcontainer")
 
 		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
