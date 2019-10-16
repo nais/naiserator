@@ -45,6 +45,34 @@
   ],
   "containers": [
     {
+      "name": "vks-sidecar",
+      "image": "navikt/vault-sidekick:v0.3.10-d122b16",
+      "args": [
+        "-v=10",
+        "-logtostderr",
+        "-renew-token",
+        "-vault=https://vault.adeo.no"
+      ],
+      "env": [
+        {
+          "name": "VAULT_AUTH_METHOD",
+          "value": "token"
+        },
+        {
+          "name": "VAULT_TOKEN_FILE",
+          "value": "/var/run/secrets/nais.io/vault/vault_token"
+        }
+      ],
+      "resources": {},
+      "volumeMounts": [
+        {
+          "name": "vault-volume",
+          "mountPath": "/var/run/secrets/nais.io/vault",
+          "subPath": "vault/var/run/secrets/nais.io/vault"
+        }
+      ]
+    },
+    {
       "name": "fasit",
       "image": "oyvindio/debug",
       "resources": {},

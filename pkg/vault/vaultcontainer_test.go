@@ -13,7 +13,6 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-
 func TestFeatureFlagging(t *testing.T) {
 	t.Run("Vault should by default be disabled", func(t *testing.T) {
 		viper.Reset()
@@ -26,51 +25,78 @@ func TestFeatureFlagging(t *testing.T) {
 	})
 }
 
-func TestNewInitializer(t *testing.T) {
+func TestVaultContainerCreation(t *testing.T) {
 
-	var i vault.Initializer
-	const appName = "app"
+	var i vault.Creator
+	const appName = "fasit"
+
+	app := fixtures.MinimalApplication()
+	app.Name = appName
+	app.Namespace = "default"
+	app.Spec.Vault.Enabled = true
 
 	viper.Reset()
 	viper.Set("features.vault", true)
-	viper.Set("vault.address", "adr")
-	viper.Set("vault.auth-path", "authpath")
-	viper.Set("vault.init-container-image", "img")
+	viper.Set("vault.address", "https://vault.adeo.no")
+	viper.Set("vault.kv-path", "/kv/preprod/fss")
+	viper.Set("vault.auth-path-new", "auth/kubernetes/preprod/fss/login") //todo Breaking change with nais-yaml
+	viper.Set("vault.init-container-image-new", "navikt/vault-sidekick:v0.3.10-d122b16")
 
 	t.Run("Initializer mutates podspec correctly", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Name = appName
-		app.Namespace = "namespace"
-		app.Spec.Vault.Enabled = true
-
-		paths := []nais.SecretPath{
-			{
-				MountPath: "/first/mount/path",
-				KvPath:    "/first/kv/path",
-			},
-			{
-				MountPath: "/second/mount/path",
-				KvPath:    "/second/kv/path",
-			},
-		}
-		app.Spec.Vault.Mounts = paths
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		i, err = vault.NewInitializer(app)
-		assert.NoError(t, err)
-
-		podSpec := v1.PodSpec{
-			Containers: []v1.Container{
+		tests := []struct {
+			name       string
+			goldenFile string
+			paths      []nais.SecretPath
+			sidcar     bool
+		}{
+			{"default", "default.json", nil, false},
+			{"default with sidecaar", "default_sidecar.json", nil, true},
+			{"user specified secrets", "user_secrets.json", []nais.SecretPath{
 				{
-					Name: appName,
+					KvPath:    "/serviceuser/data/test/srvfasit",
+					MountPath: "/secrets/credential/srvfasit",
 				},
-			},
+				{
+					KvPath:    "/certificate/data/dev/fasit-keystore",
+					MountPath: "/secrets/certificate/fasit-keystore",
+				},
+			}, false},
+			{"user specified secrets as sidecar ", "user_secrets_sidecar.json", []nais.SecretPath{
+				{
+					KvPath:    "/serviceuser/data/test/srvfasit",
+					MountPath: "/secrets/credential/srvfasit",
+				},
+				{
+					KvPath:    "/certificate/data/dev/fasit-keystore",
+					MountPath: "/secrets/certificate/fasit-keystore",
+				},
+			}, true},
 		}
 
-		mutatedPodSpec := i.AddVaultContainers(&podSpec)
+		for _, test := range tests {
+			app.Spec.Vault.Mounts = test.paths
+			app.Spec.Vault.Sidecar = test.sidcar
 
-		goldie.AssertJson(t,"default.json", mutatedPodSpec)
+			err := nais.ApplyDefaults(app)
+			assert.NoError(t, err)
+
+			i, err = vault.NewVaultContainerCreator(*app)
+			assert.NoError(t, err)
+
+			podSpec := v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  appName,
+						Image: "oyvindio/debug",
+					},
+				},
+			}
+
+			mutatedPodSpec, err := i.AddVaultContainer(&podSpec)
+			assert.NoError(t, err)
+
+			goldie.AssertJson(t, test.goldenFile, mutatedPodSpec)
+		}
 
 	})
 }
