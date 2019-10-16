@@ -452,9 +452,6 @@ spec:
                         - application
                         type: object
                       type: array
-                  required:
-                  - external
-                  - rules
                   type: object
               type: object
             configMaps:

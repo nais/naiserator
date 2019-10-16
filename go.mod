@@ -16,6 +16,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0
+	golang.org/x/tools v0.0.0-20191015211201-9c6d90b5a7d0 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190408172450-b1350b9e3bc2 // kubernetes-1.12.7
