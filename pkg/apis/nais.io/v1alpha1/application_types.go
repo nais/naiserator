@@ -177,8 +177,8 @@ type AccessPolicyInbound struct {
 }
 
 type AccessPolicyOutbound struct {
-	Rules    []AccessPolicyRule         `json:"rules"`
-	External []AccessPolicyExternalRule `json:"external"`
+	Rules    []AccessPolicyRule         `json:"rules,omitempty"`
+	External []AccessPolicyExternalRule `json:"external,omitempty"`
 }
 
 type AccessPolicy struct {
