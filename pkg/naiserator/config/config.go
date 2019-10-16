@@ -40,12 +40,10 @@ type Proxy struct {
 }
 
 type Vault struct {
-	Address               string `json:"address"`
-	InitContainerImage    string `json:"init-container-image"`
-	InitContainerImageNew string `json:"init-container-image-new"`
-	AuthPath              string `json:"auth-path"`
-	AuthPathNew           string `json:"auth-path-new"`
-	KeyValuePath          string `json:"kv-path"`
+	Address            string `json:"address"`
+	InitContainerImage string `json:"init-container-image"`
+	AuthPath           string `json:"auth-path"`
+	KeyValuePath       string `json:"kv-path"`
 }
 
 type Config struct {
@@ -80,8 +78,8 @@ const (
 	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
 	SecurelogsFluentdImage              = "securelogs.fluentd-image"
 	VaultAddress                        = "vault.address"
-	VaultAuthPathNew                    = "vault.auth-path-new"
-	VaultInitContainerImageNew          = "vault.init-container-image-new"
+	VaultAuthPath                       = "vault.auth-path"
+	VaultInitContainerImage             = "vault.init-container-image"
 	VaultKvPath                         = "vault.kv-path"
 )
 
@@ -117,8 +115,8 @@ func init() {
 	flag.StringSlice(ProxyExclude, []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
 
 	flag.String(VaultAddress, "", "address of the Vault server")
-	flag.String(VaultInitContainerImageNew, "", "Docker image of init container to use to read secrets from Vault")
-	flag.String(VaultAuthPathNew, "", "path to vault kubernetes auth backend")
+	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
+	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
 	flag.String(VaultKvPath, "", "path to Vault KV mount")
 
 	kafka.SetupFlags()
