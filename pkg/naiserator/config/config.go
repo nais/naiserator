@@ -40,10 +40,12 @@ type Proxy struct {
 }
 
 type Vault struct {
-	Address            string `json:"address"`
-	InitContainerImage string `json:"init-container-image"`
-	AuthPath           string `json:"auth-path"`
-	KeyValuePath       string `json:"kv-path"`
+	Address               string `json:"address"`
+	InitContainerImage    string `json:"init-container-image"`
+	InitContainerImageNew string `json:"init-container-image-new"`
+	AuthPath              string `json:"auth-path"`
+	AuthPathNew           string `json:"auth-path-new"`
+	KeyValuePath          string `json:"kv-path"`
 }
 
 type Config struct {
