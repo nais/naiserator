@@ -78,8 +78,8 @@ const (
 	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
 	SecurelogsFluentdImage              = "securelogs.fluentd-image"
 	VaultAddress                        = "vault.address"
-	VaultAuthPath                       = "vault.auth-path-new"
-	VaultInitContainerImage             = "vault.init-container-image-new"
+	VaultAuthPathNew                    = "vault.auth-path-new"
+	VaultInitContainerImageNew          = "vault.init-container-image-new"
 	VaultKvPath                         = "vault.kv-path"
 )
 
@@ -115,8 +115,8 @@ func init() {
 	flag.StringSlice(ProxyExclude, []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
 
 	flag.String(VaultAddress, "", "address of the Vault server")
-	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
-	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
+	flag.String(VaultInitContainerImageNew, "", "Docker image of init container to use to read secrets from Vault")
+	flag.String(VaultAuthPathNew, "", "path to vault kubernetes auth backend")
 	flag.String(VaultKvPath, "", "path to Vault KV mount")
 
 	kafka.SetupFlags()

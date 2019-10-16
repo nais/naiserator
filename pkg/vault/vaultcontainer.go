@@ -71,8 +71,8 @@ func defaultKVPath() string {
 func NewVaultContainerCreator(app nais.Application) (Creator, error) {
 	config := config{
 		vaultAddr:          viper.GetString(config2.VaultAddress),
-		initContainerImage: viper.GetString(config2.VaultInitContainerImage),
-		authPath:           viper.GetString(config2.VaultAuthPath),
+		initContainerImage: viper.GetString(config2.VaultInitContainerImageNew),
+		authPath:           viper.GetString(config2.VaultAuthPathNew),
 		app:                app,
 	}
 
