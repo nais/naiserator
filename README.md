@@ -94,4 +94,4 @@ go directly into the Go file as magic annotations.
 
 Check out the [controller-gen documentation](https://book.kubebuilder.io/reference/generating-crd.html) if unsure.
 
-A known working version of controller-gen is `v0.2.0-beta.3`.
+A known working version of controller-gen is `v0.2.1`.
