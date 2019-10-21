@@ -17,7 +17,7 @@
         "-one-shot",
         "-vault=https://vault.adeo.no",
         "-save-token=/var/run/secrets/nais.io/vault/vault_token",
-        "-cn=secret:/kv/preprod/fss/fasit/default:dir=/var/run/secrets/nais.io/vault,fmt=flatten,retries=5"
+        "-cn=secret:/kv/preprod/fss/fasit/default:dir=/var/run/secrets/nais.io/vault,fmt=flatten,retries=0"
       ],
       "env": [
         {
