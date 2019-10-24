@@ -142,7 +142,21 @@ func (c config) createInitContainer(paths []nais.SecretPath) k8score.Container {
 	}
 
 	for _, path := range paths {
-		args = append(args, fmt.Sprintf("-cn=secret:%s:dir=%s,fmt=flatten,retries=1", path.KvPath, path.MountPath))
+		var format string
+		if len(path.Format) > 0 {
+			format = path.Format
+		} else {
+			format = "flatten"
+		}
+
+		var paramname string
+		if format == "flatten" {
+			paramname = "dir"
+		} else {
+			paramname = "file"
+		}
+
+		args = append(args, fmt.Sprintf("-cn=secret:%s:%s=%s,fmt=%s,retries=1", path.KvPath, paramname, path.MountPath, format))
 	}
 
 	return k8score.Container{

@@ -57,6 +57,11 @@ func TestVaultContainerCreation(t *testing.T) {
 					MountPath: "/secrets/credential/srvfasit",
 				},
 				{
+					KvPath:    "/oracle/data/dev/testdb",
+					MountPath: "/secrets/oracle/testdb.json",
+					Format: "json",
+				},
+				{
 					KvPath:    "/certificate/data/dev/fasit-keystore",
 					MountPath: "/secrets/certificate/fasit-keystore",
 				},
