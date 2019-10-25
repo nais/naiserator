@@ -24,8 +24,8 @@ type realObjects struct {
 	hpa                *autoscalingv1.HorizontalPodAutoscaler
 	ingress            *extensionsv1beta1.Ingress
 	networkPolicy      *networkingv1.NetworkPolicy
-	serviceRole        *rbac_istio_io_v1alpha1.ServiceRole
-	serviceRoleBinding *rbac_istio_io_v1alpha1.ServiceRoleBinding
+	serviceRole        []*rbac_istio_io_v1alpha1.ServiceRole
+	serviceRoleBinding []*rbac_istio_io_v1alpha1.ServiceRoleBinding
 	virtualServices    []*networking_istio_io_v1alpha3.VirtualService
 	role               *rbacv1.Role
 	rolebinding        *rbacv1.RoleBinding
@@ -47,9 +47,9 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 		case *networkingv1.NetworkPolicy:
 			o.networkPolicy = v
 		case *rbac_istio_io_v1alpha1.ServiceRole:
-			o.serviceRole = v
+			o.serviceRole = append(o.serviceRole, v)
 		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
-			o.serviceRoleBinding = v
+			o.serviceRoleBinding = append(o.serviceRoleBinding, v)
 		case *networking_istio_io_v1alpha3.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)
 		case *rbacv1.Role:
@@ -194,6 +194,25 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.serviceRoleBinding)
 		assert.NotNil(t, objects.serviceRole)
 		assert.NotNil(t, objects.networkPolicy)
+	})
+
+	t.Run("servicerolebinding and prometheus servicerolebinding resources are created when access policy creation is enabled", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		opts.AccessPolicy = true
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace"}}
+		app.Spec.Prometheus.Enabled = true
+
+
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.Len(t, objects.serviceRole, 2)
+		assert.Len(t, objects.serviceRoleBinding, 2)
 	})
 
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {

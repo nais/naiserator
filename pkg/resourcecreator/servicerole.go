@@ -29,13 +29,6 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 		})
 	}
 
-	if app.Spec.Prometheus.Enabled {
-		rules = append(rules, nais.AccessPolicyRule{
-			Namespace:   IstioNamespace,
-			Application: IstioPrometheusServiceAccount,
-		})
-	}
-
 	if len(rules) == 0 && len(app.Spec.Ingresses) == 0 {
 		return nil
 	}
