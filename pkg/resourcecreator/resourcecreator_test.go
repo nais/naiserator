@@ -203,7 +203,6 @@ func TestCreate(t *testing.T) {
 		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace"}}
 		app.Spec.Prometheus.Enabled = true
 
-
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
