@@ -139,7 +139,7 @@ func TestIstio(t *testing.T) {
 		assert.NoError(t, err)
 
 		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
-		assert.NotNil(t, serviceRoleBinding)
+		assert.Nil(t, serviceRoleBinding)
 
 		serviceRoleBindingPrometheus := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.NotNil(t, serviceRoleBindingPrometheus)
