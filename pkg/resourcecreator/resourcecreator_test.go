@@ -18,17 +18,17 @@ import (
 )
 
 type realObjects struct {
-	deployment         *v1.Deployment
-	service            *corev1.Service
-	serviceAccount     *corev1.ServiceAccount
-	hpa                *autoscalingv1.HorizontalPodAutoscaler
-	ingress            *extensionsv1beta1.Ingress
-	networkPolicy      *networkingv1.NetworkPolicy
-	serviceRole        []*rbac_istio_io_v1alpha1.ServiceRole
-	serviceRoleBinding []*rbac_istio_io_v1alpha1.ServiceRoleBinding
-	virtualServices    []*networking_istio_io_v1alpha3.VirtualService
-	role               *rbacv1.Role
-	rolebinding        *rbacv1.RoleBinding
+	deployment          *v1.Deployment
+	service             *corev1.Service
+	serviceAccount      *corev1.ServiceAccount
+	hpa                 *autoscalingv1.HorizontalPodAutoscaler
+	ingress             *extensionsv1beta1.Ingress
+	networkPolicy       *networkingv1.NetworkPolicy
+	serviceRoles        []*rbac_istio_io_v1alpha1.ServiceRole
+	serviceRoleBindings []*rbac_istio_io_v1alpha1.ServiceRoleBinding
+	virtualServices     []*networking_istio_io_v1alpha3.VirtualService
+	role                *rbacv1.Role
+	rolebinding         *rbacv1.RoleBinding
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -47,9 +47,9 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 		case *networkingv1.NetworkPolicy:
 			o.networkPolicy = v
 		case *rbac_istio_io_v1alpha1.ServiceRole:
-			o.serviceRole = append(o.serviceRole, v)
+			o.serviceRoles = append(o.serviceRoles, v)
 		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
-			o.serviceRoleBinding = append(o.serviceRoleBinding, v)
+			o.serviceRoleBindings = append(o.serviceRoleBindings, v)
 		case *networking_istio_io_v1alpha3.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)
 		case *rbacv1.Role:
@@ -154,8 +154,8 @@ func TestCreate(t *testing.T) {
 
 		objects := getRealObjects(resources)
 		assert.Nil(t, objects.virtualServices)
-		assert.Nil(t, objects.serviceRoleBinding)
-		assert.Nil(t, objects.serviceRole)
+		assert.Nil(t, objects.serviceRoleBindings)
+		assert.Nil(t, objects.serviceRoles)
 		assert.Nil(t, objects.networkPolicy)
 	})
 
@@ -172,8 +172,8 @@ func TestCreate(t *testing.T) {
 
 		objects := getRealObjects(resources)
 		assert.Len(t, objects.virtualServices, 1)
-		assert.NotNil(t, objects.serviceRoleBinding)
-		assert.NotNil(t, objects.serviceRole)
+		assert.NotNil(t, objects.serviceRoleBindings)
+		assert.NotNil(t, objects.serviceRoles)
 		assert.NotNil(t, objects.networkPolicy)
 	})
 
@@ -191,8 +191,8 @@ func TestCreate(t *testing.T) {
 
 		objects := getRealObjects(resources)
 		assert.NotNil(t, objects.virtualServices)
-		assert.NotNil(t, objects.serviceRoleBinding)
-		assert.NotNil(t, objects.serviceRole)
+		assert.NotNil(t, objects.serviceRoleBindings)
+		assert.NotNil(t, objects.serviceRoles)
 		assert.NotNil(t, objects.networkPolicy)
 	})
 
@@ -210,8 +210,8 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.Len(t, objects.serviceRole, 2)
-		assert.Len(t, objects.serviceRoleBinding, 2)
+		assert.Len(t, objects.serviceRoles, 2)
+		assert.Len(t, objects.serviceRoleBindings, 2)
 	})
 
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
