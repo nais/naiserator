@@ -142,6 +142,8 @@ type EnvVar struct {
 type SecretPath struct {
 	MountPath string `json:"mountPath"`
 	KvPath    string `json:"kvPath"`
+	// +kubebuilder:validation:Enum=flatten;json;yaml;env;properties;""
+	Format    string `json:"format,omitempty"`
 }
 
 type Vault struct {
