@@ -45,8 +45,13 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
 		}
 
+		operation = OperationCreateOrUpdate
+		if len(app.Spec.Ingresses) == 0 {
+			operation = OperationDeleteIfExists
+		}
+
 		for _, vs := range vses {
-			objects = append(objects, ResourceOperation{vs, OperationCreateOrUpdate})
+			objects = append(objects, ResourceOperation{vs, operation})
 		}
 
 		serviceRole := ServiceRole(app)
@@ -55,8 +60,13 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 		serviceRoleBinding := ServiceRoleBinding(app)
+		operation = OperationCreateOrUpdate
+		if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
+			operation = OperationDeleteIfExists
+		}
+
 		if serviceRoleBinding != nil {
-			objects = append(objects, ResourceOperation{serviceRoleBinding, OperationCreateOrUpdate})
+			objects = append(objects, ResourceOperation{serviceRoleBinding, operation})
 		}
 
 		serviceRolePrometheus := ServiceRolePrometheus(app)
@@ -65,13 +75,22 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
+		operation = OperationCreateOrUpdate
+		if !app.Spec.Prometheus.Enabled {
+			operation = OperationDeleteIfExists
+		}
+
 		if serviceRoleBindingPrometheus != nil {
-			objects = append(objects, ResourceOperation{serviceRoleBindingPrometheus, OperationCreateOrUpdate})
+			objects = append(objects, ResourceOperation{serviceRoleBindingPrometheus, operation})
 		}
 
 		serviceEntry := ServiceEntry(app)
+		operation = OperationCreateOrUpdate
+		if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
+			operation = OperationDeleteIfExists
+		}
 		if serviceEntry != nil {
-			objects = append(objects, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
+			objects = append(objects, ResourceOperation{serviceEntry, operation})
 		}
 
 	} else {
