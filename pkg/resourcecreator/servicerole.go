@@ -29,10 +29,6 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 		})
 	}
 
-	if len(rules) == 0 && len(app.Spec.Ingresses) == 0 {
-		return nil
-	}
-
 	return &istio_crd.ServiceRoleBinding{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "ServiceRoleBinding",
@@ -50,10 +46,6 @@ func ServiceRoleBinding(app *nais.Application) *istio_crd.ServiceRoleBinding {
 }
 
 func ServiceRoleBindingPrometheus(app *nais.Application) (serviceRoleBindingPrometheus *istio_crd.ServiceRoleBinding) {
-	if !app.Spec.Prometheus.Enabled {
-		return nil
-	}
-
 	name := fmt.Sprintf("%s-prometheus", app.Name)
 
 	return &istio_crd.ServiceRoleBinding{

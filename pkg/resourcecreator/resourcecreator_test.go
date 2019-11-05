@@ -231,7 +231,7 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, app.Name, objects.rolebinding.Name)
 	})
 
-	t.Run("default network policy that allows egress to resources in kube-system and istio-system is created for app", func (t *testing.T) {
+	t.Run("default network policy that allows egress to resources in kube-system and istio-system is created for app", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
@@ -248,4 +248,61 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.networkPolicy)
 		assert.NotEmpty(t, objects.networkPolicy.Spec.Egress)
 	})
+
+	t.Run("omitting ingresses denies traffic from istio ingress gateway", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		opts.AccessPolicy = true
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
+		numDeletes := 0
+		for _, resource := range deletes {
+			switch x := resource.Resource.(type) {
+			case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
+				if x.GetName() == "myapplication" {
+					numDeletes++
+				}
+			}
+		}
+
+		if numDeletes != 1 {
+			t.Fail()
+		}
+	})
+
+	t.Run("no service role and no service role binding created for prometheus, when disabled", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+
+		app.Spec.Prometheus.Enabled = false
+		opts.AccessPolicy = true
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
+		numDeletes := 0
+		for _, resource := range deletes {
+			switch x := resource.Resource.(type) {
+			case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
+				if x.GetName() == "myapplication-prometheus" {
+					numDeletes++
+				}
+			}
+		}
+
+		if numDeletes != 1 {
+			t.Fail()
+		}
+	})
+
 }

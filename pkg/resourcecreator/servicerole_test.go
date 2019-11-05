@@ -107,39 +107,11 @@ func TestIstio(t *testing.T) {
 		assert.Contains(t, serviceRoleBinding.Spec.Subjects, &subject)
 	})
 
-	t.Run("omitting ingresses denies traffic from istio ingress gateway", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
-		assert.NoError(t, err)
-		assert.Nil(t, serviceRoleBinding)
-
-	})
-
-	t.Run("no service role and no service role binding created for prometheus, when disabled ", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.Prometheus.Enabled = false
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		serviceRolePrometheus := resourcecreator.ServiceRolePrometheus(app)
-		assert.Nil(t, serviceRolePrometheus)
-
-		serviceRoleBindingPrometheus := resourcecreator.ServiceRoleBindingPrometheus(app)
-		assert.Nil(t, serviceRoleBindingPrometheus)
-
-	})
-
 	t.Run("service role and service role binding created, with matching naming, when prometheus is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Prometheus.Enabled = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
-
-		serviceRoleBinding := resourcecreator.ServiceRoleBinding(app)
-		assert.Nil(t, serviceRoleBinding)
 
 		serviceRoleBindingPrometheus := resourcecreator.ServiceRoleBindingPrometheus(app)
 		assert.NotNil(t, serviceRoleBindingPrometheus)
