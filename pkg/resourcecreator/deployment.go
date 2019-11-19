@@ -104,6 +104,9 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if app.Spec.WebProxy {
@@ -258,7 +261,7 @@ func secureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
 func vaultSidecar(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	creator, err := vault.NewVaultContainerCreator(*app)
 	if err != nil {
-		return nil, fmt.Errorf("while creating Vaultt container: %s", err)
+		return nil, fmt.Errorf("while creating Vault container: %s", err)
 	}
 	return creator.AddVaultContainer(podSpec)
 }
