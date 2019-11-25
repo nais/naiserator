@@ -29,7 +29,7 @@ Any unneeded resources will be automatically deleted if disabled by feature flag
 
 ## Documentation
 
-The entire specification for the manifest is documented in our [doc.nais.io](https://doc.nais.io/in-depth/nais-manifest).
+The entire specification for the manifest is documented in our [doc.nais.io](https://doc.nais.io/nais-application/manifest).
 
 ## Deployment
 
