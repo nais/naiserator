@@ -51,7 +51,7 @@ func TestSynchronizer(t *testing.T) {
 	// Store the Application resource in the cluster before testing commences.
 	// This simulates a deployment into the cluster which is then picked up by the
 	// informer queue.
-	app, err := appClient.Naiserator().Applications(namespace).Create(app)
+	app, err := appClient.NaiseratorV1alpha1().Applications(namespace).Create(app)
 	if err != nil {
 		t.Fatalf("Application resource cannot be persisted to fake Kubernetes: %s", err)
 	}
@@ -71,7 +71,7 @@ func TestSynchronizer(t *testing.T) {
 
 	// Test that the Application was updated successfully after processing,
 	// and that the hash is present.
-	persistedApp, err := appClient.Naiserator().Applications(namespace).Get(name, metav1.GetOptions{})
+	persistedApp, err := appClient.NaiseratorV1alpha1().Applications(namespace).Get(name, metav1.GetOptions{})
 	assert.NotNil(t, persistedApp)
 	assert.NoError(t, err)
 	assert.Equalf(t, app.LastSyncedHash(), persistedApp.LastSyncedHash(), "Application resource hash in Kubernetes doesn't match local version")
