@@ -14,14 +14,8 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Naiserator() naiseratorv1alpha1.NaiseratorV1alpha1Interface
 	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Networking() networkingv1alpha3.NetworkingV1alpha3Interface
 	RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Rbac() rbacv1alpha1.RbacV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -38,31 +32,13 @@ func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1In
 	return c.naiseratorV1alpha1
 }
 
-// Deprecated: Naiserator retrieves the default version of NaiseratorClient.
-// Please explicitly pick a version.
-func (c *Clientset) Naiserator() naiseratorv1alpha1.NaiseratorV1alpha1Interface {
-	return c.naiseratorV1alpha1
-}
-
 // NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
 func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
 	return c.networkingV1alpha3
 }
 
-// Deprecated: Networking retrieves the default version of NetworkingClient.
-// Please explicitly pick a version.
-func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
-	return c.networkingV1alpha3
-}
-
 // RbacV1alpha1 retrieves the RbacV1alpha1Client
 func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
-	return c.rbacV1alpha1
-}
-
-// Deprecated: Rbac retrieves the default version of RbacClient.
-// Please explicitly pick a version.
-func (c *Clientset) Rbac() rbacv1alpha1.RbacV1alpha1Interface {
 	return c.rbacV1alpha1
 }
 
