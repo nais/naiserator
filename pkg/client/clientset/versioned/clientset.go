@@ -3,6 +3,7 @@
 package versioned
 
 import (
+	iamv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
@@ -13,6 +14,9 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	IamV1alpha1() iamv1alpha1.IamV1alpha1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Iam() iamv1alpha1.IamV1alpha1Interface
 	NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Naiserator() naiseratorv1alpha1.NaiseratorV1alpha1Interface
@@ -28,9 +32,21 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
+	iamV1alpha1        *iamv1alpha1.IamV1alpha1Client
 	naiseratorV1alpha1 *naiseratorv1alpha1.NaiseratorV1alpha1Client
 	networkingV1alpha3 *networkingv1alpha3.NetworkingV1alpha3Client
 	rbacV1alpha1       *rbacv1alpha1.RbacV1alpha1Client
+}
+
+// IamV1alpha1 retrieves the IamV1alpha1Client
+func (c *Clientset) IamV1alpha1() iamv1alpha1.IamV1alpha1Interface {
+	return c.iamV1alpha1
+}
+
+// Deprecated: Iam retrieves the default version of IamClient.
+// Please explicitly pick a version.
+func (c *Clientset) Iam() iamv1alpha1.IamV1alpha1Interface {
+	return c.iamV1alpha1
 }
 
 // NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client
@@ -82,6 +98,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.iamV1alpha1, err = iamv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.naiseratorV1alpha1, err = naiseratorv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -106,6 +126,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.iamV1alpha1 = iamv1alpha1.NewForConfigOrDie(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.NewForConfigOrDie(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.NewForConfigOrDie(c)
 	cs.rbacV1alpha1 = rbacv1alpha1.NewForConfigOrDie(c)
@@ -117,6 +138,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.iamV1alpha1 = iamv1alpha1.New(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.New(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.New(c)
 	cs.rbacV1alpha1 = rbacv1alpha1.New(c)
