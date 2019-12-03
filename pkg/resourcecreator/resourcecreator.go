@@ -37,6 +37,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		objects = append(objects, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
+	if resourceOptions.GoogleCluster {
+		googleServiceAccount := GoogleServiceAccount(app)
+		objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
+	}
+
 	if resourceOptions.AccessPolicy {
 		objects = append(objects, ResourceOperation{NetworkPolicy(app, resourceOptions.AccessPolicyNotAllowedCIDRs), OperationCreateOrUpdate})
 		vses, err := VirtualServices(app)

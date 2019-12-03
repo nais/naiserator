@@ -6,9 +6,11 @@ package updater
 import (
 	"fmt"
 
+	iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	typed_iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	log "github.com/sirupsen/logrus"
@@ -236,6 +238,23 @@ func RoleBinding(client typed_rbac_v1.RoleBindingInterface, old, new *rbacv1.Rol
 	}
 }
 
+func iamServiceAccount(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccountInterface, old, new *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount) func() error {
+	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -370,6 +389,17 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return RoleBinding(c, nil, new)
 		}
 		return RoleBinding(c, old, new)
+
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
+		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return iamServiceAccount(c, nil, new)
+		}
+		return iamServiceAccount(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
@@ -535,6 +565,19 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			return err
 		}
 
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
+		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+		return func() error {
+			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+			_, err = c.Create(new)
+			return err
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -668,6 +711,17 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		c := clientSet.RbacV1().RoleBindings(new.Namespace)
 		return func() error {
 			log.Infof("deleting *rbacv1.RoleBinding for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
+		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+		return func() error {
+			log.Infof("deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil

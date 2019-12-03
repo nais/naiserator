@@ -89,6 +89,12 @@ var i = []Service{
 		Type:      "*rbacv1.RoleBinding",
 		Client:    "clientSet.RbacV1().RoleBindings",
 	},
+	{
+		Name:      "iamServiceAccount",
+		Interface: "typed_iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccountInterface",
+		Type:      "*iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount",
+		Client:    "customClient.IamV1alpha1().IAMServiceAccounts",
+	},
 }
 
 func main() {

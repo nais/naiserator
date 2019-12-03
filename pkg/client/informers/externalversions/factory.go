@@ -8,6 +8,7 @@ import (
 	time "time"
 
 	versioned "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	iamcnrmcloudgooglecom "github.com/nais/naiserator/pkg/client/informers/externalversions/iam.cnrm.cloud.google.com"
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
 	naisio "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io"
 	networkingistioio "github.com/nais/naiserator/pkg/client/informers/externalversions/networking.istio.io"
@@ -158,9 +159,14 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Iam() iamcnrmcloudgooglecom.Interface
 	Naiserator() naisio.Interface
 	Networking() networkingistioio.Interface
 	Rbac() rbacistioio.Interface
+}
+
+func (f *sharedInformerFactory) Iam() iamcnrmcloudgooglecom.Interface {
+	return iamcnrmcloudgooglecom.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Naiserator() naisio.Interface {

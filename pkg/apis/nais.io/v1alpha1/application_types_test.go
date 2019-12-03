@@ -18,6 +18,34 @@ func TestApplication_Hash(t *testing.T) {
 	assert.NotEqual(t, a2, a3, "must not match ")
 }
 
+func TestApplication_CreateAppNamespaceHash(t *testing.T) {
+	application := &v1alpha1.Application{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "reallylongapplicationname",
+			Namespace: "evenlongernamespacename",
+		},
+	}
+	application2 := &v1alpha1.Application{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "reallylongafoo",
+			Namespace: "evenlongerbar",
+		},
+	}
+	application3 := &v1alpha1.Application{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "short",
+			Namespace: "name",
+		},
+	}
+	appNameHash := application.CreateAppNamespaceHash()
+	appNameHash2 := application2.CreateAppNamespaceHash()
+	appNameHash3 := application3.CreateAppNamespaceHash()
+	assert.Equal(t, "reallylonga-evenlonger-siqwsiq", appNameHash)
+	assert.Equal(t, "reallylonga-evenlonger-piuqbfq", appNameHash2)
+	assert.Equal(t, "short-name-hqb7npi", appNameHash3)
+	assert.True(t, len(appNameHash2) <= 30)
+	assert.True(t, len(appNameHash3) >= 6)
+}
 func TestNilFix(t *testing.T) {
 	app := v1alpha1.Application{}
 	err := v1alpha1.ApplyDefaults(&app)

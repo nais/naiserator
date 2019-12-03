@@ -5,7 +5,8 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
+	naisiov1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbacistioiov1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -38,8 +39,12 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=naiserator.nais.io, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
+	// Group=iam.cnrm.cloud.google.com, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("iamserviceaccounts"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Iam().V1alpha1().IAMServiceAccounts().Informer()}, nil
+
+		// Group=naiserator.nais.io, Version=v1alpha1
+	case naisiov1alpha1.SchemeGroupVersion.WithResource("applications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Naiserator().V1alpha1().Applications().Informer()}, nil
 
 		// Group=networking.istio.io, Version=v1alpha3

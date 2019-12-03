@@ -15,8 +15,6 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	IamV1alpha1() iamv1alpha1.IamV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Iam() iamv1alpha1.IamV1alpha1Interface
 	NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface
 	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
 	RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface
@@ -34,12 +32,6 @@ type Clientset struct {
 
 // IamV1alpha1 retrieves the IamV1alpha1Client
 func (c *Clientset) IamV1alpha1() iamv1alpha1.IamV1alpha1Interface {
-	return c.iamV1alpha1
-}
-
-// Deprecated: Iam retrieves the default version of IamClient.
-// Please explicitly pick a version.
-func (c *Clientset) Iam() iamv1alpha1.IamV1alpha1Interface {
 	return c.iamV1alpha1
 }
 

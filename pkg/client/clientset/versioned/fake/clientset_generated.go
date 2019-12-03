@@ -71,11 +71,6 @@ func (c *Clientset) IamV1alpha1() iamv1alpha1.IamV1alpha1Interface {
 	return &fakeiamv1alpha1.FakeIamV1alpha1{Fake: &c.Fake}
 }
 
-// Iam retrieves the IamV1alpha1Client
-func (c *Clientset) Iam() iamv1alpha1.IamV1alpha1Interface {
-	return &fakeiamv1alpha1.FakeIamV1alpha1{Fake: &c.Fake}
-}
-
 // NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client
 func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface {
 	return &fakenaiseratorv1alpha1.FakeNaiseratorV1alpha1{Fake: &c.Fake}
