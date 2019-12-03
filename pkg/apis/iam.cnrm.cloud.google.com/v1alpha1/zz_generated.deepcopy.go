@@ -39,7 +39,7 @@ func (in *IAMServiceAccount) DeepCopyObject() runtime.Object {
 func (in *IAMServiceAccountList) DeepCopyInto(out *IAMServiceAccountList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]IAMServiceAccount, len(*in))

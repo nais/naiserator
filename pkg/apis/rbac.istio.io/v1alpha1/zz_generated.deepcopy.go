@@ -113,7 +113,7 @@ func (in *ServiceRoleBinding) DeepCopyObject() runtime.Object {
 func (in *ServiceRoleBindingList) DeepCopyInto(out *ServiceRoleBindingList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]ServiceRoleBinding, len(*in))
@@ -178,7 +178,7 @@ func (in *ServiceRoleBindingSpec) DeepCopy() *ServiceRoleBindingSpec {
 func (in *ServiceRoleList) DeepCopyInto(out *ServiceRoleList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]ServiceRole, len(*in))
