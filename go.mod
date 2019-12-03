@@ -18,10 +18,10 @@ require (
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/tools v0.0.0-20191015211201-9c6d90b5a7d0 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
-	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/api v0.0.0-20190408172450-b1350b9e3bc2 // kubernetes-1.12.7
-	k8s.io/apimachinery v0.0.0-20190409012359-28713bcd7119 // kubernetes-1.12.7
-	k8s.io/client-go v0.0.0-20190408172623-b7e8408f656e // kubernetes-1.12.7
+	gopkg.in/yaml.v2 v2.2.4
+	k8s.io/api v0.0.0-20191114100237-2cd11237263f // kubernetes-1.15.6
+	k8s.io/apimachinery v0.0.0-20191004115701-31ade1b30762 // kubernetes-1.15.6
+	k8s.io/client-go v0.0.0-20191114101336-8cba805ad12d // kubernetes-1.15.6
 )
 
 go 1.13
