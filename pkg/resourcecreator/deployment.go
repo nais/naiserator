@@ -298,15 +298,17 @@ func envVars(app *nais.Application) []corev1.EnvVar {
 func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 	objectMeta := app.CreateObjectMeta()
 
-	port := app.Spec.Prometheus.Port
-	if len(port) == 0 {
-		port = strconv.Itoa(app.Spec.Port)
-	}
+	if app.Spec.Prometheus.Path != "" {
+		port := app.Spec.Prometheus.Port
+		if len(port) == 0 {
+			port = strconv.Itoa(app.Spec.Port)
+		}
 
-	objectMeta.Annotations = map[string]string{
-		"prometheus.io/scrape": strconv.FormatBool(app.Spec.Prometheus.Enabled),
-		"prometheus.io/port":   port,
-		"prometheus.io/path":   app.Spec.Prometheus.Path,
+		objectMeta.Annotations = map[string]string{
+			"prometheus.io/scrape": "true",
+			"prometheus.io/port":   port,
+			"prometheus.io/path":   app.Spec.Prometheus.Path,
+		}
 	}
 	if len(app.Spec.Logformat) > 0 {
 		objectMeta.Annotations["nais.io/logformat"] = app.Spec.Logformat

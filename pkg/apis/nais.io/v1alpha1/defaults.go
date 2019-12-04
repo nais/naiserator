@@ -39,9 +39,6 @@ func getAppDefaults() *Application {
 			Strategy: Strategy{
 				Type: DeploymentStrategyRollingUpdate,
 			},
-			Prometheus: PrometheusConfig{
-				Path: "/metrics",
-			},
 			Ingresses: []string{},
 			Resources: ResourceRequirements{
 				Limits: ResourceSpec{

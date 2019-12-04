@@ -98,7 +98,6 @@ type Probe struct {
 }
 
 type PrometheusConfig struct {
-	Enabled bool   `json:"enabled,omitempty"`
 	Port    string `json:"port,omitempty"`
 	Path    string `json:"path,omitempty"`
 }

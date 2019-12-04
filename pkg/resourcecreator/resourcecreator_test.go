@@ -201,7 +201,7 @@ func TestCreate(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace"}}
-		app.Spec.Prometheus.Enabled = true
+		app.Spec.Prometheus.Path = "/metrics"
 
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -283,7 +283,7 @@ func TestCreate(t *testing.T) {
 
 		opts := resourcecreator.NewResourceOptions()
 
-		app.Spec.Prometheus.Enabled = false
+		app.Spec.Prometheus.Path = ""
 		opts.AccessPolicy = true
 
 		resources, err := resourcecreator.Create(app, opts)

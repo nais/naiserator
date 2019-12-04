@@ -81,7 +81,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
 		operation = OperationCreateOrUpdate
-		if !app.Spec.Prometheus.Enabled {
+		if app.Spec.Prometheus.Path == "" {
 			operation = OperationDeleteIfExists
 		}
 

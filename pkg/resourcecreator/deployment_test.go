@@ -83,7 +83,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("prometheus port defaults to application port", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Prometheus.Enabled = true
+		app.Spec.Prometheus.Path = "/metrics"
 		app.Spec.Port = 12345
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -92,14 +92,14 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
+		assert.Equal(t, "true", deploy.Spec.Template.Annotations["prometheus.io/scrape"])
+		assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 		assert.Equal(t, strconv.Itoa(app.Spec.Port), deploy.Spec.Template.Annotations["prometheus.io/port"])
 	})
 
-	t.Run("prometheus is set up correctly", func(t *testing.T) {
+	t.Run("prometheus is disabled if no path is set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Prometheus.Path = "/my/metrics"
 		app.Spec.Prometheus.Port = "1234"
-		app.Spec.Prometheus.Enabled = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -107,9 +107,9 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
-		assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
-		assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
+		assert.Empty(t, deploy.Spec.Template.Annotations["prometheus.io/scrape"])
+		assert.Empty(t, deploy.Spec.Template.Annotations["prometheus.io/path"])
+		assert.Empty(t, deploy.Spec.Template.Annotations["prometheus.io/port"])
 	})
 
 	t.Run("certificate authority files and configuration is set according to spec", func(t *testing.T) {

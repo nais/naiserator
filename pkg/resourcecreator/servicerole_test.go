@@ -109,7 +109,7 @@ func TestIstio(t *testing.T) {
 
 	t.Run("service role and service role binding created, with matching naming, when prometheus is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Prometheus.Enabled = true
+		app.Spec.Prometheus.Path = "/metrics"
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 

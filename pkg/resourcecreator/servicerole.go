@@ -94,7 +94,7 @@ func ServiceRole(app *nais.Application) *istio_crd.ServiceRole {
 }
 
 func ServiceRolePrometheus(app *nais.Application) (serviceRolePrometheus *istio_crd.ServiceRole) {
-	if !app.Spec.Prometheus.Enabled {
+	if app.Spec.Prometheus.Path == "" {
 		return nil
 	}
 
