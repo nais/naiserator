@@ -8,10 +8,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ServiceAccount(app *nais.Application, googleCluster bool, projectId string) *corev1.ServiceAccount {
+func ServiceAccount(app *nais.Application, projectId string) *corev1.ServiceAccount {
 	objectMeta := app.CreateObjectMeta()
 	gcpSvcAcc := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", app.CreateAppNamespaceHash(), projectId)
-	if googleCluster {
+	if len(projectId) > 0 {
 		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = gcpSvcAcc
 	}
 

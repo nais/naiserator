@@ -9,15 +9,14 @@ import (
 type IAMServiceAccount struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec IAMServiceAccountSpec `json:"spec"`
+	Spec              IAMServiceAccountSpec `json:"spec"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type IAMServiceAccountList struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items []IAMServiceAccount `json:"items"`
+	Items           []IAMServiceAccount `json:"items"`
 }
 
 type IAMServiceAccountSpec struct {
@@ -29,30 +28,28 @@ type IAMServiceAccountSpec struct {
 type IAMPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec IAMPolicySpec `json:"spec"`
+	Spec              IAMPolicySpec `json:"spec"`
 }
 
 type IAMPolicySpec struct {
 	ResourceRef *ResourceRef `json:"resourceRef"`
-	Bindings []Bindings `json:"bindings"`
+	Bindings    []Bindings   `json:"bindings"`
 }
 
 type ResourceRef struct {
 	ApiVersion string `json:"apiVersion"`
-	Kind string `json:"kind"`
-	Name string `json:"name"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
 }
 
 type Bindings struct {
-	Role string `json:"role"`
+	Role    string   `json:"role"`
 	Members []string `json:"members"`
 }
 
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type IAMPolicyList struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items []IAMPolicy `json:"items"`
+	Items           []IAMPolicy `json:"items"`
 }

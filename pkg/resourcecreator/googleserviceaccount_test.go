@@ -1,6 +1,5 @@
 package resourcecreator_test
 
-
 import (
 	"testing"
 
@@ -14,6 +13,6 @@ func TestGetGoogleServiceAccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
 	googleSvcAcc := resourcecreator.GoogleServiceAccount(app)
 
-	assert.Equal(t, "myapplicati-mynamespac-w4o5cwa", googleSvcAcc.Name)
-	assert.Equal(t, "serviceaccounts", googleSvcAcc.Namespace)
+	assert.Equal(t, app.CreateAppNamespaceHash(), googleSvcAcc.Name)
+	assert.Equal(t, resourcecreator.GoogleIAMServiceAccountNamespace, googleSvcAcc.Namespace)
 }

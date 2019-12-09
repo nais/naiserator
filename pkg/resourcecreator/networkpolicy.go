@@ -35,7 +35,7 @@ func networkPolicyRules(rules []nais.AccessPolicyRule) (networkPolicy []networki
 }
 
 func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
-    rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
+	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{

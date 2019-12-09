@@ -24,7 +24,7 @@ func TestVirtualService(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		vses,err  := resourcecreator.VirtualServices(app)
+		vses, err := resourcecreator.VirtualServices(app)
 		assert.Len(t, vses, 3)
 
 		assert.Equal(t, fmt.Sprintf(resourcecreator.IstioGatewayPrefix, "host-no"), vses[0].Spec.Gateways[0])
@@ -34,7 +34,7 @@ func TestVirtualService(t *testing.T) {
 		assert.Equal(t, app.Name, route.Destination.Host)
 		assert.Equal(t, uint32(app.Spec.Service.Port), route.Destination.Port.Number)
 		assert.Equal(t, resourcecreator.IstioVirtualServiceTotalWeight, route.Weight)
-		assert.True(t, strings.HasPrefix(vses[0].Name, app.Name + "-first-host-no"))
+		assert.True(t, strings.HasPrefix(vses[0].Name, app.Name+"-first-host-no"))
 		assert.Equal(t, app.Namespace, vses[0].Namespace)
 	})
 }

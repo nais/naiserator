@@ -12,6 +12,7 @@ import (
 )
 
 const accessPolicyApp = "allowedAccessApp"
+
 var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 
 func TestNetworkPolicy(t *testing.T) {

@@ -26,7 +26,6 @@ type Features struct {
 	AccessPolicy                bool     `json:"access-policy"`
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	NativeSecrets               bool     `json:"native-secrets"`
-	GoogleCluster               bool     `json:"google-cluster"`
 	Vault                       bool     `json:"vault"`
 }
 
@@ -74,7 +73,6 @@ const (
 	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesVault                       = "features.vault"
-	GoogleCluster                       = "features.google-cluster"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
 	KubeConfig                          = "kubeconfig"
 	ProxyAddress                        = "proxy.address"
@@ -123,7 +121,6 @@ func init() {
 	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
 	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
 	flag.String(VaultKvPath, "", "path to Vault KV mount")
-	flag.Bool(GoogleCluster, false, "Enable creation of Google specific CRD's")
 
 	kafka.SetupFlags()
 }

@@ -24,7 +24,7 @@ func (in *Application) CreateObjectMeta() metav1.ObjectMeta {
 
 // We concatenate name, namespace and add a hash in order to avoid duplicate names when creating service accounts in common service accounts namespace.
 // Also making sure to not exceed name length restrictions of 30 characters
-func (in *Application) CreateAppNamespaceHash() string{
+func (in *Application) CreateAppNamespaceHash() string {
 	name := in.Name
 	namespace := in.Namespace
 	if len(name) > 11 {

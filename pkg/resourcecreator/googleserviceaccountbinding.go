@@ -9,7 +9,7 @@ import (
 )
 
 func GoogleServiceAccountBinding(app *nais.Application, sa *google_iam_crd.IAMServiceAccount, projectId string) google_iam_crd.IAMPolicy {
-	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]",projectId,app.Namespace,app.Name)
+	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, app.Namespace, app.Name)
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = GoogleIAMServiceAccountNamespace
 	objectMeta.Name = app.CreateAppNamespaceHash()
