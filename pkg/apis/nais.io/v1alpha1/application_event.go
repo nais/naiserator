@@ -11,14 +11,13 @@ import (
 const eventMaxLen = 1024
 
 func (in *Application) CreateEvent(reason, message, typeStr string) *corev1.Event {
+	objectMeta := in.CreateObjectMeta()
+	objectMeta.GenerateName = "naiserator-event-"
+	objectMeta.Name = ""
+	objectMeta.Annotations[DeploymentCorrelationIDAnnotation] = in.Status.CorrelationID
+
 	return &corev1.Event{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "naiserator-event",
-			Namespace:    in.Namespace,
-			Annotations: map[string]string{
-				DeploymentCorrelationIDAnnotation: in.Status.CorrelationID,
-			},
-		},
+		ObjectMeta:          objectMeta,
 		ReportingController: "naiserator",
 		ReportingInstance:   "naiserator",
 		Action:              reason,
