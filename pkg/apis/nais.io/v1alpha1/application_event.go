@@ -15,6 +15,9 @@ func (in *Application) CreateEvent(reason, message, typeStr string) *corev1.Even
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "naiserator-event",
 			Namespace:    in.Namespace,
+			Annotations: map[string]string{
+				DeploymentCorrelationIDAnnotation: in.Status.CorrelationID,
+			},
 		},
 		ReportingController: "naiserator",
 		ReportingInstance:   "naiserator",
