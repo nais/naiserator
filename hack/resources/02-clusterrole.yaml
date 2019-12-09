@@ -14,6 +14,8 @@ rules:
       - 'endpoints'
       - 'events'
       - 'horizontalpodautoscalers'
+      - 'iampolicies'
+      - 'iamserviceaccounts'
       - 'ingresses'
       - 'networkpolicies'
       - 'roles'

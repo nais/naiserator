@@ -255,6 +255,23 @@ func iamServiceAccount(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMServic
 	}
 }
 
+func iamPolicy(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyInterface, old, new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy) func() error {
+	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -400,6 +417,17 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return iamServiceAccount(c, nil, new)
 		}
 		return iamServiceAccount(c, old, new)
+
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
+		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return iamPolicy(c, nil, new)
+		}
+		return iamPolicy(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
@@ -578,6 +606,19 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			return err
 		}
 
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
+		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+		return func() error {
+			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+			_, err = c.Create(new)
+			return err
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -722,6 +763,17 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
 		return func() error {
 			log.Infof("deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
+		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+		return func() error {
+			log.Infof("deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil

@@ -10,12 +10,17 @@ import (
 
 type IamV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	IAMPoliciesGetter
 	IAMServiceAccountsGetter
 }
 
 // IamV1alpha1Client is used to interact with features provided by the iam.cnrm.cloud.google.com group.
 type IamV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *IamV1alpha1Client) IAMPolicies(namespace string) IAMPolicyInterface {
+	return newIAMPolicies(c, namespace)
 }
 
 func (c *IamV1alpha1Client) IAMServiceAccounts(namespace string) IAMServiceAccountInterface {

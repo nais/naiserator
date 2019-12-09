@@ -95,6 +95,12 @@ var i = []Service{
 		Type:      "*iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount",
 		Client:    "customClient.IamV1alpha1().IAMServiceAccounts",
 	},
+	{
+		Name:      "iamPolicy",
+		Interface: "typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyInterface",
+		Type:      "*iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy",
+		Client:    "customClient.IamV1alpha1().IAMPolicies",
+	},
 }
 
 func main() {

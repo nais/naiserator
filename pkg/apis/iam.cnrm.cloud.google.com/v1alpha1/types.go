@@ -23,3 +23,36 @@ type IAMServiceAccountList struct {
 type IAMServiceAccountSpec struct {
 	DisplayName string `json:"displayName"`
 }
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type IAMPolicy struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec IAMPolicySpec `json:"spec"`
+}
+
+type IAMPolicySpec struct {
+	ResourceRef *ResourceRef `json:"resourceRef"`
+	Bindings []Bindings `json:"bindings"`
+}
+
+type ResourceRef struct {
+	ApiVersion string `json:"apiVersion"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
+type Bindings struct {
+	Role string `json:"role"`
+	Members []string `json:"members"`
+}
+
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type IAMPolicyList struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items []IAMPolicy `json:"items"`
+}

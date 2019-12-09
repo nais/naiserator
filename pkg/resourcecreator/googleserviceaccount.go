@@ -7,17 +7,17 @@ import (
 )
 
 func GoogleServiceAccount(app *nais.Application) google_iam_crd.IAMServiceAccount {
-	ObjectMeta := app.CreateObjectMeta()
-	ObjectMeta.Annotations["nais.io/teamNamespace"] = app.Namespace
-	ObjectMeta.Namespace = GoogleIAMServiceAccountNamespace
-	ObjectMeta.Name = app.CreateAppNamespaceHash()
+	objectMeta := app.CreateObjectMeta()
+	objectMeta.Annotations["nais.io/teamNamespace"] = app.Namespace
+	objectMeta.Namespace = GoogleIAMServiceAccountNamespace
+	objectMeta.Name = app.CreateAppNamespaceHash()
 
 	return google_iam_crd.IAMServiceAccount{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMServiceAccount",
 			APIVersion: GoogleIAMAPIVersion,
 		},
-		ObjectMeta: ObjectMeta,
+		ObjectMeta: objectMeta,
 		Spec: google_iam_crd.IAMServiceAccountSpec{
 			DisplayName: app.Name,
 		},
