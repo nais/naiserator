@@ -289,6 +289,7 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 					return
 				}
 
+				updatedApp.Status.SynchronizationState = EventRolloutComplete
 				updatedApp.SetDeploymentRolloutStatus(event.RolloutStatus)
 				_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(updatedApp)
 				if err != nil {
