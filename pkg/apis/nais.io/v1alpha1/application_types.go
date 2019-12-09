@@ -74,6 +74,7 @@ type ApplicationSpec struct {
 type ApplicationStatus struct {
 	CorrelationID           string `json:"correlationID,omitempty"`
 	DeploymentRolloutStatus string `json:"deploymentRolloutStatus,omitempty"`
+	SynchronizationState    string `json:"synchronizationState,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

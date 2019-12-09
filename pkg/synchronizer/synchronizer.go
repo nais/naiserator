@@ -31,6 +31,7 @@ const (
 	EventRolloutComplete       = "RolloutComplete"
 	EventFailedPrepare         = "FailedPrepare"
 	EventFailedSynchronization = "FailedSynchronization"
+	EventFailedStatusUpdate    = "FailedStatusUpdate"
 )
 
 // Synchronizer creates child resources from Application resources in the cluster.
@@ -87,34 +88,47 @@ func (n *Synchronizer) reportError(source string, err error, app *v1alpha1.Appli
 
 // Process work queue
 func (n *Synchronizer) Process(app *v1alpha1.Application) {
+	logger := *log.WithFields(app.LogFields())
+
+	// Update Application resource with deployment event
+	defer func() {
+		err := n.UpdateStatus(app)
+		if err != nil {
+			n.reportError(EventFailedStatusUpdate, err, app)
+		} else {
+			logger.Debugf("Persisted Application status '%s'", app.Status.SynchronizationState)
+		}
+	}()
+
 	rollout, err := n.Prepare(app)
 	if err != nil {
-		n.reportError(EventFailedPrepare, err, app)
+		app.Status.SynchronizationState = EventFailedPrepare
+		n.reportError(app.Status.SynchronizationState, err, app)
 		return
 	}
 
-	logger := *log.WithFields(app.LogFields())
-
 	if rollout == nil {
-		logger.Debugf("no changes")
+		logger.Debugf("No changes")
 		return
 	}
 
 	logger = *log.WithFields(rollout.App.LogFields())
-	logger.Debugf("starting synchronization")
+	logger.Debugf("Starting synchronization")
 
 	err = n.Sync(*rollout)
 	if err != nil {
-		n.reportError(EventFailedSynchronization, err, app)
+		app.Status.SynchronizationState = EventFailedSynchronization
+		n.reportError(app.Status.SynchronizationState, err, app)
 		return
 	}
 
 	// Synchronization OK
-	logger.Debugf("successful synchronization")
+	app.Status.SynchronizationState = EventSynchronized
+	logger.Debugf("Successful synchronization")
 	metrics.ApplicationsProcessed.Inc()
 	metrics.Deployments.Inc()
 
-	_, err = n.reportEvent(app.CreateEvent(EventSynchronized, "Successfully synchronized all application resources", "Normal"))
+	_, err = n.reportEvent(app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
@@ -122,14 +136,6 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	// Create new deployment event
 	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus)
-
-	// Update Application resource with deployment event
-	err = n.UpdateStatus(app, *rollout)
-	if err != nil {
-		n.reportError("main", err, app)
-	} else {
-		logger.Debugf("persisted Application status")
-	}
 
 	// If Kafka is enabled, we can send out a signal when the deployment is complete.
 	// To do this we need to monitor the rollout status over a designated period.
@@ -149,7 +155,7 @@ func (n *Synchronizer) Main() {
 }
 
 // Update application status and persist to cluster
-func (n *Synchronizer) UpdateStatus(app *v1alpha1.Application, rollout Rollout) error {
+func (n *Synchronizer) UpdateStatus(app *v1alpha1.Application) error {
 	_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	if err != nil {
 		return fmt.Errorf("persist application: %s", err)
