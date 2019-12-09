@@ -25,6 +25,14 @@ const (
 	DeploymentMonitorTimeout   = time.Minute * 5
 )
 
+// Machine readable event "Reason" fields, used for determining deployment state.
+const (
+	EventSynchronized          = "Synchronized"
+	EventRolloutComplete       = "RolloutComplete"
+	EventFailedPrepare         = "FailedPrepare"
+	EventFailedSynchronization = "FailedSynchronization"
+)
+
 // Synchronizer creates child resources from Application resources in the cluster.
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
@@ -81,7 +89,7 @@ func (n *Synchronizer) reportError(source string, err error, app *v1alpha1.Appli
 func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	rollout, err := n.Prepare(app)
 	if err != nil {
-		n.reportError("prepare", err, app)
+		n.reportError(EventFailedPrepare, err, app)
 		return
 	}
 
@@ -97,7 +105,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 
 	err = n.Sync(*rollout)
 	if err != nil {
-		n.reportError("synchronize", err, app)
+		n.reportError(EventFailedSynchronization, err, app)
 		return
 	}
 
@@ -106,7 +114,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	metrics.ApplicationsProcessed.Inc()
 	metrics.Deployments.Inc()
 
-	_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
+	_, err = n.reportEvent(app.CreateEvent(EventSynchronized, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
@@ -261,6 +269,11 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
 				kafka.Events <- kafka.Message{Event: event, Logger: logger}
+
+				_, err = n.reportEvent(app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+				if err != nil {
+					logger.Errorf("monitor rollout: unable to report rollout complete event: %s", err)
+				}
 
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
 				var updatedApp *v1alpha1.Application
