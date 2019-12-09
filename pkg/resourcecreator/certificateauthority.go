@@ -34,6 +34,7 @@ func certificateAuthorityVolumeMounts() []corev1.VolumeMount {
 		Name:      CA_BUNDLE_JKS_CONFIGMAP_NAME,
 		MountPath: NAV_TRUSTSTORE_PATH,
 		SubPath:   CA_BUNDLE_JKS_SOURCE_FILENAME,
+		ReadOnly:  true,
 	})
 
 	for _, path := range certFiles {
@@ -41,6 +42,7 @@ func certificateAuthorityVolumeMounts() []corev1.VolumeMount {
 			Name:      CA_BUNDLE_PEM_CONFIGMAP_NAME,
 			MountPath: path,
 			SubPath:   CA_BUNDLE_PEM_SOURCE_FILENAME,
+			ReadOnly:  true,
 		})
 	}
 

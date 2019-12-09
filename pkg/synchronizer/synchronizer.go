@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	"github.com/nais/naiserator/pkg/event"
@@ -24,6 +23,15 @@ import (
 const (
 	DeploymentMonitorFrequency = time.Second * 5
 	DeploymentMonitorTimeout   = time.Minute * 5
+)
+
+// Machine readable event "Reason" fields, used for determining deployment state.
+const (
+	EventSynchronized          = "Synchronized"
+	EventRolloutComplete       = "RolloutComplete"
+	EventFailedPrepare         = "FailedPrepare"
+	EventFailedSynchronization = "FailedSynchronization"
+	EventFailedStatusUpdate    = "FailedStatusUpdate"
 )
 
 // Synchronizer creates child resources from Application resources in the cluster.
@@ -80,34 +88,47 @@ func (n *Synchronizer) reportError(source string, err error, app *v1alpha1.Appli
 
 // Process work queue
 func (n *Synchronizer) Process(app *v1alpha1.Application) {
+	logger := *log.WithFields(app.LogFields())
+
+	// Update Application resource with deployment event
+	defer func() {
+		err := n.UpdateStatus(app)
+		if err != nil {
+			n.reportError(EventFailedStatusUpdate, err, app)
+		} else {
+			logger.Debugf("Persisted Application status '%s'", app.Status.SynchronizationState)
+		}
+	}()
+
 	rollout, err := n.Prepare(app)
 	if err != nil {
-		n.reportError("prepare", err, app)
+		app.Status.SynchronizationState = EventFailedPrepare
+		n.reportError(app.Status.SynchronizationState, err, app)
 		return
 	}
 
-	logger := *log.WithFields(app.LogFields())
-
 	if rollout == nil {
-		logger.Debugf("no changes")
+		logger.Debugf("No changes")
 		return
 	}
 
 	logger = *log.WithFields(rollout.App.LogFields())
-	logger.Debugf("starting synchronization")
+	logger.Debugf("Starting synchronization")
 
 	err = n.Sync(*rollout)
 	if err != nil {
-		n.reportError("synchronize", err, app)
+		app.Status.SynchronizationState = EventFailedSynchronization
+		n.reportError(app.Status.SynchronizationState, err, app)
 		return
 	}
 
 	// Synchronization OK
-	logger.Debugf("successful synchronization")
+	app.Status.SynchronizationState = EventSynchronized
+	logger.Debugf("Successful synchronization")
 	metrics.ApplicationsProcessed.Inc()
 	metrics.Deployments.Inc()
 
-	_, err = n.reportEvent(app.CreateEvent("synchronize", "successfully synchronized application resources", "Normal"))
+	_, err = n.reportEvent(app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
@@ -115,14 +136,6 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	// Create new deployment event
 	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus)
-
-	// Update Application resource with deployment event
-	err = n.UpdateStatus(app, *rollout)
-	if err != nil {
-		n.reportError("main", err, app)
-	} else {
-		logger.Debugf("persisted Application status")
-	}
 
 	// If Kafka is enabled, we can send out a signal when the deployment is complete.
 	// To do this we need to monitor the rollout status over a designated period.
@@ -142,7 +155,7 @@ func (n *Synchronizer) Main() {
 }
 
 // Update application status and persist to cluster
-func (n *Synchronizer) UpdateStatus(app *v1alpha1.Application, rollout Rollout) error {
+func (n *Synchronizer) UpdateStatus(app *v1alpha1.Application) error {
 	_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 	if err != nil {
 		return fmt.Errorf("persist application: %s", err)
@@ -185,11 +198,11 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 	}
 	app.SetLastSyncedHash(hash)
 
-	deploymentID, err := uuid.NewRandom()
+	deploymentID, err := app.NextCorrelationID()
 	if err != nil {
-		return nil, fmt.Errorf("BUG: generate deployment correlation ID: %s", err)
+		return nil, err
 	}
-	app.SetCorrelationID(deploymentID.String())
+	app.SetCorrelationID(deploymentID)
 
 	// Make a query to Kubernetes for this application's previous deployment.
 	// The number of replicas is significant, so we need to carry it over to match
@@ -263,6 +276,11 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 				event.RolloutStatus = deployment.RolloutStatus_complete
 				kafka.Events <- kafka.Message{Event: event, Logger: logger}
 
+				_, err = n.reportEvent(app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+				if err != nil {
+					logger.Errorf("monitor rollout: unable to report rollout complete event: %s", err)
+				}
+
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
 				var updatedApp *v1alpha1.Application
 				updatedApp, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
@@ -271,6 +289,7 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 					return
 				}
 
+				updatedApp.Status.SynchronizationState = EventRolloutComplete
 				updatedApp.SetDeploymentRolloutStatus(event.RolloutStatus)
 				_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(updatedApp)
 				if err != nil {
