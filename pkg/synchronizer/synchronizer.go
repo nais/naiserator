@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	"github.com/nais/naiserator/pkg/event"
@@ -185,11 +184,11 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 	}
 	app.SetLastSyncedHash(hash)
 
-	deploymentID, err := uuid.NewRandom()
+	deploymentID, err := app.NextCorrelationID()
 	if err != nil {
-		return nil, fmt.Errorf("BUG: generate deployment correlation ID: %s", err)
+		return nil, err
 	}
-	app.SetCorrelationID(deploymentID.String())
+	app.SetCorrelationID(deploymentID)
 
 	// Make a query to Kubernetes for this application's previous deployment.
 	// The number of replicas is significant, so we need to carry it over to match

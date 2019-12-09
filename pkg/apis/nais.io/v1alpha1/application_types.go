@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/google/uuid"
 	hash "github.com/mitchellh/hashstructure"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -17,11 +18,12 @@ import (
 )
 
 const (
-	LastSyncedHashAnnotation = "nais.io/lastSyncedHash"
-	SecretTypeEnv            = "env"
-	SecretTypeFiles          = "files"
-	DefaultSecretType        = SecretTypeEnv
-	DefaultSecretMountPath   = "/var/run/secrets"
+	LastSyncedHashAnnotation          = "nais.io/lastSyncedHash"
+	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
+	SecretTypeEnv                     = "env"
+	SecretTypeFiles                   = "files"
+	DefaultSecretType                 = SecretTypeEnv
+	DefaultSecretMountPath            = "/var/run/secrets"
 )
 
 // Application defines a NAIS application.
@@ -143,7 +145,7 @@ type SecretPath struct {
 	MountPath string `json:"mountPath"`
 	KvPath    string `json:"kvPath"`
 	// +kubebuilder:validation:Enum=flatten;json;yaml;env;properties;""
-	Format    string `json:"format,omitempty"`
+	Format string `json:"format,omitempty"`
 }
 
 type Vault struct {
@@ -291,6 +293,23 @@ func (in *Application) LastSyncedHash() string {
 func (in *Application) SetLastSyncedHash(hash string) {
 	in.NilFix()
 	in.Annotations[LastSyncedHashAnnotation] = hash
+}
+
+// If the application was deployed with a correlation ID annotation, return this value.
+// Otherwise, generate a random UUID.
+func (in *Application) NextCorrelationID() (string, error) {
+	in.NilFix()
+
+	correlationID := in.Annotations[DeploymentCorrelationIDAnnotation]
+	if len(correlationID) == 0 {
+		id, err := uuid.NewRandom()
+		if err != nil {
+			return correlationID, fmt.Errorf("BUG: generate deployment correlation ID: %s", err)
+		}
+		correlationID = id.String()
+	}
+
+	return correlationID, nil
 }
 
 func (in *Application) SetCorrelationID(id string) {
