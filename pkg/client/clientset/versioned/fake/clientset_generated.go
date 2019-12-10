@@ -12,6 +12,8 @@ import (
 	fakenetworkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3/fake"
 	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	fakerbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1/fake"
+	storagev1alpha2 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1alpha2"
+	fakestoragev1alpha2 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1alpha2/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -84,4 +86,9 @@ func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3In
 // RbacV1alpha1 retrieves the RbacV1alpha1Client
 func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
 	return &fakerbacv1alpha1.FakeRbacV1alpha1{Fake: &c.Fake}
+}
+
+// StorageV1alpha2 retrieves the StorageV1alpha2Client
+func (c *Clientset) StorageV1alpha2() storagev1alpha2.StorageV1alpha2Interface {
+	return &fakestoragev1alpha2.FakeStorageV1alpha2{Fake: &c.Fake}
 }
