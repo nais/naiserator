@@ -9,10 +9,12 @@ import (
 	iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
+	storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	typed_iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
+	typed_storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1alpha2"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -272,7 +274,7 @@ func iamPolicy(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyInterfac
 	}
 }
 
-func googleStorageBucket(client type_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketInterface, old, new *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket) func() error {
+func googleStorageBucket(client typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketInterface, old, new *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket) func() error {
 	log.Infof("creating or updating *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket for %s", new.Name)
 	if old == nil {
 		return func() error {
@@ -289,7 +291,7 @@ func googleStorageBucket(client type_storage_cnrm_cloud_google_com_v1alpha2.Goog
 	}
 }
 
-func googleStorageBucketAccessControl(client type_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControlInterface, old, new *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl) func() error {
+func googleStorageBucketAccessControl(client typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControlInterface, old, new *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl) func() error {
 	log.Infof("creating or updating *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl for %s", new.Name)
 	if old == nil {
 		return func() error {
@@ -464,7 +466,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return iamPolicy(c, old, new)
 
 	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket:
-		c := customClient.StorageV1alpha2().StorageBucket(new.Namespace)
+		c := customClient.StorageV1alpha2().GoogleStorageBuckets(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -475,7 +477,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return googleStorageBucket(c, old, new)
 
 	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl:
-		c := customClient.StorageV1alpha2().StorageBucketAccessControl(new.Namespace)
+		c := customClient.StorageV1alpha2().GoogleStorageBucketAccessControls(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -676,7 +678,7 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 		}
 
 	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket:
-		c := customClient.StorageV1alpha2().StorageBucket(new.Namespace)
+		c := customClient.StorageV1alpha2().GoogleStorageBuckets(new.Namespace)
 		return func() error {
 			log.Infof("pre-deleting *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
@@ -689,7 +691,7 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 		}
 
 	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl:
-		c := customClient.StorageV1alpha2().StorageBucketAccessControl(new.Namespace)
+		c := customClient.StorageV1alpha2().GoogleStorageBucketAccessControls(new.Namespace)
 		return func() error {
 			log.Infof("pre-deleting *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
@@ -864,7 +866,7 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 
 	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket:
-		c := customClient.StorageV1alpha2().StorageBucket(new.Namespace)
+		c := customClient.StorageV1alpha2().GoogleStorageBuckets(new.Namespace)
 		return func() error {
 			log.Infof("deleting *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
@@ -875,7 +877,7 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 
 	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl:
-		c := customClient.StorageV1alpha2().StorageBucketAccessControl(new.Namespace)
+		c := customClient.StorageV1alpha2().GoogleStorageBucketAccessControls(new.Namespace)
 		return func() error {
 			log.Infof("deleting *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})

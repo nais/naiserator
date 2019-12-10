@@ -6,6 +6,7 @@ import (
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
+	storagev1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,7 @@ type realObjects struct {
 	virtualServices     []*networking_istio_io_v1alpha3.VirtualService
 	role                *rbacv1.Role
 	rolebinding         *rbacv1.RoleBinding
+	bucket				*storagev1alpha2.GoogleStorageBucket
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -56,6 +58,8 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.role = v
 		case *rbacv1.RoleBinding:
 			o.rolebinding = v
+		case *storagev1alpha2.GoogleStorageBucket:
+			o.bucket = v
 		}
 	}
 	return

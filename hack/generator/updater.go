@@ -103,15 +103,15 @@ var i = []Service{
 	},
 	{
 		Name:      "googleStorageBucket",
-		Interface: "type_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketInterface",
+		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketInterface",
 		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket",
-		Client:    "customClient.StorageV1alpha2().StorageBucket",
+		Client:    "customClient.StorageV1alpha2().GoogleStorageBuckets",
 	},
 	{
 		Name:      "googleStorageBucketAccessControl",
-		Interface: "type_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControlInterface",
+		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControlInterface",
 		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl",
-		Client:    "customClient.StorageV1alpha2().StorageBucketAccessControl",
+		Client:    "customClient.StorageV1alpha2().GoogleStorageBucketAccessControls",
 	},
 }
 

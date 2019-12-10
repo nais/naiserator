@@ -18,6 +18,9 @@ const (
 	IstioVirtualServiceTotalWeight    int32 = 100 // The total weight of all routes must equal 100
 	GoogleIAMAPIVersion                     = "iam.cnrm.cloud.google.com/v1alpha1"
 	GoogleIAMServiceAccountNamespace        = "serviceaccounts"
+	GoogleStorageAPIVersion					= "storage.cnrm.cloud.google.com/v1alpha2"
+	GoogleRegion							=  "europe-north1"
+
 
 	NetworkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0" // The default IP block CIDR for the default allow network policies per app
 )
