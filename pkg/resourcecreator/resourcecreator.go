@@ -22,7 +22,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	objects := ResourceOperations{
 		{Service(app), OperationCreateOrUpdate},
-		{ServiceAccount(app, resourceOptions.GoogleProjectId), OperationCreateOrUpdate},
+		{ServiceAccount(app, resourceOptions), OperationCreateOrUpdate},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 

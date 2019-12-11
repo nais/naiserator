@@ -8,7 +8,7 @@ import (
 
 func GoogleServiceAccount(app *nais.Application) google_iam_crd.IAMServiceAccount {
 	objectMeta := app.CreateObjectMeta()
-	objectMeta.Annotations["nais.io/teamNamespace"] = app.Namespace
+	objectMeta.Annotations["nais.io/team"] = app.Labels["team"]
 	objectMeta.Namespace = GoogleIAMServiceAccountNamespace
 	objectMeta.Name = app.CreateAppNamespaceHash()
 

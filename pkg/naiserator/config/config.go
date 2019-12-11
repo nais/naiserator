@@ -51,7 +51,7 @@ type Config struct {
 	Informer        Informer     `json:"informer"`
 	Kubeconfig      string       `json:"kubeconfig"`
 	ClusterName     string       `json:"cluster-name"`
-	GoogleProjectId string       `json:"project-id"`
+	GoogleProjectId string       `json:"google-project-id"`
 	Log             Log          `json:"log"`
 	Features        Features     `json:"features"`
 	Securelogs      Securelogs   `json:"securelogs"`
@@ -68,7 +68,7 @@ var (
 const (
 	Bind                                = "bind"
 	ClusterName                         = "cluster-name"
-	GoogleProjectId                     = "project-id"
+	GoogleProjectId                     = "google-project-id"
 	FeaturesAccessPolicy                = "features.access-policy"
 	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets               = "features.native-secrets"
