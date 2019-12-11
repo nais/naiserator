@@ -18,25 +18,30 @@ func validateBucketName(bucketname string) error {
 	}
 	return nil
 }
-
-func GoogleStorageBucket(app *nais.Application, bucketname string) (*google_storage_crd.GoogleStorageBucket, error) {
-	err := validateBucketName(bucketname)
-	if err != nil {
-		return nil, err
+func GoogleStorageBuckets(app *nais.Application) (googleBuckets []*google_storage_crd.GoogleStorageBucket, err error) {
+	for _, bucket := range app.Spec.CloudStorage {
+		err := validateBucketName(bucket.Name)
+		if err != nil {
+			// TODO: return error event
+		}
+		googleBuckets = append(googleBuckets, GoogleStorageBucket(app, bucket.Name))
 	}
+	return googleBuckets, err
 
+}
+func GoogleStorageBucket(app *nais.Application, bucketName string) *google_storage_crd.GoogleStorageBucket {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
-	objectMeta.Name = bucketname
+	objectMeta.Name = bucketName
 
 	return &google_storage_crd.GoogleStorageBucket{
-		TypeMeta:   k8s_meta.TypeMeta{
-			Kind: "StorageBucket",
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "StorageBucket",
 			APIVersion: GoogleStorageAPIVersion,
 		},
 		ObjectMeta: objectMeta,
-		Spec:       google_storage_crd.GoogleStorageBucketSpec{
+		Spec: google_storage_crd.GoogleStorageBucketSpec{
 			Location: GoogleRegion,
 		},
-	}, nil
+	}
 }
