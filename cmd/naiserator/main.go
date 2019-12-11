@@ -100,7 +100,7 @@ func run() error {
 	resourceOptions.AccessPolicy = cfg.Features.AccessPolicy
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
-	resourceOptions.GoogleCluster = cfg.Features.GoogleCluster
+	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
 	applicationClientset := createApplicationClientset(kubeconfig)

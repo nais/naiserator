@@ -31,6 +31,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&IAMServiceAccount{},
 		&IAMServiceAccountList{},
+		&IAMPolicy{},
+		&IAMPolicyList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

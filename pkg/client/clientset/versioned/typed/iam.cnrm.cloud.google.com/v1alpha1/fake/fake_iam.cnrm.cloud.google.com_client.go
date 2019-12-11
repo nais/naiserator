@@ -12,6 +12,10 @@ type FakeIamV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeIamV1alpha1) IAMPolicies(namespace string) v1alpha1.IAMPolicyInterface {
+	return &FakeIAMPolicies{c, namespace}
+}
+
 func (c *FakeIamV1alpha1) IAMServiceAccounts(namespace string) v1alpha1.IAMServiceAccountInterface {
 	return &FakeIAMServiceAccounts{c, namespace}
 }

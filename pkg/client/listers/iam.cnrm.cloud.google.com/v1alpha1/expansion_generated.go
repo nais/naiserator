@@ -2,6 +2,14 @@
 
 package v1alpha1
 
+// IAMPolicyListerExpansion allows custom methods to be added to
+// IAMPolicyLister.
+type IAMPolicyListerExpansion interface{}
+
+// IAMPolicyNamespaceListerExpansion allows custom methods to be added to
+// IAMPolicyNamespaceLister.
+type IAMPolicyNamespaceListerExpansion interface{}
+
 // IAMServiceAccountListerExpansion allows custom methods to be added to
 // IAMServiceAccountLister.
 type IAMServiceAccountListerExpansion interface{}

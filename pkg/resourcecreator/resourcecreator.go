@@ -22,7 +22,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	objects := ResourceOperations{
 		{Service(app), OperationCreateOrUpdate},
-		{ServiceAccount(app), OperationCreateOrUpdate},
+		{ServiceAccount(app, resourceOptions), OperationCreateOrUpdate},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 
@@ -37,9 +37,12 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		objects = append(objects, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
-	if resourceOptions.GoogleCluster {
+	if len(resourceOptions.GoogleProjectId) > 0 {
 		googleServiceAccount := GoogleServiceAccount(app)
+		googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
 		objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
+		objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
+
 	}
 
 	if resourceOptions.AccessPolicy {
