@@ -522,8 +522,6 @@ spec:
                     - name
                     type: object
                   type: array
-              required:
-              - cloudStorage
               type: object
             image:
               type: string

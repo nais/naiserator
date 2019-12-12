@@ -142,7 +142,7 @@ type CloudStorage struct {
 }
 
 type GCP struct {
-	CloudStorage []CloudStorage `json:"cloudStorage"`
+	CloudStorage []CloudStorage `json:"cloudStorage,omitempty"`
 }
 
 type EnvVar struct {
