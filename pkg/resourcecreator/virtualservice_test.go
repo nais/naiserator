@@ -65,7 +65,7 @@ func TestVirtualService(t *testing.T) {
 
 	t.Run("virtualservice created according to spec", func(t *testing.T) {
 		ingresses := []string{
-			"https://first.host.no",
+			"https://first.host.no/prefixed/with/url",
 		}
 
 		app := fixtures.MinimalApplication()
@@ -79,8 +79,11 @@ func TestVirtualService(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf(resourcecreator.IstioGatewayPrefix, "host-no"), vses[0].Spec.Gateways[0])
 		assert.Len(t, vses[0].Spec.HTTP, 1)
 		assert.Len(t, vses[0].Spec.HTTP[0].Route, 1)
+		assert.Len(t, vses[0].Spec.HTTP[0].Match, 1)
+
 		route := vses[0].Spec.HTTP[0].Route[0]
 		assert.Equal(t, app.Name, route.Destination.Host)
+		assert.Equal(t, "/prefixed/with/url", vses[0].Spec.HTTP[0].Match[0].URI.Prefix)
 		assert.Equal(t, uint32(app.Spec.Service.Port), route.Destination.Port.Number)
 		assert.Equal(t, resourcecreator.IstioVirtualServiceTotalWeight, route.Weight)
 		assert.True(t, strings.HasPrefix(vses[0].Name, app.Name+"-first-host-no"))
