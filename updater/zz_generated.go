@@ -708,6 +708,174 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 	}
 }
 
+func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+
+	case *corev1.Service:
+		c := clientSet.CoreV1().Services(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *corev1.ServiceAccount:
+		c := clientSet.CoreV1().ServiceAccounts(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *appsv1.Deployment:
+		c := clientSet.AppsV1().Deployments(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *extensionsv1beta1.Ingress:
+		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *autoscalingv1.HorizontalPodAutoscaler:
+		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *networkingv1.NetworkPolicy:
+		c := clientSet.NetworkingV1().NetworkPolicies(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *v1alpha1.ServiceRole:
+		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *v1alpha1.ServiceRoleBinding:
+		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *networking_istio_io_v1alpha3.VirtualService:
+		c := customClient.NetworkingV1alpha3().VirtualServices(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *networking_istio_io_v1alpha3.ServiceEntry:
+		c := customClient.NetworkingV1alpha3().ServiceEntries(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *rbacv1.Role:
+		c := clientSet.RbacV1().Roles(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *rbacv1.RoleBinding:
+		c := clientSet.RbacV1().RoleBindings(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
+		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
+		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket:
+		c := customClient.StorageV1alpha2().GoogleStorageBuckets(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	case *storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl:
+		c := customClient.StorageV1alpha2().GoogleStorageBucketAccessControls(new.Namespace)
+		return func() error {
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return err
+			}
+			return nil
+		}
+
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
 func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 

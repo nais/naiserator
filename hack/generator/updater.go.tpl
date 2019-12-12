@@ -99,6 +99,24 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 	}
 }
 
+func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+	{{range .}}
+		case {{.Type}}:
+		c := {{.Client}}(new.Namespace)
+		return func() error {
+            _, err := c.Create(new)
+            if err != nil && !errors.IsAlreadyExists(err) {
+                return err
+            }
+            return nil
+        }
+	{{end}}
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
 func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}

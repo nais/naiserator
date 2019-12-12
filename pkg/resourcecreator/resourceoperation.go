@@ -10,6 +10,7 @@ type Operation int
 const (
 	OperationCreateOrUpdate Operation = iota
 	OperationCreateOrRecreate
+	OperationCreateIfNotExists
 	OperationDeleteIfExists
 )
 

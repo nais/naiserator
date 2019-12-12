@@ -245,6 +245,8 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 			fn = updater.CreateOrUpdate(n.ClientSet, n.AppClient, rop.Resource)
 		case resourcecreator.OperationCreateOrRecreate:
 			fn = updater.CreateOrRecreate(n.ClientSet, n.AppClient, rop.Resource)
+		case resourcecreator.OperationCreateIfNotExists:
+			fn = updater.CreateIfNotExists(n.ClientSet, n.AppClient, rop.Resource)
 		case resourcecreator.OperationDeleteIfExists:
 			fn = updater.DeleteIfExists(n.ClientSet, n.AppClient, rop.Resource)
 		default:
