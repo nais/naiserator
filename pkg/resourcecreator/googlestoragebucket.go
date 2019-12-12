@@ -7,8 +7,8 @@ import (
 )
 
 func GoogleStorageBuckets(app *nais.Application) []*google_storage_crd.GoogleStorageBucket {
-	googleBuckets := make([]*google_storage_crd.GoogleStorageBucket, len(app.Spec.GCP.CloudStorage))
-	for i, bucket := range app.Spec.GCP.CloudStorage {
+	googleBuckets := make([]*google_storage_crd.GoogleStorageBucket, len(app.Spec.GCP.Buckets))
+	for i, bucket := range app.Spec.GCP.Buckets {
 		googleBuckets[i] = GoogleStorageBucket(app, bucket.Name)
 	}
 	return googleBuckets

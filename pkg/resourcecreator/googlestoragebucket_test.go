@@ -13,7 +13,7 @@ func TestGetGoogleStorageBuckets(t *testing.T) {
 	t.Run("bucket creation", func(t *testing.T) {
 		bucketname := "buck-owens"
 		app := fixtures.MinimalApplication()
-		app.Spec.GCP.CloudStorage = []v1alpha1.CloudStorage{
+		app.Spec.GCP.Buckets = []v1alpha1.CloudStorageBucket{
 			{Name: bucketname},
 		}
 		bucket := resourcecreator.GoogleStorageBuckets(app)

@@ -324,7 +324,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.GoogleProjectId = "nais-foo-1234"
-		app.Spec.GCP.CloudStorage = []nais.CloudStorage{
+		app.Spec.GCP.Buckets = []nais.CloudStorageBucket{
 			{
 				Name: "bucket-name",
 			},

@@ -38,7 +38,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 {
-		if len(app.Spec.GCP.CloudStorage) > 0 {
+		if len(app.Spec.GCP.Buckets) > 0 {
 			// TODO: A service account will be required for all GCP related resources.
 			// TODO: If implementing more features, move these two outside of the cloud storage check.
 			googleServiceAccount := GoogleServiceAccount(app)

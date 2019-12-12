@@ -137,12 +137,12 @@ type EnvVarSource struct {
 	FieldRef ObjectFieldSelector `json:"fieldRef"`
 }
 
-type CloudStorage struct {
+type CloudStorageBucket struct {
 	Name string `json:"name"`
 }
 
 type GCP struct {
-	CloudStorage []CloudStorage `json:"cloudStorage,omitempty"`
+	Buckets []CloudStorageBucket `json:"buckets,omitempty"`
 }
 
 type EnvVar struct {

@@ -513,7 +513,7 @@ spec:
               type: array
             gcp:
               properties:
-                cloudStorage:
+                buckets:
                   items:
                     properties:
                       name:
