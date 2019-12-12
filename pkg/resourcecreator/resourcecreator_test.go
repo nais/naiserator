@@ -1,8 +1,10 @@
 package resourcecreator_test
 
 import (
+	"strings"
 	"testing"
 
+	iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
@@ -19,18 +21,21 @@ import (
 )
 
 type realObjects struct {
-	deployment          *v1.Deployment
-	service             *corev1.Service
-	serviceAccount      *corev1.ServiceAccount
-	hpa                 *autoscalingv1.HorizontalPodAutoscaler
-	ingress             *extensionsv1beta1.Ingress
-	networkPolicy       *networkingv1.NetworkPolicy
-	serviceRoles        []*rbac_istio_io_v1alpha1.ServiceRole
-	serviceRoleBindings []*rbac_istio_io_v1alpha1.ServiceRoleBinding
-	virtualServices     []*networking_istio_io_v1alpha3.VirtualService
-	role                *rbacv1.Role
-	rolebinding         *rbacv1.RoleBinding
-	bucket				*storagev1alpha2.GoogleStorageBucket
+	deployment              *v1.Deployment
+	service                 *corev1.Service
+	serviceAccount          *corev1.ServiceAccount
+	hpa                     *autoscalingv1.HorizontalPodAutoscaler
+	ingress                 *extensionsv1beta1.Ingress
+	networkPolicy           *networkingv1.NetworkPolicy
+	serviceRoles            []*rbac_istio_io_v1alpha1.ServiceRole
+	serviceRoleBindings     []*rbac_istio_io_v1alpha1.ServiceRoleBinding
+	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
+	role                    *rbacv1.Role
+	rolebinding             *rbacv1.RoleBinding
+	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
+	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
+	bucket                  *storagev1alpha2.GoogleStorageBucket
+	bucketAccessControl     *storagev1alpha2.GoogleStorageBucketAccessControl
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -58,8 +63,14 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.role = v
 		case *rbacv1.RoleBinding:
 			o.rolebinding = v
+		case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
+			o.googleIAMServiceAccount = v
+		case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
+			o.googleIAMPolicy = v
 		case *storagev1alpha2.GoogleStorageBucket:
 			o.bucket = v
+		case *storagev1alpha2.GoogleStorageBucketAccessControl:
+			o.bucketAccessControl = v
 		}
 	}
 	return
@@ -307,6 +318,38 @@ func TestCreate(t *testing.T) {
 		if numDeletes != 1 {
 			t.Fail()
 		}
+	})
+
+	t.Run("google service account, bucket, and bucket policy resources are coherent", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		opts.GoogleProjectId = "nais-foo-1234"
+		app.Spec.GCP.CloudStorage = []nais.CloudStorage{
+			{
+				Name: "bucket-name",
+			},
+		}
+
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.googleIAMPolicy)
+		assert.NotNil(t, objects.googleIAMServiceAccount)
+		assert.NotNil(t, objects.bucketAccessControl)
+		assert.NotNil(t, objects.bucket)
+
+		entityTokens := strings.SplitN(objects.bucketAccessControl.Spec.Entity, "@", 2)
+
+		// Requesting a bucket creates four separate Google resources.
+		// There must be a connection between Bucket, Bucket IAM Policy, and Google Service Account.
+		assert.Equal(t, "bucket-name", objects.bucket.Name)
+		assert.Equal(t, objects.bucket.Name, objects.bucketAccessControl.Spec.BucketRef.Name)
+		assert.Equal(t, objects.googleIAMServiceAccount.Name, entityTokens[0])
+		assert.Equal(t, "nais-foo-1234.iam.gserviceaccount.com", entityTokens[1])
 	})
 
 }
