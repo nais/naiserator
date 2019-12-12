@@ -1,6 +1,7 @@
 package resourcecreator_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/magiconair/properties/assert"
@@ -11,13 +12,12 @@ import (
 func TestGoogleStorageBucketAccessControl(t *testing.T) {
 	t.Run("testing", func(t *testing.T) {
 		bucketname := "buck-owens"
+		projectId := "project-1234"
 		app := fixtures.MinimalApplication()
-		bucket, _ := resourcecreator.GoogleStorageBucket(app, bucketname)
-		googleSvcAcc := resourcecreator.GoogleServiceAccount(app)
-		bac := resourcecreator.GoogleStorageBucketAccessControl(app,bucket,&googleSvcAcc)
+		bac := resourcecreator.GoogleStorageBucketAccessControl(app, bucketname, projectId)
 
 		assert.Equal(t, bac.Spec.BucketRef.Name, bucketname)
-		assert.Equal(t, bac.Spec.Entity, googleSvcAcc.Spec.DisplayName)
+		assert.Equal(t, bac.Spec.Entity, fmt.Sprintf("%s@%s.iam.gserviceaccount.com", app.Name, projectId))
 		assert.Equal(t, bac.Spec.Role, "OWNER")
 	})
 }

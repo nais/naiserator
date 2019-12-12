@@ -9,24 +9,33 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func validateBucketName(bucketname string) error {
-	urlString := fmt.Sprintf("https://www.googleapis.com/storage/v1/b/%s", bucketname)
-	resp, _ := http.Get(urlString)
+func validateBucketNames(app *nais.Application) error {
+	for _, bucket := range app.Spec.ObjectStorage {
+		bucketname := bucket.Name
 
-	if resp.StatusCode != 404 {
-		return fmt.Errorf("bucket name '%s' is not available", bucketname)
+		urlString := fmt.Sprintf("https://www.googleapis.com/storage/v1/b/%s", bucketname)
+		resp, _ := http.Get(urlString)
+
+		if resp.StatusCode != 404 {
+			if
+
+
+
+
+			return fmt.Errorf("bucket name '%s' is not available\n", bucketname)
+		}
 	}
 	return nil
 }
 func GoogleStorageBuckets(app *nais.Application) (googleBuckets []*google_storage_crd.GoogleStorageBucket, err error) {
-	for _, bucket := range app.Spec.CloudStorage {
-		err := validateBucketName(bucket.Name)
-		if err != nil {
-			// TODO: return error event
-		}
+	err = validateBucketNames(app)
+	if err != nil {
+		return nil, err
+	}
+	for _, bucket := range app.Spec.ObjectStorage {
 		googleBuckets = append(googleBuckets, GoogleStorageBucket(app, bucket.Name))
 	}
-	return googleBuckets, err
+	return googleBuckets, nil
 
 }
 func GoogleStorageBucket(app *nais.Application, bucketName string) *google_storage_crd.GoogleStorageBucket {
