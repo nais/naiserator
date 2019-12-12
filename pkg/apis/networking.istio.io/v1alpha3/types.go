@@ -22,17 +22,30 @@ type Destination struct {
 	Port   PortSelector `json:"port"`
 }
 
+type StringMatch struct {
+	Exact  string `json:"exact,omitempty"`
+	Prefix string `json:"prefix,omitempty"`
+	Regex  string `json:"regex,omitempty"`
+}
+
+type HTTPMatchRequest struct {
+	URI StringMatch `json:"uri"`
+}
+
 type HTTPRouteDestination struct {
 	Destination Destination `json:"destination"`
 	Weight      int32       `json:"weight"`
 }
 
 type HTTPRoute struct {
+	Match []HTTPMatchRequest     `json:"match,omitempty"`
 	Route []HTTPRouteDestination `json:"route"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// documentation: https://istio.io/docs/reference/config/networking/virtual-service/
 type VirtualService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
