@@ -2,11 +2,12 @@ package resourcecreator
 
 import (
 	"fmt"
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/url"
 	"strings"
+
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func VirtualServices(app *nais.Application) (vses []*istio.VirtualService, err error) {
@@ -14,22 +15,33 @@ func VirtualServices(app *nais.Application) (vses []*istio.VirtualService, err e
 		return nil, nil
 	}
 
-	ingresses, err := sanitize(app.Spec.Ingresses)
-	if err != nil {
-		return nil, err
-	}
+	for _, ingress := range app.Spec.Ingresses {
+		parsedUrl, err := url.Parse(ingress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+		}
+		if len(parsedUrl.Path) == 0 {
+			parsedUrl.Path = "/"
+		}
+		err = validateUrl(parsedUrl)
+		if err != nil {
+			return nil, err
+		}
 
-	for _, ingress := range ingresses {
-		vses = append(vses, virtualService(ingress, app))
+		vs := virtualService(*parsedUrl, app)
+		vses = append(vses, &vs)
 	}
 
 	return
 }
 
-func virtualService(ingress *url.URL, app *nais.Application) *istio.VirtualService {
+func virtualService(ingress url.URL, app *nais.Application) istio.VirtualService {
+	domainID := istioDomainID(ingress)
+
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = fmt.Sprintf("%s-%s", app.Name, strings.ReplaceAll(ingress.Hostname(), ".", "-"))
-	return &istio.VirtualService{
+
+	return istio.VirtualService{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "VirtualService",
 			APIVersion: IstioNetworkingAPIVersion,
@@ -37,11 +49,18 @@ func virtualService(ingress *url.URL, app *nais.Application) *istio.VirtualServi
 		ObjectMeta: objectMeta,
 		Spec: istio.VirtualServiceSpec{
 			Gateways: []string{
-				fmt.Sprintf(IstioGatewayPrefix, domain(ingress)),
+				fmt.Sprintf(IstioGatewayPrefix, domainID),
 			},
 			Hosts: []string{ingress.Hostname()},
 			HTTP: []istio.HTTPRoute{
 				{
+					Match: []istio.HTTPMatchRequest{
+						{
+							URI: istio.StringMatch{
+								Prefix: ingress.Path,
+							},
+						},
+					},
 					Route: []istio.HTTPRouteDestination{
 						{
 							Destination: istio.Destination{
@@ -59,32 +78,11 @@ func virtualService(ingress *url.URL, app *nais.Application) *istio.VirtualServi
 	}
 }
 
-// sanitize takes a slice of string assumed to either be hostnames or URLs and returns valid URLs
-func sanitize(hosts []string) (sanitized []*url.URL, err error) {
-	for _, host := range hosts {
-		// parse raw input, and return error if found
-		if _, err := url.Parse(host); err != nil {
-			return nil, fmt.Errorf("unable to parse host: '%s'. %s", host, err)
-		}
-
-		// Remove and re-append http(s) as protocol to unify the host format.
-		// This allows us to use url.Parse function for validating and operating on the parts of the URL.
-		// Assumes we are only dealing with http in this context.
-		host = fmt.Sprintf("https://%s", strings.TrimPrefix(strings.TrimPrefix(host, "http://"), "https://"))
-		parsedUrl, err := url.ParseRequestURI(host)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse host: '%s'. %s", host, err)
-		}
-
-		sanitized = append(sanitized, parsedUrl)
-	}
-
-	return
-}
-
-// domain returns the mid-level and top-level domain separated with a dash
-func domain(ingress *url.URL) string {
+// returns the mid-level and top-level domain separated with a dash
+func istioDomainID(ingress url.URL) string {
 	parts := strings.Split(ingress.Hostname(), ".")
-
-	return parts[len(parts)-2] + "-" + parts[len(parts)-1]
+	if len(parts) > 2 {
+		parts = parts[len(parts)-2:]
+	}
+	return strings.Join(parts, "-")
 }

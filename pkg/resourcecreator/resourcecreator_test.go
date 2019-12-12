@@ -176,7 +176,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"host.domain.tld"}
+		app.Spec.Ingresses = []string{"https://host.domain.tld"}
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		err := nais.ApplyDefaults(app)

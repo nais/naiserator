@@ -88,10 +88,15 @@ func (n *Synchronizer) reportError(source string, err error, app *v1alpha1.Appli
 
 // Process work queue
 func (n *Synchronizer) Process(app *v1alpha1.Application) {
+	changed := true
+
 	logger := *log.WithFields(app.LogFields())
 
 	// Update Application resource with deployment event
 	defer func() {
+		if !changed {
+			return
+		}
 		err := n.UpdateStatus(app)
 		if err != nil {
 			n.reportError(EventFailedStatusUpdate, err, app)
@@ -108,6 +113,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	}
 
 	if rollout == nil {
+		changed = false
 		logger.Debugf("No changes")
 		return
 	}

@@ -22,7 +22,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	objects := ResourceOperations{
 		{Service(app), OperationCreateOrUpdate},
-		{ServiceAccount(app, resourceOptions.GoogleProjectId), OperationCreateOrUpdate},
+		{ServiceAccount(app, resourceOptions), OperationCreateOrUpdate},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 
@@ -70,17 +70,18 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			objects = append(objects, ResourceOperation{vs, operation})
 		}
 
-		serviceRole := ServiceRole(app)
-		if serviceRole != nil {
-			objects = append(objects, ResourceOperation{serviceRole, OperationCreateOrUpdate})
-		}
-
-		serviceRoleBinding := ServiceRoleBinding(app)
+		// Applies to ServiceRoles and ServiceRoleBindings
 		operation = OperationCreateOrUpdate
 		if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
 			operation = OperationDeleteIfExists
 		}
 
+		serviceRole := ServiceRole(app)
+		if serviceRole != nil {
+			objects = append(objects, ResourceOperation{serviceRole, operation})
+		}
+
+		serviceRoleBinding := ServiceRoleBinding(app)
 		if serviceRoleBinding != nil {
 			objects = append(objects, ResourceOperation{serviceRoleBinding, operation})
 		}
