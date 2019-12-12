@@ -9,6 +9,7 @@ import (
 	naisiov1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbacistioiov1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
+	v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -60,6 +61,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoles().Informer()}, nil
 	case rbacistioiov1alpha1.SchemeGroupVersion.WithResource("servicerolebindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoleBindings().Informer()}, nil
+
+		// Group=storage.cnrm.cloud.google.com, Version=v1alpha2
+	case v1alpha2.SchemeGroupVersion.WithResource("googlestoragebuckets"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().GoogleStorageBuckets().Informer()}, nil
+	case v1alpha2.SchemeGroupVersion.WithResource("googlestoragebucketaccesscontrols"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().GoogleStorageBucketAccessControls().Informer()}, nil
 
 	}
 

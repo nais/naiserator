@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/imdario/mergo v0.3.7
+	github.com/magiconair/properties v1.8.0
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e

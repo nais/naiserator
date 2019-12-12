@@ -45,6 +45,7 @@ type Application struct {
 // ApplicationSpec contains the NAIS manifest.
 type ApplicationSpec struct {
 	AccessPolicy    AccessPolicy         `json:"accessPolicy,omitempty"`
+	GCP             GCP                  `json:"gcp,omitempty"`
 	ConfigMaps      ConfigMaps           `json:"configMaps,omitempty"`
 	Env             []EnvVar             `json:"env,omitempty"`
 	Image           string               `json:"image"`
@@ -134,6 +135,14 @@ type ObjectFieldSelector struct {
 
 type EnvVarSource struct {
 	FieldRef ObjectFieldSelector `json:"fieldRef"`
+}
+
+type CloudStorageBucket struct {
+	Name string `json:"name"`
+}
+
+type GCP struct {
+	Buckets []CloudStorageBucket `json:"buckets,omitempty"`
 }
 
 type EnvVar struct {

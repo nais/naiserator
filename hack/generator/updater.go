@@ -101,6 +101,18 @@ var i = []Service{
 		Type:      "*iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy",
 		Client:    "customClient.IamV1alpha1().IAMPolicies",
 	},
+	{
+		Name:      "googleStorageBucket",
+		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketInterface",
+		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket",
+		Client:    "customClient.StorageV1alpha2().GoogleStorageBuckets",
+	},
+	{
+		Name:      "googleStorageBucketAccessControl",
+		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControlInterface",
+		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl",
+		Client:    "customClient.StorageV1alpha2().GoogleStorageBucketAccessControls",
+	},
 }
 
 func main() {

@@ -30,6 +30,8 @@ import (
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	typed_iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1"
 	iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
+	storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
+	typed_storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1alpha2"
 
 )
 
@@ -91,6 +93,24 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
             _, err = c.Create(new)
             return err
 		}
+	{{end}}
+	default:
+		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
+	}
+}
+
+func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+	switch new := resource.(type) {
+	{{range .}}
+		case {{.Type}}:
+		c := {{.Client}}(new.Namespace)
+		return func() error {
+            _, err := c.Create(new)
+            if err != nil && !errors.IsAlreadyExists(err) {
+                return err
+            }
+            return nil
+        }
 	{{end}}
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))

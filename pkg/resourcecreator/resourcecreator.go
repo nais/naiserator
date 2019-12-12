@@ -38,11 +38,21 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 {
-		googleServiceAccount := GoogleServiceAccount(app)
-		googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
-		objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
-		objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
+		if len(app.Spec.GCP.Buckets) > 0 {
+			// TODO: A service account will be required for all GCP related resources.
+			// TODO: If implementing more features, move these two outside of the cloud storage check.
+			googleServiceAccount := GoogleServiceAccount(app)
+			googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
+			objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
+			objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
+			buckets := GoogleStorageBuckets(app)
+			for _, bucket := range buckets {
+				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+				objects = append(objects, ResourceOperation{bucket, OperationCreateIfNotExists})
+				objects = append(objects, ResourceOperation{bucketBac, OperationCreateOrUpdate})
+			}
+		}
 	}
 
 	if resourceOptions.AccessPolicy {

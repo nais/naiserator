@@ -511,6 +511,18 @@ spec:
                 - name
                 type: object
               type: array
+            gcp:
+              properties:
+                buckets:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  type: array
+              type: object
             image:
               type: string
             ingresses:
