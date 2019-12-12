@@ -511,6 +511,20 @@ spec:
                 - name
                 type: object
               type: array
+            gcp:
+              properties:
+                cloudStorage:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  type: array
+              required:
+              - cloudStorage
+              type: object
             image:
               type: string
             ingresses:

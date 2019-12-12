@@ -8,10 +8,10 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleStorageBucketAccessControl(app *nais.Application, bucket, projectId string) *google_storage_crd.GoogleStorageBucketAccessControl {
+func GoogleStorageBucketAccessControl(app *nais.Application, bucketName, projectId, serviceAccountName string) *google_storage_crd.GoogleStorageBucketAccessControl {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
-	objectMeta.Name = bucket
+	objectMeta.Name = bucketName
 
 	return &google_storage_crd.GoogleStorageBucketAccessControl{
 		TypeMeta: k8s_meta.TypeMeta{
@@ -21,9 +21,9 @@ func GoogleStorageBucketAccessControl(app *nais.Application, bucket, projectId s
 		ObjectMeta: objectMeta,
 		Spec: google_storage_crd.GoogleStorageBucketAccessControlSpec{
 			BucketRef: google_storage_crd.BucketRef{
-				Name: bucket,
+				Name: bucketName,
 			},
-			Entity: fmt.Sprintf("%s@%s.iam.gserviceaccount.com", app.Name, projectId),
+			Entity: fmt.Sprintf("%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId),
 			Role:   "OWNER",
 		},
 	}

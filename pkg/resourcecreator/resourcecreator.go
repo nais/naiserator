@@ -43,18 +43,14 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
 		objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
-		if len(app.Spec.ObjectStorage) > 0 {
-			buckets, err := GoogleStorageBuckets(app)
-			if err != nil {
-				// log this shit
-			}
+		if len(app.Spec.GCP.CloudStorage) > 0 {
+			buckets := GoogleStorageBuckets(app)
 			for _, bucket := range buckets {
-				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId)
-				objects = append(objects, ResourceOperation{bucket, OperationCreateOrRecreate})
-				objects = append(objects, ResourceOperation{bucketBac, OperationCreateOrRecreate})
+				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+				objects = append(objects, ResourceOperation{bucket, OperationCreateIfNotExists})
+				objects = append(objects, ResourceOperation{bucketBac, OperationCreateOrUpdate})
 			}
 		}
-
 	}
 
 	if resourceOptions.AccessPolicy {
