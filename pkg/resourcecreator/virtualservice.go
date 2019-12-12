@@ -54,6 +54,13 @@ func virtualService(ingress url.URL, app *nais.Application) istio.VirtualService
 			Hosts: []string{ingress.Hostname()},
 			HTTP: []istio.HTTPRoute{
 				{
+					Match: []istio.HTTPMatchRequest{
+						{
+							URI: istio.StringMatch{
+								Prefix: ingress.Path,
+							},
+						},
+					},
 					Route: []istio.HTTPRouteDestination{
 						{
 							Destination: istio.Destination{
