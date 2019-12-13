@@ -74,7 +74,10 @@ func TestSynchronizer(t *testing.T) {
 	persistedApp, err := appClient.NaiseratorV1alpha1().Applications(namespace).Get(name, metav1.GetOptions{})
 	assert.NotNil(t, persistedApp)
 	assert.NoError(t, err)
-	assert.Equalf(t, app.LastSyncedHash(), persistedApp.LastSyncedHash(), "Application resource hash in Kubernetes doesn't match local version")
+	assert.Equalf(t, app.LastSyncedHash(), persistedApp.LastSyncedHash(), "Application resource hash in Kubernetes matches local version")
+
+	// Test that the status field is set with RolloutComplete
+	assert.Equalf(t, synchronizer.EventSynchronized, persistedApp.Status.SynchronizationState, "Synchronization state is set")
 
 	// Test that a base resource set was created successfully
 	testResource(clientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{}))
