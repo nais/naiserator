@@ -714,6 +714,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *corev1.Service:
 		c := clientSet.CoreV1().Services(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *corev1.Service for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -724,6 +725,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *corev1.ServiceAccount:
 		c := clientSet.CoreV1().ServiceAccounts(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *corev1.ServiceAccount for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -734,6 +736,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *appsv1.Deployment:
 		c := clientSet.AppsV1().Deployments(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *appsv1.Deployment for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -744,6 +747,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *extensionsv1beta1.Ingress:
 		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *extensionsv1beta1.Ingress for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -754,6 +758,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *autoscalingv1.HorizontalPodAutoscaler:
 		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -764,6 +769,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *networkingv1.NetworkPolicy:
 		c := clientSet.NetworkingV1().NetworkPolicies(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *networkingv1.NetworkPolicy for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -774,6 +780,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *v1alpha1.ServiceRole:
 		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *v1alpha1.ServiceRole for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -784,6 +791,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *v1alpha1.ServiceRoleBinding:
 		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *v1alpha1.ServiceRoleBinding for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -794,6 +802,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *networking_istio_io_v1alpha3.VirtualService:
 		c := customClient.NetworkingV1alpha3().VirtualServices(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -804,6 +813,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *networking_istio_io_v1alpha3.ServiceEntry:
 		c := customClient.NetworkingV1alpha3().ServiceEntries(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -814,6 +824,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *rbacv1.Role:
 		c := clientSet.RbacV1().Roles(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *rbacv1.Role for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -824,6 +835,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *rbacv1.RoleBinding:
 		c := clientSet.RbacV1().RoleBindings(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *rbacv1.RoleBinding for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -834,6 +846,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
 		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -844,6 +857,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
 		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -854,6 +868,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket:
 		c := customClient.StorageV1alpha2().StorageBuckets(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -864,6 +879,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl:
 		c := customClient.StorageV1alpha2().StorageBucketAccessControls(new.Namespace)
 		return func() error {
+			log.Infof("if not exists, creating new *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
