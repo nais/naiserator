@@ -8,7 +8,7 @@ import (
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
-	storagev1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
+	storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -34,8 +34,8 @@ type realObjects struct {
 	rolebinding             *rbacv1.RoleBinding
 	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
 	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
-	bucket                  *storagev1alpha2.GoogleStorageBucket
-	bucketAccessControl     *storagev1alpha2.GoogleStorageBucketAccessControl
+	bucket                  *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket
+	bucketAccessControl     *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -67,9 +67,9 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.googleIAMServiceAccount = v
 		case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
 			o.googleIAMPolicy = v
-		case *storagev1alpha2.GoogleStorageBucket:
+		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket:
 			o.bucket = v
-		case *storagev1alpha2.GoogleStorageBucketAccessControl:
+		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl:
 			o.bucketAccessControl = v
 		}
 	}

@@ -2,6 +2,6 @@
 
 package v1alpha2
 
-type GoogleStorageBucketExpansion interface{}
+type StorageBucketExpansion interface{}
 
-type GoogleStorageBucketAccessControlExpansion interface{}
+type StorageBucketAccessControlExpansion interface{}

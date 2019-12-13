@@ -2,18 +2,18 @@
 
 package v1alpha2
 
-// GoogleStorageBucketListerExpansion allows custom methods to be added to
-// GoogleStorageBucketLister.
-type GoogleStorageBucketListerExpansion interface{}
+// StorageBucketListerExpansion allows custom methods to be added to
+// StorageBucketLister.
+type StorageBucketListerExpansion interface{}
 
-// GoogleStorageBucketNamespaceListerExpansion allows custom methods to be added to
-// GoogleStorageBucketNamespaceLister.
-type GoogleStorageBucketNamespaceListerExpansion interface{}
+// StorageBucketNamespaceListerExpansion allows custom methods to be added to
+// StorageBucketNamespaceLister.
+type StorageBucketNamespaceListerExpansion interface{}
 
-// GoogleStorageBucketAccessControlListerExpansion allows custom methods to be added to
-// GoogleStorageBucketAccessControlLister.
-type GoogleStorageBucketAccessControlListerExpansion interface{}
+// StorageBucketAccessControlListerExpansion allows custom methods to be added to
+// StorageBucketAccessControlLister.
+type StorageBucketAccessControlListerExpansion interface{}
 
-// GoogleStorageBucketAccessControlNamespaceListerExpansion allows custom methods to be added to
-// GoogleStorageBucketAccessControlNamespaceLister.
-type GoogleStorageBucketAccessControlNamespaceListerExpansion interface{}
+// StorageBucketAccessControlNamespaceListerExpansion allows custom methods to be added to
+// StorageBucketAccessControlNamespaceLister.
+type StorageBucketAccessControlNamespaceListerExpansion interface{}

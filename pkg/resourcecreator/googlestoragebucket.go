@@ -6,8 +6,8 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleStorageBuckets(app *nais.Application) []*google_storage_crd.GoogleStorageBucket {
-	googleBuckets := make([]*google_storage_crd.GoogleStorageBucket, len(app.Spec.GCP.Buckets))
+func GoogleStorageBuckets(app *nais.Application) []*google_storage_crd.StorageBucket {
+	googleBuckets := make([]*google_storage_crd.StorageBucket, len(app.Spec.GCP.Buckets))
 	for i, bucket := range app.Spec.GCP.Buckets {
 		googleBuckets[i] = GoogleStorageBucket(app, bucket.Name)
 	}
@@ -15,7 +15,7 @@ func GoogleStorageBuckets(app *nais.Application) []*google_storage_crd.GoogleSto
 
 }
 
-func GoogleStorageBucket(app *nais.Application, bucketName string) *google_storage_crd.GoogleStorageBucket {
+func GoogleStorageBucket(app *nais.Application, bucketName string) *google_storage_crd.StorageBucket {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = bucketName
@@ -24,13 +24,13 @@ func GoogleStorageBucket(app *nais.Application, bucketName string) *google_stora
 	// We suspect this will make some users unhappy, so we leave it as an orphan instead.
 	objectMeta.OwnerReferences = make([]k8s_meta.OwnerReference, 0)
 
-	return &google_storage_crd.GoogleStorageBucket{
+	return &google_storage_crd.StorageBucket{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "StorageBucket",
 			APIVersion: GoogleStorageAPIVersion,
 		},
 		ObjectMeta: objectMeta,
-		Spec: google_storage_crd.GoogleStorageBucketSpec{
+		Spec: google_storage_crd.StorageBucketSpec{
 			Location: GoogleRegion,
 		},
 	}

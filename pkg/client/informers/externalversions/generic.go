@@ -63,10 +63,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoleBindings().Informer()}, nil
 
 		// Group=storage.cnrm.cloud.google.com, Version=v1alpha2
-	case v1alpha2.SchemeGroupVersion.WithResource("googlestoragebuckets"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().GoogleStorageBuckets().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("googlestoragebucketaccesscontrols"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().GoogleStorageBucketAccessControls().Informer()}, nil
+	case v1alpha2.SchemeGroupVersion.WithResource("storagebuckets"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().StorageBuckets().Informer()}, nil
+	case v1alpha2.SchemeGroupVersion.WithResource("storagebucketaccesscontrols"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().StorageBucketAccessControls().Informer()}, nil
 
 	}
 
