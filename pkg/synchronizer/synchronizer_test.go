@@ -3,6 +3,7 @@ package synchronizer_test
 import (
 	"testing"
 
+	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	nais_fake "github.com/nais/naiserator/pkg/client/clientset/versioned/fake"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
@@ -20,6 +21,9 @@ func TestSynchronizer(t *testing.T) {
 	app := fixtures.MinimalApplication()
 	name := app.GetName()
 	namespace := app.GetNamespace()
+	app.SetAnnotations(map[string]string{
+		v1alpha1.DeploymentCorrelationIDAnnotation: "deploy-id",
+	})
 
 	// Test that a resource has been created in the fake cluster
 	testResource := func(resource metav1.Object, err error) {
@@ -78,6 +82,7 @@ func TestSynchronizer(t *testing.T) {
 
 	// Test that the status field is set with RolloutComplete
 	assert.Equalf(t, synchronizer.EventSynchronized, persistedApp.Status.SynchronizationState, "Synchronization state is set")
+	assert.Equalf(t, "deploy-id", persistedApp.Status.CorrelationID, "Correlation ID is set")
 
 	// Test that a base resource set was created successfully
 	testResource(clientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{}))

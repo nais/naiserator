@@ -100,6 +100,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 		}
 		err := n.UpdateApplication(app, func(existing *v1alpha1.Application) error {
 			existing.Status.SynchronizationState = app.Status.SynchronizationState
+			existing.Status.CorrelationID = app.Status.CorrelationID
 			existing.Annotations[v1alpha1.LastSyncedHashAnnotation] = app.Annotations[v1alpha1.LastSyncedHashAnnotation]
 			_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(existing)
 			return err
