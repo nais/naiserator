@@ -13,8 +13,8 @@ spec:
   - JSONPath: .metadata.labels.team
     name: Team
     type: string
-  - JSONPath: .status.deploymentRolloutStatus
-    name: Status
+  - JSONPath: .status.synchronizationState
+    name: State
     type: string
   group: nais.io
   names:
