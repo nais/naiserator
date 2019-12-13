@@ -194,7 +194,11 @@ func (in *ApplicationSpec) DeepCopyInto(out *ApplicationSpec) {
 	}
 	out.SecureLogs = in.SecureLogs
 	out.Service = in.Service
-	out.Strategy = in.Strategy
+	if in.Strategy != nil {
+		in, out := &in.Strategy, &out.Strategy
+		*out = new(Strategy)
+		**out = **in
+	}
 	in.Vault.DeepCopyInto(&out.Vault)
 	return
 }
