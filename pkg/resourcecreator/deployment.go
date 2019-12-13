@@ -7,6 +7,7 @@ import (
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/securelogs"
 	"github.com/nais/naiserator/pkg/vault"
+	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -46,6 +47,12 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 	}
 
 	var strategy appsv1.DeploymentStrategy
+
+	if app.Spec.Strategy == nil {
+		log.Error("BUG: strategy is nil; should be fixed by NilFix")
+		app.Spec.Strategy = &nais.Strategy{Type: nais.DeploymentStrategyRollingUpdate}
+	}
+
 	if app.Spec.Strategy.Type == nais.DeploymentStrategyRecreate {
 		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RecreateDeploymentStrategyType,

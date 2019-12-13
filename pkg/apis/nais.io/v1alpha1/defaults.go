@@ -36,7 +36,7 @@ func getAppDefaults() *Application {
 				FailureThreshold: DefaultProbeFailureThreshold,
 			},
 			Port: DefaultAppPort,
-			Strategy: Strategy{
+			Strategy: &Strategy{
 				Type: DeploymentStrategyRollingUpdate,
 			},
 			Prometheus: PrometheusConfig{

@@ -63,7 +63,7 @@ type ApplicationSpec struct {
 	SecureLogs      SecureLogs           `json:"secureLogs,omitempty"`
 	Service         Service              `json:"service,omitempty"`
 	SkipCaBundle    bool                 `json:"skipCaBundle,omitempty"`
-	Strategy        Strategy             `json:"strategy,omitempty"`
+	Strategy        *Strategy            `json:"strategy,omitempty"`
 	Vault           Vault                `json:"vault,omitempty"`
 	WebProxy        bool                 `json:"webproxy,omitempty"`
 
