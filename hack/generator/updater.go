@@ -113,6 +113,24 @@ var i = []Service{
 		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl",
 		Client:    "customClient.StorageV1alpha2().GoogleStorageBucketAccessControls",
 	},
+	{
+		Name:      "sqlInstance",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlInstanceInterface",
+		Type:      "sql_cnrm_cloud_google_com_v1alpha3.SqlInstance",
+		Client:    "customClient.StorageV1alpha3().SqlInstances",
+	},
+	{
+		Name:      "sqlDatabase",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlDatabaseInterface",
+		Type:      "sql_cnrm_cloud_google_com_v1alpha3.SqlDatabase",
+		Client:    "customClient.StorageV1alpha3().SqlDatabases",
+	},
+	{
+		Name:      "SqlUser",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlUserInterface",
+		Type:      "sql_cnrm_cloud_google_com_v1alpha3.SqlUser",
+		Client:    "customClient.StorageV1alpha3().SqlUsers",
+	},
 }
 
 func main() {

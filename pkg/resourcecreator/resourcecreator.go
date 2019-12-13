@@ -6,7 +6,6 @@ package resourcecreator
 
 import (
 	"fmt"
-
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 )
 
@@ -38,20 +37,23 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 {
-		if len(app.Spec.GCP.Buckets) > 0 {
-			// TODO: A service account will be required for all GCP related resources.
-			// TODO: If implementing more features, move these two outside of the cloud storage check.
-			googleServiceAccount := GoogleServiceAccount(app)
-			googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
-			objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
-			objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
+		googleServiceAccount := GoogleServiceAccount(app)
+		googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
+		objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
+		objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
+		if len(app.Spec.GCP.Buckets) > 0 {
 			buckets := GoogleStorageBuckets(app)
 			for _, bucket := range buckets {
 				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 				objects = append(objects, ResourceOperation{bucket, OperationCreateIfNotExists})
 				objects = append(objects, ResourceOperation{bucketBac, OperationCreateOrUpdate})
 			}
+		}
+
+		if len(app.Spec.GCP.SqlInstance.Type) > 0 {
+			sqlInstance := GoogleSqlInstance(app)
+			objects = append(objects, ResourceOperation{sqlInstance, OperationCreateOrUpdate})
 		}
 	}
 
