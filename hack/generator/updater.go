@@ -116,20 +116,20 @@ var i = []Service{
 	{
 		Name:      "sqlInstance",
 		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlInstanceInterface",
-		Type:      "sql_cnrm_cloud_google_com_v1alpha3.SqlInstance",
-		Client:    "customClient.StorageV1alpha3().SqlInstances",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SqlInstance",
+		Client:    "customClient.SqlV1alpha3().SqlInstances",
 	},
 	{
 		Name:      "sqlDatabase",
 		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlDatabaseInterface",
-		Type:      "sql_cnrm_cloud_google_com_v1alpha3.SqlDatabase",
-		Client:    "customClient.StorageV1alpha3().SqlDatabases",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SqlDatabase",
+		Client:    "customClient.SqlV1alpha3().SqlDatabases",
 	},
 	{
-		Name:      "SqlUser",
+		Name:      "sqlUser",
 		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlUserInterface",
-		Type:      "sql_cnrm_cloud_google_com_v1alpha3.SqlUser",
-		Client:    "customClient.StorageV1alpha3().SqlUsers",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SqlUser",
+		Client:    "customClient.SqlV1alpha3().SqlUsers",
 	},
 }
 

@@ -13,30 +13,6 @@ const (
 	GCPRegion                = "europe-north1"
 )
 
-func availabilityType(highAvailability bool) string {
-	if highAvailability {
-		return AvailabilityTypeRegional
-	} else {
-		return AvailabilityTypeZonal
-	}
-}
-
-func diskType(diskType nais.CloudSqlInstanceDiskType) string {
-	return fmt.Sprintf("PD_%s", diskType)
-}
-
-func tier(cpu, memory int) string {
-	return fmt.Sprintf("db-custom-%d-%d", cpu, memory)
-}
-
-func cascadingDelete(cascadingDelete bool) map[string]string {
-	if cascadingDelete {
-		return nil
-	}
-
-	return map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
-}
-
 func GoogleSqlInstance(app *nais.Application) *google_sql_crd.SqlInstance {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
@@ -62,4 +38,28 @@ func GoogleSqlInstance(app *nais.Application) *google_sql_crd.SqlInstance {
 			},
 		},
 	}
+}
+
+func availabilityType(highAvailability bool) string {
+	if highAvailability {
+		return AvailabilityTypeRegional
+	} else {
+		return AvailabilityTypeZonal
+	}
+}
+
+func diskType(diskType nais.CloudSqlInstanceDiskType) string {
+	return fmt.Sprintf("PD_%s", diskType)
+}
+
+func tier(cpu, memory int) string {
+	return fmt.Sprintf("db-custom-%d-%d", cpu, memory)
+}
+
+func cascadingDelete(cascadingDelete bool) map[string]string {
+	if cascadingDelete {
+		return nil
+	}
+
+	return map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
 }

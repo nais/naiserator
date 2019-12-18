@@ -19,7 +19,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	objects := ResourceOperations{
+	ops := ResourceOperations{
 		{Service(app), OperationCreateOrUpdate},
 		{ServiceAccount(app, resourceOptions), OperationCreateOrUpdate},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
@@ -29,36 +29,36 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	leRoleBinding := LeaderElectionRoleBinding(app)
 
 	if app.Spec.LeaderElection {
-		objects = append(objects, ResourceOperation{leRole, OperationCreateOrUpdate})
-		objects = append(objects, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
+		ops = append(ops, ResourceOperation{leRole, OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	} else {
-		objects = append(objects, ResourceOperation{leRole, OperationDeleteIfExists})
-		objects = append(objects, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
+		ops = append(ops, ResourceOperation{leRole, OperationDeleteIfExists})
+		ops = append(ops, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 {
 		googleServiceAccount := GoogleServiceAccount(app)
 		googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
-		objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
-		objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
 		if len(app.Spec.GCP.Buckets) > 0 {
 			buckets := GoogleStorageBuckets(app)
 			for _, bucket := range buckets {
 				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
-				objects = append(objects, ResourceOperation{bucket, OperationCreateIfNotExists})
-				objects = append(objects, ResourceOperation{bucketBac, OperationCreateOrUpdate})
+				ops = append(ops, ResourceOperation{bucket, OperationCreateIfNotExists})
+				ops = append(ops, ResourceOperation{bucketBac, OperationCreateOrUpdate})
 			}
 		}
 
 		if len(app.Spec.GCP.SqlInstance.Type) > 0 {
 			sqlInstance := GoogleSqlInstance(app)
-			objects = append(objects, ResourceOperation{sqlInstance, OperationCreateOrUpdate})
+			ops = append(ops, ResourceOperation{sqlInstance, OperationCreateOrUpdate})
 		}
 	}
 
 	if resourceOptions.AccessPolicy {
-		objects = append(objects, ResourceOperation{NetworkPolicy(app, resourceOptions.AccessPolicyNotAllowedCIDRs), OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions.AccessPolicyNotAllowedCIDRs), OperationCreateOrUpdate})
 		vses, err := VirtualServices(app)
 
 		if err != nil {
@@ -71,7 +71,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 		for _, vs := range vses {
-			objects = append(objects, ResourceOperation{vs, operation})
+			ops = append(ops, ResourceOperation{vs, operation})
 		}
 
 		// Applies to ServiceRoles and ServiceRoleBindings
@@ -82,17 +82,17 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 		serviceRole := ServiceRole(app)
 		if serviceRole != nil {
-			objects = append(objects, ResourceOperation{serviceRole, operation})
+			ops = append(ops, ResourceOperation{serviceRole, operation})
 		}
 
 		serviceRoleBinding := ServiceRoleBinding(app)
 		if serviceRoleBinding != nil {
-			objects = append(objects, ResourceOperation{serviceRoleBinding, operation})
+			ops = append(ops, ResourceOperation{serviceRoleBinding, operation})
 		}
 
 		serviceRolePrometheus := ServiceRolePrometheus(app)
 		if serviceRolePrometheus != nil {
-			objects = append(objects, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
+			ops = append(ops, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
 		}
 
 		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
@@ -102,7 +102,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 		if serviceRoleBindingPrometheus != nil {
-			objects = append(objects, ResourceOperation{serviceRoleBindingPrometheus, operation})
+			ops = append(ops, ResourceOperation{serviceRoleBindingPrometheus, operation})
 		}
 
 		serviceEntry := ServiceEntry(app)
@@ -111,7 +111,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			operation = OperationDeleteIfExists
 		}
 		if serviceEntry != nil {
-			objects = append(objects, ResourceOperation{serviceEntry, operation})
+			ops = append(ops, ResourceOperation{serviceEntry, operation})
 		}
 
 	} else {
@@ -128,16 +128,16 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			operation = OperationDeleteIfExists
 		}
 
-		objects = append(objects, ResourceOperation{ingress, operation})
+		ops = append(ops, ResourceOperation{ingress, operation})
 	}
 
-	deployment, err := Deployment(app, resourceOptions)
+	deployment, err := Deployment(app, resourceOptions) // TODO ...resourceOptions, additionalEnvs) //
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	objects = append(objects, ResourceOperation{deployment, OperationCreateOrUpdate})
+	ops = append(ops, ResourceOperation{deployment, OperationCreateOrUpdate})
 
-	return objects, nil
+	return ops, nil
 }
 
 func int32p(i int32) *int32 {
