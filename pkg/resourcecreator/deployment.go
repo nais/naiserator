@@ -91,13 +91,7 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.PodSpec, error) {
 	var err error
 
-	ApplySecretDefaults(&app.Spec.Secrets)
-
 	podSpec := podSpecBase(app)
-
-	if resourceOptions.NativeSecrets && len(app.Spec.Secrets) > 0 {
-		podSpec = secrets(app, podSpec)
-	}
 
 	if app.Spec.LeaderElection {
 		podSpec = LeaderElection(app, podSpec)
@@ -107,7 +101,8 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		podSpec = caBundle(podSpec)
 	}
 
-	podSpec = configMapFiles(app, podSpec)
+	podSpec = fromFiles(app, podSpec, resourceOptions.NativeSecrets)
+	podSpec = fromEnv(app, podSpec, resourceOptions.NativeSecrets)
 
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
@@ -130,89 +125,91 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	return podSpec, err
 }
 
-func secrets(application *nais.Application, podSpecRef *corev1.PodSpec) *corev1.PodSpec {
-	spec := podSpecRef.DeepCopy()
-	appContainer := GetContainerByName(spec.Containers, application.Name)
-
-	for _, s := range application.Spec.Secrets {
-		if s.Type == nais.SecretTypeEnv {
-			appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(s))
-			continue
-		}
-
-		if s.Type == nais.SecretTypeFiles {
-			spec.Volumes = append(spec.Volumes, secretVolume(s))
-			appContainer.VolumeMounts = append(appContainer.VolumeMounts, secretVolumeMount(s))
-			continue
+func fromEnv(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool)  *corev1.PodSpec {
+	for _, env := range app.Spec.EnvFrom {
+		if len(env.ConfigMap) > 0 {
+			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvConfigmap(env.ConfigMap))
+		} else if nativeSecrets && len(env.Secret) > 0 {
+			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvSecret(env.Secret))
 		}
 	}
 
 	return spec
 }
 
-func secretVolumeMount(secret nais.Secret) corev1.VolumeMount {
-	return corev1.VolumeMount{
-		Name:      secret.Name,
-		ReadOnly:  true,
-		MountPath: secret.MountPath}
+func fromEnvConfigmap(name string) corev1.EnvFromSource {
+	return corev1.EnvFromSource{
+		ConfigMapRef: &corev1.ConfigMapEnvSource{
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
 }
 
-func secretVolume(secret nais.Secret) corev1.Volume {
-	return corev1.Volume{
-		Name: secret.Name,
-		VolumeSource: corev1.VolumeSource{
-			Secret: &corev1.SecretVolumeSource{
-				SecretName: secret.Name}}}
-}
-
-func envFromSecret(secret nais.Secret) corev1.EnvFromSource {
+func fromEnvSecret(name string) corev1.EnvFromSource {
 	return corev1.EnvFromSource{
 		SecretRef: &corev1.SecretEnvSource{
 			LocalObjectReference: corev1.LocalObjectReference{
-				Name: secret.Name,
-			}}}
-}
-
-func ApplySecretDefaults(secretsRef *[]nais.Secret) {
-	secrets := *secretsRef
-	for i, secret := range secrets {
-		if len(secret.Type) == 0 {
-			secrets[i].Type = nais.DefaultSecretType
-		}
-
-		if secret.Type == nais.SecretTypeFiles && len(secret.MountPath) == 0 {
-			secrets[i].MountPath = nais.DefaultSecretMountPath
-		}
+				Name: name,
+			},
+		},
 	}
 }
 
-func configMapFiles(app *nais.Application, spec *corev1.PodSpec) *corev1.PodSpec {
-	for _, cm := range app.Spec.ConfigMaps.Files {
-		volumeName := fmt.Sprintf("nais-cm-%s", cm)
-
-		volume := corev1.Volume{
-			Name: volumeName,
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: cm,
-					},
-				},
-			},
+func fromFiles(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
+	for _, file := range app.Spec.FilesFrom {
+		if len(file.ConfigMap) > 0 {
+			name := file.ConfigMap
+			spec.Volumes = append(spec.Volumes, fromFilesConfigmapVolume(name))
+			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
+				fromFilesVolumeMount(name, file.MountPath, nais.GetDefaultMountPath(name)))
+		} else if nativeSecrets && len(file.Secret) > 0 {
+			name := file.Secret
+			spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(name))
+			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
+				fromFilesVolumeMount(name, file.MountPath, nais.DefaultSecretMountPath))
 		}
-
-		volumeMount := corev1.VolumeMount{
-			Name:      volumeName,
-			MountPath: fmt.Sprintf("/var/run/configmaps/%s", cm),
-		}
-
-		spec.Volumes = append(spec.Volumes, volume)
-		spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts, volumeMount)
 	}
 
 	return spec
 }
 
+func fromFilesVolumeMount(name string, mountPath string, defaultMountPath string) corev1.VolumeMount {
+	if len(mountPath) == 0 {
+		mountPath = defaultMountPath
+	}
+
+	return corev1.VolumeMount{
+		Name:      name,
+		ReadOnly:  true,
+		MountPath: mountPath,
+	}
+}
+
+func fromFilesSecretVolume(name string) corev1.Volume {
+	return corev1.Volume{
+		Name: name,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: name,
+			},
+		},
+	}
+}
+
+func fromFilesConfigmapVolume(name string) corev1.Volume {
+	return corev1.Volume{
+		Name: name,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: name,
+				},
+			},
+		},
+	}
+}
 func podSpecBase(app *nais.Application) *corev1.PodSpec {
 	return &corev1.PodSpec{
 		Containers:         []corev1.Container{appContainer(app)},
