@@ -88,6 +88,11 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	podSpec := podSpecBase(app)
 
+	for _, instance := range app.Spec.GCP.SqlInstances {
+		appContainer := GetContainerByName(podSpec.Containers, app.Name)
+		appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(GCPSqlInstanceSecretName(app.Name, instance.Name)))
+	}
+
 	if resourceOptions.NativeSecrets && len(app.Spec.Secrets) > 0 {
 		podSpec = secrets(app, podSpec)
 	}
@@ -129,7 +134,7 @@ func secrets(application *nais.Application, podSpecRef *corev1.PodSpec) *corev1.
 
 	for _, s := range application.Spec.Secrets {
 		if s.Type == nais.SecretTypeEnv {
-			appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(s))
+			appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(s.Name))
 			continue
 		}
 
@@ -158,11 +163,11 @@ func secretVolume(secret nais.Secret) corev1.Volume {
 				SecretName: secret.Name}}}
 }
 
-func envFromSecret(secret nais.Secret) corev1.EnvFromSource {
+func envFromSecret(secretName string) corev1.EnvFromSource {
 	return corev1.EnvFromSource{
 		SecretRef: &corev1.SecretEnvSource{
 			LocalObjectReference: corev1.LocalObjectReference{
-				Name: secret.Name,
+				Name: secretName,
 			}}}
 }
 

@@ -4,64 +4,64 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type SqlInstanceSpec struct {
+type SQLInstanceSpec struct {
 	DatabaseVersion string              `json:"databaseVersion"`
 	Region          string              `json:"region"`
-	Settings        SqlInstanceSettings `json:"settings"`
+	Settings        SQLInstanceSettings `json:"settings"`
 }
 
-type SqlInstanceSettings struct {
+type SQLInstanceSettings struct {
 	AvailabilityType    string                         `json:"availabilityType"`
-	BackupConfiguration SqlInstanceBackupConfiguration `json:"backupConfiguration"`
+	BackupConfiguration SQLInstanceBackupConfiguration `json:"backupConfiguration"`
 	DiskAutoResize      bool                           `json:"diskAutoResize"`
 	DiskSize            int                            `json:"diskSize"`
 	DiskType            string                         `json:"diskType"`
 	Tier                string                         `json:"tier"`
 }
 
-type SqlInstanceBackupConfiguration struct {
+type SQLInstanceBackupConfiguration struct {
 	Enabled   bool   `json:"enabled"`
 	StartTime string `json:"startTime"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type SqlInstance struct {
+type SQLInstance struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty'`
-	Spec              SqlInstanceSpec `json:"spec"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              SQLInstanceSpec `json:"spec"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type SqlInstanceList struct {
+type SQLInstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SqlInstance `json:"items"`
+	Items           []SQLInstance `json:"items"`
 }
 
 type InstanceRef struct {
 	Name string `json:"name"`
 }
-type SqlDatabaseSpec struct {
+type SQLDatabaseSpec struct {
 	InstanceRef InstanceRef `json:"instanceRef"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type SqlDatabase struct {
+type SQLDatabase struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty'`
-	Spec              SqlDatabaseSpec `json:"spec"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              SQLDatabaseSpec `json:"spec"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type SqlDatabaseList struct {
+type SQLDatabaseList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SqlDatabase `json:"items"`
+	Items           []SQLDatabase `json:"items"`
 }
 
-type SqlUserSpec struct {
+type SQLUserSpec struct {
 	InstanceRef InstanceRef `json:"instanceRef"`
 	Host        string      `json:"host"`
 	Password    string      `json:"password"`
@@ -69,15 +69,15 @@ type SqlUserSpec struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type SqlUser struct {
+type SQLUser struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty'`
-	Spec              SqlUserSpec `json:"spec"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              SQLUserSpec `json:"spec"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type SqlUserList struct {
+type SQLUserList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SqlUserList `json:"items"`
+	Items           []SQLUserList `json:"items"`
 }

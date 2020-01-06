@@ -5,7 +5,10 @@
 package resourcecreator
 
 import (
+	"encoding/base64"
 	"fmt"
+	"strings"
+
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 )
 
@@ -51,9 +54,37 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			}
 		}
 
-		if len(app.Spec.GCP.SqlInstance.Type) > 0 {
-			sqlInstance := GoogleSqlInstance(app)
-			ops = append(ops, ResourceOperation{sqlInstance, OperationCreateOrUpdate})
+		for i, sqlInstance := range app.Spec.GCP.SqlInstances {
+			if i > 0 {
+				return nil, fmt.Errorf("only one sql instance is supported")
+			}
+
+			if len(sqlInstance.Name) == 0 {
+				app.Spec.GCP.SqlInstances[i].Name = fmt.Sprintf("%s-%d", app.Name, i)
+			}
+
+			instance, err := GoogleSqlInstance(app, sqlInstance)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create sqlinstance: %s", err)
+			}
+
+			ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
+
+			for _, db := range GoogleSqlDatabases(app, sqlInstance) {
+				ops = append(ops, ResourceOperation{db, OperationCreateOrUpdate})
+			}
+
+			key, err := Keygen(32)
+			if err != nil {
+				return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
+			}
+			password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
+
+			ops = append(ops, ResourceOperation{GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, password), OperationCreateOrUpdate})
+			ops = append(ops, ResourceOperation{OpaqueSecret(app, GCPSqlInstanceSecretName(app.Name, instance.Name), map[string]string{
+				fmt.Sprintf("GCP_SQLINSTANCE_%s_PASSWORD", strings.ToUpper(instance.Name)): password,
+				fmt.Sprintf("GCP_SQLINSTANCE_%s_USERNAME", strings.ToUpper(instance.Name)): instance.Name}),
+				OperationCreateOrUpdate})
 		}
 	}
 
@@ -142,4 +173,12 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 func int32p(i int32) *int32 {
 	return &i
+}
+
+func CascadingDeleteAnnotation(cascadingDelete bool) map[string]string {
+	if cascadingDelete {
+		return nil
+	}
+
+	return map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
 }

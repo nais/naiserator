@@ -10,9 +10,9 @@ import (
 
 type SqlV1alpha3Interface interface {
 	RESTClient() rest.Interface
-	SqlDatabasesGetter
-	SqlInstancesGetter
-	SqlUsersGetter
+	SQLDatabasesGetter
+	SQLInstancesGetter
+	SQLUsersGetter
 }
 
 // SqlV1alpha3Client is used to interact with features provided by the sql.cnrm.cloud.google.com group.
@@ -20,16 +20,16 @@ type SqlV1alpha3Client struct {
 	restClient rest.Interface
 }
 
-func (c *SqlV1alpha3Client) SqlDatabases(namespace string) SqlDatabaseInterface {
-	return newSqlDatabases(c, namespace)
+func (c *SqlV1alpha3Client) SQLDatabases(namespace string) SQLDatabaseInterface {
+	return newSQLDatabases(c, namespace)
 }
 
-func (c *SqlV1alpha3Client) SqlInstances(namespace string) SqlInstanceInterface {
-	return newSqlInstances(c, namespace)
+func (c *SqlV1alpha3Client) SQLInstances(namespace string) SQLInstanceInterface {
+	return newSQLInstances(c, namespace)
 }
 
-func (c *SqlV1alpha3Client) SqlUsers(namespace string) SqlUserInterface {
-	return newSqlUsers(c, namespace)
+func (c *SqlV1alpha3Client) SQLUsers(namespace string) SQLUserInterface {
+	return newSQLUsers(c, namespace)
 }
 
 // NewForConfig creates a new SqlV1alpha3Client for the given config.

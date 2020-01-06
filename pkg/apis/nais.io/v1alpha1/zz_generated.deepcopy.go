@@ -341,7 +341,13 @@ func (in *GCP) DeepCopyInto(out *GCP) {
 		*out = make([]CloudStorageBucket, len(*in))
 		copy(*out, *in)
 	}
-	in.SqlInstance.DeepCopyInto(&out.SqlInstance)
+	if in.SqlInstances != nil {
+		in, out := &in.SqlInstances, &out.SqlInstances
+		*out = make([]CloudSqlInstance, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 

@@ -12,31 +12,31 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeSqlDatabases implements SqlDatabaseInterface
-type FakeSqlDatabases struct {
+// FakeSQLDatabases implements SQLDatabaseInterface
+type FakeSQLDatabases struct {
 	Fake *FakeSqlV1alpha3
 	ns   string
 }
 
 var sqldatabasesResource = schema.GroupVersionResource{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Resource: "sqldatabases"}
 
-var sqldatabasesKind = schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Kind: "SqlDatabase"}
+var sqldatabasesKind = schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Kind: "SQLDatabase"}
 
-// Get takes name of the sqlDatabase, and returns the corresponding sqlDatabase object, and an error if there is any.
-func (c *FakeSqlDatabases) Get(name string, options v1.GetOptions) (result *v1alpha3.SqlDatabase, err error) {
+// Get takes name of the sQLDatabase, and returns the corresponding sQLDatabase object, and an error if there is any.
+func (c *FakeSQLDatabases) Get(name string, options v1.GetOptions) (result *v1alpha3.SQLDatabase, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(sqldatabasesResource, c.ns, name), &v1alpha3.SqlDatabase{})
+		Invokes(testing.NewGetAction(sqldatabasesResource, c.ns, name), &v1alpha3.SQLDatabase{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlDatabase), err
+	return obj.(*v1alpha3.SQLDatabase), err
 }
 
-// List takes label and field selectors, and returns the list of SqlDatabases that match those selectors.
-func (c *FakeSqlDatabases) List(opts v1.ListOptions) (result *v1alpha3.SqlDatabaseList, err error) {
+// List takes label and field selectors, and returns the list of SQLDatabases that match those selectors.
+func (c *FakeSQLDatabases) List(opts v1.ListOptions) (result *v1alpha3.SQLDatabaseList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(sqldatabasesResource, sqldatabasesKind, c.ns, opts), &v1alpha3.SqlDatabaseList{})
+		Invokes(testing.NewListAction(sqldatabasesResource, sqldatabasesKind, c.ns, opts), &v1alpha3.SQLDatabaseList{})
 
 	if obj == nil {
 		return nil, err
@@ -46,8 +46,8 @@ func (c *FakeSqlDatabases) List(opts v1.ListOptions) (result *v1alpha3.SqlDataba
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha3.SqlDatabaseList{ListMeta: obj.(*v1alpha3.SqlDatabaseList).ListMeta}
-	for _, item := range obj.(*v1alpha3.SqlDatabaseList).Items {
+	list := &v1alpha3.SQLDatabaseList{ListMeta: obj.(*v1alpha3.SQLDatabaseList).ListMeta}
+	for _, item := range obj.(*v1alpha3.SQLDatabaseList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -55,58 +55,58 @@ func (c *FakeSqlDatabases) List(opts v1.ListOptions) (result *v1alpha3.SqlDataba
 	return list, err
 }
 
-// Watch returns a watch.Interface that watches the requested sqlDatabases.
-func (c *FakeSqlDatabases) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested sQLDatabases.
+func (c *FakeSQLDatabases) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(sqldatabasesResource, c.ns, opts))
 
 }
 
-// Create takes the representation of a sqlDatabase and creates it.  Returns the server's representation of the sqlDatabase, and an error, if there is any.
-func (c *FakeSqlDatabases) Create(sqlDatabase *v1alpha3.SqlDatabase) (result *v1alpha3.SqlDatabase, err error) {
+// Create takes the representation of a sQLDatabase and creates it.  Returns the server's representation of the sQLDatabase, and an error, if there is any.
+func (c *FakeSQLDatabases) Create(sQLDatabase *v1alpha3.SQLDatabase) (result *v1alpha3.SQLDatabase, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(sqldatabasesResource, c.ns, sqlDatabase), &v1alpha3.SqlDatabase{})
+		Invokes(testing.NewCreateAction(sqldatabasesResource, c.ns, sQLDatabase), &v1alpha3.SQLDatabase{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlDatabase), err
+	return obj.(*v1alpha3.SQLDatabase), err
 }
 
-// Update takes the representation of a sqlDatabase and updates it. Returns the server's representation of the sqlDatabase, and an error, if there is any.
-func (c *FakeSqlDatabases) Update(sqlDatabase *v1alpha3.SqlDatabase) (result *v1alpha3.SqlDatabase, err error) {
+// Update takes the representation of a sQLDatabase and updates it. Returns the server's representation of the sQLDatabase, and an error, if there is any.
+func (c *FakeSQLDatabases) Update(sQLDatabase *v1alpha3.SQLDatabase) (result *v1alpha3.SQLDatabase, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(sqldatabasesResource, c.ns, sqlDatabase), &v1alpha3.SqlDatabase{})
+		Invokes(testing.NewUpdateAction(sqldatabasesResource, c.ns, sQLDatabase), &v1alpha3.SQLDatabase{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlDatabase), err
+	return obj.(*v1alpha3.SQLDatabase), err
 }
 
-// Delete takes name of the sqlDatabase and deletes it. Returns an error if one occurs.
-func (c *FakeSqlDatabases) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the sQLDatabase and deletes it. Returns an error if one occurs.
+func (c *FakeSQLDatabases) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(sqldatabasesResource, c.ns, name), &v1alpha3.SqlDatabase{})
+		Invokes(testing.NewDeleteAction(sqldatabasesResource, c.ns, name), &v1alpha3.SQLDatabase{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeSqlDatabases) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *FakeSQLDatabases) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(sqldatabasesResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha3.SqlDatabaseList{})
+	_, err := c.Fake.Invokes(action, &v1alpha3.SQLDatabaseList{})
 	return err
 }
 
-// Patch applies the patch and returns the patched sqlDatabase.
-func (c *FakeSqlDatabases) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlDatabase, err error) {
+// Patch applies the patch and returns the patched sQLDatabase.
+func (c *FakeSQLDatabases) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLDatabase, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(sqldatabasesResource, c.ns, name, pt, data, subresources...), &v1alpha3.SqlDatabase{})
+		Invokes(testing.NewPatchSubresourceAction(sqldatabasesResource, c.ns, name, pt, data, subresources...), &v1alpha3.SQLDatabase{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlDatabase), err
+	return obj.(*v1alpha3.SQLDatabase), err
 }

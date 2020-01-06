@@ -156,20 +156,19 @@ const (
 
 type CloudSqlDatabase struct {
 	// +kubebuilder:validation:Required
-	Name string
+	Name string `json:"name"`
 }
 
 type CloudSqlInstance struct {
 	// +kubebuilder:validation:Enum=POSTGRES_11
 	// +kubebuilder:validation:Required
-	Type CloudSqlInstanceType `json:"type,omitempty"`
-	// +kubebuilder:validation:Minimum=1
-	Cpu int `json:"cpu,omitempty"`
-	// +kubebuilder:validation:Minimum=3840
-	Memory int `json:"memory,omitempty"`
+	Type CloudSqlInstanceType `json:"type"`
+	Name string               `json:"name,omitempty"`
+	// +kubebuilder:validation:Pattern="db-.+"
+	Tier string `json:"tier,omitempty"`
 	// +kubebuilder:validation:Enum=SSD;HDD
 	DiskType         CloudSqlInstanceDiskType `json:"diskType,omitempty"`
-	HighAvailability bool                     `json:"highAvailability,omitempty"`
+	HighAvailability bool                     `json:"highAvailabilit,omitemptyy"`
 	// +kubebuilder:validation:Minimum=10
 	DiskSize       int  `json:"diskSize,omitempty"`
 	DiskAutoResize bool `json:"diskAutoResize,omitempty"`
@@ -181,8 +180,8 @@ type CloudSqlInstance struct {
 }
 
 type GCP struct {
-	Buckets     []CloudStorageBucket `json:"buckets,omitempty"`
-	SqlInstance CloudSqlInstance     `json:"sqlInstance,omitempty"`
+	Buckets      []CloudStorageBucket `json:"buckets,omitempty"`
+	SqlInstances []CloudSqlInstance   `json:"sqlInstances,omitempty"`
 }
 
 type EnvVar struct {

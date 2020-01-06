@@ -24,6 +24,12 @@ var i = []Service{
 		Client:        "clientSet.CoreV1().Services",
 	},
 	{
+		Name:      "secret",
+		Interface: "typed_core_v1.SecretInterface",
+		Type:      "*corev1.Secret",
+		Client:    "clientSet.CoreV1().Secrets",
+	},
+	{
 		Name:      "serviceAccount",
 		Interface: "typed_core_v1.ServiceAccountInterface",
 		Type:      "*corev1.ServiceAccount",
@@ -115,21 +121,21 @@ var i = []Service{
 	},
 	{
 		Name:      "sqlInstance",
-		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlInstanceInterface",
-		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SqlInstance",
-		Client:    "customClient.SqlV1alpha3().SqlInstances",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SQLInstanceInterface",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SQLInstance",
+		Client:    "customClient.SqlV1alpha3().SQLInstances",
 	},
 	{
 		Name:      "sqlDatabase",
-		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlDatabaseInterface",
-		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SqlDatabase",
-		Client:    "customClient.SqlV1alpha3().SqlDatabases",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SQLDatabaseInterface",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase",
+		Client:    "customClient.SqlV1alpha3().SQLDatabases",
 	},
 	{
 		Name:      "sqlUser",
-		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SqlUserInterface",
-		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SqlUser",
-		Client:    "customClient.SqlV1alpha3().SqlUsers",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SQLUserInterface",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SQLUser",
+		Client:    "customClient.SqlV1alpha3().SQLUsers",
 	},
 }
 

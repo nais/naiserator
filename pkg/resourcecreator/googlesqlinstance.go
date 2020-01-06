@@ -2,42 +2,69 @@ package resourcecreator
 
 import (
 	"fmt"
+
+	"github.com/imdario/mergo"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	AvailabilityTypeRegional = "REGIONAL"
-	AvailabilityTypeZonal    = "Zonal"
-	GCPRegion                = "europe-north1"
+	AvailabilityTypeRegional     = "REGIONAL"
+	AvailabilityTypeZonal        = "Zonal"
+	GCPRegion                    = "europe-north1"
+	DefaultSqlInstanceDiskType   = "SSD"
+	DefaultSqlInstanceAutoBackup = "02:00"
+	DefaultSqlInstanceTier       = "db-f1-micro"
+	DefaultSqlInstanceDiskSize   = 10
 )
 
-func GoogleSqlInstance(app *nais.Application) *google_sql_crd.SqlInstance {
+func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance) (*google_sql_crd.SQLInstance, error) {
 	objectMeta := app.CreateObjectMeta()
-	objectMeta.Namespace = app.Namespace
-	objectMeta.Name = app.Name
-	objectMeta.Annotations = cascadingDelete(app.Spec.GCP.SqlInstance.CascadingDelete)
+	objectMeta.Name = instance.Name
 
-	return &google_sql_crd.SqlInstance{
+	i, err := withDefaults(instance, app.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	objectMeta.Annotations = CascadingDeleteAnnotation(i.CascadingDelete)
+
+	return &google_sql_crd.SQLInstance{
 		TypeMeta: k8s_meta.TypeMeta{
-			Kind:       "SqlInstance",
+			Kind:       "SQLInstance",
 			APIVersion: "sql.cnrm.cloud.google.com/v1alpha3",
 		},
 		ObjectMeta: objectMeta,
-		Spec: google_sql_crd.SqlInstanceSpec{
-			DatabaseVersion: string(app.Spec.GCP.SqlInstance.Type),
+		Spec: google_sql_crd.SQLInstanceSpec{
+			DatabaseVersion: string(i.Type),
 			Region:          GCPRegion,
-			Settings: google_sql_crd.SqlInstanceSettings{
-				AvailabilityType:    availabilityType(app.Spec.GCP.SqlInstance.HighAvailability),
-				BackupConfiguration: google_sql_crd.SqlInstanceBackupConfiguration{},
-				DiskAutoResize:      app.Spec.GCP.SqlInstance.DiskAutoResize,
-				DiskSize:            app.Spec.GCP.SqlInstance.DiskSize,
-				DiskType:            diskType(app.Spec.GCP.SqlInstance.DiskType),
-				Tier:                tier(app.Spec.GCP.SqlInstance.Cpu, app.Spec.GCP.SqlInstance.Memory),
+			Settings: google_sql_crd.SQLInstanceSettings{
+				AvailabilityType:    availabilityType(i.HighAvailability),
+				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{},
+				DiskAutoResize:      i.DiskAutoResize,
+				DiskSize:            i.DiskSize,
+				DiskType:            diskType(i.DiskType),
+				Tier:                i.Tier,
 			},
 		},
+	}, nil
+}
+
+func withDefaults(instance nais.CloudSqlInstance, appName string) (withDefaults nais.CloudSqlInstance, err error) {
+	defaultInstance := nais.CloudSqlInstance{
+		Tier:       DefaultSqlInstanceTier,
+		DiskType:   DefaultSqlInstanceDiskType,
+		DiskSize:   DefaultSqlInstanceDiskSize,
+		AutoBackup: DefaultSqlInstanceAutoBackup,
+		Databases:  []nais.CloudSqlDatabase{{Name: appName}},
 	}
+
+	if err := mergo.Merge(&instance, defaultInstance); err != nil {
+		return nais.CloudSqlInstance{}, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
+	}
+
+	return instance, err
 }
 
 func availabilityType(highAvailability bool) string {
@@ -54,12 +81,4 @@ func diskType(diskType nais.CloudSqlInstanceDiskType) string {
 
 func tier(cpu, memory int) string {
 	return fmt.Sprintf("db-custom-%d-%d", cpu, memory)
-}
-
-func cascadingDelete(cascadingDelete bool) map[string]string {
-	if cascadingDelete {
-		return nil
-	}
-
-	return map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
 }

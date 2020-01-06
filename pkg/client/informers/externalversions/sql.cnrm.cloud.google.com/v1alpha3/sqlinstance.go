@@ -15,59 +15,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// SqlInstanceInformer provides access to a shared informer and lister for
-// SqlInstances.
-type SqlInstanceInformer interface {
+// SQLInstanceInformer provides access to a shared informer and lister for
+// SQLInstances.
+type SQLInstanceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha3.SqlInstanceLister
+	Lister() v1alpha3.SQLInstanceLister
 }
 
-type sqlInstanceInformer struct {
+type sQLInstanceInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewSqlInstanceInformer constructs a new informer for SqlInstance type.
+// NewSQLInstanceInformer constructs a new informer for SQLInstance type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewSqlInstanceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredSqlInstanceInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewSQLInstanceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredSQLInstanceInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredSqlInstanceInformer constructs a new informer for SqlInstance type.
+// NewFilteredSQLInstanceInformer constructs a new informer for SQLInstance type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredSqlInstanceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredSQLInstanceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SqlV1alpha3().SqlInstances(namespace).List(options)
+				return client.SqlV1alpha3().SQLInstances(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SqlV1alpha3().SqlInstances(namespace).Watch(options)
+				return client.SqlV1alpha3().SQLInstances(namespace).Watch(options)
 			},
 		},
-		&sqlcnrmcloudgooglecomv1alpha3.SqlInstance{},
+		&sqlcnrmcloudgooglecomv1alpha3.SQLInstance{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *sqlInstanceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredSqlInstanceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *sQLInstanceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredSQLInstanceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *sqlInstanceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sqlcnrmcloudgooglecomv1alpha3.SqlInstance{}, f.defaultInformer)
+func (f *sQLInstanceInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&sqlcnrmcloudgooglecomv1alpha3.SQLInstance{}, f.defaultInformer)
 }
 
-func (f *sqlInstanceInformer) Lister() v1alpha3.SqlInstanceLister {
-	return v1alpha3.NewSqlInstanceLister(f.Informer().GetIndexer())
+func (f *sQLInstanceInformer) Lister() v1alpha3.SQLInstanceLister {
+	return v1alpha3.NewSQLInstanceLister(f.Informer().GetIndexer())
 }

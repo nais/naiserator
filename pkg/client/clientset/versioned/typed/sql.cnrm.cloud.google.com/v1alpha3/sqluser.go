@@ -13,42 +13,42 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// SqlUsersGetter has a method to return a SqlUserInterface.
+// SQLUsersGetter has a method to return a SQLUserInterface.
 // A group's client should implement this interface.
-type SqlUsersGetter interface {
-	SqlUsers(namespace string) SqlUserInterface
+type SQLUsersGetter interface {
+	SQLUsers(namespace string) SQLUserInterface
 }
 
-// SqlUserInterface has methods to work with SqlUser resources.
-type SqlUserInterface interface {
-	Create(*v1alpha3.SqlUser) (*v1alpha3.SqlUser, error)
-	Update(*v1alpha3.SqlUser) (*v1alpha3.SqlUser, error)
+// SQLUserInterface has methods to work with SQLUser resources.
+type SQLUserInterface interface {
+	Create(*v1alpha3.SQLUser) (*v1alpha3.SQLUser, error)
+	Update(*v1alpha3.SQLUser) (*v1alpha3.SQLUser, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha3.SqlUser, error)
-	List(opts v1.ListOptions) (*v1alpha3.SqlUserList, error)
+	Get(name string, options v1.GetOptions) (*v1alpha3.SQLUser, error)
+	List(opts v1.ListOptions) (*v1alpha3.SQLUserList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlUser, err error)
-	SqlUserExpansion
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLUser, err error)
+	SQLUserExpansion
 }
 
-// sqlUsers implements SqlUserInterface
-type sqlUsers struct {
+// sQLUsers implements SQLUserInterface
+type sQLUsers struct {
 	client rest.Interface
 	ns     string
 }
 
-// newSqlUsers returns a SqlUsers
-func newSqlUsers(c *SqlV1alpha3Client, namespace string) *sqlUsers {
-	return &sqlUsers{
+// newSQLUsers returns a SQLUsers
+func newSQLUsers(c *SqlV1alpha3Client, namespace string) *sQLUsers {
+	return &sQLUsers{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the sqlUser, and returns the corresponding sqlUser object, and an error if there is any.
-func (c *sqlUsers) Get(name string, options v1.GetOptions) (result *v1alpha3.SqlUser, err error) {
-	result = &v1alpha3.SqlUser{}
+// Get takes name of the sQLUser, and returns the corresponding sQLUser object, and an error if there is any.
+func (c *sQLUsers) Get(name string, options v1.GetOptions) (result *v1alpha3.SQLUser, err error) {
+	result = &v1alpha3.SQLUser{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("sqlusers").
@@ -59,13 +59,13 @@ func (c *sqlUsers) Get(name string, options v1.GetOptions) (result *v1alpha3.Sql
 	return
 }
 
-// List takes label and field selectors, and returns the list of SqlUsers that match those selectors.
-func (c *sqlUsers) List(opts v1.ListOptions) (result *v1alpha3.SqlUserList, err error) {
+// List takes label and field selectors, and returns the list of SQLUsers that match those selectors.
+func (c *sQLUsers) List(opts v1.ListOptions) (result *v1alpha3.SQLUserList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result = &v1alpha3.SqlUserList{}
+	result = &v1alpha3.SQLUserList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("sqlusers").
@@ -76,8 +76,8 @@ func (c *sqlUsers) List(opts v1.ListOptions) (result *v1alpha3.SqlUserList, err 
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested sqlUsers.
-func (c *sqlUsers) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested sQLUsers.
+func (c *sQLUsers) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -91,33 +91,33 @@ func (c *sqlUsers) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Watch()
 }
 
-// Create takes the representation of a sqlUser and creates it.  Returns the server's representation of the sqlUser, and an error, if there is any.
-func (c *sqlUsers) Create(sqlUser *v1alpha3.SqlUser) (result *v1alpha3.SqlUser, err error) {
-	result = &v1alpha3.SqlUser{}
+// Create takes the representation of a sQLUser and creates it.  Returns the server's representation of the sQLUser, and an error, if there is any.
+func (c *sQLUsers) Create(sQLUser *v1alpha3.SQLUser) (result *v1alpha3.SQLUser, err error) {
+	result = &v1alpha3.SQLUser{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("sqlusers").
-		Body(sqlUser).
+		Body(sQLUser).
 		Do().
 		Into(result)
 	return
 }
 
-// Update takes the representation of a sqlUser and updates it. Returns the server's representation of the sqlUser, and an error, if there is any.
-func (c *sqlUsers) Update(sqlUser *v1alpha3.SqlUser) (result *v1alpha3.SqlUser, err error) {
-	result = &v1alpha3.SqlUser{}
+// Update takes the representation of a sQLUser and updates it. Returns the server's representation of the sQLUser, and an error, if there is any.
+func (c *sQLUsers) Update(sQLUser *v1alpha3.SQLUser) (result *v1alpha3.SQLUser, err error) {
+	result = &v1alpha3.SQLUser{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("sqlusers").
-		Name(sqlUser.Name).
-		Body(sqlUser).
+		Name(sQLUser.Name).
+		Body(sQLUser).
 		Do().
 		Into(result)
 	return
 }
 
-// Delete takes name of the sqlUser and deletes it. Returns an error if one occurs.
-func (c *sqlUsers) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the sQLUser and deletes it. Returns an error if one occurs.
+func (c *sQLUsers) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("sqlusers").
@@ -128,7 +128,7 @@ func (c *sqlUsers) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *sqlUsers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *sQLUsers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	var timeout time.Duration
 	if listOptions.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
@@ -143,9 +143,9 @@ func (c *sqlUsers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.Li
 		Error()
 }
 
-// Patch applies the patch and returns the patched sqlUser.
-func (c *sqlUsers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlUser, err error) {
-	result = &v1alpha3.SqlUser{}
+// Patch applies the patch and returns the patched sQLUser.
+func (c *sQLUsers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLUser, err error) {
+	result = &v1alpha3.SQLUser{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("sqlusers").

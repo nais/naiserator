@@ -12,31 +12,31 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeSqlInstances implements SqlInstanceInterface
-type FakeSqlInstances struct {
+// FakeSQLInstances implements SQLInstanceInterface
+type FakeSQLInstances struct {
 	Fake *FakeSqlV1alpha3
 	ns   string
 }
 
 var sqlinstancesResource = schema.GroupVersionResource{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Resource: "sqlinstances"}
 
-var sqlinstancesKind = schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Kind: "SqlInstance"}
+var sqlinstancesKind = schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Kind: "SQLInstance"}
 
-// Get takes name of the sqlInstance, and returns the corresponding sqlInstance object, and an error if there is any.
-func (c *FakeSqlInstances) Get(name string, options v1.GetOptions) (result *v1alpha3.SqlInstance, err error) {
+// Get takes name of the sQLInstance, and returns the corresponding sQLInstance object, and an error if there is any.
+func (c *FakeSQLInstances) Get(name string, options v1.GetOptions) (result *v1alpha3.SQLInstance, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(sqlinstancesResource, c.ns, name), &v1alpha3.SqlInstance{})
+		Invokes(testing.NewGetAction(sqlinstancesResource, c.ns, name), &v1alpha3.SQLInstance{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlInstance), err
+	return obj.(*v1alpha3.SQLInstance), err
 }
 
-// List takes label and field selectors, and returns the list of SqlInstances that match those selectors.
-func (c *FakeSqlInstances) List(opts v1.ListOptions) (result *v1alpha3.SqlInstanceList, err error) {
+// List takes label and field selectors, and returns the list of SQLInstances that match those selectors.
+func (c *FakeSQLInstances) List(opts v1.ListOptions) (result *v1alpha3.SQLInstanceList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(sqlinstancesResource, sqlinstancesKind, c.ns, opts), &v1alpha3.SqlInstanceList{})
+		Invokes(testing.NewListAction(sqlinstancesResource, sqlinstancesKind, c.ns, opts), &v1alpha3.SQLInstanceList{})
 
 	if obj == nil {
 		return nil, err
@@ -46,8 +46,8 @@ func (c *FakeSqlInstances) List(opts v1.ListOptions) (result *v1alpha3.SqlInstan
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha3.SqlInstanceList{ListMeta: obj.(*v1alpha3.SqlInstanceList).ListMeta}
-	for _, item := range obj.(*v1alpha3.SqlInstanceList).Items {
+	list := &v1alpha3.SQLInstanceList{ListMeta: obj.(*v1alpha3.SQLInstanceList).ListMeta}
+	for _, item := range obj.(*v1alpha3.SQLInstanceList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -55,58 +55,58 @@ func (c *FakeSqlInstances) List(opts v1.ListOptions) (result *v1alpha3.SqlInstan
 	return list, err
 }
 
-// Watch returns a watch.Interface that watches the requested sqlInstances.
-func (c *FakeSqlInstances) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested sQLInstances.
+func (c *FakeSQLInstances) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(sqlinstancesResource, c.ns, opts))
 
 }
 
-// Create takes the representation of a sqlInstance and creates it.  Returns the server's representation of the sqlInstance, and an error, if there is any.
-func (c *FakeSqlInstances) Create(sqlInstance *v1alpha3.SqlInstance) (result *v1alpha3.SqlInstance, err error) {
+// Create takes the representation of a sQLInstance and creates it.  Returns the server's representation of the sQLInstance, and an error, if there is any.
+func (c *FakeSQLInstances) Create(sQLInstance *v1alpha3.SQLInstance) (result *v1alpha3.SQLInstance, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(sqlinstancesResource, c.ns, sqlInstance), &v1alpha3.SqlInstance{})
+		Invokes(testing.NewCreateAction(sqlinstancesResource, c.ns, sQLInstance), &v1alpha3.SQLInstance{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlInstance), err
+	return obj.(*v1alpha3.SQLInstance), err
 }
 
-// Update takes the representation of a sqlInstance and updates it. Returns the server's representation of the sqlInstance, and an error, if there is any.
-func (c *FakeSqlInstances) Update(sqlInstance *v1alpha3.SqlInstance) (result *v1alpha3.SqlInstance, err error) {
+// Update takes the representation of a sQLInstance and updates it. Returns the server's representation of the sQLInstance, and an error, if there is any.
+func (c *FakeSQLInstances) Update(sQLInstance *v1alpha3.SQLInstance) (result *v1alpha3.SQLInstance, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(sqlinstancesResource, c.ns, sqlInstance), &v1alpha3.SqlInstance{})
+		Invokes(testing.NewUpdateAction(sqlinstancesResource, c.ns, sQLInstance), &v1alpha3.SQLInstance{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlInstance), err
+	return obj.(*v1alpha3.SQLInstance), err
 }
 
-// Delete takes name of the sqlInstance and deletes it. Returns an error if one occurs.
-func (c *FakeSqlInstances) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the sQLInstance and deletes it. Returns an error if one occurs.
+func (c *FakeSQLInstances) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(sqlinstancesResource, c.ns, name), &v1alpha3.SqlInstance{})
+		Invokes(testing.NewDeleteAction(sqlinstancesResource, c.ns, name), &v1alpha3.SQLInstance{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeSqlInstances) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *FakeSQLInstances) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(sqlinstancesResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha3.SqlInstanceList{})
+	_, err := c.Fake.Invokes(action, &v1alpha3.SQLInstanceList{})
 	return err
 }
 
-// Patch applies the patch and returns the patched sqlInstance.
-func (c *FakeSqlInstances) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlInstance, err error) {
+// Patch applies the patch and returns the patched sQLInstance.
+func (c *FakeSQLInstances) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLInstance, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(sqlinstancesResource, c.ns, name, pt, data, subresources...), &v1alpha3.SqlInstance{})
+		Invokes(testing.NewPatchSubresourceAction(sqlinstancesResource, c.ns, name, pt, data, subresources...), &v1alpha3.SQLInstance{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlInstance), err
+	return obj.(*v1alpha3.SQLInstance), err
 }

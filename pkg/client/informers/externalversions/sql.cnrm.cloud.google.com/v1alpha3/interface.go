@@ -8,12 +8,12 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// SqlDatabases returns a SqlDatabaseInformer.
-	SqlDatabases() SqlDatabaseInformer
-	// SqlInstances returns a SqlInstanceInformer.
-	SqlInstances() SqlInstanceInformer
-	// SqlUsers returns a SqlUserInformer.
-	SqlUsers() SqlUserInformer
+	// SQLDatabases returns a SQLDatabaseInformer.
+	SQLDatabases() SQLDatabaseInformer
+	// SQLInstances returns a SQLInstanceInformer.
+	SQLInstances() SQLInstanceInformer
+	// SQLUsers returns a SQLUserInformer.
+	SQLUsers() SQLUserInformer
 }
 
 type version struct {
@@ -27,17 +27,17 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// SqlDatabases returns a SqlDatabaseInformer.
-func (v *version) SqlDatabases() SqlDatabaseInformer {
-	return &sqlDatabaseInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// SQLDatabases returns a SQLDatabaseInformer.
+func (v *version) SQLDatabases() SQLDatabaseInformer {
+	return &sQLDatabaseInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// SqlInstances returns a SqlInstanceInformer.
-func (v *version) SqlInstances() SqlInstanceInformer {
-	return &sqlInstanceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// SQLInstances returns a SQLInstanceInformer.
+func (v *version) SQLInstances() SQLInstanceInformer {
+	return &sQLInstanceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// SqlUsers returns a SqlUserInformer.
-func (v *version) SqlUsers() SqlUserInformer {
-	return &sqlUserInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// SQLUsers returns a SQLUserInformer.
+func (v *version) SQLUsers() SQLUserInformer {
+	return &sQLUserInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

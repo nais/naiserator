@@ -12,31 +12,31 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeSqlUsers implements SqlUserInterface
-type FakeSqlUsers struct {
+// FakeSQLUsers implements SQLUserInterface
+type FakeSQLUsers struct {
 	Fake *FakeSqlV1alpha3
 	ns   string
 }
 
 var sqlusersResource = schema.GroupVersionResource{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Resource: "sqlusers"}
 
-var sqlusersKind = schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Kind: "SqlUser"}
+var sqlusersKind = schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1alpha3", Kind: "SQLUser"}
 
-// Get takes name of the sqlUser, and returns the corresponding sqlUser object, and an error if there is any.
-func (c *FakeSqlUsers) Get(name string, options v1.GetOptions) (result *v1alpha3.SqlUser, err error) {
+// Get takes name of the sQLUser, and returns the corresponding sQLUser object, and an error if there is any.
+func (c *FakeSQLUsers) Get(name string, options v1.GetOptions) (result *v1alpha3.SQLUser, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(sqlusersResource, c.ns, name), &v1alpha3.SqlUser{})
+		Invokes(testing.NewGetAction(sqlusersResource, c.ns, name), &v1alpha3.SQLUser{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlUser), err
+	return obj.(*v1alpha3.SQLUser), err
 }
 
-// List takes label and field selectors, and returns the list of SqlUsers that match those selectors.
-func (c *FakeSqlUsers) List(opts v1.ListOptions) (result *v1alpha3.SqlUserList, err error) {
+// List takes label and field selectors, and returns the list of SQLUsers that match those selectors.
+func (c *FakeSQLUsers) List(opts v1.ListOptions) (result *v1alpha3.SQLUserList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(sqlusersResource, sqlusersKind, c.ns, opts), &v1alpha3.SqlUserList{})
+		Invokes(testing.NewListAction(sqlusersResource, sqlusersKind, c.ns, opts), &v1alpha3.SQLUserList{})
 
 	if obj == nil {
 		return nil, err
@@ -46,8 +46,8 @@ func (c *FakeSqlUsers) List(opts v1.ListOptions) (result *v1alpha3.SqlUserList, 
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha3.SqlUserList{ListMeta: obj.(*v1alpha3.SqlUserList).ListMeta}
-	for _, item := range obj.(*v1alpha3.SqlUserList).Items {
+	list := &v1alpha3.SQLUserList{ListMeta: obj.(*v1alpha3.SQLUserList).ListMeta}
+	for _, item := range obj.(*v1alpha3.SQLUserList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -55,58 +55,58 @@ func (c *FakeSqlUsers) List(opts v1.ListOptions) (result *v1alpha3.SqlUserList, 
 	return list, err
 }
 
-// Watch returns a watch.Interface that watches the requested sqlUsers.
-func (c *FakeSqlUsers) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested sQLUsers.
+func (c *FakeSQLUsers) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(sqlusersResource, c.ns, opts))
 
 }
 
-// Create takes the representation of a sqlUser and creates it.  Returns the server's representation of the sqlUser, and an error, if there is any.
-func (c *FakeSqlUsers) Create(sqlUser *v1alpha3.SqlUser) (result *v1alpha3.SqlUser, err error) {
+// Create takes the representation of a sQLUser and creates it.  Returns the server's representation of the sQLUser, and an error, if there is any.
+func (c *FakeSQLUsers) Create(sQLUser *v1alpha3.SQLUser) (result *v1alpha3.SQLUser, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(sqlusersResource, c.ns, sqlUser), &v1alpha3.SqlUser{})
+		Invokes(testing.NewCreateAction(sqlusersResource, c.ns, sQLUser), &v1alpha3.SQLUser{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlUser), err
+	return obj.(*v1alpha3.SQLUser), err
 }
 
-// Update takes the representation of a sqlUser and updates it. Returns the server's representation of the sqlUser, and an error, if there is any.
-func (c *FakeSqlUsers) Update(sqlUser *v1alpha3.SqlUser) (result *v1alpha3.SqlUser, err error) {
+// Update takes the representation of a sQLUser and updates it. Returns the server's representation of the sQLUser, and an error, if there is any.
+func (c *FakeSQLUsers) Update(sQLUser *v1alpha3.SQLUser) (result *v1alpha3.SQLUser, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(sqlusersResource, c.ns, sqlUser), &v1alpha3.SqlUser{})
+		Invokes(testing.NewUpdateAction(sqlusersResource, c.ns, sQLUser), &v1alpha3.SQLUser{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlUser), err
+	return obj.(*v1alpha3.SQLUser), err
 }
 
-// Delete takes name of the sqlUser and deletes it. Returns an error if one occurs.
-func (c *FakeSqlUsers) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the sQLUser and deletes it. Returns an error if one occurs.
+func (c *FakeSQLUsers) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(sqlusersResource, c.ns, name), &v1alpha3.SqlUser{})
+		Invokes(testing.NewDeleteAction(sqlusersResource, c.ns, name), &v1alpha3.SQLUser{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeSqlUsers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *FakeSQLUsers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(sqlusersResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha3.SqlUserList{})
+	_, err := c.Fake.Invokes(action, &v1alpha3.SQLUserList{})
 	return err
 }
 
-// Patch applies the patch and returns the patched sqlUser.
-func (c *FakeSqlUsers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlUser, err error) {
+// Patch applies the patch and returns the patched sQLUser.
+func (c *FakeSQLUsers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLUser, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(sqlusersResource, c.ns, name, pt, data, subresources...), &v1alpha3.SqlUser{})
+		Invokes(testing.NewPatchSubresourceAction(sqlusersResource, c.ns, name, pt, data, subresources...), &v1alpha3.SQLUser{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha3.SqlUser), err
+	return obj.(*v1alpha3.SQLUser), err
 }

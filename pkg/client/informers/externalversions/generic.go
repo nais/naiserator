@@ -65,11 +65,11 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 
 		// Group=sql.cnrm.cloud.google.com, Version=v1alpha3
 	case sqlcnrmcloudgooglecomv1alpha3.SchemeGroupVersion.WithResource("sqldatabases"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SqlDatabases().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SQLDatabases().Informer()}, nil
 	case sqlcnrmcloudgooglecomv1alpha3.SchemeGroupVersion.WithResource("sqlinstances"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SqlInstances().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SQLInstances().Informer()}, nil
 	case sqlcnrmcloudgooglecomv1alpha3.SchemeGroupVersion.WithResource("sqlusers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SqlUsers().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SQLUsers().Informer()}, nil
 
 		// Group=storage.cnrm.cloud.google.com, Version=v1alpha2
 	case v1alpha2.SchemeGroupVersion.WithResource("googlestoragebuckets"):

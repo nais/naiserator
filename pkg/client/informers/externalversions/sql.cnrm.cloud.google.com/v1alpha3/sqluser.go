@@ -15,59 +15,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// SqlUserInformer provides access to a shared informer and lister for
-// SqlUsers.
-type SqlUserInformer interface {
+// SQLUserInformer provides access to a shared informer and lister for
+// SQLUsers.
+type SQLUserInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha3.SqlUserLister
+	Lister() v1alpha3.SQLUserLister
 }
 
-type sqlUserInformer struct {
+type sQLUserInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewSqlUserInformer constructs a new informer for SqlUser type.
+// NewSQLUserInformer constructs a new informer for SQLUser type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewSqlUserInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredSqlUserInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewSQLUserInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredSQLUserInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredSqlUserInformer constructs a new informer for SqlUser type.
+// NewFilteredSQLUserInformer constructs a new informer for SQLUser type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredSqlUserInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredSQLUserInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SqlV1alpha3().SqlUsers(namespace).List(options)
+				return client.SqlV1alpha3().SQLUsers(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SqlV1alpha3().SqlUsers(namespace).Watch(options)
+				return client.SqlV1alpha3().SQLUsers(namespace).Watch(options)
 			},
 		},
-		&sqlcnrmcloudgooglecomv1alpha3.SqlUser{},
+		&sqlcnrmcloudgooglecomv1alpha3.SQLUser{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *sqlUserInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredSqlUserInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *sQLUserInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredSQLUserInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *sqlUserInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sqlcnrmcloudgooglecomv1alpha3.SqlUser{}, f.defaultInformer)
+func (f *sQLUserInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&sqlcnrmcloudgooglecomv1alpha3.SQLUser{}, f.defaultInformer)
 }
 
-func (f *sqlUserInformer) Lister() v1alpha3.SqlUserLister {
-	return v1alpha3.NewSqlUserLister(f.Informer().GetIndexer())
+func (f *sQLUserInformer) Lister() v1alpha3.SQLUserLister {
+	return v1alpha3.NewSQLUserLister(f.Informer().GetIndexer())
 }

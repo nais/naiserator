@@ -2,8 +2,8 @@
 
 package v1alpha3
 
-type SqlDatabaseExpansion interface{}
+type SQLDatabaseExpansion interface{}
 
-type SqlInstanceExpansion interface{}
+type SQLInstanceExpansion interface{}
 
-type SqlUserExpansion interface{}
+type SQLUserExpansion interface{}

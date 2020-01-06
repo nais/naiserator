@@ -12,16 +12,16 @@ type FakeSqlV1alpha3 struct {
 	*testing.Fake
 }
 
-func (c *FakeSqlV1alpha3) SqlDatabases(namespace string) v1alpha3.SqlDatabaseInterface {
-	return &FakeSqlDatabases{c, namespace}
+func (c *FakeSqlV1alpha3) SQLDatabases(namespace string) v1alpha3.SQLDatabaseInterface {
+	return &FakeSQLDatabases{c, namespace}
 }
 
-func (c *FakeSqlV1alpha3) SqlInstances(namespace string) v1alpha3.SqlInstanceInterface {
-	return &FakeSqlInstances{c, namespace}
+func (c *FakeSqlV1alpha3) SQLInstances(namespace string) v1alpha3.SQLInstanceInterface {
+	return &FakeSQLInstances{c, namespace}
 }
 
-func (c *FakeSqlV1alpha3) SqlUsers(namespace string) v1alpha3.SqlUserInterface {
-	return &FakeSqlUsers{c, namespace}
+func (c *FakeSqlV1alpha3) SQLUsers(namespace string) v1alpha3.SQLUserInterface {
+	return &FakeSQLUsers{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

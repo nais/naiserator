@@ -13,42 +13,42 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// SqlInstancesGetter has a method to return a SqlInstanceInterface.
+// SQLInstancesGetter has a method to return a SQLInstanceInterface.
 // A group's client should implement this interface.
-type SqlInstancesGetter interface {
-	SqlInstances(namespace string) SqlInstanceInterface
+type SQLInstancesGetter interface {
+	SQLInstances(namespace string) SQLInstanceInterface
 }
 
-// SqlInstanceInterface has methods to work with SqlInstance resources.
-type SqlInstanceInterface interface {
-	Create(*v1alpha3.SqlInstance) (*v1alpha3.SqlInstance, error)
-	Update(*v1alpha3.SqlInstance) (*v1alpha3.SqlInstance, error)
+// SQLInstanceInterface has methods to work with SQLInstance resources.
+type SQLInstanceInterface interface {
+	Create(*v1alpha3.SQLInstance) (*v1alpha3.SQLInstance, error)
+	Update(*v1alpha3.SQLInstance) (*v1alpha3.SQLInstance, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha3.SqlInstance, error)
-	List(opts v1.ListOptions) (*v1alpha3.SqlInstanceList, error)
+	Get(name string, options v1.GetOptions) (*v1alpha3.SQLInstance, error)
+	List(opts v1.ListOptions) (*v1alpha3.SQLInstanceList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlInstance, err error)
-	SqlInstanceExpansion
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLInstance, err error)
+	SQLInstanceExpansion
 }
 
-// sqlInstances implements SqlInstanceInterface
-type sqlInstances struct {
+// sQLInstances implements SQLInstanceInterface
+type sQLInstances struct {
 	client rest.Interface
 	ns     string
 }
 
-// newSqlInstances returns a SqlInstances
-func newSqlInstances(c *SqlV1alpha3Client, namespace string) *sqlInstances {
-	return &sqlInstances{
+// newSQLInstances returns a SQLInstances
+func newSQLInstances(c *SqlV1alpha3Client, namespace string) *sQLInstances {
+	return &sQLInstances{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the sqlInstance, and returns the corresponding sqlInstance object, and an error if there is any.
-func (c *sqlInstances) Get(name string, options v1.GetOptions) (result *v1alpha3.SqlInstance, err error) {
-	result = &v1alpha3.SqlInstance{}
+// Get takes name of the sQLInstance, and returns the corresponding sQLInstance object, and an error if there is any.
+func (c *sQLInstances) Get(name string, options v1.GetOptions) (result *v1alpha3.SQLInstance, err error) {
+	result = &v1alpha3.SQLInstance{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("sqlinstances").
@@ -59,13 +59,13 @@ func (c *sqlInstances) Get(name string, options v1.GetOptions) (result *v1alpha3
 	return
 }
 
-// List takes label and field selectors, and returns the list of SqlInstances that match those selectors.
-func (c *sqlInstances) List(opts v1.ListOptions) (result *v1alpha3.SqlInstanceList, err error) {
+// List takes label and field selectors, and returns the list of SQLInstances that match those selectors.
+func (c *sQLInstances) List(opts v1.ListOptions) (result *v1alpha3.SQLInstanceList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result = &v1alpha3.SqlInstanceList{}
+	result = &v1alpha3.SQLInstanceList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("sqlinstances").
@@ -76,8 +76,8 @@ func (c *sqlInstances) List(opts v1.ListOptions) (result *v1alpha3.SqlInstanceLi
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested sqlInstances.
-func (c *sqlInstances) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested sQLInstances.
+func (c *sQLInstances) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -91,33 +91,33 @@ func (c *sqlInstances) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Watch()
 }
 
-// Create takes the representation of a sqlInstance and creates it.  Returns the server's representation of the sqlInstance, and an error, if there is any.
-func (c *sqlInstances) Create(sqlInstance *v1alpha3.SqlInstance) (result *v1alpha3.SqlInstance, err error) {
-	result = &v1alpha3.SqlInstance{}
+// Create takes the representation of a sQLInstance and creates it.  Returns the server's representation of the sQLInstance, and an error, if there is any.
+func (c *sQLInstances) Create(sQLInstance *v1alpha3.SQLInstance) (result *v1alpha3.SQLInstance, err error) {
+	result = &v1alpha3.SQLInstance{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("sqlinstances").
-		Body(sqlInstance).
+		Body(sQLInstance).
 		Do().
 		Into(result)
 	return
 }
 
-// Update takes the representation of a sqlInstance and updates it. Returns the server's representation of the sqlInstance, and an error, if there is any.
-func (c *sqlInstances) Update(sqlInstance *v1alpha3.SqlInstance) (result *v1alpha3.SqlInstance, err error) {
-	result = &v1alpha3.SqlInstance{}
+// Update takes the representation of a sQLInstance and updates it. Returns the server's representation of the sQLInstance, and an error, if there is any.
+func (c *sQLInstances) Update(sQLInstance *v1alpha3.SQLInstance) (result *v1alpha3.SQLInstance, err error) {
+	result = &v1alpha3.SQLInstance{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("sqlinstances").
-		Name(sqlInstance.Name).
-		Body(sqlInstance).
+		Name(sQLInstance.Name).
+		Body(sQLInstance).
 		Do().
 		Into(result)
 	return
 }
 
-// Delete takes name of the sqlInstance and deletes it. Returns an error if one occurs.
-func (c *sqlInstances) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the sQLInstance and deletes it. Returns an error if one occurs.
+func (c *sQLInstances) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("sqlinstances").
@@ -128,7 +128,7 @@ func (c *sqlInstances) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *sqlInstances) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *sQLInstances) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	var timeout time.Duration
 	if listOptions.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
@@ -143,9 +143,9 @@ func (c *sqlInstances) DeleteCollection(options *v1.DeleteOptions, listOptions v
 		Error()
 }
 
-// Patch applies the patch and returns the patched sqlInstance.
-func (c *sqlInstances) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlInstance, err error) {
-	result = &v1alpha3.SqlInstance{}
+// Patch applies the patch and returns the patched sQLInstance.
+func (c *sQLInstances) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLInstance, err error) {
+	result = &v1alpha3.SQLInstance{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("sqlinstances").

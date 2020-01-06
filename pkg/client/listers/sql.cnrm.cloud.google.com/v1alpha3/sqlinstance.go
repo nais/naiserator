@@ -9,64 +9,64 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// SqlInstanceLister helps list SqlInstances.
-type SqlInstanceLister interface {
-	// List lists all SqlInstances in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha3.SqlInstance, err error)
-	// SqlInstances returns an object that can list and get SqlInstances.
-	SqlInstances(namespace string) SqlInstanceNamespaceLister
-	SqlInstanceListerExpansion
+// SQLInstanceLister helps list SQLInstances.
+type SQLInstanceLister interface {
+	// List lists all SQLInstances in the indexer.
+	List(selector labels.Selector) (ret []*v1alpha3.SQLInstance, err error)
+	// SQLInstances returns an object that can list and get SQLInstances.
+	SQLInstances(namespace string) SQLInstanceNamespaceLister
+	SQLInstanceListerExpansion
 }
 
-// sqlInstanceLister implements the SqlInstanceLister interface.
-type sqlInstanceLister struct {
+// sQLInstanceLister implements the SQLInstanceLister interface.
+type sQLInstanceLister struct {
 	indexer cache.Indexer
 }
 
-// NewSqlInstanceLister returns a new SqlInstanceLister.
-func NewSqlInstanceLister(indexer cache.Indexer) SqlInstanceLister {
-	return &sqlInstanceLister{indexer: indexer}
+// NewSQLInstanceLister returns a new SQLInstanceLister.
+func NewSQLInstanceLister(indexer cache.Indexer) SQLInstanceLister {
+	return &sQLInstanceLister{indexer: indexer}
 }
 
-// List lists all SqlInstances in the indexer.
-func (s *sqlInstanceLister) List(selector labels.Selector) (ret []*v1alpha3.SqlInstance, err error) {
+// List lists all SQLInstances in the indexer.
+func (s *sQLInstanceLister) List(selector labels.Selector) (ret []*v1alpha3.SQLInstance, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha3.SqlInstance))
+		ret = append(ret, m.(*v1alpha3.SQLInstance))
 	})
 	return ret, err
 }
 
-// SqlInstances returns an object that can list and get SqlInstances.
-func (s *sqlInstanceLister) SqlInstances(namespace string) SqlInstanceNamespaceLister {
-	return sqlInstanceNamespaceLister{indexer: s.indexer, namespace: namespace}
+// SQLInstances returns an object that can list and get SQLInstances.
+func (s *sQLInstanceLister) SQLInstances(namespace string) SQLInstanceNamespaceLister {
+	return sQLInstanceNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// SqlInstanceNamespaceLister helps list and get SqlInstances.
-type SqlInstanceNamespaceLister interface {
-	// List lists all SqlInstances in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha3.SqlInstance, err error)
-	// Get retrieves the SqlInstance from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha3.SqlInstance, error)
-	SqlInstanceNamespaceListerExpansion
+// SQLInstanceNamespaceLister helps list and get SQLInstances.
+type SQLInstanceNamespaceLister interface {
+	// List lists all SQLInstances in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v1alpha3.SQLInstance, err error)
+	// Get retrieves the SQLInstance from the indexer for a given namespace and name.
+	Get(name string) (*v1alpha3.SQLInstance, error)
+	SQLInstanceNamespaceListerExpansion
 }
 
-// sqlInstanceNamespaceLister implements the SqlInstanceNamespaceLister
+// sQLInstanceNamespaceLister implements the SQLInstanceNamespaceLister
 // interface.
-type sqlInstanceNamespaceLister struct {
+type sQLInstanceNamespaceLister struct {
 	indexer   cache.Indexer
 	namespace string
 }
 
-// List lists all SqlInstances in the indexer for a given namespace.
-func (s sqlInstanceNamespaceLister) List(selector labels.Selector) (ret []*v1alpha3.SqlInstance, err error) {
+// List lists all SQLInstances in the indexer for a given namespace.
+func (s sQLInstanceNamespaceLister) List(selector labels.Selector) (ret []*v1alpha3.SQLInstance, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha3.SqlInstance))
+		ret = append(ret, m.(*v1alpha3.SQLInstance))
 	})
 	return ret, err
 }
 
-// Get retrieves the SqlInstance from the indexer for a given namespace and name.
-func (s sqlInstanceNamespaceLister) Get(name string) (*v1alpha3.SqlInstance, error) {
+// Get retrieves the SQLInstance from the indexer for a given namespace and name.
+func (s sQLInstanceNamespaceLister) Get(name string) (*v1alpha3.SQLInstance, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -74,5 +74,5 @@ func (s sqlInstanceNamespaceLister) Get(name string) (*v1alpha3.SqlInstance, err
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha3.Resource("sqlinstance"), name)
 	}
-	return obj.(*v1alpha3.SqlInstance), nil
+	return obj.(*v1alpha3.SQLInstance), nil
 }

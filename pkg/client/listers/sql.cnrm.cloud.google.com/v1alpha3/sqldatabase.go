@@ -9,64 +9,64 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// SqlDatabaseLister helps list SqlDatabases.
-type SqlDatabaseLister interface {
-	// List lists all SqlDatabases in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha3.SqlDatabase, err error)
-	// SqlDatabases returns an object that can list and get SqlDatabases.
-	SqlDatabases(namespace string) SqlDatabaseNamespaceLister
-	SqlDatabaseListerExpansion
+// SQLDatabaseLister helps list SQLDatabases.
+type SQLDatabaseLister interface {
+	// List lists all SQLDatabases in the indexer.
+	List(selector labels.Selector) (ret []*v1alpha3.SQLDatabase, err error)
+	// SQLDatabases returns an object that can list and get SQLDatabases.
+	SQLDatabases(namespace string) SQLDatabaseNamespaceLister
+	SQLDatabaseListerExpansion
 }
 
-// sqlDatabaseLister implements the SqlDatabaseLister interface.
-type sqlDatabaseLister struct {
+// sQLDatabaseLister implements the SQLDatabaseLister interface.
+type sQLDatabaseLister struct {
 	indexer cache.Indexer
 }
 
-// NewSqlDatabaseLister returns a new SqlDatabaseLister.
-func NewSqlDatabaseLister(indexer cache.Indexer) SqlDatabaseLister {
-	return &sqlDatabaseLister{indexer: indexer}
+// NewSQLDatabaseLister returns a new SQLDatabaseLister.
+func NewSQLDatabaseLister(indexer cache.Indexer) SQLDatabaseLister {
+	return &sQLDatabaseLister{indexer: indexer}
 }
 
-// List lists all SqlDatabases in the indexer.
-func (s *sqlDatabaseLister) List(selector labels.Selector) (ret []*v1alpha3.SqlDatabase, err error) {
+// List lists all SQLDatabases in the indexer.
+func (s *sQLDatabaseLister) List(selector labels.Selector) (ret []*v1alpha3.SQLDatabase, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha3.SqlDatabase))
+		ret = append(ret, m.(*v1alpha3.SQLDatabase))
 	})
 	return ret, err
 }
 
-// SqlDatabases returns an object that can list and get SqlDatabases.
-func (s *sqlDatabaseLister) SqlDatabases(namespace string) SqlDatabaseNamespaceLister {
-	return sqlDatabaseNamespaceLister{indexer: s.indexer, namespace: namespace}
+// SQLDatabases returns an object that can list and get SQLDatabases.
+func (s *sQLDatabaseLister) SQLDatabases(namespace string) SQLDatabaseNamespaceLister {
+	return sQLDatabaseNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// SqlDatabaseNamespaceLister helps list and get SqlDatabases.
-type SqlDatabaseNamespaceLister interface {
-	// List lists all SqlDatabases in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha3.SqlDatabase, err error)
-	// Get retrieves the SqlDatabase from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha3.SqlDatabase, error)
-	SqlDatabaseNamespaceListerExpansion
+// SQLDatabaseNamespaceLister helps list and get SQLDatabases.
+type SQLDatabaseNamespaceLister interface {
+	// List lists all SQLDatabases in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v1alpha3.SQLDatabase, err error)
+	// Get retrieves the SQLDatabase from the indexer for a given namespace and name.
+	Get(name string) (*v1alpha3.SQLDatabase, error)
+	SQLDatabaseNamespaceListerExpansion
 }
 
-// sqlDatabaseNamespaceLister implements the SqlDatabaseNamespaceLister
+// sQLDatabaseNamespaceLister implements the SQLDatabaseNamespaceLister
 // interface.
-type sqlDatabaseNamespaceLister struct {
+type sQLDatabaseNamespaceLister struct {
 	indexer   cache.Indexer
 	namespace string
 }
 
-// List lists all SqlDatabases in the indexer for a given namespace.
-func (s sqlDatabaseNamespaceLister) List(selector labels.Selector) (ret []*v1alpha3.SqlDatabase, err error) {
+// List lists all SQLDatabases in the indexer for a given namespace.
+func (s sQLDatabaseNamespaceLister) List(selector labels.Selector) (ret []*v1alpha3.SQLDatabase, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha3.SqlDatabase))
+		ret = append(ret, m.(*v1alpha3.SQLDatabase))
 	})
 	return ret, err
 }
 
-// Get retrieves the SqlDatabase from the indexer for a given namespace and name.
-func (s sqlDatabaseNamespaceLister) Get(name string) (*v1alpha3.SqlDatabase, error) {
+// Get retrieves the SQLDatabase from the indexer for a given namespace and name.
+func (s sQLDatabaseNamespaceLister) Get(name string) (*v1alpha3.SQLDatabase, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -74,5 +74,5 @@ func (s sqlDatabaseNamespaceLister) Get(name string) (*v1alpha3.SqlDatabase, err
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha3.Resource("sqldatabase"), name)
 	}
-	return obj.(*v1alpha3.SqlDatabase), nil
+	return obj.(*v1alpha3.SQLDatabase), nil
 }

@@ -9,64 +9,64 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// SqlUserLister helps list SqlUsers.
-type SqlUserLister interface {
-	// List lists all SqlUsers in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha3.SqlUser, err error)
-	// SqlUsers returns an object that can list and get SqlUsers.
-	SqlUsers(namespace string) SqlUserNamespaceLister
-	SqlUserListerExpansion
+// SQLUserLister helps list SQLUsers.
+type SQLUserLister interface {
+	// List lists all SQLUsers in the indexer.
+	List(selector labels.Selector) (ret []*v1alpha3.SQLUser, err error)
+	// SQLUsers returns an object that can list and get SQLUsers.
+	SQLUsers(namespace string) SQLUserNamespaceLister
+	SQLUserListerExpansion
 }
 
-// sqlUserLister implements the SqlUserLister interface.
-type sqlUserLister struct {
+// sQLUserLister implements the SQLUserLister interface.
+type sQLUserLister struct {
 	indexer cache.Indexer
 }
 
-// NewSqlUserLister returns a new SqlUserLister.
-func NewSqlUserLister(indexer cache.Indexer) SqlUserLister {
-	return &sqlUserLister{indexer: indexer}
+// NewSQLUserLister returns a new SQLUserLister.
+func NewSQLUserLister(indexer cache.Indexer) SQLUserLister {
+	return &sQLUserLister{indexer: indexer}
 }
 
-// List lists all SqlUsers in the indexer.
-func (s *sqlUserLister) List(selector labels.Selector) (ret []*v1alpha3.SqlUser, err error) {
+// List lists all SQLUsers in the indexer.
+func (s *sQLUserLister) List(selector labels.Selector) (ret []*v1alpha3.SQLUser, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha3.SqlUser))
+		ret = append(ret, m.(*v1alpha3.SQLUser))
 	})
 	return ret, err
 }
 
-// SqlUsers returns an object that can list and get SqlUsers.
-func (s *sqlUserLister) SqlUsers(namespace string) SqlUserNamespaceLister {
-	return sqlUserNamespaceLister{indexer: s.indexer, namespace: namespace}
+// SQLUsers returns an object that can list and get SQLUsers.
+func (s *sQLUserLister) SQLUsers(namespace string) SQLUserNamespaceLister {
+	return sQLUserNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// SqlUserNamespaceLister helps list and get SqlUsers.
-type SqlUserNamespaceLister interface {
-	// List lists all SqlUsers in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha3.SqlUser, err error)
-	// Get retrieves the SqlUser from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha3.SqlUser, error)
-	SqlUserNamespaceListerExpansion
+// SQLUserNamespaceLister helps list and get SQLUsers.
+type SQLUserNamespaceLister interface {
+	// List lists all SQLUsers in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v1alpha3.SQLUser, err error)
+	// Get retrieves the SQLUser from the indexer for a given namespace and name.
+	Get(name string) (*v1alpha3.SQLUser, error)
+	SQLUserNamespaceListerExpansion
 }
 
-// sqlUserNamespaceLister implements the SqlUserNamespaceLister
+// sQLUserNamespaceLister implements the SQLUserNamespaceLister
 // interface.
-type sqlUserNamespaceLister struct {
+type sQLUserNamespaceLister struct {
 	indexer   cache.Indexer
 	namespace string
 }
 
-// List lists all SqlUsers in the indexer for a given namespace.
-func (s sqlUserNamespaceLister) List(selector labels.Selector) (ret []*v1alpha3.SqlUser, err error) {
+// List lists all SQLUsers in the indexer for a given namespace.
+func (s sQLUserNamespaceLister) List(selector labels.Selector) (ret []*v1alpha3.SQLUser, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha3.SqlUser))
+		ret = append(ret, m.(*v1alpha3.SQLUser))
 	})
 	return ret, err
 }
 
-// Get retrieves the SqlUser from the indexer for a given namespace and name.
-func (s sqlUserNamespaceLister) Get(name string) (*v1alpha3.SqlUser, error) {
+// Get retrieves the SQLUser from the indexer for a given namespace and name.
+func (s sQLUserNamespaceLister) Get(name string) (*v1alpha3.SQLUser, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -74,5 +74,5 @@ func (s sqlUserNamespaceLister) Get(name string) (*v1alpha3.SqlUser, error) {
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha3.Resource("sqluser"), name)
 	}
-	return obj.(*v1alpha3.SqlUser), nil
+	return obj.(*v1alpha3.SQLUser), nil
 }

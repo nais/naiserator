@@ -13,42 +13,42 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// SqlDatabasesGetter has a method to return a SqlDatabaseInterface.
+// SQLDatabasesGetter has a method to return a SQLDatabaseInterface.
 // A group's client should implement this interface.
-type SqlDatabasesGetter interface {
-	SqlDatabases(namespace string) SqlDatabaseInterface
+type SQLDatabasesGetter interface {
+	SQLDatabases(namespace string) SQLDatabaseInterface
 }
 
-// SqlDatabaseInterface has methods to work with SqlDatabase resources.
-type SqlDatabaseInterface interface {
-	Create(*v1alpha3.SqlDatabase) (*v1alpha3.SqlDatabase, error)
-	Update(*v1alpha3.SqlDatabase) (*v1alpha3.SqlDatabase, error)
+// SQLDatabaseInterface has methods to work with SQLDatabase resources.
+type SQLDatabaseInterface interface {
+	Create(*v1alpha3.SQLDatabase) (*v1alpha3.SQLDatabase, error)
+	Update(*v1alpha3.SQLDatabase) (*v1alpha3.SQLDatabase, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha3.SqlDatabase, error)
-	List(opts v1.ListOptions) (*v1alpha3.SqlDatabaseList, error)
+	Get(name string, options v1.GetOptions) (*v1alpha3.SQLDatabase, error)
+	List(opts v1.ListOptions) (*v1alpha3.SQLDatabaseList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlDatabase, err error)
-	SqlDatabaseExpansion
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLDatabase, err error)
+	SQLDatabaseExpansion
 }
 
-// sqlDatabases implements SqlDatabaseInterface
-type sqlDatabases struct {
+// sQLDatabases implements SQLDatabaseInterface
+type sQLDatabases struct {
 	client rest.Interface
 	ns     string
 }
 
-// newSqlDatabases returns a SqlDatabases
-func newSqlDatabases(c *SqlV1alpha3Client, namespace string) *sqlDatabases {
-	return &sqlDatabases{
+// newSQLDatabases returns a SQLDatabases
+func newSQLDatabases(c *SqlV1alpha3Client, namespace string) *sQLDatabases {
+	return &sQLDatabases{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the sqlDatabase, and returns the corresponding sqlDatabase object, and an error if there is any.
-func (c *sqlDatabases) Get(name string, options v1.GetOptions) (result *v1alpha3.SqlDatabase, err error) {
-	result = &v1alpha3.SqlDatabase{}
+// Get takes name of the sQLDatabase, and returns the corresponding sQLDatabase object, and an error if there is any.
+func (c *sQLDatabases) Get(name string, options v1.GetOptions) (result *v1alpha3.SQLDatabase, err error) {
+	result = &v1alpha3.SQLDatabase{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("sqldatabases").
@@ -59,13 +59,13 @@ func (c *sqlDatabases) Get(name string, options v1.GetOptions) (result *v1alpha3
 	return
 }
 
-// List takes label and field selectors, and returns the list of SqlDatabases that match those selectors.
-func (c *sqlDatabases) List(opts v1.ListOptions) (result *v1alpha3.SqlDatabaseList, err error) {
+// List takes label and field selectors, and returns the list of SQLDatabases that match those selectors.
+func (c *sQLDatabases) List(opts v1.ListOptions) (result *v1alpha3.SQLDatabaseList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result = &v1alpha3.SqlDatabaseList{}
+	result = &v1alpha3.SQLDatabaseList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("sqldatabases").
@@ -76,8 +76,8 @@ func (c *sqlDatabases) List(opts v1.ListOptions) (result *v1alpha3.SqlDatabaseLi
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested sqlDatabases.
-func (c *sqlDatabases) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested sQLDatabases.
+func (c *sQLDatabases) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -91,33 +91,33 @@ func (c *sqlDatabases) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Watch()
 }
 
-// Create takes the representation of a sqlDatabase and creates it.  Returns the server's representation of the sqlDatabase, and an error, if there is any.
-func (c *sqlDatabases) Create(sqlDatabase *v1alpha3.SqlDatabase) (result *v1alpha3.SqlDatabase, err error) {
-	result = &v1alpha3.SqlDatabase{}
+// Create takes the representation of a sQLDatabase and creates it.  Returns the server's representation of the sQLDatabase, and an error, if there is any.
+func (c *sQLDatabases) Create(sQLDatabase *v1alpha3.SQLDatabase) (result *v1alpha3.SQLDatabase, err error) {
+	result = &v1alpha3.SQLDatabase{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("sqldatabases").
-		Body(sqlDatabase).
+		Body(sQLDatabase).
 		Do().
 		Into(result)
 	return
 }
 
-// Update takes the representation of a sqlDatabase and updates it. Returns the server's representation of the sqlDatabase, and an error, if there is any.
-func (c *sqlDatabases) Update(sqlDatabase *v1alpha3.SqlDatabase) (result *v1alpha3.SqlDatabase, err error) {
-	result = &v1alpha3.SqlDatabase{}
+// Update takes the representation of a sQLDatabase and updates it. Returns the server's representation of the sQLDatabase, and an error, if there is any.
+func (c *sQLDatabases) Update(sQLDatabase *v1alpha3.SQLDatabase) (result *v1alpha3.SQLDatabase, err error) {
+	result = &v1alpha3.SQLDatabase{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("sqldatabases").
-		Name(sqlDatabase.Name).
-		Body(sqlDatabase).
+		Name(sQLDatabase.Name).
+		Body(sQLDatabase).
 		Do().
 		Into(result)
 	return
 }
 
-// Delete takes name of the sqlDatabase and deletes it. Returns an error if one occurs.
-func (c *sqlDatabases) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the sQLDatabase and deletes it. Returns an error if one occurs.
+func (c *sQLDatabases) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("sqldatabases").
@@ -128,7 +128,7 @@ func (c *sqlDatabases) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *sqlDatabases) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *sQLDatabases) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	var timeout time.Duration
 	if listOptions.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
@@ -143,9 +143,9 @@ func (c *sqlDatabases) DeleteCollection(options *v1.DeleteOptions, listOptions v
 		Error()
 }
 
-// Patch applies the patch and returns the patched sqlDatabase.
-func (c *sqlDatabases) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SqlDatabase, err error) {
-	result = &v1alpha3.SqlDatabase{}
+// Patch applies the patch and returns the patched sQLDatabase.
+func (c *sQLDatabases) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.SQLDatabase, err error) {
+	result = &v1alpha3.SQLDatabase{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("sqldatabases").

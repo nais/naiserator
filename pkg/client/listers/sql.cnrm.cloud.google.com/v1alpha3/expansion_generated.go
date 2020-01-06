@@ -2,26 +2,26 @@
 
 package v1alpha3
 
-// SqlDatabaseListerExpansion allows custom methods to be added to
-// SqlDatabaseLister.
-type SqlDatabaseListerExpansion interface{}
+// SQLDatabaseListerExpansion allows custom methods to be added to
+// SQLDatabaseLister.
+type SQLDatabaseListerExpansion interface{}
 
-// SqlDatabaseNamespaceListerExpansion allows custom methods to be added to
-// SqlDatabaseNamespaceLister.
-type SqlDatabaseNamespaceListerExpansion interface{}
+// SQLDatabaseNamespaceListerExpansion allows custom methods to be added to
+// SQLDatabaseNamespaceLister.
+type SQLDatabaseNamespaceListerExpansion interface{}
 
-// SqlInstanceListerExpansion allows custom methods to be added to
-// SqlInstanceLister.
-type SqlInstanceListerExpansion interface{}
+// SQLInstanceListerExpansion allows custom methods to be added to
+// SQLInstanceLister.
+type SQLInstanceListerExpansion interface{}
 
-// SqlInstanceNamespaceListerExpansion allows custom methods to be added to
-// SqlInstanceNamespaceLister.
-type SqlInstanceNamespaceListerExpansion interface{}
+// SQLInstanceNamespaceListerExpansion allows custom methods to be added to
+// SQLInstanceNamespaceLister.
+type SQLInstanceNamespaceListerExpansion interface{}
 
-// SqlUserListerExpansion allows custom methods to be added to
-// SqlUserLister.
-type SqlUserListerExpansion interface{}
+// SQLUserListerExpansion allows custom methods to be added to
+// SQLUserLister.
+type SQLUserListerExpansion interface{}
 
-// SqlUserNamespaceListerExpansion allows custom methods to be added to
-// SqlUserNamespaceLister.
-type SqlUserNamespaceListerExpansion interface{}
+// SQLUserNamespaceListerExpansion allows custom methods to be added to
+// SQLUserNamespaceLister.
+type SQLUserNamespaceListerExpansion interface{}
