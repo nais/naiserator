@@ -254,34 +254,6 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, int32(app.Spec.Readiness.InitialDelay), appContainer.ReadinessProbe.InitialDelaySeconds)
 	})
 
-	t.Run("configMaps are mounted into the container", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.FilesFrom = []nais.FilesFrom{
-			{ConfigMap: "foo"},
-			{ConfigMap: "bar"},
-		}
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-
-		for _, cm := range app.Spec.FilesFrom {
-			volume := getVolumeByName(deploy.Spec.Template.Spec.Volumes, cm.ConfigMap)
-			volumeMount := getVolumeMountByName(appContainer.VolumeMounts, cm.ConfigMap)
-
-			assert.NotNil(t, volume)
-			assert.NotNil(t, volumeMount)
-			assert.NotNil(t, volume.ConfigMap)
-
-			assert.Equal(t, volume.ConfigMap.LocalObjectReference.Name, cm.ConfigMap)
-			assert.Equal(t, volume.Name, volumeMount.Name)
-			assert.Len(t, volume.ConfigMap.Items, 0)
-		}
-	})
-
 	t.Run("webproxy configuration is injected into the container env", func(t *testing.T) {
 		viper.Reset()
 		viper.Set("proxy.address", httpProxy)
