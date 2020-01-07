@@ -17,6 +17,7 @@ func GoogleStorageBuckets(app *nais.Application) []*google_storage_crd.StorageBu
 
 func GoogleStorageBucket(app *nais.Application, bucketName string) *google_storage_crd.StorageBucket {
 	objectMeta := app.CreateObjectMeta()
+	objectMeta.Annotations["cnrm.cloud.google.com/deletion-policy"] = "abandon"
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = bucketName
 
