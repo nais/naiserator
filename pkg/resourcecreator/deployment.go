@@ -90,7 +90,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	for _, instance := range app.Spec.GCP.SqlInstances {
 		appContainer := GetContainerByName(podSpec.Containers, app.Name)
-		appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(GCPSqlInstanceSecretName(app.Name, instance.Name)))
+		appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
 	}
 
 	if resourceOptions.NativeSecrets && len(app.Spec.Secrets) > 0 {

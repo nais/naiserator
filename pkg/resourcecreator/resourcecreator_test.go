@@ -1,6 +1,7 @@
 package resourcecreator_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
+	sqlv1alpha3 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
 	storagev1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -21,21 +23,25 @@ import (
 )
 
 type realObjects struct {
+	bucket                  *storagev1alpha2.GoogleStorageBucket
+	bucketAccessControl     *storagev1alpha2.GoogleStorageBucketAccessControl
 	deployment              *v1.Deployment
-	service                 *corev1.Service
-	serviceAccount          *corev1.ServiceAccount
+	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
+	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
 	hpa                     *autoscalingv1.HorizontalPodAutoscaler
 	ingress                 *extensionsv1beta1.Ingress
 	networkPolicy           *networkingv1.NetworkPolicy
-	serviceRoles            []*rbac_istio_io_v1alpha1.ServiceRole
-	serviceRoleBindings     []*rbac_istio_io_v1alpha1.ServiceRoleBinding
-	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
 	role                    *rbacv1.Role
 	rolebinding             *rbacv1.RoleBinding
-	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
-	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
-	bucket                  *storagev1alpha2.GoogleStorageBucket
-	bucketAccessControl     *storagev1alpha2.GoogleStorageBucketAccessControl
+	secret                  *corev1.Secret
+	service                 *corev1.Service
+	serviceAccount          *corev1.ServiceAccount
+	serviceRoleBindings     []*rbac_istio_io_v1alpha1.ServiceRoleBinding
+	serviceRoles            []*rbac_istio_io_v1alpha1.ServiceRole
+	sqlDatabase             *sqlv1alpha3.SQLDatabase
+	sqlInstance             *sqlv1alpha3.SQLInstance
+	sqlUser                 *sqlv1alpha3.SQLUser
+	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -43,6 +49,8 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 		switch v := r.Resource.(type) {
 		case *v1.Deployment:
 			o.deployment = v
+		case *corev1.Secret:
+			o.secret = v
 		case *corev1.Service:
 			o.service = v
 		case *corev1.ServiceAccount:
@@ -71,6 +79,12 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.bucket = v
 		case *storagev1alpha2.GoogleStorageBucketAccessControl:
 			o.bucketAccessControl = v
+		case *sqlv1alpha3.SQLInstance:
+			o.sqlInstance = v
+		case *sqlv1alpha3.SQLUser:
+			o.sqlUser = v
+		case *sqlv1alpha3.SQLDatabase:
+			o.sqlDatabase = v
 		}
 	}
 	return
@@ -350,6 +364,46 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, objects.bucket.Name, objects.bucketAccessControl.Spec.BucketRef.Name)
 		assert.Equal(t, objects.googleIAMServiceAccount.Name, entityTokens[0])
 		assert.Equal(t, "nais-foo-1234.iam.gserviceaccount.com", entityTokens[1])
+	})
+
+	t.Run("using gcp sqlinstance yields expected resources", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		opts.GoogleProjectId = "nais-foo-1234"
+		instanceName := app.Name
+		dbName := "mydb"
+		app.Spec.GCP.SqlInstances = []nais.CloudSqlInstance{
+			{
+				Type: nais.CloudSqlInstanceTypePostgres,
+				Databases: []nais.CloudSqlDatabase{
+					{
+						Name: dbName,
+					},
+				},
+			},
+		}
+
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.googleIAMPolicy)
+		assert.NotNil(t, objects.googleIAMServiceAccount)
+		assert.NotNil(t, objects.sqlInstance)
+		assert.NotNil(t, objects.sqlDatabase)
+		assert.NotNil(t, objects.sqlUser)
+		assert.NotNil(t, objects.secret)
+
+		assert.Equal(t, instanceName, objects.sqlInstance.Name)
+		assert.Equal(t, app.Name, objects.sqlUser.Name)
+		assert.Equal(t, dbName, objects.sqlDatabase.Name)
+		assert.Equal(t, instanceName, objects.sqlDatabase.Spec.InstanceRef.Name)
+		assert.Equal(t, instanceName, objects.sqlUser.Spec.InstanceRef.Name)
+		assert.Equal(t, instanceName, objects.secret.StringData["GCP_SQLINSTANCE_MYAPPLICATION_USERNAME"])
+		assert.Equal(t, fmt.Sprintf("sqlinstanceuser-%s", instanceName), objects.deployment.Spec.Template.Spec.Containers[0].EnvFrom[0].SecretRef.Name)
 	})
 
 }

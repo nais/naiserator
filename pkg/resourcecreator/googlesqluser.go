@@ -8,8 +8,8 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GCPSqlInstanceSecretName(appName, instanceName string) string {
-	return fmt.Sprintf("%s-sqlinstance-%s", appName, instanceName)
+func GCPSqlInstanceSecretName(instanceName string) string {
+	return fmt.Sprintf("sqlinstanceuser-%s", instanceName)
 }
 
 func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete bool, password string) *google_sql_crd.SQLUser {

@@ -60,7 +60,8 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			}
 
 			if len(sqlInstance.Name) == 0 {
-				app.Spec.GCP.SqlInstances[i].Name = fmt.Sprintf("%s-%d", app.Name, i)
+				app.Spec.GCP.SqlInstances[i].Name = app.Name
+				sqlInstance.Name = app.Name
 			}
 
 			instance, err := GoogleSqlInstance(app, sqlInstance)
@@ -81,9 +82,9 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
 
 			ops = append(ops, ResourceOperation{GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, password), OperationCreateOrUpdate})
-			ops = append(ops, ResourceOperation{OpaqueSecret(app, GCPSqlInstanceSecretName(app.Name, instance.Name), map[string]string{
-				fmt.Sprintf("GCP_SQLINSTANCE_%s_PASSWORD", strings.ToUpper(instance.Name)): password,
-				fmt.Sprintf("GCP_SQLINSTANCE_%s_USERNAME", strings.ToUpper(instance.Name)): instance.Name}),
+			ops = append(ops, ResourceOperation{OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), map[string]string{
+				fmt.Sprintf("GCP_SQLINSTANCE_%s_PASSWORD", strings.ReplaceAll(strings.ToUpper(instance.Name), "-", "_")): password,
+				fmt.Sprintf("GCP_SQLINSTANCE_%s_USERNAME", strings.ReplaceAll(strings.ToUpper(instance.Name), "-", "_")): instance.Name}),
 				OperationCreateOrUpdate})
 		}
 	}

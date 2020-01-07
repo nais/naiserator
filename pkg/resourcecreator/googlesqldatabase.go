@@ -8,12 +8,12 @@ import (
 
 func GoogleSqlDatabases(app *nais.Application, instance nais.CloudSqlInstance) (databases []*google_sql_crd.SQLDatabase) {
 	for _, db := range instance.Databases {
-		databases = append(databases, googleSqlDatabase(db.Name, instance.CascadingDelete, app))
+		databases = append(databases, googleSqlDatabase(db.Name, instance.Name, instance.CascadingDelete, app))
 	}
 	return
 }
 
-func googleSqlDatabase(name string, cascadingDelete bool, app *nais.Application) *google_sql_crd.SQLDatabase {
+func googleSqlDatabase(name, instanceName string, cascadingDelete bool, app *nais.Application) *google_sql_crd.SQLDatabase {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = name
@@ -27,7 +27,7 @@ func googleSqlDatabase(name string, cascadingDelete bool, app *nais.Application)
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLDatabaseSpec{
-			InstanceRef: google_sql_crd.InstanceRef{Name: app.Name},
+			InstanceRef: google_sql_crd.InstanceRef{Name: instanceName},
 		},
 	}
 }
