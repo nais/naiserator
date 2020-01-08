@@ -263,7 +263,6 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 }
 
 var appsync sync.Mutex
-
 // Atomically update an Application resource.
 // Locks the resource to avoid race conditions.
 func (n *Synchronizer) UpdateApplication(app *v1alpha1.Application, updateFunc func(existing *v1alpha1.Application) error) error {
