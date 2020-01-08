@@ -48,8 +48,6 @@ type ApplicationSpec struct {
 	AccessPolicy    AccessPolicy         `json:"accessPolicy,omitempty"`
 	GCP             GCP                  `json:"gcp,omitempty"`
 	Env             []EnvVar             `json:"env,omitempty"`
-	EnvFrom         []EnvFrom            `json:"envFrom,omitempty"`
-	FilesFrom       []FilesFrom          `json:"filesFrom,omitempty"`
 	Image           string               `json:"image"`
 	Ingresses       []string             `json:"ingresses,omitempty"`
 	LeaderElection  bool                 `json:"leaderElection,omitempty"`
@@ -152,17 +150,6 @@ type EnvVar struct {
 	ValueFrom EnvVarSource `json:"valueFrom,omitempty"`
 }
 
-type EnvFrom struct {
-	ConfigMap string `json:"configmap,omitempty"`
-	Secret    string `json:"secret,omitempty"`
-}
-
-type FilesFrom struct {
-	ConfigMap string `json:"configmap,omitempty"`
-	Secret    string `json:"secret,omitempty"`
-	MountPath string `json:"mountPath,omitempty"`
-}
-
 type SecretPath struct {
 	MountPath string `json:"mountPath"`
 	KvPath    string `json:"kvPath"`
@@ -246,14 +233,8 @@ func (in *Application) NilFix() {
 	if in.Spec.Env == nil {
 		in.Spec.Env = make([]EnvVar, 0)
 	}
-	if in.Spec.EnvFrom == nil {
-		in.Spec.EnvFrom = make([]EnvFrom, 0)
-	}
 	if in.Spec.Vault.Mounts == nil {
 		in.Spec.Vault.Mounts = make([]SecretPath, 0)
-	}
-	if in.Spec.FilesFrom == nil {
-		in.Spec.FilesFrom = make([]FilesFrom, 0)
 	}
 	if in.Spec.AccessPolicy.Inbound.Rules == nil {
 		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyRule, 0)

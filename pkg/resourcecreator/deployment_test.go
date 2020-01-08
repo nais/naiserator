@@ -394,94 +394,94 @@ func TestDeployment(t *testing.T) {
 		}
 	})
 
-	t.Run("secret defaults is applied", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
+	//t.Run("secret defaults is applied", func(t *testing.T) {
+	//	app := fixtures.MinimalApplication()
+	//	err := nais.ApplyDefaults(app)
+	//	assert.NoError(t, err)
+	//
+	//	customMountPath := "hello/world"
+	//	app.Spec.FilesFrom = []nais.FilesFrom{
+	//		{Secret: "foo"},
+	//		{Secret: "bar", MountPath: customMountPath},
+	//	}
+	//
+	//	deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: true})
+	//	assert.NoError(t, err)
+	//	assert.NotNil(t, deployment)
+	//
+	//	appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+	//	assert.NotNil(t, appContainer)
+	//	assert.Equal(t, nais.DefaultSecretMountPath, getVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
+	//	assert.Equal(t, customMountPath, getVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
+	//})
 
-		customMountPath := "hello/world"
-		app.Spec.FilesFrom = []nais.FilesFrom{
-			{Secret: "foo"},
-			{Secret: "bar", MountPath: customMountPath},
-		}
+	//t.Run("froms are correctly configured", func(t *testing.T) {
+	//	app := fixtures.MinimalApplication()
+	//	err := nais.ApplyDefaults(app)
+	//	assert.NoError(t, err)
+	//
+	//	envConfigmapName := "envconfigmap"
+	//	envSecretName := "envsecret"
+	//	fileConfigmapName := "fileconfigmap"
+	//	fileSecretName := "filesecret"
+	//	fileSecretMountPath := "/my/path"
+	//
+	//	app.Spec.EnvFrom = []nais.EnvFrom{
+	//		{Secret: envSecretName},
+	//		{ConfigMap: envConfigmapName},
+	//	}
+	//	app.Spec.FilesFrom = []nais.FilesFrom{
+	//		{Secret: fileSecretName, MountPath: fileSecretMountPath},
+	//		{ConfigMap: fileConfigmapName},
+	//	}
+	//
+	//	deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: true})
+	//	assert.NoError(t, err)
+	//	assert.NotNil(t, deployment)
+	//
+	//	appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+	//
+	//	assert.Equal(t, 2, len(appContainer.EnvFrom))
+	//	assert.Equal(t, envSecretName, appContainer.EnvFrom[0].SecretRef.Name)
+	//	assert.Equal(t, envConfigmapName, appContainer.EnvFrom[1].ConfigMapRef.Name)
+	//
+	//	secretVolumeMount := getVolumeMountByName(appContainer.VolumeMounts, fileSecretName)
+	//	secretVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, fileSecretName)
+	//	assert.Equal(t, fileSecretName, secretVolumeMount.Name)
+	//	assert.Equal(t, fileSecretMountPath, secretVolumeMount.MountPath)
+	//	assert.True(t, secretVolumeMount.ReadOnly)
+	//	assert.Equal(t, fileSecretName, secretVolume.Name)
+	//	assert.Equal(t, fileSecretName, secretVolume.Secret.SecretName)
+	//
+	//	configmapVolumeMount := getVolumeMountByName(appContainer.VolumeMounts, fileConfigmapName)
+	//	configmapVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, fileConfigmapName)
+	//	assert.Equal(t, fileConfigmapName, configmapVolumeMount.Name)
+	//	assert.Equal(t, nais.GetDefaultMountPath(fileConfigmapName), configmapVolumeMount.MountPath)
+	//	assert.True(t, configmapVolumeMount.ReadOnly)
+	//	assert.Equal(t, fileConfigmapName, configmapVolume.Name)
+	//	assert.Equal(t, fileConfigmapName, configmapVolume.ConfigMap.Name)
+	//})
 
-		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: true})
-		assert.NoError(t, err)
-		assert.NotNil(t, deployment)
-
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-		assert.Equal(t, nais.DefaultSecretMountPath, getVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
-		assert.Equal(t, customMountPath, getVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
-	})
-
-	t.Run("froms are correctly configured", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		envConfigmapName := "envconfigmap"
-		envSecretName := "envsecret"
-		fileConfigmapName := "fileconfigmap"
-		fileSecretName := "filesecret"
-		fileSecretMountPath := "/my/path"
-
-		app.Spec.EnvFrom = []nais.EnvFrom{
-			{Secret: envSecretName},
-			{ConfigMap: envConfigmapName},
-		}
-		app.Spec.FilesFrom = []nais.FilesFrom{
-			{Secret: fileSecretName, MountPath: fileSecretMountPath},
-			{ConfigMap: fileConfigmapName},
-		}
-
-		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: true})
-		assert.NoError(t, err)
-		assert.NotNil(t, deployment)
-
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
-
-		assert.Equal(t, 2, len(appContainer.EnvFrom))
-		assert.Equal(t, envSecretName, appContainer.EnvFrom[0].SecretRef.Name)
-		assert.Equal(t, envConfigmapName, appContainer.EnvFrom[1].ConfigMapRef.Name)
-
-		secretVolumeMount := getVolumeMountByName(appContainer.VolumeMounts, fileSecretName)
-		secretVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, fileSecretName)
-		assert.Equal(t, fileSecretName, secretVolumeMount.Name)
-		assert.Equal(t, fileSecretMountPath, secretVolumeMount.MountPath)
-		assert.True(t, secretVolumeMount.ReadOnly)
-		assert.Equal(t, fileSecretName, secretVolume.Name)
-		assert.Equal(t, fileSecretName, secretVolume.Secret.SecretName)
-
-		configmapVolumeMount := getVolumeMountByName(appContainer.VolumeMounts, fileConfigmapName)
-		configmapVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, fileConfigmapName)
-		assert.Equal(t, fileConfigmapName, configmapVolumeMount.Name)
-		assert.Equal(t, nais.GetDefaultMountPath(fileConfigmapName), configmapVolumeMount.MountPath)
-		assert.True(t, configmapVolumeMount.ReadOnly)
-		assert.Equal(t, fileConfigmapName, configmapVolume.Name)
-		assert.Equal(t, fileConfigmapName, configmapVolume.ConfigMap.Name)
-	})
-
-	t.Run("secrets are not configured when feature flag for secrets is false", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		app.Spec.EnvFrom = []nais.EnvFrom{
-			{Secret: "foo"},
-		}
-		app.Spec.FilesFrom = []nais.FilesFrom{
-			{Secret: "bar"},
-		}
-
-		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: false})
-		assert.NoError(t, err)
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-		assert.Equal(t, 0, len(appContainer.EnvFrom))
-		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, "bar")
-		assert.Nil(t, volumeMount)
-	})
+	//	t.Run("secrets are not configured when feature flag for secrets is false", func(t *testing.T) {
+	//		app := fixtures.MinimalApplication()
+	//		err := nais.ApplyDefaults(app)
+	//		assert.NoError(t, err)
+	//
+	//		app.Spec.EnvFrom = []nais.EnvFrom{
+	//			{Secret: "foo"},
+	//		}
+	//		app.Spec.FilesFrom = []nais.FilesFrom{
+	//			{Secret: "bar"},
+	//		}
+	//
+	//		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{NativeSecrets: false})
+	//		assert.NoError(t, err)
+	//		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+	//		assert.NotNil(t, appContainer)
+	//		assert.Equal(t, 0, len(appContainer.EnvFrom))
+	//		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, "bar")
+	//		assert.Nil(t, volumeMount)
+	//	})
 }
 
 func getVolumeByName(volumes []v1.Volume, name string) *v1.Volume {
