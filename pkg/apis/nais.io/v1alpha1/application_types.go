@@ -173,11 +173,11 @@ type CloudSqlInstance struct {
 	Tier string `json:"tier,omitempty"`
 	// +kubebuilder:validation:Enum=SSD;HDD
 	DiskType         CloudSqlInstanceDiskType `json:"diskType,omitempty"`
-	HighAvailability bool                     `json:"highAvailability,omitemptyy"`
+	HighAvailability bool                     `json:"highAvailability,omitempty"`
 	// +kubebuilder:validation:Minimum=10
 	DiskSize       int  `json:"diskSize,omitempty"`
 	DiskAutoResize bool `json:"diskAutoResize,omitempty"`
-	// +kubebuilder:validation:Pattern="\d\d:00"
+	// +kubebuilder:validation:Pattern="[0-9]{2}:00"
 	AutoBackupTime string `json:"autoBackup,omitempty"`
 	// +kubebuilder:validation:Required
 	Databases       []CloudSqlDatabase `json:"databases,omitempty"`
