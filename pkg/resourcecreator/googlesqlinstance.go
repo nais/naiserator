@@ -51,12 +51,12 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 	var err error
 
 	defaultInstance := nais.CloudSqlInstance{
-		Name:       appName,
-		Tier:       DefaultSqlInstanceTier,
-		DiskType:   DefaultSqlInstanceDiskType,
-		DiskSize:   DefaultSqlInstanceDiskSize,
-		AutoBackup: DefaultSqlInstanceAutoBackup,
-		Databases:  []nais.CloudSqlDatabase{{Name: appName}},
+		Name:           appName,
+		Tier:           DefaultSqlInstanceTier,
+		DiskType:       DefaultSqlInstanceDiskType,
+		DiskSize:       DefaultSqlInstanceDiskSize,
+		AutoBackupTime: DefaultSqlInstanceAutoBackup,
+		Databases:      []nais.CloudSqlDatabase{{Name: appName}},
 	}
 
 	if err = mergo.Merge(&instance, defaultInstance); err != nil {

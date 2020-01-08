@@ -513,6 +513,37 @@ spec:
               type: array
             gcp:
               properties:
+                sqlInstances:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      type:
+                        type: string
+                      diskType:
+                        type: string
+                      highAvailability:
+                        type: boolean
+                      diskSize:
+                        type: integer
+                      diskAutoResize:
+                        type: boolean
+                      autoBackupTime:
+                        type: string
+                      cascadingDelete:
+                        type: boolean
+                      databases:
+                        type: array
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          required:
+                            - name
+                    required:
+                    - type
+                    type: object
+                  type: array
                 buckets:
                   items:
                     properties:
