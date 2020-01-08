@@ -25,6 +25,8 @@ rules:
       - 'serviceroles'
       - 'serviceentries'
       - 'servicerolebindings'
+      - 'storagebuckets'
+      - 'storagebucketaccesscontrols'
       - 'virtualservices'
     verbs:
       - 'get'

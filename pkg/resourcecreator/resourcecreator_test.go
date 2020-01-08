@@ -10,7 +10,7 @@ import (
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	sqlv1alpha3 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
-	storagev1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
+	storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -23,11 +23,7 @@ import (
 )
 
 type realObjects struct {
-	bucket                  *storagev1alpha2.GoogleStorageBucket
-	bucketAccessControl     *storagev1alpha2.GoogleStorageBucketAccessControl
 	deployment              *v1.Deployment
-	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
-	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
 	hpa                     *autoscalingv1.HorizontalPodAutoscaler
 	ingress                 *extensionsv1beta1.Ingress
 	networkPolicy           *networkingv1.NetworkPolicy
@@ -42,6 +38,10 @@ type realObjects struct {
 	sqlInstance             *sqlv1alpha3.SQLInstance
 	sqlUser                 *sqlv1alpha3.SQLUser
 	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
+	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
+	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
+	bucket                  *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket
+	bucketAccessControl     *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -75,9 +75,9 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.googleIAMServiceAccount = v
 		case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
 			o.googleIAMPolicy = v
-		case *storagev1alpha2.GoogleStorageBucket:
+		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket:
 			o.bucket = v
-		case *storagev1alpha2.GoogleStorageBucketAccessControl:
+		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl:
 			o.bucketAccessControl = v
 		case *sqlv1alpha3.SQLInstance:
 			o.sqlInstance = v

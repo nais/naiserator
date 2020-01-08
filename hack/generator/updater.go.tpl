@@ -106,6 +106,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		case {{.Type}}:
 		c := {{.Client}}(new.Namespace)
 		return func() error {
+            log.Infof("creating new {{ .Type }} for %s", new.Name)
             _, err := c.Create(new)
             if err != nil && !errors.IsAlreadyExists(err) {
                 return err

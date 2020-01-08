@@ -20,11 +20,12 @@ import (
 const (
 	LastSyncedHashAnnotation          = "nais.io/lastSyncedHash"
 	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
-	SecretTypeEnv                     = "env"
-	SecretTypeFiles                   = "files"
-	DefaultSecretType                 = SecretTypeEnv
 	DefaultSecretMountPath            = "/var/run/secrets"
 )
+
+func GetDefaultMountPath(name string) string {
+	return fmt.Sprintf("/var/run/configmaps/%s", name)
+}
 
 // Application defines a NAIS application.
 //
@@ -32,7 +33,7 @@ const (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Team",type="string",JSONPath=".metadata.labels.team"
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.deploymentRolloutStatus"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.synchronizationState"
 // +kubebuilder:resource:path="applications",shortName="app",singular="application"
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -46,8 +47,9 @@ type Application struct {
 type ApplicationSpec struct {
 	AccessPolicy    AccessPolicy         `json:"accessPolicy,omitempty"`
 	GCP             GCP                  `json:"gcp,omitempty"`
-	ConfigMaps      ConfigMaps           `json:"configMaps,omitempty"`
 	Env             []EnvVar             `json:"env,omitempty"`
+	EnvFrom         []EnvFrom            `json:"envFrom,omitempty"`
+	FilesFrom       []FilesFrom          `json:"filesFrom,omitempty"`
 	Image           string               `json:"image"`
 	Ingresses       []string             `json:"ingresses,omitempty"`
 	LeaderElection  bool                 `json:"leaderElection,omitempty"`
@@ -59,11 +61,10 @@ type ApplicationSpec struct {
 	Readiness       Probe                `json:"readiness,omitempty"`
 	Replicas        Replicas             `json:"replicas,omitempty"`
 	Resources       ResourceRequirements `json:"resources,omitempty"`
-	Secrets         []Secret             `json:"secrets,omitempty"`
 	SecureLogs      SecureLogs           `json:"secureLogs,omitempty"`
 	Service         Service              `json:"service,omitempty"`
 	SkipCaBundle    bool                 `json:"skipCaBundle,omitempty"`
-	Strategy        Strategy             `json:"strategy,omitempty"`
+	Strategy        *Strategy            `json:"strategy,omitempty"`
 	Vault           Vault                `json:"vault,omitempty"`
 	WebProxy        bool                 `json:"webproxy,omitempty"`
 
@@ -190,6 +191,17 @@ type EnvVar struct {
 	ValueFrom EnvVarSource `json:"valueFrom,omitempty"`
 }
 
+type EnvFrom struct {
+	ConfigMap string `json:"configmap,omitempty"`
+	Secret    string `json:"secret,omitempty"`
+}
+
+type FilesFrom struct {
+	ConfigMap string `json:"configmap,omitempty"`
+	Secret    string `json:"secret,omitempty"`
+	MountPath string `json:"mountPath,omitempty"`
+}
+
 type SecretPath struct {
 	MountPath string `json:"mountPath"`
 	KvPath    string `json:"kvPath"`
@@ -201,10 +213,6 @@ type Vault struct {
 	Enabled bool         `json:"enabled,omitempty"`
 	Sidecar bool         `json:"sidecar,omitempty"`
 	Mounts  []SecretPath `json:"paths,omitempty"`
-}
-
-type ConfigMaps struct {
-	Files []string `json:"files,omitempty"`
 }
 
 type Strategy struct {
@@ -237,13 +245,6 @@ type AccessPolicyOutbound struct {
 type AccessPolicy struct {
 	Inbound  AccessPolicyInbound  `json:"inbound,omitempty"`
 	Outbound AccessPolicyOutbound `json:"outbound,omitempty"`
-}
-
-type Secret struct {
-	Name string `json:"name"`
-	// +kubebuilder:validation:Enum="";env;files
-	Type      string `json:"type,omitempty"`
-	MountPath string `json:"mountPath,omitempty"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
@@ -284,14 +285,14 @@ func (in *Application) NilFix() {
 	if in.Spec.Env == nil {
 		in.Spec.Env = make([]EnvVar, 0)
 	}
-	if in.Spec.Secrets == nil {
-		in.Spec.Secrets = make([]Secret, 0)
+	if in.Spec.EnvFrom == nil {
+		in.Spec.EnvFrom = make([]EnvFrom, 0)
 	}
 	if in.Spec.Vault.Mounts == nil {
 		in.Spec.Vault.Mounts = make([]SecretPath, 0)
 	}
-	if in.Spec.ConfigMaps.Files == nil {
-		in.Spec.ConfigMaps.Files = make([]string, 0)
+	if in.Spec.FilesFrom == nil {
+		in.Spec.FilesFrom = make([]FilesFrom, 0)
 	}
 	if in.Spec.AccessPolicy.Inbound.Rules == nil {
 		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyRule, 0)

@@ -2,6 +2,7 @@ package synchronizer
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -97,7 +98,13 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 		if !changed {
 			return
 		}
-		err := n.UpdateStatus(app)
+		err := n.UpdateApplication(app, func(existing *v1alpha1.Application) error {
+			existing.Status.SynchronizationState = app.Status.SynchronizationState
+			existing.Status.CorrelationID = app.Status.CorrelationID
+			existing.Annotations[v1alpha1.LastSyncedHashAnnotation] = app.Annotations[v1alpha1.LastSyncedHashAnnotation]
+			_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(existing)
+			return err
+		})
 		if err != nil {
 			n.reportError(EventFailedStatusUpdate, err, app)
 		} else {
@@ -158,16 +165,6 @@ func (n *Synchronizer) Main() {
 	for app := range n.workQueue {
 		n.Process(&app)
 	}
-}
-
-// Update application status and persist to cluster
-func (n *Synchronizer) UpdateStatus(app *v1alpha1.Application) error {
-	_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
-	if err != nil {
-		return fmt.Errorf("persist application: %s", err)
-	}
-
-	return nil
 }
 
 func (n *Synchronizer) Sync(rollout Rollout) error {
@@ -265,6 +262,25 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 	return funcs
 }
 
+var appsync sync.Mutex
+
+// Atomically update an Application resource.
+// Locks the resource to avoid race conditions.
+func (n *Synchronizer) UpdateApplication(app *v1alpha1.Application, updateFunc func(existing *v1alpha1.Application) error) error {
+	var err error
+
+	appsync.Lock()
+	defer appsync.Unlock()
+
+	app, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("get newest version of Application: %s", err)
+	}
+
+	app.NilFix()
+	return updateFunc(app)
+}
+
 func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
 	logger.Debugf("monitoring rollout status")
 
@@ -290,19 +306,17 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 				}
 
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
-				var updatedApp *v1alpha1.Application
-				updatedApp, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
-				if err != nil {
-					logger.Errorf("monitor rollout: get newest version of Application: %s", err)
-					return
-				}
+				err = n.UpdateApplication(&app, func(app *v1alpha1.Application) error {
+					app.Status.SynchronizationState = EventRolloutComplete
+					app.SetDeploymentRolloutStatus(event.RolloutStatus)
+					_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
+					return err
+				})
 
-				updatedApp.Status.SynchronizationState = EventRolloutComplete
-				updatedApp.SetDeploymentRolloutStatus(event.RolloutStatus)
-				_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(updatedApp)
 				if err != nil {
 					logger.Errorf("monitor rollout: store application sync status: %s", err)
 				}
+
 				return
 			}
 		case <-time.After(timeout):

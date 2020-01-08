@@ -8,10 +8,10 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// GoogleStorageBuckets returns a GoogleStorageBucketInformer.
-	GoogleStorageBuckets() GoogleStorageBucketInformer
-	// GoogleStorageBucketAccessControls returns a GoogleStorageBucketAccessControlInformer.
-	GoogleStorageBucketAccessControls() GoogleStorageBucketAccessControlInformer
+	// StorageBuckets returns a StorageBucketInformer.
+	StorageBuckets() StorageBucketInformer
+	// StorageBucketAccessControls returns a StorageBucketAccessControlInformer.
+	StorageBucketAccessControls() StorageBucketAccessControlInformer
 }
 
 type version struct {
@@ -25,12 +25,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// GoogleStorageBuckets returns a GoogleStorageBucketInformer.
-func (v *version) GoogleStorageBuckets() GoogleStorageBucketInformer {
-	return &googleStorageBucketInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// StorageBuckets returns a StorageBucketInformer.
+func (v *version) StorageBuckets() StorageBucketInformer {
+	return &storageBucketInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// GoogleStorageBucketAccessControls returns a GoogleStorageBucketAccessControlInformer.
-func (v *version) GoogleStorageBucketAccessControls() GoogleStorageBucketAccessControlInformer {
-	return &googleStorageBucketAccessControlInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// StorageBucketAccessControls returns a StorageBucketAccessControlInformer.
+func (v *version) StorageBucketAccessControls() StorageBucketAccessControlInformer {
+	return &storageBucketAccessControlInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

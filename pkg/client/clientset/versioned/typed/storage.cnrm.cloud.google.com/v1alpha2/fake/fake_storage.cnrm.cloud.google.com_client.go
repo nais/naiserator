@@ -12,12 +12,12 @@ type FakeStorageV1alpha2 struct {
 	*testing.Fake
 }
 
-func (c *FakeStorageV1alpha2) GoogleStorageBuckets(namespace string) v1alpha2.GoogleStorageBucketInterface {
-	return &FakeGoogleStorageBuckets{c, namespace}
+func (c *FakeStorageV1alpha2) StorageBuckets(namespace string) v1alpha2.StorageBucketInterface {
+	return &FakeStorageBuckets{c, namespace}
 }
 
-func (c *FakeStorageV1alpha2) GoogleStorageBucketAccessControls(namespace string) v1alpha2.GoogleStorageBucketAccessControlInterface {
-	return &FakeGoogleStorageBucketAccessControls{c, namespace}
+func (c *FakeStorageV1alpha2) StorageBucketAccessControls(namespace string) v1alpha2.StorageBucketAccessControlInterface {
+	return &FakeStorageBucketAccessControls{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

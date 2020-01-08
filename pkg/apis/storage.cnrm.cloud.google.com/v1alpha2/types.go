@@ -6,32 +6,32 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type GoogleStorageBucket struct {
+type StorageBucket struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty'`
-	Spec              GoogleStorageBucketSpec `json:"spec"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              StorageBucketSpec `json:"spec"`
 }
 
-type GoogleStorageBucketSpec struct {
+type StorageBucketSpec struct {
 	Location string `json:"location"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type GoogleStorageBucketList struct {
+type StorageBucketList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []GoogleStorageBucket `json:"items"`
+	Items           []StorageBucket `json:"items"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type GoogleStorageBucketAccessControl struct {
+type StorageBucketAccessControl struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty'`
-	Spec              GoogleStorageBucketAccessControlSpec `json:"spec"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              StorageBucketAccessControlSpec `json:"spec"`
 }
 
-type GoogleStorageBucketAccessControlSpec struct {
+type StorageBucketAccessControlSpec struct {
 	BucketRef BucketRef `json:"bucketRef"`
 	Entity    string    `json:"entity"`
 	Role      string    `json:"role"`
@@ -42,8 +42,8 @@ type BucketRef struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type GoogleStorageBucketAccessControlList struct {
+type StorageBucketAccessControlList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []GoogleStorageBucketAccessControl `json:"items"`
+	Items           []StorageBucketAccessControl `json:"items"`
 }

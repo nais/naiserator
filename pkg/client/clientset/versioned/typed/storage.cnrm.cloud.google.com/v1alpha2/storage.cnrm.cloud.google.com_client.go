@@ -10,8 +10,8 @@ import (
 
 type StorageV1alpha2Interface interface {
 	RESTClient() rest.Interface
-	GoogleStorageBucketsGetter
-	GoogleStorageBucketAccessControlsGetter
+	StorageBucketsGetter
+	StorageBucketAccessControlsGetter
 }
 
 // StorageV1alpha2Client is used to interact with features provided by the storage.cnrm.cloud.google.com group.
@@ -19,12 +19,12 @@ type StorageV1alpha2Client struct {
 	restClient rest.Interface
 }
 
-func (c *StorageV1alpha2Client) GoogleStorageBuckets(namespace string) GoogleStorageBucketInterface {
-	return newGoogleStorageBuckets(c, namespace)
+func (c *StorageV1alpha2Client) StorageBuckets(namespace string) StorageBucketInterface {
+	return newStorageBuckets(c, namespace)
 }
 
-func (c *StorageV1alpha2Client) GoogleStorageBucketAccessControls(namespace string) GoogleStorageBucketAccessControlInterface {
-	return newGoogleStorageBucketAccessControls(c, namespace)
+func (c *StorageV1alpha2Client) StorageBucketAccessControls(namespace string) StorageBucketAccessControlInterface {
+	return newStorageBucketAccessControls(c, namespace)
 }
 
 // NewForConfig creates a new StorageV1alpha2Client for the given config.

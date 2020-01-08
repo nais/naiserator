@@ -109,15 +109,15 @@ var i = []Service{
 	},
 	{
 		Name:      "googleStorageBucket",
-		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketInterface",
-		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucket",
-		Client:    "customClient.StorageV1alpha2().GoogleStorageBuckets",
+		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.StorageBucketInterface",
+		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.StorageBucket",
+		Client:    "customClient.StorageV1alpha2().StorageBuckets",
 	},
 	{
 		Name:      "googleStorageBucketAccessControl",
-		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControlInterface",
-		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.GoogleStorageBucketAccessControl",
-		Client:    "customClient.StorageV1alpha2().GoogleStorageBucketAccessControls",
+		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControlInterface",
+		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl",
+		Client:    "customClient.StorageV1alpha2().StorageBucketAccessControls",
 	},
 	{
 		Name:      "sqlInstance",
