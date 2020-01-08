@@ -245,7 +245,7 @@ func (in *SQLUserList) DeepCopyInto(out *SQLUserList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]SQLUserList, len(*in))
+		*out = make([]SQLUser, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

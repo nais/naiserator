@@ -79,5 +79,5 @@ type SQLUser struct {
 type SQLUserList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SQLUserList `json:"items"`
+	Items           []SQLUser `json:"items"`
 }
