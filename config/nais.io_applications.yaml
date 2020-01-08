@@ -471,13 +471,6 @@ spec:
                       type: array
                   type: object
               type: object
-            configMaps:
-              properties:
-                files:
-                  items:
-                    type: string
-                  type: array
-              type: object
             env:
               items:
                 properties:
@@ -509,6 +502,26 @@ spec:
                     type: object
                 required:
                 - name
+                type: object
+              type: array
+            envFrom:
+              items:
+                properties:
+                  configmap:
+                    type: string
+                  secret:
+                    type: string
+                type: object
+              type: array
+            filesFrom:
+              items:
+                properties:
+                  configmap:
+                    type: string
+                  mountPath:
+                    type: string
+                  secret:
+                    type: string
                 type: object
               type: array
             gcp:
@@ -632,23 +645,6 @@ spec:
                       type: string
                   type: object
               type: object
-            secrets:
-              items:
-                properties:
-                  mountPath:
-                    type: string
-                  name:
-                    type: string
-                  type:
-                    enum:
-                    - ""
-                    - env
-                    - files
-                    type: string
-                required:
-                - name
-                type: object
-              type: array
             secureLogs:
               properties:
                 enabled:
