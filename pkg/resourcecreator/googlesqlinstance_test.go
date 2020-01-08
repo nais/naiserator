@@ -12,7 +12,14 @@ import (
 
 func TestGoogleSqlInstance(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	sqlInstance, err := resourcecreator.GoogleSqlInstance(app, nais.CloudSqlInstance{Name: app.Name, Type: "POSTGRES_11"})
+	spec := nais.CloudSqlInstance{
+		Name: app.Name,
+		Type: "POSTGRES_11",
+	}
+	spec, err := resourcecreator.CloudSqlInstanceWithDefaults(spec, app.Name)
+	assert.NoError(t, err)
+
+	sqlInstance, err := resourcecreator.GoogleSqlInstance(app, spec)
 	assert.NoError(t, err)
 	assert.Equal(t, app.Name, sqlInstance.Name)
 	assert.Equal(t, fmt.Sprintf("PD_%s", resourcecreator.DefaultSqlInstanceDiskType), sqlInstance.Spec.Settings.DiskType)

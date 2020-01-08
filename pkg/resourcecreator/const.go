@@ -20,6 +20,8 @@ const (
 	GoogleIAMServiceAccountNamespace        = "serviceaccounts"
 	GoogleStorageAPIVersion                 = "storage.cnrm.cloud.google.com/v1alpha2"
 	GoogleRegion                            = "europe-north1"
+	GoogleDeletionPolicyAnnotation          = "cnrm.cloud.google.com/deletion-policy"
 
 	NetworkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0" // The default IP block CIDR for the default allow network policies per app
+
 )

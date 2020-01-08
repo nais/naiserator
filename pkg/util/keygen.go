@@ -1,4 +1,4 @@
-package resourcecreator
+package util
 
 import (
 	"crypto/rand"

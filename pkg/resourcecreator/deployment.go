@@ -94,8 +94,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	podSpec := podSpecBase(app)
 
 	for _, instance := range app.Spec.GCP.SqlInstances {
-		appContainer := GetContainerByName(podSpec.Containers, app.Name)
-		appContainer.EnvFrom = append(appContainer.EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
+		podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
 	}
 
 	if app.Spec.LeaderElection {

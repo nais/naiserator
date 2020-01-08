@@ -2,6 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
+	"strings"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
@@ -17,7 +18,9 @@ func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete b
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = app.Name
 
-	objectMeta.Annotations = CascadingDeleteAnnotation(cascadingDelete)
+	if !cascadingDelete {
+		ApplyAbandonDeletionPolicy(&objectMeta)
+	}
 
 	return &google_sql_crd.SQLUser{
 		TypeMeta: k8s_meta.TypeMeta{
@@ -30,5 +33,13 @@ func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete b
 			Host:        "%",
 			Password:    password,
 		},
+	}
+}
+
+func GoogleSqlUserEnvVars(instanceName, password string) map[string]string {
+	cased := strings.ReplaceAll(strings.ToUpper(instanceName), "-", "_")
+	return map[string]string{
+		fmt.Sprintf("GCP_SQLINSTANCE_%s_PASSWORD", cased): password,
+		fmt.Sprintf("GCP_SQLINSTANCE_%s_USERNAME", cased): instanceName,
 	}
 }

@@ -18,5 +18,5 @@ func TestGoogleSqlDatabase(t *testing.T) {
 	assert.Equal(t, databases[1].Name, sqlDatabases[1].Name)
 	assert.Len(t, sqlDatabases, len(databases))
 	assert.Equal(t, instanceName, sqlDatabases[0].Spec.InstanceRef.Name)
-	assert.Equal(t, resourcecreator.CascadingDeleteAnnotation(false), sqlDatabases[0].ObjectMeta.Annotations)
+	assert.Equal(t, "abandon", sqlDatabases[0].ObjectMeta.Annotations[resourcecreator.GoogleDeletionPolicyAnnotation])
 }

@@ -11,9 +11,8 @@ import (
 
 const (
 	AvailabilityTypeRegional     = "REGIONAL"
-	AvailabilityTypeZonal        = "Zonal"
-	GCPRegion                    = "europe-north1"
-	DefaultSqlInstanceDiskType   = "SSD"
+	AvailabilityTypeZonal        = "ZONAL"
+	DefaultSqlInstanceDiskType   = nais.CloudSqlInstanceDiskTypeSSD
 	DefaultSqlInstanceAutoBackup = "02:00"
 	DefaultSqlInstanceTier       = "db-f1-micro"
 	DefaultSqlInstanceDiskSize   = 10
@@ -23,12 +22,9 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance) (*
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = instance.Name
 
-	i, err := withDefaults(instance, app.Name)
-	if err != nil {
-		return nil, err
+	if !instance.CascadingDelete {
+		ApplyAbandonDeletionPolicy(&objectMeta)
 	}
-
-	objectMeta.Annotations = CascadingDeleteAnnotation(i.CascadingDelete)
 
 	return &google_sql_crd.SQLInstance{
 		TypeMeta: k8s_meta.TypeMeta{
@@ -37,22 +33,25 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance) (*
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLInstanceSpec{
-			DatabaseVersion: string(i.Type),
-			Region:          GCPRegion,
+			DatabaseVersion: string(instance.Type),
+			Region:          GoogleRegion,
 			Settings: google_sql_crd.SQLInstanceSettings{
-				AvailabilityType:    availabilityType(i.HighAvailability),
+				AvailabilityType:    availabilityType(instance.HighAvailability),
 				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{},
-				DiskAutoResize:      i.DiskAutoResize,
-				DiskSize:            i.DiskSize,
-				DiskType:            diskType(i.DiskType),
-				Tier:                i.Tier,
+				DiskAutoResize:      instance.DiskAutoResize,
+				DiskSize:            instance.DiskSize,
+				DiskType:            instance.DiskType.GoogleType(),
+				Tier:                instance.Tier,
 			},
 		},
 	}, nil
 }
 
-func withDefaults(instance nais.CloudSqlInstance, appName string) (withDefaults nais.CloudSqlInstance, err error) {
+func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string) (nais.CloudSqlInstance, error) {
+	var err error
+
 	defaultInstance := nais.CloudSqlInstance{
+		Name:       appName,
 		Tier:       DefaultSqlInstanceTier,
 		DiskType:   DefaultSqlInstanceDiskType,
 		DiskSize:   DefaultSqlInstanceDiskSize,
@@ -60,7 +59,7 @@ func withDefaults(instance nais.CloudSqlInstance, appName string) (withDefaults 
 		Databases:  []nais.CloudSqlDatabase{{Name: appName}},
 	}
 
-	if err := mergo.Merge(&instance, defaultInstance); err != nil {
+	if err = mergo.Merge(&instance, defaultInstance); err != nil {
 		return nais.CloudSqlInstance{}, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
 	}
 
@@ -73,12 +72,4 @@ func availabilityType(highAvailability bool) string {
 	} else {
 		return AvailabilityTypeZonal
 	}
-}
-
-func diskType(diskType nais.CloudSqlInstanceDiskType) string {
-	return fmt.Sprintf("PD_%s", diskType)
-}
-
-func tier(cpu, memory int) string {
-	return fmt.Sprintf("db-custom-%d-%d", cpu, memory)
 }

@@ -7,9 +7,10 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/util"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
@@ -59,9 +60,10 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				return nil, fmt.Errorf("only one sql instance is supported")
 			}
 
-			if len(sqlInstance.Name) == 0 {
-				app.Spec.GCP.SqlInstances[i].Name = app.Name
-				sqlInstance.Name = app.Name
+			// TODO: name defaulting will break with more than one instance
+			sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
+			if err != nil {
+				return nil, err
 			}
 
 			instance, err := GoogleSqlInstance(app, sqlInstance)
@@ -75,17 +77,20 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				ops = append(ops, ResourceOperation{db, OperationCreateOrUpdate})
 			}
 
-			key, err := Keygen(32)
+			key, err := util.Keygen(32)
 			if err != nil {
 				return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
 			}
 			password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
 
-			ops = append(ops, ResourceOperation{GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, password), OperationCreateOrUpdate})
-			ops = append(ops, ResourceOperation{OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), map[string]string{
-				fmt.Sprintf("GCP_SQLINSTANCE_%s_PASSWORD", strings.ReplaceAll(strings.ToUpper(instance.Name), "-", "_")): password,
-				fmt.Sprintf("GCP_SQLINSTANCE_%s_USERNAME", strings.ReplaceAll(strings.ToUpper(instance.Name), "-", "_")): instance.Name}),
-				OperationCreateOrUpdate})
+			sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, password)
+			ops = append(ops, ResourceOperation{sqlUser, OperationCreateOrUpdate})
+
+			secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
+			ops = append(ops, ResourceOperation{secret, OperationCreateOrUpdate})
+
+			// FIXME: take into account when refactoring default values
+			app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 		}
 	}
 
@@ -163,7 +168,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{ingress, operation})
 	}
 
-	deployment, err := Deployment(app, resourceOptions) // TODO ...resourceOptions, additionalEnvs) //
+	deployment, err := Deployment(app, resourceOptions)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
@@ -176,10 +181,9 @@ func int32p(i int32) *int32 {
 	return &i
 }
 
-func CascadingDeleteAnnotation(cascadingDelete bool) map[string]string {
-	if cascadingDelete {
-		return nil
-	}
-
-	return map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
+// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
+func ApplyAbandonDeletionPolicy(resource v1.ObjectMetaAccessor) {
+	m := resource.GetObjectMeta().GetAnnotations()
+	m[GoogleDeletionPolicyAnnotation] = "abandon"
+	resource.GetObjectMeta().SetAnnotations(m)
 }

@@ -150,6 +150,10 @@ const (
 
 type CloudSqlInstanceDiskType string
 
+func (c CloudSqlInstanceDiskType) GoogleType() string {
+	return fmt.Sprintf("PD_%s", c)
+}
+
 const (
 	CloudSqlInstanceDiskTypeSSD CloudSqlInstanceDiskType = "SSD"
 	CloudSqlInstanceDiskTypeHDD CloudSqlInstanceDiskType = "HDD"

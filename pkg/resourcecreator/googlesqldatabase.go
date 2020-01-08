@@ -18,7 +18,9 @@ func googleSqlDatabase(name, instanceName string, cascadingDelete bool, app *nai
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = name
 
-	objectMeta.Annotations = CascadingDeleteAnnotation(cascadingDelete)
+	if !cascadingDelete {
+		ApplyAbandonDeletionPolicy(&objectMeta)
+	}
 
 	return &google_sql_crd.SQLDatabase{
 		TypeMeta: k8s_meta.TypeMeta{
