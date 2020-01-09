@@ -284,7 +284,7 @@ func envVars(app *nais.Application) []corev1.EnvVar {
 	newEnvVars := defaultEnvVars(app)
 
 	for _, envVar := range app.Spec.Env {
-		if envVar.ValueFrom.FieldRef.FieldPath != "" {
+		if envVar.ValueFrom != nil && envVar.ValueFrom.FieldRef.FieldPath != "" {
 			newEnvVars = append(newEnvVars, corev1.EnvVar{
 				Name: envVar.Name,
 				ValueFrom: &corev1.EnvVarSource{

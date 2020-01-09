@@ -149,7 +149,7 @@ type GCP struct {
 type EnvVar struct {
 	Name      string       `json:"name"`
 	Value     string       `json:"value,omitempty"`
-	ValueFrom EnvVarSource `json:"valueFrom,omitempty"`
+	ValueFrom *EnvVarSource `json:"valueFrom,omitempty"`
 }
 
 type EnvFrom struct {

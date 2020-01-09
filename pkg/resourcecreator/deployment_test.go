@@ -373,7 +373,7 @@ func TestDeployment(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Env = append(app.Spec.Env, nais.EnvVar{
 			Name: "podIP",
-			ValueFrom: nais.EnvVarSource{
+			ValueFrom: &nais.EnvVarSource{
 				FieldRef: nais.ObjectFieldSelector{FieldPath: "status.podIP"},
 			},
 		})
