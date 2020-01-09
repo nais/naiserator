@@ -4,7 +4,6 @@ package v1alpha1
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/google/uuid"
 	hash "github.com/mitchellh/hashstructure"
@@ -147,8 +146,8 @@ type GCP struct {
 }
 
 type EnvVar struct {
-	Name      string       `json:"name"`
-	Value     string       `json:"value,omitempty"`
+	Name      string        `json:"name"`
+	Value     string        `json:"value,omitempty"`
 	ValueFrom *EnvVarSource `json:"valueFrom,omitempty"`
 }
 
@@ -235,6 +234,10 @@ func (in *Application) GetOwnerReference() metav1.OwnerReference {
 func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object
+	var changeCause string
+	if in.Annotations != nil {
+		changeCause = in.Annotations["kubernetes.io/change-cause"]
+	}
 	relevantValues := struct {
 		AppSpec     ApplicationSpec
 		Labels      map[string]string
@@ -242,11 +245,11 @@ func (in Application) Hash() (string, error) {
 	}{
 		in.Spec,
 		in.Labels,
-		in.Annotations["kubernetes.io/change-cause"],
+		changeCause,
 	}
 
 	h, err := hash.Hash(relevantValues, nil)
-	return strconv.FormatUint(h, 10), err
+	return fmt.Sprintf("%x", h), err
 }
 
 func (in *Application) LogFields() log.Fields {
