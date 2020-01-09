@@ -10,6 +10,11 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	// Change this value to accept re-synchronization of ALL application resources when deploying a new version.
+	applicationHash = "8417214d046876cd"
+)
+
 func TestApplication_Hash(t *testing.T) {
 	a1, err := v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{}}.Hash()
 	a2, _ := v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{}, ObjectMeta: v1.ObjectMeta{Annotations: map[string]string{"a": "b", "team": "banan"}}}.Hash()
@@ -50,7 +55,7 @@ func TestApplication_CreateAppNamespaceHash(t *testing.T) {
 }
 
 // Test that updating the application spec with new, default-null values does not trigger a hash change.
-func TestUpdateCRD(t *testing.T) {
+func TestHashJSONMarshalling(t *testing.T) {
 	type a struct {
 		Foo string `json:"foo"`
 	}
@@ -69,4 +74,11 @@ func TestUpdateCRD(t *testing.T) {
 	oldHash, _ := hashstructure.Hash(oldMarshal, nil)
 	newHash, _ := hashstructure.Hash(newMarshal, nil)
 	assert.Equal(t, newHash, oldHash)
+}
+
+func TestNewCRD(t *testing.T) {
+	app := &v1alpha1.Application{}
+	hash, err := app.Hash()
+	assert.NoError(t, err)
+	assert.Equalf(t, applicationHash, hash, "Application spec changes trigger a complete re-synchronization of all application resources. If this is what you really want, change the `applicationHash` constant in this test file to `%s`.", hash)
 }
