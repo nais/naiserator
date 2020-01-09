@@ -9,13 +9,11 @@ import (
 	iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
-	sql_cnrm_cloud_google_com_v1alpha3 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
 	storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	typed_iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
-	typed_sql_cnrm_cloud_google_com_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1alpha3"
 	typed_storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1alpha2"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -48,23 +46,6 @@ func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) fu
 	CopyMeta(old, new)
 
 	CopyService(old, new)
-
-	return func() error {
-		_, err := client.Update(new)
-		return err
-	}
-}
-
-func secret(client typed_core_v1.SecretInterface, old, new *corev1.Secret) func() error {
-	log.Infof("creating or updating *corev1.Secret for %s", new.Name)
-	if old == nil {
-		return func() error {
-			_, err := client.Create(new)
-			return err
-		}
-	}
-
-	CopyMeta(old, new)
 
 	return func() error {
 		_, err := client.Update(new)
@@ -327,57 +308,6 @@ func googleStorageBucketAccessControl(client typed_storage_cnrm_cloud_google_com
 	}
 }
 
-func sqlInstance(client typed_sql_cnrm_cloud_google_com_v1alpha3.SQLInstanceInterface, old, new *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance) func() error {
-	log.Infof("creating or updating *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance for %s", new.Name)
-	if old == nil {
-		return func() error {
-			_, err := client.Create(new)
-			return err
-		}
-	}
-
-	CopyMeta(old, new)
-
-	return func() error {
-		_, err := client.Update(new)
-		return err
-	}
-}
-
-func sqlDatabase(client typed_sql_cnrm_cloud_google_com_v1alpha3.SQLDatabaseInterface, old, new *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase) func() error {
-	log.Infof("creating or updating *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase for %s", new.Name)
-	if old == nil {
-		return func() error {
-			_, err := client.Create(new)
-			return err
-		}
-	}
-
-	CopyMeta(old, new)
-
-	return func() error {
-		_, err := client.Update(new)
-		return err
-	}
-}
-
-func sqlUser(client typed_sql_cnrm_cloud_google_com_v1alpha3.SQLUserInterface, old, new *sql_cnrm_cloud_google_com_v1alpha3.SQLUser) func() error {
-	log.Infof("creating or updating *sql_cnrm_cloud_google_com_v1alpha3.SQLUser for %s", new.Name)
-	if old == nil {
-		return func() error {
-			_, err := client.Create(new)
-			return err
-		}
-	}
-
-	CopyMeta(old, new)
-
-	return func() error {
-		_, err := client.Update(new)
-		return err
-	}
-}
-
 func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -391,17 +321,6 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return service(c, nil, new)
 		}
 		return service(c, old, new)
-
-	case *corev1.Secret:
-		c := clientSet.CoreV1().Secrets(new.Namespace)
-		old, err := c.Get(new.Name, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return func() error { return err }
-			}
-			return secret(c, nil, new)
-		}
-		return secret(c, old, new)
 
 	case *corev1.ServiceAccount:
 		c := clientSet.CoreV1().ServiceAccounts(new.Namespace)
@@ -568,39 +487,6 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 		return googleStorageBucketAccessControl(c, old, new)
 
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance:
-		c := customClient.SqlV1alpha3().SQLInstances(new.Namespace)
-		old, err := c.Get(new.Name, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return func() error { return err }
-			}
-			return sqlInstance(c, nil, new)
-		}
-		return sqlInstance(c, old, new)
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase:
-		c := customClient.SqlV1alpha3().SQLDatabases(new.Namespace)
-		old, err := c.Get(new.Name, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return func() error { return err }
-			}
-			return sqlDatabase(c, nil, new)
-		}
-		return sqlDatabase(c, old, new)
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLUser:
-		c := customClient.SqlV1alpha3().SQLUsers(new.Namespace)
-		old, err := c.Get(new.Name, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return func() error { return err }
-			}
-			return sqlUser(c, nil, new)
-		}
-		return sqlUser(c, old, new)
-
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -618,19 +504,6 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 				return err
 			}
 			log.Infof("creating new *corev1.Service for %s", new.Name)
-			_, err = c.Create(new)
-			return err
-		}
-
-	case *corev1.Secret:
-		c := clientSet.CoreV1().Secrets(new.Namespace)
-		return func() error {
-			log.Infof("pre-deleting *corev1.Secret for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && !errors.IsNotFound(err) {
-				return err
-			}
-			log.Infof("creating new *corev1.Secret for %s", new.Name)
 			_, err = c.Create(new)
 			return err
 		}
@@ -830,45 +703,6 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			return err
 		}
 
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance:
-		c := customClient.SqlV1alpha3().SQLInstances(new.Namespace)
-		return func() error {
-			log.Infof("pre-deleting *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && !errors.IsNotFound(err) {
-				return err
-			}
-			log.Infof("creating new *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance for %s", new.Name)
-			_, err = c.Create(new)
-			return err
-		}
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase:
-		c := customClient.SqlV1alpha3().SQLDatabases(new.Namespace)
-		return func() error {
-			log.Infof("pre-deleting *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && !errors.IsNotFound(err) {
-				return err
-			}
-			log.Infof("creating new *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase for %s", new.Name)
-			_, err = c.Create(new)
-			return err
-		}
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLUser:
-		c := customClient.SqlV1alpha3().SQLUsers(new.Namespace)
-		return func() error {
-			log.Infof("pre-deleting *sql_cnrm_cloud_google_com_v1alpha3.SQLUser for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && !errors.IsNotFound(err) {
-				return err
-			}
-			log.Infof("creating new *sql_cnrm_cloud_google_com_v1alpha3.SQLUser for %s", new.Name)
-			_, err = c.Create(new)
-			return err
-		}
-
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -881,17 +715,6 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		c := clientSet.CoreV1().Services(new.Namespace)
 		return func() error {
 			log.Infof("creating new *corev1.Service for %s", new.Name)
-			_, err := c.Create(new)
-			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
-			}
-			return nil
-		}
-
-	case *corev1.Secret:
-		c := clientSet.CoreV1().Secrets(new.Namespace)
-		return func() error {
-			log.Infof("creating new *corev1.Secret for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -1064,39 +887,6 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return nil
 		}
 
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance:
-		c := customClient.SqlV1alpha3().SQLInstances(new.Namespace)
-		return func() error {
-			log.Infof("creating new *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance for %s", new.Name)
-			_, err := c.Create(new)
-			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
-			}
-			return nil
-		}
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase:
-		c := customClient.SqlV1alpha3().SQLDatabases(new.Namespace)
-		return func() error {
-			log.Infof("creating new *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase for %s", new.Name)
-			_, err := c.Create(new)
-			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
-			}
-			return nil
-		}
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLUser:
-		c := customClient.SqlV1alpha3().SQLUsers(new.Namespace)
-		return func() error {
-			log.Infof("creating new *sql_cnrm_cloud_google_com_v1alpha3.SQLUser for %s", new.Name)
-			_, err := c.Create(new)
-			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
-			}
-			return nil
-		}
-
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -1109,17 +899,6 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		c := clientSet.CoreV1().Services(new.Namespace)
 		return func() error {
 			log.Infof("deleting *corev1.Service for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
-			}
-			return err
-		}
-
-	case *corev1.Secret:
-		c := clientSet.CoreV1().Secrets(new.Namespace)
-		return func() error {
-			log.Infof("deleting *corev1.Secret for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil
@@ -1285,39 +1064,6 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		c := customClient.StorageV1alpha2().StorageBucketAccessControls(new.Namespace)
 		return func() error {
 			log.Infof("deleting *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
-			}
-			return err
-		}
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance:
-		c := customClient.SqlV1alpha3().SQLInstances(new.Namespace)
-		return func() error {
-			log.Infof("deleting *sql_cnrm_cloud_google_com_v1alpha3.SQLInstance for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
-			}
-			return err
-		}
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase:
-		c := customClient.SqlV1alpha3().SQLDatabases(new.Namespace)
-		return func() error {
-			log.Infof("deleting *sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
-			}
-			return err
-		}
-
-	case *sql_cnrm_cloud_google_com_v1alpha3.SQLUser:
-		c := customClient.SqlV1alpha3().SQLUsers(new.Namespace)
-		return func() error {
-			log.Infof("deleting *sql_cnrm_cloud_google_com_v1alpha3.SQLUser for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil
