@@ -25,12 +25,12 @@ func ApplyDefaults(app *Application) error {
 func getAppDefaults() *Application {
 	return &Application{
 		Spec: ApplicationSpec{
-			Replicas: Replicas{
+			Replicas: &Replicas{
 				Min:                    2,
 				Max:                    4,
 				CpuThresholdPercentage: 50,
 			},
-			Liveness: Probe{
+			Liveness: &Probe{
 				PeriodSeconds:    DefaultProbePeriodSeconds,
 				Timeout:          DefaultProbeTimeoutSeconds,
 				FailureThreshold: DefaultProbeFailureThreshold,
@@ -39,25 +39,25 @@ func getAppDefaults() *Application {
 			Strategy: &Strategy{
 				Type: DeploymentStrategyRollingUpdate,
 			},
-			Prometheus: PrometheusConfig{
+			Prometheus: &PrometheusConfig{
 				Path: "/metrics",
 			},
 			Ingresses: []string{},
-			Resources: ResourceRequirements{
-				Limits: ResourceSpec{
+			Resources: &ResourceRequirements{
+				Limits: &ResourceSpec{
 					Cpu:    "500m",
 					Memory: "512Mi",
 				},
-				Requests: ResourceSpec{
+				Requests: &ResourceSpec{
 					Cpu:    "200m",
 					Memory: "256Mi",
 				},
 			},
-			Vault: Vault{
+			Vault: &Vault{
 				Enabled: false,
 				Mounts:  []SecretPath{},
 			},
-			Service: Service{
+			Service: &Service{
 				Port: DefaultServicePort,
 			},
 		},

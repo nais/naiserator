@@ -45,28 +45,28 @@ type Application struct {
 
 // ApplicationSpec contains the NAIS manifest.
 type ApplicationSpec struct {
-	AccessPolicy    AccessPolicy         `json:"accessPolicy,omitempty"`
-	GCP             GCP                  `json:"gcp,omitempty"`
-	Env             []EnvVar             `json:"env,omitempty"`
-	EnvFrom         []EnvFrom            `json:"envFrom,omitempty"`
-	FilesFrom       []FilesFrom          `json:"filesFrom,omitempty"`
-	Image           string               `json:"image"`
-	Ingresses       []string             `json:"ingresses,omitempty"`
-	LeaderElection  bool                 `json:"leaderElection,omitempty"`
-	Liveness        Probe                `json:"liveness,omitempty"`
-	Logtransform    string               `json:"logtransform,omitempty"`
-	Port            int                  `json:"port,omitempty"`
-	PreStopHookPath string               `json:"preStopHookPath,omitempty"`
-	Prometheus      PrometheusConfig     `json:"prometheus,omitempty"`
-	Readiness       Probe                `json:"readiness,omitempty"`
-	Replicas        Replicas             `json:"replicas,omitempty"`
-	Resources       ResourceRequirements `json:"resources,omitempty"`
-	SecureLogs      SecureLogs           `json:"secureLogs,omitempty"`
-	Service         Service              `json:"service,omitempty"`
-	SkipCaBundle    bool                 `json:"skipCaBundle,omitempty"`
-	Strategy        *Strategy            `json:"strategy,omitempty"`
-	Vault           Vault                `json:"vault,omitempty"`
-	WebProxy        bool                 `json:"webproxy,omitempty"`
+	AccessPolicy    *AccessPolicy         `json:"accessPolicy,omitempty"`
+	GCP             *GCP                  `json:"gcp,omitempty"`
+	Env             []EnvVar              `json:"env,omitempty"`
+	EnvFrom         []EnvFrom             `json:"envFrom,omitempty"`
+	FilesFrom       []FilesFrom           `json:"filesFrom,omitempty"`
+	Image           string                `json:"image"`
+	Ingresses       []string              `json:"ingresses,omitempty"`
+	LeaderElection  bool                  `json:"leaderElection,omitempty"`
+	Liveness        *Probe                `json:"liveness,omitempty"`
+	Logtransform    string                `json:"logtransform,omitempty"`
+	Port            int                   `json:"port,omitempty"`
+	PreStopHookPath string                `json:"preStopHookPath,omitempty"`
+	Prometheus      *PrometheusConfig     `json:"prometheus,omitempty"`
+	Readiness       *Probe                `json:"readiness,omitempty"`
+	Replicas        *Replicas             `json:"replicas,omitempty"`
+	Resources       *ResourceRequirements `json:"resources,omitempty"`
+	SecureLogs      *SecureLogs           `json:"secureLogs,omitempty"`
+	Service         *Service              `json:"service,omitempty"`
+	SkipCaBundle    bool                  `json:"skipCaBundle,omitempty"`
+	Strategy        *Strategy             `json:"strategy,omitempty"`
+	Vault           *Vault                `json:"vault,omitempty"`
+	WebProxy        bool                  `json:"webproxy,omitempty"`
 
 	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
 	Logformat string `json:"logformat,omitempty"`
@@ -125,8 +125,8 @@ type ResourceSpec struct {
 }
 
 type ResourceRequirements struct {
-	Limits   ResourceSpec `json:"limits,omitempty"`
-	Requests ResourceSpec `json:"requests,omitempty"`
+	Limits   *ResourceSpec `json:"limits,omitempty"`
+	Requests *ResourceSpec `json:"requests,omitempty"`
 }
 
 type ObjectFieldSelector struct {
