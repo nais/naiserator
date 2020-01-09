@@ -215,6 +215,20 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 		return nil, fmt.Errorf("query existing deployment: %s", err)
 	}
 
+	if len(app.Spec.GCP.SqlInstances) > 0 {
+		namespace, err := n.ClientSet.CoreV1().Namespaces().Get(app.GetNamespace(), v1.GetOptions{})
+
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("query existing namespace: %s", err)
+		}
+
+		if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
+			n.ResourceOptions.GoogleTeamProjectId = val
+		} else {
+			return nil, fmt.Errorf("team project id annotation not set on namespace %s", app.GetNamespace())
+		}
+	}
+
 	rollout := &Rollout{
 		App:             app,
 		ResourceOptions: n.ResourceOptions,

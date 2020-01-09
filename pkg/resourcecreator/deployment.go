@@ -2,6 +2,8 @@ package resourcecreator
 
 import (
 	"fmt"
+	config2 "github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/spf13/viper"
 	"strconv"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -95,6 +97,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	for _, instance := range app.Spec.GCP.SqlInstances {
 		podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
+		podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 3306, resourceOptions.GoogleTeamProjectId))
 	}
 
 	if app.Spec.LeaderElection {
@@ -127,6 +130,29 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	return podSpec, err
+}
+
+func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, projectId string) corev1.Container {
+	connectionName := fmt.Sprintf("%s:%s:%s", projectId, GoogleRegion, sqlInstance.Name)
+	var runAsUser int64 = 2
+	allowPrivilegeEscalation := false
+	return corev1.Container{
+		Name:            "cloudsql-proxy",
+		Image:           viper.GetString(config2.VaultInitContainerImage),
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Ports: []corev1.ContainerPort{{
+			ContainerPort: port,
+			Protocol:      corev1.ProtocolTCP,
+		}},
+		Command: []string{
+				"/cloud_sql_proxy",
+				fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
+		},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser:                &runAsUser,
+			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+		},
+	}
 }
 
 func envFrom(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
