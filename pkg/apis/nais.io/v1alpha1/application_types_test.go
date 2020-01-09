@@ -1,8 +1,10 @@
 package v1alpha1_test
 
 import (
+	"encoding/json"
 	"testing"
 
+	"github.com/mitchellh/hashstructure"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,4 +47,26 @@ func TestApplication_CreateAppNamespaceHash(t *testing.T) {
 	assert.Equal(t, "short-name-hqb7npi", appNameHash3)
 	assert.True(t, len(appNameHash2) <= 30)
 	assert.True(t, len(appNameHash3) >= 6)
+}
+
+// Test that updating the application spec with new, default-null values does not trigger a hash change.
+func TestUpdateCRD(t *testing.T) {
+	type a struct {
+		Foo string `json:"foo"`
+	}
+	type oldspec struct {
+		A *a `json:"a,omitempty"`
+	}
+	type newspec struct {
+		A *a     `json:"a,omitempty"`
+		B *a     `json:"b,omitempty"` // new field added to crd spec
+		C string `json:"c,omitempty"` // new field added to crd spec
+	}
+	old := &oldspec{}
+	neu := &newspec{}
+	oldMarshal, _ := json.Marshal(old)
+	newMarshal, _ := json.Marshal(neu)
+	oldHash, _ := hashstructure.Hash(oldMarshal, nil)
+	newHash, _ := hashstructure.Hash(newMarshal, nil)
+	assert.Equal(t, newHash, oldHash)
 }

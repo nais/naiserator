@@ -3,6 +3,7 @@ package v1alpha1
 // +groupName="nais.io"
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -248,7 +249,11 @@ func (in Application) Hash() (string, error) {
 		changeCause,
 	}
 
-	h, err := hash.Hash(relevantValues, nil)
+	marshalled, err := json.Marshal(relevantValues)
+	if err != nil {
+		return "", err
+	}
+	h, err := hash.Hash(marshalled, nil)
 	return fmt.Sprintf("%x", h), err
 }
 
