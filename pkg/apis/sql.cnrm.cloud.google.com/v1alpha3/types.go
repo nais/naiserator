@@ -13,7 +13,7 @@ type SQLInstanceSpec struct {
 type SQLInstanceSettings struct {
 	AvailabilityType    string                         `json:"availabilityType"`
 	BackupConfiguration SQLInstanceBackupConfiguration `json:"backupConfiguration"`
-	DiskAutoResize      bool                           `json:"diskAutoResize"`
+	DiskAutoresize      bool                           `json:"diskAutoresize"`
 	DiskSize            int                            `json:"diskSize"`
 	DiskType            string                         `json:"diskType"`
 	Tier                string                         `json:"tier"`

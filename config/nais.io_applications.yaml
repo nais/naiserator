@@ -170,7 +170,7 @@ spec:
                           - name
                           type: object
                         type: array
-                      diskAutoResize:
+                      diskAutore:wsize:
                         type: boolean
                       diskSize:
                         minimum: 10
