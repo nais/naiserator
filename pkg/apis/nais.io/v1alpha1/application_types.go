@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	LastSyncedHashAnnotation          = "nais.io/lastSyncedHash"
 	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
 	DefaultSecretMountPath            = "/var/run/secrets"
 )
@@ -77,6 +76,7 @@ type ApplicationStatus struct {
 	CorrelationID           string `json:"correlationID,omitempty"`
 	DeploymentRolloutStatus string `json:"deploymentRolloutStatus,omitempty"`
 	SynchronizationState    string `json:"synchronizationState,omitempty"`
+	SynchronizationHash     string `json:"synchronizationHash,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -204,8 +204,8 @@ type AccessPolicyOutbound struct {
 }
 
 type AccessPolicy struct {
-	Inbound  AccessPolicyInbound  `json:"inbound,omitempty"`
-	Outbound AccessPolicyOutbound `json:"outbound,omitempty"`
+	Inbound  *AccessPolicyInbound  `json:"inbound,omitempty"`
+	Outbound *AccessPolicyOutbound `json:"outbound,omitempty"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
@@ -229,40 +229,6 @@ func (in *Application) GetOwnerReference() metav1.OwnerReference {
 		Kind:       "Application",
 		Name:       in.Name,
 		UID:        in.UID,
-	}
-}
-
-// NilFix initializes all slices from their nil defaults.
-//
-// This is done in order to workaround the k8s client serializer
-// which crashes when these fields are uninitialized.
-func (in *Application) NilFix() {
-	if in.Annotations == nil {
-		in.Annotations = make(map[string]string)
-	}
-	if in.Spec.Ingresses == nil {
-		in.Spec.Ingresses = make([]string, 0)
-	}
-	if in.Spec.Env == nil {
-		in.Spec.Env = make([]EnvVar, 0)
-	}
-	if in.Spec.EnvFrom == nil {
-		in.Spec.EnvFrom = make([]EnvFrom, 0)
-	}
-	if in.Spec.Vault.Mounts == nil {
-		in.Spec.Vault.Mounts = make([]SecretPath, 0)
-	}
-	if in.Spec.FilesFrom == nil {
-		in.Spec.FilesFrom = make([]FilesFrom, 0)
-	}
-	if in.Spec.AccessPolicy.Inbound.Rules == nil {
-		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyRule, 0)
-	}
-	if in.Spec.AccessPolicy.Outbound.Rules == nil {
-		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyRule, 0)
-	}
-	if in.Spec.AccessPolicy.Outbound.External == nil {
-		in.Spec.AccessPolicy.Outbound.External = make([]AccessPolicyExternalRule, 0)
 	}
 }
 
@@ -296,22 +262,15 @@ func (in Application) Cluster() string {
 	return viper.GetString(config.ClusterName)
 }
 
-func (in *Application) LastSyncedHash() string {
-	in.NilFix()
-	return in.Annotations[LastSyncedHashAnnotation]
-}
-
-func (in *Application) SetLastSyncedHash(hash string) {
-	in.NilFix()
-	in.Annotations[LastSyncedHashAnnotation] = hash
-}
-
 // If the application was deployed with a correlation ID annotation, return this value.
 // Otherwise, generate a random UUID.
 func (in *Application) NextCorrelationID() (string, error) {
-	in.NilFix()
+	var correlationID string
 
-	correlationID := in.Annotations[DeploymentCorrelationIDAnnotation]
+	if in.Annotations != nil {
+		correlationID = in.Annotations[DeploymentCorrelationIDAnnotation]
+	}
+
 	if len(correlationID) == 0 {
 		id, err := uuid.NewRandom()
 		if err != nil {

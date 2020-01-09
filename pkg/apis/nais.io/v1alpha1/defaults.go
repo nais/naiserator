@@ -60,6 +60,18 @@ func getAppDefaults() *Application {
 			Service: &Service{
 				Port: DefaultServicePort,
 			},
+			SecureLogs: &SecureLogs{
+				Enabled: false,
+			},
+			AccessPolicy: &AccessPolicy{
+				Inbound: &AccessPolicyInbound{
+					Rules: []AccessPolicyRule{},
+				},
+				Outbound: &AccessPolicyOutbound{
+					Rules:    []AccessPolicyRule{},
+					External: []AccessPolicyExternalRule{},
+				},
+			},
 		},
 	}
 }

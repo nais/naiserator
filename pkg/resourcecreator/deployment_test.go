@@ -181,7 +181,7 @@ func TestDeployment(t *testing.T) {
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Port = 12333
-		app.Spec.Liveness = nais.Probe{
+		app.Spec.Liveness = &nais.Probe{
 			Path: "/probe/path",
 		}
 		err := nais.ApplyDefaults(app)
@@ -200,7 +200,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("liveness configuration is set up correctly", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Liveness = nais.Probe{
+		app.Spec.Liveness = &nais.Probe{
 			Path:             "/probe/path",
 			Port:             12399,
 			Timeout:          12,
@@ -228,7 +228,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("readiness configuration is set up correctly", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Readiness = nais.Probe{
+		app.Spec.Readiness = &nais.Probe{
 			Path:             "/probe/path",
 			Port:             12399,
 			Timeout:          12,

@@ -46,14 +46,3 @@ func TestApplication_CreateAppNamespaceHash(t *testing.T) {
 	assert.True(t, len(appNameHash2) <= 30)
 	assert.True(t, len(appNameHash3) >= 6)
 }
-func TestNilFix(t *testing.T) {
-	app := v1alpha1.Application{}
-	err := v1alpha1.ApplyDefaults(&app)
-	assert.NoError(t, err)
-	assert.Nil(t, app.Spec.Ingresses)
-	assert.Nil(t, app.Spec.Env)
-	app.NilFix()
-	assert.NotNil(t, app.Spec.Ingresses)
-	assert.NotNil(t, app.Spec.Env)
-	assert.Equal(t, int32(v1alpha1.DefaultServicePort), app.Spec.Service.Port)
-}

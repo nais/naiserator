@@ -324,9 +324,11 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.GoogleProjectId = "nais-foo-1234"
-		app.Spec.GCP.Buckets = []nais.CloudStorageBucket{
-			{
-				Name: "bucket-name",
+		app.Spec.GCP = &nais.GCP{
+			Buckets: []nais.CloudStorageBucket{
+				{
+					Name: "bucket-name",
+				},
 			},
 		}
 
@@ -351,5 +353,4 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, objects.googleIAMServiceAccount.Name, entityTokens[0])
 		assert.Equal(t, "nais-foo-1234.iam.gserviceaccount.com", entityTokens[1])
 	})
-
 }

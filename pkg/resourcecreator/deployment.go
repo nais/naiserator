@@ -125,7 +125,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	return podSpec, err
 }
 
-func fromEnv(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool)  *corev1.PodSpec {
+func fromEnv(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
 	for _, env := range app.Spec.EnvFrom {
 		if len(env.ConfigMap) > 0 {
 			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvConfigmap(env.ConfigMap))
@@ -227,18 +227,18 @@ func appContainer(app *nais.Application) corev1.Container {
 		Ports: []corev1.ContainerPort{
 			{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais.DefaultPortName},
 		},
-		Resources:       resourceLimits(app.Spec.Resources),
+		Resources:       resourceLimits(*app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
 		Env:             envVars(app),
 	}
 
-	if len(app.Spec.Liveness.Path) > 0 {
-		c.LivenessProbe = probe(app, app.Spec.Liveness)
+	if app.Spec.Liveness != nil && len(app.Spec.Liveness.Path) > 0 {
+		c.LivenessProbe = probe(app, *app.Spec.Liveness)
 	}
 
-	if len(app.Spec.Readiness.Path) > 0 {
-		c.ReadinessProbe = probe(app, app.Spec.Readiness)
+	if app.Spec.Readiness != nil && len(app.Spec.Readiness.Path) > 0 {
+		c.ReadinessProbe = probe(app, *app.Spec.Readiness)
 	}
 
 	return c

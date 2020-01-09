@@ -99,9 +99,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 			return
 		}
 		err := n.UpdateApplication(app, func(existing *v1alpha1.Application) error {
-			existing.Status.SynchronizationState = app.Status.SynchronizationState
-			existing.Status.CorrelationID = app.Status.CorrelationID
-			existing.Annotations[v1alpha1.LastSyncedHashAnnotation] = app.Annotations[v1alpha1.LastSyncedHashAnnotation]
+			existing.Status = app.Status
 			_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(existing)
 			return err
 		})
@@ -196,10 +194,10 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 	}
 
 	// Skip processing if application didn't change since last synchronization.
-	if app.LastSyncedHash() == hash {
+	if app.Status.SynchronizationHash == hash {
 		return nil, nil
 	}
-	app.SetLastSyncedHash(hash)
+	app.Status.SynchronizationHash = hash
 
 	deploymentID, err := app.NextCorrelationID()
 	if err != nil {
@@ -276,7 +274,6 @@ func (n *Synchronizer) UpdateApplication(app *v1alpha1.Application, updateFunc f
 		return fmt.Errorf("get newest version of Application: %s", err)
 	}
 
-	app.NilFix()
 	return updateFunc(app)
 }
 
