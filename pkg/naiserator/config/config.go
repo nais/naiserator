@@ -47,17 +47,18 @@ type Vault struct {
 }
 
 type Config struct {
-	Bind            string       `json:"bind"`
-	Informer        Informer     `json:"informer"`
-	Kubeconfig      string       `json:"kubeconfig"`
-	ClusterName     string       `json:"cluster-name"`
-	GoogleProjectId string       `json:"google-project-id"`
-	Log             Log          `json:"log"`
-	Features        Features     `json:"features"`
-	Securelogs      Securelogs   `json:"securelogs"`
-	Proxy           Proxy        `json:"proxy"`
-	Vault           Vault        `json:"vault"`
-	Kafka           kafka.Config `json:"kafka"`
+	Bind                              string       `json:"bind"`
+	Informer                          Informer     `json:"informer"`
+	Kubeconfig                        string       `json:"kubeconfig"`
+	ClusterName                       string       `json:"cluster-name"`
+	GoogleProjectId                   string       `json:"google-project-id"`
+	GoogleCloudSQLProxyContainerImage string       `json:"google-cloud-sql-proxy-container-image"`
+	Log                               Log          `json:"log"`
+	Features                          Features     `json:"features"`
+	Securelogs                        Securelogs   `json:"securelogs"`
+	Proxy                             Proxy        `json:"proxy"`
+	Vault                             Vault        `json:"vault"`
+	Kafka                             kafka.Config `json:"kafka"`
 }
 
 var (
