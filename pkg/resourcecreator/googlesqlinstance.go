@@ -83,7 +83,7 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, opti
 			APIVersion: "iam.cnrm.cloud.google.com/v1alpha1",
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: GcpServiceAccountName(app, options.GoogleProjectId),
+			Member: fmt.Sprintf("serviceAccount:%s", GcpServiceAccountName(app, options.GoogleProjectId)),
 			Role:   "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
