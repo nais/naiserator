@@ -95,9 +95,11 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	podSpec := podSpecBase(app)
 
-	for _, instance := range app.Spec.GCP.SqlInstances {
-		podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
-		podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 3306, resourceOptions.GoogleTeamProjectId))
+	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
+		for _, instance := range app.Spec.GCP.SqlInstances {
+			podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
+			podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 3306, resourceOptions.GoogleTeamProjectId))
+		}
 	}
 
 	if app.Spec.LeaderElection {
@@ -145,8 +147,8 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 			Protocol:      corev1.ProtocolTCP,
 		}},
 		Command: []string{
-				"/cloud_sql_proxy",
-				fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
+			"/cloud_sql_proxy",
+			fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
 		},
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser:                &runAsUser,
@@ -257,18 +259,18 @@ func appContainer(app *nais.Application) corev1.Container {
 		Ports: []corev1.ContainerPort{
 			{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais.DefaultPortName},
 		},
-		Resources:       resourceLimits(app.Spec.Resources),
+		Resources:       resourceLimits(*app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
 		Env:             envVars(app),
 	}
 
-	if len(app.Spec.Liveness.Path) > 0 {
-		c.LivenessProbe = probe(app, app.Spec.Liveness)
+	if app.Spec.Liveness != nil && len(app.Spec.Liveness.Path) > 0 {
+		c.LivenessProbe = probe(app, *app.Spec.Liveness)
 	}
 
-	if len(app.Spec.Readiness.Path) > 0 {
-		c.ReadinessProbe = probe(app, app.Spec.Readiness)
+	if app.Spec.Readiness != nil && len(app.Spec.Readiness.Path) > 0 {
+		c.ReadinessProbe = probe(app, *app.Spec.Readiness)
 	}
 
 	return c
@@ -314,7 +316,7 @@ func envVars(app *nais.Application) []corev1.EnvVar {
 	newEnvVars := defaultEnvVars(app)
 
 	for _, envVar := range app.Spec.Env {
-		if envVar.ValueFrom.FieldRef.FieldPath != "" {
+		if envVar.ValueFrom != nil && envVar.ValueFrom.FieldRef.FieldPath != "" {
 			newEnvVars = append(newEnvVars, corev1.EnvVar{
 				Name: envVar.Name,
 				ValueFrom: &corev1.EnvVarSource{

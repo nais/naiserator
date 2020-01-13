@@ -3,8 +3,8 @@ package v1alpha1
 // +groupName="nais.io"
 
 import (
+	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/google/uuid"
 	hash "github.com/mitchellh/hashstructure"
@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	LastSyncedHashAnnotation          = "nais.io/lastSyncedHash"
 	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
 	DefaultSecretMountPath            = "/var/run/secrets"
 )
@@ -45,28 +44,28 @@ type Application struct {
 
 // ApplicationSpec contains the NAIS manifest.
 type ApplicationSpec struct {
-	AccessPolicy    AccessPolicy         `json:"accessPolicy,omitempty"`
-	GCP             GCP                  `json:"gcp,omitempty"`
-	Env             []EnvVar             `json:"env,omitempty"`
-	EnvFrom         []EnvFrom            `json:"envFrom,omitempty"`
-	FilesFrom       []FilesFrom          `json:"filesFrom,omitempty"`
-	Image           string               `json:"image"`
-	Ingresses       []string             `json:"ingresses,omitempty"`
-	LeaderElection  bool                 `json:"leaderElection,omitempty"`
-	Liveness        Probe                `json:"liveness,omitempty"`
-	Logtransform    string               `json:"logtransform,omitempty"`
-	Port            int                  `json:"port,omitempty"`
-	PreStopHookPath string               `json:"preStopHookPath,omitempty"`
-	Prometheus      PrometheusConfig     `json:"prometheus,omitempty"`
-	Readiness       Probe                `json:"readiness,omitempty"`
-	Replicas        Replicas             `json:"replicas,omitempty"`
-	Resources       ResourceRequirements `json:"resources,omitempty"`
-	SecureLogs      SecureLogs           `json:"secureLogs,omitempty"`
-	Service         Service              `json:"service,omitempty"`
-	SkipCaBundle    bool                 `json:"skipCaBundle,omitempty"`
-	Strategy        *Strategy            `json:"strategy,omitempty"`
-	Vault           Vault                `json:"vault,omitempty"`
-	WebProxy        bool                 `json:"webproxy,omitempty"`
+	AccessPolicy    *AccessPolicy         `json:"accessPolicy,omitempty"`
+	GCP             *GCP                  `json:"gcp,omitempty"`
+	Env             []EnvVar              `json:"env,omitempty"`
+	EnvFrom         []EnvFrom             `json:"envFrom,omitempty"`
+	FilesFrom       []FilesFrom           `json:"filesFrom,omitempty"`
+	Image           string                `json:"image"`
+	Ingresses       []string              `json:"ingresses,omitempty"`
+	LeaderElection  bool                  `json:"leaderElection,omitempty"`
+	Liveness        *Probe                `json:"liveness,omitempty"`
+	Logtransform    string                `json:"logtransform,omitempty"`
+	Port            int                   `json:"port,omitempty"`
+	PreStopHookPath string                `json:"preStopHookPath,omitempty"`
+	Prometheus      *PrometheusConfig     `json:"prometheus,omitempty"`
+	Readiness       *Probe                `json:"readiness,omitempty"`
+	Replicas        *Replicas             `json:"replicas,omitempty"`
+	Resources       *ResourceRequirements `json:"resources,omitempty"`
+	SecureLogs      *SecureLogs           `json:"secureLogs,omitempty"`
+	Service         *Service              `json:"service,omitempty"`
+	SkipCaBundle    bool                  `json:"skipCaBundle,omitempty"`
+	Strategy        *Strategy             `json:"strategy,omitempty"`
+	Vault           *Vault                `json:"vault,omitempty"`
+	WebProxy        bool                  `json:"webproxy,omitempty"`
 
 	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
 	Logformat string `json:"logformat,omitempty"`
@@ -77,6 +76,7 @@ type ApplicationStatus struct {
 	CorrelationID           string `json:"correlationID,omitempty"`
 	DeploymentRolloutStatus string `json:"deploymentRolloutStatus,omitempty"`
 	SynchronizationState    string `json:"synchronizationState,omitempty"`
+	SynchronizationHash     string `json:"synchronizationHash,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -125,8 +125,8 @@ type ResourceSpec struct {
 }
 
 type ResourceRequirements struct {
-	Limits   ResourceSpec `json:"limits,omitempty"`
-	Requests ResourceSpec `json:"requests,omitempty"`
+	Limits   *ResourceSpec `json:"limits,omitempty"`
+	Requests *ResourceSpec `json:"requests,omitempty"`
 }
 
 type ObjectFieldSelector struct {
@@ -190,9 +190,9 @@ type GCP struct {
 }
 
 type EnvVar struct {
-	Name      string       `json:"name"`
-	Value     string       `json:"value,omitempty"`
-	ValueFrom EnvVarSource `json:"valueFrom,omitempty"`
+	Name      string        `json:"name"`
+	Value     string        `json:"value,omitempty"`
+	ValueFrom *EnvVarSource `json:"valueFrom,omitempty"`
 }
 
 type EnvFrom struct {
@@ -247,8 +247,8 @@ type AccessPolicyOutbound struct {
 }
 
 type AccessPolicy struct {
-	Inbound  AccessPolicyInbound  `json:"inbound,omitempty"`
-	Outbound AccessPolicyOutbound `json:"outbound,omitempty"`
+	Inbound  *AccessPolicyInbound  `json:"inbound,omitempty"`
+	Outbound *AccessPolicyOutbound `json:"outbound,omitempty"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
@@ -275,43 +275,13 @@ func (in *Application) GetOwnerReference() metav1.OwnerReference {
 	}
 }
 
-// NilFix initializes all slices from their nil defaults.
-//
-// This is done in order to workaround the k8s client serializer
-// which crashes when these fields are uninitialized.
-func (in *Application) NilFix() {
-	if in.Annotations == nil {
-		in.Annotations = make(map[string]string)
-	}
-	if in.Spec.Ingresses == nil {
-		in.Spec.Ingresses = make([]string, 0)
-	}
-	if in.Spec.Env == nil {
-		in.Spec.Env = make([]EnvVar, 0)
-	}
-	if in.Spec.EnvFrom == nil {
-		in.Spec.EnvFrom = make([]EnvFrom, 0)
-	}
-	if in.Spec.Vault.Mounts == nil {
-		in.Spec.Vault.Mounts = make([]SecretPath, 0)
-	}
-	if in.Spec.FilesFrom == nil {
-		in.Spec.FilesFrom = make([]FilesFrom, 0)
-	}
-	if in.Spec.AccessPolicy.Inbound.Rules == nil {
-		in.Spec.AccessPolicy.Inbound.Rules = make([]AccessPolicyRule, 0)
-	}
-	if in.Spec.AccessPolicy.Outbound.Rules == nil {
-		in.Spec.AccessPolicy.Outbound.Rules = make([]AccessPolicyRule, 0)
-	}
-	if in.Spec.AccessPolicy.Outbound.External == nil {
-		in.Spec.AccessPolicy.Outbound.External = make([]AccessPolicyExternalRule, 0)
-	}
-}
-
 func (in Application) Hash() (string, error) {
 	// struct including the relevant fields for
 	// creating a hash of an Application object
+	var changeCause string
+	if in.Annotations != nil {
+		changeCause = in.Annotations["kubernetes.io/change-cause"]
+	}
 	relevantValues := struct {
 		AppSpec     ApplicationSpec
 		Labels      map[string]string
@@ -319,11 +289,15 @@ func (in Application) Hash() (string, error) {
 	}{
 		in.Spec,
 		in.Labels,
-		in.Annotations["kubernetes.io/change-cause"],
+		changeCause,
 	}
 
-	h, err := hash.Hash(relevantValues, nil)
-	return strconv.FormatUint(h, 10), err
+	marshalled, err := json.Marshal(relevantValues)
+	if err != nil {
+		return "", err
+	}
+	h, err := hash.Hash(marshalled, nil)
+	return fmt.Sprintf("%x", h), err
 }
 
 func (in *Application) LogFields() log.Fields {
@@ -339,22 +313,15 @@ func (in Application) Cluster() string {
 	return viper.GetString(config.ClusterName)
 }
 
-func (in *Application) LastSyncedHash() string {
-	in.NilFix()
-	return in.Annotations[LastSyncedHashAnnotation]
-}
-
-func (in *Application) SetLastSyncedHash(hash string) {
-	in.NilFix()
-	in.Annotations[LastSyncedHashAnnotation] = hash
-}
-
 // If the application was deployed with a correlation ID annotation, return this value.
 // Otherwise, generate a random UUID.
 func (in *Application) NextCorrelationID() (string, error) {
-	in.NilFix()
+	var correlationID string
 
-	correlationID := in.Annotations[DeploymentCorrelationIDAnnotation]
+	if in.Annotations != nil {
+		correlationID = in.Annotations[DeploymentCorrelationIDAnnotation]
+	}
+
 	if len(correlationID) == 0 {
 		id, err := uuid.NewRandom()
 		if err != nil {

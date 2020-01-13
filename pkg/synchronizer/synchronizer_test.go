@@ -21,6 +21,7 @@ import (
 func TestSynchronizer(t *testing.T) {
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
+
 	name := app.GetName()
 	namespace := app.GetNamespace()
 	app.SetAnnotations(map[string]string{
@@ -80,7 +81,7 @@ func TestSynchronizer(t *testing.T) {
 	persistedApp, err := appClient.NaiseratorV1alpha1().Applications(namespace).Get(name, metav1.GetOptions{})
 	assert.NotNil(t, persistedApp)
 	assert.NoError(t, err)
-	assert.Equalf(t, app.LastSyncedHash(), persistedApp.LastSyncedHash(), "Application resource hash in Kubernetes matches local version")
+	assert.Equalf(t, app.Status.SynchronizationHash, persistedApp.Status.SynchronizationHash, "Application resource hash in Kubernetes matches local version")
 
 	// Test that the status field is set with RolloutComplete
 	assert.Equalf(t, synchronizer.EventSynchronized, persistedApp.Status.SynchronizationState, "Synchronization state is set")
@@ -98,7 +99,7 @@ func TestSynchronizer(t *testing.T) {
 func TestSynchronizerResourceOptions(t *testing.T) {
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
-	app.Spec.GCP.SqlInstances = []v1alpha1.CloudSqlInstance{{}}
+	app.Spec.GCP = &v1alpha1.GCP{SqlInstances: []v1alpha1.CloudSqlInstance{{}}}
 
 	// Initialize synchronizer with fake Kubernetes clients
 	clientSet := fake.NewSimpleClientset()

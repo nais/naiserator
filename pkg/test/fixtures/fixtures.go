@@ -14,17 +14,22 @@ const (
 
 // MinimalApplication returns the absolute minimum application that might live in a Kubernetes cluster.
 func MinimalFailingApplication() *nais.Application {
-	return &nais.Application{
+	app := &nais.Application{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ApplicationName,
 			Namespace: ApplicationNamespace,
 		},
 	}
+	err := nais.ApplyDefaults(app)
+	if err != nil {
+		panic(err)
+	}
+	return app
 }
 
 // MinimalApplication returns the absolute minimum configuration needed to create a full set of Kubernetes resources.
 func MinimalApplication() *nais.Application {
-	return &nais.Application{
+	app := &nais.Application{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ApplicationName,
 			Namespace: ApplicationNamespace,
@@ -33,4 +38,9 @@ func MinimalApplication() *nais.Application {
 			},
 		},
 	}
+	err := nais.ApplyDefaults(app)
+	if err != nil {
+		panic(err)
+	}
+	return app
 }

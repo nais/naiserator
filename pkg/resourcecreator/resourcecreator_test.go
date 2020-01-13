@@ -338,9 +338,11 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.GoogleProjectId = "nais-foo-1234"
-		app.Spec.GCP.Buckets = []nais.CloudStorageBucket{
-			{
-				Name: "bucket-name",
+		app.Spec.GCP = &nais.GCP{
+			Buckets: []nais.CloudStorageBucket{
+				{
+					Name: "bucket-name",
+				},
 			},
 		}
 
@@ -372,7 +374,7 @@ func TestCreate(t *testing.T) {
 		opts.GoogleProjectId = "nais-foo-1234"
 		instanceName := app.Name
 		dbName := "mydb"
-		app.Spec.GCP.SqlInstances = []nais.CloudSqlInstance{
+		app.Spec.GCP = &nais.GCP{SqlInstances: []nais.CloudSqlInstance{
 			{
 				Type: nais.CloudSqlInstanceTypePostgres,
 				Databases: []nais.CloudSqlDatabase{
@@ -381,7 +383,7 @@ func TestCreate(t *testing.T) {
 					},
 				},
 			},
-		}
+		}}
 
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
