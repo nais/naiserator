@@ -140,7 +140,7 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 	allowPrivilegeEscalation := false
 	return corev1.Container{
 		Name:            "cloudsql-proxy",
-		Image:           viper.GetString(config2.VaultInitContainerImage),
+		Image:           viper.GetString(config2.GoogleCloudSQLProxyContainerImage),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
