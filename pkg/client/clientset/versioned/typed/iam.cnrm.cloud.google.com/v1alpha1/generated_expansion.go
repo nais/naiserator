@@ -4,4 +4,6 @@ package v1alpha1
 
 type IAMPolicyExpansion interface{}
 
+type IAMPolicyMemberExpansion interface{}
+
 type IAMServiceAccountExpansion interface{}

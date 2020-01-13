@@ -44,6 +44,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=iam.cnrm.cloud.google.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("iampolicies"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Iam().V1alpha1().IAMPolicies().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("iampolicymembers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Iam().V1alpha1().IAMPolicyMembers().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("iamserviceaccounts"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Iam().V1alpha1().IAMServiceAccounts().Informer()}, nil
 

@@ -40,6 +40,7 @@ type realObjects struct {
 	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
 	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
 	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
+	googleIAMPolicyMember   *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember
 	bucket                  *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket
 	bucketAccessControl     *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl
 }
@@ -75,6 +76,8 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.googleIAMServiceAccount = v
 		case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
 			o.googleIAMPolicy = v
+		case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember:
+			o.googleIAMPolicyMember = v
 		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket:
 			o.bucket = v
 		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl:
@@ -398,6 +401,7 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.sqlDatabase)
 		assert.NotNil(t, objects.sqlUser)
 		assert.NotNil(t, objects.secret)
+		assert.NotNil(t, objects.googleIAMPolicyMember)
 
 		assert.Equal(t, instanceName, objects.sqlInstance.Name)
 		assert.Equal(t, app.Name, objects.sqlUser.Name)
@@ -405,6 +409,7 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, instanceName, objects.sqlDatabase.Spec.InstanceRef.Name)
 		assert.Equal(t, instanceName, objects.sqlUser.Spec.InstanceRef.Name)
 		assert.Equal(t, instanceName, objects.secret.StringData["GCP_SQLINSTANCE_MYAPPLICATION_USERNAME"])
+		assert.Equal(t, instanceName, objects.googleIAMPolicyMember.Name)
 		assert.Equal(t, fmt.Sprintf("sqlinstanceuser-%s", instanceName), objects.deployment.Spec.Template.Spec.Containers[0].EnvFrom[0].SecretRef.Name)
 	})
 

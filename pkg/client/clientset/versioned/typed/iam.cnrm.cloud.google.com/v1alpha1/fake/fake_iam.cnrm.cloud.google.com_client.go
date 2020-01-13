@@ -16,6 +16,10 @@ func (c *FakeIamV1alpha1) IAMPolicies(namespace string) v1alpha1.IAMPolicyInterf
 	return &FakeIAMPolicies{c, namespace}
 }
 
+func (c *FakeIamV1alpha1) IAMPolicyMembers(namespace string) v1alpha1.IAMPolicyMemberInterface {
+	return &FakeIAMPolicyMembers{c, namespace}
+}
+
 func (c *FakeIamV1alpha1) IAMServiceAccounts(namespace string) v1alpha1.IAMServiceAccountInterface {
 	return &FakeIAMServiceAccounts{c, namespace}
 }

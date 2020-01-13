@@ -10,6 +10,14 @@ type IAMPolicyListerExpansion interface{}
 // IAMPolicyNamespaceLister.
 type IAMPolicyNamespaceListerExpansion interface{}
 
+// IAMPolicyMemberListerExpansion allows custom methods to be added to
+// IAMPolicyMemberLister.
+type IAMPolicyMemberListerExpansion interface{}
+
+// IAMPolicyMemberNamespaceListerExpansion allows custom methods to be added to
+// IAMPolicyMemberNamespaceLister.
+type IAMPolicyMemberNamespaceListerExpansion interface{}
+
 // IAMServiceAccountListerExpansion allows custom methods to be added to
 // IAMServiceAccountLister.
 type IAMServiceAccountListerExpansion interface{}

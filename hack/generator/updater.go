@@ -108,6 +108,12 @@ var i = []Service{
 		Client:    "customClient.IamV1alpha1().IAMPolicies",
 	},
 	{
+		Name:      "iamPolicyMember",
+		Interface: "typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMemberInterface",
+		Type:      "*iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember",
+		Client:    "customClient.IamV1alpha1().IAMPolicyMembers",
+	},
+	{
 		Name:      "googleStorageBucket",
 		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.StorageBucketInterface",
 		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.StorageBucket",

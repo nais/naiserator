@@ -7,7 +7,6 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
-
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,12 +65,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				return nil, err
 			}
 
-			instance, err := GoogleSqlInstance(app, sqlInstance)
-			if err != nil {
-				return nil, fmt.Errorf("unable to create sqlinstance: %s", err)
-			}
-
+			instance := GoogleSqlInstance(app, sqlInstance)
 			ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
+
+			iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions)
+			ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateOrUpdate})
 
 			for _, db := range GoogleSqlDatabases(app, sqlInstance) {
 				ops = append(ops, ResourceOperation{db, OperationCreateOrUpdate})

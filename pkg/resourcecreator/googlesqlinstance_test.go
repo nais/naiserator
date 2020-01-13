@@ -19,8 +19,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 	spec, err := resourcecreator.CloudSqlInstanceWithDefaults(spec, app.Name)
 	assert.NoError(t, err)
 
-	sqlInstance, err := resourcecreator.GoogleSqlInstance(app, spec)
-	assert.NoError(t, err)
+	sqlInstance := resourcecreator.GoogleSqlInstance(app, spec)
 	assert.Equal(t, app.Name, sqlInstance.Name)
 	assert.Equal(t, fmt.Sprintf("PD_%s", resourcecreator.DefaultSqlInstanceDiskType), sqlInstance.Spec.Settings.DiskType)
 	assert.Equal(t, resourcecreator.DefaultSqlInstanceDiskSize, sqlInstance.Spec.Settings.DiskSize)

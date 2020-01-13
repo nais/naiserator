@@ -11,8 +11,7 @@ import (
 func ServiceAccount(app *nais.Application, options ResourceOptions) *corev1.ServiceAccount {
 	objectMeta := app.CreateObjectMeta()
 	if len(options.GoogleProjectId) > 0 {
-		gcpSvcAcc := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", app.CreateAppNamespaceHash(), options.GoogleProjectId)
-		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = gcpSvcAcc
+		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = GcpServiceAccountName(app, options.GoogleProjectId)
 	}
 
 	return &corev1.ServiceAccount{
@@ -22,4 +21,8 @@ func ServiceAccount(app *nais.Application, options ResourceOptions) *corev1.Serv
 		},
 		ObjectMeta: objectMeta,
 	}
+}
+
+func GcpServiceAccountName(app *nais.Application, projectId string) string {
+	return fmt.Sprintf("%s@%s.iam.gserviceaccount.com", app.CreateAppNamespaceHash(), projectId)
 }

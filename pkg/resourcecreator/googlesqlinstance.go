@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/imdario/mergo"
+	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +19,7 @@ const (
 	DefaultSqlInstanceDiskSize   = 10
 )
 
-func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance) (*google_sql_crd.SQLInstance, error) {
+func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance) *google_sql_crd.SQLInstance {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = instance.Name
 
@@ -44,7 +45,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance) (*
 				Tier:                instance.Tier,
 			},
 		},
-	}, nil
+	}
 }
 
 func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string) (nais.CloudSqlInstance, error) {
@@ -71,5 +72,23 @@ func availabilityType(highAvailability bool) string {
 		return AvailabilityTypeRegional
 	} else {
 		return AvailabilityTypeZonal
+	}
+}
+
+func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, options ResourceOptions) *google_iam_crd.IAMPolicyMember {
+	return &google_iam_crd.IAMPolicyMember{
+		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
+		TypeMeta: k8s_meta.TypeMeta{
+			Kind:       "IAMPolicyMember",
+			APIVersion: "iam.cnrm.cloud.google.com/v1alpha1",
+		},
+		Spec: google_iam_crd.IAMPolicyMemberSpec{
+			Member: GcpServiceAccountName(app, options.GoogleProjectId),
+			Role:   "roles/cloudsql.client",
+			ResourceRef: google_iam_crd.ResourceRef{
+				Kind: "Project",
+				Name: options.GoogleTeamProjectId,
+			},
+		},
 	}
 }

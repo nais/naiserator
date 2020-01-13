@@ -53,3 +53,24 @@ type IAMPolicyList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []IAMPolicy `json:"items"`
 }
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type IAMPolicyMember struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              IAMPolicyMemberSpec `json:"spec"`
+}
+
+type IAMPolicyMemberSpec struct {
+	Member      string      `json:"member"`
+	Role        string      `json:"role"`
+	ResourceRef ResourceRef `json:"resourceRef"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type IAMPolicyMemberList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []IAMPolicyMember `json:"items"`
+}

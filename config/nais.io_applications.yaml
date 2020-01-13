@@ -374,6 +374,8 @@ spec:
               type: string
             deploymentRolloutStatus:
               type: string
+            synchronizationHash:
+              type: string
             synchronizationState:
               type: string
           type: object
