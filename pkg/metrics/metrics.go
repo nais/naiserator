@@ -30,6 +30,11 @@ var (
 		Namespace: "naiserator",
 		Help:      "number of nais.io.Application resources that failed processing",
 	})
+	Retries = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:      "applications_retried",
+		Namespace: "naiserator",
+		Help:      "number of nais.io.Application resources that failed synchronization and have been re-enqueued",
+	})
 	ResourcesGenerated = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "resources_generated",
 		Namespace: "naiserator",
@@ -47,6 +52,7 @@ func init() {
 	prometheus.MustRegister(HttpRequests)
 	prometheus.MustRegister(ApplicationsProcessed)
 	prometheus.MustRegister(ApplicationsFailed)
+	prometheus.MustRegister(Retries)
 	prometheus.MustRegister(ResourcesGenerated)
 	prometheus.MustRegister(QueueSize)
 }
