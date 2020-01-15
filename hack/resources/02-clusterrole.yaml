@@ -22,6 +22,7 @@ rules:
       - 'networkpolicies'
       - 'rolebindings'
       - 'roles'
+      - 'secrets'
       - 'serviceaccounts'
       - 'serviceentries'
       - 'servicerolebindings'
