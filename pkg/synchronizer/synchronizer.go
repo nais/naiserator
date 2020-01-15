@@ -159,12 +159,12 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus)
 
-	// If Kafka is enabled, we can send out a signal when the deployment is complete.
-	// To do this we need to monitor the rollout status over a designated period.
 	if n.KafkaEnabled {
 		kafka.Events <- kafka.Message{Event: event, Logger: logger}
-		go n.MonitorRollout(*app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 	}
+
+	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
+	go n.MonitorRollout(*app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
 }
 
 // Process work queue
@@ -311,7 +311,9 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 			if deploymentComplete(deploy, &deploy.Status) {
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				kafka.Events <- kafka.Message{Event: event, Logger: logger}
+				if n.KafkaEnabled {
+					kafka.Events <- kafka.Message{Event: event, Logger: logger}
+				}
 
 				_, err = n.reportEvent(app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 				if err != nil {
