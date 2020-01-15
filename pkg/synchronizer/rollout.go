@@ -8,9 +8,11 @@ import (
 
 // Rollout represents the data neccessary to rollout an application to Kubernetes.
 type Rollout struct {
-	App                *nais.Application
-	ResourceOptions    resourcecreator.ResourceOptions
-	ResourceOperations resourcecreator.ResourceOperations
+	App                 *nais.Application
+	ResourceOptions     resourcecreator.ResourceOptions
+	ResourceOperations  resourcecreator.ResourceOperations
+	CorrelationID       string
+	SynchronizationHash string
 }
 
 // SetCurrentDeployment makes sure newly created Deployment objects matches autoscaling properties of an

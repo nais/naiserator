@@ -33,6 +33,7 @@ const (
 	EventFailedPrepare         = "FailedPrepare"
 	EventFailedSynchronization = "FailedSynchronization"
 	EventFailedStatusUpdate    = "FailedStatusUpdate"
+	EventRetrying              = "Retrying"
 )
 
 // Synchronizer creates child resources from Application resources in the cluster.
@@ -106,7 +107,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 		if err != nil {
 			n.reportError(EventFailedStatusUpdate, err, app)
 		} else {
-			logger.Debugf("Persisted Application status '%s'", app.Status.SynchronizationState)
+			logger.Debugf("Application status: %+v'", app.Status)
 		}
 	}()
 
@@ -126,16 +127,26 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	logger = *log.WithFields(rollout.App.LogFields())
 	logger.Debugf("Starting synchronization")
 
-	err = n.Sync(*rollout)
+	app.Status.CorrelationID = rollout.CorrelationID
+
+	err, retry := n.Sync(*rollout)
 	if err != nil {
-		app.Status.SynchronizationState = EventFailedSynchronization
+		if retry {
+			app.Status.SynchronizationState = EventRetrying
+			metrics.Retries.Inc()
+		} else {
+			app.Status.SynchronizationState = EventFailedSynchronization
+			app.Status.SynchronizationHash = rollout.SynchronizationHash // permanent failure
+			metrics.ApplicationsFailed.Inc()
+		}
 		n.reportError(app.Status.SynchronizationState, err, app)
 		return
 	}
 
 	// Synchronization OK
-	app.Status.SynchronizationState = EventSynchronized
 	logger.Debugf("Successful synchronization")
+	app.Status.SynchronizationState = EventSynchronized
+	app.Status.SynchronizationHash = rollout.SynchronizationHash
 	metrics.ApplicationsProcessed.Inc()
 	metrics.Deployments.Inc()
 
@@ -166,45 +177,54 @@ func (n *Synchronizer) Main() {
 	}
 }
 
-func (n *Synchronizer) Sync(rollout Rollout) error {
+func (n *Synchronizer) Sync(rollout Rollout) (error, bool) {
 
 	commits := n.ClusterOperations(rollout)
 
 	for _, fn := range commits {
 		if err := fn(); err != nil {
-			metrics.ApplicationsFailed.Inc()
-			return fmt.Errorf("persisting resource to Kubernetes: %s", err)
+			retry := false
+			// In case of race condition errors
+			if errors.IsConflict(err) {
+				retry = true
+			}
+			return fmt.Errorf("persisting resource to Kubernetes: %s", err), retry
 		}
 		metrics.ResourcesGenerated.Inc()
 	}
 
-	return nil
+	return nil, false
 }
 
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
 func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
-	if err := v1alpha1.ApplyDefaults(app); err != nil {
+	var err error
+
+	rollout := &Rollout{
+		App:             app,
+		ResourceOptions: n.ResourceOptions,
+	}
+
+	if err = v1alpha1.ApplyDefaults(app); err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
 
-	hash, err := app.Hash()
+	rollout.SynchronizationHash, err = app.Hash()
 	if err != nil {
 		return nil, fmt.Errorf("BUG: create application hash: %s", err)
 	}
 
 	// Skip processing if application didn't change since last synchronization.
-	if app.Status.SynchronizationHash == hash {
+	if app.Status.SynchronizationHash == rollout.SynchronizationHash {
 		return nil, nil
 	}
-	app.Status.SynchronizationHash = hash
 
-	deploymentID, err := app.NextCorrelationID()
+	rollout.CorrelationID, err = app.NextCorrelationID()
 	if err != nil {
 		return nil, err
 	}
-	app.SetCorrelationID(deploymentID)
 
 	// Make a query to Kubernetes for this application's previous deployment.
 	// The number of replicas is significant, so we need to carry it over to match
@@ -214,10 +234,6 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 		return nil, fmt.Errorf("query existing deployment: %s", err)
 	}
 
-	rollout := &Rollout{
-		App:             app,
-		ResourceOptions: n.ResourceOptions,
-	}
 	rollout.SetCurrentDeployment(previousDeployment)
 	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
 	if err != nil {
