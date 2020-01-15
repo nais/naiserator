@@ -39,13 +39,15 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
-	if len(resourceOptions.GoogleProjectId) > 0 {
+	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
+		// TODO: A service account will be required for all GCP related resources.
+		// TODO: If implementing more features, move these two outside of the cloud storage check.
 		googleServiceAccount := GoogleServiceAccount(app)
 		googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
 		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
 		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
-		if len(app.Spec.GCP.Buckets) > 0 {
+		if app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
 			buckets := GoogleStorageBuckets(app)
 			for _, bucket := range buckets {
 				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
@@ -54,41 +56,43 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			}
 		}
 
-		for i, sqlInstance := range app.Spec.GCP.SqlInstances {
-			if i > 0 {
-				return nil, fmt.Errorf("only one sql instance is supported")
+		if app.Spec.GCP.SqlInstances != nil {
+			for i, sqlInstance := range app.Spec.GCP.SqlInstances {
+				if i > 0 {
+					return nil, fmt.Errorf("only one sql instance is supported")
+				}
+
+				// TODO: name defaulting will break with more than one instance
+				sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
+				if err != nil {
+					return nil, err
+				}
+
+				instance := GoogleSqlInstance(app, sqlInstance)
+				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
+
+				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions)
+				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateOrUpdate})
+
+				for _, db := range GoogleSqlDatabases(app, sqlInstance) {
+					ops = append(ops, ResourceOperation{db, OperationCreateOrUpdate})
+				}
+
+				key, err := util.Keygen(32)
+				if err != nil {
+					return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
+				}
+				password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
+
+				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, password)
+				ops = append(ops, ResourceOperation{sqlUser, OperationCreateOrUpdate})
+
+				secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
+				ops = append(ops, ResourceOperation{secret, OperationCreateOrUpdate})
+
+				// FIXME: take into account when refactoring default values
+				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 			}
-
-			// TODO: name defaulting will break with more than one instance
-			sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
-			if err != nil {
-				return nil, err
-			}
-
-			instance := GoogleSqlInstance(app, sqlInstance)
-			ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
-
-			iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions)
-			ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateOrUpdate})
-
-			for _, db := range GoogleSqlDatabases(app, sqlInstance) {
-				ops = append(ops, ResourceOperation{db, OperationCreateOrUpdate})
-			}
-
-			key, err := util.Keygen(32)
-			if err != nil {
-				return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
-			}
-			password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
-
-			sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, password)
-			ops = append(ops, ResourceOperation{sqlUser, OperationCreateOrUpdate})
-
-			secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
-			ops = append(ops, ResourceOperation{secret, OperationCreateOrUpdate})
-
-			// FIXME: take into account when refactoring default values
-			app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 		}
 	}
 

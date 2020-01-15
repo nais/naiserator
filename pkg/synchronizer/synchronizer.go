@@ -161,6 +161,7 @@ func (n *Synchronizer) Main() {
 	log.Info("Main loop consuming from work queue")
 
 	for app := range n.workQueue {
+		metrics.QueueSize.Set(float64(len(n.workQueue)))
 		n.Process(&app)
 	}
 }

@@ -35,6 +35,11 @@ var (
 		Namespace: "naiserator",
 		Help:      "number of Kubernetes resources that have been generated as a result of application deployments",
 	})
+	QueueSize = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name:      "queue_size",
+		Namespace: "naiserator",
+		Help:      "number of applications in processing queue",
+	})
 )
 
 func init() {
@@ -43,6 +48,7 @@ func init() {
 	prometheus.MustRegister(ApplicationsProcessed)
 	prometheus.MustRegister(ApplicationsFailed)
 	prometheus.MustRegister(ResourcesGenerated)
+	prometheus.MustRegister(QueueSize)
 }
 
 func isAlive(w http.ResponseWriter, r *http.Request) {
