@@ -203,7 +203,7 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 	var err error
 
 	rollout := &Rollout{
-		App:             app,
+		App: app,
 	}
 
 	if err = v1alpha1.ApplyDefaults(app); err != nil {
