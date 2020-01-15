@@ -234,6 +234,20 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 		return nil, fmt.Errorf("query existing deployment: %s", err)
 	}
 
+	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
+		namespace, err := n.ClientSet.CoreV1().Namespaces().Get(app.GetNamespace(), v1.GetOptions{})
+
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("query existing namespace: %s", err)
+		}
+
+		if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
+			rollout.SetGoogleTeamProjectId(val)
+		} else {
+			return nil, fmt.Errorf("team project id annotation not set on namespace %s", app.GetNamespace())
+		}
+	}
+
 	rollout.SetCurrentDeployment(previousDeployment)
 	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
 	if err != nil {
@@ -278,6 +292,7 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 }
 
 var appsync sync.Mutex
+
 // Atomically update an Application resource.
 // Locks the resource to avoid race conditions.
 func (n *Synchronizer) UpdateApplication(app *v1alpha1.Application, updateFunc func(existing *v1alpha1.Application) error) error {

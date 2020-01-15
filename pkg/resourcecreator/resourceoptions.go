@@ -7,6 +7,7 @@ type ResourceOptions struct {
 	AccessPolicyNotAllowedCIDRs []string
 	NativeSecrets               bool
 	GoogleProjectId             string
+	GoogleTeamProjectId         string
 }
 
 // NewResourceOptions creates a struct with the default resource options.

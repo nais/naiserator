@@ -10,6 +10,8 @@ import (
 type Interface interface {
 	// IAMPolicies returns a IAMPolicyInformer.
 	IAMPolicies() IAMPolicyInformer
+	// IAMPolicyMembers returns a IAMPolicyMemberInformer.
+	IAMPolicyMembers() IAMPolicyMemberInformer
 	// IAMServiceAccounts returns a IAMServiceAccountInformer.
 	IAMServiceAccounts() IAMServiceAccountInformer
 }
@@ -28,6 +30,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // IAMPolicies returns a IAMPolicyInformer.
 func (v *version) IAMPolicies() IAMPolicyInformer {
 	return &iAMPolicyInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// IAMPolicyMembers returns a IAMPolicyMemberInformer.
+func (v *version) IAMPolicyMembers() IAMPolicyMemberInformer {
+	return &iAMPolicyMemberInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // IAMServiceAccounts returns a IAMServiceAccountInformer.

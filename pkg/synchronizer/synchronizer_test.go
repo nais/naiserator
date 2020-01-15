@@ -1,6 +1,8 @@
 package synchronizer_test
 
 import (
+	"fmt"
+	v1 "k8s.io/api/core/v1"
 	"testing"
 
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -92,4 +94,47 @@ func TestSynchronizer(t *testing.T) {
 
 	// Test that the Ingress resource was removed
 	testResourceNotExist(clientSet.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{}))
+}
+
+func TestSynchronizerResourceOptions(t *testing.T) {
+	// Create Application fixture
+	app := fixtures.MinimalApplication()
+	app.Spec.GCP = &v1alpha1.GCP{SqlInstances: []v1alpha1.CloudSqlInstance{{}}}
+
+	// Initialize synchronizer with fake Kubernetes clients
+	clientSet := fake.NewSimpleClientset()
+	appClient := nais_fake.NewSimpleClientset()
+	resourceOptions := resourcecreator.NewResourceOptions()
+	resourceOptions.GoogleProjectId = "something"
+	kafkaEnabled := false
+
+	syncer := synchronizer.New(
+		clientSet,
+		appClient,
+		resourceOptions,
+		kafkaEnabled,
+	)
+
+	// Test that the team project id is fetched from namespace annotation, and used to create the sql proxy sidecar
+	testProjectId := "test-project-id"
+	testNamespace := v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: app.GetNamespace(),
+		},
+	}
+	testNamespace.SetAnnotations(map[string]string{
+		"cnrm.cloud.google.com/project-id": testProjectId,
+	})
+
+	_, err := clientSet.CoreV1().Namespaces().Create(&testNamespace)
+	assert.NoError(t, err)
+
+	syncer.Process(app)
+
+	deploy, err := clientSet.AppsV1().Deployments(testNamespace.Name).Get(app.Name, metav1.GetOptions{})
+	assert.NotNil(t, deploy)
+	assert.NoError(t, err)
+
+	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:3306", testProjectId, resourcecreator.GoogleRegion, app.Name)
+	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[1])
 }

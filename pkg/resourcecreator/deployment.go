@@ -2,6 +2,8 @@ package resourcecreator
 
 import (
 	"fmt"
+	config2 "github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/spf13/viper"
 	"strconv"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -93,6 +95,13 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	podSpec := podSpecBase(app)
 
+	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
+		for _, instance := range app.Spec.GCP.SqlInstances {
+			podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
+			podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 3306, resourceOptions.GoogleTeamProjectId))
+		}
+	}
+
 	if app.Spec.LeaderElection {
 		podSpec = LeaderElection(app, podSpec)
 	}
@@ -101,8 +110,8 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		podSpec = caBundle(podSpec)
 	}
 
-	podSpec = fromFiles(app, podSpec, resourceOptions.NativeSecrets)
-	podSpec = fromEnv(app, podSpec, resourceOptions.NativeSecrets)
+	podSpec = filesFrom(app, podSpec, resourceOptions.NativeSecrets)
+	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
 
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
@@ -125,12 +134,35 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	return podSpec, err
 }
 
-func fromEnv(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
+func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, projectId string) corev1.Container {
+	connectionName := fmt.Sprintf("%s:%s:%s", projectId, GoogleRegion, sqlInstance.Name)
+	var runAsUser int64 = 2
+	allowPrivilegeEscalation := false
+	return corev1.Container{
+		Name:            "cloudsql-proxy",
+		Image:           viper.GetString(config2.GoogleCloudSQLProxyContainerImage),
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Ports: []corev1.ContainerPort{{
+			ContainerPort: port,
+			Protocol:      corev1.ProtocolTCP,
+		}},
+		Command: []string{
+			"/cloud_sql_proxy",
+			fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
+		},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser:                &runAsUser,
+			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+		},
+	}
+}
+
+func envFrom(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
 	for _, env := range app.Spec.EnvFrom {
 		if len(env.ConfigMap) > 0 {
 			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvConfigmap(env.ConfigMap))
 		} else if nativeSecrets && len(env.Secret) > 0 {
-			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvSecret(env.Secret))
+			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, envFromSecret(env.Secret))
 		}
 	}
 
@@ -147,7 +179,7 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
-func fromEnvSecret(name string) corev1.EnvFromSource {
+func envFromSecret(name string) corev1.EnvFromSource {
 	return corev1.EnvFromSource{
 		SecretRef: &corev1.SecretEnvSource{
 			LocalObjectReference: corev1.LocalObjectReference{
@@ -157,7 +189,7 @@ func fromEnvSecret(name string) corev1.EnvFromSource {
 	}
 }
 
-func fromFiles(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
+func filesFrom(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
 	for _, file := range app.Spec.FilesFrom {
 		if len(file.ConfigMap) > 0 {
 			name := file.ConfigMap

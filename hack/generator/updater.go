@@ -24,6 +24,12 @@ var i = []Service{
 		Client:        "clientSet.CoreV1().Services",
 	},
 	{
+		Name:      "secret",
+		Interface: "typed_core_v1.SecretInterface",
+		Type:      "*corev1.Secret",
+		Client:    "clientSet.CoreV1().Secrets",
+	},
+	{
 		Name:      "serviceAccount",
 		Interface: "typed_core_v1.ServiceAccountInterface",
 		Type:      "*corev1.ServiceAccount",
@@ -102,6 +108,12 @@ var i = []Service{
 		Client:    "customClient.IamV1alpha1().IAMPolicies",
 	},
 	{
+		Name:      "iamPolicyMember",
+		Interface: "typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMemberInterface",
+		Type:      "*iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember",
+		Client:    "customClient.IamV1alpha1().IAMPolicyMembers",
+	},
+	{
 		Name:      "googleStorageBucket",
 		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.StorageBucketInterface",
 		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.StorageBucket",
@@ -112,6 +124,24 @@ var i = []Service{
 		Interface: "typed_storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControlInterface",
 		Type:      "*storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl",
 		Client:    "customClient.StorageV1alpha2().StorageBucketAccessControls",
+	},
+	{
+		Name:      "sqlInstance",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SQLInstanceInterface",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SQLInstance",
+		Client:    "customClient.SqlV1alpha3().SQLInstances",
+	},
+	{
+		Name:      "sqlDatabase",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SQLDatabaseInterface",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SQLDatabase",
+		Client:    "customClient.SqlV1alpha3().SQLDatabases",
+	},
+	{
+		Name:      "sqlUser",
+		Interface: "typed_sql_cnrm_cloud_google_com_v1alpha3.SQLUserInterface",
+		Type:      "*sql_cnrm_cloud_google_com_v1alpha3.SQLUser",
+		Client:    "customClient.SqlV1alpha3().SQLUsers",
 	},
 }
 

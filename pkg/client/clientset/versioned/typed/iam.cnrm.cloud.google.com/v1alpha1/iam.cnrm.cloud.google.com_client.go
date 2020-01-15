@@ -11,6 +11,7 @@ import (
 type IamV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	IAMPoliciesGetter
+	IAMPolicyMembersGetter
 	IAMServiceAccountsGetter
 }
 
@@ -21,6 +22,10 @@ type IamV1alpha1Client struct {
 
 func (c *IamV1alpha1Client) IAMPolicies(namespace string) IAMPolicyInterface {
 	return newIAMPolicies(c, namespace)
+}
+
+func (c *IamV1alpha1Client) IAMPolicyMembers(namespace string) IAMPolicyMemberInterface {
+	return newIAMPolicyMembers(c, namespace)
 }
 
 func (c *IamV1alpha1Client) IAMServiceAccounts(namespace string) IAMServiceAccountInterface {

@@ -47,17 +47,18 @@ type Vault struct {
 }
 
 type Config struct {
-	Bind            string       `json:"bind"`
-	Informer        Informer     `json:"informer"`
-	Kubeconfig      string       `json:"kubeconfig"`
-	ClusterName     string       `json:"cluster-name"`
-	GoogleProjectId string       `json:"google-project-id"`
-	Log             Log          `json:"log"`
-	Features        Features     `json:"features"`
-	Securelogs      Securelogs   `json:"securelogs"`
-	Proxy           Proxy        `json:"proxy"`
-	Vault           Vault        `json:"vault"`
-	Kafka           kafka.Config `json:"kafka"`
+	Bind                              string       `json:"bind"`
+	Informer                          Informer     `json:"informer"`
+	Kubeconfig                        string       `json:"kubeconfig"`
+	ClusterName                       string       `json:"cluster-name"`
+	GoogleProjectId                   string       `json:"google-project-id"`
+	GoogleCloudSQLProxyContainerImage string       `json:"google-cloud-sql-proxy-container-image"`
+	Log                               Log          `json:"log"`
+	Features                          Features     `json:"features"`
+	Securelogs                        Securelogs   `json:"securelogs"`
+	Proxy                             Proxy        `json:"proxy"`
+	Vault                             Vault        `json:"vault"`
+	Kafka                             kafka.Config `json:"kafka"`
 }
 
 var (
@@ -69,6 +70,7 @@ const (
 	Bind                                = "bind"
 	ClusterName                         = "cluster-name"
 	GoogleProjectId                     = "google-project-id"
+	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
 	FeaturesAccessPolicy                = "features.access-policy"
 	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets               = "features.native-secrets"
@@ -103,6 +105,7 @@ func init() {
 	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
+	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 
 	flag.Bool(FeaturesAccessPolicy, false, "enable access policy with Istio and NetworkPolicies")
 	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")

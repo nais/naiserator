@@ -142,8 +142,51 @@ type CloudStorageBucket struct {
 	Name string `json:"name"`
 }
 
+type CloudSqlInstanceType string
+
+const (
+	CloudSqlInstanceTypePostgres CloudSqlInstanceType = "POSTGRES_11"
+)
+
+type CloudSqlInstanceDiskType string
+
+func (c CloudSqlInstanceDiskType) GoogleType() string {
+	return fmt.Sprintf("PD_%s", c)
+}
+
+const (
+	CloudSqlInstanceDiskTypeSSD CloudSqlInstanceDiskType = "SSD"
+	CloudSqlInstanceDiskTypeHDD CloudSqlInstanceDiskType = "HDD"
+)
+
+type CloudSqlDatabase struct {
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+}
+
+type CloudSqlInstance struct {
+	// +kubebuilder:validation:Enum=POSTGRES_11
+	// +kubebuilder:validation:Required
+	Type CloudSqlInstanceType `json:"type"`
+	Name string               `json:"name,omitempty"`
+	// +kubebuilder:validation:Pattern="db-.+"
+	Tier string `json:"tier,omitempty"`
+	// +kubebuilder:validation:Enum=SSD;HDD
+	DiskType         CloudSqlInstanceDiskType `json:"diskType,omitempty"`
+	HighAvailability bool                     `json:"highAvailability,omitempty"`
+	// +kubebuilder:validation:Minimum=10
+	DiskSize       int  `json:"diskSize,omitempty"`
+	DiskAutoresize bool `json:"diskAutore:wsize,omitempty"`
+	// +kubebuilder:validation:Pattern="[0-9]{2}:00"
+	AutoBackupTime string `json:"autoBackup,omitempty"`
+	// +kubebuilder:validation:Required
+	Databases       []CloudSqlDatabase `json:"databases,omitempty"`
+	CascadingDelete bool               `json:"cascadingDelete,omitempty"`
+}
+
 type GCP struct {
-	Buckets []CloudStorageBucket `json:"buckets,omitempty"`
+	Buckets      []CloudStorageBucket `json:"buckets,omitempty"`
+	SqlInstances []CloudSqlInstance   `json:"sqlInstances,omitempty"`
 }
 
 type EnvVar struct {

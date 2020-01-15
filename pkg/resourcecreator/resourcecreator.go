@@ -5,9 +5,11 @@
 package resourcecreator
 
 import (
+	"encoding/base64"
 	"fmt"
-
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/util"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
@@ -20,7 +22,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	objects := ResourceOperations{
+	ops := ResourceOperations{
 		{Service(app), OperationCreateOrUpdate},
 		{ServiceAccount(app, resourceOptions), OperationCreateOrUpdate},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
@@ -30,33 +32,72 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	leRoleBinding := LeaderElectionRoleBinding(app)
 
 	if app.Spec.LeaderElection {
-		objects = append(objects, ResourceOperation{leRole, OperationCreateOrUpdate})
-		objects = append(objects, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
+		ops = append(ops, ResourceOperation{leRole, OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	} else {
-		objects = append(objects, ResourceOperation{leRole, OperationDeleteIfExists})
-		objects = append(objects, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
+		ops = append(ops, ResourceOperation{leRole, OperationDeleteIfExists})
+		ops = append(ops, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
-	if len(resourceOptions.GoogleProjectId) > 0 {
-		if app.Spec.GCP != nil && app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
-			// TODO: A service account will be required for all GCP related resources.
-			// TODO: If implementing more features, move these two outside of the cloud storage check.
-			googleServiceAccount := GoogleServiceAccount(app)
-			googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
-			objects = append(objects, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
-			objects = append(objects, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
+	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
+		// TODO: A service account will be required for all GCP related resources.
+		// TODO: If implementing more features, move these two outside of the cloud storage check.
+		googleServiceAccount := GoogleServiceAccount(app)
+		googleServiceAccountBinding := GoogleServiceAccountBinding(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
+		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
+		if app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
 			buckets := GoogleStorageBuckets(app)
 			for _, bucket := range buckets {
 				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
-				objects = append(objects, ResourceOperation{bucket, OperationCreateIfNotExists})
-				objects = append(objects, ResourceOperation{bucketBac, OperationCreateOrUpdate})
+				ops = append(ops, ResourceOperation{bucket, OperationCreateIfNotExists})
+				ops = append(ops, ResourceOperation{bucketBac, OperationCreateOrUpdate})
+			}
+		}
+
+		if app.Spec.GCP.SqlInstances != nil {
+			for i, sqlInstance := range app.Spec.GCP.SqlInstances {
+				if i > 0 {
+					return nil, fmt.Errorf("only one sql instance is supported")
+				}
+
+				// TODO: name defaulting will break with more than one instance
+				sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
+				if err != nil {
+					return nil, err
+				}
+
+				instance := GoogleSqlInstance(app, sqlInstance)
+				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
+
+				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions)
+				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateOrUpdate})
+
+				for _, db := range GoogleSqlDatabases(app, sqlInstance) {
+					ops = append(ops, ResourceOperation{db, OperationCreateOrUpdate})
+				}
+
+				key, err := util.Keygen(32)
+				if err != nil {
+					return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
+				}
+				password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
+
+				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, password)
+				ops = append(ops, ResourceOperation{sqlUser, OperationCreateOrUpdate})
+
+				secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
+				ops = append(ops, ResourceOperation{secret, OperationCreateOrUpdate})
+
+				// FIXME: take into account when refactoring default values
+				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 			}
 		}
 	}
 
 	if resourceOptions.AccessPolicy {
-		objects = append(objects, ResourceOperation{NetworkPolicy(app, resourceOptions.AccessPolicyNotAllowedCIDRs), OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions.AccessPolicyNotAllowedCIDRs), OperationCreateOrUpdate})
 		vses, err := VirtualServices(app)
 
 		if err != nil {
@@ -69,7 +110,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 		for _, vs := range vses {
-			objects = append(objects, ResourceOperation{vs, operation})
+			ops = append(ops, ResourceOperation{vs, operation})
 		}
 
 		// Applies to ServiceRoles and ServiceRoleBindings
@@ -80,17 +121,17 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 		serviceRole := ServiceRole(app)
 		if serviceRole != nil {
-			objects = append(objects, ResourceOperation{serviceRole, operation})
+			ops = append(ops, ResourceOperation{serviceRole, operation})
 		}
 
 		serviceRoleBinding := ServiceRoleBinding(app)
 		if serviceRoleBinding != nil {
-			objects = append(objects, ResourceOperation{serviceRoleBinding, operation})
+			ops = append(ops, ResourceOperation{serviceRoleBinding, operation})
 		}
 
 		serviceRolePrometheus := ServiceRolePrometheus(app)
 		if serviceRolePrometheus != nil {
-			objects = append(objects, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
+			ops = append(ops, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
 		}
 
 		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
@@ -100,7 +141,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 		if serviceRoleBindingPrometheus != nil {
-			objects = append(objects, ResourceOperation{serviceRoleBindingPrometheus, operation})
+			ops = append(ops, ResourceOperation{serviceRoleBindingPrometheus, operation})
 		}
 
 		serviceEntry := ServiceEntry(app)
@@ -109,7 +150,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			operation = OperationDeleteIfExists
 		}
 		if serviceEntry != nil {
-			objects = append(objects, ResourceOperation{serviceEntry, operation})
+			ops = append(ops, ResourceOperation{serviceEntry, operation})
 		}
 
 	} else {
@@ -126,18 +167,25 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			operation = OperationDeleteIfExists
 		}
 
-		objects = append(objects, ResourceOperation{ingress, operation})
+		ops = append(ops, ResourceOperation{ingress, operation})
 	}
 
 	deployment, err := Deployment(app, resourceOptions)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	objects = append(objects, ResourceOperation{deployment, OperationCreateOrUpdate})
+	ops = append(ops, ResourceOperation{deployment, OperationCreateOrUpdate})
 
-	return objects, nil
+	return ops, nil
 }
 
 func int32p(i int32) *int32 {
 	return &i
+}
+
+// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
+func ApplyAbandonDeletionPolicy(resource v1.ObjectMetaAccessor) {
+	m := resource.GetObjectMeta().GetAnnotations()
+	m[GoogleDeletionPolicyAnnotation] = "abandon"
+	resource.GetObjectMeta().SetAnnotations(m)
 }
