@@ -126,6 +126,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 
 	logger = *log.WithFields(rollout.App.LogFields())
 	logger.Debugf("Starting synchronization")
+	metrics.ApplicationsProcessed.Inc()
 
 	app.Status.CorrelationID = rollout.CorrelationID
 
@@ -147,7 +148,6 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	logger.Debugf("Successful synchronization")
 	app.Status.SynchronizationState = EventSynchronized
 	app.Status.SynchronizationHash = rollout.SynchronizationHash
-	metrics.ApplicationsProcessed.Inc()
 	metrics.Deployments.Inc()
 
 	_, err = n.reportEvent(app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
