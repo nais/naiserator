@@ -5,44 +5,44 @@ import (
 	"strings"
 	"testing"
 
-	iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
+	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
-	rbac_istio_io_v1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
-	sqlv1alpha3 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
-	storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
+	istio_networking_crd "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
+	istio_rbac_crd "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
+	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
+	google_storage_crd "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
-	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
-	networkingv1 "k8s.io/api/networking/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+	autoscaling "k8s.io/api/autoscaling/v1"
+	core "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1"
+	rbac "k8s.io/api/rbac/v1"
 )
 
 type realObjects struct {
 	deployment              *v1.Deployment
-	hpa                     *autoscalingv1.HorizontalPodAutoscaler
-	ingress                 *extensionsv1beta1.Ingress
-	networkPolicy           *networkingv1.NetworkPolicy
-	role                    *rbacv1.Role
-	rolebinding             *rbacv1.RoleBinding
-	secret                  *corev1.Secret
-	service                 *corev1.Service
-	serviceAccount          *corev1.ServiceAccount
-	serviceRoleBindings     []*rbac_istio_io_v1alpha1.ServiceRoleBinding
-	serviceRoles            []*rbac_istio_io_v1alpha1.ServiceRole
-	sqlDatabase             *sqlv1alpha3.SQLDatabase
-	sqlInstance             *sqlv1alpha3.SQLInstance
-	sqlUser                 *sqlv1alpha3.SQLUser
-	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
-	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount
-	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy
-	googleIAMPolicyMember   *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember
-	bucket                  *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket
-	bucketAccessControl     *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl
+	hpa                     *autoscaling.HorizontalPodAutoscaler
+	ingress                 *extensions.Ingress
+	networkPolicy           *networking.NetworkPolicy
+	role                    *rbac.Role
+	rolebinding             *rbac.RoleBinding
+	secret                  *core.Secret
+	service                 *core.Service
+	serviceAccount          *core.ServiceAccount
+	serviceRoleBindings     []*istio_rbac_crd.ServiceRoleBinding
+	serviceRoles            []*istio_rbac_crd.ServiceRole
+	sqlDatabase             *google_sql_crd.SQLDatabase
+	sqlInstance             *google_sql_crd.SQLInstance
+	sqlUser                 *google_sql_crd.SQLUser
+	virtualServices         []*istio_networking_crd.VirtualService
+	googleIAMServiceAccount *google_iam_crd.IAMServiceAccount
+	googleIAMPolicy         *google_iam_crd.IAMPolicy
+	googleIAMPolicyMember   *google_iam_crd.IAMPolicyMember
+	bucket                  *google_storage_crd.StorageBucket
+	bucketAccessControl     *google_storage_crd.StorageBucketAccessControl
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -50,43 +50,43 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 		switch v := r.Resource.(type) {
 		case *v1.Deployment:
 			o.deployment = v
-		case *corev1.Secret:
+		case *core.Secret:
 			o.secret = v
-		case *corev1.Service:
+		case *core.Service:
 			o.service = v
-		case *corev1.ServiceAccount:
+		case *core.ServiceAccount:
 			o.serviceAccount = v
-		case *autoscalingv1.HorizontalPodAutoscaler:
+		case *autoscaling.HorizontalPodAutoscaler:
 			o.hpa = v
-		case *extensionsv1beta1.Ingress:
+		case *extensions.Ingress:
 			o.ingress = v
-		case *networkingv1.NetworkPolicy:
+		case *networking.NetworkPolicy:
 			o.networkPolicy = v
-		case *rbac_istio_io_v1alpha1.ServiceRole:
+		case *istio_rbac_crd.ServiceRole:
 			o.serviceRoles = append(o.serviceRoles, v)
-		case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
+		case *istio_rbac_crd.ServiceRoleBinding:
 			o.serviceRoleBindings = append(o.serviceRoleBindings, v)
-		case *networking_istio_io_v1alpha3.VirtualService:
+		case *istio_networking_crd.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)
-		case *rbacv1.Role:
+		case *rbac.Role:
 			o.role = v
-		case *rbacv1.RoleBinding:
+		case *rbac.RoleBinding:
 			o.rolebinding = v
-		case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
+		case *google_iam_crd.IAMServiceAccount:
 			o.googleIAMServiceAccount = v
-		case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
+		case *google_iam_crd.IAMPolicy:
 			o.googleIAMPolicy = v
-		case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember:
+		case *google_iam_crd.IAMPolicyMember:
 			o.googleIAMPolicyMember = v
-		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucket:
+		case *google_storage_crd.StorageBucket:
 			o.bucket = v
-		case *storage_cnrm_cloud_google_com_v1alpha2.StorageBucketAccessControl:
+		case *google_storage_crd.StorageBucketAccessControl:
 			o.bucketAccessControl = v
-		case *sqlv1alpha3.SQLInstance:
+		case *google_sql_crd.SQLInstance:
 			o.sqlInstance = v
-		case *sqlv1alpha3.SQLUser:
+		case *google_sql_crd.SQLUser:
 			o.sqlUser = v
-		case *sqlv1alpha3.SQLDatabase:
+		case *google_sql_crd.SQLDatabase:
 			o.sqlDatabase = v
 		}
 	}
@@ -296,7 +296,7 @@ func TestCreate(t *testing.T) {
 		numDeletes := 0
 		for _, resource := range deletes {
 			switch x := resource.Resource.(type) {
-			case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
+			case *istio_rbac_crd.ServiceRoleBinding:
 				if x.GetName() == "myapplication" {
 					numDeletes++
 				}
@@ -325,7 +325,7 @@ func TestCreate(t *testing.T) {
 		numDeletes := 0
 		for _, resource := range deletes {
 			switch x := resource.Resource.(type) {
-			case *rbac_istio_io_v1alpha1.ServiceRoleBinding:
+			case *istio_rbac_crd.ServiceRoleBinding:
 				if x.GetName() == "myapplication-prometheus" {
 					numDeletes++
 				}

@@ -6,13 +6,13 @@ package updater
 import (
 	"fmt"
 
-	iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
+	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1alpha3 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
 	storage_cnrm_cloud_google_com_v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
-	typed_iam_cnrm_cloud_google_com_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1"
+	typed_iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	typed_sql_cnrm_cloud_google_com_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1alpha3"
@@ -259,8 +259,8 @@ func RoleBinding(client typed_rbac_v1.RoleBindingInterface, old, new *rbacv1.Rol
 	}
 }
 
-func iamServiceAccount(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccountInterface, old, new *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount) func() error {
-	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+func iamServiceAccount(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountInterface, old, new *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount) func() error {
+	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -276,8 +276,8 @@ func iamServiceAccount(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMServic
 	}
 }
 
-func iamPolicy(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyInterface, old, new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy) func() error {
-	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+func iamPolicy(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMPolicyInterface, old, new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy) func() error {
+	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -293,8 +293,8 @@ func iamPolicy(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyInterfac
 	}
 }
 
-func iamPolicyMember(client typed_iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMemberInterface, old, new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember) func() error {
-	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember for %s", new.Name)
+func iamPolicyMember(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberInterface, old, new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember) func() error {
+	log.Infof("creating or updating *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -541,8 +541,8 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 		return RoleBinding(c, old, new)
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
-		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount:
+		c := customClient.IamV1beta1().IAMServiceAccounts(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -552,8 +552,8 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 		return iamServiceAccount(c, old, new)
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
-		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy:
+		c := customClient.IamV1beta1().IAMPolicies(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -563,8 +563,8 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 		return iamPolicy(c, old, new)
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember:
-		c := customClient.IamV1alpha1().IAMPolicyMembers(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember:
+		c := customClient.IamV1beta1().IAMPolicyMembers(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -806,41 +806,41 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			return err
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
-		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount:
+		c := customClient.IamV1beta1().IAMServiceAccounts(new.Namespace)
 		return func() error {
-			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
 				return err
 			}
-			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			_, err = c.Create(new)
 			return err
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
-		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy:
+		c := customClient.IamV1beta1().IAMPolicies(new.Namespace)
 		return func() error {
-			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
 				return err
 			}
-			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			_, err = c.Create(new)
 			return err
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember:
-		c := customClient.IamV1alpha1().IAMPolicyMembers(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember:
+		c := customClient.IamV1beta1().IAMPolicyMembers(new.Namespace)
 		return func() error {
-			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember for %s", new.Name)
+			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
 				return err
 			}
-			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember for %s", new.Name)
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			_, err = c.Create(new)
 			return err
 		}
@@ -1061,10 +1061,10 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return nil
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
-		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount:
+		c := customClient.IamV1beta1().IAMServiceAccounts(new.Namespace)
 		return func() error {
-			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -1072,10 +1072,10 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return nil
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
-		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy:
+		c := customClient.IamV1beta1().IAMPolicies(new.Namespace)
 		return func() error {
-			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -1083,10 +1083,10 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return nil
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember:
-		c := customClient.IamV1alpha1().IAMPolicyMembers(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember:
+		c := customClient.IamV1beta1().IAMPolicyMembers(new.Namespace)
 		return func() error {
-			log.Infof("creating new *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember for %s", new.Name)
+			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return err
@@ -1300,10 +1300,10 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return err
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount:
-		c := customClient.IamV1alpha1().IAMServiceAccounts(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount:
+		c := customClient.IamV1beta1().IAMServiceAccounts(new.Namespace)
 		return func() error {
-			log.Infof("deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMServiceAccount for %s", new.Name)
+			log.Infof("deleting *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil
@@ -1311,10 +1311,10 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return err
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy:
-		c := customClient.IamV1alpha1().IAMPolicies(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy:
+		c := customClient.IamV1beta1().IAMPolicies(new.Namespace)
 		return func() error {
-			log.Infof("deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicy for %s", new.Name)
+			log.Infof("deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil
@@ -1322,10 +1322,10 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return err
 		}
 
-	case *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember:
-		c := customClient.IamV1alpha1().IAMPolicyMembers(new.Namespace)
+	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember:
+		c := customClient.IamV1beta1().IAMPolicyMembers(new.Namespace)
 		return func() error {
-			log.Infof("deleting *iam_cnrm_cloud_google_com_v1alpha1.IAMPolicyMember for %s", new.Name)
+			log.Infof("deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil

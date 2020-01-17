@@ -3,7 +3,7 @@ package resourcecreator
 import (
 	"fmt"
 
-	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
+	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

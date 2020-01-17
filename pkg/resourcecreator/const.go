@@ -16,7 +16,7 @@ const (
 	IstioServiceEntryResolutionDNS          = "DNS"                                  // Service entry lookup type
 	IstioGatewayPrefix                      = "istio-system/ingress-gateway-%s"
 	IstioVirtualServiceTotalWeight    int32 = 100 // The total weight of all routes must equal 100
-	GoogleIAMAPIVersion                     = "iam.cnrm.cloud.google.com/v1alpha1"
+	GoogleIAMAPIVersion                     = "iam.cnrm.cloud.google.com/v1beta1"
 	GoogleIAMServiceAccountNamespace        = "serviceaccounts"
 	GoogleStorageAPIVersion                 = "storage.cnrm.cloud.google.com/v1alpha2"
 	GoogleRegion                            = "europe-north1"

@@ -4,8 +4,8 @@ package fake
 
 import (
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
-	iamv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1"
-	fakeiamv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1alpha1/fake"
+	iamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
+	fakeiamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1/fake"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 	fakenaiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1/fake"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
@@ -70,9 +70,9 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// IamV1alpha1 retrieves the IamV1alpha1Client
-func (c *Clientset) IamV1alpha1() iamv1alpha1.IamV1alpha1Interface {
-	return &fakeiamv1alpha1.FakeIamV1alpha1{Fake: &c.Fake}
+// IamV1beta1 retrieves the IamV1beta1Client
+func (c *Clientset) IamV1beta1() iamv1beta1.IamV1beta1Interface {
+	return &fakeiamv1beta1.FakeIamV1beta1{Fake: &c.Fake}
 }
 
 // NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client

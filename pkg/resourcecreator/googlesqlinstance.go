@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/imdario/mergo"
-	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
+	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,7 +80,7 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, opti
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMPolicyMember",
-			APIVersion: "iam.cnrm.cloud.google.com/v1alpha1",
+			APIVersion: GoogleIAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf("serviceAccount:%s", GcpServiceAccountName(app, options.GoogleProjectId)),

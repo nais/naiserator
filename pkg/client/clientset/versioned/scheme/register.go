@@ -3,7 +3,7 @@
 package scheme
 
 import (
-	iamv1alpha1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1alpha1"
+	iamv1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbacv1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
@@ -20,7 +20,7 @@ var Scheme = runtime.NewScheme()
 var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
-	iamv1alpha1.AddToScheme,
+	iamv1beta1.AddToScheme,
 	naiseratorv1alpha1.AddToScheme,
 	networkingv1alpha3.AddToScheme,
 	rbacv1alpha1.AddToScheme,
