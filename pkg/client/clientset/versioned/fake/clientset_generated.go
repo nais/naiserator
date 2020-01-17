@@ -12,10 +12,10 @@ import (
 	fakenetworkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3/fake"
 	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	fakerbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1/fake"
-	sqlv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1alpha3"
-	fakesqlv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1alpha3/fake"
-	storagev1alpha2 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1alpha2"
-	fakestoragev1alpha2 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1alpha2/fake"
+	sqlv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
+	fakesqlv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1/fake"
+	storagev1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
+	fakestoragev1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -90,12 +90,12 @@ func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
 	return &fakerbacv1alpha1.FakeRbacV1alpha1{Fake: &c.Fake}
 }
 
-// SqlV1alpha3 retrieves the SqlV1alpha3Client
-func (c *Clientset) SqlV1alpha3() sqlv1alpha3.SqlV1alpha3Interface {
-	return &fakesqlv1alpha3.FakeSqlV1alpha3{Fake: &c.Fake}
+// SqlV1beta1 retrieves the SqlV1beta1Client
+func (c *Clientset) SqlV1beta1() sqlv1beta1.SqlV1beta1Interface {
+	return &fakesqlv1beta1.FakeSqlV1beta1{Fake: &c.Fake}
 }
 
-// StorageV1alpha2 retrieves the StorageV1alpha2Client
-func (c *Clientset) StorageV1alpha2() storagev1alpha2.StorageV1alpha2Interface {
-	return &fakestoragev1alpha2.FakeStorageV1alpha2{Fake: &c.Fake}
+// StorageV1beta1 retrieves the StorageV1beta1Client
+func (c *Clientset) StorageV1beta1() storagev1beta1.StorageV1beta1Interface {
+	return &fakestoragev1beta1.FakeStorageV1beta1{Fake: &c.Fake}
 }

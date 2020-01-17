@@ -7,8 +7,8 @@ import (
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbacv1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
-	sqlv1alpha3 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
-	storagev1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
+	sqlv1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	storagev1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -24,8 +24,8 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	naiseratorv1alpha1.AddToScheme,
 	networkingv1alpha3.AddToScheme,
 	rbacv1alpha1.AddToScheme,
-	sqlv1alpha3.AddToScheme,
-	storagev1alpha2.AddToScheme,
+	sqlv1beta1.AddToScheme,
+	storagev1beta1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

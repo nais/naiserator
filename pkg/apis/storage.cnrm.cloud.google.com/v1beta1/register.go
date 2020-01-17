@@ -6,7 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const GroupName = "iam.cnrm.cloud.google.com"
+const GroupName = "storage.cnrm.cloud.google.com"
 const GroupVersion = "v1beta1"
 
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: GroupVersion}
@@ -29,10 +29,10 @@ var (
 // Adds the list of known types to Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&IAMServiceAccount{},
-		&IAMServiceAccountList{},
-		&IAMPolicy{},
-		&IAMPolicyList{},
+		&StorageBucket{},
+		&StorageBucketList{},
+		&StorageBucketAccessControl{},
+		&StorageBucketAccessControlList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

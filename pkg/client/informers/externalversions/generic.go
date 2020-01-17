@@ -9,8 +9,8 @@ import (
 	v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	rbacistioiov1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
-	sqlcnrmcloudgooglecomv1alpha3 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1alpha3"
-	v1alpha2 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
+	sqlcnrmcloudgooglecomv1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	storagecnrmcloudgooglecomv1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -65,19 +65,19 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case rbacistioiov1alpha1.SchemeGroupVersion.WithResource("servicerolebindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoleBindings().Informer()}, nil
 
-		// Group=sql.cnrm.cloud.google.com, Version=v1alpha3
-	case sqlcnrmcloudgooglecomv1alpha3.SchemeGroupVersion.WithResource("sqldatabases"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SQLDatabases().Informer()}, nil
-	case sqlcnrmcloudgooglecomv1alpha3.SchemeGroupVersion.WithResource("sqlinstances"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SQLInstances().Informer()}, nil
-	case sqlcnrmcloudgooglecomv1alpha3.SchemeGroupVersion.WithResource("sqlusers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1alpha3().SQLUsers().Informer()}, nil
+		// Group=sql.cnrm.cloud.google.com, Version=v1beta1
+	case sqlcnrmcloudgooglecomv1beta1.SchemeGroupVersion.WithResource("sqldatabases"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1beta1().SQLDatabases().Informer()}, nil
+	case sqlcnrmcloudgooglecomv1beta1.SchemeGroupVersion.WithResource("sqlinstances"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1beta1().SQLInstances().Informer()}, nil
+	case sqlcnrmcloudgooglecomv1beta1.SchemeGroupVersion.WithResource("sqlusers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sql().V1beta1().SQLUsers().Informer()}, nil
 
-		// Group=storage.cnrm.cloud.google.com, Version=v1alpha2
-	case v1alpha2.SchemeGroupVersion.WithResource("storagebuckets"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().StorageBuckets().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("storagebucketaccesscontrols"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha2().StorageBucketAccessControls().Informer()}, nil
+		// Group=storage.cnrm.cloud.google.com, Version=v1beta1
+	case storagecnrmcloudgooglecomv1beta1.SchemeGroupVersion.WithResource("storagebuckets"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1beta1().StorageBuckets().Informer()}, nil
+	case storagecnrmcloudgooglecomv1beta1.SchemeGroupVersion.WithResource("storagebucketaccesscontrols"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1beta1().StorageBucketAccessControls().Informer()}, nil
 
 	}
 

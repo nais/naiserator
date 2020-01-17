@@ -2,7 +2,7 @@ package resourcecreator
 
 import (
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	google_storage_crd "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1alpha2"
+	google_storage_crd "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
