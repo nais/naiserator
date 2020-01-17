@@ -61,10 +61,23 @@ type SQLDatabaseList struct {
 	Items           []SQLDatabase `json:"items"`
 }
 
+type SecretRef struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+type SqlUserPasswordSecretKeyRef struct {
+	SecretKeyRef SecretRef `json:"secretKeyRef"`
+}
+
+type SqlUserPasswordValue struct {
+	ValueFrom SqlUserPasswordSecretKeyRef `json:"valueFrom"`
+}
+
 type SQLUserSpec struct {
-	InstanceRef InstanceRef `json:"instanceRef"`
-	Host        string      `json:"host"`
-	Password    string      `json:"password"`
+	InstanceRef InstanceRef          `json:"instanceRef"`
+	Host        string               `json:"host"`
+	Password    SqlUserPasswordValue `json:"password"`
 }
 
 // +genclient

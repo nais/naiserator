@@ -22,6 +22,8 @@ func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete b
 		ApplyAbandonDeletionPolicy(&objectMeta)
 	}
 
+	casedInstanceName := strings.ReplaceAll(strings.ToUpper(instanceName), "-", "_")
+
 	return &google_sql_crd.SQLUser{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "SQLUser",
@@ -31,7 +33,14 @@ func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete b
 		Spec: google_sql_crd.SQLUserSpec{
 			InstanceRef: google_sql_crd.InstanceRef{Name: instanceName},
 			Host:        "%",
-			Password:    password,
+			Password: google_sql_crd.SqlUserPasswordValue{
+				ValueFrom: google_sql_crd.SqlUserPasswordSecretKeyRef{
+					SecretKeyRef: google_sql_crd.SecretRef{
+						Key:  fmt.Sprintf("GCP_SQLINSTANCE_%s_PASSWORD", casedInstanceName),
+						Name: GCPSqlInstanceSecretName(instanceName),
+					},
+				},
+			},
 		},
 	}
 }
