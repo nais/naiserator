@@ -13,7 +13,7 @@ func GCPSqlInstanceSecretName(instanceName string) string {
 	return fmt.Sprintf("sqlinstanceuser-%s", instanceName)
 }
 
-func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete bool, password string) *google_sql_crd.SQLUser {
+func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete bool) *google_sql_crd.SQLUser {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = app.Name
