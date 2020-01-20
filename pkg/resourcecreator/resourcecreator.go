@@ -51,15 +51,14 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 		if app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
 			for _, b := range app.Spec.GCP.Buckets {
-				bucketName := fmt.Sprintf("%s-%s", b.NamePrefix, util.RandomString(6))
-				bucket := GoogleStorageBucket(app, bucketName)
+				bucket := GoogleStorageBucket(app, b)
 				ops = append(ops, ResourceOperation{bucket, OperationCreateIfNotExists})
 
 				bucketAccessControl := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 				ops = append(ops, ResourceOperation{bucketAccessControl, OperationCreateOrUpdate})
 
 				envifedPrefix := strings.ReplaceAll(strings.ToUpper(b.NamePrefix), "-", "_")
-				resourceOptions.AdditionalEnvs[fmt.Sprintf("GCP_BUCKET_%s_NAME", envifedPrefix)] = bucketName
+				resourceOptions.AdditionalEnvs[fmt.Sprintf("GCP_BUCKET_%s_NAME", envifedPrefix)] = bucket.Name
 			}
 		}
 

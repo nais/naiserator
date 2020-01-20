@@ -381,6 +381,7 @@ func TestCreate(t *testing.T) {
 		}
 
 		assert.True(t, found, fmt.Sprintf("did not find key %s with expected value", envKey))
+		assert.Equal(t, "abandon", objects.bucket.Annotations[resourcecreator.GoogleDeletionPolicyAnnotation])
 	})
 
 	t.Run("using gcp sqlinstance yields expected resources", func(t *testing.T) {
