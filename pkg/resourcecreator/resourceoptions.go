@@ -8,11 +8,13 @@ type ResourceOptions struct {
 	NativeSecrets               bool
 	GoogleProjectId             string
 	GoogleTeamProjectId         string
+	AdditionalEnvs              map[string]string
 }
 
 // NewResourceOptions creates a struct with the default resource options.
 func NewResourceOptions() ResourceOptions {
 	return ResourceOptions{
-		NumReplicas: 1,
+		NumReplicas:    1,
+		AdditionalEnvs: make(map[string]string),
 	}
 }

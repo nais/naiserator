@@ -54,8 +54,8 @@ func LeaderElectionRole(app *nais.Application) *rbacv1.Role {
 	}
 }
 
-func LeaderElection(app *nais.Application, podSpec *corev1.PodSpec) (spec *corev1.PodSpec) {
-	spec = podSpec.DeepCopy()
+func LeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *corev1.PodSpec {
+	spec := podSpec.DeepCopy()
 	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Name, app.Namespace))
 	mainContainer := spec.Containers[0].DeepCopy()
 

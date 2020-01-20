@@ -7,6 +7,8 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
+
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,11 +50,16 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
 		if app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
-			buckets := GoogleStorageBuckets(app)
-			for _, bucket := range buckets {
-				bucketBac := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+			for _, b := range app.Spec.GCP.Buckets {
+				bucketName := fmt.Sprintf("%s-%s", b.NamePrefix, util.RandomString(6))
+				bucket := GoogleStorageBucket(app, bucketName)
 				ops = append(ops, ResourceOperation{bucket, OperationCreateIfNotExists})
-				ops = append(ops, ResourceOperation{bucketBac, OperationCreateOrUpdate})
+
+				bucketAccessControl := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+				ops = append(ops, ResourceOperation{bucketAccessControl, OperationCreateOrUpdate})
+
+				envifedPrefix := strings.ReplaceAll(strings.ToUpper(b.NamePrefix), "-", "_")
+				resourceOptions.AdditionalEnvs[fmt.Sprintf("GCP_BUCKET_%s_NAME", envifedPrefix)] = bucketName
 			}
 		}
 

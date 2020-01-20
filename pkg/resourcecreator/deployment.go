@@ -2,9 +2,10 @@ package resourcecreator
 
 import (
 	"fmt"
+	"strconv"
+
 	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
-	"strconv"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/securelogs"
@@ -94,6 +95,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	var err error
 
 	podSpec := podSpecBase(app)
+	podSpec = applyAdditionalEnvs(podSpec, resourceOptions.AdditionalEnvs)
 
 	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
 		for _, instance := range app.Spec.GCP.SqlInstances {
@@ -132,6 +134,17 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	return podSpec, err
+}
+
+func applyAdditionalEnvs(podSpec *corev1.PodSpec, envs map[string]string) *corev1.PodSpec {
+	spec := podSpec.DeepCopy()
+	for key, val := range envs {
+		spec.Containers[0].Env = append(spec.Containers[0].Env, corev1.EnvVar{
+			Name:  key,
+			Value: val,
+		})
+	}
+	return spec
 }
 
 func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, projectId string) corev1.Container {
@@ -389,13 +402,13 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	}
 }
 
-func probe(app *nais.Application, probe nais.Probe) (k8sprobe *corev1.Probe) {
+func probe(app *nais.Application, probe nais.Probe) *corev1.Probe {
 	port := probe.Port
 	if port == 0 {
 		port = app.Spec.Port
 	}
 
-	k8sprobe = &corev1.Probe{
+	k8sprobe := &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: probe.Path,
@@ -412,7 +425,7 @@ func probe(app *nais.Application, probe nais.Probe) (k8sprobe *corev1.Probe) {
 		k8sprobe.Handler.HTTPGet.Port = intstr.FromInt(probe.Port)
 	}
 
-	return
+	return k8sprobe
 }
 
 func GetContainerByName(containers []corev1.Container, name string) *corev1.Container {

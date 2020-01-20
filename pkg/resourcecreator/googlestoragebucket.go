@@ -6,18 +6,8 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleStorageBuckets(app *nais.Application) []*google_storage_crd.StorageBucket {
-	googleBuckets := make([]*google_storage_crd.StorageBucket, len(app.Spec.GCP.Buckets))
-	for i, bucket := range app.Spec.GCP.Buckets {
-		googleBuckets[i] = GoogleStorageBucket(app, bucket.Name)
-	}
-	return googleBuckets
-
-}
-
 func GoogleStorageBucket(app *nais.Application, bucketName string) *google_storage_crd.StorageBucket {
 	objectMeta := app.CreateObjectMeta()
-	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = bucketName
 
 	ApplyAbandonDeletionPolicy(&objectMeta)

@@ -2,6 +2,8 @@ package util
 
 import (
 	"math"
+	"math/rand"
+	"time"
 )
 
 const strTrimMiddleTruncate = "---[truncated]---"
@@ -25,4 +27,15 @@ func StrTrimMiddle(s string, maxlen int) string {
 	}
 	partlen := int(math.Floor(float64(newlen)) / 2)
 	return s[:partlen] + strTrimMiddleTruncate + s[len(s)-partlen:]
+}
+
+func RandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, length)
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
 }

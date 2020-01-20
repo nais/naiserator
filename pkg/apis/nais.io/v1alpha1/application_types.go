@@ -139,7 +139,7 @@ type EnvVarSource struct {
 }
 
 type CloudStorageBucket struct {
-	Name string `json:"name"`
+	NamePrefix string `json:"namePrefix"`
 }
 
 type CloudSqlInstanceType string
