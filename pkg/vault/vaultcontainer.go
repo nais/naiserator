@@ -194,6 +194,11 @@ func (c config) createSideCarContainer() corev1.Container {
 		VolumeMounts: []corev1.VolumeMount{createDefaultMount()},
 		Args:         args,
 		Image:        c.initContainerImage,
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("10m"),
+			},
+		},
 		Env: []corev1.EnvVar{
 			{
 				Name:  "VAULT_AUTH_METHOD",
