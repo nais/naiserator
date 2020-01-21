@@ -99,7 +99,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
 		for _, instance := range app.Spec.GCP.SqlInstances {
 			podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GCPSqlInstanceSecretName(instance.Name)))
-			podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 3306, resourceOptions.GoogleTeamProjectId))
+			podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 5432, resourceOptions.GoogleTeamProjectId))
 		}
 	}
 
