@@ -86,11 +86,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				}
 				password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
 
+				secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
+				ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
+
 				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete)
 				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
-
-				secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
-				ops = append(ops, ResourceOperation{secret, OperationCreateOrUpdate})
 
 				// FIXME: take into account when refactoring default values
 				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name

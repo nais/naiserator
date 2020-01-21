@@ -1,12 +1,12 @@
 package resourcecreator_test
 
 import (
-"testing"
+	"testing"
 
-"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-"github.com/nais/naiserator/pkg/resourcecreator"
-"github.com/nais/naiserator/pkg/test/fixtures"
-"github.com/stretchr/testify/assert"
+	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetGoogleStorageBucket(t *testing.T) {
