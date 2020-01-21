@@ -45,8 +45,8 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		// TODO: If implementing more features, move these two outside of the cloud storage check.
 		googleServiceAccount := GoogleIAMServiceAccount(app)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
-		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
-		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateIfNotExists})
+		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateIfNotExists})
 
 		if app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
 			for _, b := range app.Spec.GCP.Buckets {

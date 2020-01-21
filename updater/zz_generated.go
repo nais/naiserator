@@ -41,6 +41,9 @@ func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) fu
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "service", err)
+			}
 			return err
 		}
 	}
@@ -51,6 +54,9 @@ func service(client typed_core_v1.ServiceInterface, old, new *corev1.Service) fu
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "service", err)
+		}
 		return err
 	}
 }
@@ -60,6 +66,9 @@ func secret(client typed_core_v1.SecretInterface, old, new *corev1.Secret) func(
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "secret", err)
+			}
 			return err
 		}
 	}
@@ -68,6 +77,9 @@ func secret(client typed_core_v1.SecretInterface, old, new *corev1.Secret) func(
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "secret", err)
+		}
 		return err
 	}
 }
@@ -77,6 +89,9 @@ func serviceAccount(client typed_core_v1.ServiceAccountInterface, old, new *core
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "serviceAccount", err)
+			}
 			return err
 		}
 	}
@@ -85,6 +100,9 @@ func serviceAccount(client typed_core_v1.ServiceAccountInterface, old, new *core
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "serviceAccount", err)
+		}
 		return err
 	}
 }
@@ -94,6 +112,9 @@ func deployment(client typed_apps_v1.DeploymentInterface, old, new *appsv1.Deplo
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "deployment", err)
+			}
 			return err
 		}
 	}
@@ -102,6 +123,9 @@ func deployment(client typed_apps_v1.DeploymentInterface, old, new *appsv1.Deplo
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "deployment", err)
+		}
 		return err
 	}
 }
@@ -111,6 +135,9 @@ func ingress(client typed_extensions_v1beta1.IngressInterface, old, new *extensi
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "ingress", err)
+			}
 			return err
 		}
 	}
@@ -119,6 +146,9 @@ func ingress(client typed_extensions_v1beta1.IngressInterface, old, new *extensi
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "ingress", err)
+		}
 		return err
 	}
 }
@@ -128,6 +158,9 @@ func horizontalPodAutoscaler(client typed_autoscaling_v1.HorizontalPodAutoscaler
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "horizontalPodAutoscaler", err)
+			}
 			return err
 		}
 	}
@@ -136,6 +169,9 @@ func horizontalPodAutoscaler(client typed_autoscaling_v1.HorizontalPodAutoscaler
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "horizontalPodAutoscaler", err)
+		}
 		return err
 	}
 }
@@ -145,6 +181,9 @@ func networkPolicy(client typed_networking_v1.NetworkPolicyInterface, old, new *
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "networkPolicy", err)
+			}
 			return err
 		}
 	}
@@ -153,6 +192,9 @@ func networkPolicy(client typed_networking_v1.NetworkPolicyInterface, old, new *
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "networkPolicy", err)
+		}
 		return err
 	}
 }
@@ -162,6 +204,9 @@ func serviceRole(client istio_v1alpha1.ServiceRoleInterface, old, new *v1alpha1.
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "serviceRole", err)
+			}
 			return err
 		}
 	}
@@ -170,6 +215,9 @@ func serviceRole(client istio_v1alpha1.ServiceRoleInterface, old, new *v1alpha1.
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "serviceRole", err)
+		}
 		return err
 	}
 }
@@ -179,6 +227,9 @@ func serviceRoleBinding(client istio_v1alpha1.ServiceRoleBindingInterface, old, 
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
+			}
 			return err
 		}
 	}
@@ -187,6 +238,9 @@ func serviceRoleBinding(client istio_v1alpha1.ServiceRoleBindingInterface, old, 
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
+		}
 		return err
 	}
 }
@@ -196,6 +250,9 @@ func virtualService(client typed_networking_istio_io_v1alpha3.VirtualServiceInte
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "virtualService", err)
+			}
 			return err
 		}
 	}
@@ -204,6 +261,9 @@ func virtualService(client typed_networking_istio_io_v1alpha3.VirtualServiceInte
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "virtualService", err)
+		}
 		return err
 	}
 }
@@ -213,6 +273,9 @@ func ServiceEntry(client typed_networking_istio_io_v1alpha3.ServiceEntryInterfac
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "ServiceEntry", err)
+			}
 			return err
 		}
 	}
@@ -221,6 +284,9 @@ func ServiceEntry(client typed_networking_istio_io_v1alpha3.ServiceEntryInterfac
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "ServiceEntry", err)
+		}
 		return err
 	}
 }
@@ -230,6 +296,9 @@ func Role(client typed_rbac_v1.RoleInterface, old, new *rbacv1.Role) func() erro
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "Role", err)
+			}
 			return err
 		}
 	}
@@ -238,6 +307,9 @@ func Role(client typed_rbac_v1.RoleInterface, old, new *rbacv1.Role) func() erro
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "Role", err)
+		}
 		return err
 	}
 }
@@ -247,6 +319,9 @@ func RoleBinding(client typed_rbac_v1.RoleBindingInterface, old, new *rbacv1.Rol
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "RoleBinding", err)
+			}
 			return err
 		}
 	}
@@ -255,6 +330,9 @@ func RoleBinding(client typed_rbac_v1.RoleBindingInterface, old, new *rbacv1.Rol
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "RoleBinding", err)
+		}
 		return err
 	}
 }
@@ -264,6 +342,9 @@ func iamServiceAccount(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMService
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "iamServiceAccount", err)
+			}
 			return err
 		}
 	}
@@ -272,6 +353,9 @@ func iamServiceAccount(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMService
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "iamServiceAccount", err)
+		}
 		return err
 	}
 }
@@ -281,6 +365,9 @@ func iamPolicy(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMPolicyInterface
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "iamPolicy", err)
+			}
 			return err
 		}
 	}
@@ -289,6 +376,9 @@ func iamPolicy(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMPolicyInterface
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "iamPolicy", err)
+		}
 		return err
 	}
 }
@@ -298,6 +388,9 @@ func iamPolicyMember(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMem
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "iamPolicyMember", err)
+			}
 			return err
 		}
 	}
@@ -306,6 +399,9 @@ func iamPolicyMember(client typed_iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMem
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "iamPolicyMember", err)
+		}
 		return err
 	}
 }
@@ -315,6 +411,9 @@ func googleStorageBucket(client typed_storage_cnrm_cloud_google_com_v1beta1.Stor
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "googleStorageBucket", err)
+			}
 			return err
 		}
 	}
@@ -323,6 +422,9 @@ func googleStorageBucket(client typed_storage_cnrm_cloud_google_com_v1beta1.Stor
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "googleStorageBucket", err)
+		}
 		return err
 	}
 }
@@ -332,6 +434,9 @@ func googleStorageBucketAccessControl(client typed_storage_cnrm_cloud_google_com
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "googleStorageBucketAccessControl", err)
+			}
 			return err
 		}
 	}
@@ -340,6 +445,9 @@ func googleStorageBucketAccessControl(client typed_storage_cnrm_cloud_google_com
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "googleStorageBucketAccessControl", err)
+		}
 		return err
 	}
 }
@@ -349,6 +457,9 @@ func sqlInstance(client typed_sql_cnrm_cloud_google_com_v1beta1.SQLInstanceInter
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "sqlInstance", err)
+			}
 			return err
 		}
 	}
@@ -357,6 +468,9 @@ func sqlInstance(client typed_sql_cnrm_cloud_google_com_v1beta1.SQLInstanceInter
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "sqlInstance", err)
+		}
 		return err
 	}
 }
@@ -366,6 +480,9 @@ func sqlDatabase(client typed_sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseInter
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "sqlDatabase", err)
+			}
 			return err
 		}
 	}
@@ -374,6 +491,9 @@ func sqlDatabase(client typed_sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseInter
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "sqlDatabase", err)
+		}
 		return err
 	}
 }
@@ -383,6 +503,9 @@ func sqlUser(client typed_sql_cnrm_cloud_google_com_v1beta1.SQLUserInterface, ol
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "sqlUser", err)
+			}
 			return err
 		}
 	}
@@ -391,6 +514,9 @@ func sqlUser(client typed_sql_cnrm_cloud_google_com_v1beta1.SQLUserInterface, ol
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "sqlUser", err)
+		}
 		return err
 	}
 }
@@ -403,7 +529,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "service", err) }
 			}
 			return service(c, nil, new)
 		}
@@ -414,7 +540,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "secret", err) }
 			}
 			return secret(c, nil, new)
 		}
@@ -425,7 +551,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "serviceAccount", err) }
 			}
 			return serviceAccount(c, nil, new)
 		}
@@ -436,7 +562,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "deployment", err) }
 			}
 			return deployment(c, nil, new)
 		}
@@ -447,7 +573,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "ingress", err) }
 			}
 			return ingress(c, nil, new)
 		}
@@ -458,7 +584,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "horizontalPodAutoscaler", err) }
 			}
 			return horizontalPodAutoscaler(c, nil, new)
 		}
@@ -469,7 +595,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "networkPolicy", err) }
 			}
 			return networkPolicy(c, nil, new)
 		}
@@ -480,7 +606,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "serviceRole", err) }
 			}
 			return serviceRole(c, nil, new)
 		}
@@ -491,7 +617,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "serviceRoleBinding", err) }
 			}
 			return serviceRoleBinding(c, nil, new)
 		}
@@ -502,7 +628,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "virtualService", err) }
 			}
 			return virtualService(c, nil, new)
 		}
@@ -513,7 +639,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "ServiceEntry", err) }
 			}
 			return ServiceEntry(c, nil, new)
 		}
@@ -524,7 +650,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "Role", err) }
 			}
 			return Role(c, nil, new)
 		}
@@ -535,7 +661,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "RoleBinding", err) }
 			}
 			return RoleBinding(c, nil, new)
 		}
@@ -546,7 +672,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "iamServiceAccount", err) }
 			}
 			return iamServiceAccount(c, nil, new)
 		}
@@ -557,7 +683,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "iamPolicy", err) }
 			}
 			return iamPolicy(c, nil, new)
 		}
@@ -568,7 +694,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "iamPolicyMember", err) }
 			}
 			return iamPolicyMember(c, nil, new)
 		}
@@ -579,7 +705,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "googleStorageBucket", err) }
 			}
 			return googleStorageBucket(c, nil, new)
 		}
@@ -590,7 +716,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "googleStorageBucketAccessControl", err) }
 			}
 			return googleStorageBucketAccessControl(c, nil, new)
 		}
@@ -601,7 +727,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "sqlInstance", err) }
 			}
 			return sqlInstance(c, nil, new)
 		}
@@ -612,7 +738,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "sqlDatabase", err) }
 			}
 			return sqlDatabase(c, nil, new)
 		}
@@ -623,7 +749,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "sqlUser", err) }
 			}
 			return sqlUser(c, nil, new)
 		}
@@ -643,11 +769,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *corev1.Service for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "service", err)
 			}
 			log.Infof("creating new *corev1.Service for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "service", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *corev1.Secret:
@@ -656,11 +786,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *corev1.Secret for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "secret", err)
 			}
 			log.Infof("creating new *corev1.Secret for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "secret", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *corev1.ServiceAccount:
@@ -669,11 +803,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *corev1.ServiceAccount for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "serviceAccount", err)
 			}
 			log.Infof("creating new *corev1.ServiceAccount for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "serviceAccount", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *appsv1.Deployment:
@@ -682,11 +820,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *appsv1.Deployment for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "deployment", err)
 			}
 			log.Infof("creating new *appsv1.Deployment for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "deployment", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *extensionsv1beta1.Ingress:
@@ -695,11 +837,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *extensionsv1beta1.Ingress for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "ingress", err)
 			}
 			log.Infof("creating new *extensionsv1beta1.Ingress for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "ingress", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *autoscalingv1.HorizontalPodAutoscaler:
@@ -708,11 +854,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "horizontalPodAutoscaler", err)
 			}
 			log.Infof("creating new *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "horizontalPodAutoscaler", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *networkingv1.NetworkPolicy:
@@ -721,11 +871,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *networkingv1.NetworkPolicy for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "networkPolicy", err)
 			}
 			log.Infof("creating new *networkingv1.NetworkPolicy for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "networkPolicy", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *v1alpha1.ServiceRole:
@@ -734,11 +888,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *v1alpha1.ServiceRole for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "serviceRole", err)
 			}
 			log.Infof("creating new *v1alpha1.ServiceRole for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "serviceRole", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *v1alpha1.ServiceRoleBinding:
@@ -747,11 +905,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *v1alpha1.ServiceRoleBinding for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
 			}
 			log.Infof("creating new *v1alpha1.ServiceRoleBinding for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *networking_istio_io_v1alpha3.VirtualService:
@@ -760,11 +922,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "virtualService", err)
 			}
 			log.Infof("creating new *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "virtualService", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *networking_istio_io_v1alpha3.ServiceEntry:
@@ -773,11 +939,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "ServiceEntry", err)
 			}
 			log.Infof("creating new *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "ServiceEntry", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *rbacv1.Role:
@@ -786,11 +956,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *rbacv1.Role for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "Role", err)
 			}
 			log.Infof("creating new *rbacv1.Role for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "Role", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *rbacv1.RoleBinding:
@@ -799,11 +973,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *rbacv1.RoleBinding for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "RoleBinding", err)
 			}
 			log.Infof("creating new *rbacv1.RoleBinding for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "RoleBinding", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount:
@@ -812,11 +990,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "iamServiceAccount", err)
 			}
 			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "iamServiceAccount", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy:
@@ -825,11 +1007,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "iamPolicy", err)
 			}
 			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "iamPolicy", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember:
@@ -838,11 +1024,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "iamPolicyMember", err)
 			}
 			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "iamPolicyMember", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *storage_cnrm_cloud_google_com_v1beta1.StorageBucket:
@@ -851,11 +1041,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *storage_cnrm_cloud_google_com_v1beta1.StorageBucket for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "googleStorageBucket", err)
 			}
 			log.Infof("creating new *storage_cnrm_cloud_google_com_v1beta1.StorageBucket for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "googleStorageBucket", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl:
@@ -864,11 +1058,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "googleStorageBucketAccessControl", err)
 			}
 			log.Infof("creating new *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "googleStorageBucketAccessControl", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLInstance:
@@ -877,11 +1075,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *sql_cnrm_cloud_google_com_v1beta1.SQLInstance for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "sqlInstance", err)
 			}
 			log.Infof("creating new *sql_cnrm_cloud_google_com_v1beta1.SQLInstance for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "sqlInstance", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase:
@@ -890,11 +1092,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "sqlDatabase", err)
 			}
 			log.Infof("creating new *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "sqlDatabase", err)
+			} else {
+				return nil
+			}
 		}
 
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLUser:
@@ -903,11 +1109,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting *sql_cnrm_cloud_google_com_v1beta1.SQLUser for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "sqlUser", err)
 			}
 			log.Infof("creating new *sql_cnrm_cloud_google_com_v1beta1.SQLUser for %s", new.Name)
 			_, err = c.Create(new)
-			return err
+			if err != nil {
+				return fmt.Errorf("%s: %s", "sqlUser", err)
+			} else {
+				return nil
+			}
 		}
 
 	default:
@@ -924,7 +1134,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *corev1.Service for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "service", err)
 			}
 			return nil
 		}
@@ -935,7 +1145,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *corev1.Secret for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "secret", err)
 			}
 			return nil
 		}
@@ -946,7 +1156,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *corev1.ServiceAccount for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "serviceAccount", err)
 			}
 			return nil
 		}
@@ -957,7 +1167,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *appsv1.Deployment for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "deployment", err)
 			}
 			return nil
 		}
@@ -968,7 +1178,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *extensionsv1beta1.Ingress for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "ingress", err)
 			}
 			return nil
 		}
@@ -979,7 +1189,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "horizontalPodAutoscaler", err)
 			}
 			return nil
 		}
@@ -990,7 +1200,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *networkingv1.NetworkPolicy for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "networkPolicy", err)
 			}
 			return nil
 		}
@@ -1001,7 +1211,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *v1alpha1.ServiceRole for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "serviceRole", err)
 			}
 			return nil
 		}
@@ -1012,7 +1222,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *v1alpha1.ServiceRoleBinding for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
 			}
 			return nil
 		}
@@ -1023,7 +1233,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "virtualService", err)
 			}
 			return nil
 		}
@@ -1034,7 +1244,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "ServiceEntry", err)
 			}
 			return nil
 		}
@@ -1045,7 +1255,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *rbacv1.Role for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "Role", err)
 			}
 			return nil
 		}
@@ -1056,7 +1266,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *rbacv1.RoleBinding for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "RoleBinding", err)
 			}
 			return nil
 		}
@@ -1067,7 +1277,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "iamServiceAccount", err)
 			}
 			return nil
 		}
@@ -1078,7 +1288,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "iamPolicy", err)
 			}
 			return nil
 		}
@@ -1089,7 +1299,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "iamPolicyMember", err)
 			}
 			return nil
 		}
@@ -1100,7 +1310,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *storage_cnrm_cloud_google_com_v1beta1.StorageBucket for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "googleStorageBucket", err)
 			}
 			return nil
 		}
@@ -1111,7 +1321,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "googleStorageBucketAccessControl", err)
 			}
 			return nil
 		}
@@ -1122,7 +1332,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *sql_cnrm_cloud_google_com_v1beta1.SQLInstance for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "sqlInstance", err)
 			}
 			return nil
 		}
@@ -1133,7 +1343,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "sqlDatabase", err)
 			}
 			return nil
 		}
@@ -1144,7 +1354,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			log.Infof("creating new *sql_cnrm_cloud_google_com_v1beta1.SQLUser for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
-				return err
+				return fmt.Errorf("%s: %s", "sqlUser", err)
 			}
 			return nil
 		}
@@ -1162,9 +1372,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *corev1.Service for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "service", err)
 			}
+
 			return err
 		}
 
@@ -1173,9 +1387,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *corev1.Secret for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "secret", err)
 			}
+
 			return err
 		}
 
@@ -1184,9 +1402,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *corev1.ServiceAccount for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "serviceAccount", err)
 			}
+
 			return err
 		}
 
@@ -1195,9 +1417,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *appsv1.Deployment for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "deployment", err)
 			}
+
 			return err
 		}
 
@@ -1206,9 +1432,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *extensionsv1beta1.Ingress for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "ingress", err)
 			}
+
 			return err
 		}
 
@@ -1217,9 +1447,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *autoscalingv1.HorizontalPodAutoscaler for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "horizontalPodAutoscaler", err)
 			}
+
 			return err
 		}
 
@@ -1228,9 +1462,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *networkingv1.NetworkPolicy for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "networkPolicy", err)
 			}
+
 			return err
 		}
 
@@ -1239,9 +1477,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *v1alpha1.ServiceRole for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "serviceRole", err)
 			}
+
 			return err
 		}
 
@@ -1250,9 +1492,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *v1alpha1.ServiceRoleBinding for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
 			}
+
 			return err
 		}
 
@@ -1261,9 +1507,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *networking_istio_io_v1alpha3.VirtualService for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "virtualService", err)
 			}
+
 			return err
 		}
 
@@ -1272,9 +1522,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *networking_istio_io_v1alpha3.ServiceEntry for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "ServiceEntry", err)
 			}
+
 			return err
 		}
 
@@ -1283,9 +1537,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *rbacv1.Role for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "Role", err)
 			}
+
 			return err
 		}
 
@@ -1294,9 +1552,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *rbacv1.RoleBinding for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "RoleBinding", err)
 			}
+
 			return err
 		}
 
@@ -1305,9 +1567,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "iamServiceAccount", err)
 			}
+
 			return err
 		}
 
@@ -1316,9 +1582,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "iamPolicy", err)
 			}
+
 			return err
 		}
 
@@ -1327,9 +1597,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "iamPolicyMember", err)
 			}
+
 			return err
 		}
 
@@ -1338,9 +1612,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *storage_cnrm_cloud_google_com_v1beta1.StorageBucket for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "googleStorageBucket", err)
 			}
+
 			return err
 		}
 
@@ -1349,9 +1627,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "googleStorageBucketAccessControl", err)
 			}
+
 			return err
 		}
 
@@ -1360,9 +1642,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *sql_cnrm_cloud_google_com_v1beta1.SQLInstance for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "sqlInstance", err)
 			}
+
 			return err
 		}
 
@@ -1371,9 +1657,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "sqlDatabase", err)
 			}
+
 			return err
 		}
 
@@ -1382,9 +1672,13 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting *sql_cnrm_cloud_google_com_v1beta1.SQLUser for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "sqlUser", err)
 			}
+
 			return err
 		}
 

@@ -43,6 +43,9 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
+			}
 			return err
 		}
 	}
@@ -54,6 +57,9 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 
 	return func() error {
 		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "{{ .Name }}", err)
+		}
 		return err
 	}
 }
@@ -68,7 +74,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return err }
+				return func() error { return fmt.Errorf("%s: %s", "{{ .Name }}", err) }
 			}
 			return {{.Name}}(c, nil, new)
 		}
@@ -85,14 +91,18 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 		case {{.Type}}:
 		c := {{.Client}}(new.Namespace)
 		return func() error {
-            log.Infof("pre-deleting {{ .Type }} for %s", new.Name)
+			log.Infof("pre-deleting {{ .Type }} for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return err
+				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
 			}
-            log.Infof("creating new {{ .Type }} for %s", new.Name)
-            _, err = c.Create(new)
-            return err
+			log.Infof("creating new {{ .Type }} for %s", new.Name)
+			_, err = c.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
+			} else {
+				return nil
+			}
 		}
 	{{end}}
 	default:
@@ -106,13 +116,13 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		case {{.Type}}:
 		c := {{.Client}}(new.Namespace)
 		return func() error {
-            log.Infof("creating new {{ .Type }} for %s", new.Name)
-            _, err := c.Create(new)
-            if err != nil && !errors.IsAlreadyExists(err) {
-                return err
-            }
-            return nil
-        }
+			log.Infof("creating new {{ .Type }} for %s", new.Name)
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
+			}
+			return nil
+		}
 	{{end}}
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
@@ -125,11 +135,15 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		case {{.Type}}:
 		c := {{.Client}}(new.Namespace)
 		return func() error {
-            log.Infof("deleting {{ .Type }} for %s", new.Name)
+			log.Infof("deleting {{ .Type }} for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && errors.IsNotFound(err) {
-				return nil
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
 			}
+
 			return err
 		}
 	{{end}}
