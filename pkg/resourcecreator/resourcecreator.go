@@ -7,7 +7,6 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
@@ -56,9 +55,6 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 				bucketAccessControl := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 				ops = append(ops, ResourceOperation{bucketAccessControl, OperationCreateOrUpdate})
-
-				envifedPrefix := strings.ReplaceAll(strings.ToUpper(b.NamePrefix), "-", "_")
-				resourceOptions.AdditionalEnvs[fmt.Sprintf("GCP_BUCKET_%s_NAME", envifedPrefix)] = bucket.Name
 			}
 		}
 

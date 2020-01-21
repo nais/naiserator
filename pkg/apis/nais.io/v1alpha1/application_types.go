@@ -139,7 +139,7 @@ type EnvVarSource struct {
 }
 
 type CloudStorageBucket struct {
-	NamePrefix      string `json:"namePrefix"`
+	Name            string `json:"name"`
 	CascadingDelete bool   `json:"cascadingDelete,omitempty"`
 }
 

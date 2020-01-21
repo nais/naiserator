@@ -344,7 +344,7 @@ func TestCreate(t *testing.T) {
 		app.Spec.GCP = &nais.GCP{
 			Buckets: []nais.CloudStorageBucket{
 				{
-					NamePrefix: "bucket-name",
+					Name: "bucket-name",
 				},
 			},
 		}
@@ -365,22 +365,12 @@ func TestCreate(t *testing.T) {
 
 		// Requesting a bucket creates four separate Google resources.
 		// There must be a connection between Bucket, Bucket IAM Policy, and Google Service Account.
-		assert.True(t, strings.HasPrefix(objects.bucket.Name, app.Spec.GCP.Buckets[0].NamePrefix))
+		assert.True(t, strings.HasPrefix(objects.bucket.Name, app.Spec.GCP.Buckets[0].Name))
 		assert.Equal(t, objects.bucket.Name, objects.bucketAccessControl.Spec.BucketRef.Name)
 		assert.Equal(t, objects.bucket.Spec.Location, resourcecreator.GoogleRegion)
 		assert.Equal(t, objects.googleIAMServiceAccount.Name, entityTokens[0])
 		assert.Equal(t, "nais-foo-1234.iam.gserviceaccount.com", entityTokens[1])
 
-		envKey := "GCP_BUCKET_BUCKET_NAME_NAME"
-		found := false
-		for _, envVar := range objects.deployment.Spec.Template.Spec.Containers[0].Env {
-			if envVar.Name == envKey && strings.HasPrefix(envVar.Value, app.Spec.GCP.Buckets[0].NamePrefix) {
-				found = true
-				break
-			}
-		}
-
-		assert.True(t, found, fmt.Sprintf("did not find key %s with expected value", envKey))
 		assert.Equal(t, "abandon", objects.bucket.Annotations[resourcecreator.GoogleDeletionPolicyAnnotation])
 	})
 

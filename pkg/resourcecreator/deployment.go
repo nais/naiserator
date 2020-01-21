@@ -95,7 +95,6 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	var err error
 
 	podSpec := podSpecBase(app)
-	podSpec = applyAdditionalEnvs(podSpec, resourceOptions.AdditionalEnvs)
 
 	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
 		for _, instance := range app.Spec.GCP.SqlInstances {
@@ -134,17 +133,6 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	return podSpec, err
-}
-
-func applyAdditionalEnvs(podSpec *corev1.PodSpec, envs map[string]string) *corev1.PodSpec {
-	spec := podSpec.DeepCopy()
-	for key, val := range envs {
-		spec.Containers[0].Env = append(spec.Containers[0].Env, corev1.EnvVar{
-			Name:  key,
-			Value: val,
-		})
-	}
-	return spec
 }
 
 func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, projectId string) corev1.Container {

@@ -15,11 +15,11 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.GCP = &v1alpha1.GCP{
 			Buckets: []v1alpha1.CloudStorageBucket{
-				{NamePrefix: bucketname},
+				{Name: bucketname},
 			},
 		}
 		bucket := resourcecreator.GoogleStorageBucket(app, app.Spec.GCP.Buckets[0])
-		assert.Equal(t, "buckowens.myapplicati-mynamespac-w4o5cwa", bucket.Name)
+		assert.Equal(t, "buckowens", bucket.Name)
 		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
 	})
 }

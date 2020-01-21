@@ -10,7 +10,7 @@ import (
 
 func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
 	objectMeta := app.CreateObjectMeta()
-	objectMeta.Name = fmt.Sprintf("%s.%s", bucket.NamePrefix, app.CreateAppNamespaceHash())
+	objectMeta.Name = fmt.Sprintf("%s", bucket.Name)
 
 	if !bucket.CascadingDelete {
 		ApplyAbandonDeletionPolicy(&objectMeta)
