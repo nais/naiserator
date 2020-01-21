@@ -11,7 +11,7 @@ import (
 
 func TestGetGoogleServiceAccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	googleSvcAcc := resourcecreator.GoogleServiceAccount(app)
+	googleSvcAcc := resourcecreator.GoogleIAMServiceAccount(app)
 
 	assert.Equal(t, app.CreateAppNamespaceHash(), googleSvcAcc.Name)
 	assert.Equal(t, resourcecreator.GoogleIAMServiceAccountNamespace, googleSvcAcc.Namespace)

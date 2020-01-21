@@ -18,7 +18,7 @@ const (
 	IstioVirtualServiceTotalWeight    int32 = 100 // The total weight of all routes must equal 100
 	GoogleIAMAPIVersion                     = "iam.cnrm.cloud.google.com/v1beta1"
 	GoogleIAMServiceAccountNamespace        = "serviceaccounts"
-	GoogleStorageAPIVersion                 = "storage.cnrm.cloud.google.com/v1alpha2"
+	GoogleStorageAPIVersion                 = "storage.cnrm.cloud.google.com/v1beta1"
 	GoogleRegion                            = "europe-north1"
 	GoogleDeletionPolicyAnnotation          = "cnrm.cloud.google.com/deletion-policy"
 

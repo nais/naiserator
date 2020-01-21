@@ -8,7 +8,7 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleServiceAccountBinding(app *nais.Application, sa *google_iam_crd.IAMServiceAccount, projectId string) google_iam_crd.IAMPolicy {
+func GoogleIAMPolicy(app *nais.Application, sa *google_iam_crd.IAMServiceAccount, projectId string) google_iam_crd.IAMPolicy {
 	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, app.Namespace, app.Name)
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = GoogleIAMServiceAccountNamespace
