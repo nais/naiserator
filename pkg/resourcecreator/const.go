@@ -21,6 +21,8 @@ const (
 	GoogleStorageAPIVersion                 = "storage.cnrm.cloud.google.com/v1beta1"
 	GoogleRegion                            = "europe-north1"
 	GoogleDeletionPolicyAnnotation          = "cnrm.cloud.google.com/deletion-policy"
+	GoogleDeletionPolicyAbandon             = "abandon"
+	GoogleProjectIdAnnotation               = "cnrm.cloud.google.com/project-id"
 
 	NetworkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0" // The default IP block CIDR for the default allow network policies per app
 

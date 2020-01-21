@@ -13,13 +13,16 @@ func GCPSqlInstanceSecretName(instanceName string) string {
 	return fmt.Sprintf("sqlinstanceuser-%s", instanceName)
 }
 
-func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete bool) *google_sql_crd.SQLUser {
+func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete bool, projectId string) *google_sql_crd.SQLUser {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = app.Name
 
+	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
+
 	if !cascadingDelete {
-		ApplyAbandonDeletionPolicy(&objectMeta)
+		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
+		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
 	}
 
 	casedInstanceName := strings.ReplaceAll(strings.ToUpper(instanceName), "-", "_")

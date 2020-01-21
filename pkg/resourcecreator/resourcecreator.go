@@ -70,14 +70,14 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 					return nil, err
 				}
 
-				instance := GoogleSqlInstance(app, sqlInstance)
+				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleProjectId)
 				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
 
 				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions)
-				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateOrUpdate})
+				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
-				for _, db := range GoogleSqlDatabases(app, sqlInstance) {
-					ops = append(ops, ResourceOperation{db, OperationCreateOrUpdate})
+				for _, db := range GoogleSqlDatabases(app, sqlInstance, resourceOptions.GoogleProjectId) {
+					ops = append(ops, ResourceOperation{db, OperationCreateIfNotExists})
 				}
 
 				key, err := util.Keygen(32)
@@ -89,7 +89,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
 				ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 
-				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete)
+				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, resourceOptions.GoogleProjectId)
 				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 
 				// FIXME: take into account when refactoring default values
@@ -185,9 +185,8 @@ func int32p(i int32) *int32 {
 	return &i
 }
 
-// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
-func ApplyAbandonDeletionPolicy(resource v1.ObjectMetaAccessor) {
+func setAnnotation(resource v1.ObjectMetaAccessor, key, value string) {
 	m := resource.GetObjectMeta().GetAnnotations()
-	m[GoogleDeletionPolicyAnnotation] = "abandon"
+	m[key] = value
 	resource.GetObjectMeta().SetAnnotations(m)
 }

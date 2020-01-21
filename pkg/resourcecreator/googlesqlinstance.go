@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/imdario/mergo"
+
 	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
@@ -19,12 +20,14 @@ const (
 	DefaultSqlInstanceDiskSize   = 10
 )
 
-func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance) *google_sql_crd.SQLInstance {
+func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = instance.Name
+	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
 
 	if !instance.CascadingDelete {
-		ApplyAbandonDeletionPolicy(&objectMeta)
+		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
+		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
 	}
 
 	return &google_sql_crd.SQLInstance{
