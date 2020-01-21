@@ -78,7 +78,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, options ResourceOptions) *google_iam_crd.IAMPolicyMember {
+func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId string) *google_iam_crd.IAMPolicyMember {
 	return &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{
@@ -86,11 +86,10 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, opti
 			APIVersion: GoogleIAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", GcpServiceAccountName(app, options.GoogleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", GcpServiceAccountName(app, googleProjectId)),
 			Role:   "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
-				Name: options.GoogleTeamProjectId,
 			},
 		},
 	}
