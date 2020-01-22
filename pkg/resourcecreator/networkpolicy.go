@@ -37,6 +37,23 @@ func networkPolicyRules(rules []nais.AccessPolicyRule) (networkPolicy []networki
 func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
+	rules = append(rules, networkingv1.NetworkPolicyIngressRule{
+		From: []networkingv1.NetworkPolicyPeer{
+			{
+				PodSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": IstioPrometheusLabelValue,
+					},
+				},
+				NamespaceSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"name": IstioNamespace,
+					},
+				},
+			},
+		},
+	})
+
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
 			From: networkPolicyRules(app.Spec.AccessPolicy.Inbound.Rules),

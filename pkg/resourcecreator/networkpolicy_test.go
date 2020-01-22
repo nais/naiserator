@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	networking "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const accessPolicyApp = "allowedAccessApp"
@@ -25,7 +26,27 @@ func TestNetworkPolicy(t *testing.T) {
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 1)
-		assert.Equal(t, []networking.NetworkPolicyIngressRule{}, networkPolicy.Spec.Ingress)
+
+		testPolicy := make([]networking.NetworkPolicyIngressRule, 0)
+
+		testPolicy = append(testPolicy, networking.NetworkPolicyIngressRule{
+			From: []networking.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "prometheus",
+						},
+					},
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"name": "istio-system",
+						},
+					},
+				},
+			},
+		})
+
+		assert.Equal(t, testPolicy, networkPolicy.Spec.Ingress)
 	})
 
 	t.Run("allowed app in egress rule sets network policy pod selector to allowed app", func(t *testing.T) {
@@ -69,8 +90,8 @@ func TestNetworkPolicy(t *testing.T) {
 		podMatch := map[string]string{"istio": "ingressgateway"}
 		namespaceMatch := map[string]string{"name": "istio-system"}
 
-		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[0].From[0].PodSelector.MatchLabels)
-		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector.MatchLabels)
+		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[1].From[0].PodSelector.MatchLabels)
+		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[1].From[0].NamespaceSelector.MatchLabels)
 	})
 
 	t.Run("specifying ingresses when all traffic is allowed still creates an explicit rule for istio ingress gateway", func(t *testing.T) {
@@ -84,17 +105,28 @@ func TestNetworkPolicy(t *testing.T) {
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 		assert.NotNil(t, networkPolicy)
-		assert.Len(t, networkPolicy.Spec.Ingress, 2)
+		assert.Len(t, networkPolicy.Spec.Ingress, 3)
 		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
 		assert.Len(t, networkPolicy.Spec.Ingress[1].From, 1)
 
-		podMatch := map[string]string{"istio": "ingressgateway"}
-		namespaceMatch := map[string]string{"name": "istio-system"}
-
-		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[1].From[0].PodSelector.MatchLabels)
-		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[1].From[0].NamespaceSelector.MatchLabels)
+		istioPodMatch := map[string]string{"istio": "ingressgateway"}
+		istioNamespaceMatch := map[string]string{"name": "istio-system"}
+		prometheusMatch := map[string]string{"app": "prometheus"}
+		asterix := networking.NetworkPolicyIngressRule{
+			Ports: nil,
+			From: []networking.NetworkPolicyPeer{{
+				PodSelector: &metav1.LabelSelector{},
+				NamespaceSelector: nil,
+				IPBlock: nil,
+			}},
+		}
+		assert.Equal(t, prometheusMatch, networkPolicy.Spec.Ingress[0].From[0].PodSelector.MatchLabels)
+		assert.Equal(t, istioNamespaceMatch, networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector.MatchLabels)
+		assert.Equal(t, asterix,networkPolicy.Spec.Ingress[1])
+		assert.Equal(t, istioPodMatch, networkPolicy.Spec.Ingress[2].From[0].PodSelector.MatchLabels)
+		assert.Equal(t, istioNamespaceMatch, networkPolicy.Spec.Ingress[2].From[0].NamespaceSelector.MatchLabels)
 	})
-	t.Run("all traffic inside namespace sets from rule to to empty podspec", func(t *testing.T) {
+	t.Run("all traffic inside namespace sets from rule to empty podspec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 
 		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais.AccessPolicyRule{Application: "*"})
@@ -106,7 +138,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 		yamlres, err := yaml.Marshal(networkPolicy)
 		assert.NotNil(t, yamlres)
-		assert.Empty(t, networkPolicy.Spec.Ingress[0].From[0].PodSelector)
+		assert.Empty(t, networkPolicy.Spec.Ingress[1].From[0].PodSelector)
 	})
 
 	t.Run("default network policy rule contains egress rules", func(t *testing.T) {
@@ -116,7 +148,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
 		assert.NotNil(t, networkPolicy)
-		assert.Len(t, networkPolicy.Spec.Ingress, 0)
+		assert.Len(t, networkPolicy.Spec.Ingress, 1)
 		assert.Len(t, networkPolicy.Spec.Egress, 1)
 		assert.Len(t, networkPolicy.Spec.Egress[0].To, 4)
 
