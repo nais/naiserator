@@ -4,6 +4,7 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func FluentdSidecar() corev1.Container {
@@ -11,6 +12,12 @@ func FluentdSidecar() corev1.Container {
 		Name:            "secure-logs-fluentd",
 		Image:           viper.GetString(config.SecurelogsFluentdImage),
 		ImagePullPolicy: corev1.PullIfNotPresent,
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("10m"),
+				corev1.ResourceMemory: resource.MustParse("200m"),
+			},
+		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "secure-logs",
@@ -74,6 +81,12 @@ func ConfigmapReloadSidecar() corev1.Container {
 			"--volume-dir=/config",
 			"--webhook-url=http://localhost:24444/api/config.reload",
 			"--webhook-method=GET",
+		},
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("10m"),
+				corev1.ResourceMemory: resource.MustParse("50m"),
+			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
