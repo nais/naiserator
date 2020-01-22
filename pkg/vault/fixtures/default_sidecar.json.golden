@@ -63,7 +63,11 @@
           "value": "/var/run/secrets/nais.io/vault/vault_token"
         }
       ],
-      "resources": {},
+      "resources": {
+        "requests": {
+          "cpu": "10m"
+        }
+      },
       "volumeMounts": [
         {
           "name": "vault-volume",
