@@ -41,17 +41,21 @@ const (
 type Synchronizer struct {
 	workQueue       chan v1alpha1.Application
 	ClientSet       kubernetes.Interface
-	KafkaEnabled    bool
 	AppClient       clientV1Alpha1.Interface
 	ResourceOptions resourcecreator.ResourceOptions
+	Config          Config
 }
 
-func New(clientSet kubernetes.Interface, appClient clientV1Alpha1.Interface, resourceOptions resourcecreator.ResourceOptions, kafkaEnabled bool) *Synchronizer {
+type Config struct {
+	KafkaEnabled bool
+}
+
+func New(clientSet kubernetes.Interface, appClient clientV1Alpha1.Interface, resourceOptions resourcecreator.ResourceOptions, config Config) *Synchronizer {
 	naiserator := Synchronizer{
 		workQueue:       make(chan v1alpha1.Application, 1024),
 		ClientSet:       clientSet,
 		AppClient:       appClient,
-		KafkaEnabled:    kafkaEnabled,
+		Config:          config,
 		ResourceOptions: resourceOptions,
 	}
 
@@ -159,7 +163,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus)
 
-	if n.KafkaEnabled {
+	if n.Config.KafkaEnabled {
 		kafka.Events <- kafka.Message{Event: event, Logger: logger}
 	}
 
@@ -326,7 +330,7 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 			if deploymentComplete(deploy, &deploy.Status) {
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				if n.KafkaEnabled {
+				if n.Config.KafkaEnabled {
 					kafka.Events <- kafka.Message{Event: event, Logger: logger}
 				}
 

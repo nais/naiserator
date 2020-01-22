@@ -2,8 +2,9 @@ package synchronizer_test
 
 import (
 	"fmt"
-	v1 "k8s.io/api/core/v1"
 	"testing"
+
+	"k8s.io/api/core/v1"
 
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	nais_fake "github.com/nais/naiserator/pkg/client/clientset/versioned/fake"
@@ -46,13 +47,14 @@ func TestSynchronizer(t *testing.T) {
 	clientSet := fake.NewSimpleClientset()
 	appClient := nais_fake.NewSimpleClientset()
 	resourceOptions := resourcecreator.NewResourceOptions()
-	kafkaEnabled := false
 
 	syncer := synchronizer.New(
 		clientSet,
 		appClient,
 		resourceOptions,
-		kafkaEnabled,
+		synchronizer.Config{
+			KafkaEnabled: false,
+		},
 	)
 
 	// Store the Application resource in the cluster before testing commences.
@@ -106,13 +108,14 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	appClient := nais_fake.NewSimpleClientset()
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.GoogleProjectId = "something"
-	kafkaEnabled := false
 
 	syncer := synchronizer.New(
 		clientSet,
 		appClient,
 		resourceOptions,
-		kafkaEnabled,
+		synchronizer.Config{
+			KafkaEnabled: false,
+		},
 	)
 
 	// Test that the team project id is fetched from namespace annotation, and used to create the sql proxy sidecar

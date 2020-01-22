@@ -106,11 +106,15 @@ func run() error {
 	applicationClientset := createApplicationClientset(kubeconfig)
 	genericClientset := createGenericClientset(kubeconfig)
 
+	syncerConfig := synchronizer.Config{
+		KafkaEnabled: cfg.Kafka.Enabled,
+	}
+
 	syncer := synchronizer.New(
 		genericClientset,
 		applicationClientset,
 		resourceOptions,
-		cfg.Kafka.Enabled,
+		syncerConfig,
 	)
 
 	inf := informer.New(syncer, applicationInformerFactory)
