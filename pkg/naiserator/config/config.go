@@ -22,6 +22,11 @@ type Informer struct {
 	FullSyncInterval time.Duration `json:"full-sync-interval"`
 }
 
+type Synchronizer struct {
+	RolloutTimeout       time.Duration `json:"rollout-timeout"`
+	RolloutCheckInterval time.Duration `json:"rollout-check-interval"`
+}
+
 type Features struct {
 	AccessPolicy                bool     `json:"access-policy"`
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
@@ -49,6 +54,7 @@ type Vault struct {
 type Config struct {
 	Bind                              string       `json:"bind"`
 	Informer                          Informer     `json:"informer"`
+	Synchronizer                      Synchronizer `json:"synchronizer"`
 	Kubeconfig                        string       `json:"kubeconfig"`
 	ClusterName                       string       `json:"cluster-name"`
 	GoogleProjectId                   string       `json:"google-project-id"`
@@ -61,11 +67,6 @@ type Config struct {
 	Kafka                             kafka.Config `json:"kafka"`
 }
 
-var (
-	// These configuration options should never be printed.
-	redactKeys = []string{}
-)
-
 const (
 	Bind                                = "bind"
 	ClusterName                         = "cluster-name"
@@ -76,6 +77,8 @@ const (
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesVault                       = "features.vault"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
+	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
+	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
 	KubeConfig                          = "kubeconfig"
 	ProxyAddress                        = "proxy.address"
 	ProxyExclude                        = "proxy.exclude"
@@ -113,6 +116,9 @@ func init() {
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 
 	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
+
+	flag.Duration(SynchronizerRolloutCheckInterval, time.Duration(5*time.Second), "how often to check if a deployment has rolled out successfully")
+	flag.Duration(SynchronizerRolloutTimeout, time.Duration(5*time.Minute), "how long to keep checking for a successful deployment rollout")
 
 	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
 	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")

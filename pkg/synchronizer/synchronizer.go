@@ -21,11 +21,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const (
-	DeploymentMonitorFrequency = time.Second * 5
-	DeploymentMonitorTimeout   = time.Minute * 5
-)
-
 // Machine readable event "Reason" fields, used for determining deployment state.
 const (
 	EventSynchronized          = "Synchronized"
@@ -47,7 +42,9 @@ type Synchronizer struct {
 }
 
 type Config struct {
-	KafkaEnabled bool
+	KafkaEnabled               bool
+	DeploymentMonitorFrequency time.Duration
+	DeploymentMonitorTimeout   time.Duration
 }
 
 func New(clientSet kubernetes.Interface, appClient clientV1Alpha1.Interface, resourceOptions resourcecreator.ResourceOptions, config Config) *Synchronizer {
@@ -168,7 +165,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(*app, logger, DeploymentMonitorFrequency, DeploymentMonitorTimeout)
+	go n.MonitorRollout(*app, logger, n.Config.DeploymentMonitorFrequency, n.Config.DeploymentMonitorTimeout)
 }
 
 // Process work queue

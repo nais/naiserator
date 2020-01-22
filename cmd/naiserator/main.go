@@ -107,7 +107,9 @@ func run() error {
 	genericClientset := createGenericClientset(kubeconfig)
 
 	syncerConfig := synchronizer.Config{
-		KafkaEnabled: cfg.Kafka.Enabled,
+		KafkaEnabled:               cfg.Kafka.Enabled,
+		DeploymentMonitorFrequency: cfg.Synchronizer.RolloutCheckInterval,
+		DeploymentMonitorTimeout:   cfg.Synchronizer.RolloutTimeout,
 	}
 
 	syncer := synchronizer.New(
