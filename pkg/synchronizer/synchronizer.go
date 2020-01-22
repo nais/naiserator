@@ -183,7 +183,7 @@ func (n *Synchronizer) Sync(rollout Rollout) (error, bool) {
 	commits := n.ClusterOperations(rollout)
 
 	for _, fn := range commits {
-		if err := fn(); err != nil {
+		if err := observeDuration(fn); err != nil {
 			retry := false
 			// In case of race condition errors
 			if errors.IsConflict(err) {
