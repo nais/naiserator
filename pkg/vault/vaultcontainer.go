@@ -196,7 +196,7 @@ func (c config) createSideCarContainer() corev1.Container {
 		Image:        c.initContainerImage,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("10m"),
+				corev1.ResourceCPU: resource.MustParse("10m"),
 			},
 		},
 		Env: []corev1.EnvVar{
