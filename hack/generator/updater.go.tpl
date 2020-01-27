@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	istioClientSet "istio.io/client-go/pkg/clientset/versioned"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +35,8 @@ import (
 	typed_storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	typed_sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
+	istio_security_v1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	typed_istio_security_v1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/security/v1beta1"
 )
 
 {{range .}}
@@ -66,7 +69,7 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 
 {{end}}
 
-func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
@@ -85,7 +88,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 	}
 }
 
-func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
@@ -110,7 +113,7 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 	}
 }
 
-func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:
@@ -129,7 +132,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	}
 }
 
-func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 	{{range .}}
 		case {{.Type}}:

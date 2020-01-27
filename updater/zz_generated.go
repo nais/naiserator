@@ -18,6 +18,9 @@ import (
 	typed_sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	typed_storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
 	log "github.com/sirupsen/logrus"
+	istio_security_v1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	istioClientSet "istio.io/client-go/pkg/clientset/versioned"
+	typed_istio_security_v1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/security/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -521,7 +524,30 @@ func sqlUser(client typed_sql_cnrm_cloud_google_com_v1beta1.SQLUserInterface, ol
 	}
 }
 
-func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func authorizationPolicy(client typed_istio_security_v1beta1.AuthorizationPolicyInterface, old, new *istio_security_v1beta1.AuthorizationPolicy) func() error {
+	log.Infof("creating or updating *istio_security_v1beta1.AuthorizationPolicy for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "authorizationPolicy", err)
+			}
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		if err != nil {
+			return fmt.Errorf("%s: %s", "authorizationPolicy", err)
+		}
+		return err
+	}
+}
+
+func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -755,12 +781,23 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 		return sqlUser(c, old, new)
 
+	case *istio_security_v1beta1.AuthorizationPolicy:
+		c := istioClient.SecurityV1beta1().AuthorizationPolicies(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return fmt.Errorf("%s: %s", "authorizationPolicy", err) }
+			}
+			return authorizationPolicy(c, nil, new)
+		}
+		return authorizationPolicy(c, old, new)
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
 }
 
-func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -1120,12 +1157,29 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			}
 		}
 
+	case *istio_security_v1beta1.AuthorizationPolicy:
+		c := istioClient.SecurityV1beta1().AuthorizationPolicies(new.Namespace)
+		return func() error {
+			log.Infof("pre-deleting *istio_security_v1beta1.AuthorizationPolicy for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return fmt.Errorf("%s: %s", "authorizationPolicy", err)
+			}
+			log.Infof("creating new *istio_security_v1beta1.AuthorizationPolicy for %s", new.Name)
+			_, err = c.Create(new)
+			if err != nil {
+				return fmt.Errorf("%s: %s", "authorizationPolicy", err)
+			} else {
+				return nil
+			}
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
 }
 
-func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -1359,12 +1413,23 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return nil
 		}
 
+	case *istio_security_v1beta1.AuthorizationPolicy:
+		c := istioClient.SecurityV1beta1().AuthorizationPolicies(new.Namespace)
+		return func() error {
+			log.Infof("creating new *istio_security_v1beta1.AuthorizationPolicy for %s", new.Name)
+			_, err := c.Create(new)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				return fmt.Errorf("%s: %s", "authorizationPolicy", err)
+			}
+			return nil
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
 }
 
-func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, resource runtime.Object) func() error {
+func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
 	case *corev1.Service:
@@ -1677,6 +1742,21 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 					return nil
 				}
 				return fmt.Errorf("%s: %s", "sqlUser", err)
+			}
+
+			return err
+		}
+
+	case *istio_security_v1beta1.AuthorizationPolicy:
+		c := istioClient.SecurityV1beta1().AuthorizationPolicies(new.Namespace)
+		return func() error {
+			log.Infof("deleting *istio_security_v1beta1.AuthorizationPolicy for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("%s: %s", "authorizationPolicy", err)
 			}
 
 			return err

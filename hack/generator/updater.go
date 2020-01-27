@@ -143,6 +143,12 @@ var i = []Service{
 		Type:      "*sql_cnrm_cloud_google_com_v1beta1.SQLUser",
 		Client:    "customClient.SqlV1beta1().SQLUsers",
 	},
+	{
+		Name:      "authorizationPolicy",
+		Interface: "typed_istio_security_v1beta1.AuthorizationPolicyInterface",
+		Type:      "*istio_security_v1beta1.AuthorizationPolicy",
+		Client:    "istioClient.SecurityV1beta1().AuthorizationPolicies",
+	},
 }
 
 func main() {

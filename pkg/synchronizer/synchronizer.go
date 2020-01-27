@@ -7,6 +7,7 @@ import (
 
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
+	istioClient "istio.io/client-go/pkg/clientset/versioned"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
@@ -37,6 +38,7 @@ type Synchronizer struct {
 	workQueue       chan v1alpha1.Application
 	ClientSet       kubernetes.Interface
 	AppClient       clientV1Alpha1.Interface
+	IstioClient     istioClient.Interface
 	ResourceOptions resourcecreator.ResourceOptions
 	Config          Config
 }
@@ -47,11 +49,12 @@ type Config struct {
 	DeploymentMonitorTimeout   time.Duration
 }
 
-func New(clientSet kubernetes.Interface, appClient clientV1Alpha1.Interface, resourceOptions resourcecreator.ResourceOptions, config Config) *Synchronizer {
+func New(clientSet kubernetes.Interface, appClient clientV1Alpha1.Interface, istioClient istioClient.Interface, resourceOptions resourcecreator.ResourceOptions, config Config) *Synchronizer {
 	naiserator := Synchronizer{
 		workQueue:       make(chan v1alpha1.Application, 1024),
 		ClientSet:       clientSet,
 		AppClient:       appClient,
+		IstioClient:     istioClient,
 		Config:          config,
 		ResourceOptions: resourceOptions,
 	}
@@ -275,13 +278,13 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 	for _, rop := range rollout.ResourceOperations {
 		switch rop.Operation {
 		case resourcecreator.OperationCreateOrUpdate:
-			fn = updater.CreateOrUpdate(n.ClientSet, n.AppClient, rop.Resource)
+			fn = updater.CreateOrUpdate(n.ClientSet, n.AppClient, n.IstioClient, rop.Resource)
 		case resourcecreator.OperationCreateOrRecreate:
-			fn = updater.CreateOrRecreate(n.ClientSet, n.AppClient, rop.Resource)
+			fn = updater.CreateOrRecreate(n.ClientSet, n.AppClient, n.IstioClient, rop.Resource)
 		case resourcecreator.OperationCreateIfNotExists:
-			fn = updater.CreateIfNotExists(n.ClientSet, n.AppClient, rop.Resource)
+			fn = updater.CreateIfNotExists(n.ClientSet, n.AppClient, n.IstioClient, rop.Resource)
 		case resourcecreator.OperationDeleteIfExists:
-			fn = updater.DeleteIfExists(n.ClientSet, n.AppClient, rop.Resource)
+			fn = updater.DeleteIfExists(n.ClientSet, n.AppClient, n.IstioClient, rop.Resource)
 		default:
 			log.Fatalf("BUG: no such operation %d", rop.Operation)
 		}
