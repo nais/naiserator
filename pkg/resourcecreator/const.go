@@ -6,6 +6,7 @@ const (
 	NaisAppImageEnv    = "NAIS_APP_IMAGE"
 	NaisClusterNameEnv = "NAIS_CLUSTER_NAME"
 
+	IstioAuthorizationPolicyVersion			= "security.istio.io/v1beta1"			 // API version of the AP resource
 	IstioNetworkingAPIVersion               = "networking.istio.io/v1alpha3"         // API version of the Networking resources
 	IstioRBACAPIVersion                     = "rbac.istio.io/v1alpha1"               // API version of the RBAC resources
 	IstioIngressGatewayLabelValue           = "ingressgateway"                       // Label value denoting the ingress gateway pod selector
