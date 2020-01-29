@@ -12,7 +12,6 @@ import (
 	internalinterfaces "github.com/nais/naiserator/pkg/client/informers/externalversions/internalinterfaces"
 	naisio "github.com/nais/naiserator/pkg/client/informers/externalversions/nais.io"
 	networkingistioio "github.com/nais/naiserator/pkg/client/informers/externalversions/networking.istio.io"
-	rbacistioio "github.com/nais/naiserator/pkg/client/informers/externalversions/rbac.istio.io"
 	sqlcnrmcloudgooglecom "github.com/nais/naiserator/pkg/client/informers/externalversions/sql.cnrm.cloud.google.com"
 	storagecnrmcloudgooglecom "github.com/nais/naiserator/pkg/client/informers/externalversions/storage.cnrm.cloud.google.com"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -164,7 +163,6 @@ type SharedInformerFactory interface {
 	Iam() iamcnrmcloudgooglecom.Interface
 	Naiserator() naisio.Interface
 	Networking() networkingistioio.Interface
-	Rbac() rbacistioio.Interface
 	Sql() sqlcnrmcloudgooglecom.Interface
 	Storage() storagecnrmcloudgooglecom.Interface
 }
@@ -179,10 +177,6 @@ func (f *sharedInformerFactory) Naiserator() naisio.Interface {
 
 func (f *sharedInformerFactory) Networking() networkingistioio.Interface {
 	return networkingistioio.New(f, f.namespace, f.tweakListOptions)
-}
-
-func (f *sharedInformerFactory) Rbac() rbacistioio.Interface {
-	return rbacistioio.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Sql() sqlcnrmcloudgooglecom.Interface {

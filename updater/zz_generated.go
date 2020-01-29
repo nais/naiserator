@@ -8,13 +8,11 @@ import (
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
-	"github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	typed_iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
-	istio_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	typed_sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	typed_storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
 	log "github.com/sirupsen/logrus"
@@ -197,52 +195,6 @@ func networkPolicy(client typed_networking_v1.NetworkPolicyInterface, old, new *
 		_, err := client.Update(new)
 		if err != nil {
 			return fmt.Errorf("%s: %s", "networkPolicy", err)
-		}
-		return err
-	}
-}
-
-func serviceRole(client istio_v1alpha1.ServiceRoleInterface, old, new *v1alpha1.ServiceRole) func() error {
-	log.Infof("creating or updating *v1alpha1.ServiceRole for %s", new.Name)
-	if old == nil {
-		return func() error {
-			_, err := client.Create(new)
-			if err != nil {
-				return fmt.Errorf("%s: %s", "serviceRole", err)
-			}
-			return err
-		}
-	}
-
-	CopyMeta(old, new)
-
-	return func() error {
-		_, err := client.Update(new)
-		if err != nil {
-			return fmt.Errorf("%s: %s", "serviceRole", err)
-		}
-		return err
-	}
-}
-
-func serviceRoleBinding(client istio_v1alpha1.ServiceRoleBindingInterface, old, new *v1alpha1.ServiceRoleBinding) func() error {
-	log.Infof("creating or updating *v1alpha1.ServiceRoleBinding for %s", new.Name)
-	if old == nil {
-		return func() error {
-			_, err := client.Create(new)
-			if err != nil {
-				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
-			}
-			return err
-		}
-	}
-
-	CopyMeta(old, new)
-
-	return func() error {
-		_, err := client.Update(new)
-		if err != nil {
-			return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
 		}
 		return err
 	}
@@ -627,28 +579,6 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 		return networkPolicy(c, old, new)
 
-	case *v1alpha1.ServiceRole:
-		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
-		old, err := c.Get(new.Name, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return func() error { return fmt.Errorf("%s: %s", "serviceRole", err) }
-			}
-			return serviceRole(c, nil, new)
-		}
-		return serviceRole(c, old, new)
-
-	case *v1alpha1.ServiceRoleBinding:
-		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
-		old, err := c.Get(new.Name, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return func() error { return fmt.Errorf("%s: %s", "serviceRoleBinding", err) }
-			}
-			return serviceRoleBinding(c, nil, new)
-		}
-		return serviceRoleBinding(c, old, new)
-
 	case *networking_istio_io_v1alpha3.VirtualService:
 		c := customClient.NetworkingV1alpha3().VirtualServices(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
@@ -914,40 +844,6 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			_, err = c.Create(new)
 			if err != nil {
 				return fmt.Errorf("%s: %s", "networkPolicy", err)
-			} else {
-				return nil
-			}
-		}
-
-	case *v1alpha1.ServiceRole:
-		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
-		return func() error {
-			log.Infof("pre-deleting *v1alpha1.ServiceRole for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && !errors.IsNotFound(err) {
-				return fmt.Errorf("%s: %s", "serviceRole", err)
-			}
-			log.Infof("creating new *v1alpha1.ServiceRole for %s", new.Name)
-			_, err = c.Create(new)
-			if err != nil {
-				return fmt.Errorf("%s: %s", "serviceRole", err)
-			} else {
-				return nil
-			}
-		}
-
-	case *v1alpha1.ServiceRoleBinding:
-		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
-		return func() error {
-			log.Infof("pre-deleting *v1alpha1.ServiceRoleBinding for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil && !errors.IsNotFound(err) {
-				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
-			}
-			log.Infof("creating new *v1alpha1.ServiceRoleBinding for %s", new.Name)
-			_, err = c.Create(new)
-			if err != nil {
-				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
 			} else {
 				return nil
 			}
@@ -1259,28 +1155,6 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return nil
 		}
 
-	case *v1alpha1.ServiceRole:
-		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
-		return func() error {
-			log.Infof("creating new *v1alpha1.ServiceRole for %s", new.Name)
-			_, err := c.Create(new)
-			if err != nil && !errors.IsAlreadyExists(err) {
-				return fmt.Errorf("%s: %s", "serviceRole", err)
-			}
-			return nil
-		}
-
-	case *v1alpha1.ServiceRoleBinding:
-		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
-		return func() error {
-			log.Infof("creating new *v1alpha1.ServiceRoleBinding for %s", new.Name)
-			_, err := c.Create(new)
-			if err != nil && !errors.IsAlreadyExists(err) {
-				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
-			}
-			return nil
-		}
-
 	case *networking_istio_io_v1alpha3.VirtualService:
 		c := customClient.NetworkingV1alpha3().VirtualServices(new.Namespace)
 		return func() error {
@@ -1532,36 +1406,6 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 					return nil
 				}
 				return fmt.Errorf("%s: %s", "networkPolicy", err)
-			}
-
-			return err
-		}
-
-	case *v1alpha1.ServiceRole:
-		c := customClient.RbacV1alpha1().ServiceRoles(new.Namespace)
-		return func() error {
-			log.Infof("deleting *v1alpha1.ServiceRole for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil {
-				if errors.IsNotFound(err) {
-					return nil
-				}
-				return fmt.Errorf("%s: %s", "serviceRole", err)
-			}
-
-			return err
-		}
-
-	case *v1alpha1.ServiceRoleBinding:
-		c := customClient.RbacV1alpha1().ServiceRoleBindings(new.Namespace)
-		return func() error {
-			log.Infof("deleting *v1alpha1.ServiceRoleBinding for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil {
-				if errors.IsNotFound(err) {
-					return nil
-				}
-				return fmt.Errorf("%s: %s", "serviceRoleBinding", err)
 			}
 
 			return err

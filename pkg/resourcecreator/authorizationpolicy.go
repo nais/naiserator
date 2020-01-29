@@ -12,6 +12,7 @@ import (
 
 func AuthorizationPolicy(app *nais.Application) *istio_security_client.AuthorizationPolicy {
 	objectMeta := app.CreateObjectMeta()
+
 	return &istio_security_client.AuthorizationPolicy{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "AuthorizationPolicy",
@@ -42,31 +43,29 @@ func AuthorizationPolicy(app *nais.Application) *istio_security_client.Authoriza
 func createFromRules(app *nais.Application) []*istio.Rule_From {
 	var rulesFrom []*istio.Rule_From
 
+	if len(app.Spec.Ingresses) > 0 {
+		tmp := istio.Rule_From{
+			Source: &istio.Source{
+				Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioIngressGatewayServiceAccount)},
+			},
+		}
+		rulesFrom = append(rulesFrom, &tmp)
+	}
+
 	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {
+		var namespace string
+		if rule.Namespace == "" {
+			namespace = app.Namespace
+		} else {
+			namespace = rule.Namespace
+		}
 		var tmp istio.Rule_From
 		tmp = istio.Rule_From{
 			Source: &istio.Source{
-				Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", rule.Namespace, rule.Application)},
-				Namespaces: []string{rule.Namespace},
+				Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)},
 			},
 		}
 		rulesFrom = append(rulesFrom, &tmp)
 	}
 	return rulesFrom
 }
-
-// func createToRules(app *nais.Application) []*istio.Rule_To {
-//	var rulesTo []*istio.Rule_To
-//
-//	for _, rule := range app.Spec.AccessPolicy.Outbound.Rules {
-//		var tmp istio.Rule_To
-//		tmp = istio.Rule_To{
-//			Operation: &istio.Operation{
-//				Methods: []string{"*"},
-//				Paths:   []string{"*"},
-//			},
-//		}
-//		rulesTo = append(rulesTo, &tmp)
-//	}
-//	return rulesTo
-// }
