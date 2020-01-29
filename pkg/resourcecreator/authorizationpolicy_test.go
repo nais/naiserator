@@ -38,7 +38,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 		authorizationPolicy := resourcecreator.AuthorizationPolicy(app)
 		assert.NotNil(t, authorizationPolicy)
 		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", resourcecreator.IstioNamespace, resourcecreator.IstioIngressGatewayServiceAccount), authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
-		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
+		assert.Len(t, authorizationPolicy.Spec.Rules, 2)
 		assert.Len(t, authorizationPolicy.Spec.Rules[0].From, 1)
 		assert.Len(t, authorizationPolicy.Spec.Rules[0].From[0].Source.Principals, 1)
 		assert.Nil(t, authorizationPolicy.Spec.Rules[0].From[0].Source.Namespaces)
@@ -51,7 +51,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 		assert.NotNil(t, authorizationPolicy)
 		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", resourcecreator.IstioNamespace, resourcecreator.IstioIngressGatewayServiceAccount), authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
 		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", otherNamespace, otherApplication), authorizationPolicy.Spec.Rules[0].From[1].Source.Principals[0])
-		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
+		assert.Len(t, authorizationPolicy.Spec.Rules, 2)
 		assert.Len(t, authorizationPolicy.Spec.Rules[0].From, 3)
 	})
 	t.Run("auth policy for app with multiple ingresses and policy", func(t *testing.T) {
@@ -62,7 +62,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 		assert.NotNil(t, authorizationPolicy)
 		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", resourcecreator.IstioNamespace, resourcecreator.IstioIngressGatewayServiceAccount), authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
 		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", otherNamespace, otherApplication), authorizationPolicy.Spec.Rules[0].From[1].Source.Principals[0])
-		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
+		assert.Len(t, authorizationPolicy.Spec.Rules, 2)
 		assert.Len(t, authorizationPolicy.Spec.Rules[0].From, 3)
 	})
 }

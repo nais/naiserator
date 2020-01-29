@@ -35,6 +35,22 @@ func AuthorizationPolicy(app *nais.Application) *istio_security_client.Authoriza
 						},
 					},
 				},
+				&istio.Rule{
+					From: []*istio.Rule_From{
+						&istio.Rule_From{
+							Source: &istio.Source{
+								Namespaces: []string{IstioNamespace},
+							},
+						},
+					},
+					To: []*istio.Rule_To{
+						{
+							Operation: &istio.Operation{
+								Ports: []string{IstioPrometheusPort},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -69,3 +85,42 @@ func createFromRules(app *nais.Application) []*istio.Rule_From {
 	}
 	return rulesFrom
 }
+
+// apiVersion: security.istio.io/v1beta1
+// kind: AuthorizationPolicy
+// metadata:
+//  annotations:
+//    kubectl.kubernetes.io/last-applied-configuration: |
+//      {"apiVersion":"security.istio.io/v1beta1","kind":"AuthorizationPolicy","metadata":{"annotations":{},"creationTimestamp":"2020-01-29T12:49:11Z","generation":1,"labels":{"app":"testapp-a","team":"aura"},"name":"testapp-a","namespace":"aura"},"spec":{"rules":[{"from":[{"source":{"namespace":["istio-system"]}}],"to":[{"operation":null,"ports":["15090"]}]},{"from":[{"source":{"principals":["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]}}],"to":[{"operation":{"methods":["*"],"paths":["*"]}}]}],"selector":{"matchLabels":{"app":"a"}}}}
+//  creationTimestamp: "2020-01-29T13:28:56Z"
+//  generation: 2
+//  labels:
+//    app: testapp-a
+//    team: aura
+//  name: testapp-a
+//  namespace: aura
+//  resourceVersion: "45430668"
+//  selfLink: /apis/security.istio.io/v1beta1/namespaces/aura/authorizationpolicies/testapp-a
+//  uid: 2a5f909b-d579-4014-8711-656fd51cea75
+// spec:
+//  rules:
+//  - from:
+//    - source:
+//        namespace:
+//        - istio-system
+//    to:
+//    - ports:
+//      - "15090"
+//  - from:
+//    - source:
+//        principals:
+//        - cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account
+//    to:
+//    - operation:
+//        methods:
+//        - '*'
+//        paths:
+//        - '*'
+//  selector:
+//    matchLabels:
+//      app: a
