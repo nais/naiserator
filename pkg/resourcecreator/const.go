@@ -6,14 +6,13 @@ const (
 	NaisAppImageEnv    = "NAIS_APP_IMAGE"
 	NaisClusterNameEnv = "NAIS_CLUSTER_NAME"
 
-	IstioAuthorizationPolicyVersion			= "security.istio.io/v1beta1"			 // API version of the AP resource
-	IstioNetworkingAPIVersion               = "networking.istio.io/v1alpha3"         // API version of the Networking resources
-	IstioIngressGatewayLabelValue           = "ingressgateway"                       // Label value denoting the ingress gateway pod selector
-	IstioPrometheusLabelValue               = "prometheus"                           // Label value denoting the promethues pod-selector
-	IstioPrometheusPort						= "15090"
+	IstioAuthorizationPolicyVersion         = "security.istio.io/v1beta1"    // API version of the AP resource
+	IstioNetworkingAPIVersion               = "networking.istio.io/v1alpha3" // API version of the Networking resources
+	IstioIngressGatewayLabelValue           = "ingressgateway"               // Label value denoting the ingress gateway pod selector
+	IstioPrometheusLabelValue               = "prometheus"                   // Label value denoting the promethues pod-selector
+	IstioPrometheusPort                     = "15090"
 	IstioIngressGatewayServiceAccount       = "istio-ingressgateway-service-account" // Service account name that Istio ingress gateway is running as
 	IstioNamespace                          = "istio-system"                         // Which namespace Istio is installed in
-	IstioPrometheusServiceAccount           = "istio-prometheus-service-account"     // Service account name that Prometheus is running as
 	IstioServiceEntryLocationExternal       = "MESH_EXTERNAL"                        // Service entries external to the cluster
 	IstioServiceEntryResolutionDNS          = "DNS"                                  // Service entry lookup type
 	IstioGatewayPrefix                      = "istio-system/ingress-gateway-%s"

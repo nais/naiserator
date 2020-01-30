@@ -12,6 +12,17 @@ import (
 
 func AuthorizationPolicy(app *nais.Application) *istio_security_client.AuthorizationPolicy {
 	objectMeta := app.CreateObjectMeta()
+	var rules []*istio.Rule
+
+	rules = append(rules, createRuleForPrometheus())
+
+	if len(app.Spec.Ingresses) > 0 {
+		rules = append(rules, createRuleForIngressGateway())
+	}
+
+	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
+		rules = append(rules, createAccessPolicyPrincipals(app))
+	}
 
 	return &istio_security_client.AuthorizationPolicy{
 		TypeMeta: k8s_meta.TypeMeta{
@@ -23,50 +34,52 @@ func AuthorizationPolicy(app *nais.Application) *istio_security_client.Authoriza
 			Selector: &v1beta1.WorkloadSelector{
 				MatchLabels: map[string]string{"app": app.Name},
 			},
-			Rules: []*istio.Rule{
-				&istio.Rule{
-					From: createFromRules(app),
-					To: []*istio.Rule_To{
-						{
-							Operation: &istio.Operation{
-								Methods: []string{"*"},
-								Paths:   []string{"*"},
-							},
-						},
-					},
+			Rules: rules,
+		},
+	}
+}
+
+func createRuleForIngressGateway() *istio.Rule {
+	return &istio.Rule{
+		From: []*istio.Rule_From{
+			&istio.Rule_From{
+				Source: &istio.Source{
+					Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioIngressGatewayServiceAccount)},
 				},
-				&istio.Rule{
-					From: []*istio.Rule_From{
-						&istio.Rule_From{
-							Source: &istio.Source{
-								Namespaces: []string{IstioNamespace},
-							},
-						},
-					},
-					To: []*istio.Rule_To{
-						{
-							Operation: &istio.Operation{
-								Ports: []string{IstioPrometheusPort},
-							},
-						},
-					},
+			},
+		},
+		To: []*istio.Rule_To{
+			{
+				Operation: &istio.Operation{
+					Methods: []string{"*"},
+					Paths:   []string{"*"},
 				},
 			},
 		},
 	}
 }
 
-func createFromRules(app *nais.Application) []*istio.Rule_From {
-	var rulesFrom []*istio.Rule_From
-
-	if len(app.Spec.Ingresses) > 0 {
-		tmp := istio.Rule_From{
-			Source: &istio.Source{
-				Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioIngressGatewayServiceAccount)},
+func createRuleForPrometheus() *istio.Rule {
+	return &istio.Rule{
+		From: []*istio.Rule_From{
+			&istio.Rule_From{
+				Source: &istio.Source{
+					Namespaces: []string{IstioNamespace},
+				},
 			},
-		}
-		rulesFrom = append(rulesFrom, &tmp)
+		},
+		To: []*istio.Rule_To{
+			{
+				Operation: &istio.Operation{
+					Ports: []string{IstioPrometheusPort},
+				},
+			},
+		},
 	}
+}
+
+func createAccessPolicyPrincipals(app *nais.Application) *istio.Rule {
+	var principals []string
 
 	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {
 		var namespace string
@@ -75,52 +88,25 @@ func createFromRules(app *nais.Application) []*istio.Rule_From {
 		} else {
 			namespace = rule.Namespace
 		}
-		var tmp istio.Rule_From
-		tmp = istio.Rule_From{
-			Source: &istio.Source{
-				Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)},
-			},
-		}
-		rulesFrom = append(rulesFrom, &tmp)
+		tmp := fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)
+		principals = append(principals, tmp)
 	}
-	return rulesFrom
-}
 
-// apiVersion: security.istio.io/v1beta1
-// kind: AuthorizationPolicy
-// metadata:
-//  annotations:
-//    kubectl.kubernetes.io/last-applied-configuration: |
-//      {"apiVersion":"security.istio.io/v1beta1","kind":"AuthorizationPolicy","metadata":{"annotations":{},"creationTimestamp":"2020-01-29T12:49:11Z","generation":1,"labels":{"app":"testapp-a","team":"aura"},"name":"testapp-a","namespace":"aura"},"spec":{"rules":[{"from":[{"source":{"namespace":["istio-system"]}}],"to":[{"operation":null,"ports":["15090"]}]},{"from":[{"source":{"principals":["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]}}],"to":[{"operation":{"methods":["*"],"paths":["*"]}}]}],"selector":{"matchLabels":{"app":"a"}}}}
-//  creationTimestamp: "2020-01-29T13:28:56Z"
-//  generation: 2
-//  labels:
-//    app: testapp-a
-//    team: aura
-//  name: testapp-a
-//  namespace: aura
-//  resourceVersion: "45430668"
-//  selfLink: /apis/security.istio.io/v1beta1/namespaces/aura/authorizationpolicies/testapp-a
-//  uid: 2a5f909b-d579-4014-8711-656fd51cea75
-// spec:
-//  rules:
-//  - from:
-//    - source:
-//        namespace:
-//        - istio-system
-//    to:
-//    - ports:
-//      - "15090"
-//  - from:
-//    - source:
-//        principals:
-//        - cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account
-//    to:
-//    - operation:
-//        methods:
-//        - '*'
-//        paths:
-//        - '*'
-//  selector:
-//    matchLabels:
-//      app: a
+	return &istio.Rule{
+		From: []*istio.Rule_From{
+			&istio.Rule_From{
+				Source: &istio.Source{
+					Principals: principals,
+				},
+			},
+		},
+		To: []*istio.Rule_To{
+			{
+				Operation: &istio.Operation{
+					Methods: []string{"*"},
+					Paths:   []string{"*"},
+				},
+			},
+		},
+	}
+}
