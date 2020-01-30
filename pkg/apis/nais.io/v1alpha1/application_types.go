@@ -179,7 +179,7 @@ type CloudSqlInstance struct {
 	DiskSize       int  `json:"diskSize,omitempty"`
 	DiskAutoresize bool `json:"diskAutore:wsize,omitempty"`
 	// +kubebuilder:validation:Pattern="[0-9]{2}:00"
-	AutoBackupTime string `json:"autoBackup,omitempty"`
+	AutoBackupTime string `json:"autoBackupTime,omitempty"`
 	// +kubebuilder:validation:Required
 	Databases       []CloudSqlDatabase `json:"databases,omitempty"`
 	CascadingDelete bool               `json:"cascadingDelete,omitempty"`

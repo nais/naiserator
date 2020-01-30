@@ -41,7 +41,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 			Region:          GoogleRegion,
 			Settings: google_sql_crd.SQLInstanceSettings{
 				AvailabilityType:    availabilityType(instance.HighAvailability),
-				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{},
+				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{Enabled: true, StartTime: instance.AutoBackupTime},
 				DiskAutoresize:      instance.DiskAutoresize,
 				DiskSize:            instance.DiskSize,
 				DiskType:            instance.DiskType.GoogleType(),
