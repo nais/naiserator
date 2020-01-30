@@ -14,6 +14,7 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	istio "istio.io/client-go/pkg/apis/security/v1beta1"
+	istio_security_client "istio.io/client-go/pkg/apis/security/v1beta1"
 	"k8s.io/api/apps/v1"
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
@@ -33,8 +34,6 @@ type realObjects struct {
 	secret              *core.Secret
 	service             *core.Service
 	serviceAccount      *core.ServiceAccount
-	//serviceRoleBindings     []*istio_rbac_crd.ServiceRoleBinding
-	//serviceRoles            []*istio_rbac_crd.ServiceRole
 	sqlDatabase             *google_sql_crd.SQLDatabase
 	sqlInstance             *google_sql_crd.SQLInstance
 	sqlUser                 *google_sql_crd.SQLUser
@@ -63,10 +62,6 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.ingress = v
 		case *networking.NetworkPolicy:
 			o.networkPolicy = v
-		//case *istio_rbac_crd.ServiceRole:
-		//	o.serviceRoles = append(o.serviceRoles, v)
-		//case *istio_rbac_crd.ServiceRoleBinding:
-		//	o.serviceRoleBindings = append(o.serviceRoleBindings, v)
 		case *istio.AuthorizationPolicy:
 			o.authorizationPolicy = v
 		case *istio_networking_crd.VirtualService:
@@ -242,7 +237,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.Equal(t, "cluster.local/ns/othernamespace/sa/otherapp", objects.authorizationPolicy.Spec.Rules[1].From[0].Source.Principals[0])
+		assert.Equal(t, "cluster.local/ns/othernamespace/sa/otherapp", objects.authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
 	})
 
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
@@ -279,33 +274,33 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.networkPolicy)
 		assert.NotEmpty(t, objects.networkPolicy.Spec.Egress)
 	})
-	// TODO
-	//t.Run("omitting ingresses denies traffic from istio ingress gateway", func(t *testing.T) {
-	//	app := fixtures.MinimalApplication()
-	//	err := nais.ApplyDefaults(app)
-	//	assert.NoError(t, err)
 
-	//	opts := resourcecreator.NewResourceOptions()
-	//	opts.AccessPolicy = true
+	t.Run("omitting ingresses denies traffic from istio ingress gateway", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
 
-	//	resources, err := resourcecreator.Create(app, opts)
-	//	assert.NoError(t, err)
+		opts := resourcecreator.NewResourceOptions()
+		opts.AccessPolicy = true
 
-	//	deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
-	//	numDeletes := 0
-	//	for _, resource := range deletes {
-	//		switch x := resource.Resource.(type) {
-	//		case *istio_rbac_crd.ServiceRoleBinding:
-	//			if x.GetName() == "myapplication" {
-	//				numDeletes++
-	//			}
-	//		}
-	//	}
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
 
-	//	if numDeletes != 1 {
-	//		t.Fail()
-	//	}
-	//})
+		deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
+		numDeletes := 0
+		for _, resource := range deletes {
+			switch x := resource.Resource.(type) {
+			case *istio_security_client.AuthorizationPolicy:
+				if x.GetName() == "myapplication" {
+					numDeletes++
+				}
+			}
+		}
+
+		if numDeletes != 1 {
+			t.Fail()
+		}
+	})
 
 	t.Run("google service account, bucket, and bucket policy resources are coherent", func(t *testing.T) {
 		app := fixtures.MinimalApplication()

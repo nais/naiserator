@@ -114,12 +114,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			ops = append(ops, ResourceOperation{vs, operation})
 		}
 
-		// Applies to ServiceRoles and ServiceRoleBindings
+		// Applies to Authorization policies
 		operation = OperationCreateOrUpdate
 		if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
 			operation = OperationDeleteIfExists
 		}
-
 		authorizationPolicy := AuthorizationPolicy(app)
 		if authorizationPolicy != nil {
 			ops = append(ops, ResourceOperation{authorizationPolicy, operation})

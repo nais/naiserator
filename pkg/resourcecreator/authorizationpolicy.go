@@ -13,15 +13,12 @@ import (
 func AuthorizationPolicy(app *nais.Application) *istio_security_client.AuthorizationPolicy {
 	objectMeta := app.CreateObjectMeta()
 	var rules []*istio.Rule
-
-	rules = append(rules, createRuleForPrometheus())
-
 	if len(app.Spec.Ingresses) > 0 {
-		rules = append(rules, createRuleForIngressGateway())
+		rules = append(rules, ingressGatewayRule())
 	}
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
-		rules = append(rules, createAccessPolicyPrincipals(app))
+		rules = append(rules, accessPolicyRules(app))
 	}
 
 	return &istio_security_client.AuthorizationPolicy{
@@ -39,7 +36,7 @@ func AuthorizationPolicy(app *nais.Application) *istio_security_client.Authoriza
 	}
 }
 
-func createRuleForIngressGateway() *istio.Rule {
+func ingressGatewayRule() *istio.Rule {
 	return &istio.Rule{
 		From: []*istio.Rule_From{
 			&istio.Rule_From{
@@ -49,7 +46,7 @@ func createRuleForIngressGateway() *istio.Rule {
 			},
 		},
 		To: []*istio.Rule_To{
-			{
+			&istio.Rule_To{
 				Operation: &istio.Operation{
 					Methods: []string{"*"},
 					Paths:   []string{"*"},
@@ -59,26 +56,7 @@ func createRuleForIngressGateway() *istio.Rule {
 	}
 }
 
-func createRuleForPrometheus() *istio.Rule {
-	return &istio.Rule{
-		From: []*istio.Rule_From{
-			&istio.Rule_From{
-				Source: &istio.Source{
-					Namespaces: []string{IstioNamespace},
-				},
-			},
-		},
-		To: []*istio.Rule_To{
-			{
-				Operation: &istio.Operation{
-					Ports: []string{IstioPrometheusPort},
-				},
-			},
-		},
-	}
-}
-
-func createAccessPolicyPrincipals(app *nais.Application) *istio.Rule {
+func accessPolicyRules(app *nais.Application) *istio.Rule {
 	var principals []string
 
 	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {
@@ -101,7 +79,7 @@ func createAccessPolicyPrincipals(app *nais.Application) *istio.Rule {
 			},
 		},
 		To: []*istio.Rule_To{
-			{
+			&istio.Rule_To{
 				Operation: &istio.Operation{
 					Methods: []string{"*"},
 					Paths:   []string{"*"},
