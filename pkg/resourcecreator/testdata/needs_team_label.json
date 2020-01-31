@@ -1,0 +1,19 @@
+{
+  "config": {
+    "description": "vanilla minimal application"
+  },
+  "input": {
+    "kind": "Application",
+    "apiVersion": "v1alpha1",
+    "metadata": {
+      "name": "myapplication",
+      "labels": {
+        "team": "myteam"
+      }
+    }
+  },
+  "output": [
+    {
+    }
+  ]
+}
