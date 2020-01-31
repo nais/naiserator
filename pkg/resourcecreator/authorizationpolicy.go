@@ -57,24 +57,11 @@ func ingressGatewayRule() *istio.Rule {
 }
 
 func accessPolicyRules(app *nais.Application) *istio.Rule {
-	var principals []string
-
-	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {
-		var namespace string
-		if rule.Namespace == "" {
-			namespace = app.Namespace
-		} else {
-			namespace = rule.Namespace
-		}
-		tmp := fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)
-		principals = append(principals, tmp)
-	}
-
 	return &istio.Rule{
 		From: []*istio.Rule_From{
 			&istio.Rule_From{
 				Source: &istio.Source{
-					Principals: principals,
+					Principals: getPrincipals(app),
 				},
 			},
 		},
@@ -87,4 +74,20 @@ func accessPolicyRules(app *nais.Application) *istio.Rule {
 			},
 		},
 	}
+}
+
+func getPrincipals(app *nais.Application) []string {
+	var principals []string
+
+	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {
+		var namespace string
+		if rule.Namespace == "" {
+			namespace = app.Namespace
+		} else {
+			namespace = rule.Namespace
+		}
+		tmp := fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)
+		principals = append(principals, tmp)
+	}
+	return principals
 }
