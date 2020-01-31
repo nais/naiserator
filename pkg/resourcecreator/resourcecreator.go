@@ -70,7 +70,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 					return nil, err
 				}
 
-				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleProjectId)
+				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
 
 				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId)

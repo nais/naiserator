@@ -126,7 +126,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		},
 	}
 	testNamespace.SetAnnotations(map[string]string{
-		"cnrm.cloud.google.com/project-id": testProjectId,
+		resourcecreator.GoogleProjectIdAnnotation: testProjectId,
 	})
 
 	_, err := clientSet.CoreV1().Namespaces().Create(&testNamespace)
@@ -140,4 +140,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, resourcecreator.GoogleRegion, app.Name)
 	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[1])
+
+	sqlInstance, err := appClient.SqlV1beta1().SQLInstances(testNamespace.Name).Get(app.Name, metav1.GetOptions{})
+	assert.Equal(t, testProjectId, sqlInstance.Annotations[resourcecreator.GoogleProjectIdAnnotation])
 }
