@@ -43,7 +43,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
 		// TODO: A service account will be required for all GCP related resources.
 		// TODO: If implementing more features, move these two outside of the cloud storage check.
-		googleServiceAccount := GoogleIAMServiceAccount(app)
+		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
 		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
 		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})

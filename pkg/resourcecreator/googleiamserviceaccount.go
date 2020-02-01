@@ -6,13 +6,13 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleIAMServiceAccount(app *nais.Application) google_iam_crd.IAMServiceAccount {
+func GoogleIAMServiceAccount(app *nais.Application, projectId  string) google_iam_crd.IAMServiceAccount {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Annotations["nais.io/team"] = app.Namespace
 	objectMeta.Namespace = GoogleIAMServiceAccountNamespace
 	objectMeta.Name = app.CreateAppNamespaceHash()
 
-	return google_iam_crd.IAMServiceAccount{
+	iamServiceAccount := google_iam_crd.IAMServiceAccount{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMServiceAccount",
 			APIVersion: GoogleIAMAPIVersion,
@@ -22,4 +22,9 @@ func GoogleIAMServiceAccount(app *nais.Application) google_iam_crd.IAMServiceAcc
 			DisplayName: app.Name,
 		},
 	}
+
+	setAnnotation(&iamServiceAccount, "nais.io/team", app.Namespace)
+	setAnnotation(&iamServiceAccount, GoogleProjectIdAnnotation, projectId)
+
+	return iamServiceAccount
 }
