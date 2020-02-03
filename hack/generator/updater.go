@@ -60,18 +60,6 @@ var i = []Service{
 		Client:    "clientSet.NetworkingV1().NetworkPolicies",
 	},
 	{
-		Name:      "serviceRole",
-		Interface: "istio_v1alpha1.ServiceRoleInterface",
-		Type:      "*v1alpha1.ServiceRole",
-		Client:    "customClient.RbacV1alpha1().ServiceRoles",
-	},
-	{
-		Name:      "serviceRoleBinding",
-		Interface: "istio_v1alpha1.ServiceRoleBindingInterface",
-		Type:      "*v1alpha1.ServiceRoleBinding",
-		Client:    "customClient.RbacV1alpha1().ServiceRoleBindings",
-	},
-	{
 		Name:      "virtualService",
 		Interface: "typed_networking_istio_io_v1alpha3.VirtualServiceInterface",
 		Type:      "*networking_istio_io_v1alpha3.VirtualService",
@@ -142,6 +130,12 @@ var i = []Service{
 		Interface: "typed_sql_cnrm_cloud_google_com_v1beta1.SQLUserInterface",
 		Type:      "*sql_cnrm_cloud_google_com_v1beta1.SQLUser",
 		Client:    "customClient.SqlV1beta1().SQLUsers",
+	},
+	{
+		Name:      "authorizationPolicy",
+		Interface: "typed_istio_security_v1beta1.AuthorizationPolicyInterface",
+		Type:      "*istio_security_v1beta1.AuthorizationPolicy",
+		Client:    "istioClient.SecurityV1beta1().AuthorizationPolicies",
 	},
 }
 

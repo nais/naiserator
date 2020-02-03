@@ -14,14 +14,17 @@ require (
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/sebdah/goldie v0.0.0-20190531093107-d313ffb52c77
 	github.com/sirupsen/logrus v1.4.1
-	github.com/spf13/pflag v1.0.3
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.3.2
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
+	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/yaml.v2 v2.2.4
-	k8s.io/api v0.0.0-20191114100237-2cd11237263f // kubernetes-1.15.6
-	k8s.io/apimachinery v0.0.0-20191004115701-31ade1b30762 // kubernetes-1.15.6
-	k8s.io/client-go v0.0.0-20191114101336-8cba805ad12d // kubernetes-1.15.6
+	istio.io/api v0.0.0-20200122214507-9fbb385560b6
+	istio.io/client-go v0.0.0-20200124005443-c05d78c7fe10
+	k8s.io/api v0.17.0 // kubernetes-1.15.6
+	k8s.io/apimachinery v0.17.0 // kubernetes-1.15.6
+	k8s.io/client-go v0.17.0 // kubernetes-1.15.6
 )
 
 go 1.13

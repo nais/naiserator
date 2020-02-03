@@ -6,7 +6,6 @@ import (
 	iamv1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
-	rbacv1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	sqlv1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storagev1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +22,6 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	iamv1beta1.AddToScheme,
 	naiseratorv1alpha1.AddToScheme,
 	networkingv1alpha3.AddToScheme,
-	rbacv1alpha1.AddToScheme,
 	sqlv1beta1.AddToScheme,
 	storagev1beta1.AddToScheme,
 }

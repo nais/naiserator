@@ -8,7 +8,6 @@ import (
 	v1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
-	rbacistioiov1alpha1 "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	sqlcnrmcloudgooglecomv1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storagecnrmcloudgooglecomv1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -58,12 +57,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().ServiceEntries().Informer()}, nil
 	case v1alpha3.SchemeGroupVersion.WithResource("virtualservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().VirtualServices().Informer()}, nil
-
-		// Group=rbac.istio.io, Version=v1alpha1
-	case rbacistioiov1alpha1.SchemeGroupVersion.WithResource("serviceroles"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoles().Informer()}, nil
-	case rbacistioiov1alpha1.SchemeGroupVersion.WithResource("servicerolebindings"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Rbac().V1alpha1().ServiceRoleBindings().Informer()}, nil
 
 		// Group=sql.cnrm.cloud.google.com, Version=v1beta1
 	case sqlcnrmcloudgooglecomv1beta1.SchemeGroupVersion.WithResource("sqldatabases"):

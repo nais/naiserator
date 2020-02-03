@@ -7,7 +7,6 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
-
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -115,35 +114,14 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			ops = append(ops, ResourceOperation{vs, operation})
 		}
 
-		// Applies to ServiceRoles and ServiceRoleBindings
+		// Applies to Authorization policies
 		operation = OperationCreateOrUpdate
 		if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
 			operation = OperationDeleteIfExists
 		}
-
-		serviceRole := ServiceRole(app)
-		if serviceRole != nil {
-			ops = append(ops, ResourceOperation{serviceRole, operation})
-		}
-
-		serviceRoleBinding := ServiceRoleBinding(app)
-		if serviceRoleBinding != nil {
-			ops = append(ops, ResourceOperation{serviceRoleBinding, operation})
-		}
-
-		serviceRolePrometheus := ServiceRolePrometheus(app)
-		if serviceRolePrometheus != nil {
-			ops = append(ops, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
-		}
-
-		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
-		operation = OperationCreateOrUpdate
-		if !app.Spec.Prometheus.Enabled {
-			operation = OperationDeleteIfExists
-		}
-
-		if serviceRoleBindingPrometheus != nil {
-			ops = append(ops, ResourceOperation{serviceRoleBindingPrometheus, operation})
+		authorizationPolicy := AuthorizationPolicy(app)
+		if authorizationPolicy != nil {
+			ops = append(ops, ResourceOperation{authorizationPolicy, operation})
 		}
 
 		serviceEntry := ServiceEntry(app)

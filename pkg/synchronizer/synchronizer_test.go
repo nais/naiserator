@@ -12,6 +12,7 @@ import (
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
+	istio_fake "istio.io/client-go/pkg/clientset/versioned/fake"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -46,11 +47,13 @@ func TestSynchronizer(t *testing.T) {
 	// Initialize synchronizer with fake Kubernetes clients
 	clientSet := fake.NewSimpleClientset()
 	appClient := nais_fake.NewSimpleClientset()
+	istioClient := istio_fake.NewSimpleClientset()
 	resourceOptions := resourcecreator.NewResourceOptions()
 
 	syncer := synchronizer.New(
 		clientSet,
 		appClient,
+		istioClient,
 		resourceOptions,
 		synchronizer.Config{
 			KafkaEnabled: false,
@@ -106,12 +109,14 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	// Initialize synchronizer with fake Kubernetes clients
 	clientSet := fake.NewSimpleClientset()
 	appClient := nais_fake.NewSimpleClientset()
+	istioClient := istio_fake.NewSimpleClientset()
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.GoogleProjectId = "something"
 
 	syncer := synchronizer.New(
 		clientSet,
 		appClient,
+		istioClient,
 		resourceOptions,
 		synchronizer.Config{
 			KafkaEnabled: false,

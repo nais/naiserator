@@ -6,7 +6,6 @@ import (
 	iamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
-	rbacv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/rbac.istio.io/v1alpha1"
 	sqlv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	storagev1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
 	discovery "k8s.io/client-go/discovery"
@@ -19,7 +18,6 @@ type Interface interface {
 	IamV1beta1() iamv1beta1.IamV1beta1Interface
 	NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface
 	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
-	RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface
 	SqlV1beta1() sqlv1beta1.SqlV1beta1Interface
 	StorageV1beta1() storagev1beta1.StorageV1beta1Interface
 }
@@ -31,7 +29,6 @@ type Clientset struct {
 	iamV1beta1         *iamv1beta1.IamV1beta1Client
 	naiseratorV1alpha1 *naiseratorv1alpha1.NaiseratorV1alpha1Client
 	networkingV1alpha3 *networkingv1alpha3.NetworkingV1alpha3Client
-	rbacV1alpha1       *rbacv1alpha1.RbacV1alpha1Client
 	sqlV1beta1         *sqlv1beta1.SqlV1beta1Client
 	storageV1beta1     *storagev1beta1.StorageV1beta1Client
 }
@@ -49,11 +46,6 @@ func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1In
 // NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
 func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
 	return c.networkingV1alpha3
-}
-
-// RbacV1alpha1 retrieves the RbacV1alpha1Client
-func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
-	return c.rbacV1alpha1
 }
 
 // SqlV1beta1 retrieves the SqlV1beta1Client
@@ -94,10 +86,6 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
-	cs.rbacV1alpha1, err = rbacv1alpha1.NewForConfig(&configShallowCopy)
-	if err != nil {
-		return nil, err
-	}
 	cs.sqlV1beta1, err = sqlv1beta1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -121,7 +109,6 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 	cs.iamV1beta1 = iamv1beta1.NewForConfigOrDie(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.NewForConfigOrDie(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.NewForConfigOrDie(c)
-	cs.rbacV1alpha1 = rbacv1alpha1.NewForConfigOrDie(c)
 	cs.sqlV1beta1 = sqlv1beta1.NewForConfigOrDie(c)
 	cs.storageV1beta1 = storagev1beta1.NewForConfigOrDie(c)
 
@@ -135,7 +122,6 @@ func New(c rest.Interface) *Clientset {
 	cs.iamV1beta1 = iamv1beta1.New(c)
 	cs.naiseratorV1alpha1 = naiseratorv1alpha1.New(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.New(c)
-	cs.rbacV1alpha1 = rbacv1alpha1.New(c)
 	cs.sqlV1beta1 = sqlv1beta1.New(c)
 	cs.storageV1beta1 = storagev1beta1.New(c)
 
