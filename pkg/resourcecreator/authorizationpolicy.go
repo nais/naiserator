@@ -61,7 +61,7 @@ func accessPolicyRules(app *nais.Application) *istio.Rule {
 		From: []*istio.Rule_From{
 			&istio.Rule_From{
 				Source: &istio.Source{
-					Principals: getPrincipals(app),
+					Principals: principals(app),
 				},
 			},
 		},
@@ -76,7 +76,7 @@ func accessPolicyRules(app *nais.Application) *istio.Rule {
 	}
 }
 
-func getPrincipals(app *nais.Application) []string {
+func principals(app *nais.Application) []string {
 	var principals []string
 
 	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {

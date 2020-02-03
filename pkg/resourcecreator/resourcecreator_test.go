@@ -14,7 +14,6 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	istio "istio.io/client-go/pkg/apis/security/v1beta1"
-	istio_security_client "istio.io/client-go/pkg/apis/security/v1beta1"
 	"k8s.io/api/apps/v1"
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
@@ -289,9 +288,9 @@ func TestCreate(t *testing.T) {
 		deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
 		numDeletes := 0
 		for _, resource := range deletes {
-			switch x := resource.Resource.(type) {
-			case *istio_security_client.AuthorizationPolicy:
-				if x.GetName() == "myapplication" {
+			switch res := resource.Resource.(type) {
+			case *istio.AuthorizationPolicy:
+				if res.GetName() == "myapplication" {
 					numDeletes++
 				}
 			}
