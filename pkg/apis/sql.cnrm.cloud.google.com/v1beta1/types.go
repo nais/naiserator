@@ -10,6 +10,11 @@ type SQLInstanceSpec struct {
 	Settings        SQLInstanceSettings `json:"settings"`
 }
 
+type Maintenance struct {
+	Day  int `json:"day"`
+	Hour int `json:"hour"`
+}
+
 type SQLInstanceSettings struct {
 	AvailabilityType    string                         `json:"availabilityType"`
 	BackupConfiguration SQLInstanceBackupConfiguration `json:"backupConfiguration"`
@@ -17,6 +22,7 @@ type SQLInstanceSettings struct {
 	DiskSize            int                            `json:"diskSize"`
 	DiskType            string                         `json:"diskType"`
 	Tier                string                         `json:"tier"`
+	Maintenance         *Maintenance                   `json:"maintenance"`
 }
 
 type SQLInstanceBackupConfiguration struct {

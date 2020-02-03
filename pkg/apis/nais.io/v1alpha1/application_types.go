@@ -178,11 +178,24 @@ type CloudSqlInstance struct {
 	// +kubebuilder:validation:Minimum=10
 	DiskSize       int  `json:"diskSize,omitempty"`
 	DiskAutoresize bool `json:"diskAutore:wsize,omitempty"`
-	// +kubebuilder:validation:Pattern="[0-9]{2}:00"
-	AutoBackupTime string `json:"autoBackupTime,omitempty"`
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=23
+	AutoBackupHour *int         `json:"autoBackupHour,omitempty"` // must use pointer here to be able to distinguish between no/zero value and value 0 from user.
+	Maintenance    *Maintenance `json:"maintenance,omitempty"`
 	// +kubebuilder:validation:Required
 	Databases       []CloudSqlDatabase `json:"databases,omitempty"`
 	CascadingDelete bool               `json:"cascadingDelete,omitempty"`
+}
+
+type Maintenance struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=7
+	Day int `json:"day,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=23
+	Hour *int `json:"hour,omitempty"` // must use pointer here to be able to distinguish between no value and value 0 from user.
 }
 
 type GCP struct {

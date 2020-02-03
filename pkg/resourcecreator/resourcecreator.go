@@ -159,6 +159,9 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	return ops, nil
 }
 
+func intp(i int) *int {
+	return &i
+}
 func int32p(i int32) *int32 {
 	return &i
 }
