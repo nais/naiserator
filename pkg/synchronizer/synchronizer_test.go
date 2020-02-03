@@ -145,4 +145,15 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, resourcecreator.GoogleRegion, app.Name)
 	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[1])
+
+	sqlUser, err :=  appClient.SqlV1beta1().SQLUsers(testNamespace.Name).Get(app.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, sqlUser)
+
+	sqlDatabase, err := appClient.SqlV1beta1().SQLDatabases(testNamespace.Name).Get(app.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, sqlDatabase)
+
+	assert.Equal(t, testProjectId, sqlUser.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, sqlDatabase.Annotations[resourcecreator.GoogleProjectIdAnnotation])
 }
