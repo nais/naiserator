@@ -78,8 +78,8 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId string) *google_iam_crd.IAMPolicyMember {
-	return &google_iam_crd.IAMPolicyMember{
+func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMPolicyMember",
@@ -93,4 +93,8 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 			},
 		},
 	}
+
+	setAnnotation(policy, GoogleProjectIdAnnotation, googleTeamProjectId)
+
+	return policy
 }
