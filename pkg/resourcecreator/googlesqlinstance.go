@@ -51,7 +51,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 	}
 
 	if instance.Maintenance != nil && instance.Maintenance.Hour != nil && instance.Maintenance.Day != 0 {
-		sqlInstance.Spec.Settings.Maintenance = &google_sql_crd.Maintenance{
+		sqlInstance.Spec.Settings.MaintenanceWindow = &google_sql_crd.MaintenanceWindow{
 			Day:  instance.Maintenance.Day,
 			Hour: *instance.Maintenance.Hour,
 		}

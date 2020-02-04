@@ -28,7 +28,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 	assert.Equal(t, projectId, sqlInstance.Annotations[resourcecreator.GoogleProjectIdAnnotation])
 	assert.Equal(t, "02:00", sqlInstance.Spec.Settings.BackupConfiguration.StartTime)
 	assert.True(t, sqlInstance.Spec.Settings.BackupConfiguration.Enabled)
-	assert.Nil(t, sqlInstance.Spec.Settings.Maintenance, "user not specifying maintenance window leaves it unconfigured")
+	assert.Nil(t, sqlInstance.Spec.Settings.MaintenanceWindow, "user not specifying maintenance window leaves it unconfigured")
 
 	t.Run("setting configuring maintenance and backup works as expected", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
@@ -48,8 +48,8 @@ func TestGoogleSqlInstance(t *testing.T) {
 		assert.NoError(t, err)
 		sqlInstance := resourcecreator.GoogleSqlInstance(app, spec, projectId)
 		assert.Equal(t, "00:00", sqlInstance.Spec.Settings.BackupConfiguration.StartTime, "setting backup hour to 0 yields 00:00 as start time")
-		assert.Equal(t, maintenanceHour, sqlInstance.Spec.Settings.Maintenance.Hour)
-		assert.Equal(t, maintenanceDay, sqlInstance.Spec.Settings.Maintenance.Day)
+		assert.Equal(t, maintenanceHour, sqlInstance.Spec.Settings.MaintenanceWindow.Hour)
+		assert.Equal(t, maintenanceDay, sqlInstance.Spec.Settings.MaintenanceWindow.Day)
 	})
 
 }
