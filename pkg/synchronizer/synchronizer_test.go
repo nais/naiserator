@@ -12,6 +12,7 @@ import (
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
+	istio_fake "istio.io/client-go/pkg/clientset/versioned/fake"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -46,11 +47,13 @@ func TestSynchronizer(t *testing.T) {
 	// Initialize synchronizer with fake Kubernetes clients
 	clientSet := fake.NewSimpleClientset()
 	appClient := nais_fake.NewSimpleClientset()
+	istioClient := istio_fake.NewSimpleClientset()
 	resourceOptions := resourcecreator.NewResourceOptions()
 
 	syncer := synchronizer.New(
 		clientSet,
 		appClient,
+		istioClient,
 		resourceOptions,
 		synchronizer.Config{
 			KafkaEnabled: false,
@@ -101,17 +104,23 @@ func TestSynchronizer(t *testing.T) {
 func TestSynchronizerResourceOptions(t *testing.T) {
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
-	app.Spec.GCP = &v1alpha1.GCP{SqlInstances: []v1alpha1.CloudSqlInstance{{}}}
+	app.Spec.GCP = &v1alpha1.GCP{
+		SqlInstances: []v1alpha1.CloudSqlInstance{{
+			Databases: []v1alpha1.CloudSqlDatabase{{Name: app.Name}},
+		}},
+	}
 
 	// Initialize synchronizer with fake Kubernetes clients
 	clientSet := fake.NewSimpleClientset()
 	appClient := nais_fake.NewSimpleClientset()
+	istioClient := istio_fake.NewSimpleClientset()
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.GoogleProjectId = "something"
 
 	syncer := synchronizer.New(
 		clientSet,
 		appClient,
+		istioClient,
 		resourceOptions,
 		synchronizer.Config{
 			KafkaEnabled: false,
@@ -126,7 +135,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		},
 	}
 	testNamespace.SetAnnotations(map[string]string{
-		"cnrm.cloud.google.com/project-id": testProjectId,
+		resourcecreator.GoogleProjectIdAnnotation: testProjectId,
 	})
 
 	_, err := clientSet.CoreV1().Namespaces().Create(&testNamespace)
@@ -140,4 +149,24 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, resourcecreator.GoogleRegion, app.Name)
 	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[1])
+
+	sqlInstance, err := appClient.SqlV1beta1().SQLInstances(testNamespace.Name).Get(app.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, sqlInstance)
+	assert.Equal(t, testProjectId, sqlInstance.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+
+	sqlUser, err := appClient.SqlV1beta1().SQLUsers(testNamespace.Name).Get(app.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, sqlUser)
+	assert.Equal(t, testProjectId, sqlUser.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+
+	sqlDatabase, err := appClient.SqlV1beta1().SQLDatabases(testNamespace.Name).Get(app.Spec.GCP.SqlInstances[0].Databases[0].Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, sqlDatabase)
+	assert.Equal(t, testProjectId, sqlDatabase.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+
+	iamPolicyMember, err := appClient.IamV1beta1().IAMPolicyMembers(testNamespace.Name).Get(sqlInstance.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, iamPolicyMember)
+	assert.Equal(t, testProjectId, iamPolicyMember.Annotations[resourcecreator.GoogleProjectIdAnnotation])
 }

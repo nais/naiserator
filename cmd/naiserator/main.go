@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	istioClient "istio.io/client-go/pkg/clientset/versioned"
 	"os"
 	"os/signal"
 	"syscall"
@@ -104,6 +105,7 @@ func run() error {
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
 	applicationClientset := createApplicationClientset(kubeconfig)
+	istioClient := createIstioClientset(kubeconfig)
 	genericClientset := createGenericClientset(kubeconfig)
 
 	syncerConfig := synchronizer.Config{
@@ -115,6 +117,7 @@ func run() error {
 	syncer := synchronizer.New(
 		genericClientset,
 		applicationClientset,
+		istioClient,
 		resourceOptions,
 		syncerConfig,
 	)
@@ -147,6 +150,15 @@ func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clients
 	clientSet, err := clientV1Alpha1.NewForConfig(kubeconfig)
 	if err != nil {
 		log.Fatalf("unable to create application clientset: %s", err)
+	}
+
+	return clientSet
+}
+
+func createIstioClientset(kubeconfig *rest.Config) *istioClient.Clientset {
+	clientSet, err := istioClient.NewForConfig(kubeconfig)
+	if err != nil {
+		log.Fatalf("unable to create istio clientset: %s", err)
 	}
 
 	return clientSet

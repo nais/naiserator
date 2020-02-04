@@ -12,12 +12,12 @@ import (
 )
 
 const (
-	AvailabilityTypeRegional     = "REGIONAL"
-	AvailabilityTypeZonal        = "ZONAL"
-	DefaultSqlInstanceDiskType   = nais.CloudSqlInstanceDiskTypeSSD
-	DefaultSqlInstanceAutoBackup = "02:00"
-	DefaultSqlInstanceTier       = "db-f1-micro"
-	DefaultSqlInstanceDiskSize   = 10
+	AvailabilityTypeRegional         = "REGIONAL"
+	AvailabilityTypeZonal            = "ZONAL"
+	DefaultSqlInstanceDiskType       = nais.CloudSqlInstanceDiskTypeSSD
+	DefaultSqlInstanceAutoBackupHour = 2
+	DefaultSqlInstanceTier           = "db-f1-micro"
+	DefaultSqlInstanceDiskSize       = 10
 )
 
 func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
@@ -30,7 +30,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
 	}
 
-	return &google_sql_crd.SQLInstance{
+	sqlInstance := &google_sql_crd.SQLInstance{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "SQLInstance",
 			APIVersion: "sql.cnrm.cloud.google.com/v1alpha3",
@@ -41,7 +41,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 			Region:          GoogleRegion,
 			Settings: google_sql_crd.SQLInstanceSettings{
 				AvailabilityType:    availabilityType(instance.HighAvailability),
-				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{Enabled: true, StartTime: instance.AutoBackupTime},
+				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{Enabled: true, StartTime: fmt.Sprintf("%02d:00", *instance.AutoBackupHour)},
 				DiskAutoresize:      instance.DiskAutoresize,
 				DiskSize:            instance.DiskSize,
 				DiskType:            instance.DiskType.GoogleType(),
@@ -49,22 +49,35 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 			},
 		},
 	}
+
+	if instance.Maintenance != nil && instance.Maintenance.Hour != nil && instance.Maintenance.Day != 0 {
+		sqlInstance.Spec.Settings.MaintenanceWindow = &google_sql_crd.MaintenanceWindow{
+			Day:  instance.Maintenance.Day,
+			Hour: *instance.Maintenance.Hour,
+		}
+	}
+
+	return sqlInstance
 }
 
 func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string) (nais.CloudSqlInstance, error) {
 	var err error
 
 	defaultInstance := nais.CloudSqlInstance{
-		Name:           appName,
-		Tier:           DefaultSqlInstanceTier,
-		DiskType:       DefaultSqlInstanceDiskType,
-		DiskSize:       DefaultSqlInstanceDiskSize,
-		AutoBackupTime: DefaultSqlInstanceAutoBackup,
-		Databases:      []nais.CloudSqlDatabase{{Name: appName}},
+		Name:      appName,
+		Tier:      DefaultSqlInstanceTier,
+		DiskType:  DefaultSqlInstanceDiskType,
+		DiskSize:  DefaultSqlInstanceDiskSize,
+		Databases: []nais.CloudSqlDatabase{{Name: appName}},
 	}
 
 	if err = mergo.Merge(&instance, defaultInstance); err != nil {
 		return nais.CloudSqlInstance{}, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
+	}
+
+	// Have to do this check explicitly as mergo is not able to distingush between nil pointer and 0.
+	if instance.AutoBackupHour == nil {
+		instance.AutoBackupHour = intp(DefaultSqlInstanceAutoBackupHour)
 	}
 
 	return instance, err
@@ -78,8 +91,8 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId string) *google_iam_crd.IAMPolicyMember {
-	return &google_iam_crd.IAMPolicyMember{
+func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMPolicyMember",
@@ -93,4 +106,8 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 			},
 		},
 	}
+
+	setAnnotation(policy, GoogleProjectIdAnnotation, googleTeamProjectId)
+
+	return policy
 }

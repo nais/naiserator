@@ -14,7 +14,7 @@ func GoogleIAMPolicy(app *nais.Application, sa *google_iam_crd.IAMServiceAccount
 	objectMeta.Namespace = GoogleIAMServiceAccountNamespace
 	objectMeta.Name = app.CreateAppNamespaceHash()
 
-	return google_iam_crd.IAMPolicy{
+	iamPolicy := google_iam_crd.IAMPolicy{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMPolicy",
 			APIVersion: GoogleIAMAPIVersion,
@@ -34,4 +34,8 @@ func GoogleIAMPolicy(app *nais.Application, sa *google_iam_crd.IAMServiceAccount
 			},
 		},
 	}
+
+	setAnnotation(&iamPolicy, GoogleProjectIdAnnotation, projectId)
+
+	return iamPolicy
 }

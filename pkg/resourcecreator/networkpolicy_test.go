@@ -115,14 +115,14 @@ func TestNetworkPolicy(t *testing.T) {
 		asterix := networking.NetworkPolicyIngressRule{
 			Ports: nil,
 			From: []networking.NetworkPolicyPeer{{
-				PodSelector: &metav1.LabelSelector{},
+				PodSelector:       &metav1.LabelSelector{},
 				NamespaceSelector: nil,
-				IPBlock: nil,
+				IPBlock:           nil,
 			}},
 		}
 		assert.Equal(t, prometheusMatch, networkPolicy.Spec.Ingress[0].From[0].PodSelector.MatchLabels)
 		assert.Equal(t, istioNamespaceMatch, networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector.MatchLabels)
-		assert.Equal(t, asterix,networkPolicy.Spec.Ingress[1])
+		assert.Equal(t, asterix, networkPolicy.Spec.Ingress[1])
 		assert.Equal(t, istioPodMatch, networkPolicy.Spec.Ingress[2].From[0].PodSelector.MatchLabels)
 		assert.Equal(t, istioNamespaceMatch, networkPolicy.Spec.Ingress[2].From[0].NamespaceSelector.MatchLabels)
 	})

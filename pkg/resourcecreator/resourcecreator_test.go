@@ -8,12 +8,12 @@ import (
 	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio_networking_crd "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
-	istio_rbac_crd "github.com/nais/naiserator/pkg/apis/rbac.istio.io/v1alpha1"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	google_storage_crd "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
+	istio "istio.io/client-go/pkg/apis/security/v1beta1"
 	"k8s.io/api/apps/v1"
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
@@ -23,17 +23,16 @@ import (
 )
 
 type realObjects struct {
-	deployment              *v1.Deployment
-	hpa                     *autoscaling.HorizontalPodAutoscaler
-	ingress                 *extensions.Ingress
-	networkPolicy           *networking.NetworkPolicy
-	role                    *rbac.Role
-	rolebinding             *rbac.RoleBinding
-	secret                  *core.Secret
-	service                 *core.Service
-	serviceAccount          *core.ServiceAccount
-	serviceRoleBindings     []*istio_rbac_crd.ServiceRoleBinding
-	serviceRoles            []*istio_rbac_crd.ServiceRole
+	authorizationPolicy *istio.AuthorizationPolicy
+	deployment          *v1.Deployment
+	hpa                 *autoscaling.HorizontalPodAutoscaler
+	ingress             *extensions.Ingress
+	networkPolicy       *networking.NetworkPolicy
+	role                *rbac.Role
+	rolebinding         *rbac.RoleBinding
+	secret              *core.Secret
+	service             *core.Service
+	serviceAccount      *core.ServiceAccount
 	sqlDatabase             *google_sql_crd.SQLDatabase
 	sqlInstance             *google_sql_crd.SQLInstance
 	sqlUser                 *google_sql_crd.SQLUser
@@ -62,10 +61,8 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.ingress = v
 		case *networking.NetworkPolicy:
 			o.networkPolicy = v
-		case *istio_rbac_crd.ServiceRole:
-			o.serviceRoles = append(o.serviceRoles, v)
-		case *istio_rbac_crd.ServiceRoleBinding:
-			o.serviceRoleBindings = append(o.serviceRoleBindings, v)
+		case *istio.AuthorizationPolicy:
+			o.authorizationPolicy = v
 		case *istio_networking_crd.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)
 		case *rbac.Role:
@@ -186,8 +183,7 @@ func TestCreate(t *testing.T) {
 
 		objects := getRealObjects(resources)
 		assert.Nil(t, objects.virtualServices)
-		assert.Nil(t, objects.serviceRoleBindings)
-		assert.Nil(t, objects.serviceRoles)
+		assert.Nil(t, objects.authorizationPolicy)
 		assert.Nil(t, objects.networkPolicy)
 	})
 
@@ -204,12 +200,11 @@ func TestCreate(t *testing.T) {
 
 		objects := getRealObjects(resources)
 		assert.Len(t, objects.virtualServices, 1)
-		assert.NotNil(t, objects.serviceRoleBindings)
-		assert.NotNil(t, objects.serviceRoles)
+		assert.NotNil(t, objects.authorizationPolicy)
 		assert.NotNil(t, objects.networkPolicy)
 	})
 
-	t.Run("servicerole and servicerolebinding resources are created when access policy creation is enabled", func(t *testing.T) {
+	t.Run("authorization policy resource are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
@@ -223,8 +218,7 @@ func TestCreate(t *testing.T) {
 
 		objects := getRealObjects(resources)
 		assert.NotNil(t, objects.virtualServices)
-		assert.NotNil(t, objects.serviceRoleBindings)
-		assert.NotNil(t, objects.serviceRoles)
+		assert.NotNil(t, objects.authorizationPolicy)
 		assert.NotNil(t, objects.networkPolicy)
 	})
 
@@ -242,8 +236,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.Len(t, objects.serviceRoles, 2)
-		assert.Len(t, objects.serviceRoleBindings, 2)
+		assert.Equal(t, "cluster.local/ns/othernamespace/sa/otherapp", objects.authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
 	})
 
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
@@ -295,38 +288,9 @@ func TestCreate(t *testing.T) {
 		deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
 		numDeletes := 0
 		for _, resource := range deletes {
-			switch x := resource.Resource.(type) {
-			case *istio_rbac_crd.ServiceRoleBinding:
-				if x.GetName() == "myapplication" {
-					numDeletes++
-				}
-			}
-		}
-
-		if numDeletes != 1 {
-			t.Fail()
-		}
-	})
-
-	t.Run("no service role and no service role binding created for prometheus, when disabled", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-
-		app.Spec.Prometheus.Enabled = false
-		opts.AccessPolicy = true
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
-		numDeletes := 0
-		for _, resource := range deletes {
-			switch x := resource.Resource.(type) {
-			case *istio_rbac_crd.ServiceRoleBinding:
-				if x.GetName() == "myapplication-prometheus" {
+			switch res := resource.Resource.(type) {
+			case *istio.AuthorizationPolicy:
+				if res.GetName() == "myapplication" {
 					numDeletes++
 				}
 			}
@@ -407,6 +371,7 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.googleIAMPolicyMember)
 
 		assert.Equal(t, instanceName, objects.sqlInstance.Name)
+		assert.Equal(t, "02:00", objects.sqlInstance.Spec.Settings.BackupConfiguration.StartTime)
 		assert.Equal(t, app.Name, objects.sqlUser.Name)
 		assert.Equal(t, dbName, objects.sqlDatabase.Name)
 		assert.Equal(t, instanceName, objects.sqlDatabase.Spec.InstanceRef.Name)

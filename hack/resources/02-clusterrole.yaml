@@ -10,6 +10,7 @@ rules:
       - '*'
     resources:
       - 'applications'
+      - 'authorizationpolicies'
       - 'deployments'
       - 'endpoints'
       - 'events'

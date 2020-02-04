@@ -7,7 +7,6 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
-
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +42,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
 		// TODO: A service account will be required for all GCP related resources.
 		// TODO: If implementing more features, move these two outside of the cloud storage check.
-		googleServiceAccount := GoogleIAMServiceAccount(app)
+		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
 		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
 		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
@@ -70,13 +69,13 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 					return nil, err
 				}
 
-				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleProjectId)
+				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
 
-				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId)
+				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
-				for _, db := range GoogleSqlDatabases(app, sqlInstance, resourceOptions.GoogleProjectId) {
+				for _, db := range GoogleSqlDatabases(app, sqlInstance, resourceOptions.GoogleTeamProjectId) {
 					ops = append(ops, ResourceOperation{db, OperationCreateIfNotExists})
 				}
 
@@ -89,7 +88,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
 				ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 
-				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, resourceOptions.GoogleProjectId)
+				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 
 				// FIXME: take into account when refactoring default values
@@ -115,35 +114,14 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			ops = append(ops, ResourceOperation{vs, operation})
 		}
 
-		// Applies to ServiceRoles and ServiceRoleBindings
+		// Applies to Authorization policies
 		operation = OperationCreateOrUpdate
 		if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
 			operation = OperationDeleteIfExists
 		}
-
-		serviceRole := ServiceRole(app)
-		if serviceRole != nil {
-			ops = append(ops, ResourceOperation{serviceRole, operation})
-		}
-
-		serviceRoleBinding := ServiceRoleBinding(app)
-		if serviceRoleBinding != nil {
-			ops = append(ops, ResourceOperation{serviceRoleBinding, operation})
-		}
-
-		serviceRolePrometheus := ServiceRolePrometheus(app)
-		if serviceRolePrometheus != nil {
-			ops = append(ops, ResourceOperation{serviceRolePrometheus, OperationCreateOrUpdate})
-		}
-
-		serviceRoleBindingPrometheus := ServiceRoleBindingPrometheus(app)
-		operation = OperationCreateOrUpdate
-		if !app.Spec.Prometheus.Enabled {
-			operation = OperationDeleteIfExists
-		}
-
-		if serviceRoleBindingPrometheus != nil {
-			ops = append(ops, ResourceOperation{serviceRoleBindingPrometheus, operation})
+		authorizationPolicy := AuthorizationPolicy(app)
+		if authorizationPolicy != nil {
+			ops = append(ops, ResourceOperation{authorizationPolicy, operation})
 		}
 
 		serviceEntry := ServiceEntry(app)
@@ -181,6 +159,9 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	return ops, nil
 }
 
+func intp(i int) *int {
+	return &i
+}
 func int32p(i int32) *int32 {
 	return &i
 }
