@@ -7,10 +7,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func LeaderElectionRoleBinding(app *nais.Application) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
+		TypeMeta: v1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "RoleBinding",
+		},
 		ObjectMeta: app.CreateObjectMeta(),
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
@@ -29,6 +34,10 @@ func LeaderElectionRoleBinding(app *nais.Application) *rbacv1.RoleBinding {
 
 func LeaderElectionRole(app *nais.Application) *rbacv1.Role {
 	return &rbacv1.Role{
+		TypeMeta: v1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "Role",
+		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Rules: []rbacv1.PolicyRule{
 			{
