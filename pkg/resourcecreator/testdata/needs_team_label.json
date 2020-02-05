@@ -1,19 +1,9 @@
 {
   "config": {
-    "description": "vanilla minimal application"
+    "description": "require team label"
   },
+  "error": "the 'team' label needs to be set in the application metadata",
   "input": {
-    "kind": "Application",
-    "apiVersion": "v1alpha1",
-    "metadata": {
-      "name": "myapplication",
-      "labels": {
-        "team": "myteam"
-      }
-    }
-  },
-  "output": [
-    {
-    }
-  ]
+    "kind": "Application"
+  }
 }

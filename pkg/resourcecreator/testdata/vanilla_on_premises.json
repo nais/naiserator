@@ -1,0 +1,87 @@
+{
+  "config": {
+    "description": "vanilla minimal application running on-premises with default configuration"
+  },
+  "input": {
+    "kind": "Application",
+    "apiVersion": "v1alpha1",
+    "metadata": {
+      "name": "myapplication",
+      "labels": {
+        "team": "myteam"
+      }
+    }
+  },
+  "output": [
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {
+          "name": "myapplication"
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "v1",
+        "kind": "ServiceAccount",
+        "metadata": {
+          "name": "myapplication"
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "v1",
+        "kind": "HorizontalPodAutoscaler",
+        "metadata": {
+          "name": "myapplication"
+        }
+      }
+    },
+    {
+      "operation": "DeleteIfExists",
+      "resource": {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "Role",
+        "metadata": {
+          "name": "myapplication"
+        }
+      }
+    },
+    {
+      "operation": "DeleteIfExists",
+      "resource": {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "RoleBinding",
+        "metadata": {
+          "name": "myapplication"
+        }
+      }
+    },
+    {
+      "operation": "DeleteIfExists",
+      "resource": {
+        "apiVersion": "extensions/v1beta1",
+        "kind": "Ingress",
+        "metadata": {
+          "name": "myapplication"
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "metadata": {
+          "name": "myapplication"
+        }
+      }
+    }
+  ]
+}
