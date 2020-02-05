@@ -254,6 +254,30 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, int32(app.Spec.Readiness.InitialDelay), appContainer.ReadinessProbe.InitialDelaySeconds)
 	})
 
+	t.Run("enabling webproxy in GCP is no-op", func(t *testing.T) {
+		viper.Reset()
+		viper.Set("proxy.address", httpProxy)
+		viper.Set("proxy.exclude", noProxy)
+		app := fixtures.MinimalApplication()
+		app.Spec.WebProxy = true
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+
+		opts := resourcecreator.NewResourceOptions()
+		opts.GoogleProjectId = "googleprojectid"
+		deploy, err := resourcecreator.Deployment(app, opts)
+		assert.Nil(t, err)
+
+		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+
+		assert.Zero(t, envValue(appContainer.Env, "HTTP_PROXY"))
+		assert.Zero(t, envValue(appContainer.Env, "HTTPS_PROXY"))
+		assert.Zero(t, envValue(appContainer.Env, "NO_PROXY"))
+		assert.Zero(t, envValue(appContainer.Env, "http_proxy"))
+		assert.Zero(t, envValue(appContainer.Env, "https_proxy"))
+		assert.Zero(t, envValue(appContainer.Env, "no_proxy"))
+	})
+
 	t.Run("webproxy configuration is injected into the container env", func(t *testing.T) {
 		viper.Reset()
 		viper.Set("proxy.address", httpProxy)

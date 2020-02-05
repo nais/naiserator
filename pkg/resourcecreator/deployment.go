@@ -121,7 +121,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		}
 	}
 
-	if app.Spec.WebProxy {
+	if app.Spec.WebProxy && len(resourceOptions.GoogleProjectId) == 0 {
 		podSpec, err = proxyOpts(podSpec)
 		if err != nil {
 			return nil, err
