@@ -2,7 +2,6 @@ package resourcecreator_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,9 +10,8 @@ import (
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nsf/jsondiff"
 	"github.com/stretchr/testify/assert"
-	"github.com/yudai/gojsondiff"
-	"github.com/yudai/gojsondiff/formatter"
 )
 
 const (
@@ -22,6 +20,7 @@ const (
 
 type testCaseConfig struct {
 	Description string
+	MatchType   string
 }
 
 type testCase struct {
@@ -30,50 +29,6 @@ type testCase struct {
 	Input           json.RawMessage
 	ResourceOptions resourcecreator.ResourceOptions
 	Output          []json.RawMessage
-}
-
-// minimal kubernetes object
-type minimalObject struct {
-	ApiVersion string
-	Kind       string
-	Metadata   struct {
-		Name string
-	}
-}
-
-type resourceOperation struct {
-	Operation string
-	Resource  minimalObject
-}
-
-func shallowcompare(t *testing.T, expected, actual json.RawMessage) bool {
-	var e, a []resourceOperation
-	_ = json.Unmarshal(expected, &e)
-	_ = json.Unmarshal(actual, &a)
-	return assert.Equal(t, e, a)
-}
-
-func deepcompare(t *testing.T, expected, actual json.RawMessage) bool {
-	var e, a interface{}
-	_ = json.Unmarshal(expected, &e)
-	_ = json.Unmarshal(actual, &a)
-	return assert.Equal(t, e, a)
-}
-
-func compare(t *testing.T, expected, actual json.RawMessage) {
-	if !shallowcompare(t, expected, actual) {
-		return
-	}
-	deepcompare(t, expected, actual)
-}
-
-func compactJSON(src json.RawMessage) (json.RawMessage, error) {
-	var decoded interface{}
-	err := json.Unmarshal(src, &decoded)
-	if err != nil {
-		return nil, fmt.Errorf("decode: %s", err)
-	}
-	return json.Marshal(decoded)
 }
 
 func fileReader(file string) io.Reader {
@@ -104,9 +59,11 @@ func subTest(t *testing.T, file string) {
 		t.Fail()
 	}
 
-	differ := gojsondiff.New()
-	diffconfig := formatter.AsciiFormatterConfig{
-		ShowArrayIndex: true,
+	opts := jsondiff.Options{
+		Added:   jsondiff.Tag{Begin: "+ "},
+		Removed: jsondiff.Tag{Begin: "- "},
+		Changed: jsondiff.Tag{Begin: "? "},
+		Indent:  "  ",
 	}
 
 	t.Run(test.Config.Description, func(t *testing.T) {
@@ -137,16 +94,17 @@ func subTest(t *testing.T, file string) {
 						t.Errorf("unable to marshal resource %d: %s", i, err)
 						t.Fail()
 					}
-					diff, err := differ.Compare(test.Output[i], resourceJSON)
-					if err != nil {
-						t.Errorf("unable to unmarshal test data for resource %d: %s", i, err)
-						t.Fail()
+
+					result, diff := jsondiff.Compare(resourceJSON, test.Output[i], &opts)
+
+					switch {
+					case result == jsondiff.FullMatch:
+						return
+					case result == jsondiff.SupersetMatch && test.Config.MatchType == "subset":
+						return
+					default:
+						t.Error(diff)
 					}
-					var aJson map[string]interface{}
-					json.Unmarshal(test.Output[i], &aJson)
-					fmatter := formatter.NewAsciiFormatter(aJson, diffconfig)
-					diffString, err := fmatter.Format(diff)
-					t.Error(diffString)
 				})
 			}
 		}
