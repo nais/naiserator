@@ -18,7 +18,7 @@ func TestGoogleStorageBucketAccessControl(t *testing.T) {
 		bac := resourcecreator.GoogleStorageBucketAccessControl(app, bucketname, projectId, serviceAccountName)
 
 		assert.Equal(t, bac.Spec.BucketRef.Name, bucketname)
-		assert.Equal(t, bac.Spec.Entity, fmt.Sprintf("%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId))
+		assert.Equal(t, bac.Spec.Entity, fmt.Sprintf("user-%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId))
 		assert.Equal(t, bac.Spec.Role, "OWNER")
 	})
 }

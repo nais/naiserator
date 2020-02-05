@@ -23,7 +23,7 @@ func GoogleStorageBucketAccessControl(app *nais.Application, bucketName, project
 			BucketRef: google_storage_crd.BucketRef{
 				Name: bucketName,
 			},
-			Entity: fmt.Sprintf("%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId),
+			Entity: fmt.Sprintf("user-%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId),
 			Role:   "OWNER",
 		},
 	}
