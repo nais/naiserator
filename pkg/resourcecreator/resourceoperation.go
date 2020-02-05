@@ -16,8 +16,8 @@ const (
 
 // ResourceOperation is the combination of a Kubernetes resource and what operation to perform on it.
 type ResourceOperation struct {
-	Resource  runtime.Object
-	Operation Operation
+	Resource  runtime.Object `json:"resource"`
+	Operation Operation      `json:"operation"`
 }
 
 type ResourceOperations []ResourceOperation
