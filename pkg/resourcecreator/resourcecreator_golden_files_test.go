@@ -59,12 +59,7 @@ func subTest(t *testing.T, file string) {
 		t.Fail()
 	}
 
-	opts := jsondiff.Options{
-		Added:   jsondiff.Tag{Begin: "+ "},
-		Removed: jsondiff.Tag{Begin: "- "},
-		Changed: jsondiff.Tag{Begin: "? "},
-		Indent:  "  ",
-	}
+	opts := jsondiff.DefaultConsoleOptions()
 
 	t.Run(test.Config.Description, func(t *testing.T) {
 		app := &nais.Application{}

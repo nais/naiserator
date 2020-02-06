@@ -62,7 +62,21 @@
         "apiVersion": "v1",
         "kind": "ServiceAccount",
         "metadata": {
-          "name": "myapplication"
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
         }
       }
     },
@@ -72,7 +86,35 @@
         "apiVersion": "v1",
         "kind": "HorizontalPodAutoscaler",
         "metadata": {
-          "name": "myapplication"
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "scaleTargetRef": {
+            "name": "myapplication",
+            "apiVersion": "apps/v1",
+            "kind": "Deployment"
+          },
+          "minReplicas": 2,
+          "maxReplicas": 4,
+          "targetCPUUtilizationPercentage": 50
+        },
+        "status": {
+          "currentReplicas": 0,
+          "desiredReplicas": 0
         }
       }
     },
@@ -82,8 +124,43 @@
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "Role",
         "metadata": {
-          "name": "myapplication"
-        }
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "ownerReferences": [
+            {
+              "name": "myapplication",
+              "uid": "123456",
+              "apiVersion": "v1alpha1",
+              "kind": "Application"
+            }
+          ]
+        },
+        "rules": [
+          {
+            "verbs": [
+              "get",
+              "list",
+              "watch",
+              "create",
+              "update",
+              "patch"
+            ],
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "endpoints"
+            ],
+            "resourceNames": [
+              "myapplication"
+            ]
+          }
+        ]
       }
     },
     {
@@ -92,8 +169,34 @@
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "ownerReferences": [
+            {
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456",
+              "apiVersion": "v1alpha1"
+            }
+          ]
+        },
+        "roleRef": {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Role",
           "name": "myapplication"
-        }
+        },
+        "subjects": [
+          {
+            "namespace": "mynamespace",
+            "kind": "ServiceAccount",
+            "name": "myapplication"
+          }
+        ]
       }
     },
     {
@@ -102,7 +205,29 @@
         "apiVersion": "extensions/v1beta1",
         "kind": "Ingress",
         "metadata": {
-          "name": "myapplication"
+          "annotations": {
+            "prometheus.io/path": "",
+            "prometheus.io/scrape": "true"
+          },
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {},
+        "status": {
+          "loadBalancer": {}
         }
       }
     },
@@ -112,8 +237,183 @@
         "apiVersion": "apps/v1",
         "kind": "Deployment",
         "metadata": {
-          "name": "myapplication"
-        }
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "replicas": 0,
+          "selector": {
+            "matchLabels": {
+              "app": "myapplication"
+            }
+          },
+          "template": {
+            "spec": {
+              "imagePullSecrets": [
+                {
+                  "name": "gpr-credentials"
+                }
+              ],
+              "volumes": [
+                {
+                  "name": "ca-bundle-jks",
+                  "configMap": {
+                    "name": "ca-bundle-jks"
+                  }
+                },
+                {
+                  "name": "ca-bundle-pem",
+                  "configMap": {
+                    "name": "ca-bundle-pem"
+                  }
+                }
+              ],
+              "containers": [
+                {
+                  "name": "myapplication",
+                  "ports": [
+                    {
+                      "name": "http",
+                      "containerPort": 8080,
+                      "protocol": "TCP"
+                    }
+                  ],
+                  "env": [
+                    {
+                      "name": "NAIS_APP_NAME",
+                      "value": "myapplication"
+                    },
+                    {
+                      "value": "mynamespace",
+                      "name": "NAIS_NAMESPACE"
+                    },
+                    {
+                      "name": "NAIS_APP_IMAGE"
+                    },
+                    {
+                      "name": "NAIS_CLUSTER_NAME"
+                    },
+                    {
+                      "name": "NAV_TRUSTSTORE_PATH",
+                      "value": "/etc/ssl/certs/java/cacerts"
+                    },
+                    {
+                      "name": "NAV_TRUSTSTORE_PASSWORD",
+                      "value": "changeme"
+                    }
+                  ],
+                  "resources": {
+                    "limits": {
+                      "cpu": "500m",
+                      "memory": "512Mi"
+                    },
+                    "requests": {
+                      "cpu": "200m",
+                      "memory": "256Mi"
+                    }
+                  },
+                  "volumeMounts": [
+                    {
+                      "name": "ca-bundle-jks",
+                      "readOnly": true,
+                      "mountPath": "/etc/ssl/certs/java/cacerts",
+                      "subPath": "ca-bundle.jks"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/ssl/certs/ca-certificates.crt",
+                      "subPath": "ca-bundle.pem"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/pki/tls/certs/ca-bundle.crt",
+                      "subPath": "ca-bundle.pem"
+                    },
+                    {
+                      "readOnly": true,
+                      "mountPath": "/etc/ssl/ca-bundle.pem",
+                      "subPath": "ca-bundle.pem",
+                      "name": "ca-bundle-pem"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/pki/tls/cacert.pem",
+                      "subPath": "ca-bundle.pem"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+                      "subPath": "ca-bundle.pem"
+                    }
+                  ],
+                  "lifecycle": {
+                    "preStop": {
+                      "exec": {
+                        "command": [
+                          "sleep",
+                          "5"
+                        ]
+                      }
+                    }
+                  },
+                  "imagePullPolicy": "IfNotPresent"
+                }
+              ],
+              "restartPolicy": "Always",
+              "dnsPolicy": "ClusterFirst",
+              "serviceAccountName": "myapplication"
+            },
+            "metadata": {
+              "ownerReferences": [
+                {
+                  "apiVersion": "v1alpha1",
+                  "kind": "Application",
+                  "name": "myapplication",
+                  "uid": "123456"
+                }
+              ],
+              "name": "myapplication",
+              "namespace": "mynamespace",
+              "creationTimestamp": null,
+              "labels": {
+                "team": "myteam",
+                "app": "myapplication"
+              },
+              "annotations": {
+                "prometheus.io/path": "/metrics",
+                "prometheus.io/port": "8080",
+                "prometheus.io/scrape": "false"
+              }
+            }
+          },
+          "strategy": {
+            "type": "RollingUpdate",
+            "rollingUpdate": {
+              "maxUnavailable": 0,
+              "maxSurge": 1
+            }
+          },
+          "revisionHistoryLimit": 10,
+          "progressDeadlineSeconds": 300
+        },
+        "status": {}
       }
     }
   ]
