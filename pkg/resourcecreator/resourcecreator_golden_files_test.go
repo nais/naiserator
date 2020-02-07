@@ -2,6 +2,7 @@ package resourcecreator_test
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -61,8 +62,6 @@ func subTest(t *testing.T, file string) {
 		t.Fail()
 	}
 
-	opts := jsondiff.DefaultConsoleOptions()
-
 	t.Run(test.Config.Description, func(t *testing.T) {
 		app := &nais.Application{}
 		err = json.Unmarshal(test.Input, app)
@@ -82,24 +81,36 @@ func subTest(t *testing.T, file string) {
 			assert.EqualError(t, err, *test.Error)
 		} else {
 			assert.NoError(t, err)
-			resourceJSON, err := json.Marshal(resources)
+
+			err := compare(t, test, resources)
 			if err != nil {
-				t.Errorf("unable to marshal resources: %s", err)
+				t.Error(err)
 				t.Fail()
-			}
-
-			result, diff := jsondiff.Compare(resourceJSON, test.Output, &opts)
-
-			switch {
-			case result == jsondiff.FullMatch:
-				return
-			case result == jsondiff.SupersetMatch && test.Config.MatchType == "subset":
-				return
-			default:
-				t.Error(diff)
 			}
 		}
 	})
+}
+
+func compare(t *testing.T, test testCase, resources resourcecreator.ResourceOperations) error {
+
+	resourceJSON, err := json.Marshal(resources)
+	if err != nil {
+		t.Errorf("unable to marshal resources: %s", err)
+		t.Fail()
+	}
+
+	opts := jsondiff.DefaultConsoleOptions()
+
+	result, diff := jsondiff.Compare(resourceJSON, test.Output, &opts)
+
+	switch {
+	case result == jsondiff.FullMatch:
+		return nil
+	case result == jsondiff.SupersetMatch && test.Config.MatchType == "subset":
+		return nil
+	default:
+		return errors.New(diff)
+	}
 }
 
 func TestResourceCreator(t *testing.T) {
