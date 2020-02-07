@@ -27,10 +27,10 @@ type testCaseConfig struct {
 
 type testCase struct {
 	Config          testCaseConfig
+	ResourceOptions resourcecreator.ResourceOptions
 	Error           *string
 	Input           json.RawMessage
-	ResourceOptions resourcecreator.ResourceOptions
-	Output          []json.RawMessage
+	Output          json.RawMessage
 }
 
 func fileReader(file string) io.Reader {
@@ -82,27 +82,21 @@ func subTest(t *testing.T, file string) {
 			assert.EqualError(t, err, *test.Error)
 		} else {
 			assert.NoError(t, err)
-			for i := range resources {
-				nm := resources[i].Resource.GetObjectKind().GroupVersionKind().GroupKind().String()
-				t.Run(nm, func(t *testing.T) {
+			resourceJSON, err := json.Marshal(resources)
+			if err != nil {
+				t.Errorf("unable to marshal resources: %s", err)
+				t.Fail()
+			}
 
-					resourceJSON, err := json.Marshal(resources[i])
-					if err != nil {
-						t.Errorf("unable to marshal resource %d: %s", i, err)
-						t.Fail()
-					}
+			result, diff := jsondiff.Compare(resourceJSON, test.Output, &opts)
 
-					result, diff := jsondiff.Compare(resourceJSON, test.Output[i], &opts)
-
-					switch {
-					case result == jsondiff.FullMatch:
-						return
-					case result == jsondiff.SupersetMatch && test.Config.MatchType == "subset":
-						return
-					default:
-						t.Error(diff)
-					}
-				})
+			switch {
+			case result == jsondiff.FullMatch:
+				return
+			case result == jsondiff.SupersetMatch && test.Config.MatchType == "subset":
+				return
+			default:
+				t.Error(diff)
 			}
 		}
 	})
