@@ -11,6 +11,7 @@ require (
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e
+	github.com/nsf/jsondiff v0.0.0-20190712045011-8443391ee9b6
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/sebdah/goldie v0.0.0-20190531093107-d313ffb52c77
 	github.com/sirupsen/logrus v1.4.1

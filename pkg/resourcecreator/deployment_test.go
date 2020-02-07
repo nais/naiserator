@@ -45,41 +45,6 @@ func TestDeployment(t *testing.T) {
 	viper.Reset()
 	viper.Set("cluster-name", clusterName)
 
-	t.Run("reflection environment variables are set in the application container", func(t *testing.T) {
-
-		app := fixtures.MinimalApplication()
-		app.Spec.Image = "docker/image:latest"
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-
-		assert.Equal(t, app.ObjectMeta.Name, envValue(appContainer.Env, resourcecreator.NaisAppNameEnv))
-		assert.Equal(t, app.ObjectMeta.Namespace, envValue(appContainer.Env, resourcecreator.NaisNamespaceEnv))
-		assert.Equal(t, app.Spec.Image, envValue(appContainer.Env, resourcecreator.NaisAppImageEnv))
-		assert.Equal(t, clusterName, envValue(appContainer.Env, resourcecreator.NaisClusterNameEnv))
-	})
-
-	t.Run("misc settings are applied", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-
-		assert.Equal(t, int32(app.Spec.Port), appContainer.Ports[0].ContainerPort)
-		assert.Equal(t, app.Name, deploy.Spec.Template.Spec.ServiceAccountName)
-	})
-
 	t.Run("prometheus port defaults to application port", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Prometheus.Enabled = true
@@ -109,35 +74,6 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
 		assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
 		assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
-	})
-
-	t.Run("certificate authority files and configuration is set according to spec", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-
-		assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PATH, envValue(appContainer.Env, "NAV_TRUSTSTORE_PATH"))
-		assert.Equal(t, resourcecreator.NAV_TRUSTSTORE_PASSWORD, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
-		assert.Equal(t, resourcecreator.CA_BUNDLE_JKS_CONFIGMAP_NAME, appContainer.VolumeMounts[0].Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_JKS_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_JKS_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_PEM_CONFIGMAP_NAME, appContainer.VolumeMounts[1].Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_PEM_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[1].Name)
-		assert.Equal(t, resourcecreator.CA_BUNDLE_PEM_CONFIGMAP_NAME, deploy.Spec.Template.Spec.Volumes[1].ConfigMap.Name)
-
-		app.Spec.SkipCaBundle = true
-		deploy, err = resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-		appContainer = resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-		assert.Empty(t, envValue(appContainer.Env, "NAV_TRUSTSTORE_PATH"))
-		assert.Empty(t, envValue(appContainer.Env, "NAV_TRUSTSTORE_PASSWORD"))
-		assert.Empty(t, appContainer.VolumeMounts)
-		assert.Empty(t, deploy.Spec.Template.Spec.Volumes)
 	})
 
 	t.Run("leader election sidecar is injected when LE is requested", func(t *testing.T) {
@@ -300,42 +236,6 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, httpProxy, envValue(appContainer.Env, "http_proxy"))
 		assert.Equal(t, httpProxy, envValue(appContainer.Env, "https_proxy"))
 		assert.Equal(t, nprox, envValue(appContainer.Env, "no_proxy"))
-	})
-
-	t.Run("probes are not configured when not set", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
-
-		assert.NoError(t, err)
-		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].ReadinessProbe)
-		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].LivenessProbe)
-	})
-
-	t.Run("default prestop hook applied when not provided", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
-
-		assert.NoError(t, err)
-		assert.Empty(t, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.HTTPGet)
-		assert.Equal(t, []string{"sleep", "5"}, deploy.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.Exec.Command)
-	})
-
-	t.Run("default deployment strategy is RollingUpdate", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-		assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, appsv1.DeploymentStrategyType(app.Spec.Strategy.Type))
-
-		deploy, err := resourcecreator.Deployment(app, resourcecreator.NewResourceOptions())
-
-		assert.NoError(t, err)
-		assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, deploy.Spec.Strategy.Type)
 	})
 
 	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {

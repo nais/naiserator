@@ -5,19 +5,19 @@ import (
 )
 
 // Operation defines what should be done with a resource.
-type Operation int
+type Operation string
 
 const (
-	OperationCreateOrUpdate Operation = iota
-	OperationCreateOrRecreate
-	OperationCreateIfNotExists
-	OperationDeleteIfExists
+	OperationCreateOrUpdate    Operation = `CreateOrUpdate`
+	OperationCreateOrRecreate            = `CreateOrRecreate`
+	OperationCreateIfNotExists           = `CreateIfNotExists`
+	OperationDeleteIfExists              = `DeleteIfExists`
 )
 
 // ResourceOperation is the combination of a Kubernetes resource and what operation to perform on it.
 type ResourceOperation struct {
-	Resource  runtime.Object
-	Operation Operation
+	Resource  runtime.Object `json:"resource"`
+	Operation Operation      `json:"operation"`
 }
 
 type ResourceOperations []ResourceOperation
