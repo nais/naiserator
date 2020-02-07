@@ -45,23 +45,6 @@ func TestDeployment(t *testing.T) {
 	viper.Reset()
 	viper.Set("cluster-name", clusterName)
 
-	t.Run("prometheus is set up correctly", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.Prometheus.Path = "/my/metrics"
-		app.Spec.Prometheus.Port = "1234"
-		app.Spec.Prometheus.Enabled = true
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-
-		assert.Equal(t, strconv.FormatBool(app.Spec.Prometheus.Enabled), deploy.Spec.Template.Annotations["prometheus.io/scrape"])
-		assert.Equal(t, app.Spec.Prometheus.Path, deploy.Spec.Template.Annotations["prometheus.io/path"])
-		assert.Equal(t, app.Spec.Prometheus.Port, deploy.Spec.Template.Annotations["prometheus.io/port"])
-	})
-
 	t.Run("leader election sidecar is injected when LE is requested", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.LeaderElection = true
