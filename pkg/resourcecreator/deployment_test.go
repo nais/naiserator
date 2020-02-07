@@ -44,28 +44,6 @@ func TestDeployment(t *testing.T) {
 	viper.Reset()
 	viper.Set("cluster-name", clusterName)
 
-	t.Run("resource requests and limits are set up correctly", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.Resources.Limits.Cpu = "150m"
-		app.Spec.Resources.Limits.Memory = "2G"
-		app.Spec.Resources.Requests.Cpu = "100m"
-		app.Spec.Resources.Requests.Memory = "512M"
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-
-		assert.Equal(t, app.Spec.Resources.Limits.Cpu, appContainer.Resources.Limits.Cpu().String())
-		assert.Equal(t, app.Spec.Resources.Limits.Memory, appContainer.Resources.Limits.Memory().String())
-		assert.Equal(t, app.Spec.Resources.Requests.Cpu, appContainer.Resources.Requests.Cpu().String())
-		assert.Equal(t, app.Spec.Resources.Requests.Memory, appContainer.Resources.Requests.Memory().String())
-	})
-
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Port = 12333
