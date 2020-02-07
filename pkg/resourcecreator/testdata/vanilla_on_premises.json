@@ -12,6 +12,9 @@
       "labels": {
         "team": "myteam"
       }
+    },
+    "spec": {
+      "image": "navikt/myapplication:1.2.3"
     }
   },
   "output": [
@@ -284,6 +287,7 @@
               "containers": [
                 {
                   "name": "myapplication",
+                  "image": "navikt/myapplication:1.2.3",
                   "ports": [
                     {
                       "name": "http",
@@ -301,10 +305,12 @@
                       "name": "NAIS_NAMESPACE"
                     },
                     {
-                      "name": "NAIS_APP_IMAGE"
+                      "name": "NAIS_APP_IMAGE",
+                      "value": "navikt/myapplication:1.2.3"
                     },
                     {
-                      "name": "NAIS_CLUSTER_NAME"
+                      "name": "NAIS_CLUSTER_NAME",
+                      "value": "test-cluster"
                     },
                     {
                       "name": "NAV_TRUSTSTORE_PATH",

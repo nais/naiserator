@@ -9,8 +9,10 @@ import (
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nsf/jsondiff"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -112,6 +114,9 @@ func TestResourceCreator(t *testing.T) {
 		t.Error(err)
 		t.Fail()
 	}
+
+	viper.Set(config.ClusterName, "test-cluster")
+
 	for _, file := range files {
 		if file.IsDir() {
 			continue
