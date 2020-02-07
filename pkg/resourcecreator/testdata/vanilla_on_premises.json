@@ -301,8 +301,8 @@
                       "value": "myapplication"
                     },
                     {
-                      "value": "mynamespace",
-                      "name": "NAIS_NAMESPACE"
+                      "name": "NAIS_NAMESPACE",
+                      "value": "mynamespace"
                     },
                     {
                       "name": "NAIS_APP_IMAGE",
