@@ -1,7 +1,6 @@
 package resourcecreator_test
 
 import (
-	"strconv"
 	"strings"
 	"testing"
 
@@ -44,22 +43,6 @@ func TestDeployment(t *testing.T) {
 
 	viper.Reset()
 	viper.Set("cluster-name", clusterName)
-
-	t.Run("leader election sidecar is injected when LE is requested", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.LeaderElection = true
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-		leaderElectionContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, "elector")
-		assert.NotNil(t, leaderElectionContainer)
-	})
 
 	t.Run("resource requests and limits are set up correctly", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
