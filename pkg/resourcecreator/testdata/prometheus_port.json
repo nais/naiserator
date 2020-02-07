@@ -1,0 +1,53 @@
+{
+  "config": {
+    "description": "prometheus port is set in deployment and annotations",
+    "matchType": "subset"
+  },
+  "input": {
+    "kind": "Application",
+    "apiVersion": "v1alpha1",
+    "metadata": {
+      "name": "myapplication",
+      "namespace": "mynamespace",
+      "labels": {
+        "team": "myteam"
+      }
+    },
+    "spec": {
+      "port": 11335,
+      "prometheus": {
+        "enabled": true
+      }
+    }
+  },
+  "output": [
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "spec": {
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "ports": [
+                    {
+                      "containerPort": 11335
+                    }
+                  ]
+                }
+              ]
+            },
+            "metadata": {
+              "annotations": {
+                "prometheus.io/port": "11335",
+                "prometheus.io/scrape": "true"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
