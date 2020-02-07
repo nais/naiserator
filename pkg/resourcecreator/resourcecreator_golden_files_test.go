@@ -3,10 +3,12 @@ package resourcecreator_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -31,7 +33,23 @@ type testCase struct {
 	ResourceOptions resourcecreator.ResourceOptions
 	Error           *string
 	Input           json.RawMessage
-	Output          json.RawMessage
+	Output          []json.RawMessage
+}
+
+type match struct {
+	distance int
+	err      error
+}
+
+type meta struct {
+	Operation string
+	Resource  struct {
+		ApiVersion string
+		Kind       string
+		Metadata   struct {
+			Name string
+		}
+	}
 }
 
 func fileReader(file string) io.Reader {
@@ -82,7 +100,7 @@ func subTest(t *testing.T, file string) {
 		} else {
 			assert.NoError(t, err)
 
-			err := compare(t, test, resources)
+			err := comparedeep(test, resources)
 			if err != nil {
 				t.Error(err)
 				t.Fail()
@@ -91,26 +109,86 @@ func subTest(t *testing.T, file string) {
 	})
 }
 
-func compare(t *testing.T, test testCase, resources resourcecreator.ResourceOperations) error {
-
-	resourceJSON, err := json.Marshal(resources)
-	if err != nil {
-		t.Errorf("unable to marshal resources: %s", err)
-		t.Fail()
+// given two Kubernetes objects, calculate the likelyhood that they might refer to the same object.
+func distance(a, b json.RawMessage) int {
+	distance := 0
+	ma, mb := meta{}, meta{}
+	_ = json.Unmarshal(a, &ma)
+	_ = json.Unmarshal(b, &mb)
+	if ma.Operation != mb.Operation {
+		distance++
 	}
+	if ma.Resource.ApiVersion != mb.Resource.ApiVersion {
+		distance++
+	}
+	if ma.Resource.Metadata.Name != mb.Resource.Metadata.Name {
+		distance += 2
+	}
+	if ma.Resource.Kind != mb.Resource.Kind {
+		distance += 5
+	}
+	return distance
+}
 
+// compare two Kubernetes objects against one another.
+func compare(test testCase, a, b json.RawMessage) match {
 	opts := jsondiff.DefaultConsoleOptions()
-
-	result, diff := jsondiff.Compare(resourceJSON, test.Output, &opts)
+	result, diff := jsondiff.Compare(a, b, &opts)
 
 	switch {
 	case result == jsondiff.FullMatch:
-		return nil
+		return match{}
 	case result == jsondiff.SupersetMatch && test.Config.MatchType == "subset":
-		return nil
+		return match{}
 	default:
-		return errors.New(diff)
+		return match{
+			distance: distance(a, b),
+			err:      errors.New(diff),
+		}
 	}
+}
+
+// Compare a real-world set of Kubernetes objects an expected set of Kubernetes objects.
+// The function ignores array order and uses heuristics to figure out the most likely error message.
+func comparedeep(test testCase, resources resourcecreator.ResourceOperations) error {
+	var err error
+
+	serialized := make([]json.RawMessage, len(resources))
+	for i := range resources {
+		serialized[i], err = json.Marshal(resources[i])
+		if err != nil {
+			return fmt.Errorf("unable to marshal resource %d: %s", i, err)
+		}
+	}
+
+	matched := make([]bool, len(serialized))
+
+OUTER:
+	for i := range test.Output {
+		errs := make([]match, 0)
+
+		for j := range resources {
+			if matched[j] {
+				continue
+			}
+			matched[j] = true
+			match := compare(test, serialized[j], test.Output[i])
+			if match.err == nil {
+				continue OUTER
+			} else {
+				errs = append(errs, match)
+			}
+		}
+
+		// In case of match error against all possible array indices, return the diff
+		// that is most likely the object tried matching against.
+		sort.Slice(errs, func(i, j int) bool {
+			return errs[i].distance < errs[j].distance
+		})
+		return errs[0].err
+	}
+
+	return nil
 }
 
 func TestResourceCreator(t *testing.T) {
