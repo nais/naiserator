@@ -199,6 +199,8 @@ func TestResourceCreator(t *testing.T) {
 	}
 
 	viper.Set(config.ClusterName, "test-cluster")
+	viper.Set(config.ProxyAddress, "http://foo.bar:5224")
+	viper.Set(config.ProxyExclude, []string{"foo", "bar", "baz"})
 
 	for _, file := range files {
 		if file.IsDir() {

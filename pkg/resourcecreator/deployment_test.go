@@ -1,7 +1,6 @@
 package resourcecreator_test
 
 import (
-	"strings"
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -142,30 +141,6 @@ func TestDeployment(t *testing.T) {
 		assert.Zero(t, envValue(appContainer.Env, "http_proxy"))
 		assert.Zero(t, envValue(appContainer.Env, "https_proxy"))
 		assert.Zero(t, envValue(appContainer.Env, "no_proxy"))
-	})
-
-	t.Run("webproxy configuration is injected into the container env", func(t *testing.T) {
-		viper.Reset()
-		viper.Set("proxy.address", httpProxy)
-		viper.Set("proxy.exclude", noProxy)
-		app := fixtures.MinimalApplication()
-		app.Spec.WebProxy = true
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		deploy, err := resourcecreator.Deployment(app, opts)
-		assert.Nil(t, err)
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-
-		nprox := strings.Join(noProxy, ",")
-
-		assert.Equal(t, httpProxy, envValue(appContainer.Env, "HTTP_PROXY"))
-		assert.Equal(t, httpProxy, envValue(appContainer.Env, "HTTPS_PROXY"))
-		assert.Equal(t, nprox, envValue(appContainer.Env, "NO_PROXY"))
-		assert.Equal(t, httpProxy, envValue(appContainer.Env, "http_proxy"))
-		assert.Equal(t, httpProxy, envValue(appContainer.Env, "https_proxy"))
-		assert.Equal(t, nprox, envValue(appContainer.Env, "no_proxy"))
 	})
 
 	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {
