@@ -137,9 +137,12 @@ func TestCreate(t *testing.T) {
 		objects := getRealObjects(resources.Extract(resourcecreator.OperationCreateOrUpdate))
 		assert.NotNil(t, objects.hpa)
 		assert.NotNil(t, objects.service)
-		assert.NotNil(t, objects.serviceAccount)
 		assert.NotNil(t, objects.deployment)
 		assert.Nil(t, objects.ingress)
+
+		// Test that the ServiceAccount is created
+		objects = getRealObjects(resources.Extract(resourcecreator.OperationCreateIfNotExists))
+		assert.NotNil(t, objects.serviceAccount)
 
 		// Test that the Ingress is deleted
 		objects = getRealObjects(resources.Extract(resourcecreator.OperationDeleteIfExists))
