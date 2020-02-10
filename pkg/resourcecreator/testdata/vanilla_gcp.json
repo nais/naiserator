@@ -1,0 +1,654 @@
+{
+  "config": {
+    "description": "vanilla application running in GCP with default configuration and access policies"
+  },
+  "resourceoptions": {
+    "AccessPolicy": true,
+    "GoogleProjectID": "google-project-id"
+  },
+  "input": {
+    "kind": "Application",
+    "apiVersion": "v1alpha1",
+    "metadata": {
+      "name": "myapplication",
+      "namespace": "mynamespace",
+      "uid": "123456",
+      "labels": {
+        "team": "myteam"
+      }
+    },
+    "spec": {
+      "image": "navikt/myapplication:1.2.3",
+      "accessPolicy": {
+        "inbound": {
+          "rules": [
+            {
+              "application": "app1"
+            },
+            {
+              "application": "app2",
+              "namespace": "q1"
+            },
+            {
+              "application": "*",
+              "namespace": "t1"
+            }
+          ]
+        },
+        "outbound": {
+          "rules": [
+            {
+              "application": "app3"
+            },
+            {
+              "application": "app4",
+              "namespace": "q2"
+            },
+            {
+              "application": "*",
+              "namespace": "t2"
+            }
+          ]
+        },
+        "external": [
+          {
+            "host": "www.external-application.com"
+          }
+        ]
+      }
+    }
+  },
+  "output": [
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "ports": [
+            {
+              "name": "http",
+              "port": 80,
+              "protocol": "TCP",
+              "targetPort": "http"
+            }
+          ],
+          "selector": {
+            "app": "myapplication"
+          },
+          "type": "ClusterIP"
+        },
+        "status": {
+          "loadBalancer": {}
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "v1",
+        "kind": "ServiceAccount",
+        "metadata": {
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "annotations": {
+            "iam.gke.io/gcp-service-account": "myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "v1",
+        "kind": "HorizontalPodAutoscaler",
+        "metadata": {
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "scaleTargetRef": {
+            "name": "myapplication",
+            "apiVersion": "apps/v1",
+            "kind": "Deployment"
+          },
+          "minReplicas": 2,
+          "maxReplicas": 4,
+          "targetCPUUtilizationPercentage": 50
+        },
+        "status": {
+          "currentReplicas": 0,
+          "desiredReplicas": 0
+        }
+      }
+    },
+    {
+      "operation": "DeleteIfExists",
+      "resource": {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "Role",
+        "metadata": {
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "ownerReferences": [
+            {
+              "name": "myapplication",
+              "uid": "123456",
+              "apiVersion": "v1alpha1",
+              "kind": "Application"
+            }
+          ]
+        },
+        "rules": [
+          {
+            "verbs": [
+              "get",
+              "list",
+              "watch",
+              "create",
+              "update",
+              "patch"
+            ],
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "endpoints"
+            ],
+            "resourceNames": [
+              "myapplication"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "DeleteIfExists",
+      "resource": {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "RoleBinding",
+        "metadata": {
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "ownerReferences": [
+            {
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456",
+              "apiVersion": "v1alpha1"
+            }
+          ]
+        },
+        "roleRef": {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Role",
+          "name": "myapplication"
+        },
+        "subjects": [
+          {
+            "namespace": "mynamespace",
+            "kind": "ServiceAccount",
+            "name": "myapplication"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "networking.k8s.io/v1",
+        "kind": "NetworkPolicy",
+        "metadata": {
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "egress": [
+            {
+              "to": [
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "istio": "pilot"
+                    }
+                  },
+                  "namespaceSelector": {
+                    "matchLabels": {
+                      "name": "istio-system"
+                    }
+                  }
+                },
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "istio": "mixer"
+                    }
+                  },
+                  "namespaceSelector": {
+                    "matchLabels": {
+                      "name": "istio-system"
+                    }
+                  }
+                },
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "k8s-app": "kube-dns"
+                    }
+                  },
+                  "namespaceSelector": {}
+                },
+                {
+                  "ipBlock": {
+                    "cidr": "0.0.0.0/0"
+                  }
+                }
+              ]
+            },
+            {
+              "to": [
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "app": "app3"
+                    }
+                  }
+                },
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "app": "app4"
+                    }
+                  },
+                  "namespaceSelector": {
+                    "matchLabels": {
+                      "name": "q2"
+                    }
+                  }
+                },
+                {
+                  "podSelector": {},
+                  "namespaceSelector": {
+                    "matchLabels": {
+                      "name": "t2"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "ingress": [
+            {
+              "from": [
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "app": "prometheus"
+                    }
+                  },
+                  "namespaceSelector": {
+                    "matchLabels": {
+                      "name": "istio-system"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "from": [
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "app": "app1"
+                    }
+                  }
+                },
+                {
+                  "podSelector": {
+                    "matchLabels": {
+                      "app": "app2"
+                    }
+                  },
+                  "namespaceSelector": {
+                    "matchLabels": {
+                      "name": "q1"
+                    }
+                  }
+                },
+                {
+                  "namespaceSelector": {
+                    "matchLabels": {
+                      "name": "t1"
+                    }
+                  },
+                  "podSelector": {}
+                }
+              ]
+            }
+          ],
+          "podSelector": {
+            "matchLabels": {
+              "app": "myapplication"
+            }
+          },
+          "policyTypes": [
+            "Ingress",
+            "Egress"
+          ]
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "security.istio.io/v1beta1",
+        "kind": "AuthorizationPolicy",
+        "metadata": {
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "rules": [
+            {
+              "from": [
+                {
+                  "source": {
+                    "principals": [
+                      "cluster.local/ns/mynamespace/sa/app1",
+                      "cluster.local/ns/q1/sa/app2",
+                      "cluster.local/ns/t1/sa/*"
+                    ]
+                  }
+                }
+              ],
+              "to": [
+                {
+                  "operation": {
+                    "methods": [
+                      "*"
+                    ],
+                    "paths": [
+                      "*"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "selector": {
+            "matchLabels": {
+              "app": "myapplication"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "metadata": {
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "replicas": 0,
+          "selector": {
+            "matchLabels": {
+              "app": "myapplication"
+            }
+          },
+          "template": {
+            "spec": {
+              "imagePullSecrets": [
+                {
+                  "name": "gpr-credentials"
+                }
+              ],
+              "volumes": [
+                {
+                  "name": "ca-bundle-jks",
+                  "configMap": {
+                    "name": "ca-bundle-jks"
+                  }
+                },
+                {
+                  "name": "ca-bundle-pem",
+                  "configMap": {
+                    "name": "ca-bundle-pem"
+                  }
+                }
+              ],
+              "containers": [
+                {
+                  "name": "myapplication",
+                  "image": "navikt/myapplication:1.2.3",
+                  "ports": [
+                    {
+                      "name": "http",
+                      "containerPort": 8080,
+                      "protocol": "TCP"
+                    }
+                  ],
+                  "env": [
+                    {
+                      "name": "NAIS_APP_NAME",
+                      "value": "myapplication"
+                    },
+                    {
+                      "name": "NAIS_NAMESPACE",
+                      "value": "mynamespace"
+                    },
+                    {
+                      "name": "NAIS_APP_IMAGE",
+                      "value": "navikt/myapplication:1.2.3"
+                    },
+                    {
+                      "name": "NAIS_CLUSTER_NAME",
+                      "value": "test-cluster"
+                    },
+                    {
+                      "name": "NAV_TRUSTSTORE_PATH",
+                      "value": "/etc/ssl/certs/java/cacerts"
+                    },
+                    {
+                      "name": "NAV_TRUSTSTORE_PASSWORD",
+                      "value": "changeme"
+                    }
+                  ],
+                  "resources": {
+                    "limits": {
+                      "cpu": "500m",
+                      "memory": "512Mi"
+                    },
+                    "requests": {
+                      "cpu": "200m",
+                      "memory": "256Mi"
+                    }
+                  },
+                  "volumeMounts": [
+                    {
+                      "name": "ca-bundle-jks",
+                      "readOnly": true,
+                      "mountPath": "/etc/ssl/certs/java/cacerts",
+                      "subPath": "ca-bundle.jks"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/ssl/certs/ca-certificates.crt",
+                      "subPath": "ca-bundle.pem"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/pki/tls/certs/ca-bundle.crt",
+                      "subPath": "ca-bundle.pem"
+                    },
+                    {
+                      "readOnly": true,
+                      "mountPath": "/etc/ssl/ca-bundle.pem",
+                      "subPath": "ca-bundle.pem",
+                      "name": "ca-bundle-pem"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/pki/tls/cacert.pem",
+                      "subPath": "ca-bundle.pem"
+                    },
+                    {
+                      "name": "ca-bundle-pem",
+                      "readOnly": true,
+                      "mountPath": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+                      "subPath": "ca-bundle.pem"
+                    }
+                  ],
+                  "lifecycle": {
+                    "preStop": {
+                      "exec": {
+                        "command": [
+                          "sleep",
+                          "5"
+                        ]
+                      }
+                    }
+                  },
+                  "imagePullPolicy": "IfNotPresent"
+                }
+              ],
+              "restartPolicy": "Always",
+              "dnsPolicy": "ClusterFirst",
+              "serviceAccountName": "myapplication"
+            },
+            "metadata": {
+              "ownerReferences": [
+                {
+                  "apiVersion": "v1alpha1",
+                  "kind": "Application",
+                  "name": "myapplication",
+                  "uid": "123456"
+                }
+              ],
+              "name": "myapplication",
+              "namespace": "mynamespace",
+              "creationTimestamp": null,
+              "labels": {
+                "team": "myteam",
+                "app": "myapplication"
+              },
+              "annotations": {
+                "prometheus.io/path": "/metrics",
+                "prometheus.io/port": "8080",
+                "prometheus.io/scrape": "false"
+              }
+            }
+          },
+          "strategy": {
+            "type": "RollingUpdate",
+            "rollingUpdate": {
+              "maxUnavailable": 0,
+              "maxSurge": 1
+            }
+          },
+          "revisionHistoryLimit": 10,
+          "progressDeadlineSeconds": 300
+        },
+        "status": {}
+      }
+    }
+  ]
+}
