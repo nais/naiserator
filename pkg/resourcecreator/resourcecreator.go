@@ -24,7 +24,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	ops := ResourceOperations{
 		{Service(app), OperationCreateOrUpdate},
-		{ServiceAccount(app, resourceOptions), OperationCreateOrUpdate},
+		{ServiceAccount(app, resourceOptions), OperationCreateIfNotExists},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 

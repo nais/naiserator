@@ -101,7 +101,7 @@
       }
     },
     {
-      "operation": "CreateOrUpdate",
+      "operation": "CreateIfNotExists",
       "resource": {
         "apiVersion": "v1",
         "kind": "ServiceAccount",

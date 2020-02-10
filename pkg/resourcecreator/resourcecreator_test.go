@@ -137,7 +137,6 @@ func TestCreate(t *testing.T) {
 		objects := getRealObjects(resources.Extract(resourcecreator.OperationCreateOrUpdate))
 		assert.NotNil(t, objects.hpa)
 		assert.NotNil(t, objects.service)
-		assert.NotNil(t, objects.serviceAccount)
 		assert.NotNil(t, objects.deployment)
 		assert.Nil(t, objects.ingress)
 
