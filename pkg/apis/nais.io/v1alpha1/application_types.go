@@ -73,6 +73,8 @@ type ApplicationSpec struct {
 
 // ApplicationStatus contains different NAIS status properties
 type ApplicationStatus struct {
+	SynchronizationTime     int64  `json:"synchronizationTime,omitempty"`
+	RolloutCompleteTime     int64  `json:"rolloutCompleteTime,omitempty"`
 	CorrelationID           string `json:"correlationID,omitempty"`
 	DeploymentRolloutStatus string `json:"deploymentRolloutStatus,omitempty"`
 	SynchronizationState    string `json:"synchronizationState,omitempty"`

@@ -152,6 +152,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	logger.Debugf("Successful synchronization")
 	app.Status.SynchronizationState = EventSynchronized
 	app.Status.SynchronizationHash = rollout.SynchronizationHash
+	app.Status.SynchronizationTime = time.Now().UnixNano()
 	metrics.Deployments.Inc()
 
 	_, err = n.reportEvent(app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
@@ -342,6 +343,7 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
 				err = n.UpdateApplication(&app, func(app *v1alpha1.Application) error {
 					app.Status.SynchronizationState = EventRolloutComplete
+					app.Status.RolloutCompleteTime = time.Now().UnixNano()
 					app.SetDeploymentRolloutStatus(event.RolloutStatus)
 					_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
 					return err
