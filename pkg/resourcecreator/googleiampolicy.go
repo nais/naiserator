@@ -13,6 +13,12 @@ func GoogleIAMPolicy(app *nais.Application, sa *google_iam_crd.IAMServiceAccount
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = GoogleIAMServiceAccountNamespace
 	objectMeta.Name = app.CreateAppNamespaceHash()
+	objectMeta.OwnerReferences = append(objectMeta.OwnerReferences, k8s_meta.OwnerReference{
+		APIVersion:         GoogleIAMAPIVersion,
+		Kind:               "IAMServiceAccount",
+		Name:               sa.Name,
+		UID:                sa.UID,
+	})
 
 	iamPolicy := google_iam_crd.IAMPolicy{
 		TypeMeta: k8s_meta.TypeMeta{
