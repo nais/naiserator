@@ -95,6 +95,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 			}
 		}
+	} else if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP == nil {
+		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
+		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
+		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationDeleteIfExists})
+		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationDeleteIfExists})
 	}
 
 	if resourceOptions.AccessPolicy {
