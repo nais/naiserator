@@ -164,7 +164,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus)
 
-	if n.Config.KafkaEnabled {
+	if n.Config.KafkaEnabled && !app.SkipDeploymentMessage() {
 		kafka.Events <- kafka.Message{Event: event, Logger: logger}
 	}
 
@@ -331,7 +331,7 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 			if deploymentComplete(deploy, &deploy.Status) {
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				if n.Config.KafkaEnabled {
+				if n.Config.KafkaEnabled && !app.SkipDeploymentMessage() {
 					kafka.Events <- kafka.Message{Event: event, Logger: logger}
 				}
 

@@ -5,6 +5,7 @@ package v1alpha1
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/google/uuid"
 	hash "github.com/mitchellh/hashstructure"
@@ -19,6 +20,7 @@ import (
 
 const (
 	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
+	SkipDeploymentMessageAnnotation   = "nais.io/skipDeploymentMessage"
 	DefaultSecretMountPath            = "/var/run/secrets"
 )
 
@@ -362,4 +364,12 @@ func (in *Application) DefaultSecretPath(base string) SecretPath {
 		MountPath: DefaultVaultMountPath,
 		KvPath:    fmt.Sprintf("%s/%s/%s", base, in.Name, in.Namespace),
 	}
+}
+
+func (in *Application) SkipDeploymentMessage() bool {
+	if in.Annotations == nil {
+		return false
+	}
+	skip, _ := strconv.ParseBool(in.Annotations[SkipDeploymentMessageAnnotation])
+	return skip
 }
