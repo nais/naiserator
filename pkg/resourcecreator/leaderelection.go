@@ -52,11 +52,7 @@ func LeaderElectionRole(app *nais.Application) *rbacv1.Role {
 				},
 				Verbs: []string{
 					"get",
-					"list",
-					"watch",
-					"create",
 					"update",
-					"patch",
 				},
 			},
 		},
