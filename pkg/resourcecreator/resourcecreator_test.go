@@ -17,7 +17,7 @@ import (
 	"k8s.io/api/apps/v1"
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	networking "k8s.io/api/networking/v1"
 	rbac "k8s.io/api/rbac/v1"
 )
@@ -26,7 +26,7 @@ type realObjects struct {
 	authorizationPolicy *istio.AuthorizationPolicy
 	deployment          *v1.Deployment
 	hpa                 *autoscaling.HorizontalPodAutoscaler
-	ingress             *extensions.Ingress
+	ingress             *networkingv1beta1.Ingress
 	networkPolicy       *networking.NetworkPolicy
 	role                *rbac.Role
 	rolebinding         *rbac.RoleBinding
@@ -57,7 +57,7 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.serviceAccount = v
 		case *autoscaling.HorizontalPodAutoscaler:
 			o.hpa = v
-		case *extensions.Ingress:
+		case *networkingv1beta1.Ingress:
 			o.ingress = v
 		case *networking.NetworkPolicy:
 			o.networkPolicy = v

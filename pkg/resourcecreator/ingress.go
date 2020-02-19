@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -21,15 +21,15 @@ func validateUrl(u *url.URL) error {
 	return nil
 }
 
-func ingressRule(app *nais.Application, u *url.URL) extensionsv1beta1.IngressRule {
-	return extensionsv1beta1.IngressRule{
+func ingressRule(app *nais.Application, u *url.URL) networkingv1beta1.IngressRule {
+	return networkingv1beta1.IngressRule{
 		Host: u.Host,
-		IngressRuleValue: extensionsv1beta1.IngressRuleValue{
-			HTTP: &extensionsv1beta1.HTTPIngressRuleValue{
-				Paths: []extensionsv1beta1.HTTPIngressPath{
+		IngressRuleValue: networkingv1beta1.IngressRuleValue{
+			HTTP: &networkingv1beta1.HTTPIngressRuleValue{
+				Paths: []networkingv1beta1.HTTPIngressPath{
 					{
 						Path: u.Path,
-						Backend: extensionsv1beta1.IngressBackend{
+						Backend: networkingv1beta1.IngressBackend{
 							ServiceName: app.Name,
 							ServicePort: intstr.IntOrString{IntVal: nais.DefaultServicePort},
 						},
@@ -40,8 +40,8 @@ func ingressRule(app *nais.Application, u *url.URL) extensionsv1beta1.IngressRul
 	}
 }
 
-func ingressRules(app *nais.Application, urls []string) ([]extensionsv1beta1.IngressRule, error) {
-	var rules []extensionsv1beta1.IngressRule
+func ingressRules(app *nais.Application, urls []string) ([]networkingv1beta1.IngressRule, error) {
+	var rules []networkingv1beta1.IngressRule
 
 	for _, ingress := range urls {
 		parsedUrl, err := url.Parse(ingress)
@@ -62,7 +62,7 @@ func ingressRules(app *nais.Application, urls []string) ([]extensionsv1beta1.Ing
 	return rules, nil
 }
 
-func Ingress(app *nais.Application) (*extensionsv1beta1.Ingress, error) {
+func Ingress(app *nais.Application) (*networkingv1beta1.Ingress, error) {
 
 	rules, err := ingressRules(app, app.Spec.Ingresses)
 	if err != nil {
@@ -73,13 +73,13 @@ func Ingress(app *nais.Application) (*extensionsv1beta1.Ingress, error) {
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = app.Spec.Liveness.Path
 
-	return &extensionsv1beta1.Ingress{
+	return &networkingv1beta1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "extensions/v1beta1",
+			APIVersion: "networking/v1beta1",
 		},
 		ObjectMeta: objectMeta,
-		Spec: extensionsv1beta1.IngressSpec{
+		Spec: networkingv1beta1.IngressSpec{
 			Rules: rules,
 		},
 	}, nil

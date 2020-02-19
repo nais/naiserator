@@ -43,9 +43,9 @@ var i = []Service{
 	},
 	{
 		Name:      "ingress",
-		Interface: "typed_extensions_v1beta1.IngressInterface",
-		Type:      "*extensionsv1beta1.Ingress",
-		Client:    "clientSet.ExtensionsV1beta1().Ingresses",
+		Interface: "typed_networking_v1beta1.IngressInterface",
+		Type:      "*networkingv1beta1.Ingress",
+		Client:    "clientSet.NetworkingV1beta1().Ingresses",
 	},
 	{
 		Name:      "horizontalPodAutoscaler",
