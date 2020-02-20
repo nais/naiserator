@@ -3,6 +3,7 @@ module github.com/nais/naiserator
 require (
 	cloud.google.com/go v0.49.0 // indirect
 	github.com/Shopify/sarama v1.23.0
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-multierror v1.0.0

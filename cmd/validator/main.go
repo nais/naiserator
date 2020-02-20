@@ -1,14 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 
+	"github.com/ghodss/yaml"
 	nais_v1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
-	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
@@ -29,6 +32,7 @@ const (
 	ExitInvocation ExitCode = 1
 	ExitFile       ExitCode = 2
 	ExitFormat     ExitCode = 3
+	ExitRender     ExitCode = 4
 )
 
 func DefaultConfig() Config {
@@ -61,19 +65,48 @@ func run() (ExitCode, error) {
 		return ExitInvocation, fmt.Errorf("must specify input file (try --input)")
 	}
 
-	file, err := os.Open(cfg.Input)
+	file, err := ioutil.ReadFile(cfg.Input)
 	if err != nil {
 		return ExitFile, err
 	}
 
 	app := &nais_v1.Application{}
-	decoder := yaml.NewDecoder(file)
-	err = decoder.Decode(app)
+	err = yaml.Unmarshal(file, app)
 	if err != nil {
 		return ExitFormat, err
 	}
 
 	log.Infof("input file '%s' validated successfully", cfg.Input)
+
+	if !cfg.Render {
+		return ExitSuccess, nil
+	}
+
+	err = nais_v1.ApplyDefaults(app)
+	if err != nil {
+		return ExitRender, err
+	}
+
+	opts := resourcecreator.NewResourceOptions()
+	operations, err := resourcecreator.Create(app, opts)
+	if err != nil {
+		return ExitRender, err
+	}
+
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+
+	for _, op := range operations {
+		switch op.Operation {
+		case resourcecreator.OperationDeleteIfExists:
+			continue
+		default:
+			err = encoder.Encode(op.Resource)
+			if err != nil {
+				return ExitRender, err
+			}
+		}
+	}
 
 	return ExitSuccess, err
 }
