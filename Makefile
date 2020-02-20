@@ -21,6 +21,9 @@ docker-push:
 local:
 	go run cmd/naiserator/main.go --kubeconfig=${KUBECONFIG} --bind=127.0.0.1:8080
 
+validator:
+	go build -o bin/validator cmd/validator/main.go
+
 install:
 	cd cmd/naiserator && go install
 
