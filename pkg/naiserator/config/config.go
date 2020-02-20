@@ -90,7 +90,7 @@ const (
 	VaultKvPath                         = "vault.kv-path"
 )
 
-func init() {
+func setup() {
 	// Automatically read configuration options from environment variables.
 	// i.e. --proxy.address will be configurable using NAISERATOR_PROXY_ADDRESS.
 	viper.SetEnvPrefix("NAISERATOR")
@@ -166,6 +166,8 @@ func decoderHook(dc *mapstructure.DecoderConfig) {
 func New() (*Config, error) {
 	var err error
 	var cfg Config
+
+	setup()
 
 	err = viper.ReadInConfig()
 	if err != nil {
