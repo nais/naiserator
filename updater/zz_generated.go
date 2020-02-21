@@ -22,8 +22,8 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,8 +32,8 @@ import (
 	typed_apps_v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	typed_autoscaling_v1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
 	typed_core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	typed_extensions_v1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
 	typed_networking_v1 "k8s.io/client-go/kubernetes/typed/networking/v1"
+	typed_networking_v1beta1 "k8s.io/client-go/kubernetes/typed/networking/v1beta1"
 	typed_rbac_v1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
 )
 
@@ -131,8 +131,8 @@ func deployment(client typed_apps_v1.DeploymentInterface, old, new *appsv1.Deplo
 	}
 }
 
-func ingress(client typed_extensions_v1beta1.IngressInterface, old, new *extensionsv1beta1.Ingress) func() error {
-	log.Infof("creating or updating *extensionsv1beta1.Ingress for %s", new.Name)
+func ingress(client typed_networking_v1beta1.IngressInterface, old, new *networkingv1beta1.Ingress) func() error {
+	log.Infof("creating or updating *networkingv1beta1.Ingress for %s", new.Name)
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
@@ -546,8 +546,8 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 		return deployment(c, old, new)
 
-	case *extensionsv1beta1.Ingress:
-		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
+	case *networkingv1beta1.Ingress:
+		c := clientSet.NetworkingV1beta1().Ingresses(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -798,15 +798,15 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			}
 		}
 
-	case *extensionsv1beta1.Ingress:
-		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
+	case *networkingv1beta1.Ingress:
+		c := clientSet.NetworkingV1beta1().Ingresses(new.Namespace)
 		return func() error {
-			log.Infof("pre-deleting *extensionsv1beta1.Ingress for %s", new.Name)
+			log.Infof("pre-deleting *networkingv1beta1.Ingress for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
 				return fmt.Errorf("%s: %s", "ingress", err)
 			}
-			log.Infof("creating new *extensionsv1beta1.Ingress for %s", new.Name)
+			log.Infof("creating new *networkingv1beta1.Ingress for %s", new.Name)
 			_, err = c.Create(new)
 			if err != nil {
 				return fmt.Errorf("%s: %s", "ingress", err)
@@ -1122,10 +1122,10 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return nil
 		}
 
-	case *extensionsv1beta1.Ingress:
-		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
+	case *networkingv1beta1.Ingress:
+		c := clientSet.NetworkingV1beta1().Ingresses(new.Namespace)
 		return func() error {
-			log.Infof("creating new *extensionsv1beta1.Ingress for %s", new.Name)
+			log.Infof("creating new *networkingv1beta1.Ingress for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && !errors.IsAlreadyExists(err) {
 				return fmt.Errorf("%s: %s", "ingress", err)
@@ -1366,10 +1366,10 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return err
 		}
 
-	case *extensionsv1beta1.Ingress:
-		c := clientSet.ExtensionsV1beta1().Ingresses(new.Namespace)
+	case *networkingv1beta1.Ingress:
+		c := clientSet.NetworkingV1beta1().Ingresses(new.Namespace)
 		return func() error {
-			log.Infof("deleting *extensionsv1beta1.Ingress for %s", new.Name)
+			log.Infof("deleting *networkingv1beta1.Ingress for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil {
 				if errors.IsNotFound(err) {

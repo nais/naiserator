@@ -72,7 +72,7 @@ func TestSynchronizer(t *testing.T) {
 	app.Spec.Ingresses = []string{"https://foo.bar"}
 	ingress, err := resourcecreator.Ingress(app)
 	app.Spec.Ingresses = []string{}
-	ingress, err = clientSet.ExtensionsV1beta1().Ingresses(namespace).Create(ingress)
+	ingress, err = clientSet.NetworkingV1beta1().Ingresses(namespace).Create(ingress)
 	if err != nil || len(ingress.Spec.Rules) == 0 {
 		t.Fatalf("BUG: error creating ingress for testing: %s", err)
 	}
@@ -98,7 +98,7 @@ func TestSynchronizer(t *testing.T) {
 	testResource(clientSet.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{}))
 
 	// Test that the Ingress resource was removed
-	testResourceNotExist(clientSet.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{}))
+	testResourceNotExist(clientSet.NetworkingV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{}))
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
