@@ -22,7 +22,8 @@ type Config struct {
 var cfg = DefaultConfig()
 
 var help = `
-validate and/or render NAIS manifests
+Validator verifies that a NAIS manifest is syntactically correct.
+It can also, optionally, render Kubernetes resources from an Application resource.
 `
 
 type ExitCode int
@@ -45,7 +46,7 @@ func init() {
 	flag.ErrHelp = fmt.Errorf(help)
 
 	flag.StringVar(&cfg.Input, "input", cfg.Input, "nais.yaml input file")
-	flag.BoolVar(&cfg.Render, "render", cfg.Render, "Render generated NAIS resources to stdout.")
+	flag.BoolVar(&cfg.Render, "render", cfg.Render, "Render generated NAIS resources to stdout (experimental)")
 
 	flag.Parse()
 
