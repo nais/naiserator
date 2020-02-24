@@ -399,7 +399,7 @@ func probe(app *nais.Application, probe nais.Probe) *corev1.Probe {
 	k8sprobe := &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
-				Path: probe.Path,
+				Path: leadingSlash(probe.Path),
 				Port: intstr.FromInt(port),
 			},
 		},
@@ -414,6 +414,13 @@ func probe(app *nais.Application, probe nais.Probe) *corev1.Probe {
 	}
 
 	return k8sprobe
+}
+
+func leadingSlash(s string) string {
+	if len(s) == 0 || s[0] == '/' {
+		return s
+	}
+	return "/" + s
 }
 
 func GetContainerByName(containers []corev1.Container, name string) *corev1.Container {
