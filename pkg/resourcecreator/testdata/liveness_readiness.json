@@ -1,0 +1,59 @@
+{
+  "config": {
+    "description": "liveness and readiness checks are added",
+    "matchType": "subset"
+  },
+  "input": {
+    "kind": "Application",
+    "apiVersion": "v1alpha1",
+    "metadata": {
+      "name": "myapplication",
+      "namespace": "mynamespace",
+      "labels": {
+        "team": "myteam"
+      }
+    },
+    "spec": {
+      "liveness": {
+        "path": "liveness"
+      },
+      "readiness": {
+        "path": "readiness"
+      }
+    }
+  },
+  "output": [
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "spec": {
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "livenessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                      "path": "liveness",
+                      "port": 8080
+                    },
+                    "periodSeconds": 10,
+                    "timeoutSeconds": 1
+                  },
+                  "readinessProbe": {
+                    "httpGet": {
+                      "path": "readiness",
+                      "port": 8080
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}
