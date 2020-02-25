@@ -36,7 +36,7 @@
                   "livenessProbe": {
                     "failureThreshold": 3,
                     "httpGet": {
-                      "path": "liveness",
+                      "path": "/liveness",
                       "port": 8080
                     },
                     "periodSeconds": 10,
@@ -44,7 +44,7 @@
                   },
                   "readinessProbe": {
                     "httpGet": {
-                      "path": "readiness",
+                      "path": "/readiness",
                       "port": 8080
                     }
                   }

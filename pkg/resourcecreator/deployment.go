@@ -3,6 +3,7 @@ package resourcecreator
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
@@ -399,7 +400,7 @@ func probe(app *nais.Application, probe nais.Probe) *corev1.Probe {
 	k8sprobe := &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
-				Path: probe.Path,
+				Path: leadingSlash(probe.Path),
 				Port: intstr.FromInt(port),
 			},
 		},
@@ -414,6 +415,13 @@ func probe(app *nais.Application, probe nais.Probe) *corev1.Probe {
 	}
 
 	return k8sprobe
+}
+
+func leadingSlash(s string) string {
+	if strings.HasPrefix(s, "/") {
+		return s
+	}
+	return "/" + s
 }
 
 func GetContainerByName(containers []corev1.Container, name string) *corev1.Container {
