@@ -323,7 +323,7 @@ func (in *Application) LogFields() log.Fields {
 		"namespace":       in.GetNamespace(),
 		"resourceversion": in.GetResourceVersion(),
 		"application":     in.GetName(),
-		"correlation-id":  in.Status.CorrelationID,
+		"correlation_id":  in.Status.CorrelationID,
 	}
 }
 
