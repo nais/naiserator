@@ -3,6 +3,7 @@ package resourcecreator
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
@@ -417,7 +418,7 @@ func probe(app *nais.Application, probe nais.Probe) *corev1.Probe {
 }
 
 func leadingSlash(s string) string {
-	if len(s) == 0 || s[0] == '/' {
+	if strings.HasPrefix(s, "/") {
 		return s
 	}
 	return "/" + s
