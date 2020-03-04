@@ -93,7 +93,7 @@ func (c config) AddVaultContainer(podSpec *corev1.PodSpec) (*corev1.PodSpec, err
 	}
 }
 
-func valideSecretPaths(paths []nais.SecretPath) error {
+func validateSecretPaths(paths []nais.SecretPath) error {
 	m := make(map[string]string, len(paths))
 	for _, s := range paths {
 		if old, exists := m[s.MountPath]; exists {
@@ -106,8 +106,22 @@ func valideSecretPaths(paths []nais.SecretPath) error {
 
 func (c config) addVaultContainer(spec *corev1.PodSpec, paths []nais.SecretPath) (*corev1.PodSpec, error) {
 
-	if err := valideSecretPaths(paths); err != nil {
+	if err := validateSecretPaths(paths); err != nil {
 		return nil, err
+	}
+
+	if c.app.Spec.Vault.LoadDefault {
+		var defaultPathExists = false
+		for _, path := range paths {
+			defaultMountPathExists := filepath.Clean(nais.DefaultVaultMountPath) == filepath.Clean(path.MountPath)
+			defaultKvPathExists := filepath.Clean(c.defaultSecretPath().KvPath) == filepath.Clean(path.KvPath)
+			if defaultMountPathExists || defaultKvPathExists {
+				defaultPathExists = true
+			}
+		}
+		if !defaultPathExists {
+			paths = append(paths, c.defaultSecretPath())
+		}
 	}
 
 	spec.InitContainers = append(spec.InitContainers, c.createInitContainer(paths))
@@ -248,9 +262,9 @@ func createDefaultMount() corev1.VolumeMount {
 	}
 }
 
-func (in config) defaultSecretPath() nais.SecretPath {
+func (c config) defaultSecretPath() nais.SecretPath {
 	return nais.SecretPath{
 		MountPath: nais.DefaultVaultMountPath,
-		KvPath:    fmt.Sprintf("%s/%s/%s", defaultKVPath(), in.app.Name, in.app.Namespace),
+		KvPath:    fmt.Sprintf("%s/%s/%s", defaultKVPath(), c.app.Name, c.app.Namespace),
 	}
 }

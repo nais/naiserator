@@ -568,6 +568,8 @@ spec:
               properties:
                 enabled:
                   type: boolean
+                loadDefault:
+                  type: boolean
                 paths:
                   items:
                     properties:
