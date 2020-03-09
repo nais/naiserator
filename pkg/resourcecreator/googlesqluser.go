@@ -35,7 +35,6 @@ func GoogleSqlUser(app *nais.Application, instanceName string, cascadingDelete b
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLUserSpec{
 			InstanceRef: google_sql_crd.InstanceRef{Name: instanceName},
-			Host:        "%",
 			Password: google_sql_crd.SqlUserPasswordValue{
 				ValueFrom: google_sql_crd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: google_sql_crd.SecretRef{
