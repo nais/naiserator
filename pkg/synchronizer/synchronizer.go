@@ -193,7 +193,8 @@ func (n *Synchronizer) Sync(rollout Rollout) (error, bool) {
 			if errors.IsConflict(err) {
 				retry = true
 			}
-			return fmt.Errorf("persisting resource to Kubernetes: %s", err), retry
+			reason := errors.ReasonForError(err)
+			return fmt.Errorf("persisting resource to Kubernetes: %s: %s", reason, err), retry
 		}
 		metrics.ResourcesGenerated.Inc()
 	}
