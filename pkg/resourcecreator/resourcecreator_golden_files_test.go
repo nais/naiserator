@@ -148,7 +148,7 @@ func compare(test testCase, a, b json.RawMessage) match {
 	}
 }
 
-// Compare a real-world set of Kubernetes objects an expected set of Kubernetes objects.
+// Compare a real-world set of Kubernetes objects against an expected set of Kubernetes objects.
 // The function ignores array order and uses heuristics to figure out the most likely error message.
 func comparedeep(test testCase, resources resourcecreator.ResourceOperations) error {
 	var err error
@@ -178,6 +178,10 @@ OUTER:
 			} else {
 				errs = append(errs, match)
 			}
+		}
+
+		if len(errs) == 0 {
+			return nil
 		}
 
 		// In case of match error against all possible array indices, return the diff
