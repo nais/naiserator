@@ -48,13 +48,13 @@
               "application": "*",
               "namespace": "t2"
             }
+          ],
+          "external": [
+            {
+              "host": "www.external-application.com"
+            }
           ]
-        },
-        "external": [
-          {
-            "host": "www.external-application.com"
-          }
-        ]
+        }
       }
     }
   },
