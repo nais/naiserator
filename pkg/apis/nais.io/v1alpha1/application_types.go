@@ -246,8 +246,15 @@ type Service struct {
 	Port int32 `json:"port"`
 }
 
+type AccessPolicyPortRule struct {
+	Port int32 `json:"port"`
+	// +kubebuilder:validation:Enum=HTTP;HTTPS;GRPC;HTTP2;MONGO;TCP;TLS
+	Protocol string `json:"protocol"`
+}
+
 type AccessPolicyExternalRule struct {
-	Host string `json:"host"`
+	Host  string                 `json:"host"`
+	Ports []AccessPolicyPortRule `json:"ports,omitempty"`
 }
 
 type AccessPolicyRule struct {
