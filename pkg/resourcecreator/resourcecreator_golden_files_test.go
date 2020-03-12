@@ -21,6 +21,7 @@ import (
 
 const (
 	testDataDirectory = "testdata"
+	matchSubset       = "subset"
 )
 
 type testCaseConfig struct {
@@ -100,7 +101,11 @@ func subTest(t *testing.T, file string) {
 		} else {
 			assert.NoError(t, err)
 
-			err := comparedeep(test, resources)
+			if test.Config.MatchType == matchSubset {
+				err = comparedeep(test, resources)
+			} else {
+				err = compareexact(test, resources)
+			}
 			if err != nil {
 				t.Error(err)
 				t.Fail()
@@ -138,7 +143,7 @@ func compare(test testCase, a, b json.RawMessage) match {
 	switch {
 	case result == jsondiff.FullMatch:
 		return match{}
-	case result == jsondiff.SupersetMatch && test.Config.MatchType == "subset":
+	case result == jsondiff.SupersetMatch && test.Config.MatchType == matchSubset:
 		return match{}
 	default:
 		return match{
@@ -146,6 +151,21 @@ func compare(test testCase, a, b json.RawMessage) match {
 			err:      errors.New(diff),
 		}
 	}
+}
+
+func compareexact(test testCase, resources resourcecreator.ResourceOperations) error {
+	serialized, err := json.Marshal(resources)
+	if err != nil {
+		return err
+	}
+
+	expected, err := json.Marshal(test.Output)
+	if err != nil {
+		return err
+	}
+
+	match := compare(test, serialized, expected)
+	return match.err
 }
 
 // Compare a real-world set of Kubernetes objects against an expected set of Kubernetes objects.
