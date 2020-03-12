@@ -1,0 +1,80 @@
+{
+  "config": {
+    "description": "specifying custom port and protocol for mesh-external services in gcp",
+    "matchType": "subset"
+  },
+  "resourceoptions": {
+    "AccessPolicy": true,
+    "GoogleProjectID": "google-project-id",
+    "NumReplicas": 1
+  },
+  "input": {
+    "kind": "Application",
+    "apiVersion": "v1alpha1",
+    "metadata": {
+      "name": "myapplication",
+      "namespace": "mynamespace",
+      "uid": "123456",
+      "labels": {
+        "team": "myteam"
+      }
+    },
+    "spec": {
+      "image": "navikt/myapplication:1.2.3",
+      "accessPolicy": {
+        "outbound": {
+          "external": [
+            {
+              "host": "external-service.com",
+              "ports": [
+                {
+                  "port": 13579,
+                  "protocol": "TCP"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "output": [
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "networking.istio.io/v1alpha3",
+        "kind": "ServiceEntry",
+        "metadata": {
+          "name": "myapplication",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "hosts": [
+            "external-service.com"
+          ],
+          "location": "MESH_EXTERNAL",
+          "resolution": "DNS",
+          "ports": [
+            {
+              "number": 13579,
+              "protocol": "TCP"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
