@@ -11,9 +11,22 @@ func ServiceEntry(app *nais.Application) *istio.ServiceEntry {
 		return nil
 	}
 
+	ports := make([]istio.Port, 0)
+
 	hosts := make([]string, len(app.Spec.AccessPolicy.Outbound.External))
-	for i := range app.Spec.AccessPolicy.Outbound.External {
-		hosts[i] = app.Spec.AccessPolicy.Outbound.External[i].Host
+	for i, ext := range app.Spec.AccessPolicy.Outbound.External {
+		hosts[i] = ext.Host
+		for _, port := range ext.Ports {
+			ports = append(ports, serviceEntryPort(port))
+		}
+	}
+
+	if len(ports) == 0 {
+		ports = append(ports, istio.Port{
+			Name:     "https",
+			Protocol: "HTTPS",
+			Number:   443,
+		})
 	}
 
 	return &istio.ServiceEntry{
@@ -26,13 +39,14 @@ func ServiceEntry(app *nais.Application) *istio.ServiceEntry {
 			Hosts:      hosts,
 			Location:   IstioServiceEntryLocationExternal,
 			Resolution: IstioServiceEntryResolutionDNS,
-			Ports: []istio.Port{
-				{
-					Name:     "https",
-					Protocol: "HTTPS",
-					Number:   443,
-				},
-			},
+			Ports:      ports,
 		},
+	}
+}
+
+func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
+	return istio.Port{
+		Number:   rule.Port,
+		Protocol: rule.Protocol,
 	}
 }

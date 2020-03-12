@@ -32,6 +32,15 @@
                   "protocol": "TCP"
                 }
               ]
+            },
+            {
+              "host": "another-external-service.com",
+              "ports": [
+                {
+                  "port": 2,
+                  "protocol": "GRPC"
+                }
+              ]
             }
           ]
         }
@@ -63,7 +72,8 @@
         },
         "spec": {
           "hosts": [
-            "external-service.com"
+            "external-service.com",
+            "another-external-service.com"
           ],
           "location": "MESH_EXTERNAL",
           "resolution": "DNS",
@@ -71,6 +81,10 @@
             {
               "number": 13579,
               "protocol": "TCP"
+            },
+            {
+              "number": 2,
+              "protocol": "GRPC"
             }
           ]
         }
