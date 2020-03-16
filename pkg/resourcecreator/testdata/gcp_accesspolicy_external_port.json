@@ -29,6 +29,7 @@
               "ports": [
                 {
                   "port": 13579,
+                  "name": "someservice",
                   "protocol": "TCP"
                 }
               ]
@@ -38,6 +39,7 @@
               "ports": [
                 {
                   "port": 2,
+                  "name": "grpc",
                   "protocol": "GRPC"
                 }
               ]
@@ -80,10 +82,12 @@
           "ports": [
             {
               "number": 13579,
+              "name": "someservice",
               "protocol": "TCP"
             },
             {
               "number": 2,
+              "name": "grpc",
               "protocol": "GRPC"
             }
           ]

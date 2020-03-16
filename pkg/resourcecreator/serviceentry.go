@@ -46,6 +46,7 @@ func ServiceEntry(app *nais.Application) *istio.ServiceEntry {
 
 func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
 	return istio.Port{
+		Name:     rule.Name,
 		Number:   rule.Port,
 		Protocol: rule.Protocol,
 	}
