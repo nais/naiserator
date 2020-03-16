@@ -288,6 +288,27 @@ spec:
                         properties:
                           host:
                             type: string
+                          ports:
+                            items:
+                              properties:
+                                port:
+                                  format: int32
+                                  type: integer
+                                protocol:
+                                  enum:
+                                  - HTTP
+                                  - HTTPS
+                                  - GRPC
+                                  - HTTP2
+                                  - MONGO
+                                  - TCP
+                                  - TLS
+                                  type: string
+                              required:
+                              - port
+                              - protocol
+                              type: object
+                            type: array
                         required:
                         - host
                         type: object
