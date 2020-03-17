@@ -63,10 +63,14 @@ func ingressRules(app *nais.Application, urls []string) ([]networkingv1beta1.Ing
 }
 
 func Ingress(app *nais.Application) (*networkingv1beta1.Ingress, error) {
-
 	rules, err := ingressRules(app, app.Spec.Ingresses)
 	if err != nil {
 		return nil, err
+	}
+
+	// Ingress objects must have at least one path rule to be valid.
+	if len(rules) == 0 {
+		return nil, nil
 	}
 
 	objectMeta := app.CreateObjectMeta()

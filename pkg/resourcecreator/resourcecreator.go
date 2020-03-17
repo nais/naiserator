@@ -7,6 +7,7 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
+
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,8 +16,6 @@ import (
 // Create takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
 func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOperations, error) {
-	var operation Operation
-
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
@@ -28,20 +27,14 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 
-	leRole := LeaderElectionRole(app)
-	leRoleBinding := LeaderElectionRoleBinding(app)
-
 	if app.Spec.LeaderElection {
+		leRole := LeaderElectionRole(app)
+		leRoleBinding := LeaderElectionRoleBinding(app)
 		ops = append(ops, ResourceOperation{leRole, OperationCreateOrUpdate})
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
-	} else {
-		ops = append(ops, ResourceOperation{leRole, OperationDeleteIfExists})
-		ops = append(ops, ResourceOperation{leRoleBinding, OperationDeleteIfExists})
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
-		// TODO: A service account will be required for all GCP related resources.
-		// TODO: If implementing more features, move these two outside of the cloud storage check.
 		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
 		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
@@ -95,11 +88,6 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 			}
 		}
-	} else if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP == nil {
-		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
-		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
-		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationDeleteIfExists})
-		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationDeleteIfExists})
 	}
 
 	if resourceOptions.AccessPolicy {
@@ -110,32 +98,18 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
 		}
 
-		operation = OperationCreateOrUpdate
-		if len(app.Spec.Ingresses) == 0 {
-			operation = OperationDeleteIfExists
-		}
-
 		for _, vs := range vses {
-			ops = append(ops, ResourceOperation{vs, operation})
+			ops = append(ops, ResourceOperation{vs, OperationCreateOrUpdate})
 		}
 
-		// Applies to Authorization policies
-		operation = OperationCreateOrUpdate
-		if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
-			operation = OperationDeleteIfExists
-		}
 		authorizationPolicy := AuthorizationPolicy(app)
 		if authorizationPolicy != nil {
-			ops = append(ops, ResourceOperation{authorizationPolicy, operation})
+			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
 		}
 
 		serviceEntry := ServiceEntry(app)
-		operation = OperationCreateOrUpdate
-		if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
-			operation = OperationDeleteIfExists
-		}
 		if serviceEntry != nil {
-			ops = append(ops, ResourceOperation{serviceEntry, operation})
+			ops = append(ops, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
 		}
 
 	} else {
@@ -145,14 +119,9 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			return nil, fmt.Errorf("while creating ingress: %s", err)
 		}
 
-		// Kubernetes doesn't support ingress resources without any rules. This means we must
-		// delete the old resource if it exists.
-		operation = OperationCreateOrUpdate
-		if len(app.Spec.Ingresses) == 0 {
-			operation = OperationDeleteIfExists
+		if ingress != nil {
+			ops = append(ops, ResourceOperation{ingress, OperationCreateOrUpdate})
 		}
-
-		ops = append(ops, ResourceOperation{ingress, operation})
 	}
 
 	deployment, err := Deployment(app, resourceOptions)
@@ -167,6 +136,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 func intp(i int) *int {
 	return &i
 }
+
 func int32p(i int32) *int32 {
 	return &i
 }

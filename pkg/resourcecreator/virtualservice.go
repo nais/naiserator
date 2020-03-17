@@ -10,10 +10,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func VirtualServices(app *nais.Application) (vses []*istio.VirtualService, err error) {
-	if len(app.Spec.Ingresses) == 0 {
-		return nil, nil
-	}
+func VirtualServices(app *nais.Application) ([]*istio.VirtualService, error) {
+	vses := make([]*istio.VirtualService, 0)
 
 	for _, ingress := range app.Spec.Ingresses {
 		parsedUrl, err := url.Parse(ingress)
@@ -32,7 +30,7 @@ func VirtualServices(app *nais.Application) (vses []*istio.VirtualService, err e
 		vses = append(vses, &vs)
 	}
 
-	return
+	return vses, nil
 }
 
 func virtualService(ingress url.URL, app *nais.Application) istio.VirtualService {
