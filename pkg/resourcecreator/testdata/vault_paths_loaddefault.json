@@ -1,6 +1,6 @@
 {
   "config": {
-    "description": "vault enabled with default configuration",
+    "description": "vault enabled with user specified path for managed secret and loadDefault enabled",
     "matchType": "subset",
     "vaultEnabled": true
   },
@@ -17,7 +17,14 @@
     },
     "spec": {
       "vault": {
-        "enabled": true
+        "enabled": true,
+        "loadDefault": true,
+        "paths": [
+          {
+            "kvPath": "/serviceuser/data/test/srvuser",
+            "mountPath": "/secrets/credential/srvuser"
+          }
+        ]
       }
     }
   },
@@ -71,6 +78,11 @@
                     },
                     {
                       "name": "vault-volume",
+                      "mountPath": "/secrets/credential/srvuser",
+                      "subPath": "vault/secrets/credential/srvuser"
+                    },
+                    {
+                      "name": "vault-volume",
                       "mountPath": "/var/run/secrets/nais.io/vault",
                       "subPath": "vault/var/run/secrets/nais.io/vault"
                     }
@@ -87,6 +99,7 @@
                     "-one-shot",
                     "-vault=https://vault.adeo.no",
                     "-save-token=/var/run/secrets/nais.io/vault/vault_token",
+                    "-cn=secret:/serviceuser/data/test/srvuser:dir=/secrets/credential/srvuser,fmt=flatten,retries=1",
                     "-cn=secret:/kv/preprod/fss/myapplication/mynamespace:dir=/var/run/secrets/nais.io/vault,fmt=flatten,retries=1"
                   ],
                   "env": [
@@ -104,6 +117,11 @@
                     }
                   ],
                   "volumeMounts": [
+                    {
+                      "name": "vault-volume",
+                      "mountPath": "/secrets/credential/srvuser",
+                      "subPath": "vault/secrets/credential/srvuser"
+                    },
                     {
                       "name": "vault-volume",
                       "mountPath": "/var/run/secrets/nais.io/vault",

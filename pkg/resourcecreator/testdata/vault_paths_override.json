@@ -1,6 +1,6 @@
 {
   "config": {
-    "description": "vault enabled with default configuration",
+    "description": "vault enabled with user specified path for default app secrets",
     "matchType": "subset",
     "vaultEnabled": true
   },
@@ -17,7 +17,13 @@
     },
     "spec": {
       "vault": {
-        "enabled": true
+        "enabled": true,
+        "paths": [
+          {
+            "kvPath": "/kv/preprod/fss/myapplication/mynamespace",
+            "mountPath": "/var/run/secrets/nais.io/vault"
+          }
+        ]
       }
     }
   },

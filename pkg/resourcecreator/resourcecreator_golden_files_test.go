@@ -24,8 +24,9 @@ const (
 )
 
 type testCaseConfig struct {
-	Description string
-	MatchType   string
+	Description  string
+	MatchType    string
+	VaultEnabled bool
 }
 
 type testCase struct {
@@ -81,6 +82,14 @@ func subTest(t *testing.T, file string) {
 	}
 
 	t.Run(test.Config.Description, func(t *testing.T) {
+		if test.Config.VaultEnabled {
+			viper.Set("features.vault", true)
+			viper.Set("vault.address", "https://vault.adeo.no")
+			viper.Set("vault.kv-path", "/kv/preprod/fss")
+			viper.Set("vault.auth-path", "auth/kubernetes/preprod/fss/login")
+			viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-d122b16")
+		}
+
 		app := &nais.Application{}
 		err = json.Unmarshal(test.Input, app)
 		if err != nil {

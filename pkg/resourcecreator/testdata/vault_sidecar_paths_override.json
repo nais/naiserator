@@ -1,6 +1,6 @@
 {
   "config": {
-    "description": "vault enabled with default configuration",
+    "description": "vault enabled with sidecar enabled and user specified path for default app secrets",
     "matchType": "subset",
     "vaultEnabled": true
   },
@@ -17,7 +17,14 @@
     },
     "spec": {
       "vault": {
-        "enabled": true
+        "enabled": true,
+        "sidecar": true,
+        "paths": [
+          {
+            "kvPath": "/kv/preprod/fss/myapplication/mynamespace",
+            "mountPath": "/var/run/secrets/nais.io/vault"
+          }
+        ]
       }
     }
   },
@@ -31,6 +38,38 @@
           "template": {
             "spec": {
               "containers": [
+                {
+                  "name": "vks-sidecar",
+                  "image": "navikt/vault-sidekick:v0.3.10-d122b16",
+                  "args": [
+                    "-v=10",
+                    "-logtostderr",
+                    "-renew-token",
+                    "-vault=https://vault.adeo.no"
+                  ],
+                  "env": [
+                    {
+                      "name": "VAULT_AUTH_METHOD",
+                      "value": "token"
+                    },
+                    {
+                      "name": "VAULT_TOKEN_FILE",
+                      "value": "/var/run/secrets/nais.io/vault/vault_token"
+                    }
+                  ],
+                  "resources": {
+                    "requests": {
+                      "cpu": "10m"
+                    }
+                  },
+                  "volumeMounts": [
+                    {
+                      "name": "vault-volume",
+                      "mountPath": "/var/run/secrets/nais.io/vault",
+                      "subPath": "vault/var/run/secrets/nais.io/vault"
+                    }
+                  ]
+                },
                 {
                   "volumeMounts": [
                     {
