@@ -56,7 +56,7 @@
         "apiVersion": "networking.istio.io/v1alpha3",
         "kind": "ServiceEntry",
         "metadata": {
-          "name": "myapplication",
+          "name": "myapplication-someservice",
           "namespace": "mynamespace",
           "creationTimestamp": null,
           "labels": {
@@ -74,8 +74,7 @@
         },
         "spec": {
           "hosts": [
-            "external-service.com",
-            "another-external-service.com"
+            "external-service.com"
           ],
           "location": "MESH_EXTERNAL",
           "resolution": "DNS",
@@ -84,7 +83,40 @@
               "number": 13579,
               "name": "someservice",
               "protocol": "TCP"
-            },
+            }
+          ]
+        }
+      }
+    },
+    {
+      "operation": "CreateOrUpdate",
+      "resource": {
+        "apiVersion": "networking.istio.io/v1alpha3",
+        "kind": "ServiceEntry",
+        "metadata": {
+          "name": "myapplication-grpc",
+          "namespace": "mynamespace",
+          "creationTimestamp": null,
+          "labels": {
+            "app": "myapplication",
+            "team": "myteam"
+          },
+          "ownerReferences": [
+            {
+              "apiVersion": "v1alpha1",
+              "kind": "Application",
+              "name": "myapplication",
+              "uid": "123456"
+            }
+          ]
+        },
+        "spec": {
+          "hosts": [
+            "another-external-service.com"
+          ],
+          "location": "MESH_EXTERNAL",
+          "resolution": "DNS",
+          "ports": [
             {
               "number": 2,
               "name": "grpc",
