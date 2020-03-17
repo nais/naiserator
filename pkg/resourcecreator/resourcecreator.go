@@ -7,6 +7,7 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
+
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -129,13 +130,9 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			ops = append(ops, ResourceOperation{authorizationPolicy, operation})
 		}
 
-		serviceEntry := ServiceEntry(app)
-		operation = OperationCreateOrUpdate
-		if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
-			operation = OperationDeleteIfExists
-		}
-		if serviceEntry != nil {
-			ops = append(ops, ResourceOperation{serviceEntry, operation})
+		serviceEntries := ServiceEntries(app)
+		for _, serviceEntry := range serviceEntries {
+			ops = append(ops, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
 		}
 
 	} else {

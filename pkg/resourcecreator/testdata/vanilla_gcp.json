@@ -538,7 +538,7 @@
         "apiVersion": "networking.istio.io/v1alpha3",
         "kind": "ServiceEntry",
         "metadata": {
-          "name": "myapplication",
+          "name": "myapplication-01",
           "namespace": "mynamespace",
           "creationTimestamp": null,
           "labels": {

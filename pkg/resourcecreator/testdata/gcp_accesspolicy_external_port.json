@@ -56,7 +56,7 @@
         "apiVersion": "networking.istio.io/v1alpha3",
         "kind": "ServiceEntry",
         "metadata": {
-          "name": "myapplication-someservice",
+          "name": "myapplication-01",
           "namespace": "mynamespace",
           "creationTimestamp": null,
           "labels": {
@@ -94,7 +94,7 @@
         "apiVersion": "networking.istio.io/v1alpha3",
         "kind": "ServiceEntry",
         "metadata": {
-          "name": "myapplication-grpc",
+          "name": "myapplication-02",
           "namespace": "mynamespace",
           "creationTimestamp": null,
           "labels": {
