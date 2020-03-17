@@ -129,26 +129,3 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
 }
-
-func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
-	switch new := resource.(type) {
-	{{range .}}
-		case {{.Type}}:
-		c := {{.Client}}(new.Namespace)
-		return func() error {
-			log.Infof("deleting {{ .Type }} for %s", new.Name)
-			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil {
-				if errors.IsNotFound(err) {
-					return nil
-				}
-				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
-			}
-
-			return err
-		}
-	{{end}}
-	default:
-		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
-	}
-}
