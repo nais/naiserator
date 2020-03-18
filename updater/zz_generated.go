@@ -1075,6 +1075,23 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 	}
 }
 
+func Orphans(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, name, namespace string) ([]runtime.Object, error) {
+	orphans := make([]runtime.Object, 0)
+
+	{
+		c := clientSet.CoreV1().Services(namespace)
+		resources, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		if err != nil {
+			return nil, fmt.Errorf("discover %s: %s", "service", err)
+		}
+		for _, r := range resources.Items {
+			orphans = append(orphans, &r)
+		}
+	}
+
+	return orphans, nil
+}
+
 func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
