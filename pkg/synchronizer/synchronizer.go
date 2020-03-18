@@ -19,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -182,6 +183,34 @@ func (n *Synchronizer) Main() {
 	}
 }
 
+// Return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
+func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
+
+	// Return true if a cluster resource also is applied with the rollout.
+	intersects := func(existing runtime.Object) bool {
+		for _, rop := range rollout.ResourceOperations {
+			if rop.Resource.GetObjectKind().GroupVersionKind() == existing.GetObjectKind().GroupVersionKind() {
+				return true
+			}
+		}
+		return false
+	}
+
+	resources, err := updater.FindAll(n.ClientSet, n.AppClient, n.IstioClient, rollout.App.Name, rollout.App.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
+	}
+
+	unreferenced := make([]runtime.Object, 0, len(resources))
+	for _, existing := range resources {
+		if !intersects(existing) {
+			unreferenced = append(unreferenced, existing)
+		}
+	}
+
+	return unreferenced, nil
+}
+
 func (n *Synchronizer) Sync(rollout Rollout) (error, bool) {
 
 	commits := n.ClusterOperations(rollout)
@@ -290,6 +319,18 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 		}
 
 		funcs = append(funcs, fn)
+	}
+
+	// Delete extraneous resources
+	unreferenced, err := n.Unreferenced(rollout)
+	if err != nil {
+		funcs = append(funcs, func() error {
+			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
+		})
+	} else {
+		for _, resource := range unreferenced {
+			funcs = append(funcs, updater.DeleteIfExists(n.ClientSet, n.AppClient, n.IstioClient, resource))
+		}
 	}
 
 	return funcs
