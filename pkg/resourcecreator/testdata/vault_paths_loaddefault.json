@@ -18,7 +18,9 @@
     "spec": {
       "vault": {
         "enabled": true,
-        "loadDefault": true,
+        "mounts": {
+          "default": true
+        },
         "paths": [
           {
             "kvPath": "/serviceuser/data/test/srvuser",

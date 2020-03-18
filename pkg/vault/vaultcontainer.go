@@ -44,7 +44,7 @@ func (c config) validate() (bool, error) {
 		multierror.Append(result, fmt.Errorf("vault auth path not found in environment"))
 	}
 
-	for _, p := range c.app.Spec.Vault.Mounts {
+	for _, p := range c.app.Spec.Vault.Paths {
 		if len(p.MountPath) == 0 {
 			multierror.Append(result, fmt.Errorf("mount path not specified"))
 			break
@@ -86,10 +86,10 @@ func NewVaultContainerCreator(app nais.Application) (Creator, error) {
 
 // Add init/sidecar container to pod spec.
 func (c config) AddVaultContainer(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
-	if len(c.app.Spec.Vault.Mounts) == 0 {
+	if len(c.app.Spec.Vault.Paths) == 0 {
 		return c.addVaultContainer(podSpec, []nais.SecretPath{c.defaultSecretPath()})
 	} else {
-		return c.addVaultContainer(podSpec, c.app.Spec.Vault.Mounts)
+		return c.addVaultContainer(podSpec, c.app.Spec.Vault.Paths)
 	}
 }
 
@@ -110,7 +110,7 @@ func (c config) addVaultContainer(spec *corev1.PodSpec, paths []nais.SecretPath)
 		return nil, err
 	}
 
-	if c.app.Spec.Vault.LoadDefault {
+	if c.app.Spec.Vault.Mounts.Default {
 		var defaultPathExists = false
 		for _, path := range paths {
 			defaultMountPathExists := filepath.Clean(nais.DefaultVaultMountPath) == filepath.Clean(path.MountPath)

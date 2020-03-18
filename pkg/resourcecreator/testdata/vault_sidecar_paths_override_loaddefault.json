@@ -19,7 +19,9 @@
       "vault": {
         "enabled": true,
         "sidecar": true,
-        "loadDefault": true,
+        "mounts": {
+          "default": true
+        },
         "paths": [
           {
             "kvPath": "/kv/preprod/fss/myapplication/mynamespace",

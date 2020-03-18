@@ -568,8 +568,11 @@ spec:
               properties:
                 enabled:
                   type: boolean
-                loadDefault:
-                  type: boolean
+                mounts:
+                  properties:
+                    default:
+                      type: boolean
+                  type: object
                 paths:
                   items:
                     properties:

@@ -18,7 +18,9 @@
     "spec": {
       "vault": {
         "enabled": true,
-        "loadDefault": true,
+        "mounts": {
+          "default": true
+        },
         "paths": [
           {
             "kvPath": "/kv/preprod/fss/myapplication/mynamespace",
