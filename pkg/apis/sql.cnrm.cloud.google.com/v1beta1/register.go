@@ -30,8 +30,11 @@ var (
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&SQLInstance{},
+		&SQLInstanceList{},
 		&SQLDatabase{},
+		&SQLDatabaseList{},
 		&SQLUser{},
+		&SQLUserList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
