@@ -137,12 +137,13 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	{
 		c := {{.Client}}(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "{{.Type}}", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
-		}
+		} else if existing != nil {
+            for _, r := range existing.Items {
+                resources = append(resources, &r)
+            }
+        }
 	}
 	{{end}}
 

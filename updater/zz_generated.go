@@ -1309,220 +1309,240 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	{
 		c := clientSet.CoreV1().Services(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*corev1.Service", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.CoreV1().Secrets(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*corev1.Secret", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.CoreV1().ServiceAccounts(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*corev1.ServiceAccount", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.AppsV1().Deployments(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*appsv1.Deployment", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.NetworkingV1beta1().Ingresses(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networkingv1beta1.Ingress", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*autoscalingv1.HorizontalPodAutoscaler", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.NetworkingV1().NetworkPolicies(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networkingv1.NetworkPolicy", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.NetworkingV1alpha3().VirtualServices(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networking_istio_io_v1alpha3.VirtualService", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.NetworkingV1alpha3().ServiceEntries(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networking_istio_io_v1alpha3.ServiceEntry", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.RbacV1().Roles(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*rbacv1.Role", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := clientSet.RbacV1().RoleBindings(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*rbacv1.RoleBinding", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.IamV1beta1().IAMServiceAccounts(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.IamV1beta1().IAMPolicies(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicy", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.IamV1beta1().IAMPolicyMembers(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.StorageV1beta1().StorageBuckets(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucket", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.StorageV1beta1().StorageBucketAccessControls(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.SqlV1beta1().SQLInstances(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLInstance", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.SqlV1beta1().SQLDatabases(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLDatabase", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := customClient.SqlV1beta1().SQLUsers(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLUser", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
 	{
 		c := istioClient.SecurityV1beta1().AuthorizationPolicies(namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*istio_security_v1beta1.AuthorizationPolicy", err)
-		}
-		for _, r := range existing.Items {
-			resources = append(resources, &r)
+		} else if existing != nil {
+			for _, r := range existing.Items {
+				resources = append(resources, &r)
+			}
 		}
 	}
 
