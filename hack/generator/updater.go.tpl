@@ -129,3 +129,23 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
 }
+
+func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, name, namespace string) ([]runtime.Object, error) {
+	resources := make([]runtime.Object, 0)
+
+	{{range .}}
+	{
+		c := {{.Client}}(namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		if err != nil {
+			return nil, fmt.Errorf("discover %s: %s", "{{.Type}}", err)
+		}
+		for _, r := range existing.Items {
+			resources = append(resources, &r)
+		}
+	}
+	{{end}}
+
+	return resources, nil
+}
+
