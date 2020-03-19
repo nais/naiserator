@@ -19,6 +19,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -189,12 +190,24 @@ func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
 
 	// Return true if a cluster resource also is applied with the rollout.
 	intersects := func(existing runtime.Object) bool {
+		existingMeta, err := meta.Accessor(existing)
+		if err != nil {
+			log.Errorf("BUG: unable to determine TypeMeta for existing resource: %s", err)
+			return true
+		}
 		for _, rop := range rollout.ResourceOperations {
 			// Normally we would use GroupVersionKind to compare resource types, but due to
 			// https://github.com/kubernetes/client-go/issues/308 the GVK is not set on the existing resource.
 			// Reflection seems to work fine here.
-			if reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing) {
+			resourceMeta, err := meta.Accessor(rop.Resource)
+			if err != nil {
+				log.Errorf("BUG: unable to determine TypeMeta for new resource: %s", err)
 				return true
+			}
+			if reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing) {
+				if resourceMeta.GetName() == existingMeta.GetName() {
+					return true
+				}
 			}
 		}
 		return false

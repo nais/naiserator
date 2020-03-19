@@ -140,9 +140,11 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "{{.Type}}", err)
 		} else if existing != nil {
-            for _, r := range existing.Items {
-                resources = append(resources, &r)
-            }
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "{{.Type}}", err)
+			}
+			resources = append(resources, items...)
         }
 	}
 	{{end}}
