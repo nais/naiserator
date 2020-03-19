@@ -35,6 +35,7 @@ import (
 	typed_sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	istio_security_v1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	typed_istio_security_v1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/security/v1beta1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 )
 
 {{range .}}
@@ -128,6 +129,54 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
+}
+
+func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, app *nais.Application) ([]runtime.Object, error) {
+	resources := make([]runtime.Object, 0)
+
+	{{range .}}
+	{
+		c := {{.Client}}(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "{{.Type}}", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "{{.Type}}", err)
+			}
+			resources = append(resources, items...)
+        }
+	}
+	{{end}}
+
+	return withOwnerReference(app, resources), nil
+}
+
+func withOwnerReference(app *nais.Application, resources []runtime.Object) []runtime.Object {
+	owned := make([]runtime.Object, 0, len(resources))
+
+	hasOwnerReference := func(r runtime.Object) (bool, error) {
+		m, err := meta.Accessor(r)
+		if err != nil {
+			return false, err
+		}
+		for _, ref := range m.GetOwnerReferences() {
+			if ref.UID == app.UID {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	for _, resource := range resources {
+		ok, err := hasOwnerReference(resource)
+		if err == nil && ok {
+			owned = append(owned, resource)
+		}
+	}
+
+	return owned
 }
 
 func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {

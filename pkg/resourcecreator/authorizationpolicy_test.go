@@ -20,7 +20,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	t.Run("auth policy with no ingresses or access policies", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		authorizationPolicy := resourcecreator.AuthorizationPolicy(app)
-		assert.Len(t, authorizationPolicy.Spec.Rules, 0)
+		assert.Nil(t, authorizationPolicy)
 	})
 
 	t.Run("auth policy no namespace or ingress", func(t *testing.T) {

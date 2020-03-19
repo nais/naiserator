@@ -2,6 +2,7 @@ package synchronizer
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -18,7 +19,9 @@ import (
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -182,6 +185,49 @@ func (n *Synchronizer) Main() {
 	}
 }
 
+// Return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
+func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
+
+	// Return true if a cluster resource also is applied with the rollout.
+	intersects := func(existing runtime.Object) bool {
+		existingMeta, err := meta.Accessor(existing)
+		if err != nil {
+			log.Errorf("BUG: unable to determine TypeMeta for existing resource: %s", err)
+			return true
+		}
+		for _, rop := range rollout.ResourceOperations {
+			// Normally we would use GroupVersionKind to compare resource types, but due to
+			// https://github.com/kubernetes/client-go/issues/308 the GVK is not set on the existing resource.
+			// Reflection seems to work fine here.
+			resourceMeta, err := meta.Accessor(rop.Resource)
+			if err != nil {
+				log.Errorf("BUG: unable to determine TypeMeta for new resource: %s", err)
+				return true
+			}
+			if reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing) {
+				if resourceMeta.GetName() == existingMeta.GetName() {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	resources, err := updater.FindAll(n.ClientSet, n.AppClient, n.IstioClient, rollout.App)
+	if err != nil {
+		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
+	}
+
+	unreferenced := make([]runtime.Object, 0, len(resources))
+	for _, existing := range resources {
+		if !intersects(existing) {
+			unreferenced = append(unreferenced, existing)
+		}
+	}
+
+	return unreferenced, nil
+}
+
 func (n *Synchronizer) Sync(rollout Rollout) (error, bool) {
 
 	commits := n.ClusterOperations(rollout)
@@ -285,13 +331,32 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 			fn = updater.CreateOrRecreate(n.ClientSet, n.AppClient, n.IstioClient, rop.Resource)
 		case resourcecreator.OperationCreateIfNotExists:
 			fn = updater.CreateIfNotExists(n.ClientSet, n.AppClient, n.IstioClient, rop.Resource)
-		case resourcecreator.OperationDeleteIfExists:
-			fn = updater.DeleteIfExists(n.ClientSet, n.AppClient, n.IstioClient, rop.Resource)
 		default:
 			log.Fatalf("BUG: no such operation %s", rop.Operation)
 		}
 
 		funcs = append(funcs, fn)
+	}
+
+	// Delete extraneous resources
+	unreferenced, err := n.Unreferenced(rollout)
+	if err != nil {
+		funcs = append(funcs, func() error {
+			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
+		})
+	} else {
+		for _, resource := range unreferenced {
+			funcs = append(funcs, func() error {
+				m, err := meta.Accessor(resource)
+				if err != nil {
+					log.Debugf("would delete resource but got error: %s", err)
+					return nil
+				}
+				log.Debugf("would delete resource: %s", m.GetSelfLink())
+				return nil
+			})
+			//funcs = append(funcs, updater.DeleteIfExists(n.ClientSet, n.AppClient, n.IstioClient, resource))
+		}
 	}
 
 	return funcs
