@@ -206,7 +206,11 @@ func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
 			}
 			if reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing) {
 				if resourceMeta.GetName() == existingMeta.GetName() {
-					return true
+					for _, ref := range existingMeta.GetOwnerReferences() {
+						if ref.UID == rollout.App.UID {
+							return true
+						}
+					}
 				}
 			}
 		}
