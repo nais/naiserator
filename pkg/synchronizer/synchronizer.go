@@ -2,6 +2,7 @@ package synchronizer
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -189,7 +190,10 @@ func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
 	// Return true if a cluster resource also is applied with the rollout.
 	intersects := func(existing runtime.Object) bool {
 		for _, rop := range rollout.ResourceOperations {
-			if rop.Resource.GetObjectKind().GroupVersionKind() == existing.GetObjectKind().GroupVersionKind() {
+			// Normally we would use GroupVersionKind to compare resource types, but due to
+			// https://github.com/kubernetes/client-go/issues/308 the GVK is not set on the existing resource.
+			// Reflection seems to work fine here.
+			if reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing) {
 				return true
 			}
 		}
