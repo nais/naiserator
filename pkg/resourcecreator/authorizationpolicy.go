@@ -11,8 +11,13 @@ import (
 )
 
 func AuthorizationPolicy(app *nais.Application) *istio_security_client.AuthorizationPolicy {
-	objectMeta := app.CreateObjectMeta()
 	var rules []*istio.Rule
+
+	// Authorization policy does not apply if app doesn't receive incoming traffic
+	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
+		return nil
+	}
+
 	if len(app.Spec.Ingresses) > 0 {
 		rules = append(rules, ingressGatewayRule())
 	}
@@ -26,7 +31,7 @@ func AuthorizationPolicy(app *nais.Application) *istio_security_client.Authoriza
 			Kind:       "AuthorizationPolicy",
 			APIVersion: IstioAuthorizationPolicyVersion,
 		},
-		ObjectMeta: objectMeta,
+		ObjectMeta: app.CreateObjectMeta(),
 		Spec: istio.AuthorizationPolicy{
 			Selector: &v1beta1.WorkloadSelector{
 				MatchLabels: map[string]string{"app": app.Name},

@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
@@ -26,6 +27,7 @@ import (
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -1301,6 +1303,318 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
+}
+
+func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, app *nais.Application) ([]runtime.Object, error) {
+	resources := make([]runtime.Object, 0)
+
+	{
+		c := clientSet.CoreV1().Services(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*corev1.Service", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*corev1.Service", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.CoreV1().Secrets(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*corev1.Secret", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*corev1.Secret", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.CoreV1().ServiceAccounts(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*corev1.ServiceAccount", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*corev1.ServiceAccount", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.AppsV1().Deployments(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*appsv1.Deployment", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*appsv1.Deployment", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.NetworkingV1beta1().Ingresses(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*networkingv1beta1.Ingress", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*networkingv1beta1.Ingress", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*autoscalingv1.HorizontalPodAutoscaler", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*autoscalingv1.HorizontalPodAutoscaler", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.NetworkingV1().NetworkPolicies(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*networkingv1.NetworkPolicy", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*networkingv1.NetworkPolicy", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.NetworkingV1alpha3().VirtualServices(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*networking_istio_io_v1alpha3.VirtualService", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*networking_istio_io_v1alpha3.VirtualService", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.NetworkingV1alpha3().ServiceEntries(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*networking_istio_io_v1alpha3.ServiceEntry", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*networking_istio_io_v1alpha3.ServiceEntry", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.RbacV1().Roles(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*rbacv1.Role", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*rbacv1.Role", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := clientSet.RbacV1().RoleBindings(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*rbacv1.RoleBinding", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*rbacv1.RoleBinding", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.IamV1beta1().IAMServiceAccounts(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.IamV1beta1().IAMPolicies(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicy", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicy", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.IamV1beta1().IAMPolicyMembers(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.StorageV1beta1().StorageBuckets(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucket", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucket", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.StorageV1beta1().StorageBucketAccessControls(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.SqlV1beta1().SQLInstances(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLInstance", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLInstance", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.SqlV1beta1().SQLDatabases(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLDatabase", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLDatabase", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := customClient.SqlV1beta1().SQLUsers(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLUser", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLUser", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	{
+		c := istioClient.SecurityV1beta1().AuthorizationPolicies(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*istio_security_v1beta1.AuthorizationPolicy", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*istio_security_v1beta1.AuthorizationPolicy", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
+	return withOwnerReference(app, resources), nil
+}
+
+func withOwnerReference(app *nais.Application, resources []runtime.Object) []runtime.Object {
+	owned := make([]runtime.Object, 0, len(resources))
+
+	hasOwnerReference := func(r runtime.Object) (bool, error) {
+		m, err := meta.Accessor(r)
+		if err != nil {
+			return false, err
+		}
+		for _, ref := range m.GetOwnerReferences() {
+			if ref.UID == app.UID {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	for _, resource := range resources {
+		ok, err := hasOwnerReference(resource)
+		if err == nil && ok {
+			owned = append(owned, resource)
+		}
+	}
+
+	return owned
 }
 
 func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {

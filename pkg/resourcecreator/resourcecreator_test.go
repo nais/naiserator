@@ -17,22 +17,22 @@ import (
 	"k8s.io/api/apps/v1"
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	networking "k8s.io/api/networking/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	rbac "k8s.io/api/rbac/v1"
 )
 
 type realObjects struct {
-	authorizationPolicy *istio.AuthorizationPolicy
-	deployment          *v1.Deployment
-	hpa                 *autoscaling.HorizontalPodAutoscaler
-	ingress             *networkingv1beta1.Ingress
-	networkPolicy       *networking.NetworkPolicy
-	role                *rbac.Role
-	rolebinding         *rbac.RoleBinding
-	secret              *core.Secret
-	service             *core.Service
-	serviceAccount      *core.ServiceAccount
+	authorizationPolicy     *istio.AuthorizationPolicy
+	deployment              *v1.Deployment
+	hpa                     *autoscaling.HorizontalPodAutoscaler
+	ingress                 *networkingv1beta1.Ingress
+	networkPolicy           *networking.NetworkPolicy
+	role                    *rbac.Role
+	rolebinding             *rbac.RoleBinding
+	secret                  *core.Secret
+	service                 *core.Service
+	serviceAccount          *core.ServiceAccount
 	sqlDatabase             *google_sql_crd.SQLDatabase
 	sqlInstance             *google_sql_crd.SQLInstance
 	sqlUser                 *google_sql_crd.SQLUser
@@ -123,26 +123,6 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, app.Namespace, objects.deployment.Namespace)
 		assert.Equal(t, app.Name, objects.deployment.Labels["app"])
 		assert.Equal(t, app.Labels["team"], objects.deployment.Labels["team"])
-	})
-
-	t.Run("all basic resource types are created from an application spec", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		objects := getRealObjects(resources.Extract(resourcecreator.OperationCreateOrUpdate))
-		assert.NotNil(t, objects.hpa)
-		assert.NotNil(t, objects.service)
-		assert.NotNil(t, objects.deployment)
-		assert.Nil(t, objects.ingress)
-
-		// Test that the Ingress is deleted
-		objects = getRealObjects(resources.Extract(resourcecreator.OperationDeleteIfExists))
-		assert.NotNil(t, objects.ingress)
 	})
 
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {
@@ -271,33 +251,6 @@ func TestCreate(t *testing.T) {
 
 		assert.NotNil(t, objects.networkPolicy)
 		assert.NotEmpty(t, objects.networkPolicy.Spec.Egress)
-	})
-
-	t.Run("omitting ingresses denies traffic from istio ingress gateway", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resourcecreator.NewResourceOptions()
-		opts.AccessPolicy = true
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		deletes := resources.Extract(resourcecreator.OperationDeleteIfExists)
-		numDeletes := 0
-		for _, resource := range deletes {
-			switch res := resource.Resource.(type) {
-			case *istio.AuthorizationPolicy:
-				if res.GetName() == "myapplication" {
-					numDeletes++
-				}
-			}
-		}
-
-		if numDeletes != 1 {
-			t.Fail()
-		}
 	})
 
 	t.Run("google service account, bucket, and bucket policy resources are coherent", func(t *testing.T) {
