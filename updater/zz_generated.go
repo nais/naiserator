@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
@@ -1304,12 +1305,12 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	}
 }
 
-func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, name, namespace string) ([]runtime.Object, error) {
+func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, app *nais.Application) ([]runtime.Object, error) {
 	resources := make([]runtime.Object, 0)
 
 	{
-		c := clientSet.CoreV1().Services(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.CoreV1().Services(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*corev1.Service", err)
 		} else if existing != nil {
@@ -1322,8 +1323,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.CoreV1().Secrets(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.CoreV1().Secrets(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*corev1.Secret", err)
 		} else if existing != nil {
@@ -1336,8 +1337,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.CoreV1().ServiceAccounts(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.CoreV1().ServiceAccounts(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*corev1.ServiceAccount", err)
 		} else if existing != nil {
@@ -1350,8 +1351,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.AppsV1().Deployments(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.AppsV1().Deployments(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*appsv1.Deployment", err)
 		} else if existing != nil {
@@ -1364,8 +1365,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.NetworkingV1beta1().Ingresses(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.NetworkingV1beta1().Ingresses(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networkingv1beta1.Ingress", err)
 		} else if existing != nil {
@@ -1378,8 +1379,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.AutoscalingV1().HorizontalPodAutoscalers(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*autoscalingv1.HorizontalPodAutoscaler", err)
 		} else if existing != nil {
@@ -1392,8 +1393,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.NetworkingV1().NetworkPolicies(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.NetworkingV1().NetworkPolicies(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networkingv1.NetworkPolicy", err)
 		} else if existing != nil {
@@ -1406,8 +1407,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.NetworkingV1alpha3().VirtualServices(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.NetworkingV1alpha3().VirtualServices(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networking_istio_io_v1alpha3.VirtualService", err)
 		} else if existing != nil {
@@ -1420,8 +1421,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.NetworkingV1alpha3().ServiceEntries(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.NetworkingV1alpha3().ServiceEntries(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*networking_istio_io_v1alpha3.ServiceEntry", err)
 		} else if existing != nil {
@@ -1434,8 +1435,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.RbacV1().Roles(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.RbacV1().Roles(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*rbacv1.Role", err)
 		} else if existing != nil {
@@ -1448,8 +1449,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := clientSet.RbacV1().RoleBindings(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := clientSet.RbacV1().RoleBindings(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*rbacv1.RoleBinding", err)
 		} else if existing != nil {
@@ -1462,8 +1463,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.IamV1beta1().IAMServiceAccounts(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.IamV1beta1().IAMServiceAccounts(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount", err)
 		} else if existing != nil {
@@ -1476,8 +1477,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.IamV1beta1().IAMPolicies(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.IamV1beta1().IAMPolicies(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicy", err)
 		} else if existing != nil {
@@ -1490,8 +1491,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.IamV1beta1().IAMPolicyMembers(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.IamV1beta1().IAMPolicyMembers(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember", err)
 		} else if existing != nil {
@@ -1504,8 +1505,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.StorageV1beta1().StorageBuckets(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.StorageV1beta1().StorageBuckets(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucket", err)
 		} else if existing != nil {
@@ -1518,8 +1519,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.StorageV1beta1().StorageBucketAccessControls(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.StorageV1beta1().StorageBucketAccessControls(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl", err)
 		} else if existing != nil {
@@ -1532,8 +1533,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.SqlV1beta1().SQLInstances(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.SqlV1beta1().SQLInstances(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLInstance", err)
 		} else if existing != nil {
@@ -1546,8 +1547,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.SqlV1beta1().SQLDatabases(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.SqlV1beta1().SQLDatabases(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLDatabase", err)
 		} else if existing != nil {
@@ -1560,8 +1561,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.SqlV1beta1().SQLUsers(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := customClient.SqlV1beta1().SQLUsers(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*sql_cnrm_cloud_google_com_v1beta1.SQLUser", err)
 		} else if existing != nil {
@@ -1574,8 +1575,8 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := istioClient.SecurityV1beta1().AuthorizationPolicies(namespace)
-		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + name})
+		c := istioClient.SecurityV1beta1().AuthorizationPolicies(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*istio_security_v1beta1.AuthorizationPolicy", err)
 		} else if existing != nil {
@@ -1587,7 +1588,33 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 		}
 	}
 
-	return resources, nil
+	return withOwnerReference(app, resources), nil
+}
+
+func withOwnerReference(app *nais.Application, resources []runtime.Object) []runtime.Object {
+	owned := make([]runtime.Object, 0, len(resources))
+
+	hasOwnerReference := func(r runtime.Object) (bool, error) {
+		m, err := meta.Accessor(r)
+		if err != nil {
+			return false, err
+		}
+		for _, ref := range m.GetOwnerReferences() {
+			if ref.UID == app.UID {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	for _, resource := range resources {
+		ok, err := hasOwnerReference(resource)
+		if err == nil && ok {
+			owned = append(owned, resource)
+		}
+	}
+
+	return owned
 }
 
 func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {

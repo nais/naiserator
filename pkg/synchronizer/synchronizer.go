@@ -206,18 +206,14 @@ func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
 			}
 			if reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing) {
 				if resourceMeta.GetName() == existingMeta.GetName() {
-					for _, ref := range existingMeta.GetOwnerReferences() {
-						if ref.UID == rollout.App.UID {
-							return true
-						}
-					}
+					return true
 				}
 			}
 		}
 		return false
 	}
 
-	resources, err := updater.FindAll(n.ClientSet, n.AppClient, n.IstioClient, rollout.App.Name, rollout.App.Namespace)
+	resources, err := updater.FindAll(n.ClientSet, n.AppClient, n.IstioClient, rollout.App)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
