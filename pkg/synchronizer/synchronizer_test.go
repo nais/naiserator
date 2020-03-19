@@ -21,8 +21,6 @@ import (
 // Test an entire synchronization run, i.e. create numerous resources
 // from an Application resource.
 func TestSynchronizer(t *testing.T) {
-	t.SkipNow()
-	return
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
 

@@ -346,16 +346,7 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 		})
 	} else {
 		for _, resource := range unreferenced {
-			funcs = append(funcs, func() error {
-				m, err := meta.Accessor(resource)
-				if err != nil {
-					log.Debugf("would delete resource but got error: %s", err)
-					return nil
-				}
-				log.Debugf("would delete resource: %s", m.GetSelfLink())
-				return nil
-			})
-			//funcs = append(funcs, updater.DeleteIfExists(n.ClientSet, n.AppClient, n.IstioClient, resource))
+			funcs = append(funcs, updater.DeleteIfExists(n.ClientSet, n.AppClient, n.IstioClient, resource))
 		}
 	}
 
