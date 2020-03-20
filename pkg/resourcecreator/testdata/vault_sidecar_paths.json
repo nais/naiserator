@@ -131,7 +131,8 @@
                     "-one-shot",
                     "-vault=https://vault.adeo.no",
                     "-save-token=/var/run/secrets/nais.io/vault/vault_token",
-                    "-cn=secret:/serviceuser/data/test/srvuser:dir=/secrets/credential/srvuser,fmt=flatten,retries=1"
+                    "-cn=secret:/serviceuser/data/test/srvuser:dir=/secrets/credential/srvuser,fmt=flatten,retries=1",
+                    "-cn=secret:/kv/preprod/fss/myapplication/mynamespace:dir=/var/run/secrets/nais.io/vault,fmt=flatten,retries=1"
                   ],
                   "env": [
                     {

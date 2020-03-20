@@ -2,10 +2,11 @@ package vault
 
 import (
 	"fmt"
+	"path/filepath"
+
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
@@ -110,7 +111,7 @@ func (c config) addVaultContainer(spec *corev1.PodSpec, paths []nais.SecretPath)
 		return nil, err
 	}
 
-	if c.app.Spec.Vault.Mounts.Default && !c.defaultPathExists(paths) {
+	if !c.defaultPathExists(paths) {
 		paths = append(paths, c.defaultSecretPath())
 	}
 
