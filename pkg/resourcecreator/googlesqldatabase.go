@@ -14,9 +14,8 @@ func GoogleSqlDatabases(app *nais.Application, instance nais.CloudSqlInstance, p
 }
 
 func googleSqlDatabase(name, instanceName string, cascadingDelete bool, app *nais.Application, projectId string) *google_sql_crd.SQLDatabase {
-	objectMeta := app.CreateObjectMeta()
-	objectMeta.Namespace = app.Namespace
-	objectMeta.Name = name
+	objectMeta := app.CreateObjectMetaWithName(name)
+
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
 
 	if !cascadingDelete {
