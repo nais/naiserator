@@ -26,14 +26,18 @@ func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
 }
 
-func googleSQLPrefix(instance *google_sql_crd.SQLInstance, db *google_sql_crd.SQLDatabase) string {
-	instanceName := googleSQLDatabaseCase(instance.Name)
-	databaseName := googleSQLDatabaseCase(db.Name)
-	return fmt.Sprintf("NAIS_DATABASE_%s_%s", instanceName, databaseName)
+func googleSQLPrefix(db *nais.CloudSqlDatabase, instanceName string) string {
+	if len(db.EnvVarName) > 0 {
+		return db.EnvVarName
+	}
+	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(instanceName), googleSQLDatabaseCase(db.Name))
 }
 
-func GoogleSQLEnvVars(instance *google_sql_crd.SQLInstance, db *google_sql_crd.SQLDatabase, username, password string) map[string]string {
-	prefix := googleSQLPrefix(instance, db)
+func GoogleSQLEnvVars(db *nais.CloudSqlDatabase, instanceName, username, password string) map[string]string {
+	var prefix string
+
+	prefix = googleSQLPrefix(db, instanceName)
+
 	return map[string]string{
 		prefix + googleSQLUsernameSuffix: username,
 		prefix + googleSQLPasswordSuffix: password,
@@ -48,7 +52,7 @@ func GoogleSQLSecretName(app *nais.Application) string {
 	return fmt.Sprintf("google-sql-%s", app.Name)
 }
 
-func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, db *google_sql_crd.SQLDatabase, cascadingDelete bool, projectId string) *google_sql_crd.SQLUser {
+func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, secretEnv string, cascadingDelete bool, projectId string) *google_sql_crd.SQLUser {
 	objectMeta := app.CreateObjectMeta()
 
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
@@ -69,7 +73,7 @@ func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, 
 			Password: google_sql_crd.SqlUserPasswordValue{
 				ValueFrom: google_sql_crd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: google_sql_crd.SecretRef{
-						Key:  googleSQLPrefix(instance, db),
+						Key:  secretEnv,
 						Name: GoogleSQLSecretName(app),
 					},
 				},

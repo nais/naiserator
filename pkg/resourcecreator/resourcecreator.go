@@ -77,16 +77,16 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
-				databases := GoogleSqlDatabases(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
-				for _, db := range databases {
-					ops = append(ops, ResourceOperation{db, OperationCreateIfNotExists})
-					env := GoogleSQLEnvVars(instance, db, username, password)
+				for _, db := range sqlInstance.Databases {
+					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
+					env := GoogleSQLEnvVars(&db, instance.Name, username, password)
 					for k, v := range env {
 						vars[k] = v
 					}
 				}
 
-				sqlUser := GoogleSqlUser(app, instance, databases[0], sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+				sqlUser := GoogleSqlUser(app, instance, "FIXME_SECRET_ENV", sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 
 				// FIXME: take into account when refactoring default values

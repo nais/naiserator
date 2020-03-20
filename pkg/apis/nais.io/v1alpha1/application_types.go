@@ -166,7 +166,8 @@ const (
 
 type CloudSqlDatabase struct {
 	// +kubebuilder:validation:Required
-	Name string `json:"name"`
+	Name       string `json:"name"`
+	EnvVarName string `json:"envVarName,omitempty"`
 }
 
 type CloudSqlInstance struct {

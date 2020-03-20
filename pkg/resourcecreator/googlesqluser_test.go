@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/magiconair/properties/assert"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,16 +24,13 @@ func TestGoogleSQLEnvVars(t *testing.T) {
 		ObjectMeta: v1.ObjectMeta{
 			Name: "foo",
 		},
-		Spec: google_sql_crd.SQLInstanceSpec{},
 	}
 
-	db := &google_sql_crd.SQLDatabase{
-		ObjectMeta: v1.ObjectMeta{
-			Name: "bar",
-		},
+	db := &nais.CloudSqlDatabase{
+		Name: "bar",
 	}
 
-	vars := resourcecreator.GoogleSQLEnvVars(instance, db, "username", "password")
+	vars := resourcecreator.GoogleSQLEnvVars(db, instance.Name, "username", "password")
 
 	assert.Equal(t, expected, vars)
 }
