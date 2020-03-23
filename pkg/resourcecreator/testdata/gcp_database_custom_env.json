@@ -1,0 +1,76 @@
+{
+  "config": {
+    "description": "custom environment variable name on cloud sql databases",
+    "matchType": "subset"
+  },
+  "resourceoptions": {
+    "AccessPolicy": true,
+    "GoogleProjectID": "google-project-id",
+    "GoogleTeamProjectID": "team-project-id",
+    "NumReplicas": 1
+  },
+  "input": {
+    "kind": "Application",
+    "apiVersion": "v1alpha1",
+    "metadata": {
+      "name": "myapplication",
+      "namespace": "mynamespace",
+      "uid": "123456",
+      "labels": {
+        "team": "myteam"
+      }
+    },
+    "spec": {
+      "image": "navikt/myapplication:1.2.3",
+      "gcp": {
+        "sqlInstances": [
+          {
+            "type": "POSTGRES_11",
+            "databases": [
+              {
+                "name": "mydb",
+                "envVarName": "PWNED"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "output": [
+    {
+      "resource": {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+          "name": "google-sql-myapplication",
+          "namespace": "mynamespace"
+        },
+        "stringData": {
+          "PWNED_DATABASE": "mydb",
+          "PWNED_HOST": "127.0.0.1",
+          "PWNED_PORT": "5432",
+          "PWNED_USERNAME": "myapplication"
+        }
+      },
+      "operation": "CreateIfNotExists"
+    },
+    {
+      "resource": {
+        "kind": "SQLUser",
+        "apiVersion": "sql.cnrm.cloud.google.com/v1alpha3",
+        "spec": {
+          "password": {
+            "valueFrom": {
+              "secretKeyRef": {
+                "name": "google-sql-myapplication",
+                "key": "PWNED_PASSWORD"
+              }
+            }
+          }
+        }
+      },
+      "operation": "CreateIfNotExists"
+    }
+  ]
+}

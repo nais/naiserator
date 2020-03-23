@@ -1,6 +1,6 @@
 {
   "config": {
-    "description": "vanilla application running in GCP with default configuration and access policies",
+    "description": "google cloud sql instances provisioned with databases and automatic configuration",
     "matchType": "subset"
   },
   "resourceoptions": {
