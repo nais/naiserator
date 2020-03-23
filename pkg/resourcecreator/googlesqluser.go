@@ -33,6 +33,15 @@ func googleSQLPrefix(db *nais.CloudSqlDatabase, instanceName string) string {
 	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(instanceName), googleSQLDatabaseCase(db.Name))
 }
 
+func GoogleSQLFirstPasswordKey(envVars map[string]string) (string, error) {
+	for k := range envVars {
+		if strings.HasSuffix(k, googleSQLPasswordSuffix) {
+			return k, nil
+		}
+	}
+	return "", fmt.Errorf("no password environment variable found")
+}
+
 func GoogleSQLEnvVars(db *nais.CloudSqlDatabase, instanceName, username, password string) map[string]string {
 	var prefix string
 
@@ -52,7 +61,7 @@ func GoogleSQLSecretName(app *nais.Application) string {
 	return fmt.Sprintf("google-sql-%s", app.Name)
 }
 
-func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, secretEnv string, cascadingDelete bool, projectId string) *google_sql_crd.SQLUser {
+func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, secretKeyRefEnvName string, cascadingDelete bool, projectId string) *google_sql_crd.SQLUser {
 	objectMeta := app.CreateObjectMeta()
 
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
@@ -73,7 +82,7 @@ func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, 
 			Password: google_sql_crd.SqlUserPasswordValue{
 				ValueFrom: google_sql_crd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: google_sql_crd.SecretRef{
-						Key:  secretEnv,
+						Key:  secretKeyRefEnvName,
 						Name: GoogleSQLSecretName(app),
 					},
 				},

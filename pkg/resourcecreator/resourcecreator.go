@@ -86,7 +86,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 					}
 				}
 
-				sqlUser := GoogleSqlUser(app, instance, "FIXME_SECRET_ENV", sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+				secretKeyRefEnvName, err := GoogleSQLFirstPasswordKey(vars)
+				if err != nil {
+					return nil, fmt.Errorf("unable to assign sql password: %s", err)
+				}
+				sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 
 				// FIXME: take into account when refactoring default values
