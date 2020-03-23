@@ -13,7 +13,7 @@ import (
 func VirtualServices(app *nais.Application) ([]*istio.VirtualService, error) {
 	vses := make([]*istio.VirtualService, 0)
 
-	for _, ingress := range app.Spec.Ingresses {
+	for index, ingress := range app.Spec.Ingresses {
 		parsedUrl, err := url.Parse(ingress)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
@@ -26,18 +26,18 @@ func VirtualServices(app *nais.Application) ([]*istio.VirtualService, error) {
 			return nil, err
 		}
 
-		vs := virtualService(*parsedUrl, app)
+		name := fmt.Sprintf("%s-%02d", app.Name, index)
+		vs := virtualService(*parsedUrl, app, name)
 		vses = append(vses, &vs)
 	}
 
 	return vses, nil
 }
 
-func virtualService(ingress url.URL, app *nais.Application) istio.VirtualService {
+func virtualService(ingress url.URL, app *nais.Application, name string) istio.VirtualService {
 	domainID := istioDomainID(ingress)
 
-	objectMeta := app.CreateObjectMeta()
-	objectMeta.Name = fmt.Sprintf("%s-%s", app.Name, strings.ReplaceAll(ingress.Hostname(), ".", "-"))
+	objectMeta := app.CreateObjectMetaWithName(name)
 
 	return istio.VirtualService{
 		TypeMeta: v1.TypeMeta{
