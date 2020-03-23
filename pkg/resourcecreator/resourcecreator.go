@@ -86,7 +86,8 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 					}
 				}
 
-				secretKeyRefEnvName, err := GoogleSQLFirstPasswordKey(vars)
+				// FIXME: only works when there is one sql instance
+				secretKeyRefEnvName, err := firstKeyWithSuffix(vars, googleSQLPasswordSuffix)
 				if err != nil {
 					return nil, fmt.Errorf("unable to assign sql password: %s", err)
 				}

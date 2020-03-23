@@ -33,13 +33,13 @@ func googleSQLPrefix(db *nais.CloudSqlDatabase, instanceName string) string {
 	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(instanceName), googleSQLDatabaseCase(db.Name))
 }
 
-func GoogleSQLFirstPasswordKey(envVars map[string]string) (string, error) {
-	for k := range envVars {
-		if strings.HasSuffix(k, googleSQLPasswordSuffix) {
+func firstKeyWithSuffix(vars map[string]string, suffix string) (string, error) {
+	for k := range vars {
+		if strings.HasSuffix(k, suffix) {
 			return k, nil
 		}
 	}
-	return "", fmt.Errorf("no password environment variable found")
+	return "", fmt.Errorf("no variable found matching suffix %s", suffix)
 }
 
 func GoogleSQLEnvVars(db *nais.CloudSqlDatabase, instanceName, username, password string) map[string]string {
