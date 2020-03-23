@@ -407,6 +407,8 @@ spec:
                       databases:
                         items:
                           properties:
+                            envVarPrefix:
+                              type: string
                             name:
                               type: string
                           required:

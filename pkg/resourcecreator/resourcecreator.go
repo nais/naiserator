@@ -51,6 +51,8 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 		if app.Spec.GCP.SqlInstances != nil {
+			vars := make(map[string]string)
+
 			for i, sqlInstance := range app.Spec.GCP.SqlInstances {
 				if i > 0 {
 					return nil, fmt.Errorf("only one sql instance is supported")
@@ -65,28 +67,38 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
 
-				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
-
-				for _, db := range GoogleSqlDatabases(app, sqlInstance, resourceOptions.GoogleTeamProjectId) {
-					ops = append(ops, ResourceOperation{db, OperationCreateIfNotExists})
-				}
-
 				key, err := util.Keygen(32)
 				if err != nil {
 					return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
 				}
+				username := instance.Name
 				password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
 
-				secret := OpaqueSecret(app, GCPSqlInstanceSecretName(instance.Name), GoogleSqlUserEnvVars(instance.Name, password))
-				ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
+				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
-				sqlUser := GoogleSqlUser(app, instance.Name, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+				for _, db := range sqlInstance.Databases {
+					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
+					env := GoogleSQLEnvVars(&db, instance.Name, username, password)
+					for k, v := range env {
+						vars[k] = v
+					}
+				}
+
+				secretKeyRefEnvName, err := GoogleSQLFirstPasswordKey(vars)
+				if err != nil {
+					return nil, fmt.Errorf("unable to assign sql password: %s", err)
+				}
+				sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 
 				// FIXME: take into account when refactoring default values
 				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 			}
+
+			secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
+			ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 		}
 	}
 

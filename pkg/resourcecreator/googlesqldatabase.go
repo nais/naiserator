@@ -6,20 +6,12 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleSqlDatabases(app *nais.Application, instance nais.CloudSqlInstance, projectId string) (databases []*google_sql_crd.SQLDatabase) {
-	for _, db := range instance.Databases {
-		databases = append(databases, googleSqlDatabase(db.Name, instance.Name, instance.CascadingDelete, app, projectId))
-	}
-	return
-}
+func GoogleSQLDatabase(app *nais.Application, db nais.CloudSqlDatabase, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLDatabase {
+	objectMeta := app.CreateObjectMetaWithName(db.Name)
 
-func googleSqlDatabase(name, instanceName string, cascadingDelete bool, app *nais.Application, projectId string) *google_sql_crd.SQLDatabase {
-	objectMeta := app.CreateObjectMeta()
-	objectMeta.Namespace = app.Namespace
-	objectMeta.Name = name
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
 
-	if !cascadingDelete {
+	if !instance.CascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
 		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
 	}
@@ -31,7 +23,7 @@ func googleSqlDatabase(name, instanceName string, cascadingDelete bool, app *nai
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLDatabaseSpec{
-			InstanceRef: google_sql_crd.InstanceRef{Name: instanceName},
+			InstanceRef: google_sql_crd.InstanceRef{Name: instance.Name},
 		},
 	}
 }
