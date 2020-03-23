@@ -191,9 +191,9 @@ OUTER:
 			if matched[j] {
 				continue
 			}
-			matched[j] = true
 			match := compare(test, serialized[j], test.Output[i])
 			if match.err == nil {
+				matched[j] = true
 				continue OUTER
 			} else {
 				errs = append(errs, match)
