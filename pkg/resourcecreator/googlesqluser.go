@@ -62,7 +62,7 @@ func GoogleSQLSecretName(app *nais.Application) string {
 }
 
 func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, secretKeyRefEnvName string, cascadingDelete bool, projectId string) *google_sql_crd.SQLUser {
-	objectMeta := app.CreateObjectMeta()
+	objectMeta := app.CreateObjectMetaWithName(instance.Name)
 
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
 
