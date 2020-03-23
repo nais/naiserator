@@ -27,8 +27,8 @@ func googleSQLDatabaseCase(x string) string {
 }
 
 func googleSQLPrefix(db *nais.CloudSqlDatabase, instanceName string) string {
-	if len(db.EnvVarName) > 0 {
-		return db.EnvVarName
+	if len(db.EnvVarPrefix) > 0 {
+		return strings.TrimSuffix(db.EnvVarPrefix, "_")
 	}
 	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(instanceName), googleSQLDatabaseCase(db.Name))
 }

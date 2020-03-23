@@ -29,7 +29,7 @@
             "databases": [
               {
                 "name": "mydb",
-                "envVarName": "PWNED"
+                "envVarPrefix": "PWNED"
               }
             ]
           }
