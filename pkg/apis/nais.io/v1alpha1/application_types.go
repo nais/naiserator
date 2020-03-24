@@ -233,9 +233,9 @@ type SecretPath struct {
 }
 
 type Vault struct {
-	Enabled bool         `json:"enabled,omitempty"`
-	Sidecar bool         `json:"sidecar,omitempty"`
-	Mounts  []SecretPath `json:"paths,omitempty"`
+	Enabled     bool         `json:"enabled,omitempty"`
+	Sidecar     bool         `json:"sidecar,omitempty"`
+	Paths       []SecretPath `json:"paths,omitempty"`
 }
 
 type Strategy struct {

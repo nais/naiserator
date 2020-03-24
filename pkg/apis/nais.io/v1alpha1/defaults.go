@@ -54,8 +54,8 @@ func getAppDefaults() *Application {
 				},
 			},
 			Vault: &Vault{
-				Enabled: false,
-				Mounts:  []SecretPath{},
+				Enabled:     false,
+				Paths:       []SecretPath{},
 			},
 			Service: &Service{
 				Port: DefaultServicePort,

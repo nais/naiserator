@@ -1,6 +1,6 @@
 {
   "config": {
-    "description": "requests and limits are copied into deployment resource",
+    "description": "webproxy configuration is injected into the container env",
     "matchType": "subset"
   },
   "input": {
