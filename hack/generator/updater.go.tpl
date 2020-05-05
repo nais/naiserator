@@ -45,9 +45,6 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 	if old == nil {
 		return func() error {
 			_, err := client.Create(new)
-			if err != nil {
-				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
-			}
 			return err
 		}
 	}
@@ -59,9 +56,6 @@ func {{.Name}}(client {{.Interface}}, old, new {{.Type}}) func() error {
 
 	return func() error {
 		_, err := client.Update(new)
-		if err != nil {
-			return fmt.Errorf("%s: %s", "{{ .Name }}", err)
-		}
 		return err
 	}
 }
@@ -76,7 +70,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				return func() error { return fmt.Errorf("%s: %s", "{{ .Name }}", err) }
+				return func() error { return err }
 			}
 			return {{.Name}}(c, nil, new)
 		}
@@ -96,15 +90,11 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			log.Infof("pre-deleting {{ .Type }} for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && !errors.IsNotFound(err) {
-				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
+				return err
 			}
 			log.Infof("creating new {{ .Type }} for %s", new.Name)
 			_, err = c.Create(new)
-			if err != nil {
-				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
-			} else {
-				return nil
-			}
+			return err
 		}
 	{{end}}
 	default:
@@ -120,10 +110,10 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		return func() error {
 			log.Infof("creating new {{ .Type }} for %s", new.Name)
 			_, err := c.Create(new)
-			if err != nil && !errors.IsAlreadyExists(err) {
-				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
+			if err != nil && errors.IsAlreadyExists(err) {
+				return nil
 			}
-			return nil
+			return err
 		}
 	{{end}}
 	default:
@@ -187,12 +177,9 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return func() error {
 			log.Infof("deleting {{ .Type }} for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
-			if err != nil {
-				if errors.IsNotFound(err) {
-					return nil
-				}
-				return fmt.Errorf("%s: %s", "{{ .Name }}", err)
-			}
+			if err != nil && errors.IsNotFound(err) {
+                return nil
+            }
 
 			return err
 		}
