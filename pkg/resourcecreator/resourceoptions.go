@@ -8,6 +8,7 @@ type ResourceOptions struct {
 	NativeSecrets               bool
 	GoogleProjectId             string
 	GoogleTeamProjectId         string
+	ClusterName                 string
 }
 
 // NewResourceOptions creates a struct with the default resource options.

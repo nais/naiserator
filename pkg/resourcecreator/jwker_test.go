@@ -1,62 +1,167 @@
 package resourcecreator_test
 
 import (
-	"fmt"
 	"testing"
 
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestJwker(t *testing.T) {
-	// otherApplication := "a"
-	// otherNamespace := "othernamespace"
-	// otherApplication2 := "b"
-	// otherNamespace2 := "othernamespace2"
+	otherApplication := "a"
+	clusterName := "myCluster"
+	otherNamespace := "othernamespace"
+	otherCluster := "otherCluster"
+	otherApplication2 := "b"
+	otherNamespace2 := "othernamespace2"
+	otherApplication3 := "c"
 
-	t.Run("minimal jwker", func(t *testing.T) {
+	t.Run("no jwker for app with no access policy", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		jwker := resourcecreator.Jwker(app)
-		fmt.Println(jwker)
-	})
-
-	/*t.Run("auth policy no namespace or ingress", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, ""}}
-		authorizationPolicy := resourcecreator.AuthorizationPolicy(app)
-		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
-		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", app.Namespace, otherApplication), authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
+		jwker := resourcecreator.Jwker(app, clusterName)
+		assert.Empty(t, jwker)
 	})
 
-	t.Run("auth policy for app with ingress and no access policies", func(t *testing.T) {
+	t.Run("one inbound without cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"fjas"}
-		authorizationPolicy := resourcecreator.AuthorizationPolicy(app)
-		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
-		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", resourcecreator.IstioNamespace, resourcecreator.IstioIngressGatewayServiceAccount), authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, "", ""}}
+		jwker := resourcecreator.Jwker(app, clusterName)
+		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
+		assert.NotEmpty(t, jwker.Spec.SecretName)
+		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
+		assert.Equal(t, fixtures.ApplicationNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
+		assert.Empty(t, jwker.Spec.AccessPolicy.Outbound)
 	})
-	t.Run("auth policy for app with ingress and policy", func(t *testing.T) {
+
+	t.Run("one inbound with cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"fjas"}
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace}, {otherApplication2, ""}}
-		authorizationPolicy := resourcecreator.AuthorizationPolicy(app)
-		assert.Len(t, authorizationPolicy.Spec.Rules, 2)
-		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", otherNamespace, otherApplication), authorizationPolicy.Spec.Rules[1].From[0].Source.Principals[0])
-		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", app.Namespace, otherApplication2), authorizationPolicy.Spec.Rules[1].From[0].Source.Principals[1])
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
+		jwker := resourcecreator.Jwker(app, clusterName)
+		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
+		assert.NotEmpty(t, jwker.Spec.SecretName)
+		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
+		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
+		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
+		assert.Empty(t, jwker.Spec.AccessPolicy.Outbound)
 	})
-	t.Run("auth policy for app with access policy and no ingress", func(t *testing.T) {
+
+	t.Run("one outbound and no inbound", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace}}
-		authorizationPolicy := resourcecreator.AuthorizationPolicy(app)
-		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
-		assert.Len(t, authorizationPolicy.Spec.Rules[0].From[0].Source.Principals, 1)
-		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/%s", otherNamespace, otherApplication), authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
+		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
+		jwker := resourcecreator.Jwker(app, clusterName)
+		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 1)
+		assert.NotEmpty(t, jwker.Spec.SecretName)
+		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Outbound.Rules[0].Application)
+		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Outbound.Rules[0].Namespace)
+		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Outbound.Rules[0].Cluster)
+		assert.Empty(t, jwker.Spec.AccessPolicy.Inbound)
 	})
-	t.Run("auth policy for app with multiple inbound", func(t *testing.T) {
+
+	t.Run("multiple inbound and no outbound", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace}, {otherApplication2, otherNamespace2}}
-		authorizationPolicy := resourcecreator.AuthorizationPolicy(app)
-		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
-		assert.Len(t, authorizationPolicy.Spec.Rules[0].From[0].Source.Principals, 2)
-	})*/
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{
+			{
+				otherApplication, otherNamespace, otherCluster,
+			},
+			{
+				otherApplication2, otherNamespace2, "",
+			},
+			{
+				otherApplication3, "", "",
+			},
+		}
+		jwker := resourcecreator.Jwker(app, clusterName)
+		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 3)
+		assert.Empty(t, jwker.Spec.AccessPolicy.Outbound)
+		assert.NotEmpty(t, jwker.Spec.SecretName)
+		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
+		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
+		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
+		assert.Equal(t, otherApplication2, jwker.Spec.AccessPolicy.Inbound.Rules[1].Application)
+		assert.Equal(t, otherNamespace2, jwker.Spec.AccessPolicy.Inbound.Rules[1].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Inbound.Rules[1].Cluster)
+		assert.Equal(t, otherApplication3, jwker.Spec.AccessPolicy.Inbound.Rules[2].Application)
+		assert.Equal(t, fixtures.ApplicationNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[2].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Inbound.Rules[2].Cluster)
+	})
+
+	t.Run("multiple outbound and no inbound", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{
+			{
+				otherApplication, otherNamespace, otherCluster,
+			},
+			{
+				otherApplication2, otherNamespace2, "",
+			},
+			{
+				otherApplication3, "", "",
+			},
+		}
+		jwker := resourcecreator.Jwker(app, clusterName)
+		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 3)
+		assert.Empty(t, jwker.Spec.AccessPolicy.Inbound)
+		assert.NotEmpty(t, jwker.Spec.SecretName)
+		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Outbound.Rules[0].Application)
+		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Outbound.Rules[0].Namespace)
+		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Outbound.Rules[0].Cluster)
+		assert.Equal(t, otherApplication2, jwker.Spec.AccessPolicy.Outbound.Rules[1].Application)
+		assert.Equal(t, otherNamespace2, jwker.Spec.AccessPolicy.Outbound.Rules[1].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Outbound.Rules[1].Cluster)
+		assert.Equal(t, otherApplication3, jwker.Spec.AccessPolicy.Outbound.Rules[2].Application)
+		assert.Equal(t, fixtures.ApplicationNamespace, jwker.Spec.AccessPolicy.Outbound.Rules[2].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Outbound.Rules[2].Cluster)
+	})
+	//
+	t.Run("multiple inbound and multiple outbound", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{
+			{
+				otherApplication, otherNamespace, otherCluster,
+			},
+			{
+				otherApplication2, otherNamespace2, "",
+			},
+			{
+				otherApplication3, "", "",
+			},
+		}
+
+		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{
+			{
+				otherApplication, otherNamespace, otherCluster,
+			},
+			{
+				otherApplication2, otherNamespace2, "",
+			},
+			{
+				otherApplication3, "", "",
+			},
+		}
+		jwker := resourcecreator.Jwker(app, clusterName)
+		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 3)
+		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 3)
+		assert.NotEmpty(t, jwker.Spec.SecretName)
+		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
+		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
+		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
+		assert.Equal(t, otherApplication2, jwker.Spec.AccessPolicy.Inbound.Rules[1].Application)
+		assert.Equal(t, otherNamespace2, jwker.Spec.AccessPolicy.Inbound.Rules[1].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Inbound.Rules[1].Cluster)
+		assert.Equal(t, otherApplication3, jwker.Spec.AccessPolicy.Inbound.Rules[2].Application)
+		assert.Equal(t, fixtures.ApplicationNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[2].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Inbound.Rules[2].Cluster)
+		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Outbound.Rules[0].Application)
+		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Outbound.Rules[0].Namespace)
+		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Outbound.Rules[0].Cluster)
+		assert.Equal(t, otherApplication2, jwker.Spec.AccessPolicy.Outbound.Rules[1].Application)
+		assert.Equal(t, otherNamespace2, jwker.Spec.AccessPolicy.Outbound.Rules[1].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Outbound.Rules[1].Cluster)
+		assert.Equal(t, otherApplication3, jwker.Spec.AccessPolicy.Outbound.Rules[2].Application)
+		assert.Equal(t, fixtures.ApplicationNamespace, jwker.Spec.AccessPolicy.Outbound.Rules[2].Namespace)
+		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Outbound.Rules[2].Cluster)
+	})
 }

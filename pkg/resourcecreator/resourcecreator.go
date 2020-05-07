@@ -34,8 +34,8 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	}
 
-	if app.Spec.AccessPolicy != nil {
-		jwker := Jwker(app)
+	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 || len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
+		jwker := Jwker(app, resourceOptions.ClusterName)
 		ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
 	}
 

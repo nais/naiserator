@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -11,23 +12,8 @@ const (
 )
 
 type JwkerSpec struct {
-	AccessPolicy *AccessPolicy `json:"accessPolicy"`
+	AccessPolicy *v1alpha1.AccessPolicy `json:"accessPolicy"`
 	SecretName   string        `json:"secretName"`
-}
-type AccessPolicy struct {
-	Inbound  *AccessPolicyInbound  `json:"inbound,omitempty"`
-	Outbound *AccessPolicyOutbound `json:"outbound,omitempty"`
-}
-type AccessPolicyOutbound struct {
-	Rules []AccessPolicyRule `json:"rules,omitempty"`
-}
-type AccessPolicyInbound struct {
-	Rules []AccessPolicyRule `json:"rules,omitempty"`
-}
-type AccessPolicyRule struct {
-	Application string `json:"application"`
-	Namespace   string `json:"namespace,omitempty"`
-	Cluster     string `json:"cluster,omitempty"`
 }
 
 // JwkerStatus defines the observed state of Jwker
