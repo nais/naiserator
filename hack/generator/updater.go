@@ -137,6 +137,12 @@ var i = []Service{
 		Type:      "*istio_security_v1beta1.AuthorizationPolicy",
 		Client:    "istioClient.SecurityV1beta1().AuthorizationPolicies",
 	},
+	{
+		Name:      "jwker",
+		Interface: "typed_nais_v1.JwkerInterface",
+		Type:      "*nais_v1.Jwker",
+		Client:    "customClient.NaiseratorV1().Jwkers",
+	},
 }
 
 func main() {

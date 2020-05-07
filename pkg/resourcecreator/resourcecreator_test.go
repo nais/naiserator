@@ -205,7 +205,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace"}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace", ""}}
 		app.Spec.Prometheus.Enabled = true
 
 		err := nais.ApplyDefaults(app)

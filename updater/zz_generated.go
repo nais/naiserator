@@ -7,12 +7,14 @@ import (
 	"fmt"
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais_v1 "github.com/nais/naiserator/pkg/apis/nais.io/v1"
+	nais_v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	typed_iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
+	typed_nais_v1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	typed_sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	typed_storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
@@ -381,6 +383,23 @@ func authorizationPolicy(client typed_istio_security_v1beta1.AuthorizationPolicy
 	}
 }
 
+func jwker(client typed_nais_v1.JwkerInterface, old, new *nais_v1.Jwker) func() error {
+	log.Infof("creating or updating *nais_v1.Jwker for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -603,6 +622,17 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return authorizationPolicy(c, nil, new)
 		}
 		return authorizationPolicy(c, old, new)
+
+	case *nais_v1.Jwker:
+		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return jwker(c, nil, new)
+		}
+		return jwker(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
@@ -872,6 +902,19 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			return err
 		}
 
+	case *nais_v1.Jwker:
+		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		return func() error {
+			log.Infof("pre-deleting *nais_v1.Jwker for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *nais_v1.Jwker for %s", new.Name)
+			_, err = c.Create(new)
+			return err
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -1100,12 +1143,23 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 			return err
 		}
 
+	case *nais_v1.Jwker:
+		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		return func() error {
+			log.Infof("creating new *nais_v1.Jwker for %s", new.Name)
+			_, err := c.Create(new)
+			if err != nil && errors.IsAlreadyExists(err) {
+				return nil
+			}
+			return err
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
 }
 
-func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, app *nais.Application) ([]runtime.Object, error) {
+func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, app *nais_v1alpha1.Application) ([]runtime.Object, error) {
 	resources := make([]runtime.Object, 0)
 
 	{
@@ -1388,10 +1442,24 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 		}
 	}
 
+	{
+		c := customClient.NaiseratorV1().Jwkers(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*nais_v1.Jwker", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*nais_v1.Jwker", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
 	return withOwnerReference(app, resources), nil
 }
 
-func withOwnerReference(app *nais.Application, resources []runtime.Object) []runtime.Object {
+func withOwnerReference(app *nais_v1alpha1.Application, resources []runtime.Object) []runtime.Object {
 	owned := make([]runtime.Object, 0, len(resources))
 
 	hasOwnerReference := func(r runtime.Object) (bool, error) {
@@ -1652,6 +1720,18 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		c := istioClient.SecurityV1beta1().AuthorizationPolicies(new.Namespace)
 		return func() error {
 			log.Infof("deleting *istio_security_v1beta1.AuthorizationPolicy for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+
+			return err
+		}
+
+	case *nais_v1.Jwker:
+		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		return func() error {
+			log.Infof("deleting *nais_v1.Jwker for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil

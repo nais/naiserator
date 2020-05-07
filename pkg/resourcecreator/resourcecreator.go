@@ -34,6 +34,11 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	}
 
+	if app.Spec.AccessPolicy != nil {
+		jwker := Jwker(app)
+		ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
+	}
+
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
 		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)

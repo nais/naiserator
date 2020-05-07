@@ -4,6 +4,7 @@ package fake
 
 import (
 	iamv1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	naiseratorv1 "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	sqlv1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
@@ -20,6 +21,7 @@ var codecs = serializer.NewCodecFactory(scheme)
 var parameterCodec = runtime.NewParameterCodec(scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
 	iamv1beta1.AddToScheme,
+	naiseratorv1.AddToScheme,
 	naiseratorv1alpha1.AddToScheme,
 	networkingv1alpha3.AddToScheme,
 	sqlv1beta1.AddToScheme,

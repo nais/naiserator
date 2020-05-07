@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	istioClient "istio.io/client-go/pkg/clientset/versioned"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	istioClient "istio.io/client-go/pkg/clientset/versioned"
+
 	"github.com/Shopify/sarama"
 	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
 	"github.com/nais/naiserator/pkg/informer"
@@ -146,8 +146,8 @@ func createApplicationInformerFactory(kubeconfig *rest.Config, interval time.Dur
 	return informers.NewSharedInformerFactory(config, interval)
 }
 
-func createApplicationClientset(kubeconfig *rest.Config) *clientV1Alpha1.Clientset {
-	clientSet, err := clientV1Alpha1.NewForConfig(kubeconfig)
+func createApplicationClientset(kubeconfig *rest.Config) *clientset.Clientset {
+	clientSet, err := clientset.NewForConfig(kubeconfig)
 	if err != nil {
 		log.Fatalf("unable to create application clientset: %s", err)
 	}

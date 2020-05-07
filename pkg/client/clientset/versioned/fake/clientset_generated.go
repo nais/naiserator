@@ -6,6 +6,8 @@ import (
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	iamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
 	fakeiamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1/fake"
+	naiseratorv1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
+	fakenaiseratorv1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1/fake"
 	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 	fakenaiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1/fake"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
@@ -71,6 +73,11 @@ var _ clientset.Interface = &Clientset{}
 // IamV1beta1 retrieves the IamV1beta1Client
 func (c *Clientset) IamV1beta1() iamv1beta1.IamV1beta1Interface {
 	return &fakeiamv1beta1.FakeIamV1beta1{Fake: &c.Fake}
+}
+
+// NaiseratorV1 retrieves the NaiseratorV1Client
+func (c *Clientset) NaiseratorV1() naiseratorv1.NaiseratorV1Interface {
+	return &fakenaiseratorv1.FakeNaiseratorV1{Fake: &c.Fake}
 }
 
 // NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client

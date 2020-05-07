@@ -233,9 +233,9 @@ type SecretPath struct {
 }
 
 type Vault struct {
-	Enabled     bool         `json:"enabled,omitempty"`
-	Sidecar     bool         `json:"sidecar,omitempty"`
-	Paths       []SecretPath `json:"paths,omitempty"`
+	Enabled bool         `json:"enabled,omitempty"`
+	Sidecar bool         `json:"sidecar,omitempty"`
+	Paths   []SecretPath `json:"paths,omitempty"`
 }
 
 type Strategy struct {
@@ -262,6 +262,7 @@ type AccessPolicyExternalRule struct {
 type AccessPolicyRule struct {
 	Application string `json:"application"`
 	Namespace   string `json:"namespace,omitempty"`
+	Cluster     string `json:"cluster,omitempty"`
 }
 
 type AccessPolicyInbound struct {
