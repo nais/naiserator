@@ -5,12 +5,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	EventRolloutComplete       = "RolloutComplete"
-	EventFailedPrepare         = "FailedPrepare"
-	EventFailedSynchronization = "FailedSynchronization"
-)
-
 type JwkerSpec struct {
 	AccessPolicy *v1alpha1.AccessPolicy `json:"accessPolicy"`
 	SecretName   string        `json:"secretName"`
