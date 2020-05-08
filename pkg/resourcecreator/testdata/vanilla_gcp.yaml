@@ -1,0 +1,73 @@
+config:
+  description: vanilla application running in GCP with default configuration and access
+    policies
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    accessPolicy:
+      inbound:
+        rules:
+          - application: app1
+          - application: app2
+            namespace: q1
+          - application: '*'
+            namespace: t1
+      outbound:
+        rules:
+          - application: app3
+          - application: app4
+            namespace: q2
+          - application: '*'
+            namespace: t2
+        external:
+          - host: www.external-application.com
+
+tests:
+  - match:
+      - type: subset
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
+
+  - apiVersion: v1
+    kind: Service
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        exclude:
+          - apiVersion
+          - kind
+          - metadata
+          - status
+        resource:
+          spec:
+            ports:
+              - port: 80
+                targetPort: http
+                name: http
+                protocol: TCP
+            selector:
+              app: myapplication
+            type: ClusterIP

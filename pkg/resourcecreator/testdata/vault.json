@@ -2,7 +2,21 @@
   "config": {
     "description": "vault enabled with default configuration",
     "matchType": "subset",
-    "vaultEnabled": true
+    "vaultEnabled": true,
+    "match": {
+      ".metadata": {
+      },
+      ".spec.template.spec.initContainers[].volume": [
+        "subset"
+      ],
+      ".spec.template.spec.containers[].volumeMounts": [
+        "subset"
+      ],
+      ".secretName": {
+        "type": "regex",
+        "match": "^appname-.\\w{8}$"
+      }
+    }
   },
   "input": {
     "kind": "Application",
@@ -33,42 +47,6 @@
               "containers": [
                 {
                   "volumeMounts": [
-                    {
-                      "mountPath": "/etc/ssl/certs/java/cacerts",
-                      "name": "ca-bundle-jks",
-                      "readOnly": true,
-                      "subPath": "ca-bundle.jks"
-                    },
-                    {
-                      "name": "ca-bundle-pem",
-                      "readOnly": true,
-                      "mountPath": "/etc/ssl/certs/ca-certificates.crt",
-                      "subPath": "ca-bundle.pem"
-                    },
-                    {
-                      "readOnly": true,
-                      "mountPath": "/etc/pki/tls/certs/ca-bundle.crt",
-                      "subPath": "ca-bundle.pem",
-                      "name": "ca-bundle-pem"
-                    },
-                    {
-                      "name": "ca-bundle-pem",
-                      "readOnly": true,
-                      "mountPath": "/etc/ssl/ca-bundle.pem",
-                      "subPath": "ca-bundle.pem"
-                    },
-                    {
-                      "name": "ca-bundle-pem",
-                      "readOnly": true,
-                      "mountPath": "/etc/pki/tls/cacert.pem",
-                      "subPath": "ca-bundle.pem"
-                    },
-                    {
-                      "name": "ca-bundle-pem",
-                      "readOnly": true,
-                      "mountPath": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
-                      "subPath": "ca-bundle.pem"
-                    },
                     {
                       "name": "vault-volume",
                       "mountPath": "/var/run/secrets/nais.io/vault",
@@ -110,26 +88,6 @@
                       "subPath": "vault/var/run/secrets/nais.io/vault"
                     }
                   ]
-                }
-              ],
-              "volumes": [
-                {
-                  "name": "ca-bundle-jks",
-                  "configMap": {
-                    "name": "ca-bundle-jks"
-                  }
-                },
-                {
-                  "name": "ca-bundle-pem",
-                  "configMap": {
-                    "name": "ca-bundle-pem"
-                  }
-                },
-                {
-                  "name": "vault-volume",
-                  "emptyDir": {
-                    "medium": "Memory"
-                  }
                 }
               ]
             }
