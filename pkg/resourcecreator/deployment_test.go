@@ -12,7 +12,9 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-const clusterName = "my.test.cluster.local"
+const (
+	clusterName = "my.test.cluster.local"
+)
 
 func TestDeployment(t *testing.T) {
 
@@ -310,6 +312,35 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, 0, len(appContainer.EnvFrom))
 		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, "bar")
 		assert.Nil(t, volumeMount)
+	})
+	t.Run("jwker secrets are mounted when JwkerSecretName is set", func(t *testing.T) {
+		const jwkerSecret = "myJwkerSecret"
+		app := fixtures.MinimalApplication()
+		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{JwkerSecretName: jwkerSecret})
+		assert.NoError(t, err)
+
+		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
+		assert.NotEmpty(t, volumeMount)
+		assert.Equal(t, jwkerSecret, volumeMount.Name)
+		assert.Equal(t, "/var/run/secrets", volumeMount.MountPath)
+		jwkerVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
+		assert.NotEmpty(t, jwkerVolume)
+		assert.Equal(t, jwkerSecret, jwkerVolume.Name)
+		assert.Equal(t, jwkerSecret, jwkerVolume.VolumeSource.Secret.SecretName)
+	})
+	t.Run("when no jwkerSecretName is given there should be no jwker volume mount", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{})
+		assert.NoError(t, err)
+
+		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		assert.NotNil(t, appContainer)
+		assert.Len(t, appContainer.VolumeMounts, 6)
+		for _, v := range appContainer.VolumeMounts {
+			assert.NotEqual(t, "/var/run/secrets",v.MountPath)
+		}
 	})
 }
 

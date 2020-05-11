@@ -37,6 +37,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 || len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
 		jwker := Jwker(app, resourceOptions.ClusterName)
 		ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
+		resourceOptions.JwkerSecretName = jwker.Spec.SecretName
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
@@ -131,7 +132,6 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 	} else {
-
 		ingress, err := Ingress(app)
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingress: %s", err)

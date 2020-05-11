@@ -114,6 +114,9 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	podSpec = filesFrom(app, podSpec, resourceOptions.NativeSecrets)
 	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
+	if len(resourceOptions.JwkerSecretName) > 0 {
+		podSpec = jwkerSecretFrom(podSpec, resourceOptions.JwkerSecretName)
+	}
 
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
@@ -189,6 +192,13 @@ func envFromSecret(name string) corev1.EnvFromSource {
 			},
 		},
 	}
+}
+
+func jwkerSecretFrom(spec *corev1.PodSpec, jwkerSecretName string) *corev1.PodSpec {
+	spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(jwkerSecretName))
+	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
+		fromFilesVolumeMount(jwkerSecretName, "", nais.DefaultSecretMountPath))
+	return spec
 }
 
 func filesFrom(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
