@@ -9,7 +9,7 @@ type ResourceOptions struct {
 	GoogleProjectId             string
 	GoogleTeamProjectId         string
 	ClusterName                 string
-	JwkerSecretName				string
+	JwkerSecretName             string
 }
 
 // NewResourceOptions creates a struct with the default resource options.
