@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -88,8 +89,69 @@ func resourcemeta(resource interface{}) meta {
 	return ym
 }
 
-func yamlTest(t *testing.T, resource Raw, match Match) {
-	
+func deepCompare(expected, actual reflect.Value) error {
+	// FIXME: mandag: ikke bruk reflect
+	var err error
+
+	if !expected.IsValid() || !actual.IsValid() {
+		if expected.IsValid() == actual.IsValid() {
+			return nil
+		}
+		return fmt.Errorf("validity differs")
+	}
+
+	kind := expected.Kind()
+
+	switch kind {
+	case reflect.Map:
+		for _, k := range expected.MapKeys() {
+			val1 := expected.MapIndex(k)
+			val2 := actual.MapIndex(k)
+			err = deepCompare(val1, val2)
+			if err != nil {
+				return fmt.Errorf("sub: %s", err)
+			}
+		}
+
+	case reflect.Interface:
+		if expected.IsNil() || actual.IsNil() {
+			if expected.IsNil() == actual.IsNil() {
+				return nil
+			}
+			return fmt.Errorf("%s: interfaces differ in nil values", expected.String())
+		}
+		return deepCompare(expected.Elem(), actual.Elem())
+	}
+
+	return nil
+}
+
+func conv(v reflect.Value) interface{} {
+	switch v.Kind() {
+	case reflect.String:
+		return v.String()
+	case reflect.Int:
+		return v.Int()
+	default:
+		return nil
+	}
+}
+
+func subsetTest(t *testing.T, expected, actual interface{}) error {
+	v1 := conv(reflect.ValueOf(expected))
+	v2 := conv(reflect.ValueOf(actual))
+	switch x := expected.(type) {
+	case string:
+	case map[string]interface{}:
+		panic(x)
+	case map[interface{}]interface{}:
+		panic(x)
+	default:
+		panic(x)
+	}
+	v1 := reflect.ValueOf(expected)
+	v2 := reflect.ValueOf(actual)
+	return deepCompare(v1, v2)
 }
 
 func rawResource(resource runtime.Object) Raw {
@@ -100,6 +162,8 @@ func rawResource(resource runtime.Object) Raw {
 }
 
 func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test SubTest) {
+	var err error
+
 	for _, resource := range resources {
 		rm := resourcemeta(resource)
 
@@ -108,8 +172,16 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 		}
 		t.Logf("testing resource %s against %s", rm, test)
 
+		raw := rawResource(resource.Resource)
 		for _, match := range test.Match {
-			yamlTest(t, rawResource(resource.Resource), match)
+			switch match.Type {
+			case MatchSubset:
+				err = subsetTest(t, match.Resource, raw)
+			}
+		}
+
+		if err != nil {
+			t.Error(err)
 		}
 	}
 }
