@@ -22,6 +22,8 @@ const (
 	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
 	SkipDeploymentMessageAnnotation   = "nais.io/skipDeploymentMessage"
 	DefaultSecretMountPath            = "/var/run/secrets"
+	DefaultJwkerMountPath             = "/var/run/secrets/nais.io/jwker"
+	JwkerCredentialsFilename          = "jwks" // from jwker/pkg/secret/secrets.go: JwksSecretKey
 )
 
 func GetDefaultMountPath(name string) string {
