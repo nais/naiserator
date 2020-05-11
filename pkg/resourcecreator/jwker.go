@@ -59,7 +59,6 @@ func getSecretName(app *nais.Application) string {
 
 func Jwker(app *nais.Application, clusterName string) *jwker.Jwker {
 	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.AccessPolicy.Outbound.Rules) == 0 {
-		fmt.Println("No access policies")
 		return nil
 	}
 	return &jwker.Jwker{
