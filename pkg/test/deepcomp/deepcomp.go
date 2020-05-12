@@ -4,7 +4,6 @@ package deepcomp
 import (
 	"fmt"
 	"reflect"
-	"unsafe"
 
 	"github.com/go-test/deep"
 )
@@ -73,6 +72,10 @@ func DeepEqual(x, y interface{}) Diffset {
 // comparisons that have already been seen, which allows short circuiting on
 // recursive types.
 func deepValueEqual(v1, v2 reflect.Value, depth int, path string, ds Diffset) Diffset {
+	brp := ".foo[1].bro[0]"
+	if brp == path {
+		path = brp
+	}
 	expected := Diff{
 		Path:    path,
 		Message: fmt.Sprintf("expected %s '%+v' but got %s '%+v'", v1.Kind().String(), v1.Interface(), v2.Kind().String(), v2.Interface()),
@@ -89,52 +92,36 @@ func deepValueEqual(v1, v2 reflect.Value, depth int, path string, ds Diffset) Di
 		return append(ds, expected)
 	}
 
-	// if depth > 10 { panic("deepValueEqual") }	// for debugging
-
-	// We want to avoid putting more in the visited map than we need to.
-	// For any possible reference cycle that might be encountered,
-	// hard(t) needs to return true for at least one of the types in the cycle.
-	hard := func(k reflect.Kind) bool {
-		switch k {
-		case reflect.Map, reflect.Slice, reflect.Ptr, reflect.Interface:
-			return true
-		}
-		return false
-	}
-
-	if v1.CanAddr() && v2.CanAddr() && hard(v1.Kind()) {
-		addr1 := unsafe.Pointer(v1.UnsafeAddr())
-		addr2 := unsafe.Pointer(v2.UnsafeAddr())
-		if uintptr(addr1) > uintptr(addr2) {
-			// Canonicalize order to reduce number of entries in visited.
-			// Assumes non-moving garbage collector.
-			addr1, addr2 = addr2, addr1
-		}
-	}
-
 	switch v1.Kind() {
 	case reflect.Array:
 		for i := 0; i < v1.Len(); i++ {
-			ds = append(ds, deepValueEqual(v1.Index(i), v2.Index(i), depth+1, fmt.Sprintf("%s[%d]", path, i), ds)...)
+			ds = deepValueEqual(v1.Index(i), v2.Index(i), depth+1, fmt.Sprintf("%s[%d]", path, i), ds)
 		}
-		/*
-			case reflect.Slice:
-				if v1.IsNil() != v2.IsNil() {
-					return false
-				}
-				if v1.Len() != v2.Len() {
-					return false
-				}
-				if v1.Pointer() == v2.Pointer() {
-					return true
-				}
-				for i := 0; i < v1.Len(); i++ {
-					if !deepValueEqual(v1.Index(i), v2.Index(i), depth+1) {
-						return false
-					}
-				}
-				return ds
-		*/
+	case reflect.Slice:
+		if v1.IsNil() != v2.IsNil() {
+			return append(ds, expected)
+		}
+		if v1.Pointer() == v2.Pointer() {
+			return ds
+		}
+		for i := 0; i < v1.Len(); i++ {
+			if i >= v2.Len() {
+				ds = append(ds, Diff{
+					Path:    path,
+					Message: fmt.Sprintf("too few elements; expected %d but got %d", v1.Len(), v2.Len()),
+					Type:    DiffMissingField,
+				})
+				break
+			}
+			ds = deepValueEqual(v1.Index(i), v2.Index(i), depth+1, fmt.Sprintf("%s[%d]", path, i), ds)
+		}
+		if v1.Len() < v2.Len() {
+			ds = append(ds, Diff{
+				Path:    path,
+				Message: fmt.Sprintf("too many elements; expected %d but got %d", v1.Len(), v2.Len()),
+				Type:    DiffExtraField,
+			})
+		}
 	case reflect.Interface:
 		if v1.IsNil() != v2.IsNil() {
 			return append(ds, expected)
@@ -142,7 +129,7 @@ func deepValueEqual(v1, v2 reflect.Value, depth int, path string, ds Diffset) Di
 		return deepValueEqual(v1.Elem(), v2.Elem(), depth+1, path, ds)
 	case reflect.Ptr:
 		if v1.Pointer() != v2.Pointer() {
-			return append(ds, deepValueEqual(v1.Elem(), v2.Elem(), depth+1, path, ds)...)
+			return deepValueEqual(v1.Elem(), v2.Elem(), depth+1, path, ds)
 		}
 		/*
 			case reflect.Struct:
@@ -167,7 +154,7 @@ func deepValueEqual(v1, v2 reflect.Value, depth int, path string, ds Diffset) Di
 					Type:    DiffMissingField,
 				})
 			} else {
-				ds = append(ds, deepValueEqual(val1, val2, depth+1, path+"."+k.String(), ds)...)
+				ds = deepValueEqual(val1, val2, depth+1, path+"."+k.String(), ds)
 			}
 		}
 		if v1.Len() == v2.Len() {

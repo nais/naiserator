@@ -82,6 +82,76 @@ var testcases = []testcase{
 			},
 		},
 	},
+	// nested structs
+	{
+		expected: `{"foo":{"bar":{"baz":"ok"}}}`,
+		actual:   `{"foo":{"bar":{"baz":"ok"}}}`,
+		mode:     `exact`,
+	},
+	// nested structs comparison failed with path
+	{
+		expected: `{"foo":{"bar":{"baz":"ok"}}}`,
+		actual:   `{"foo":{"bar":{"baz":"nope"}}}`,
+		mode:     `exact`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    ".foo.bar.baz",
+				Type:    "valueDiffers",
+				Message: "expected string 'ok' but got string 'nope'",
+			},
+		},
+	},
+	// slices
+	{
+		expected: `[1,2,3]`,
+		actual:   `[1,2,3]`,
+		mode:     `exact`,
+	},
+	// slices with too many elements
+	{
+		expected: `[1,2,3]`,
+		actual:   `[1,2,3,4]`,
+		mode:     `exact`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    "",
+				Type:    "extraField",
+				Message: "too many elements; expected 3 but got 4",
+			},
+		},
+	},
+	// slices with too few elements
+	{
+		expected: `[1,2,3,4]`,
+		actual:   `[1,2,3]`,
+		mode:     `exact`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    "",
+				Type:    "missingField",
+				Message: "too few elements; expected 4 but got 3",
+			},
+		},
+	},
+	// nested complex types
+	{
+		expected: `{"foo":[0,{"bar":["baz"]},2,3]}`,
+		actual:   `{"foo":[0,{"bar":["baz"]},2,3]}`,
+		mode:     `exact`,
+	},
+	// nested complex types
+	{
+		expected: `{"foo":[0,{"bro":["baz"]},2,3]}`,
+		actual:   `{"foo":[0,{"bro":["foo"]},2,3]}`,
+		mode:     `exact`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    ".foo[1].bro[0]",
+				Type:    "valueDiffers",
+				Message: "expected string 'baz' but got string 'foo'",
+			},
+		},
+	},
 }
 
 func decode(data string) interface{} {
