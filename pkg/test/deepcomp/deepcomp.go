@@ -83,10 +83,6 @@ func Exact(x, y interface{}) Diffset {
 // comparisons that have already been seen, which allows short circuiting on
 // recursive types.
 func deepValueEqual(v1, v2 reflect.Value, depth int, path string, ds Diffset) Diffset {
-	brp := ".foo[1].bro[0]"
-	if brp == path {
-		path = brp
-	}
 	expected := Diff{
 		Path:    path,
 		Message: fmt.Sprintf("expected %s '%+v' but got %s '%+v'", v1.Kind().String(), v1.Interface(), v2.Kind().String(), v2.Interface()),
