@@ -8,30 +8,6 @@ import (
 	"reflect"
 )
 
-type MatchType string
-
-type DiffType string
-
-const (
-	MatchRegex  MatchType = "regex"
-	MatchExact  MatchType = "exact"
-	MatchSubset MatchType = "subset"
-
-	DiffMissingField DiffType = "missingField"
-	DiffExtraField   DiffType = "extraField"
-	DiffTypeDiffers  DiffType = "typeDiffers"
-	DiffValueDiffers DiffType = "valueDiffers"
-	DiffInvalidTypes DiffType = "invalidTypes"
-)
-
-type Diffset []Diff
-
-type Diff struct {
-	Path    string
-	Message string
-	Type    DiffType
-}
-
 func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 	switch matchType {
 	case MatchRegex:
@@ -51,7 +27,7 @@ func Subset(expected, actual interface{}) Diffset {
 	subset := make(Diffset, 0, len(diffs))
 
 	for _, diff := range diffs {
-		if diff.Type != DiffExtraField {
+		if diff.Type != ErrExtraField {
 			subset = append(subset, diff)
 		}
 	}
@@ -87,7 +63,7 @@ func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchTy
 			return append(diffs, Diff{
 				Path:    path,
 				Message: fmt.Sprintf("expected %d but got %d", a.Len(), b.Len()),
-				Type:    DiffMissingField,
+				Type:    ErrMissingField,
 			})
 		}
 		diffs = append(diffs, deepValueEqual(a.Index(i), b.Index(i), depth+1, fmt.Sprintf("%s[%d]", path, i), matchType)...)
@@ -96,7 +72,7 @@ func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchTy
 		return append(diffs, Diff{
 			Path:    path,
 			Message: fmt.Sprintf("expected %d but got %d", a.Len(), b.Len()),
-			Type:    DiffExtraField,
+			Type:    ErrExtraField,
 		})
 	}
 	return diffs
@@ -139,7 +115,7 @@ func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchT
 		return Diffset{Diff{
 			Path:    path,
 			Message: fmt.Sprintf("expected %s '%+v' but reached end of input without finding it", elem.Kind().String(), elem.Interface()),
-			Type:    DiffMissingField,
+			Type:    ErrMissingField,
 		}}
 	}
 
@@ -154,16 +130,16 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 	simpleExpect := Diff{
 		Path:    path,
 		Message: fmt.Sprintf("expected %s '%+v' but got %s '%+v'", a.Kind().String(), a.Interface(), b.Kind().String(), b.Interface()),
-		Type:    DiffValueDiffers,
+		Type:    ErrValueDiffers,
 	}
 
 	if !a.IsValid() || !b.IsValid() {
-		simpleExpect.Type = DiffInvalidTypes
+		simpleExpect.Type = ErrInvalidTypes
 		return Diffset{simpleExpect}
 	}
 
 	if a.Type() != b.Type() {
-		simpleExpect.Type = DiffTypeDiffers
+		simpleExpect.Type = ErrTypeDiffers
 		return Diffset{simpleExpect}
 	}
 
@@ -210,7 +186,7 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 				diffs = append(diffs, Diff{
 					Path:    path + "." + k.String(),
 					Message: "missing map value",
-					Type:    DiffMissingField,
+					Type:    ErrMissingField,
 				})
 			} else {
 				diffs = append(diffs, deepValueEqual(val1, val2, depth+1, path+"."+k.String(), matchType)...)
@@ -225,7 +201,7 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 				diffs = append(diffs, Diff{
 					Path:    path + "." + k.String(),
 					Message: "unexpected map key",
-					Type:    DiffExtraField,
+					Type:    ErrExtraField,
 				})
 			}
 		}

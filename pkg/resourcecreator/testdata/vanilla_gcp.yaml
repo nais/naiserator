@@ -50,18 +50,19 @@ tests:
                 kind: Application
                 name: myapplication
                 uid: "123456"
-ignore:
+
   - apiVersion: v1
     kind: Service
     name: myapplication
     operation: CreateOrUpdate
     match:
       - type: exact
+        name: "service created with tcp port 80"
         exclude:
-          - apiVersion
-          - kind
-          - metadata
-          - status
+          - .apiVersion
+          - .kind
+          - .metadata
+          - .status
         resource:
           spec:
             ports:

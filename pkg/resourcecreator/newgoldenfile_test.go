@@ -29,6 +29,7 @@ type SubTest struct {
 type Match struct {
 	Type     deepcomp.MatchType
 	Name     string
+	Exclude  []string // list of keys
 	Resource interface{}
 }
 
@@ -70,6 +71,16 @@ func rawResource(resource runtime.Object) interface{} {
 	return r
 }
 
+func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepcomp.Diffset {
+	diffs := make(deepcomp.Diffset, 0, len(diffset))
+	for _, diff := range diffset {
+		if !deny(diff) {
+			diffs = append(diffs, diff)
+		}
+	}
+	return diffs
+}
+
 func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test SubTest) {
 	for _, resource := range resources {
 		rm := resourcemeta(resource)
@@ -80,14 +91,30 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 
 		raw := rawResource(resource.Resource)
 		diffs := make(deepcomp.Diffset, 0)
+
+		// retrieve all failure cases
 		for _, match := range test.Match {
+
+			// filter out all cases in the exclusion list
+			callback := func(diff deepcomp.Diff) bool {
+				for _, path := range match.Exclude {
+					if path == diff.Path {
+						return true
+					}
+				}
+				return false
+			}
+
 			t.Logf("testing '%s' against test '%s'", rm, match.Name)
-			diffs = append(diffs, deepcomp.Compare(match.Type, &match.Resource, raw)...)
+
+			diffs = append(diffs, filter(deepcomp.Compare(match.Type, &match.Resource, raw), callback)...)
 		}
 
+		// apply blacklist
+
+		// anything left is an error.
 		for _, diff := range diffs {
 			t.Log(diff)
-			t.Error(diff.Message)
 			t.Fail()
 		}
 	}
