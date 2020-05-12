@@ -186,6 +186,19 @@ var testcases = []testcase{
 		mode:     `subset`,
 	},
 	{
+		name:     `empty actual slices in subsets`,
+		expected: `[1,2,3,4,5,6,7,8,9]`,
+		actual:   `[]`,
+		mode:     `subset`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    "",
+				Type:    "missingField",
+				Message: "expected float64 '1' but reached end of input without finding it",
+			},
+		},
+	},
+	{
 		name:     `empty slice subsets`,
 		expected: `[]`,
 		actual:   `[1,2,3,4,5,6,7,8,9]`,
