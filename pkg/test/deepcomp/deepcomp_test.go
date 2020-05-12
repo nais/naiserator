@@ -185,6 +185,25 @@ var testcases = []testcase{
 		actual:   `[1,2,3,4,5,6,7,8,9]`,
 		mode:     `subset`,
 	},
+	{
+		name:     `empty slice subsets`,
+		expected: `[]`,
+		actual:   `[1,2,3,4,5,6,7,8,9]`,
+		mode:     `subset`,
+	},
+	{
+		name:     `too many slice subset expectations`,
+		expected: `[1,2,3,4,5,6,7,8,9]`,
+		actual:   `[1,2,3,4]`,
+		mode:     `subset`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    "",
+				Type:    "missingField",
+				Message: "expected float64 '5' but reached end of input without finding it",
+			},
+		},
+	},
 }
 
 func decode(data string) interface{} {

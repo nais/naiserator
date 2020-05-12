@@ -116,8 +116,12 @@ func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchT
 	max := max(alen, blen)
 	ai, bi := 0, 0
 
+	if alen == 0 {
+		return Diffset{}
+	}
+
 	for bi = 0; bi < max; bi++ {
-		if ai >= max || bi >= max {
+		if ai >= alen || bi >= blen {
 			break
 		}
 		diffs = deepValueEqual(a.Index(ai), b.Index(bi), depth+1, fmt.Sprintf("%s[%d]", path, ai), matchType)
@@ -130,8 +134,8 @@ func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchT
 		return diffs
 	}
 
-	if ai < bi && alen > 0 {
-		elem := a.Index(alen - 1).Elem()
+	if ai < bi || ai < alen {
+		elem := a.Index(ai).Elem()
 		return Diffset{Diff{
 			Path:    path,
 			Message: fmt.Sprintf("expected %s '%+v' but reached end of input without finding it", elem.Kind().String(), elem.Interface()),
