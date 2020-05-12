@@ -177,6 +177,12 @@ var testcases = []testcase{
 			},
 		},
 	},
+	// slice subsets
+	{
+		expected: `[1,3,5]`,
+		actual:   `[1,2,3,4,5,6,7,8,9]`,
+		mode:     `subset`,
+	},
 }
 
 func decode(data string) interface{} {
