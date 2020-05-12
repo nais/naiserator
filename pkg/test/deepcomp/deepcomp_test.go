@@ -11,6 +11,7 @@ import (
 )
 
 type testcase struct {
+	name     string
 	expected string
 	actual   string
 	mode     deepcomp.MatchType
@@ -18,14 +19,14 @@ type testcase struct {
 }
 
 var testcases = []testcase{
-	// string comparison
 	{
+		name:     `string comparison`,
 		expected: `"foo"`,
 		actual:   `"foo"`,
 		mode:     `exact`,
 	},
-	// string comparison fail
 	{
+		name:     `string comparison fail`,
 		expected: `"foo"`,
 		actual:   `"bar"`,
 		mode:     `exact`,
@@ -37,8 +38,8 @@ var testcases = []testcase{
 			},
 		},
 	},
-	// string compared against number
 	{
+		name:     `string compared against number`,
 		expected: `"foo"`,
 		actual:   `123`,
 		mode:     `exact`,
@@ -50,14 +51,14 @@ var testcases = []testcase{
 			},
 		},
 	},
-	// struct comparison
 	{
+		name:     `struct comparison`,
 		expected: `{"foo":"bar"}`,
 		actual:   `{"foo":"bar"}`,
 		mode:     `exact`,
 	},
-	// missing values in structs
 	{
+		name:     `missing values in structs`,
 		expected: `{"foo":"bar"}`,
 		actual:   `{"foo":"bar","bar":"baz"}`,
 		mode:     `exact`,
@@ -69,8 +70,8 @@ var testcases = []testcase{
 			},
 		},
 	},
-	// extra values in structs
 	{
+		name:     `extra values in structs`,
 		expected: `{"foo":"bar","bar":"baz"}`,
 		actual:   `{"foo":"bar"}`,
 		mode:     `exact`,
@@ -82,14 +83,14 @@ var testcases = []testcase{
 			},
 		},
 	},
-	// nested structs
 	{
+		name:     `nested structs`,
 		expected: `{"foo":{"bar":{"baz":"ok"}}}`,
 		actual:   `{"foo":{"bar":{"baz":"ok"}}}`,
 		mode:     `exact`,
 	},
-	// nested structs comparison failed with path
 	{
+		name:     `nested structs comparison failed with path`,
 		expected: `{"foo":{"bar":{"baz":"ok"}}}`,
 		actual:   `{"foo":{"bar":{"baz":"nope"}}}`,
 		mode:     `exact`,
@@ -101,14 +102,14 @@ var testcases = []testcase{
 			},
 		},
 	},
-	// slices
 	{
+		name:     `slices`,
 		expected: `[1,2,3]`,
 		actual:   `[1,2,3]`,
 		mode:     `exact`,
 	},
-	// slices with too many elements
 	{
+		name:     `slices with too many elements`,
 		expected: `[1,2,3]`,
 		actual:   `[1,2,3,4]`,
 		mode:     `exact`,
@@ -116,12 +117,12 @@ var testcases = []testcase{
 			{
 				Path:    "",
 				Type:    "extraField",
-				Message: "too many elements; expected 3 but got 4",
+				Message: "expected 3 but got 4",
 			},
 		},
 	},
-	// slices with too few elements
 	{
+		name:     `slices with too few elements`,
 		expected: `[1,2,3,4]`,
 		actual:   `[1,2,3]`,
 		mode:     `exact`,
@@ -129,18 +130,18 @@ var testcases = []testcase{
 			{
 				Path:    "",
 				Type:    "missingField",
-				Message: "too few elements; expected 4 but got 3",
+				Message: "expected 4 but got 3",
 			},
 		},
 	},
-	// nested complex types
 	{
+		name:     `nested complex types`,
 		expected: `{"foo":[0,{"bar":["baz"]},2,3]}`,
 		actual:   `{"foo":[0,{"bar":["baz"]},2,3]}`,
 		mode:     `exact`,
 	},
-	// nested complex types
 	{
+		name:     `nested complex types`,
 		expected: `{"foo":[0,{"bro":["baz"]},2,3]}`,
 		actual:   `{"foo":[0,{"bro":["foo"]},2,3]}`,
 		mode:     `exact`,
@@ -152,39 +153,38 @@ var testcases = []testcase{
 			},
 		},
 	},
-	// subset matching of simple structs
 	{
+		name:     `subset matching of simple structs`,
 		expected: `{"foo":"bar"}`,
 		actual:   `{"foo":"bar","bar":"baz"}`,
 		mode:     `subset`,
 	},
-	// multiple subset matches
 	{
+		name:     `multiple subset matches`,
 		expected: `{"foo":"bar","baz":[1,2,3]}`,
 		actual:   `{"foo":"bar","bar":"baz","more":"test","baz":[1,2,3]}`,
 		mode:     `subset`,
 	},
-	// subset failure
+
 	{
+		name:     `subset failure`,
 		expected: `{"foo":"bar","baz":[1,2]}`,
 		actual:   `{"foo":"bar","bar":"baz","more":"test","baz":[1,3]}`,
 		mode:     `subset`,
 		diffset: deepcomp.Diffset{
 			{
-				Path:    ".baz[1]",
-				Type:    "valueDiffers",
-				Message: "expected float64 '2' but got float64 '3'",
+				Path:    ".baz",
+				Type:    "missingField",
+				Message: "expected float64 '2' but reached end of input without finding it",
 			},
 		},
 	},
-	// slice subsets
-	/*
-		{
-			expected: `[1,3,5]`,
-			actual:   `[1,2,3,4,5,6,7,8,9]`,
-			mode:     `subset`,
-		},
-	*/
+	{
+		name:     `slice subsets`,
+		expected: `[1,3,7,9]`,
+		actual:   `[1,2,3,4,5,6,7,8,9]`,
+		mode:     `subset`,
+	},
 }
 
 func decode(data string) interface{} {
@@ -216,6 +216,6 @@ func TestSubset(t *testing.T) {
 			test.diffset = deepcomp.Diffset{}
 		}
 		diffs := deepcomp.Compare(test.mode, a, b)
-		assert.Equal(t, test.diffset, diffs, "test %d", i+1)
+		assert.Equal(t, test.diffset, diffs, "test: %s", test.name)
 	}
 }
