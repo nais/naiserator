@@ -152,6 +152,31 @@ var testcases = []testcase{
 			},
 		},
 	},
+	// subset matching of simple structs
+	{
+		expected: `{"foo":"bar"}`,
+		actual:   `{"foo":"bar","bar":"baz"}`,
+		mode:     `subset`,
+	},
+	// multiple subset matches
+	{
+		expected: `{"foo":"bar","baz":[1,2,3]}`,
+		actual:   `{"foo":"bar","bar":"baz","more":"test","baz":[1,2,3]}`,
+		mode:     `subset`,
+	},
+	// subset failure
+	{
+		expected: `{"foo":"bar","baz":[1,2]}`,
+		actual:   `{"foo":"bar","bar":"baz","more":"test","baz":[1,3]}`,
+		mode:     `subset`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    ".baz[1]",
+				Type:    "valueDiffers",
+				Message: "expected float64 '2' but got float64 '3'",
+			},
+		},
+	},
 }
 
 func decode(data string) interface{} {

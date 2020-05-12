@@ -4,8 +4,6 @@ package deepcomp
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/go-test/deep"
 )
 
 type MatchType string
@@ -37,21 +35,34 @@ func Compare(typ MatchType, expected, actual interface{}) Diffset {
 	case MatchRegex:
 		panic("")
 	case MatchExact:
-		return DeepEqual(expected, actual)
-		return Exact(expected, actual, "", Diffset{})
+		return Exact(expected, actual)
 	case MatchSubset:
-		return Subset(expected, actual, "")
+		return Subset(expected, actual)
 	default:
 		panic(fmt.Errorf("unhandled type %v", typ))
 	}
 }
 
-// As DeepEqual traverses the data values it may find a cycle. The
-// second and subsequent times that DeepEqual compares two pointer
+func Subset(expected, actual interface{}) Diffset {
+
+	diffs := Exact(expected, actual)
+	subset := make(Diffset, 0, len(diffs))
+
+	for _, diff := range diffs {
+		if diff.Type != DiffExtraField {
+			subset = append(subset, diff)
+		}
+	}
+
+	return subset
+}
+
+// As Exact traverses the data values it may find a cycle. The
+// second and subsequent times that Exact compares two pointer
 // values that have been compared before, it treats the values as
 // equal rather than examining the values to which they point.
-// This ensures that DeepEqual terminates.
-func DeepEqual(x, y interface{}) Diffset {
+// This ensures that Exact terminates.
+func Exact(x, y interface{}) Diffset {
 	ds := Diffset{}
 	if x == nil || y == nil {
 		return ds
@@ -177,103 +188,4 @@ func deepValueEqual(v1, v2 reflect.Value, depth int, path string, ds Diffset) Di
 		}
 	}
 	return ds
-}
-
-func Exact(expected, actual interface{}, path string, ds Diffset) Diffset {
-
-	ta, tb := reflect.TypeOf(expected), reflect.TypeOf(actual)
-	ka, kb := ta.Kind(), tb.Kind()
-	_ = reflect.ValueOf(expected).Convert(reflect.TypeOf(expected)).Interface()
-	// tb := reflect.ValueOf(actual).Convert(reflect.TypeOf(actual)).Interface()
-
-	if ka != kb {
-		// return fmt.Errorf("%s: value is of type %T, expected %T", path, kb.String(), ka.String())
-	}
-
-	switch ka {
-	case reflect.String:
-		err := stringcmp(expected.(string), actual.(string))
-		if err != nil {
-			ds = append(ds, Diff{
-				Path:    path,
-				Message: err.Error(),
-			})
-		}
-	// case map[string]interface{}:
-	// err = subsetTest(t, expected, actual, path + ".")
-	case reflect.Map:
-		// ma, mb := ta.(map[string]interface{}), tb.(map[string]interface{})
-		ra := reflect.ValueOf(expected).MapRange()
-		for ra.Next() {
-			// k, v := ra.Key(), ra.Value()
-			// rb := reflect.ValueOf(actual).MapIndex(k)
-			// err = Subset(v.Interface(), rb.Interface(), path+"."+k.String())
-		}
-	default:
-		ds = append(ds, Diff{
-			Path:    path,
-			Message: "reached default case",
-		})
-	}
-
-	return ds
-}
-
-func deepCompare(expected, actual reflect.Value) error {
-	// FIXME: mandag: ikke bruk reflect
-	var err error
-
-	if !expected.IsValid() || !actual.IsValid() {
-		if expected.IsValid() == actual.IsValid() {
-			return nil
-		}
-		return fmt.Errorf("validity differs")
-	}
-
-	kind := expected.Kind()
-
-	switch kind {
-	case reflect.Map:
-		for _, k := range expected.MapKeys() {
-			val1 := expected.MapIndex(k)
-			val2 := actual.MapIndex(k)
-			err = deepCompare(val1, val2)
-			if err != nil {
-				return fmt.Errorf("sub: %s", err)
-			}
-		}
-
-	case reflect.Interface:
-		if expected.IsNil() || actual.IsNil() {
-			if expected.IsNil() == actual.IsNil() {
-				return nil
-			}
-			return fmt.Errorf("%s: interfaces differ in nil values", expected.String())
-		}
-		return deepCompare(expected.Elem(), actual.Elem())
-	}
-
-	return nil
-}
-
-func stringcmp(expected, actual string) error {
-	if expected == actual {
-		return nil
-	}
-	return fmt.Errorf("strings differ")
-}
-
-func Subset(expected, actual interface{}, path string) Diffset {
-
-	diffs := deep.Equal(expected, actual)
-	if len(diffs) == 0 {
-		return nil
-	}
-	return Diffset{
-		Diff{
-			Path:    "",
-			Message: diffs[0],
-		},
-	}
-
 }
