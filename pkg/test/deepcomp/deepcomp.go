@@ -134,7 +134,7 @@ func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchT
 		return diffs
 	}
 
-	if ai < bi || ai < alen {
+	if ai < alen {
 		elem := a.Index(ai).Elem()
 		return Diffset{Diff{
 			Path:    path,

@@ -204,6 +204,12 @@ var testcases = []testcase{
 			},
 		},
 	},
+	{
+		name:     `complex slice subsets`,
+		expected: `[{"foo":"bar"},{"bar":"baz"}]`,
+		actual:   `[{"pre":"pre"},{"foo":"bar"},{"bar":"baz"},{"post":"post"}]`,
+		mode:     `subset`,
+	},
 }
 
 func decode(data string) interface{} {
