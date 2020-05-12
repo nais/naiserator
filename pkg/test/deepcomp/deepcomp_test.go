@@ -24,25 +24,27 @@ var testcases = []testcase{
 		actual:   `"foo"`,
 		mode:     `exact`,
 	},
+	// string comparison fail
 	{
 		expected: `"foo"`,
 		actual:   `"bar"`,
 		mode:     `exact`,
 		diffset: deepcomp.Diffset{
 			{
-				Path:    ".",
+				Path:    "",
 				Type:    "valueDiffers",
 				Message: "expected string 'foo' but got string 'bar'",
 			},
 		},
 	},
+	// string compared against number
 	{
 		expected: `"foo"`,
 		actual:   `123`,
 		mode:     `exact`,
 		diffset: deepcomp.Diffset{
 			{
-				Path:    ".",
+				Path:    "",
 				Type:    "typeDiffers",
 				Message: "expected string 'foo' but got float64 '123'",
 			},
@@ -53,6 +55,32 @@ var testcases = []testcase{
 		expected: `{"foo":"bar"}`,
 		actual:   `{"foo":"bar"}`,
 		mode:     `exact`,
+	},
+	// missing values in structs
+	{
+		expected: `{"foo":"bar"}`,
+		actual:   `{"foo":"bar","bar":"baz"}`,
+		mode:     `exact`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    ".bar",
+				Type:    "extraField",
+				Message: "unexpected map key",
+			},
+		},
+	},
+	// extra values in structs
+	{
+		expected: `{"foo":"bar","bar":"baz"}`,
+		actual:   `{"foo":"bar"}`,
+		mode:     `exact`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    ".bar",
+				Type:    "missingField",
+				Message: "missing map value",
+			},
+		},
 	},
 }
 

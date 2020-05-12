@@ -18,7 +18,8 @@ const (
 	MatchExact  MatchType = "exact"
 	MatchSubset MatchType = "subset"
 
-	DiffMissing      DiffType = "missingField"
+	DiffMissingField DiffType = "missingField"
+	DiffExtraField   DiffType = "extraField"
 	DiffTypeDiffers  DiffType = "typeDiffers"
 	DiffValueDiffers DiffType = "valueDiffers"
 	DiffInvalidTypes DiffType = "invalidTypes"
@@ -65,15 +66,15 @@ func DeepEqual(x, y interface{}) Diffset {
 			Type:    "",
 		})
 	}
-	return deepValueEqual(v1, v2, 0, ds)
+	return deepValueEqual(v1, v2, 0, "", ds)
 }
 
 // Tests for deep equality using reflected types. The map argument tracks
 // comparisons that have already been seen, which allows short circuiting on
 // recursive types.
-func deepValueEqual(v1, v2 reflect.Value, depth int, ds Diffset) Diffset {
+func deepValueEqual(v1, v2 reflect.Value, depth int, path string, ds Diffset) Diffset {
 	expected := Diff{
-		Path:    ".",
+		Path:    path,
 		Message: fmt.Sprintf("expected %s '%+v' but got %s '%+v'", v1.Kind().String(), v1.Interface(), v2.Kind().String(), v2.Interface()),
 		Type:    DiffValueDiffers,
 	}
@@ -114,9 +115,8 @@ func deepValueEqual(v1, v2 reflect.Value, depth int, ds Diffset) Diffset {
 	switch v1.Kind() {
 	case reflect.Array:
 		for i := 0; i < v1.Len(); i++ {
-			ds = append(ds, deepValueEqual(v1.Index(i), v2.Index(i), depth+1, ds)...)
+			ds = append(ds, deepValueEqual(v1.Index(i), v2.Index(i), depth+1, fmt.Sprintf("%s[%d]", path, i), ds)...)
 		}
-		return ds
 		/*
 			case reflect.Slice:
 				if v1.IsNil() != v2.IsNil() {
@@ -139,44 +139,57 @@ func deepValueEqual(v1, v2 reflect.Value, depth int, ds Diffset) Diffset {
 		if v1.IsNil() != v2.IsNil() {
 			return append(ds, expected)
 		}
-		return deepValueEqual(v1.Elem(), v2.Elem(), depth+1, ds)
+		return deepValueEqual(v1.Elem(), v2.Elem(), depth+1, path, ds)
 	case reflect.Ptr:
+		if v1.Pointer() != v2.Pointer() {
+			return append(ds, deepValueEqual(v1.Elem(), v2.Elem(), depth+1, path, ds)...)
+		}
+		/*
+			case reflect.Struct:
+				for i, n := 0, v1.NumField(); i < n; i++ {
+					ds = append(ds, deepValueEqual(v1.Field(i), v2.Field(i), depth+1, ds)...)
+				}
+		*/
+	case reflect.Map:
+		if v1.IsNil() != v2.IsNil() {
+			return append(ds, expected)
+		}
 		if v1.Pointer() == v2.Pointer() {
 			return ds
 		}
-		return append(ds, deepValueEqual(v1.Elem(), v2.Elem(), depth+1, ds)...)
-	case reflect.Struct:
-		for i, n := 0, v1.NumField(); i < n; i++ {
-			ds = append(ds, deepValueEqual(v1.Field(i), v2.Field(i), depth+1, ds)...)
+		for _, k := range v1.MapKeys() {
+			val1 := v1.MapIndex(k)
+			val2 := v2.MapIndex(k)
+			if !val2.IsValid() {
+				ds = append(ds, Diff{
+					Path:    path + "." + k.String(),
+					Message: "missing map value",
+					Type:    DiffMissingField,
+				})
+			} else {
+				ds = append(ds, deepValueEqual(val1, val2, depth+1, path+"."+k.String(), ds)...)
+			}
 		}
-		return ds
-		/*
-			case reflect.Map:
-				if v1.IsNil() != v2.IsNil() {
-					return false
-				}
-				if v1.Len() != v2.Len() {
-					return false
-				}
-				if v1.Pointer() == v2.Pointer() {
-					return true
-				}
-				for _, k := range v1.MapKeys() {
-					val1 := v1.MapIndex(k)
-					val2 := v2.MapIndex(k)
-					if !val1.IsValid() || !val2.IsValid() || !deepValueEqual(val1, val2, depth+1) {
-						return false
-					}
-				}
-				return true
-		*/
+		if v1.Len() == v2.Len() {
+			return ds
+		}
+		// too many values
+		for _, k := range v2.MapKeys() {
+			if !v1.MapIndex(k).IsValid() {
+				ds = append(ds, Diff{
+					Path:    path + "." + k.String(),
+					Message: "unexpected map key",
+					Type:    DiffExtraField,
+				})
+			}
+		}
 	default:
 		// Normal equality suffices
 		if !reflect.DeepEqual(v1.Interface(), v2.Interface()) {
 			ds = append(ds, expected)
 		}
-		return ds
 	}
+	return ds
 }
 
 func Exact(expected, actual interface{}, path string, ds Diffset) Diffset {
