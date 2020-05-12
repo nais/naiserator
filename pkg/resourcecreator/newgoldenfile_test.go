@@ -28,6 +28,7 @@ type SubTest struct {
 
 type Match struct {
 	Type     deepcomp.MatchType
+	Name     string
 	Resource interface{}
 }
 
@@ -39,25 +40,8 @@ type yamlTestCase struct {
 	Tests           []SubTest
 }
 
-type yamlmeta struct {
-	Operation string
-	Resource  struct {
-		TypeMeta struct {
-			ApiVersion string
-			Kind       string
-		}
-		ObjectMeta struct {
-			Name string
-		}
-	}
-}
-
 func (m meta) String() string {
 	return fmt.Sprintf("%s %s/%s %s", m.Operation, m.Resource.ApiVersion, m.Resource.Kind, m.Resource.Metadata.Name)
-}
-
-func (s SubTest) String() string {
-	return "TODO"
 }
 
 func yamlSubtestMatchesResource(resource meta, test SubTest) bool {
@@ -82,28 +66,29 @@ func resourcemeta(resource interface{}) meta {
 func rawResource(resource runtime.Object) interface{} {
 	r := new(interface{})
 	raw, _ := json.Marshal(resource)
-	_ = json.Unmarshal(raw, &r)
+	_ = json.Unmarshal(raw, r)
 	return r
 }
 
 func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test SubTest) {
-	var err error
-
 	for _, resource := range resources {
 		rm := resourcemeta(resource)
 
 		if !yamlSubtestMatchesResource(rm, test) {
 			continue
 		}
-		t.Logf("testing resource %s against %s", rm, test)
 
 		raw := rawResource(resource.Resource)
+		diffs := make(deepcomp.Diffset, 0)
 		for _, match := range test.Match {
-			deepcomp.Compare(match.Type, match.Resource, raw)
+			t.Logf("testing '%s' against test '%s'", rm, match.Name)
+			diffs = append(diffs, deepcomp.Compare(match.Type, &match.Resource, raw)...)
 		}
 
-		if err != nil {
-			t.Error(err)
+		for _, diff := range diffs {
+			t.Log(diff)
+			t.Error(diff.Message)
+			t.Fail()
 		}
 	}
 }

@@ -39,6 +39,7 @@ input:
 tests:
   - match:
       - type: subset
+        name: "common metadata"
         resource:
           metadata:
             labels:
@@ -49,7 +50,7 @@ tests:
                 kind: Application
                 name: myapplication
                 uid: "123456"
-
+ignore:
   - apiVersion: v1
     kind: Service
     name: myapplication
