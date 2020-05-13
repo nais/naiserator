@@ -109,7 +109,7 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 				return false
 			}
 
-			t.Logf("testing '%s' against test '%s'", rm, match.Name)
+			t.Logf("Assert '%s' against '%s'", match.Name, rm)
 
 			diffs = append(diffs, filter(deepcomp.Compare(match.Type, &match.Resource, raw), callback)...)
 		}

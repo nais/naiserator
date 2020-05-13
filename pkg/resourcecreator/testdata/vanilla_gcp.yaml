@@ -71,3 +71,268 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
+
+  - operation: CreateIfNotExists
+    apiVersion: v1
+    kind: ServiceAccount
+    name: myapplication
+    match:
+      - type: subset
+        name: "service account created with google IaM annotation"
+        resource:
+          metadata:
+            annotations:
+              iam.gke.io/gcp-service-account: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+
+  - operation: CreateOrUpdate
+    apiVersion: v1
+    kind: HorizontalPodAutoscaler
+    match:
+      - type: exact
+        name: "hpa created with 2-4 replicas and 50% cpu threshold"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            scaleTargetRef:
+              kind: Deployment
+              name: myapplication
+              apiVersion: apps/v1
+            minReplicas: 2
+            maxReplicas: 4
+            targetCPUUtilizationPercentage: 50
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            ingress:
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app: prometheus
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app: app1
+                  - podSelector:
+                      matchLabels:
+                        app: app2
+                    namespaceSelector:
+                      matchLabels:
+                        name: q1
+                  - podSelector: {}
+                    namespaceSelector:
+                      matchLabels:
+                        name: t1
+            egress:
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        istio: pilot
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                  - podSelector:
+                      matchLabels:
+                        istio: mixer
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                  - podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+                    namespaceSelector: {}
+                  - ipBlock:
+                      cidr: 0.0.0.0/0
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        app: app3
+                  - podSelector:
+                      matchLabels:
+                        app: app4
+                    namespaceSelector:
+                      matchLabels:
+                        name: q2
+                  - podSelector: {}
+                    namespaceSelector:
+                      matchLabels:
+                        name: t2
+            policyTypes:
+              - Ingress
+              - Egress
+            podSelector:
+              matchLabels:
+                app: myapplication
+
+  - operation: CreateOrUpdate
+    apiVersion: security.istio.io/v1beta1
+    kind: AuthorizationPolicy
+    name: myapplication
+    match:
+      - name: "authorization policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            selector:
+              matchLabels:
+                app: myapplication
+            rules:
+              - from:
+                  - source:
+                      principals:
+                        - cluster.local/ns/mynamespace/sa/app1
+                        - cluster.local/ns/q1/sa/app2
+                        - cluster.local/ns/t1/sa/*
+                to:
+                  - operation:
+                      methods:
+                        - '*'
+                      paths:
+                        - '*'
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-01
+    match:
+      - name: "service entry created for outbound traffic to www.external-application.com"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - www.external-application.com
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 443
+                protocol: HTTPS
+                name: https
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment created"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata.creationTimestamp
+        resource:
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: myapplication
+            template:
+              metadata:
+                ownerReferences:
+                  - apiVersion: v1alpha1
+                    kind: Application
+                    name: myapplication
+                    uid: "123456"
+                name: myapplication
+                namespace: mynamespace
+                labels:
+                  team: myteam
+                  app: myapplication
+                annotations:
+                  prometheus.io/path: /metrics
+                  prometheus.io/port: "8080"
+                  prometheus.io/scrape: "false"
+              spec:
+                volumes:
+                  - name: ca-bundle-jks
+                    configMap:
+                      name: ca-bundle-jks
+                  - configMap:
+                      name: ca-bundle-pem
+                    name: ca-bundle-pem
+                containers:
+                  - ports:
+                      - protocol: TCP
+                        name: http
+                        containerPort: 8080
+                    env:
+                      - name: NAIS_APP_NAME
+                        value: myapplication
+                      - name: NAIS_NAMESPACE
+                        value: mynamespace
+                      - name: NAIS_APP_IMAGE
+                        value: navikt/myapplication:1.2.3
+                      - name: NAIS_CLUSTER_NAME
+                        value: test-cluster
+                      - name: NAV_TRUSTSTORE_PATH
+                        value: /etc/ssl/certs/java/cacerts
+                      - value: changeme
+                        name: NAV_TRUSTSTORE_PASSWORD
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 200m
+                        memory: 256Mi
+                    volumeMounts:
+                      - name: ca-bundle-jks
+                        readOnly: true
+                        mountPath: /etc/ssl/certs/java/cacerts
+                        subPath: ca-bundle.jks
+                      - subPath: ca-bundle.pem
+                        name: ca-bundle-pem
+                        readOnly: true
+                        mountPath: /etc/ssl/certs/ca-certificates.crt
+                      - subPath: ca-bundle.pem
+                        name: ca-bundle-pem
+                        readOnly: true
+                        mountPath: /etc/pki/tls/certs/ca-bundle.crt
+                      - readOnly: true
+                        mountPath: /etc/ssl/ca-bundle.pem
+                        subPath: ca-bundle.pem
+                        name: ca-bundle-pem
+                      - readOnly: true
+                        mountPath: /etc/pki/tls/cacert.pem
+                        subPath: ca-bundle.pem
+                        name: ca-bundle-pem
+                      - name: ca-bundle-pem
+                        readOnly: true
+                        mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+                        subPath: ca-bundle.pem
+                    lifecycle:
+                      preStop:
+                        exec:
+                          command:
+                            - sleep
+                            - "5"
+                    imagePullPolicy: IfNotPresent
+                    name: myapplication
+                    image: navikt/myapplication:1.2.3
+                restartPolicy: Always
+                dnsPolicy: ClusterFirst
+                serviceAccountName: myapplication
+                imagePullSecrets:
+                  - name: gpr-credentials
+            strategy:
+              type: RollingUpdate
+              rollingUpdate:
+                maxUnavailable: 0
+                maxSurge: 1
+            revisionHistoryLimit: 10
+            progressDeadlineSeconds: 300
