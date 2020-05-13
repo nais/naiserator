@@ -40,14 +40,14 @@ var testcases = []testcase{
 	},
 	{
 		name:     `string compared against number`,
-		expected: `"foo"`,
+		expected: `"123"`,
 		actual:   `123`,
 		mode:     `exact`,
 		diffset: deepcomp.Diffset{
 			{
 				Path:    "",
 				Type:    "ErrTypeDiffers",
-				Message: "expected string 'foo' but got float64 '123'",
+				Message: "expected string '123' but got float64 '123'",
 			},
 		},
 	},

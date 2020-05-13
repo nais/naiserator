@@ -198,14 +198,26 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 			}
 		}
 	default:
-		// Normal equality suffices
 		if matchType == MatchRegex {
 			diffs = append(diffs, regexcmp(a, b, path)...)
-		} else if !reflect.DeepEqual(a.Interface(), b.Interface()) {
-			diffs = append(diffs, simpleExpect)
+		} else {
+			diffs = append(diffs, simplecmp(a, b, path)...)
 		}
 	}
 	return diffs
+}
+
+// Compare two values by optimistic matching
+func simplecmp(a, b reflect.Value, path string) Diffset {
+	if reflect.DeepEqual(a.Interface(), b.Interface()) {
+		return Diffset{}
+	}
+
+	return Diffset{Diff{
+		Path:    path,
+		Message: fmt.Sprintf("expected %s '%+v' but got %s '%+v'", a.Kind().String(), a.Interface(), b.Kind().String(), b.Interface()),
+		Type:    ErrValueDiffers,
+	}}
 }
 
 // Compare two values by regular expression matching.

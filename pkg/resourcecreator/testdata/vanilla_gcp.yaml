@@ -59,8 +59,6 @@ tests:
       - type: exact
         name: "service created with tcp port 80"
         exclude:
-          - .apiVersion
-          - .kind
           - .metadata
           - .status
         resource:

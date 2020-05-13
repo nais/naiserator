@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
+	"github.com/ghodss/yaml"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
@@ -16,6 +16,10 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime"
+)
+
+var (
+	defaultExclude = []string{".apiVersion", ".kind", ".metadata.name"}
 )
 
 type SubTest struct {
@@ -66,8 +70,8 @@ func resourcemeta(resource interface{}) meta {
 
 func rawResource(resource runtime.Object) interface{} {
 	r := new(interface{})
-	raw, _ := json.Marshal(resource)
-	_ = json.Unmarshal(raw, r)
+	raw, _ := yaml.Marshal(resource)
+	_ = yaml.Unmarshal(raw, r)
 	return r
 }
 
@@ -97,7 +101,7 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 
 			// filter out all cases in the exclusion list
 			callback := func(diff deepcomp.Diff) bool {
-				for _, path := range match.Exclude {
+				for _, path := range append(match.Exclude, defaultExclude...) {
 					if path == diff.Path {
 						return true
 					}
