@@ -1,0 +1,43 @@
+config:
+  description: leader election container injection
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    leaderElection: true
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created with leader election args"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: "myapplication"
+                  - name: "elector"
+                    image: "gcr.io/google_containers/leader-elector:0.5"
+                    args:
+                      - "--election=myapplication"
+                      - "--http=localhost:4040"
+                      - "--election-namespace=mynamespace"
+                    ports:
+                      - protocol: "TCP"
+                        containerPort: 4040
+                    resources:
+                      requests:
+                        cpu: "100m"
+                    imagePullPolicy: "IfNotPresent"
+
