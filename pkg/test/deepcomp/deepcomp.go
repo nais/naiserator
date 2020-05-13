@@ -6,24 +6,23 @@ package deepcomp
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 )
 
 func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 	switch matchType {
-	case MatchRegex:
-		panic("")
-	case MatchExact:
+	case MatchRegex, MatchExact:
 		return Exact(expected, actual, matchType)
 	case MatchSubset:
-		return Subset(expected, actual)
+		return Subset(expected, actual, matchType)
 	default:
 		panic(fmt.Errorf("unhandled type %v", matchType))
 	}
 }
 
-func Subset(expected, actual interface{}) Diffset {
+func Subset(expected, actual interface{}, matchType MatchType) Diffset {
 
-	diffs := Exact(expected, actual, MatchSubset)
+	diffs := Exact(expected, actual, matchType)
 	subset := make(Diffset, 0, len(diffs))
 
 	for _, diff := range diffs {
@@ -56,6 +55,15 @@ func max(a, b int) int {
 	return b
 }
 
+func subslice(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
+	switch matchType {
+	case MatchSubset, MatchRegex:
+		return subslicesubset(a, b, depth, path, matchType)
+	default:
+		return subsliceequal(a, b, depth, path, matchType)
+	}
+}
+
 func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
 	diffs := make(Diffset, 0)
 	for i := 0; i < a.Len(); i++ {
@@ -78,14 +86,6 @@ func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchTy
 	return diffs
 }
 
-func subslice(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
-	switch matchType {
-	case MatchSubset:
-		return subslicesubset(a, b, depth, path, matchType)
-	default:
-		return subsliceequal(a, b, depth, path, matchType)
-	}
-}
 func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
 	diffs := make(Diffset, 0)
 	alen, blen := a.Len(), b.Len()
@@ -207,10 +207,32 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 		}
 	default:
 		// Normal equality suffices
-		// FIXME: support regular expressions
-		if !reflect.DeepEqual(a.Interface(), b.Interface()) {
+		if matchType == MatchRegex {
+			diffs = append(diffs, regexcmp(a, b, path)...)
+		} else if !reflect.DeepEqual(a.Interface(), b.Interface()) {
 			diffs = append(diffs, simpleExpect)
 		}
 	}
 	return diffs
+}
+
+func regexcmp(a, b reflect.Value, path string) Diffset {
+	as := fmt.Sprintf("%#v", a.Interface())
+	bs := fmt.Sprintf("%#v", b.Interface())
+	regex, err := regexp.Compile(as)
+	if err != nil {
+		return Diffset{Diff{
+			Path:    path,
+			Message: err.Error(),
+			Type:    ErrInvalidRegex,
+		}}
+	}
+	if regex.MatchString(bs) {
+		return Diffset{}
+	}
+	return Diffset{Diff{
+		Path:    path,
+		Message: "regular expression doesn't match value",
+		Type:    ErrValueDiffers,
+	}}
 }

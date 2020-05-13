@@ -33,7 +33,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    "",
-				Type:    "valueDiffers",
+				Type:    "ErrValueDiffers",
 				Message: "expected string 'foo' but got string 'bar'",
 			},
 		},
@@ -46,7 +46,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    "",
-				Type:    "typeDiffers",
+				Type:    "ErrTypeDiffers",
 				Message: "expected string 'foo' but got float64 '123'",
 			},
 		},
@@ -65,7 +65,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    ".bar",
-				Type:    "extraField",
+				Type:    "ErrExtraField",
 				Message: "unexpected map key",
 			},
 		},
@@ -78,7 +78,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    ".bar",
-				Type:    "missingField",
+				Type:    "ErrMissingField",
 				Message: "missing map value",
 			},
 		},
@@ -97,7 +97,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    ".foo.bar.baz",
-				Type:    "valueDiffers",
+				Type:    "ErrValueDiffers",
 				Message: "expected string 'ok' but got string 'nope'",
 			},
 		},
@@ -116,7 +116,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    "",
-				Type:    "extraField",
+				Type:    "ErrExtraField",
 				Message: "expected 3 but got 4",
 			},
 		},
@@ -129,7 +129,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    "",
-				Type:    "missingField",
+				Type:    "ErrMissingField",
 				Message: "expected 4 but got 3",
 			},
 		},
@@ -148,7 +148,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    ".foo[1].bro[0]",
-				Type:    "valueDiffers",
+				Type:    "ErrValueDiffers",
 				Message: "expected string 'baz' but got string 'foo'",
 			},
 		},
@@ -174,7 +174,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    ".baz",
-				Type:    "missingField",
+				Type:    "ErrMissingField",
 				Message: "expected float64 '2' but reached end of input without finding it",
 			},
 		},
@@ -193,7 +193,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    "",
-				Type:    "missingField",
+				Type:    "ErrMissingField",
 				Message: "expected float64 '1' but reached end of input without finding it",
 			},
 		},
@@ -212,7 +212,7 @@ var testcases = []testcase{
 		diffset: deepcomp.Diffset{
 			{
 				Path:    "",
-				Type:    "missingField",
+				Type:    "ErrMissingField",
 				Message: "expected float64 '5' but reached end of input without finding it",
 			},
 		},
@@ -222,6 +222,44 @@ var testcases = []testcase{
 		expected: `[{"foo":"bar"},{"bar":"baz"}]`,
 		actual:   `[{"pre":"pre"},{"foo":"bar"},{"bar":"baz"},{"post":"post"}]`,
 		mode:     `subset`,
+	},
+	{
+		name:     `regular expression matching`,
+		expected: `{"foo":"[abc][123]"}`,
+		actual:   `{"foo":"c1"}`,
+		mode:     `regex`,
+	},
+	{
+		name:     `regular expression matching failure`,
+		expected: `{"foo":"[abc]56"}`,
+		actual:   `{"foo":"c1"}`,
+		mode:     `regex`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    ".foo",
+				Type:    "ErrValueDiffers",
+				Message: "regular expression doesn't match value",
+			},
+		},
+	},
+	{
+		name:     `regular expression syntax error`,
+		expected: `{"foo":"[ab"}`,
+		actual:   `{"foo":"c1"}`,
+		mode:     `regex`,
+		diffset: deepcomp.Diffset{
+			{
+				Path:    ".foo",
+				Type:    "ErrInvalidRegex",
+				Message: "error parsing regexp: missing closing ]: `[ab\"`",
+			},
+		},
+	},
+	{
+		name:     `regular expression matching as subset`,
+		expected: `[{"foo":"[abc][123]"}]`,
+		actual:   `[{"foo":"c1"},{"bar":"bar"},1,2,3]`,
+		mode:     `regex`,
 	},
 }
 

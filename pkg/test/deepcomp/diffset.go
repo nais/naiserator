@@ -18,6 +18,7 @@ const (
 	ErrTypeDiffers  DiffType = "ErrTypeDiffers"
 	ErrValueDiffers DiffType = "ErrValueDiffers"
 	ErrInvalidTypes DiffType = "ErrInvalidTypes"
+	ErrInvalidRegex DiffType = "ErrInvalidRegex"
 )
 
 type Diffset []Diff

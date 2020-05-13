@@ -110,8 +110,6 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 			diffs = append(diffs, filter(deepcomp.Compare(match.Type, &match.Resource, raw), callback)...)
 		}
 
-		// apply blacklist
-
 		// anything left is an error.
 		for _, diff := range diffs {
 			t.Log(diff)
