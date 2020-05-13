@@ -49,6 +49,10 @@ func (m meta) String() string {
 	return fmt.Sprintf("%s %s/%s %s", m.Operation, m.Resource.ApiVersion, m.Resource.Kind, m.Resource.Metadata.Name)
 }
 
+func (m SubTest) String() string {
+	return fmt.Sprintf("operation=%s apiVersion=%s kind=%s name=%s", m.Operation, m.ApiVersion, m.Kind, m.Name)
+}
+
 func yamlSubtestMatchesResource(resource meta, test SubTest) bool {
 	switch {
 	case len(test.Name) > 0 && test.Name != resource.Resource.Metadata.Name:
@@ -86,12 +90,15 @@ func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepco
 }
 
 func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test SubTest) {
+	matched := false
+
 	for _, resource := range resources {
 		rm := resourcemeta(resource)
 
 		if !yamlSubtestMatchesResource(rm, test) {
 			continue
 		}
+		matched = true
 
 		raw := rawResource(resource.Resource)
 		diffs := make(deepcomp.Diffset, 0)
@@ -119,6 +126,11 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 			t.Log(diff)
 			t.Fail()
 		}
+	}
+
+	if !matched {
+		t.Logf("No resources matching criteria '%s'",test)
+		t.Fail()
 	}
 }
 
