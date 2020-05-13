@@ -140,6 +140,7 @@ func yamlSubTest(t *testing.T, path string) {
 	if err != nil {
 		t.Errorf("unable to read test data: %s", err)
 		t.Fail()
+		return
 	}
 
 	test := yamlTestCase{}
@@ -147,12 +148,14 @@ func yamlSubTest(t *testing.T, path string) {
 	if err != nil {
 		t.Errorf("unable to parse unmarshal test data: %s", err)
 		t.Fail()
+		return
 	}
 
 	err = nais.ApplyDefaults(&test.Input)
 	if err != nil {
 		t.Errorf("apply default values to Application object: %s", err)
 		t.Fail()
+		return
 	}
 
 	resources, err := resourcecreator.Create(&test.Input, test.ResourceOptions)
