@@ -20,8 +20,8 @@ func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 	}
 }
 
+// Like Exact, but filters out any extra fields not included in the expected data structure.
 func Subset(expected, actual interface{}, matchType MatchType) Diffset {
-
 	diffs := Exact(expected, actual, matchType)
 	subset := make(Diffset, 0, len(diffs))
 
@@ -34,18 +34,14 @@ func Subset(expected, actual interface{}, matchType MatchType) Diffset {
 	return subset
 }
 
-// As Exact traverses the data values it may find a cycle. The
-// second and subsequent times that Exact compares two pointer
-// values that have been compared before, it treats the values as
-// equal rather than examining the values to which they point.
-// This ensures that Exact terminates.
-func Exact(x, y interface{}, matchType MatchType) Diffset {
-	if x == nil || y == nil {
+// Match expected data against actual data, and return a set of all the differences.
+func Exact(expected, actual interface{}, matchType MatchType) Diffset {
+	if expected == nil || actual == nil {
 		return Diffset{}
 	}
-	v1 := reflect.ValueOf(x)
-	v2 := reflect.ValueOf(y)
-	return deepValueEqual(v1, v2, 0, "", matchType)
+	a := reflect.ValueOf(expected)
+	b := reflect.ValueOf(actual)
+	return deepValueEqual(a, b, 0, "", matchType)
 }
 
 func max(a, b int) int {
@@ -64,6 +60,7 @@ func subslice(a, b reflect.Value, depth int, path string, matchType MatchType) D
 	}
 }
 
+// Check that two slices are exactly equal.
 func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
 	diffs := make(Diffset, 0)
 	for i := 0; i < a.Len(); i++ {
@@ -86,6 +83,8 @@ func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchTy
 	return diffs
 }
 
+// Check that members of slice a is a subset of slice b.
+// Members of slice a must be found in b in the same order as in a, but need not be contiguous.
 func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
 	diffs := make(Diffset, 0)
 	alen, blen := a.Len(), b.Len()
@@ -122,9 +121,8 @@ func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchT
 	return Diffset{}
 }
 
-// Tests for deep equality using reflected types. The map argument tracks
-// comparisons that have already been seen, which allows short circuiting on
-// recursive types.
+// Recursive comparison of two arbitrary values. Mostly ripped from reflect.DeepEqual
+// and adapted for subslice/regular expression matching and verbose structured reporting.
 func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
 	diffs := make(Diffset, 0)
 	simpleExpect := Diff{
@@ -165,12 +163,6 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 		if a.Pointer() != b.Pointer() {
 			return deepValueEqual(a.Elem(), b.Elem(), depth+1, path, matchType)
 		}
-		/*
-			case reflect.Struct:
-				for i, n := 0, v1.NumField(); i < n; i++ {
-					ds = append(ds, deepValueEqual(v1.Field(i), v2.Field(i), depth+1, ds)...)
-				}
-		*/
 	case reflect.Map:
 		if a.IsNil() != b.IsNil() {
 			return append(diffs, simpleExpect)
@@ -216,6 +208,7 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 	return diffs
 }
 
+// Compare two values by regular expression matching.
 func regexcmp(a, b reflect.Value, path string) Diffset {
 	as := fmt.Sprintf("%#v", a.Interface())
 	bs := fmt.Sprintf("%#v", b.Interface())
