@@ -11,9 +11,9 @@ import (
 
 func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 	switch matchType {
-	case MatchRegex, MatchExact:
+	case MatchExact:
 		return Exact(expected, actual, matchType)
-	case MatchSubset:
+	case MatchRegex, MatchSubset:
 		return Subset(expected, actual, matchType)
 	default:
 		panic(fmt.Errorf("unhandled type %v", matchType))
@@ -237,7 +237,7 @@ func regexcmp(a, b reflect.Value, path string) Diffset {
 	}
 	return Diffset{Diff{
 		Path:    path,
-		Message: "regular expression doesn't match value",
+		Message: fmt.Sprintf("regular expression %s doesn't match value %+v", regex.String(), bs),
 		Type:    ErrValueDiffers,
 	}}
 }

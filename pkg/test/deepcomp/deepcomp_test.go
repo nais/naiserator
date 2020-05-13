@@ -238,7 +238,7 @@ var testcases = []testcase{
 			{
 				Path:    ".foo",
 				Type:    "ErrValueDiffers",
-				Message: "regular expression doesn't match value",
+				Message: "regular expression \"[abc]56\" doesn't match value \"c1\"",
 			},
 		},
 	},

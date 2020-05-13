@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -240,6 +241,9 @@ func TestResourceCreator(t *testing.T) {
 			continue
 		}
 		name := file.Name()
+		if !strings.HasSuffix(name, ".json") {
+			continue
+		}
 		path := filepath.Join(testDataDirectory, name)
 		t.Run(name, func(t *testing.T) {
 			subTest(t, path)
