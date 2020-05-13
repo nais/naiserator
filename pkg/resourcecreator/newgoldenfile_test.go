@@ -151,6 +151,14 @@ func yamlSubTest(t *testing.T, path string) {
 		return
 	}
 
+	if test.Config.VaultEnabled {
+		viper.Set("features.vault", true)
+		viper.Set("vault.address", "https://vault.adeo.no")
+		viper.Set("vault.kv-path", "/kv/preprod/fss")
+		viper.Set("vault.auth-path", "auth/kubernetes/preprod/fss/login")
+		viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-d122b16")
+	}
+
 	err = nais.ApplyDefaults(&test.Input)
 	if err != nil {
 		t.Errorf("apply default values to Application object: %s", err)
