@@ -1,9 +1,0 @@
-{
-  "config": {
-    "description": "require team label"
-  },
-  "error": "the 'team' label needs to be set in the application metadata",
-  "input": {
-    "kind": "Application"
-  }
-}
