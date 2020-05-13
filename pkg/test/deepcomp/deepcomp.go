@@ -23,15 +23,7 @@ func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 // Like Exact, but filters out any extra fields not included in the expected data structure.
 func Subset(expected, actual interface{}, matchType MatchType) Diffset {
 	diffs := Exact(expected, actual, matchType)
-	subset := make(Diffset, 0, len(diffs))
-
-	for _, diff := range diffs {
-		if diff.Type != ErrExtraField {
-			subset = append(subset, diff)
-		}
-	}
-
-	return subset
+	return diffs.Filter(ErrExtraField)
 }
 
 // Match expected data against actual data, and return a set of all the differences.
@@ -100,7 +92,7 @@ func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchT
 			break
 		}
 		diffs = deepValueEqual(a.Index(ai), b.Index(bi), depth+1, fmt.Sprintf("%s[%d]", path, ai), matchType)
-		if len(diffs) == 0 { // increment expected array only if matches actual
+		if len(diffs.Filter(ErrExtraField)) == 0 { // increment expected array only if matches actual
 			ai++
 		}
 	}

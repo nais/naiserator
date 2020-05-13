@@ -165,7 +165,12 @@ var testcases = []testcase{
 		actual:   `{"foo":"bar","bar":"baz","more":"test","baz":[1,2,3]}`,
 		mode:     `subset`,
 	},
-
+	{
+		name:     `subset matching in multiple arrays`,
+		expected: `{"spec":{"template":{"spec":{"containers":[{"env":[{"name":"foo","value":"bar"}]}]}}}}`,
+		actual:   `{"spec":{"template":{"spec":{"containers":[{"env":[{"name":"foo","value":"bar"},{"name":"foo1","value":"bar"},{"name":"foo2","value":"bar"}],"name":"nginx"}],"terminationGracePeriodSeconds":30}}}}`,
+		mode:     `subset`,
+	},
 	{
 		name:     `subset failure`,
 		expected: `{"foo":"bar","baz":[1,2]}`,
