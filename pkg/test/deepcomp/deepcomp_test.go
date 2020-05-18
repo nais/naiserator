@@ -297,6 +297,10 @@ func TestSubset(t *testing.T) {
 			test.diffset = deepcomp.Diffset{}
 		}
 		diffs := deepcomp.Compare(test.mode, a, b)
+		for i := range diffs {
+			diffs[i].A = nil
+			diffs[i].B = nil
+		}
 		assert.Equal(t, test.diffset, diffs, "test: %s", test.name)
 	}
 }

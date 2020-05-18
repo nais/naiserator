@@ -61,6 +61,8 @@ func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchTy
 				Path:    path,
 				Message: fmt.Sprintf("expected %d but got %d", a.Len(), b.Len()),
 				Type:    ErrMissingField,
+				A:       &a,
+				B:       &b,
 			})
 		}
 		diffs = append(diffs, deepValueEqual(a.Index(i), b.Index(i), depth+1, fmt.Sprintf("%s[%d]", path, i), matchType)...)
@@ -70,6 +72,8 @@ func subsliceequal(a, b reflect.Value, depth int, path string, matchType MatchTy
 			Path:    path,
 			Message: fmt.Sprintf("expected %d but got %d", a.Len(), b.Len()),
 			Type:    ErrExtraField,
+			A:       &a,
+			B:       &b,
 		})
 	}
 	return diffs
@@ -107,6 +111,8 @@ func subslicesubset(a, b reflect.Value, depth int, path string, matchType MatchT
 			Path:    path,
 			Message: fmt.Sprintf("expected %s '%+v' but reached end of input without finding it", elem.Kind().String(), elem.Interface()),
 			Type:    ErrMissingField,
+			A:       &a,
+			B:       &b,
 		}}
 	}
 
@@ -121,6 +127,8 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 		Path:    path,
 		Message: fmt.Sprintf("expected %s '%+v' but got %s '%+v'", a.Kind().String(), a.Interface(), b.Kind().String(), b.Interface()),
 		Type:    ErrValueDiffers,
+		A:       &a,
+		B:       &b,
 	}
 
 	if !a.IsValid() || !b.IsValid() {
@@ -171,6 +179,8 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 					Path:    path + "." + k.String(),
 					Message: "missing map value",
 					Type:    ErrMissingField,
+					A:       &a,
+					B:       &b,
 				})
 			} else {
 				diffs = append(diffs, deepValueEqual(val1, val2, depth+1, path+"."+k.String(), matchType)...)
@@ -186,6 +196,8 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 					Path:    path + "." + k.String(),
 					Message: "unexpected map key",
 					Type:    ErrExtraField,
+					A:       &a,
+					B:       &b,
 				})
 			}
 		}
@@ -209,6 +221,8 @@ func simplecmp(a, b reflect.Value, path string) Diffset {
 		Path:    path,
 		Message: fmt.Sprintf("expected %s '%+v' but got %s '%+v'", a.Kind().String(), a.Interface(), b.Kind().String(), b.Interface()),
 		Type:    ErrValueDiffers,
+		A:       &a,
+		B:       &b,
 	}}
 }
 
@@ -222,6 +236,8 @@ func regexcmp(a, b reflect.Value, path string) Diffset {
 			Path:    path,
 			Message: err.Error(),
 			Type:    ErrInvalidRegex,
+			A:       &a,
+			B:       &b,
 		}}
 	}
 	if regex.MatchString(bs) {
@@ -231,5 +247,7 @@ func regexcmp(a, b reflect.Value, path string) Diffset {
 		Path:    path,
 		Message: fmt.Sprintf("regular expression %s doesn't match value %+v", regex.String(), bs),
 		Type:    ErrValueDiffers,
+		A:       &a,
+		B:       &b,
 	}}
 }

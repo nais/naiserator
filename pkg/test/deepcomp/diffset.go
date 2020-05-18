@@ -2,6 +2,7 @@ package deepcomp
 
 import (
 	"fmt"
+	"reflect"
 )
 
 type MatchType string
@@ -27,6 +28,8 @@ type Diff struct {
 	Path    string
 	Message string
 	Type    ErrorType
+	A       *reflect.Value
+	B       *reflect.Value
 }
 
 func (diff Diff) String() string {
@@ -34,7 +37,7 @@ func (diff Diff) String() string {
 }
 
 func (diffs Diffset) Filter(errorType ErrorType) Diffset {
-	matched := make(Diffset,0,len(diffs))
+	matched := make(Diffset, 0, len(diffs))
 	for _, diff := range diffs {
 		if diff.Type != errorType {
 			matched = append(matched, diff)
