@@ -1,0 +1,89 @@
+config:
+  description: vault enabled with sidecar enabled and user specified paths
+  vaultEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    vault:
+      enabled: true
+      sidecar: true
+      paths:
+      - kvPath: /serviceuser/data/test/srvuser
+        mountPath: /secrets/credential/srvuser
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "vault configuration"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: "vks-sidecar"
+                    image: "navikt/vault-sidekick:v0.3.10-d122b16"
+                    args:
+                      - "-v=10"
+                      - "-logtostderr"
+                      - "-renew-token"
+                      - "-vault=https://vault.adeo.no"
+                    env:
+                      - name: "VAULT_AUTH_METHOD"
+                        value: "token"
+                      - name: "VAULT_TOKEN_FILE"
+                        value: "/var/run/secrets/nais.io/vault/vault_token"
+                    resources:
+                      requests:
+                        cpu: "10m"
+                    volumeMounts:
+                      - name: "vault-volume"
+                        mountPath: "/var/run/secrets/nais.io/vault"
+                        subPath: "vault/var/run/secrets/nais.io/vault"
+                  - volumeMounts:
+                    - name: "vault-volume"
+                      mountPath: "/var/run/secrets/nais.io/vault"
+                      subPath: "vault/var/run/secrets/nais.io/vault"
+                initContainers:
+                  - name: "vks-init"
+                    image: "navikt/vault-sidekick:v0.3.10-d122b16"
+                    args:
+                      - "-v=10"
+                      - "-logtostderr"
+                      - "-one-shot"
+                      - "-vault=https://vault.adeo.no"
+                      - "-save-token=/var/run/secrets/nais.io/vault/vault_token"
+                      - "-cn=secret:/serviceuser/data/test/srvuser:dir=/secrets/credential/srvuser,fmt=flatten,retries=1"
+                      - "-cn=secret:/kv/preprod/fss/myapplication/mynamespace:dir=/var/run/secrets/nais.io/vault,fmt=flatten,retries=1"
+                    env:
+                      - name: "VAULT_AUTH_METHOD"
+                        value: "kubernetes"
+                      - name: "VAULT_SIDEKICK_ROLE"
+                        value: "myapplication"
+                      - name: "VAULT_K8S_LOGIN_PATH"
+                        value: "auth/kubernetes/preprod/fss/login"
+                    volumeMounts:
+                      - name: "vault-volume"
+                        mountPath: "/secrets/credential/srvuser"
+                        subPath: "vault/secrets/credential/srvuser"
+                      - name: "vault-volume"
+                        mountPath: "/var/run/secrets/nais.io/vault"
+                        subPath: "vault/var/run/secrets/nais.io/vault"
+                volumes:
+                  - name: "vault-volume"
+                    emptyDir:
+                      medium: "Memory"
+
+
+
