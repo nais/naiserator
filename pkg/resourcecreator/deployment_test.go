@@ -326,7 +326,7 @@ func TestDeployment(t *testing.T) {
 		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
 		assert.NotEmpty(t, volumeMount)
 		assert.Equal(t, jwkerSecret, volumeMount.Name)
-		assert.Equal(t, "/var/run/secrets", volumeMount.MountPath)
+		assert.Equal(t, "/var/run/secrets/nais.io/jwker", volumeMount.MountPath)
 
 		jwkerVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
 		assert.NotEmpty(t, jwkerVolume)
@@ -343,7 +343,7 @@ func TestDeployment(t *testing.T) {
 		assert.NotNil(t, appContainer)
 		assert.Len(t, appContainer.VolumeMounts, 6)
 		for _, v := range appContainer.VolumeMounts {
-			assert.NotEqual(t, "/var/run/secrets",v.MountPath)
+			assert.NotEqual(t, "/var/run/secrets", v.MountPath)
 		}
 	})
 }
