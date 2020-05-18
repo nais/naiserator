@@ -1,6 +1,8 @@
 package deepcomp
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"reflect"
 )
@@ -33,7 +35,18 @@ type Diff struct {
 }
 
 func (diff Diff) String() string {
-	return fmt.Sprintf("%s at %s: %s", diff.Type, diff.Path, diff.Message)
+	w := new(bytes.Buffer)
+	_, _ = fmt.Fprintf(w, "%s at %s: %s\n", diff.Type, diff.Path, diff.Message)
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "    ")
+
+	_, _ = fmt.Fprintf(w, "--- expected:\n")
+	_ = enc.Encode(diff.A.Interface())
+
+	_, _ = fmt.Fprintf(w, "+++ actual:\n")
+	_ = enc.Encode(diff.B.Interface())
+
+	return w.String()
 }
 
 func (diffs Diffset) Filter(errorType ErrorType) Diffset {
@@ -44,4 +57,13 @@ func (diffs Diffset) Filter(errorType ErrorType) Diffset {
 		}
 	}
 	return matched
+}
+
+func (diffs Diffset) String() string {
+	w := new(bytes.Buffer)
+	for _, diff := range diffs {
+		w.WriteString(diff.String())
+		w.WriteString("\n")
+	}
+	return w.String()
 }
