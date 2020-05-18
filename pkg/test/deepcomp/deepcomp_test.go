@@ -16,6 +16,7 @@ type testcase struct {
 	actual   string
 	mode     deepcomp.MatchType
 	diffset  deepcomp.Diffset
+	diffstr  string
 }
 
 var testcases = []testcase{
@@ -268,6 +269,28 @@ var testcases = []testcase{
 	},
 }
 
+var difftestcases = []testcase{
+	{
+		name:     `blah`,
+		expected: `[1,{"foo":"bar"}]`,
+		actual:   `[{"foo":"baz"},2]`,
+		mode:     `exact`,
+		diffstr: `ErrTypeDiffers at [0]: expected float64 '1' but got map 'map[foo:baz]'
+--- expected:
+1
++++ actual:
+foo: baz
+
+ErrTypeDiffers at [1]: expected map 'map[foo:bar]' but got float64 '2'
+--- expected:
+foo: bar
++++ actual:
+2
+
+`,
+	},
+}
+
 func decode(data string) interface{} {
 	i := new(interface{})
 	err := json.Unmarshal([]byte(data), &i)
@@ -277,7 +300,7 @@ func decode(data string) interface{} {
 	return i
 }
 
-func TestSubset(t *testing.T) {
+func TestCompare(t *testing.T) {
 	var test testcase
 	var i int
 
@@ -297,6 +320,35 @@ func TestSubset(t *testing.T) {
 			test.diffset = deepcomp.Diffset{}
 		}
 		diffs := deepcomp.Compare(test.mode, a, b)
+		for i := range diffs {
+			diffs[i].A = nil
+			diffs[i].B = nil
+		}
 		assert.Equal(t, test.diffset, diffs, "test: %s", test.name)
+	}
+}
+
+func TestDifftext(t *testing.T) {
+	var test testcase
+	var i int
+
+	defer func() {
+		err := recover()
+		if err != nil {
+			t.Errorf("panic in test %d: %s", i+1, err)
+			debug.PrintStack()
+			t.Fail()
+		}
+	}()
+
+	for i, test = range difftestcases {
+		a := decode(test.expected)
+		b := decode(test.actual)
+		if test.diffset == nil {
+			test.diffset = deepcomp.Diffset{}
+		}
+		diffs := deepcomp.Compare(test.mode, a, b)
+		diffstr := diffs.String()
+		assert.Equal(t, test.diffstr, diffstr, "test: %s", test.name)
 	}
 }
