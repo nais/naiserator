@@ -2,9 +2,10 @@ package deepcomp
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"gopkg.in/yaml.v2"
 )
 
 type MatchType string
@@ -37,12 +38,13 @@ type Diff struct {
 func (diff Diff) String() string {
 	w := new(bytes.Buffer)
 	_, _ = fmt.Fprintf(w, "%s at %s: %s\n", diff.Type, diff.Path, diff.Message)
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "    ")
+	enc := yaml.NewEncoder(w)
 
 	_, _ = fmt.Fprintf(w, "--- expected:\n")
 	_ = enc.Encode(diff.A.Interface())
 
+	// make a new encoder to avoid document separator '---'
+	enc = yaml.NewEncoder(w)
 	_, _ = fmt.Fprintf(w, "+++ actual:\n")
 	_ = enc.Encode(diff.B.Interface())
 

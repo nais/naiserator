@@ -122,14 +122,14 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 		}
 
 		// anything left is an error.
-		for _, diff := range diffs {
-			t.Log(diff)
+		if len(diffs) > 0 {
+			t.Log(diffs.String())
 			t.Fail()
 		}
 	}
 
 	if !matched {
-		t.Logf("No resources matching criteria '%s'",test)
+		t.Logf("No resources matching criteria '%s'", test)
 		t.Fail()
 	}
 }

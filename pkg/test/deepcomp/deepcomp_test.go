@@ -275,19 +275,15 @@ var difftestcases = []testcase{
 		expected: `[1,{"foo":"bar"}]`,
 		actual:   `[{"foo":"baz"},2]`,
 		mode:     `exact`,
-		diffstr:  `ErrTypeDiffers at [0]: expected float64 '1' but got map 'map[foo:baz]'
+		diffstr: `ErrTypeDiffers at [0]: expected float64 '1' but got map 'map[foo:baz]'
 --- expected:
 1
 +++ actual:
-{
-    "foo": "baz"
-}
+foo: baz
 
 ErrTypeDiffers at [1]: expected map 'map[foo:bar]' but got float64 '2'
 --- expected:
-{
-    "foo": "bar"
-}
+foo: bar
 +++ actual:
 2
 
