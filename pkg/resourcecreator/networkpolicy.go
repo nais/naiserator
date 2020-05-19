@@ -135,6 +135,10 @@ func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolic
 					NamespaceSelector: labelSelector("name", IstioNamespace),
 				},
 				{
+					PodSelector:       labelSelector("istio", "ingressgateway"),
+					NamespaceSelector: labelSelector("name", IstioNamespace),
+				},
+				{
 					PodSelector: labelSelector("k8s-app", "kube-dns"),
 					NamespaceSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
