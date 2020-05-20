@@ -10,7 +10,7 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AuthorizationPolicy(app *nais.Application) *istio_security_client.AuthorizationPolicy {
+func AuthorizationPolicy(app *nais.Application, options ResourceOptions) *istio_security_client.AuthorizationPolicy {
 	var rules []*istio.Rule
 
 	// Authorization policy does not apply if app doesn't receive incoming traffic
@@ -23,7 +23,7 @@ func AuthorizationPolicy(app *nais.Application) *istio_security_client.Authoriza
 	}
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
-		rules = append(rules, accessPolicyRules(app))
+		rules = append(rules, accessPolicyRules(app, options))
 	}
 
 	return &istio_security_client.AuthorizationPolicy{
@@ -44,14 +44,14 @@ func AuthorizationPolicy(app *nais.Application) *istio_security_client.Authoriza
 func ingressGatewayRule() *istio.Rule {
 	return &istio.Rule{
 		From: []*istio.Rule_From{
-			&istio.Rule_From{
+			{
 				Source: &istio.Source{
 					Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioIngressGatewayServiceAccount)},
 				},
 			},
 		},
 		To: []*istio.Rule_To{
-			&istio.Rule_To{
+			{
 				Operation: &istio.Operation{
 					Methods: []string{"*"},
 					Paths:   []string{"*"},
@@ -61,17 +61,17 @@ func ingressGatewayRule() *istio.Rule {
 	}
 }
 
-func accessPolicyRules(app *nais.Application) *istio.Rule {
+func accessPolicyRules(app *nais.Application, options ResourceOptions) *istio.Rule {
 	return &istio.Rule{
 		From: []*istio.Rule_From{
-			&istio.Rule_From{
+			{
 				Source: &istio.Source{
-					Principals: principals(app),
+					Principals: principals(app, options),
 				},
 			},
 		},
 		To: []*istio.Rule_To{
-			&istio.Rule_To{
+			{
 				Operation: &istio.Operation{
 					Methods: []string{"*"},
 					Paths:   []string{"*"},
@@ -81,11 +81,15 @@ func accessPolicyRules(app *nais.Application) *istio.Rule {
 	}
 }
 
-func principals(app *nais.Application) []string {
+func principals(app *nais.Application, options ResourceOptions) []string {
 	var principals []string
 
 	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {
 		var namespace string
+		// non-local access policy rules do not result in istio policies
+		if !rule.MatchesCluster(options.ClusterName) {
+			continue
+		}
 		if rule.Namespace == "" {
 			namespace = app.Namespace
 		} else {

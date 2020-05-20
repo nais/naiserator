@@ -121,7 +121,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			ops = append(ops, ResourceOperation{vs, OperationCreateOrUpdate})
 		}
 
-		authorizationPolicy := AuthorizationPolicy(app)
+		authorizationPolicy := AuthorizationPolicy(app, resourceOptions)
 		if authorizationPolicy != nil {
 			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
 		}

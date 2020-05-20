@@ -10,7 +10,7 @@ func networkPolicyRules(rules []nais.AccessPolicyRule, options ResourceOptions) 
 	for _, rule := range rules {
 
 		// non-local access policy rules do not result in network policies
-		if len(rule.Cluster) > 0 && rule.Cluster != options.ClusterName {
+		if !rule.MatchesCluster(options.ClusterName) {
 			continue
 		}
 

@@ -385,3 +385,10 @@ func (in *Application) SkipDeploymentMessage() bool {
 	skip, _ := strconv.ParseBool(in.Annotations[SkipDeploymentMessageAnnotation])
 	return skip
 }
+
+func (in AccessPolicyRule) MatchesCluster(clusterName string) bool {
+	if len(in.Cluster) > 0 && in.Cluster != clusterName {
+		return false
+	}
+	return true
+}
