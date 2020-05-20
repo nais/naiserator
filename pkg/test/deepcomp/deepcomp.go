@@ -228,8 +228,8 @@ func simplecmp(a, b reflect.Value, path string) Diffset {
 
 // Compare two values by regular expression matching.
 func regexcmp(a, b reflect.Value, path string) Diffset {
-	as := fmt.Sprintf("%#v", a.Interface())
-	bs := fmt.Sprintf("%#v", b.Interface())
+	as := fmt.Sprintf("%+v", a.Interface())
+	bs := fmt.Sprintf("%+v", b.Interface())
 	regex, err := regexp.Compile(as)
 	if err != nil {
 		return Diffset{Diff{

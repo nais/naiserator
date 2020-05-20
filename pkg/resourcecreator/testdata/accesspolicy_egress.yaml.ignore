@@ -1,0 +1,68 @@
+config:
+  description: default network policy rule contains egress and ingress rules
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "egress and ingress"
+        resource:
+          egress:
+            - to:
+                - namespaceSelector:
+                    matchLabels:
+                      name: istio-system
+                  podSelector:
+                    matchLabels:
+                      istio: pilot
+                - namespaceSelector:
+                    matchLabels:
+                      name: istio-system
+                  podSelector:
+                    matchLabels:
+                      istio: mixer
+                - namespaceSelector:
+                    matchLabels:
+                      name: istio-system
+                  podSelector:
+                    matchLabels:
+                      istio: ingressgateway
+                - namespaceSelector: {}
+                  podSelector:
+                    matchLabels:
+                    k8s-app: kube-dns
+                - ipBlock:
+                    cidr: 0.0.0.0/0
+          ingress:
+            - from:
+                - namespaceSelector:
+                    matchLabels:
+                      name: istio-system
+                  podSelector:
+                    matchLabels:
+                      app: prometheus
+          podSelector:
+            matchLabels:
+              app: myapplication
+          policyTypes:
+            - Ingress
+            - Egress

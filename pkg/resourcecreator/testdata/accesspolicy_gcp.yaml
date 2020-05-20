@@ -85,6 +85,12 @@ tests:
                         name: istio-system
                   - podSelector:
                       matchLabels:
+                        istio: ingressgateway
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                  - podSelector:
+                      matchLabels:
                         k8s-app: kube-dns
                     namespaceSelector: {}
                   - ipBlock:
@@ -162,18 +168,18 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: "deployment created"
+      - name: "deployment contains jwker secrets"
         type: regex
         resource:
           spec:
             template:
               spec:
                 volumes:
-                  - name: ^myapplication-........$
+                  - name: ^myapplication-.+$
                     secret:
-                      secretName: ^myapplication-........$
+                      secretName: ^myapplication-.+$
                 containers:
-                - volumeMounts:
-                  - name: myapplication
-                    readOnly: true
-                    mountPath: /var/run/secrets/nais.io/jwker
+                  - volumeMounts:
+                      - name: ^myapplication-.+$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/jwker

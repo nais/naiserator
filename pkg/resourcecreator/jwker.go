@@ -3,6 +3,7 @@ package resourcecreator
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	jwker "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -10,6 +11,10 @@ import (
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func randStringBytes(n int) string {
 	b := make([]byte, n)
