@@ -18,12 +18,15 @@ var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 
 func TestNetworkPolicy(t *testing.T) {
 
+	defaultIpsOptions := resourcecreator.NewResourceOptions()
+	defaultIpsOptions.AccessPolicyNotAllowedCIDRs = defaultIps
+
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 1)
 
@@ -55,7 +58,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
 
 		matchLabels := map[string]string{
 			"app": accessPolicyApp,
@@ -70,7 +73,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 2)
 	})
@@ -83,7 +86,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
 		assert.NotNil(t, networkPolicy)
 		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
 
@@ -103,7 +106,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
 		assert.NotNil(t, networkPolicy)
 		assert.Len(t, networkPolicy.Spec.Ingress, 3)
 		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
@@ -133,7 +136,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIps)
+		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
 		assert.NotNil(t, networkPolicy)
 
 		yamlres, err := yaml.Marshal(networkPolicy)

@@ -6,8 +6,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func networkPolicyRules(rules []nais.AccessPolicyRule) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+func networkPolicyRules(rules []nais.AccessPolicyRule, options ResourceOptions) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules {
+
+		// non-local access policy rules do not result in network policies
+		if len(rule.Cluster) > 0 && rule.Cluster != options.ClusterName {
+			continue
+		}
+
 		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
 			PodSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -34,7 +40,7 @@ func networkPolicyRules(rules []nais.AccessPolicyRule) (networkPolicy []networki
 	return
 }
 
-func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRule {
+func ingressPolicy(app *nais.Application, options ResourceOptions) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
 	rules = append(rules, networkingv1.NetworkPolicyIngressRule{
@@ -56,7 +62,7 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-			From: networkPolicyRules(app.Spec.AccessPolicy.Inbound.Rules),
+			From: networkPolicyRules(app.Spec.AccessPolicy.Inbound.Rules, options),
 		})
 	}
 
@@ -82,11 +88,11 @@ func ingressPolicy(app *nais.Application) []networkingv1.NetworkPolicyIngressRul
 	return rules
 }
 
-func egressPolicy(app *nais.Application, ipBlockExceptCIDRs []string) []networkingv1.NetworkPolicyEgressRule {
-	defaultRules := defaultAllowEgress(ipBlockExceptCIDRs)
+func egressPolicy(app *nais.Application, options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
+	defaultRules := defaultAllowEgress(options.AccessPolicyNotAllowedCIDRs)
 	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
 		appRules := networkingv1.NetworkPolicyEgressRule{
-			To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules),
+			To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules, options),
 		}
 		return append(defaultRules, appRules)
 	}
@@ -94,15 +100,15 @@ func egressPolicy(app *nais.Application, ipBlockExceptCIDRs []string) []networki
 	return defaultRules
 }
 
-func networkPolicySpec(app *nais.Application, ipBlockExceptCIDRs []string) networkingv1.NetworkPolicySpec {
+func networkPolicySpec(app *nais.Application, options ResourceOptions) networkingv1.NetworkPolicySpec {
 	return networkingv1.NetworkPolicySpec{
 		PodSelector: *labelSelector("app", app.Name),
 		PolicyTypes: []networkingv1.PolicyType{
 			networkingv1.PolicyTypeIngress,
 			networkingv1.PolicyTypeEgress,
 		},
-		Ingress: ingressPolicy(app),
-		Egress:  egressPolicy(app, ipBlockExceptCIDRs),
+		Ingress: ingressPolicy(app, options),
+		Egress:  egressPolicy(app, options),
 	}
 
 }
@@ -157,10 +163,10 @@ func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolic
 	}
 }
 
-func NetworkPolicy(app *nais.Application, ipBlockExceptCIDRs []string) *networkingv1.NetworkPolicy {
+func NetworkPolicy(app *nais.Application, options ResourceOptions) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		TypeMeta:   typeMeta(),
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       networkPolicySpec(app, ipBlockExceptCIDRs),
+		Spec:       networkPolicySpec(app, options),
 	}
 }
