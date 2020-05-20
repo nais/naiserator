@@ -1,0 +1,45 @@
+config:
+  description: egress rules will create network policies, service entries, and jwker resources
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    accessPolicy:
+      outbound:
+        rules:
+          - application: foo
+            namespace: bar
+          - application: foo
+            namespace: bar
+            cluster: othercluster
+
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "egress and ingress network policies"
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: bar
+                    podSelector:
+                      matchLabels:
+                        app: foo
