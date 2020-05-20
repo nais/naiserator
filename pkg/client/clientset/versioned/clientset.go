@@ -4,8 +4,8 @@ package versioned
 
 import (
 	iamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
-	naiseratorv1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
-	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
+	naisv1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
+	naisv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	sqlv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	storagev1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
@@ -17,8 +17,8 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	IamV1beta1() iamv1beta1.IamV1beta1Interface
-	NaiseratorV1() naiseratorv1.NaiseratorV1Interface
-	NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface
+	NaisV1() naisv1.NaisV1Interface
+	NaisV1alpha1() naisv1alpha1.NaisV1alpha1Interface
 	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
 	SqlV1beta1() sqlv1beta1.SqlV1beta1Interface
 	StorageV1beta1() storagev1beta1.StorageV1beta1Interface
@@ -29,8 +29,8 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	iamV1beta1         *iamv1beta1.IamV1beta1Client
-	naiseratorV1       *naiseratorv1.NaiseratorV1Client
-	naiseratorV1alpha1 *naiseratorv1alpha1.NaiseratorV1alpha1Client
+	naisV1             *naisv1.NaisV1Client
+	naisV1alpha1       *naisv1alpha1.NaisV1alpha1Client
 	networkingV1alpha3 *networkingv1alpha3.NetworkingV1alpha3Client
 	sqlV1beta1         *sqlv1beta1.SqlV1beta1Client
 	storageV1beta1     *storagev1beta1.StorageV1beta1Client
@@ -41,14 +41,14 @@ func (c *Clientset) IamV1beta1() iamv1beta1.IamV1beta1Interface {
 	return c.iamV1beta1
 }
 
-// NaiseratorV1 retrieves the NaiseratorV1Client
-func (c *Clientset) NaiseratorV1() naiseratorv1.NaiseratorV1Interface {
-	return c.naiseratorV1
+// NaisV1 retrieves the NaisV1Client
+func (c *Clientset) NaisV1() naisv1.NaisV1Interface {
+	return c.naisV1
 }
 
-// NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client
-func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface {
-	return c.naiseratorV1alpha1
+// NaisV1alpha1 retrieves the NaisV1alpha1Client
+func (c *Clientset) NaisV1alpha1() naisv1alpha1.NaisV1alpha1Interface {
+	return c.naisV1alpha1
 }
 
 // NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
@@ -86,11 +86,11 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
-	cs.naiseratorV1, err = naiseratorv1.NewForConfig(&configShallowCopy)
+	cs.naisV1, err = naisv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
-	cs.naiseratorV1alpha1, err = naiseratorv1alpha1.NewForConfig(&configShallowCopy)
+	cs.naisV1alpha1, err = naisv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -119,8 +119,8 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.iamV1beta1 = iamv1beta1.NewForConfigOrDie(c)
-	cs.naiseratorV1 = naiseratorv1.NewForConfigOrDie(c)
-	cs.naiseratorV1alpha1 = naiseratorv1alpha1.NewForConfigOrDie(c)
+	cs.naisV1 = naisv1.NewForConfigOrDie(c)
+	cs.naisV1alpha1 = naisv1alpha1.NewForConfigOrDie(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.NewForConfigOrDie(c)
 	cs.sqlV1beta1 = sqlv1beta1.NewForConfigOrDie(c)
 	cs.storageV1beta1 = storagev1beta1.NewForConfigOrDie(c)
@@ -133,8 +133,8 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.iamV1beta1 = iamv1beta1.New(c)
-	cs.naiseratorV1 = naiseratorv1.New(c)
-	cs.naiseratorV1alpha1 = naiseratorv1alpha1.New(c)
+	cs.naisV1 = naisv1.New(c)
+	cs.naisV1alpha1 = naisv1alpha1.New(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.New(c)
 	cs.sqlV1beta1 = sqlv1beta1.New(c)
 	cs.storageV1beta1 = storagev1beta1.New(c)

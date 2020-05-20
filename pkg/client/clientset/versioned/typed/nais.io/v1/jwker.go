@@ -40,7 +40,7 @@ type jwkers struct {
 }
 
 // newJwkers returns a Jwkers
-func newJwkers(c *NaiseratorV1Client, namespace string) *jwkers {
+func newJwkers(c *NaisV1Client, namespace string) *jwkers {
 	return &jwkers{
 		client: c.RESTClient(),
 		ns:     namespace,

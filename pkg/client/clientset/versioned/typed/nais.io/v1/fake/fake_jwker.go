@@ -14,13 +14,13 @@ import (
 
 // FakeJwkers implements JwkerInterface
 type FakeJwkers struct {
-	Fake *FakeNaiseratorV1
+	Fake *FakeNaisV1
 	ns   string
 }
 
-var jwkersResource = schema.GroupVersionResource{Group: "naiserator.nais.io", Version: "v1", Resource: "jwkers"}
+var jwkersResource = schema.GroupVersionResource{Group: "nais.io", Version: "v1", Resource: "jwkers"}
 
-var jwkersKind = schema.GroupVersionKind{Group: "naiserator.nais.io", Version: "v1", Kind: "Jwker"}
+var jwkersKind = schema.GroupVersionKind{Group: "nais.io", Version: "v1", Kind: "Jwker"}
 
 // Get takes name of the jwker, and returns the corresponding jwker object, and an error if there is any.
 func (c *FakeJwkers) Get(name string, options v1.GetOptions) (result *naisiov1.Jwker, err error) {

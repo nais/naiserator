@@ -1,7 +1,5 @@
 package v1alpha1
 
-// +groupName="nais.io"
-
 import (
 	"encoding/json"
 	"fmt"

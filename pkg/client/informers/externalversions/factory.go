@@ -161,7 +161,7 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Iam() iamcnrmcloudgooglecom.Interface
-	Naiserator() naisio.Interface
+	Nais() naisio.Interface
 	Networking() networkingistioio.Interface
 	Sql() sqlcnrmcloudgooglecom.Interface
 	Storage() storagecnrmcloudgooglecom.Interface
@@ -171,7 +171,7 @@ func (f *sharedInformerFactory) Iam() iamcnrmcloudgooglecom.Interface {
 	return iamcnrmcloudgooglecom.New(f, f.namespace, f.tweakListOptions)
 }
 
-func (f *sharedInformerFactory) Naiserator() naisio.Interface {
+func (f *sharedInformerFactory) Nais() naisio.Interface {
 	return naisio.New(f, f.namespace, f.tweakListOptions)
 }
 

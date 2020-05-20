@@ -108,7 +108,7 @@ func (n *Synchronizer) Process(app *v1alpha1.Application) {
 		}
 		err := n.UpdateApplication(app, func(existing *v1alpha1.Application) error {
 			existing.Status = app.Status
-			_, err := n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(existing)
+			_, err := n.AppClient.NaisV1alpha1().Applications(app.Namespace).Update(existing)
 			return err
 		})
 		if err != nil {
@@ -363,7 +363,7 @@ func (n *Synchronizer) UpdateApplication(app *v1alpha1.Application, updateFunc f
 	appsync.Lock()
 	defer appsync.Unlock()
 
-	app, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
+	app, err = n.AppClient.NaisV1alpha1().Applications(app.Namespace).Get(app.Name, v1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("get newest version of Application: %s", err)
 	}
@@ -402,7 +402,7 @@ func (n *Synchronizer) MonitorRollout(app v1alpha1.Application, logger log.Entry
 					app.Status.SynchronizationState = EventRolloutComplete
 					app.Status.RolloutCompleteTime = time.Now().UnixNano()
 					app.SetDeploymentRolloutStatus(event.RolloutStatus)
-					_, err = n.AppClient.NaiseratorV1alpha1().Applications(app.Namespace).Update(app)
+					_, err = n.AppClient.NaisV1alpha1().Applications(app.Namespace).Update(app)
 					return err
 				})
 

@@ -8,22 +8,22 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-type NaiseratorV1alpha1Interface interface {
+type NaisV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ApplicationsGetter
 }
 
-// NaiseratorV1alpha1Client is used to interact with features provided by the naiserator.nais.io group.
-type NaiseratorV1alpha1Client struct {
+// NaisV1alpha1Client is used to interact with features provided by the nais.io group.
+type NaisV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *NaiseratorV1alpha1Client) Applications(namespace string) ApplicationInterface {
+func (c *NaisV1alpha1Client) Applications(namespace string) ApplicationInterface {
 	return newApplications(c, namespace)
 }
 
-// NewForConfig creates a new NaiseratorV1alpha1Client for the given config.
-func NewForConfig(c *rest.Config) (*NaiseratorV1alpha1Client, error) {
+// NewForConfig creates a new NaisV1alpha1Client for the given config.
+func NewForConfig(c *rest.Config) (*NaisV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -32,12 +32,12 @@ func NewForConfig(c *rest.Config) (*NaiseratorV1alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &NaiseratorV1alpha1Client{client}, nil
+	return &NaisV1alpha1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new NaiseratorV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new NaisV1alpha1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *NaiseratorV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *NaisV1alpha1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -45,9 +45,9 @@ func NewForConfigOrDie(c *rest.Config) *NaiseratorV1alpha1Client {
 	return client
 }
 
-// New creates a new NaiseratorV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *NaiseratorV1alpha1Client {
-	return &NaiseratorV1alpha1Client{c}
+// New creates a new NaisV1alpha1Client for the given RESTClient.
+func New(c rest.Interface) *NaisV1alpha1Client {
+	return &NaisV1alpha1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -65,7 +65,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *NaiseratorV1alpha1Client) RESTClient() rest.Interface {
+func (c *NaisV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

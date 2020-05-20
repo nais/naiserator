@@ -45,13 +45,13 @@ func NewFilteredJwkerInformer(client versioned.Interface, namespace string, resy
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NaiseratorV1().Jwkers(namespace).List(options)
+				return client.NaisV1().Jwkers(namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NaiseratorV1().Jwkers(namespace).Watch(options)
+				return client.NaisV1().Jwkers(namespace).Watch(options)
 			},
 		},
 		&naisiov1.Jwker{},

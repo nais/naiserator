@@ -141,7 +141,7 @@ var i = []Service{
 		Name:      "jwker",
 		Interface: "typed_nais_v1.JwkerInterface",
 		Type:      "*nais_v1.Jwker",
-		Client:    "customClient.NaiseratorV1().Jwkers",
+		Client:    "customClient.NaisV1().Jwkers",
 	},
 }
 

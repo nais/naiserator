@@ -624,7 +624,7 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		return authorizationPolicy(c, old, new)
 
 	case *nais_v1.Jwker:
-		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		c := customClient.NaisV1().Jwkers(new.Namespace)
 		old, err := c.Get(new.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -903,7 +903,7 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 		}
 
 	case *nais_v1.Jwker:
-		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		c := customClient.NaisV1().Jwkers(new.Namespace)
 		return func() error {
 			log.Infof("pre-deleting *nais_v1.Jwker for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
@@ -1144,7 +1144,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		}
 
 	case *nais_v1.Jwker:
-		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		c := customClient.NaisV1().Jwkers(new.Namespace)
 		return func() error {
 			log.Infof("creating new *nais_v1.Jwker for %s", new.Name)
 			_, err := c.Create(new)
@@ -1443,7 +1443,7 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	}
 
 	{
-		c := customClient.NaiseratorV1().Jwkers(app.Namespace)
+		c := customClient.NaisV1().Jwkers(app.Namespace)
 		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("discover %s: %s", "*nais_v1.Jwker", err)
@@ -1729,7 +1729,7 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		}
 
 	case *nais_v1.Jwker:
-		c := customClient.NaiseratorV1().Jwkers(new.Namespace)
+		c := customClient.NaisV1().Jwkers(new.Namespace)
 		return func() error {
 			log.Infof("deleting *nais_v1.Jwker for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
