@@ -5,6 +5,7 @@ resourceoptions:
   AccessPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
+  ClusterName: mycluster
 
 input:
   kind: Application
@@ -43,3 +44,33 @@ tests:
                     podSelector:
                       matchLabels:
                         app: foo
+
+  - apiVersion: nais.io/v1
+    kind: Jwker
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "outbound access policy rules for jwker"
+        resource:
+          spec:
+            accessPolicy:
+              outbound:
+                rules:
+                  - application: foo
+                    cluster: mycluster
+                    namespace: bar
+                  - application: foo
+                    cluster: othercluster
+                    namespace: bar
+
+  - apiVersion: nais.io/v1
+    kind: Jwker
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "auto-generated secret name"
+        resource:
+          spec:
+            secretName: ^myapplication-.+$
