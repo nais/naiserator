@@ -245,7 +245,7 @@ func regexcmp(a, b reflect.Value, path string) Diffset {
 	}
 	return Diffset{Diff{
 		Path:    path,
-		Message: fmt.Sprintf("regular expression %s doesn't match value %+v", regex.String(), bs),
+		Message: fmt.Sprintf("regular expression \"%s\" doesn't match value \"%+v\"", regex.String(), bs),
 		Type:    ErrValueDiffers,
 		A:       &a,
 		B:       &b,
