@@ -33,7 +33,7 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
 		assert.Equal(t, fixtures.ApplicationNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
 		assert.Equal(t, clusterName, jwker.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
-		assert.Empty(t, jwker.Spec.AccessPolicy.Outbound)
+		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 0)
 	})
 
 	t.Run("one inbound with cluster/namespace and no outbound", func(t *testing.T) {
@@ -45,7 +45,7 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
 		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
 		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
-		assert.Empty(t, jwker.Spec.AccessPolicy.Outbound)
+		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 0)
 	})
 
 	t.Run("one outbound and no inbound", func(t *testing.T) {
@@ -57,7 +57,7 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Outbound.Rules[0].Application)
 		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Outbound.Rules[0].Namespace)
 		assert.Equal(t, otherCluster, jwker.Spec.AccessPolicy.Outbound.Rules[0].Cluster)
-		assert.Empty(t, jwker.Spec.AccessPolicy.Inbound)
+		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 0)
 	})
 
 	t.Run("multiple inbound and no outbound", func(t *testing.T) {
@@ -75,7 +75,7 @@ func TestJwker(t *testing.T) {
 		}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 3)
-		assert.Empty(t, jwker.Spec.AccessPolicy.Outbound)
+		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 0)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
 		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
@@ -103,7 +103,7 @@ func TestJwker(t *testing.T) {
 		}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 3)
-		assert.Empty(t, jwker.Spec.AccessPolicy.Inbound)
+		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 0)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Outbound.Rules[0].Application)
 		assert.Equal(t, otherNamespace, jwker.Spec.AccessPolicy.Outbound.Rules[0].Namespace)
