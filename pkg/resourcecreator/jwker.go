@@ -40,8 +40,8 @@ func parseAccessPolicyRule(rule nais.AccessPolicyRule, namespaceName, clusterNam
 }
 
 func parseAccessPolicy(policy *nais.AccessPolicy, namespaceName, clusterName string) *nais.AccessPolicy {
-	var inbound []nais.AccessPolicyRule
-	var outbound []nais.AccessPolicyRule
+	inbound := make([]nais.AccessPolicyRule, 0)
+	outbound := make([]nais.AccessPolicyRule, 0)
 	for _, rule := range policy.Inbound.Rules {
 		inbound = append(inbound, parseAccessPolicyRule(rule, namespaceName, clusterName))
 	}
