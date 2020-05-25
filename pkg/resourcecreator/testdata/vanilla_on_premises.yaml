@@ -135,10 +135,12 @@ tests:
                         value: navikt/myapplication:1.2.3
                       - name: NAIS_CLUSTER_NAME
                         value: test-cluster
+                      - name: NAIS_CLIENT_ID
+                        value: test-cluster:mynamespace:myapplication
                       - name: NAV_TRUSTSTORE_PATH
                         value: /etc/ssl/certs/java/cacerts
-                      - value: changeme
-                        name: NAV_TRUSTSTORE_PASSWORD
+                      - name: NAV_TRUSTSTORE_PASSWORD
+                        value: changeme
                     resources:
                       limits:
                         cpu: 500m
