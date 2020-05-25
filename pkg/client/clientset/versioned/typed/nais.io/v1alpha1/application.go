@@ -40,7 +40,7 @@ type applications struct {
 }
 
 // newApplications returns a Applications
-func newApplications(c *NaiseratorV1alpha1Client, namespace string) *applications {
+func newApplications(c *NaisV1alpha1Client, namespace string) *applications {
 	return &applications{
 		client: c.RESTClient(),
 		ns:     namespace,

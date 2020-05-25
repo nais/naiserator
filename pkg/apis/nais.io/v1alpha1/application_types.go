@@ -1,7 +1,5 @@
 package v1alpha1
 
-// +groupName="nais.io"
-
 import (
 	"encoding/json"
 	"fmt"
@@ -22,6 +20,8 @@ const (
 	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
 	SkipDeploymentMessageAnnotation   = "nais.io/skipDeploymentMessage"
 	DefaultSecretMountPath            = "/var/run/secrets"
+	DefaultJwkerMountPath             = "/var/run/secrets/nais.io/jwker"
+	JwkerCredentialsFilename          = "jwks" // from jwker/pkg/secret/secrets.go: JwksSecretKey
 )
 
 func GetDefaultMountPath(name string) string {
@@ -262,6 +262,7 @@ type AccessPolicyExternalRule struct {
 type AccessPolicyRule struct {
 	Application string `json:"application"`
 	Namespace   string `json:"namespace,omitempty"`
+	Cluster     string `json:"cluster,omitempty"`
 }
 
 type AccessPolicyInbound struct {
@@ -381,4 +382,11 @@ func (in *Application) SkipDeploymentMessage() bool {
 	}
 	skip, _ := strconv.ParseBool(in.Annotations[SkipDeploymentMessageAnnotation])
 	return skip
+}
+
+func (in AccessPolicyRule) MatchesCluster(clusterName string) bool {
+	if len(in.Cluster) > 0 && in.Cluster != clusterName {
+		return false
+	}
+	return true
 }

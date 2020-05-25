@@ -6,8 +6,10 @@ import (
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	iamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
 	fakeiamv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1/fake"
-	naiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
-	fakenaiseratorv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1/fake"
+	naisv1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
+	fakenaisv1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1/fake"
+	naisv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
+	fakenaisv1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1/fake"
 	networkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	fakenetworkingv1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3/fake"
 	sqlv1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
@@ -73,9 +75,14 @@ func (c *Clientset) IamV1beta1() iamv1beta1.IamV1beta1Interface {
 	return &fakeiamv1beta1.FakeIamV1beta1{Fake: &c.Fake}
 }
 
-// NaiseratorV1alpha1 retrieves the NaiseratorV1alpha1Client
-func (c *Clientset) NaiseratorV1alpha1() naiseratorv1alpha1.NaiseratorV1alpha1Interface {
-	return &fakenaiseratorv1alpha1.FakeNaiseratorV1alpha1{Fake: &c.Fake}
+// NaisV1 retrieves the NaisV1Client
+func (c *Clientset) NaisV1() naisv1.NaisV1Interface {
+	return &fakenaisv1.FakeNaisV1{Fake: &c.Fake}
+}
+
+// NaisV1alpha1 retrieves the NaisV1alpha1Client
+func (c *Clientset) NaisV1alpha1() naisv1alpha1.NaisV1alpha1Interface {
+	return &fakenaisv1alpha1.FakeNaisV1alpha1{Fake: &c.Fake}
 }
 
 // NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client

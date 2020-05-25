@@ -14,13 +14,13 @@ import (
 
 // FakeApplications implements ApplicationInterface
 type FakeApplications struct {
-	Fake *FakeNaiseratorV1alpha1
+	Fake *FakeNaisV1alpha1
 	ns   string
 }
 
-var applicationsResource = schema.GroupVersionResource{Group: "naiserator.nais.io", Version: "v1alpha1", Resource: "applications"}
+var applicationsResource = schema.GroupVersionResource{Group: "nais.io", Version: "v1alpha1", Resource: "applications"}
 
-var applicationsKind = schema.GroupVersionKind{Group: "naiserator.nais.io", Version: "v1alpha1", Kind: "Application"}
+var applicationsKind = schema.GroupVersionKind{Group: "nais.io", Version: "v1alpha1", Kind: "Application"}
 
 // Get takes name of the application, and returns the corresponding application object, and an error if there is any.
 func (c *FakeApplications) Get(name string, options v1.GetOptions) (result *v1alpha1.Application, err error) {

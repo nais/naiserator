@@ -45,13 +45,13 @@ func NewFilteredApplicationInformer(client versioned.Interface, namespace string
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NaiseratorV1alpha1().Applications(namespace).List(options)
+				return client.NaisV1alpha1().Applications(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NaiseratorV1alpha1().Applications(namespace).Watch(options)
+				return client.NaisV1alpha1().Applications(namespace).Watch(options)
 			},
 		},
 		&naisiov1alpha1.Application{},

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	jwker "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio_networking_crd "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
@@ -27,6 +28,7 @@ type realObjects struct {
 	deployment              *v1.Deployment
 	hpa                     *autoscaling.HorizontalPodAutoscaler
 	ingress                 *networkingv1beta1.Ingress
+	jwker                   *jwker.Jwker
 	networkPolicy           *networking.NetworkPolicy
 	role                    *rbac.Role
 	rolebinding             *rbac.RoleBinding
@@ -85,6 +87,8 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.sqlUser = v
 		case *google_sql_crd.SQLDatabase:
 			o.sqlDatabase = v
+		case *jwker.Jwker:
+			o.jwker = v
 		}
 	}
 	return
@@ -166,6 +170,44 @@ func TestCreate(t *testing.T) {
 		assert.Nil(t, objects.networkPolicy)
 	})
 
+	t.Run("jwker resource is not created when access policy is empty", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.Empty(t, objects.jwker)
+	})
+	t.Run("Secret volume is created when jwker secret is set", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace", "thiscluster"}}
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.Regexp(t, "myapplication-.{8}$", objects.deployment.Spec.Template.Spec.Volumes[2].Name)
+		assert.Regexp(t, "myapplication-.{8}$", objects.deployment.Spec.Template.Spec.Containers[0].VolumeMounts[6].Name)
+	})
+	t.Run("jwker resource is created when access policy is set", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resourcecreator.NewResourceOptions()
+		err := nais.ApplyDefaults(app)
+		assert.NoError(t, err)
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace", "thiscluster"}}
+
+		resources, err := resourcecreator.Create(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.NotNil(t, objects.jwker)
+	})
 	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []string{"https://host.domain.tld"}
@@ -205,7 +247,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace"}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace", ""}}
 		app.Spec.Prometheus.Enabled = true
 
 		err := nais.ApplyDefaults(app)

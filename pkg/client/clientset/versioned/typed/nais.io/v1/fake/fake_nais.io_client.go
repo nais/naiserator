@@ -3,22 +3,22 @@
 package fake
 
 import (
-	v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
+	v1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeNaisV1alpha1 struct {
+type FakeNaisV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeNaisV1alpha1) Applications(namespace string) v1alpha1.ApplicationInterface {
-	return &FakeApplications{c, namespace}
+func (c *FakeNaisV1) Jwkers(namespace string) v1.JwkerInterface {
+	return &FakeJwkers{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeNaisV1alpha1) RESTClient() rest.Interface {
+func (c *FakeNaisV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

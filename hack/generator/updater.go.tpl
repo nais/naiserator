@@ -35,7 +35,9 @@ import (
 	typed_sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	istio_security_v1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	typed_istio_security_v1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/security/v1beta1"
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais_v1 "github.com/nais/naiserator/pkg/apis/nais.io/v1"
+	nais_v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	typed_nais_v1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
 )
 
 {{range .}}
@@ -121,7 +123,7 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 	}
 }
 
-func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, app *nais.Application) ([]runtime.Object, error) {
+func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, app *nais_v1alpha1.Application) ([]runtime.Object, error) {
 	resources := make([]runtime.Object, 0)
 
 	{{range .}}
@@ -143,7 +145,7 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 	return withOwnerReference(app, resources), nil
 }
 
-func withOwnerReference(app *nais.Application, resources []runtime.Object) []runtime.Object {
+func withOwnerReference(app *nais_v1alpha1.Application, resources []runtime.Object) []runtime.Object {
 	owned := make([]runtime.Object, 0, len(resources))
 
 	hasOwnerReference := func(r runtime.Object) (bool, error) {

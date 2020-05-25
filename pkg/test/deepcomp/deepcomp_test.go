@@ -257,7 +257,7 @@ var testcases = []testcase{
 			{
 				Path:    ".foo",
 				Type:    "ErrInvalidRegex",
-				Message: "error parsing regexp: missing closing ]: `[ab\"`",
+				Message: "error parsing regexp: missing closing ]: `[ab`",
 			},
 		},
 	},

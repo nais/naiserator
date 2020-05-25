@@ -34,6 +34,12 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	}
 
+	jwker := Jwker(app, resourceOptions.ClusterName)
+	if jwker != nil {
+		ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
+		resourceOptions.JwkerSecretName = jwker.Spec.SecretName
+	}
+
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
 		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
@@ -104,7 +110,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	}
 
 	if resourceOptions.AccessPolicy {
-		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions.AccessPolicyNotAllowedCIDRs), OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
 		vses, err := VirtualServices(app)
 
 		if err != nil {
@@ -115,7 +121,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			ops = append(ops, ResourceOperation{vs, OperationCreateOrUpdate})
 		}
 
-		authorizationPolicy := AuthorizationPolicy(app)
+		authorizationPolicy := AuthorizationPolicy(app, resourceOptions)
 		if authorizationPolicy != nil {
 			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
 		}
@@ -126,7 +132,6 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 
 	} else {
-
 		ingress, err := Ingress(app)
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingress: %s", err)

@@ -1,0 +1,185 @@
+config:
+  description: vanilla application running in GCP with default configuration and access policies
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    accessPolicy:
+      inbound:
+        rules:
+          - application: app1
+          - application: app2
+            namespace: q1
+          - application: '*'
+            namespace: t1
+      outbound:
+        rules:
+          - application: app3
+          - application: app4
+            namespace: q2
+          - application: '*'
+            namespace: t2
+        external:
+          - host: www.external-application.com
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            ingress:
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app: prometheus
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app: app1
+                  - podSelector:
+                      matchLabels:
+                        app: app2
+                    namespaceSelector:
+                      matchLabels:
+                        name: q1
+                  - podSelector: {}
+                    namespaceSelector:
+                      matchLabels:
+                        name: t1
+            egress:
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        istio: pilot
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                  - podSelector:
+                      matchLabels:
+                        istio: mixer
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                  - podSelector:
+                      matchLabels:
+                        istio: ingressgateway
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                  - podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+                    namespaceSelector: {}
+                  - ipBlock:
+                      cidr: 0.0.0.0/0
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        app: app3
+                  - podSelector:
+                      matchLabels:
+                        app: app4
+                    namespaceSelector:
+                      matchLabels:
+                        name: q2
+                  - podSelector: {}
+                    namespaceSelector:
+                      matchLabels:
+                        name: t2
+            policyTypes:
+              - Ingress
+              - Egress
+            podSelector:
+              matchLabels:
+                app: myapplication
+
+  - operation: CreateOrUpdate
+    apiVersion: security.istio.io/v1beta1
+    kind: AuthorizationPolicy
+    name: myapplication
+    match:
+      - name: "authorization policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            selector:
+              matchLabels:
+                app: myapplication
+            rules:
+              - from:
+                  - source:
+                      principals:
+                        - cluster.local/ns/mynamespace/sa/app1
+                        - cluster.local/ns/q1/sa/app2
+                        - cluster.local/ns/t1/sa/*
+                to:
+                  - operation:
+                      methods:
+                        - '*'
+                      paths:
+                        - '*'
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-01
+    match:
+      - name: "service entry created for outbound traffic to www.external-application.com"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - www.external-application.com
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 443
+                protocol: HTTPS
+                name: https
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains jwker secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^myapplication-.+$
+                    secret:
+                      secretName: ^myapplication-.+$
+                containers:
+                  - volumeMounts:
+                      - name: ^myapplication-.+$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/jwker

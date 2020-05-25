@@ -29,7 +29,7 @@ func New(synchronizer Synchronizer, sharedInformerFactory nais_informers.SharedI
 		stopChannel:     make(chan struct{}, 1),
 	}
 
-	sharedInformerFactory.Naiserator().V1alpha1().Applications().Informer().AddEventHandler(
+	sharedInformerFactory.Nais().V1alpha1().Applications().Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(newPod interface{}) {
 				i.watchCallback(newPod)
@@ -73,7 +73,7 @@ func (informer *Informer) Run() error {
 
 	informer.informerFactory.Start(informer.stopChannel)
 
-	i := informer.informerFactory.Naiserator().V1alpha1().Applications().Informer()
+	i := informer.informerFactory.Nais().V1alpha1().Applications().Informer()
 	if !cache.WaitForCacheSync(informer.stopChannel, i.HasSynced) {
 		return fmt.Errorf("timed out waiting for cache sync")
 	}

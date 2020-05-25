@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	v1beta1 "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	v1 "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1alpha3 "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	sqlcnrmcloudgooglecomv1beta1 "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
@@ -48,9 +49,13 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1beta1.SchemeGroupVersion.WithResource("iamserviceaccounts"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Iam().V1beta1().IAMServiceAccounts().Informer()}, nil
 
-		// Group=naiserator.nais.io, Version=v1alpha1
+		// Group=nais.io, Version=v1
+	case v1.SchemeGroupVersion.WithResource("jwkers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1().Jwkers().Informer()}, nil
+
+		// Group=nais.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Naiserator().V1alpha1().Applications().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1alpha1().Applications().Informer()}, nil
 
 		// Group=networking.istio.io, Version=v1alpha3
 	case v1alpha3.SchemeGroupVersion.WithResource("serviceentries"):
