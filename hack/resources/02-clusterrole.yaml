@@ -19,6 +19,7 @@ rules:
       - 'iampolicymembers'
       - 'iamserviceaccounts'
       - 'ingresses'
+      - 'jwkers'
       - 'namespaces'
       - 'networkpolicies'
       - 'rolebindings'
