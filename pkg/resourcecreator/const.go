@@ -5,6 +5,7 @@ const (
 	NaisNamespaceEnv   = "NAIS_NAMESPACE"
 	NaisAppImageEnv    = "NAIS_APP_IMAGE"
 	NaisClusterNameEnv = "NAIS_CLUSTER_NAME"
+	NaisClientId       = "NAIS_CLIENT_ID"
 
 	IstioAuthorizationPolicyVersion         = "security.istio.io/v1beta1"    // API version of the AP resource
 	IstioNetworkingAPIVersion               = "networking.istio.io/v1alpha3" // API version of the Networking resources

@@ -390,3 +390,7 @@ func (in AccessPolicyRule) MatchesCluster(clusterName string) bool {
 	}
 	return true
 }
+
+func (in *Application) ClientID() string {
+	return fmt.Sprintf("%s:%s:%s", in.Cluster(), in.ObjectMeta.Namespace, in.ObjectMeta.Name)
+}
