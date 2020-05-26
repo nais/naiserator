@@ -181,33 +181,7 @@ func TestCreate(t *testing.T) {
 		objects := getRealObjects(resources)
 		assert.Empty(t, objects.jwker)
 	})
-	t.Run("Secret volume is created when jwker secret is set", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace", "thiscluster"}}
 
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		objects := getRealObjects(resources)
-		assert.Regexp(t, "myapplication-.{8}$", objects.deployment.Spec.Template.Spec.Volumes[2].Name)
-		assert.Regexp(t, "myapplication-.{8}$", objects.deployment.Spec.Template.Spec.Containers[0].VolumeMounts[6].Name)
-	})
-	t.Run("jwker resource is created when access policy is set", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace", "thiscluster"}}
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		objects := getRealObjects(resources)
-		assert.NotNil(t, objects.jwker)
-	})
 	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []string{"https://host.domain.tld"}

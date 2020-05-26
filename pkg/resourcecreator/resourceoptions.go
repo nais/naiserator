@@ -6,6 +6,7 @@ type ResourceOptions struct {
 	AccessPolicy                bool
 	AccessPolicyNotAllowedCIDRs []string
 	NativeSecrets               bool
+	JwkerEnabled                bool
 	GoogleProjectId             string
 	GoogleTeamProjectId         string
 	ClusterName                 string

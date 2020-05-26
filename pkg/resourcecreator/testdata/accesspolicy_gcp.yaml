@@ -5,6 +5,7 @@ resourceoptions:
   AccessPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
+  JwkerEnabled: true
 
 input:
   kind: Application

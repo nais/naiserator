@@ -103,6 +103,7 @@ func run() error {
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.ClusterName = cfg.ClusterName
+	resourceOptions.JwkerEnabled = cfg.Features.Jwker
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
 	applicationClientset := createApplicationClientset(kubeconfig)

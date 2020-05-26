@@ -32,6 +32,7 @@ type Features struct {
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	NativeSecrets               bool     `json:"native-secrets"`
 	Vault                       bool     `json:"vault"`
+	Jwker                       bool     `json:"jwker"`
 }
 
 type Securelogs struct {
@@ -76,6 +77,7 @@ const (
 	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesVault                       = "features.vault"
+	FeaturesJwker                       = "features.jwker"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
 	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
 	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
@@ -114,6 +116,7 @@ func init() {
 	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
+	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
 
 	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
 

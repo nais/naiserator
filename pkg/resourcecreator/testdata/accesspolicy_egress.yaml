@@ -6,6 +6,7 @@ resourceoptions:
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster
+  JwkerEnabled: true
 
 input:
   kind: Application

@@ -34,10 +34,12 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	}
 
-	jwker := Jwker(app, resourceOptions.ClusterName)
-	if jwker != nil {
-		ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
-		resourceOptions.JwkerSecretName = jwker.Spec.SecretName
+	if resourceOptions.JwkerEnabled {
+		jwker := Jwker(app, resourceOptions.ClusterName)
+		if jwker != nil {
+			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
+			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
+		}
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
