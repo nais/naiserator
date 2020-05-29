@@ -97,8 +97,7 @@ type Azure struct {
 }
 
 type AzureApplication struct {
-	Enabled   bool     `json:"enabled,omitempty"`
-	LogoutURL string   `json:"logoutURL,omitempty"`
+	Enabled   bool     `json:"enabled"`
 	ReplyURLs []string `json:"replyURLs,omitempty"`
 }
 

@@ -343,12 +343,12 @@ spec:
                   properties:
                     enabled:
                       type: boolean
-                    logoutURL:
-                      type: string
                     replyURLs:
                       items:
                         type: string
                       type: array
+                  required:
+                  - enabled
                   type: object
               required:
               - application

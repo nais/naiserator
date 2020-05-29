@@ -1,5 +1,5 @@
 config:
-  description: azure application with access policies
+  description: azure application with reply urls
 
 resourceoptions:
   AccessPolicy: true
@@ -21,6 +21,8 @@ input:
     azure:
       application:
         enabled: true
+        replyURLs:
+          - https://my.application/oauth2/callback
     accessPolicy:
       inbound:
         rules:
@@ -41,19 +43,8 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: subset
-        name: "spec is populated with correct values"
+        name: "replyUrls is manually specified"
         resource:
           spec:
-            preAuthorizedApplications:
-              - application: app1
-                cluster: mycluster
-                namespace: mynamespace
-              - application: app2
-                cluster: mycluster
-                namespace: q1
-              - application: app3
-                cluster: other-cluster
-                namespace: t1
             replyUrls:
-              - url: "https://my.application/foo/bar/oauth2/callback"
-              - url: "https://my.application/foo/bar/baz/oauth2/callback"
+              - url: "https://my.application/oauth2/callback"

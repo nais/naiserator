@@ -22,7 +22,6 @@ func AzureAdApplication(app nais.Application, options ResourceOptions) nais.Azur
 		Spec: nais.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, options.ClusterName),
-			LogoutUrl:                 app.Spec.Azure.Application.LogoutURL,
 			SecretName:                getSecretName(app),
 		},
 	}
