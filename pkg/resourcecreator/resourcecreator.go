@@ -42,6 +42,12 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 	}
 
+	if resourceOptions.AzureratorEnabled {
+		azureapp := AzureAdApplication(*app, resourceOptions)
+		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
+		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
+	}
+
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
 		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)

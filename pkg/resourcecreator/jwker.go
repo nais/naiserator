@@ -2,29 +2,22 @@ package resourcecreator
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 
 	jwker "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-func randStringBytes(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+func accessPolicyRulesWithDefaults(rules []nais.AccessPolicyRule, namespace, clusterName string) []nais.AccessPolicyRule {
+	mangled := make([]nais.AccessPolicyRule, len(rules))
+	for i := range rules {
+		mangled[i] = accessPolicyRuleWithDefaults(rules[i], namespace, clusterName)
 	}
-	return string(b)
+	return mangled
 }
 
-func parseAccessPolicyRule(rule nais.AccessPolicyRule, namespaceName, clusterName string) nais.AccessPolicyRule {
+func accessPolicyRuleWithDefaults(rule nais.AccessPolicyRule, namespaceName, clusterName string) nais.AccessPolicyRule {
 	accessPolicyRule := nais.AccessPolicyRule{
 		Application: rule.Application,
 		Namespace:   rule.Namespace,
@@ -39,27 +32,19 @@ func parseAccessPolicyRule(rule nais.AccessPolicyRule, namespaceName, clusterNam
 	return accessPolicyRule
 }
 
-func parseAccessPolicy(policy *nais.AccessPolicy, namespaceName, clusterName string) *nais.AccessPolicy {
-	inbound := make([]nais.AccessPolicyRule, 0)
-	outbound := make([]nais.AccessPolicyRule, 0)
-	for _, rule := range policy.Inbound.Rules {
-		inbound = append(inbound, parseAccessPolicyRule(rule, namespaceName, clusterName))
-	}
-	for _, rule := range policy.Outbound.Rules {
-		outbound = append(outbound, parseAccessPolicyRule(rule, namespaceName, clusterName))
-	}
+func accessPoliciesWithDefaults(policy *nais.AccessPolicy, namespaceName, clusterName string) *nais.AccessPolicy {
 	return &nais.AccessPolicy{
 		Inbound: &nais.AccessPolicyInbound{
-			Rules: inbound,
+			Rules: accessPolicyRulesWithDefaults(policy.Inbound.Rules, namespaceName, clusterName),
 		},
 		Outbound: &nais.AccessPolicyOutbound{
-			Rules: outbound,
+			Rules: accessPolicyRulesWithDefaults(policy.Outbound.Rules, namespaceName, clusterName),
 		},
 	}
 }
 
-func getSecretName(app *nais.Application) string {
-	return fmt.Sprintf("%s-%s", app.Name, randStringBytes(8))
+func getSecretName(app nais.Application) string {
+	return fmt.Sprintf("%s-%s", app.Name, util.RandStringBytes(8))
 }
 
 func Jwker(app *nais.Application, clusterName string) *jwker.Jwker {
@@ -73,8 +58,8 @@ func Jwker(app *nais.Application, clusterName string) *jwker.Jwker {
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: jwker.JwkerSpec{
-			AccessPolicy: parseAccessPolicy(app.Spec.AccessPolicy, app.Namespace, clusterName),
-			SecretName:   getSecretName(app),
+			AccessPolicy: accessPoliciesWithDefaults(app.Spec.AccessPolicy, app.Namespace, clusterName),
+			SecretName:   getSecretName(*app),
 		},
 	}
 }
