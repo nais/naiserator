@@ -9,3 +9,11 @@ type ApplicationListerExpansion interface{}
 // ApplicationNamespaceListerExpansion allows custom methods to be added to
 // ApplicationNamespaceLister.
 type ApplicationNamespaceListerExpansion interface{}
+
+// AzureAdApplicationListerExpansion allows custom methods to be added to
+// AzureAdApplicationLister.
+type AzureAdApplicationListerExpansion interface{}
+
+// AzureAdApplicationNamespaceListerExpansion allows custom methods to be added to
+// AzureAdApplicationNamespaceLister.
+type AzureAdApplicationNamespaceListerExpansion interface{}

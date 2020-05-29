@@ -10,6 +10,8 @@ import (
 type Interface interface {
 	// Applications returns a ApplicationInformer.
 	Applications() ApplicationInformer
+	// AzureAdApplications returns a AzureAdApplicationInformer.
+	AzureAdApplications() AzureAdApplicationInformer
 }
 
 type version struct {
@@ -26,4 +28,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Applications returns a ApplicationInformer.
 func (v *version) Applications() ApplicationInformer {
 	return &applicationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// AzureAdApplications returns a AzureAdApplicationInformer.
+func (v *version) AzureAdApplications() AzureAdApplicationInformer {
+	return &azureAdApplicationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

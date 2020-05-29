@@ -6,11 +6,13 @@ type ResourceOptions struct {
 	AccessPolicy                bool
 	AccessPolicyNotAllowedCIDRs []string
 	NativeSecrets               bool
-	JwkerEnabled                bool
 	GoogleProjectId             string
 	GoogleTeamProjectId         string
 	ClusterName                 string
+	JwkerEnabled                bool
 	JwkerSecretName             string
+	AzureratorEnabled           bool
+	AzureratorSecretName        string
 }
 
 // NewResourceOptions creates a struct with the default resource options.

@@ -16,6 +16,10 @@ func (c *FakeNaisV1alpha1) Applications(namespace string) v1alpha1.ApplicationIn
 	return &FakeApplications{c, namespace}
 }
 
+func (c *FakeNaisV1alpha1) AzureAdApplications(namespace string) v1alpha1.AzureAdApplicationInterface {
+	return &FakeAzureAdApplications{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeNaisV1alpha1) RESTClient() rest.Interface {
