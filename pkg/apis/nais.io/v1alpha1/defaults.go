@@ -25,6 +25,11 @@ func ApplyDefaults(app *Application) error {
 func getAppDefaults() *Application {
 	return &Application{
 		Spec: ApplicationSpec{
+			Azure: &Azure{
+				Application: &AzureApplication{
+					Enabled: false,
+				},
+			},
 			Replicas: &Replicas{
 				Min:                    2,
 				Max:                    4,
@@ -54,8 +59,8 @@ func getAppDefaults() *Application {
 				},
 			},
 			Vault: &Vault{
-				Enabled:     false,
-				Paths:       []SecretPath{},
+				Enabled: false,
+				Paths:   []SecretPath{},
 			},
 			Service: &Service{
 				Port: DefaultServicePort,
