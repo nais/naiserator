@@ -21,6 +21,7 @@ const (
 	SkipDeploymentMessageAnnotation   = "nais.io/skipDeploymentMessage"
 	DefaultSecretMountPath            = "/var/run/secrets"
 	DefaultJwkerMountPath             = "/var/run/secrets/nais.io/jwker"
+	DefaultAzureratorMountPath        = "/var/run/secrets/nais.io/azure"
 	JwkerCredentialsFilename          = "jwks" // from jwker/pkg/secret/secrets.go: JwksSecretKey
 )
 

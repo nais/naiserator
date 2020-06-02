@@ -47,3 +47,24 @@ tests:
         resource:
           spec:
             secretName: ^myapplication-.{8}$
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains azurerator secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^myapplication-.+$
+                    secret:
+                      secretName: ^myapplication-.+$
+                containers:
+                  - volumeMounts:
+                      - name: ^myapplication-.+$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/azure
