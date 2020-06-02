@@ -42,7 +42,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 	}
 
-	if resourceOptions.AzureratorEnabled {
+	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
 		azureapp := AzureAdApplication(*app, resourceOptions)
 		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
