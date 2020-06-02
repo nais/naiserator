@@ -11,6 +11,7 @@ rules:
     resources:
       - 'applications'
       - 'authorizationpolicies'
+      - 'azureadapplications'
       - 'deployments'
       - 'endpoints'
       - 'events'
