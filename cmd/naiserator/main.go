@@ -104,6 +104,7 @@ func run() error {
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.ClusterName = cfg.ClusterName
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
+	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
 	applicationClientset := createApplicationClientset(kubeconfig)

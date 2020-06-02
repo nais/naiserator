@@ -33,6 +33,7 @@ type Features struct {
 	NativeSecrets               bool     `json:"native-secrets"`
 	Vault                       bool     `json:"vault"`
 	Jwker                       bool     `json:"jwker"`
+	Azurerator                  bool     `json:"azurerator"`
 }
 
 type Securelogs struct {
