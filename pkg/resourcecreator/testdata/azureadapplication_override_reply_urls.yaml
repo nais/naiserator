@@ -1,0 +1,50 @@
+config:
+  description: azure application with reply urls
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  AzureratorEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    azure:
+      application:
+        enabled: true
+        replyURLs:
+          - https://my.application/oauth2/callback
+    accessPolicy:
+      inbound:
+        rules:
+          - application: app1
+          - application: app2
+            namespace: q1
+          - application: app3
+            namespace: t1
+            cluster: other-cluster
+    ingresses:
+      - https://my.application/foo/bar
+      - https://my.application/foo/bar/baz
+
+tests:
+  - apiVersion: nais.io/v1alpha1
+    kind: AzureAdApplication
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "replyUrls is manually specified"
+        resource:
+          spec:
+            replyUrls:
+              - url: "https://my.application/oauth2/callback"

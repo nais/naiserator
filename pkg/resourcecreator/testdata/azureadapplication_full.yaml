@@ -1,0 +1,59 @@
+config:
+  description: azure application with access policies
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  AzureratorEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    azure:
+      application:
+        enabled: true
+    accessPolicy:
+      inbound:
+        rules:
+          - application: app1
+          - application: app2
+            namespace: q1
+          - application: app3
+            namespace: t1
+            cluster: other-cluster
+    ingresses:
+      - https://my.application/foo/bar
+      - https://my.application/foo/bar/baz
+
+tests:
+  - apiVersion: nais.io/v1alpha1
+    kind: AzureAdApplication
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "spec is populated with correct values"
+        resource:
+          spec:
+            preAuthorizedApplications:
+              - application: app1
+                cluster: mycluster
+                namespace: mynamespace
+              - application: app2
+                cluster: mycluster
+                namespace: q1
+              - application: app3
+                cluster: other-cluster
+                namespace: t1
+            replyUrls:
+              - url: "https://my.application/foo/bar/oauth2/callback"
+              - url: "https://my.application/foo/bar/baz/oauth2/callback"

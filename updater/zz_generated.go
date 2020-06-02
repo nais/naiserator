@@ -15,6 +15,7 @@ import (
 	clientV1Alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	typed_iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/iam.cnrm.cloud.google.com/v1beta1"
 	typed_nais_v1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
+	typed_nais_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 	typed_networking_istio_io_v1alpha3 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/networking.istio.io/v1alpha3"
 	typed_sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/sql.cnrm.cloud.google.com/v1beta1"
 	typed_storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/storage.cnrm.cloud.google.com/v1beta1"
@@ -400,6 +401,23 @@ func jwker(client typed_nais_v1.JwkerInterface, old, new *nais_v1.Jwker) func() 
 	}
 }
 
+func azureAdApplication(client typed_nais_v1alpha1.AzureAdApplicationInterface, old, new *nais_v1alpha1.AzureAdApplication) func() error {
+	log.Infof("creating or updating *nais_v1alpha1.AzureAdApplication for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -633,6 +651,17 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return jwker(c, nil, new)
 		}
 		return jwker(c, old, new)
+
+	case *nais_v1alpha1.AzureAdApplication:
+		c := customClient.NaisV1alpha1().AzureAdApplications(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return azureAdApplication(c, nil, new)
+		}
+		return azureAdApplication(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
@@ -915,6 +944,19 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			return err
 		}
 
+	case *nais_v1alpha1.AzureAdApplication:
+		c := customClient.NaisV1alpha1().AzureAdApplications(new.Namespace)
+		return func() error {
+			log.Infof("pre-deleting *nais_v1alpha1.AzureAdApplication for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *nais_v1alpha1.AzureAdApplication for %s", new.Name)
+			_, err = c.Create(new)
+			return err
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -1147,6 +1189,17 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		c := customClient.NaisV1().Jwkers(new.Namespace)
 		return func() error {
 			log.Infof("creating new *nais_v1.Jwker for %s", new.Name)
+			_, err := c.Create(new)
+			if err != nil && errors.IsAlreadyExists(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *nais_v1alpha1.AzureAdApplication:
+		c := customClient.NaisV1alpha1().AzureAdApplications(new.Namespace)
+		return func() error {
+			log.Infof("creating new *nais_v1alpha1.AzureAdApplication for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && errors.IsAlreadyExists(err) {
 				return nil
@@ -1456,6 +1509,20 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 		}
 	}
 
+	{
+		c := customClient.NaisV1alpha1().AzureAdApplications(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*nais_v1alpha1.AzureAdApplication", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*nais_v1alpha1.AzureAdApplication", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
 	return withOwnerReference(app, resources), nil
 }
 
@@ -1732,6 +1799,18 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		c := customClient.NaisV1().Jwkers(new.Namespace)
 		return func() error {
 			log.Infof("deleting *nais_v1.Jwker for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+
+			return err
+		}
+
+	case *nais_v1alpha1.AzureAdApplication:
+		c := customClient.NaisV1alpha1().AzureAdApplications(new.Namespace)
+		return func() error {
+			log.Infof("deleting *nais_v1alpha1.AzureAdApplication for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil

@@ -47,6 +47,7 @@ type Application struct {
 // ApplicationSpec contains the NAIS manifest.
 type ApplicationSpec struct {
 	AccessPolicy    *AccessPolicy         `json:"accessPolicy,omitempty"`
+	Azure           *Azure                `json:"azure,omitempty"`
 	GCP             *GCP                  `json:"gcp,omitempty"`
 	Env             []EnvVar              `json:"env,omitempty"`
 	EnvFrom         []EnvFrom             `json:"envFrom,omitempty"`
@@ -89,6 +90,15 @@ type ApplicationList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []Application `json:"items"`
+}
+
+type Azure struct {
+	Application *AzureApplication `json:"application"`
+}
+
+type AzureApplication struct {
+	Enabled   bool     `json:"enabled"`
+	ReplyURLs []string `json:"replyURLs,omitempty"`
 }
 
 type SecureLogs struct {

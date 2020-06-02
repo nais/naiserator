@@ -11,6 +11,7 @@ import (
 type NaisV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ApplicationsGetter
+	AzureAdApplicationsGetter
 }
 
 // NaisV1alpha1Client is used to interact with features provided by the nais.io group.
@@ -20,6 +21,10 @@ type NaisV1alpha1Client struct {
 
 func (c *NaisV1alpha1Client) Applications(namespace string) ApplicationInterface {
 	return newApplications(c, namespace)
+}
+
+func (c *NaisV1alpha1Client) AzureAdApplications(namespace string) AzureAdApplicationInterface {
+	return newAzureAdApplications(c, namespace)
 }
 
 // NewForConfig creates a new NaisV1alpha1Client for the given config.

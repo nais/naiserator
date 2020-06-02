@@ -56,6 +56,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=nais.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1alpha1().Applications().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("azureadapplications"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1alpha1().AzureAdApplications().Informer()}, nil
 
 		// Group=networking.istio.io, Version=v1alpha3
 	case v1alpha3.SchemeGroupVersion.WithResource("serviceentries"):

@@ -143,6 +143,12 @@ var i = []Service{
 		Type:      "*nais_v1.Jwker",
 		Client:    "customClient.NaisV1().Jwkers",
 	},
+	{
+		Name:      "azureAdApplication",
+		Interface: "typed_nais_v1alpha1.AzureAdApplicationInterface",
+		Type:      "*nais_v1alpha1.AzureAdApplication",
+		Client:    "customClient.NaisV1alpha1().AzureAdApplications",
+	},
 }
 
 func main() {

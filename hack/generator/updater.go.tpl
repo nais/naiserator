@@ -38,6 +38,7 @@ import (
 	nais_v1 "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais_v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	typed_nais_v1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1"
+	typed_nais_v1alpha1 "github.com/nais/naiserator/pkg/client/clientset/versioned/typed/nais.io/v1alpha1"
 )
 
 {{range .}}
