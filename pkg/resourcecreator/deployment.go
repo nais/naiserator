@@ -122,6 +122,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	if len(resourceOptions.AzureratorSecretName) > 0 {
 		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.AzureratorSecretName, nais.DefaultAzureratorMountPath)
+		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.AzureratorSecretName)
 	}
 
 	if vault.Enabled() && app.Spec.Vault.Enabled {
@@ -204,6 +205,11 @@ func podSpecWithAdditionalSecret(spec *corev1.PodSpec, secretName, mountPath str
 	spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(secretName))
 	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
 		fromFilesVolumeMount(secretName, "", mountPath))
+	return spec
+}
+
+func podSpecWithAdditionalEnvFromSecret(spec *corev1.PodSpec, secretName string) *corev1.PodSpec {
+	spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, envFromSecret(secretName))
 	return spec
 }
 

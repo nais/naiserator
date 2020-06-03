@@ -64,7 +64,10 @@ tests:
                     secret:
                       secretName: ^myapplication-.+$
                 containers:
-                  - volumeMounts:
+                  - envFrom:
+                      - secretRef:
+                          name: ^myapplication-.+$
+                    volumeMounts:
                       - name: ^myapplication-.+$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/azure
