@@ -10,12 +10,17 @@ import (
 
 type NaisV1Interface interface {
 	RESTClient() rest.Interface
+	AzureAdApplicationsGetter
 	JwkersGetter
 }
 
 // NaisV1Client is used to interact with features provided by the nais.io group.
 type NaisV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *NaisV1Client) AzureAdApplications(namespace string) AzureAdApplicationInterface {
+	return newAzureAdApplications(c, namespace)
 }
 
 func (c *NaisV1Client) Jwkers(namespace string) JwkerInterface {

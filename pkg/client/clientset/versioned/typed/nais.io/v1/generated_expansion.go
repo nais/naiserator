@@ -2,4 +2,6 @@
 
 package v1
 
+type AzureAdApplicationExpansion interface{}
+
 type JwkerExpansion interface{}

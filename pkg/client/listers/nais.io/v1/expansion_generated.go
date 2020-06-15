@@ -2,6 +2,14 @@
 
 package v1
 
+// AzureAdApplicationListerExpansion allows custom methods to be added to
+// AzureAdApplicationLister.
+type AzureAdApplicationListerExpansion interface{}
+
+// AzureAdApplicationNamespaceListerExpansion allows custom methods to be added to
+// AzureAdApplicationNamespaceLister.
+type AzureAdApplicationNamespaceListerExpansion interface{}
+
 // JwkerListerExpansion allows custom methods to be added to
 // JwkerLister.
 type JwkerListerExpansion interface{}

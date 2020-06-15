@@ -12,6 +12,10 @@ type FakeNaisV1 struct {
 	*testing.Fake
 }
 
+func (c *FakeNaisV1) AzureAdApplications(namespace string) v1.AzureAdApplicationInterface {
+	return &FakeAzureAdApplications{c, namespace}
+}
+
 func (c *FakeNaisV1) Jwkers(namespace string) v1.JwkerInterface {
 	return &FakeJwkers{c, namespace}
 }

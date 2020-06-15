@@ -50,14 +50,14 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Iam().V1beta1().IAMServiceAccounts().Informer()}, nil
 
 		// Group=nais.io, Version=v1
+	case v1.SchemeGroupVersion.WithResource("azureadapplications"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1().AzureAdApplications().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("jwkers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1().Jwkers().Informer()}, nil
 
 		// Group=nais.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1alpha1().Applications().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("azureadapplications"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1alpha1().AzureAdApplications().Informer()}, nil
 
 		// Group=networking.istio.io, Version=v1alpha3
 	case v1alpha3.SchemeGroupVersion.WithResource("serviceentries"):

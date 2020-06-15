@@ -23,7 +23,7 @@ input:
         enabled: true
 
 tests:
-  - apiVersion: nais.io/v1alpha1
+  - apiVersion: nais.io/v1
     kind: AzureAdApplication
     name: myapplication
     operation: CreateOrUpdate
@@ -37,7 +37,7 @@ tests:
         resource:
           spec: {}
 
-  - apiVersion: nais.io/v1alpha1
+  - apiVersion: nais.io/v1
     kind: AzureAdApplication
     name: myapplication
     operation: CreateOrUpdate
