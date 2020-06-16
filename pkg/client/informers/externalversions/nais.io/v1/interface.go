@@ -8,6 +8,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// AzureAdApplications returns a AzureAdApplicationInformer.
+	AzureAdApplications() AzureAdApplicationInformer
 	// Jwkers returns a JwkerInformer.
 	Jwkers() JwkerInformer
 }
@@ -21,6 +23,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// AzureAdApplications returns a AzureAdApplicationInformer.
+func (v *version) AzureAdApplications() AzureAdApplicationInformer {
+	return &azureAdApplicationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Jwkers returns a JwkerInformer.

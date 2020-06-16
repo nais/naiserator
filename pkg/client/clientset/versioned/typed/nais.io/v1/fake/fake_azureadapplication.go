@@ -3,7 +3,7 @@
 package fake
 
 import (
-	v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	naisiov1 "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -14,29 +14,29 @@ import (
 
 // FakeAzureAdApplications implements AzureAdApplicationInterface
 type FakeAzureAdApplications struct {
-	Fake *FakeNaisV1alpha1
+	Fake *FakeNaisV1
 	ns   string
 }
 
-var azureadapplicationsResource = schema.GroupVersionResource{Group: "nais.io", Version: "v1alpha1", Resource: "azureadapplications"}
+var azureadapplicationsResource = schema.GroupVersionResource{Group: "nais.io", Version: "v1", Resource: "azureadapplications"}
 
-var azureadapplicationsKind = schema.GroupVersionKind{Group: "nais.io", Version: "v1alpha1", Kind: "AzureAdApplication"}
+var azureadapplicationsKind = schema.GroupVersionKind{Group: "nais.io", Version: "v1", Kind: "AzureAdApplication"}
 
 // Get takes name of the azureAdApplication, and returns the corresponding azureAdApplication object, and an error if there is any.
-func (c *FakeAzureAdApplications) Get(name string, options v1.GetOptions) (result *v1alpha1.AzureAdApplication, err error) {
+func (c *FakeAzureAdApplications) Get(name string, options v1.GetOptions) (result *naisiov1.AzureAdApplication, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(azureadapplicationsResource, c.ns, name), &v1alpha1.AzureAdApplication{})
+		Invokes(testing.NewGetAction(azureadapplicationsResource, c.ns, name), &naisiov1.AzureAdApplication{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.AzureAdApplication), err
+	return obj.(*naisiov1.AzureAdApplication), err
 }
 
 // List takes label and field selectors, and returns the list of AzureAdApplications that match those selectors.
-func (c *FakeAzureAdApplications) List(opts v1.ListOptions) (result *v1alpha1.AzureAdApplicationList, err error) {
+func (c *FakeAzureAdApplications) List(opts v1.ListOptions) (result *naisiov1.AzureAdApplicationList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(azureadapplicationsResource, azureadapplicationsKind, c.ns, opts), &v1alpha1.AzureAdApplicationList{})
+		Invokes(testing.NewListAction(azureadapplicationsResource, azureadapplicationsKind, c.ns, opts), &naisiov1.AzureAdApplicationList{})
 
 	if obj == nil {
 		return nil, err
@@ -46,8 +46,8 @@ func (c *FakeAzureAdApplications) List(opts v1.ListOptions) (result *v1alpha1.Az
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.AzureAdApplicationList{ListMeta: obj.(*v1alpha1.AzureAdApplicationList).ListMeta}
-	for _, item := range obj.(*v1alpha1.AzureAdApplicationList).Items {
+	list := &naisiov1.AzureAdApplicationList{ListMeta: obj.(*naisiov1.AzureAdApplicationList).ListMeta}
+	for _, item := range obj.(*naisiov1.AzureAdApplicationList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -63,43 +63,43 @@ func (c *FakeAzureAdApplications) Watch(opts v1.ListOptions) (watch.Interface, e
 }
 
 // Create takes the representation of a azureAdApplication and creates it.  Returns the server's representation of the azureAdApplication, and an error, if there is any.
-func (c *FakeAzureAdApplications) Create(azureAdApplication *v1alpha1.AzureAdApplication) (result *v1alpha1.AzureAdApplication, err error) {
+func (c *FakeAzureAdApplications) Create(azureAdApplication *naisiov1.AzureAdApplication) (result *naisiov1.AzureAdApplication, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(azureadapplicationsResource, c.ns, azureAdApplication), &v1alpha1.AzureAdApplication{})
+		Invokes(testing.NewCreateAction(azureadapplicationsResource, c.ns, azureAdApplication), &naisiov1.AzureAdApplication{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.AzureAdApplication), err
+	return obj.(*naisiov1.AzureAdApplication), err
 }
 
 // Update takes the representation of a azureAdApplication and updates it. Returns the server's representation of the azureAdApplication, and an error, if there is any.
-func (c *FakeAzureAdApplications) Update(azureAdApplication *v1alpha1.AzureAdApplication) (result *v1alpha1.AzureAdApplication, err error) {
+func (c *FakeAzureAdApplications) Update(azureAdApplication *naisiov1.AzureAdApplication) (result *naisiov1.AzureAdApplication, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(azureadapplicationsResource, c.ns, azureAdApplication), &v1alpha1.AzureAdApplication{})
+		Invokes(testing.NewUpdateAction(azureadapplicationsResource, c.ns, azureAdApplication), &naisiov1.AzureAdApplication{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.AzureAdApplication), err
+	return obj.(*naisiov1.AzureAdApplication), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeAzureAdApplications) UpdateStatus(azureAdApplication *v1alpha1.AzureAdApplication) (*v1alpha1.AzureAdApplication, error) {
+func (c *FakeAzureAdApplications) UpdateStatus(azureAdApplication *naisiov1.AzureAdApplication) (*naisiov1.AzureAdApplication, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(azureadapplicationsResource, "status", c.ns, azureAdApplication), &v1alpha1.AzureAdApplication{})
+		Invokes(testing.NewUpdateSubresourceAction(azureadapplicationsResource, "status", c.ns, azureAdApplication), &naisiov1.AzureAdApplication{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.AzureAdApplication), err
+	return obj.(*naisiov1.AzureAdApplication), err
 }
 
 // Delete takes name of the azureAdApplication and deletes it. Returns an error if one occurs.
 func (c *FakeAzureAdApplications) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(azureadapplicationsResource, c.ns, name), &v1alpha1.AzureAdApplication{})
+		Invokes(testing.NewDeleteAction(azureadapplicationsResource, c.ns, name), &naisiov1.AzureAdApplication{})
 
 	return err
 }
@@ -108,17 +108,17 @@ func (c *FakeAzureAdApplications) Delete(name string, options *v1.DeleteOptions)
 func (c *FakeAzureAdApplications) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(azureadapplicationsResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.AzureAdApplicationList{})
+	_, err := c.Fake.Invokes(action, &naisiov1.AzureAdApplicationList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched azureAdApplication.
-func (c *FakeAzureAdApplications) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.AzureAdApplication, err error) {
+func (c *FakeAzureAdApplications) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *naisiov1.AzureAdApplication, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(azureadapplicationsResource, c.ns, name, pt, data, subresources...), &v1alpha1.AzureAdApplication{})
+		Invokes(testing.NewPatchSubresourceAction(azureadapplicationsResource, c.ns, name, pt, data, subresources...), &naisiov1.AzureAdApplication{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.AzureAdApplication), err
+	return obj.(*naisiov1.AzureAdApplication), err
 }

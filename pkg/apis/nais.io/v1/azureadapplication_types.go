@@ -1,8 +1,9 @@
-package v1alpha1
+package v1
 
 // +groupName="nais.io"
 
 import (
+	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,8 +34,8 @@ type AzureAdApplicationList struct {
 
 // AzureAdApplicationSpec defines the desired state of AzureAdApplication
 type AzureAdApplicationSpec struct {
-	ReplyUrls                 []AzureAdReplyUrl  `json:"replyUrls,omitempty"`
-	PreAuthorizedApplications []AccessPolicyRule `json:"preAuthorizedApplications,omitempty"`
+	ReplyUrls                 []AzureAdReplyUrl           `json:"replyUrls,omitempty"`
+	PreAuthorizedApplications []v1alpha1.AccessPolicyRule `json:"preAuthorizedApplications,omitempty"`
 	// LogoutUrl is the URL where Azure AD sends a request to have the application clear the user's session data.
 	// This is required if single sign-out should work correctly. Must start with 'https'
 	LogoutUrl string `json:"logoutUrl,omitempty"`

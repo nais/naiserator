@@ -4,22 +4,23 @@ import (
 	"net/url"
 	"path"
 
+	azureapp "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AzureAdApplication(app nais.Application, options ResourceOptions) nais.AzureAdApplication {
+func AzureAdApplication(app nais.Application, options ResourceOptions) azureapp.AzureAdApplication {
 	replyURLs := app.Spec.Azure.Application.ReplyURLs
 	if len(replyURLs) == 0 {
 		replyURLs = oauthCallbackURLs(app.Spec.Ingresses)
 	}
-	return nais.AzureAdApplication{
+	return azureapp.AzureAdApplication{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "AzureAdApplication",
-			APIVersion: "nais.io/v1alpha1",
+			APIVersion: "nais.io/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec: nais.AzureAdApplicationSpec{
+		Spec: azureapp.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, options.ClusterName),
 			SecretName:                getSecretName(app),
@@ -27,8 +28,8 @@ func AzureAdApplication(app nais.Application, options ResourceOptions) nais.Azur
 	}
 }
 
-func mapReplyURLs(urls []string) []nais.AzureAdReplyUrl {
-	maps := make([]nais.AzureAdReplyUrl, len(urls))
+func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
+	maps := make([]azureapp.AzureAdReplyUrl, len(urls))
 	for i := range urls {
 		maps[i].Url = urls[i]
 	}

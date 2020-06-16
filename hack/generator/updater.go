@@ -145,9 +145,9 @@ var i = []Service{
 	},
 	{
 		Name:      "azureAdApplication",
-		Interface: "typed_nais_v1alpha1.AzureAdApplicationInterface",
-		Type:      "*nais_v1alpha1.AzureAdApplication",
-		Client:    "customClient.NaisV1alpha1().AzureAdApplications",
+		Interface: "typed_nais_v1.AzureAdApplicationInterface",
+		Type:      "*nais_v1.AzureAdApplication",
+		Client:    "customClient.NaisV1().AzureAdApplications",
 	},
 }
 
