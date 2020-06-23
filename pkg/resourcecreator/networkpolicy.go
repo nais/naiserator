@@ -22,11 +22,18 @@ func networkPolicyRules(rules []nais.AccessPolicyRule, options ResourceOptions) 
 			},
 		}
 
-		if rule.Application == "*" {
+		if rule.Application == "*" && rule.Namespace == "*" {
+			networkPolicyPeer = networkingv1.NetworkPolicyPeer{
+				NamespaceSelector: &metav1.LabelSelector{},
+				PodSelector: &metav1.LabelSelector{},
+			}
+		}
+
+		if rule.Application == "*" && rule.Namespace != "*" {
 			networkPolicyPeer = networkingv1.NetworkPolicyPeer{PodSelector: &metav1.LabelSelector{}}
 		}
 
-		if rule.Namespace != "" {
+		if rule.Namespace != "" && rule.Namespace != "*" {
 			networkPolicyPeer.NamespaceSelector = &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"name": rule.Namespace,

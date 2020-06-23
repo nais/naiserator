@@ -1,0 +1,112 @@
+config:
+  description: vanilla application running in GCP with default configuration and access policies
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  JwkerEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    accessPolicy:
+      inbound:
+        rules:
+        - application: "*"
+          namespace: "*"
+      outbound:
+        rules:
+         - application: myapplication
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            egress:
+            - to:
+              - namespaceSelector:
+                  matchLabels:
+                    name: istio-system
+                podSelector:
+                  matchLabels:
+                    istio: pilot
+              - namespaceSelector:
+                  matchLabels:
+                    name: istio-system
+                podSelector:
+                  matchLabels:
+                    istio: mixer
+              - namespaceSelector:
+                  matchLabels:
+                    name: istio-system
+                podSelector:
+                  matchLabels:
+                    istio: ingressgateway
+              - namespaceSelector: {}
+                podSelector:
+                  matchLabels:
+                    k8s-app: kube-dns
+              - ipBlock:
+                  cidr: 0.0.0.0/0
+            - to:
+              - podSelector:
+                  matchLabels:
+                    app: myapplication
+            ingress:
+            - from:
+              - namespaceSelector:
+                  matchLabels:
+                    name: istio-system
+                podSelector:
+                  matchLabels:
+                    app: prometheus
+            - from:
+              - namespaceSelector: {}
+                podSelector: {}
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+            - Ingress
+            - Egress
+  - operation: CreateOrUpdate
+    apiVersion: security.istio.io/v1beta1
+    kind: AuthorizationPolicy
+    name: myapplication
+    match:
+      - name: "authorization policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            selector:
+              matchLabels:
+                app: myapplication
+            rules:
+              - from:
+                  - source:
+                      principals:
+                        - cluster.local/ns/*
+                to:
+                  - operation:
+                      methods:
+                        - '*'
+                      paths:
+                        - '*'
