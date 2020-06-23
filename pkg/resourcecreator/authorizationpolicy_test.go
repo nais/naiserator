@@ -16,7 +16,10 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	otherNamespace := "othernamespace"
 	otherApplication2 := "b"
 	otherNamespace2 := "othernamespace2"
+	astrix := "*"
 	resourceOptions := resourcecreator.NewResourceOptions()
+
+
 
 	t.Run("auth policy with no ingresses or access policies", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
@@ -62,5 +65,19 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 		authorizationPolicy := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
 		assert.Len(t, authorizationPolicy.Spec.Rules[0].From[0].Source.Principals, 2)
+	})
+	t.Run("auth policy to allow any app from any namespace", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{astrix, astrix, ""}}
+		authorizationPolicy := resourcecreator.AuthorizationPolicy(app, resourceOptions)
+		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
+		assert.Equal(t, "cluster.local/ns/*", authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
+	})
+	t.Run("auth policy to allow any app from given namespace", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{astrix, otherNamespace, ""}}
+		authorizationPolicy := resourcecreator.AuthorizationPolicy(app, resourceOptions)
+		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
+		assert.Equal(t, fmt.Sprintf("cluster.local/ns/%s/sa/*", otherNamespace), authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
 	})
 }
