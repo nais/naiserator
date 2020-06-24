@@ -95,16 +95,7 @@ func principals(app *nais.Application, options ResourceOptions) []string {
 		} else {
 			namespace = rule.Namespace
 		}
-		var tmp string
-		if rule.Application == "*" {
-			if namespace == "*" {
-				tmp = "cluster.local/ns/*"
-			} else {
-				tmp = fmt.Sprintf("cluster.local/ns/%s/sa/*", namespace)
-			}
-		} else {
-			tmp = fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)
-		}
+		tmp := fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application)
 		principals = append(principals, tmp)
 	}
 	return principals
