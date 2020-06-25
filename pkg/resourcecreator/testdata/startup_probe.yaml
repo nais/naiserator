@@ -1,0 +1,33 @@
+config:
+  description: startup probes are added
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    startup:
+      path: "liveness"
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created with startup probe"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - startupProbe:
+                      httpGet:
+                        path: "/liveness"
+                        port: 8080
