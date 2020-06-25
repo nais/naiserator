@@ -604,6 +604,24 @@ spec:
               type: object
             skipCaBundle:
               type: boolean
+            startup:
+              description: Liveness probe and readiness probe definitions.
+              properties:
+                failureThreshold:
+                  type: integer
+                initialDelay:
+                  type: integer
+                path:
+                  type: string
+                periodSeconds:
+                  type: integer
+                port:
+                  type: integer
+                timeout:
+                  type: integer
+              required:
+              - path
+              type: object
             strategy:
               properties:
                 type:

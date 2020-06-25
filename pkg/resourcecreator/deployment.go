@@ -297,6 +297,10 @@ func appContainer(app *nais.Application) corev1.Container {
 		c.ReadinessProbe = probe(app, *app.Spec.Readiness)
 	}
 
+	if app.Spec.Startup != nil && len(app.Spec.Startup.Path) > 0 {
+		c.StartupProbe = probe(app, *app.Spec.Startup)
+	}
+
 	return c
 }
 

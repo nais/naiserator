@@ -272,6 +272,11 @@ func (in *ApplicationSpec) DeepCopyInto(out *ApplicationSpec) {
 		*out = new(Service)
 		**out = **in
 	}
+	if in.Startup != nil {
+		in, out := &in.Startup, &out.Startup
+		*out = new(Probe)
+		**out = **in
+	}
 	if in.Strategy != nil {
 		in, out := &in.Strategy, &out.Strategy
 		*out = new(Strategy)
