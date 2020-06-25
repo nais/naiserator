@@ -1,5 +1,5 @@
 config:
-  description: liveness and readiness checks are added
+  description: startup probes are added
 
 input:
   kind: Application
@@ -11,10 +11,8 @@ input:
     labels:
       team: myteam
   spec:
-    liveness:
+    startup:
       path: "liveness"
-    readiness:
-      path: "readiness"
 
 tests:
   - apiVersion: apps/v1
@@ -23,20 +21,13 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: subset
-        name: "deployment created with liveness and readiness"
+        name: "deployment created with startup probe"
         resource:
           spec:
             template:
               spec:
                 containers:
-                  - livenessProbe:
-                      failureThreshold: 3
+                  - startupProbe:
                       httpGet:
                         path: "/liveness"
-                        port: 8080
-                      periodSeconds: 10
-                      timeoutSeconds: 1
-                    readinessProbe:
-                      httpGet:
-                        path: "/readiness"
                         port: 8080
