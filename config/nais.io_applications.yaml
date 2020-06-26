@@ -72,9 +72,9 @@ spec:
                     external:
                       items:
                         properties:
-                          host:
+                          address:
                             type: string
-                          ipaddress:
+                          host:
                             type: string
                           ports:
                             items:
