@@ -77,7 +77,6 @@ type ServiceEntry struct {
 }
 
 type ServiceEntrySpec struct {
-	Addresses  []string `json:"addresses,omitempty"`
 	Hosts      []string `json:"hosts"`
 	Location   string   `json:"location,omitempty"`
 	Resolution string   `json:"resolution"`

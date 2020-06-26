@@ -268,7 +268,6 @@ type AccessPolicyPortRule struct {
 
 type AccessPolicyExternalRule struct {
 	Host  string                 `json:"host"`
-	IPAddress string             `json:"ipaddress,omitempty"`
 	Ports []AccessPolicyPortRule `json:"ports,omitempty"`
 }
 

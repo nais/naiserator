@@ -28,32 +28,23 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 				Number:   443,
 			})
 		}
-		spec := serviceEntrySpec(ext.Host, ext.IPAddress, ports)
 		entry := &istio.ServiceEntry{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ServiceEntry",
 				APIVersion: IstioNetworkingAPIVersion,
 			},
 			ObjectMeta: meta,
-			Spec:       spec,
+			Spec: istio.ServiceEntrySpec{
+				Hosts:      []string{ext.Host},
+				Location:   IstioServiceEntryLocationExternal,
+				Resolution: IstioServiceEntryResolutionDNS,
+				Ports:      ports,
+			},
 		}
 		entries = append(entries, entry)
 	}
 
 	return entries
-}
-
-func serviceEntrySpec(host, address string, ports []istio.Port) istio.ServiceEntrySpec {
-	spec := istio.ServiceEntrySpec{
-		Hosts:      []string{host},
-		Location:   IstioServiceEntryLocationExternal,
-		Resolution: IstioServiceEntryResolutionDNS,
-		Ports:      ports,
-	}
-	if address != "" {
-		spec.Addresses = []string{address}
-	}
-	return spec
 }
 
 func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
