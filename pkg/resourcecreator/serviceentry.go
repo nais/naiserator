@@ -28,7 +28,7 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 				Number:   443,
 			})
 		}
-		spec := serviceEntrySpec(ext.Host, ext.Address, ports)
+		spec := serviceEntrySpec(ext.Host, ext.IPAddress, ports)
 		entry := &istio.ServiceEntry{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ServiceEntry",

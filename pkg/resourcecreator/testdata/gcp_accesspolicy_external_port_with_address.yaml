@@ -21,7 +21,7 @@ input:
       outbound:
         external:
           - host: external-service.com
-            address: 13.37.13.37
+            ipaddress: 13.37.13.37
             ports:
               - port: 8443
                 name: someservice
