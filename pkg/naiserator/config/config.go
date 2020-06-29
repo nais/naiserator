@@ -53,10 +53,15 @@ type Vault struct {
 	KeyValuePath       string `json:"kv-path"`
 }
 
+type HostAlias struct {
+	Host    string `json:"host"`
+	Address string `json:"address"`
+}
+
 type Config struct {
-	Bind                              string       `json:"bind"`
-	Informer                          Informer     `json:"informer"`
-	Synchronizer                      Synchronizer `json:"synchronizer"`
+	Bind                              string        `json:"bind"`
+	Informer                          Informer      `json:"informer"`
+	Synchronizer                      Synchronizer  `json:"synchronizer"`
 	Kubeconfig                        string       `json:"kubeconfig"`
 	ClusterName                       string       `json:"cluster-name"`
 	GoogleProjectId                   string       `json:"google-project-id"`
@@ -67,6 +72,7 @@ type Config struct {
 	Proxy                             Proxy        `json:"proxy"`
 	Vault                             Vault        `json:"vault"`
 	Kafka                             kafka.Config `json:"kafka"`
+	HostAliases                       []HostAlias  `json:"host-aliases"`
 }
 
 const (
@@ -156,7 +162,7 @@ func Print(redacted []string) {
 	keys.Sort()
 	for _, key := range keys {
 		if ok(key) {
-			log.Printf("%s: %s", key, viper.GetString(key))
+			log.Printf("%s: %v", key, viper.Get(key))
 		} else {
 			log.Printf("%s: ***REDACTED***", key)
 		}

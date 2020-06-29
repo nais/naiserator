@@ -1,0 +1,60 @@
+config:
+  description: specifying custom port and protocol for mesh-external services in gcp
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  HostAliases:
+    - Host: b27apvl00045.preprod.local
+      Address: 10.183.160.26
+    - Host: b27apvl00046.preprod.local
+      Address: 10.183.32.47
+    - Host: b27apvl00047.preprod.local
+      Address: 10.184.32.48
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+tests:
+  - match:
+    - type: subset
+      name: "common metadata"
+      resource:
+        metadata:
+          labels:
+            app: myapplication
+            team: myteam
+          ownerReferences:
+            - apiVersion: v1alpha1
+              kind: Application
+              name: myapplication
+              uid: "123456"
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    match:
+      - name: "hostAliases created"
+        type: subset
+        resource:
+          spec:
+            template:
+              spec:
+                hostAliases:
+                - hostnames:
+                  - b27apvl00045.preprod.local
+                  ip: 10.183.160.26
+                - hostnames:
+                  - b27apvl00046.preprod.local
+                  ip: 10.183.32.47
+                - hostnames:
+                  - b27apvl00047.preprod.local
+                  ip: 10.184.32.48

@@ -1,5 +1,9 @@
 package resourcecreator
 
+import (
+	"github.com/nais/naiserator/pkg/naiserator/config"
+)
+
 // ResourceOptions defines customizations for resource objects.
 type ResourceOptions struct {
 	NumReplicas                 int32
@@ -13,6 +17,7 @@ type ResourceOptions struct {
 	JwkerSecretName             string
 	AzureratorEnabled           bool
 	AzureratorSecretName        string
+	HostAliases                 []config.HostAlias
 }
 
 // NewResourceOptions creates a struct with the default resource options.

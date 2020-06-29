@@ -105,6 +105,7 @@ func run() error {
 	resourceOptions.ClusterName = cfg.ClusterName
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
+	resourceOptions.HostAliases = cfg.HostAliases
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
 	applicationClientset := createApplicationClientset(kubeconfig)

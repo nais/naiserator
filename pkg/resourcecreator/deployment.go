@@ -102,6 +102,11 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		for _, instance := range app.Spec.GCP.SqlInstances {
 			podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 5432, resourceOptions.GoogleTeamProjectId))
 		}
+
+	}
+
+	if len(resourceOptions.HostAliases) > 0 {
+		podSpec.HostAliases = hostAliases(resourceOptions)
 	}
 
 	if app.Spec.LeaderElection {
@@ -144,6 +149,15 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	return podSpec, err
+}
+
+func hostAliases(resourceOptions ResourceOptions) []corev1.HostAlias {
+	var hostAliases []corev1.HostAlias
+
+	for _, hostAlias := range resourceOptions.HostAliases {
+		hostAliases = append(hostAliases, corev1.HostAlias{Hostnames: []string{hostAlias.Host}, IP: hostAlias.Address})
+	}
+	return hostAliases
 }
 
 func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, projectId string) corev1.Container {
