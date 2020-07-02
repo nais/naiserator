@@ -7,11 +7,12 @@ import (
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func VirtualServices(app *nais.Application) ([]*istio.VirtualService, error) {
-	vses := make([]*istio.VirtualService, 0)
+func VirtualServices(app *nais.Application, gatewayMappings []config.GatewayMapping) ([]*istio.VirtualService, error) {
+	var vses []*istio.VirtualService
 
 	for index, ingress := range app.Spec.Ingresses {
 		parsedUrl, err := url.Parse(ingress)
@@ -27,16 +28,23 @@ func VirtualServices(app *nais.Application) ([]*istio.VirtualService, error) {
 		}
 
 		name := fmt.Sprintf("%s-%02d", app.Name, index)
-		vs := virtualService(*parsedUrl, app, name)
+		vs := virtualService(*parsedUrl, gatewayMappings, app, name)
 		vses = append(vses, &vs)
 	}
 
 	return vses, nil
 }
 
-func virtualService(ingress url.URL, app *nais.Application, name string) istio.VirtualService {
-	domainID := istioDomainID(ingress)
+func Gateway(ingress url.URL, mappings []config.GatewayMapping) string {
+	for _, mapping := range mappings {
+		if strings.HasSuffix(ingress.Host, mapping.DomainSuffix) {
+			return mapping.GatewayName
+		}
+	}
+	return ""
+}
 
+func virtualService(ingress url.URL, gatewayMappings []config.GatewayMapping, app *nais.Application, name string) istio.VirtualService {
 	objectMeta := app.CreateObjectMetaWithName(name)
 
 	return istio.VirtualService{
@@ -47,7 +55,7 @@ func virtualService(ingress url.URL, app *nais.Application, name string) istio.V
 		ObjectMeta: objectMeta,
 		Spec: istio.VirtualServiceSpec{
 			Gateways: []string{
-				fmt.Sprintf(IstioGatewayPrefix, domainID),
+				Gateway(ingress, gatewayMappings),
 			},
 			Hosts: []string{ingress.Hostname()},
 			HTTP: []istio.HTTPRoute{
@@ -74,13 +82,4 @@ func virtualService(ingress url.URL, app *nais.Application, name string) istio.V
 			},
 		},
 	}
-}
-
-// returns the mid-level and top-level domain separated with a dash
-func istioDomainID(ingress url.URL) string {
-	parts := strings.Split(ingress.Hostname(), ".")
-	if len(parts) > 2 {
-		parts = parts[len(parts)-2:]
-	}
-	return strings.Join(parts, "-")
 }

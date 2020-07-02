@@ -119,7 +119,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	if resourceOptions.AccessPolicy {
 		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
-		vses, err := VirtualServices(app)
+		vses, err := VirtualServices(app, resourceOptions.GatewayMappings)
 
 		if err != nil {
 			return nil, fmt.Errorf("unable to create VirtualServices: %s", err)

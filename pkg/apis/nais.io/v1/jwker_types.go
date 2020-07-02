@@ -7,7 +7,7 @@ import (
 
 type JwkerSpec struct {
 	AccessPolicy *v1alpha1.AccessPolicy `json:"accessPolicy"`
-	SecretName   string        `json:"secretName"`
+	SecretName   string                 `json:"secretName"`
 }
 
 // JwkerStatus defines the observed state of Jwker
