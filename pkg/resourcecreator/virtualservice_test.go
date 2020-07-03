@@ -1,9 +1,10 @@
 package resourcecreator_test
 
 import (
-	"fmt"
+	"net/url"
 	"testing"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -11,42 +12,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGatewayResolving(t *testing.T) {
+	dashDomain := ".dash-domain.tld"
+	subDomain := ".sub.domain.tld"
+
+	mappings := []config.GatewayMapping{
+		{dashDomain, "dashdomain-gateway"},
+		{subDomain, "subdomain-gateway"},
+	}
+
+	ingressDashDomain := "https://x" + dashDomain
+	ingressDashDomainWithPath := "https://x" + dashDomain + "/path"
+	ingressSubDomain := "https://x" + subDomain
+	ingressSubDomainWithPath := "https://x" + subDomain + "/path"
+
+	assert.Equal(t, "dashdomain-gateway", resourcecreator.Gateway(asUrl(ingressDashDomain), mappings))
+	assert.Equal(t, "dashdomain-gateway", resourcecreator.Gateway(asUrl(ingressDashDomainWithPath), mappings))
+	assert.Equal(t, "subdomain-gateway", resourcecreator.Gateway(asUrl(ingressSubDomain), mappings))
+	assert.Equal(t, "subdomain-gateway", resourcecreator.Gateway(asUrl(ingressSubDomainWithPath), mappings))
+}
+
+func asUrl(ingress string) url.URL {
+	u, err := url.Parse(ingress)
+	if err != nil {
+		panic("unable to parse url: " + ingress)
+	}
+	return *u
+}
+
 func TestVirtualService(t *testing.T) {
-	t.Run("virtualservices have correct gateways", func(t *testing.T) {
-		ingresses := []string{
-			"https://host.no",
-			"https://second.host.no",
-			"https://subdomain.third.host.no",
-		}
-
-		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = ingresses
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		vses, err := resourcecreator.VirtualServices(app)
-		assert.Len(t, vses, 3)
-
-		for i := range vses {
-			assert.Equal(t, fmt.Sprintf(resourcecreator.IstioGatewayPrefix, "host-no"), vses[i].Spec.Gateways[0])
-		}
-	})
-
-	t.Run("virtualservice gateway copes with missing TLD", func(t *testing.T) {
-		ingresses := []string{
-			"https://foo",
-		}
-
-		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = ingresses
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		vses, err := resourcecreator.VirtualServices(app)
-		assert.Len(t, vses, 1)
-		assert.Equal(t, fmt.Sprintf(resourcecreator.IstioGatewayPrefix, "foo"), vses[0].Spec.Gateways[0])
-	})
-
 	t.Run("virtualservices not created on invalid ingress", func(t *testing.T) {
 		ingresses := []string{
 			"host.no",
@@ -57,7 +51,7 @@ func TestVirtualService(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		vses, err := resourcecreator.VirtualServices(app)
+		vses, err := resourcecreator.VirtualServices(app, nil)
 		assert.Error(t, err)
 		assert.Nil(t, vses)
 	})
@@ -72,10 +66,14 @@ func TestVirtualService(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		vses, err := resourcecreator.VirtualServices(app)
+		vses, err := resourcecreator.VirtualServices(app, []config.GatewayMapping{{
+			DomainSuffix: ".host.no",
+			GatewayName:  "istio-system/ingress-gateway-host-no",
+		}})
+
 		assert.Len(t, vses, 1)
 
-		assert.Equal(t, fmt.Sprintf(resourcecreator.IstioGatewayPrefix, "host-no"), vses[0].Spec.Gateways[0])
+		assert.Equal(t, "istio-system/ingress-gateway-host-no", vses[0].Spec.Gateways[0])
 		assert.Len(t, vses[0].Spec.HTTP, 1)
 		assert.Len(t, vses[0].Spec.HTTP[0].Route, 1)
 		assert.Len(t, vses[0].Spec.HTTP[0].Match, 1)

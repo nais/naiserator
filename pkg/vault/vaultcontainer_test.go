@@ -1,10 +1,10 @@
 package vault_test
 
 import (
-	"testing"
-	"github.com/spf13/viper"
 	"github.com/nais/naiserator/pkg/vault"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestFeatureFlagging(t *testing.T) {

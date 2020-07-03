@@ -53,26 +53,32 @@ type Vault struct {
 	KeyValuePath       string `json:"kv-path"`
 }
 
+type GatewayMapping struct {
+	DomainSuffix string `json:"domainSuffix"`
+	GatewayName  string `json:"gatewayName"`
+}
+
 type HostAlias struct {
 	Host    string `json:"host"`
 	Address string `json:"address"`
 }
 
 type Config struct {
-	Bind                              string        `json:"bind"`
-	Informer                          Informer      `json:"informer"`
-	Synchronizer                      Synchronizer  `json:"synchronizer"`
-	Kubeconfig                        string       `json:"kubeconfig"`
-	ClusterName                       string       `json:"cluster-name"`
-	GoogleProjectId                   string       `json:"google-project-id"`
-	GoogleCloudSQLProxyContainerImage string       `json:"google-cloud-sql-proxy-container-image"`
-	Log                               Log          `json:"log"`
-	Features                          Features     `json:"features"`
-	Securelogs                        Securelogs   `json:"securelogs"`
-	Proxy                             Proxy        `json:"proxy"`
-	Vault                             Vault        `json:"vault"`
-	Kafka                             kafka.Config `json:"kafka"`
-	HostAliases                       []HostAlias  `json:"host-aliases"`
+	Bind                              string           `json:"bind"`
+	Informer                          Informer         `json:"informer"`
+	Synchronizer                      Synchronizer     `json:"synchronizer"`
+	Kubeconfig                        string           `json:"kubeconfig"`
+	ClusterName                       string           `json:"cluster-name"`
+	GoogleProjectId                   string           `json:"google-project-id"`
+	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
+	Log                               Log              `json:"log"`
+	Features                          Features         `json:"features"`
+	Securelogs                        Securelogs       `json:"securelogs"`
+	Proxy                             Proxy            `json:"proxy"`
+	Vault                             Vault            `json:"vault"`
+	Kafka                             kafka.Config     `json:"kafka"`
+	HostAliases                       []HostAlias      `json:"host-aliases"`
+	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
 }
 
 const (

@@ -106,6 +106,11 @@ func run() error {
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
 	resourceOptions.HostAliases = cfg.HostAliases
+	resourceOptions.GatewayMappings = cfg.GatewayMappings
+
+	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
+		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the Virtual Service based on the provided ingresses")
+	}
 
 	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
 	applicationClientset := createApplicationClientset(kubeconfig)

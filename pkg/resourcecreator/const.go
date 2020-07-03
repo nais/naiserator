@@ -16,8 +16,7 @@ const (
 	IstioNamespace                          = "istio-system"                         // Which namespace Istio is installed in
 	IstioServiceEntryLocationExternal       = "MESH_EXTERNAL"                        // Service entries external to the cluster
 	IstioServiceEntryResolutionDNS          = "DNS"                                  // Service entry lookup type
-	IstioGatewayPrefix                      = "istio-system/ingress-gateway-%s"
-	IstioVirtualServiceTotalWeight    int32 = 100 // The total weight of all routes must equal 100
+	IstioVirtualServiceTotalWeight    int32 = 100                                    // The total weight of all routes must equal 100
 	GoogleIAMAPIVersion                     = "iam.cnrm.cloud.google.com/v1beta1"
 	GoogleIAMServiceAccountNamespace        = "serviceaccounts"
 	GoogleStorageAPIVersion                 = "storage.cnrm.cloud.google.com/v1beta1"

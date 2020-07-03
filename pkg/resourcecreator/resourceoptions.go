@@ -18,6 +18,7 @@ type ResourceOptions struct {
 	AzureratorEnabled           bool
 	AzureratorSecretName        string
 	HostAliases                 []config.HostAlias
+	GatewayMappings             []config.GatewayMapping
 }
 
 // NewResourceOptions creates a struct with the default resource options.
