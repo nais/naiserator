@@ -28,14 +28,17 @@ func VirtualServices(app *nais.Application, gatewayMappings []config.GatewayMapp
 		}
 
 		name := fmt.Sprintf("%s-%02d", app.Name, index)
-		vs := virtualService(*parsedUrl, gatewayMappings, app, name)
-		vses = append(vses, &vs)
+		gateway := ResolveGateway(*parsedUrl, gatewayMappings)
+		if gateway != "" {
+			vs := virtualService(*parsedUrl, app, gateway, name)
+			vses = append(vses, &vs)
+		}
 	}
 
 	return vses, nil
 }
 
-func Gateway(ingress url.URL, mappings []config.GatewayMapping) string {
+func ResolveGateway(ingress url.URL, mappings []config.GatewayMapping) string {
 	for _, mapping := range mappings {
 		if strings.HasSuffix(ingress.Host, mapping.DomainSuffix) {
 			return mapping.GatewayName
@@ -44,7 +47,7 @@ func Gateway(ingress url.URL, mappings []config.GatewayMapping) string {
 	return ""
 }
 
-func virtualService(ingress url.URL, gatewayMappings []config.GatewayMapping, app *nais.Application, name string) istio.VirtualService {
+func virtualService(ingress url.URL, app *nais.Application, gateway, name string) istio.VirtualService {
 	objectMeta := app.CreateObjectMetaWithName(name)
 
 	return istio.VirtualService{
@@ -55,7 +58,7 @@ func virtualService(ingress url.URL, gatewayMappings []config.GatewayMapping, ap
 		ObjectMeta: objectMeta,
 		Spec: istio.VirtualServiceSpec{
 			Gateways: []string{
-				Gateway(ingress, gatewayMappings),
+				gateway,
 			},
 			Hosts: []string{ingress.Hostname()},
 			HTTP: []istio.HTTPRoute{

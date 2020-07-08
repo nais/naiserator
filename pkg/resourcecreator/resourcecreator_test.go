@@ -11,6 +11,7 @@ import (
 	istio_networking_crd "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	google_storage_crd "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -186,6 +187,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []string{"https://host.domain.tld"}
 		opts := resourcecreator.NewResourceOptions()
+		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", GatewayName: "gateway"}}
 		opts.AccessPolicy = true
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -203,6 +205,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
+		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".bar", GatewayName: "gateway"}}
 		app.Spec.Ingresses = []string{"https://foo.bar"}
 
 		err := nais.ApplyDefaults(app)

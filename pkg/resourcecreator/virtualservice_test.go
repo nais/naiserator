@@ -26,10 +26,10 @@ func TestGatewayResolving(t *testing.T) {
 	ingressSubDomain := "https://x" + subDomain
 	ingressSubDomainWithPath := "https://x" + subDomain + "/path"
 
-	assert.Equal(t, "dashdomain-gateway", resourcecreator.Gateway(asUrl(ingressDashDomain), mappings))
-	assert.Equal(t, "dashdomain-gateway", resourcecreator.Gateway(asUrl(ingressDashDomainWithPath), mappings))
-	assert.Equal(t, "subdomain-gateway", resourcecreator.Gateway(asUrl(ingressSubDomain), mappings))
-	assert.Equal(t, "subdomain-gateway", resourcecreator.Gateway(asUrl(ingressSubDomainWithPath), mappings))
+	assert.Equal(t, "dashdomain-gateway", resourcecreator.ResolveGateway(asUrl(ingressDashDomain), mappings))
+	assert.Equal(t, "dashdomain-gateway", resourcecreator.ResolveGateway(asUrl(ingressDashDomainWithPath), mappings))
+	assert.Equal(t, "subdomain-gateway", resourcecreator.ResolveGateway(asUrl(ingressSubDomain), mappings))
+	assert.Equal(t, "subdomain-gateway", resourcecreator.ResolveGateway(asUrl(ingressSubDomainWithPath), mappings))
 }
 
 func asUrl(ingress string) url.URL {
