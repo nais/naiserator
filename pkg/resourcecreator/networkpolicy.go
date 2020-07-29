@@ -133,6 +133,10 @@ func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolic
 		{
 			To: []networkingv1.NetworkPolicyPeer{
 				{
+					PodSelector:       labelSelector("istio", "istiod"),
+					NamespaceSelector: labelSelector("name", IstioNamespace),
+				},
+				{
 					PodSelector:       labelSelector("istio", "pilot"),
 					NamespaceSelector: labelSelector("name", IstioNamespace),
 				},
