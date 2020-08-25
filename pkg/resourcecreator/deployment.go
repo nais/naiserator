@@ -123,6 +123,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	if len(resourceOptions.JwkerSecretName) > 0 {
 		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.JwkerSecretName, nais.DefaultJwkerMountPath)
+		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.JwkerSecretName)
 	}
 
 	if len(resourceOptions.AzureratorSecretName) > 0 {
