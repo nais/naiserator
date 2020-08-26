@@ -18,14 +18,22 @@ func TestJwker(t *testing.T) {
 	otherNamespace2 := "othernamespace2"
 	otherApplication3 := "c"
 
-	t.Run("no jwker for app with no access policy", func(t *testing.T) {
+	fixture := func() *nais.Application {
 		app := fixtures.MinimalApplication()
+		app.Spec.TokenX = &nais.TokenX{
+			Enabled: true,
+		}
+		return app
+	}
+
+	t.Run("no jwker for app with no access policy", func(t *testing.T) {
+		app := fixture()
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Empty(t, jwker)
 	})
 
 	t.Run("one inbound without cluster/namespace and no outbound", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
+		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, "", ""}}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
@@ -37,7 +45,7 @@ func TestJwker(t *testing.T) {
 	})
 
 	t.Run("one inbound with cluster/namespace and no outbound", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
+		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
@@ -49,7 +57,7 @@ func TestJwker(t *testing.T) {
 	})
 
 	t.Run("one outbound and no inbound", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
+		app := fixture()
 		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 1)
@@ -61,7 +69,7 @@ func TestJwker(t *testing.T) {
 	})
 
 	t.Run("multiple inbound and no outbound", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
+		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{
 			{
 				otherApplication, otherNamespace, otherCluster,
@@ -89,7 +97,7 @@ func TestJwker(t *testing.T) {
 	})
 
 	t.Run("multiple outbound and no inbound", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
+		app := fixture()
 		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{
 			{
 				otherApplication, otherNamespace, otherCluster,
@@ -117,7 +125,7 @@ func TestJwker(t *testing.T) {
 	})
 	//
 	t.Run("multiple inbound and multiple outbound", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
+		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{
 			{
 				otherApplication, otherNamespace, otherCluster,
