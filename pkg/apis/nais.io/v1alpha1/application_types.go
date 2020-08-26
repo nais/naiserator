@@ -68,6 +68,7 @@ type ApplicationSpec struct {
 	SkipCaBundle    bool                  `json:"skipCaBundle,omitempty"`
 	Startup         *Probe                `json:"startup,omitempty"`
 	Strategy        *Strategy             `json:"strategy,omitempty"`
+	TokenX          *TokenX               `json:"tokenx,omitempty"`
 	Vault           *Vault                `json:"vault,omitempty"`
 	WebProxy        bool                  `json:"webproxy,omitempty"`
 
@@ -95,6 +96,11 @@ type ApplicationList struct {
 
 type Azure struct {
 	Application *AzureApplication `json:"application"`
+}
+
+type TokenX struct {
+	// if enabled, the application will have a jwker secret injected
+	Enabled bool `json:"tokenx"`
 }
 
 type AzureApplication struct {
