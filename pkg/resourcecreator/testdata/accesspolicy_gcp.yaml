@@ -170,24 +170,3 @@ tests:
               - number: 443
                 protocol: HTTPS
                 name: https
-
-  - operation: CreateOrUpdate
-    apiVersion: apps/v1
-    kind: Deployment
-    name: myapplication
-    match:
-      - name: "deployment contains jwker secrets"
-        type: regex
-        resource:
-          spec:
-            template:
-              spec:
-                volumes:
-                  - name: ^myapplication-.+$
-                    secret:
-                      secretName: ^myapplication-.+$
-                containers:
-                  - volumeMounts:
-                      - name: ^myapplication-.+$
-                        readOnly: true
-                        mountPath: /var/run/secrets/nais.io/jwker
