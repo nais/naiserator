@@ -414,12 +414,12 @@ spec:
               type: object
             tokenx:
               properties:
-                tokenx:
+                enabled:
                   description: if enabled, the application will have a jwker secret
                     injected
                   type: boolean
               required:
-              - tokenx
+              - enabled
               type: object
             vault:
               properties:

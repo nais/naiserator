@@ -100,7 +100,7 @@ type Azure struct {
 
 type TokenX struct {
 	// if enabled, the application will have a jwker secret injected
-	Enabled bool `json:"tokenx"`
+	Enabled bool `json:"enabled"`
 }
 
 type AzureApplication struct {
