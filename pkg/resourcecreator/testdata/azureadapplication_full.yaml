@@ -33,6 +33,7 @@ input:
     ingresses:
       - https://my.application/foo/bar
       - https://my.application/foo/bar/baz
+    tenant: nav.no
 
 tests:
   - apiVersion: nais.io/v1
@@ -57,3 +58,4 @@ tests:
             replyUrls:
               - url: "https://my.application/foo/bar/oauth2/callback"
               - url: "https://my.application/foo/bar/baz/oauth2/callback"
+            tenant: nav.no

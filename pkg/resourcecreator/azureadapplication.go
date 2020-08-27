@@ -1,19 +1,24 @@
 package resourcecreator
 
 import (
-	"net/url"
-	"path"
-
 	azureapp "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"net/url"
+	"path"
+)
+
+const (
+	AzureApplicationTenantNav = "nav.no"
 )
 
 func AzureAdApplication(app nais.Application, options ResourceOptions) azureapp.AzureAdApplication {
 	replyURLs := app.Spec.Azure.Application.ReplyURLs
+
 	if len(replyURLs) == 0 {
 		replyURLs = oauthCallbackURLs(app.Spec.Ingresses)
 	}
+
 	return azureapp.AzureAdApplication{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "AzureAdApplication",
@@ -23,6 +28,7 @@ func AzureAdApplication(app nais.Application, options ResourceOptions) azureapp.
 		Spec: azureapp.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, options.ClusterName),
+			Tenant:                    getTenant(app),
 			SecretName:                getSecretName(app),
 		},
 	}
@@ -44,4 +50,12 @@ func oauthCallbackURLs(ingresses []string) []string {
 		urls[i] = u.String()
 	}
 	return urls
+}
+
+func getTenant(app nais.Application) string {
+	tenant := app.Spec.Azure.Application.Tenant
+	if len(tenant) == 0 {
+		return AzureApplicationTenantNav
+	}
+	return tenant
 }

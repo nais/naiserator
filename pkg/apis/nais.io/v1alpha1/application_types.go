@@ -106,6 +106,8 @@ type TokenX struct {
 type AzureApplication struct {
 	Enabled   bool     `json:"enabled"`
 	ReplyURLs []string `json:"replyURLs,omitempty"`
+	// +kubebuilder:validation:Enum=nav.no;trygdeetaten.no
+	Tenant string `json:"tenant,omitempty"`
 }
 
 type SecureLogs struct {
