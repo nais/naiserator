@@ -1,5 +1,5 @@
 config:
-  description: egress rules will create network policies, service entries, and jwker resources
+  description: egress rules will create network policies and service entries
 
 resourceoptions:
   AccessPolicy: true
@@ -45,33 +45,3 @@ tests:
                     podSelector:
                       matchLabels:
                         app: foo
-
-  - apiVersion: nais.io/v1
-    kind: Jwker
-    name: myapplication
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "outbound access policy rules for jwker"
-        resource:
-          spec:
-            accessPolicy:
-              outbound:
-                rules:
-                  - application: foo
-                    cluster: mycluster
-                    namespace: bar
-                  - application: foo
-                    cluster: othercluster
-                    namespace: bar
-
-  - apiVersion: nais.io/v1
-    kind: Jwker
-    name: myapplication
-    operation: CreateOrUpdate
-    match:
-      - type: regex
-        name: "auto-generated secret name"
-        resource:
-          spec:
-            secretName: ^myapplication-.+$

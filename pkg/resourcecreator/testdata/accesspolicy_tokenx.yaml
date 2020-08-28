@@ -1,0 +1,100 @@
+config:
+  description: egress rules with tokenx enabled will create network policies, service entries, and jwker resources
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  JwkerEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    accessPolicy:
+      outbound:
+        rules:
+          - application: foo
+            namespace: bar
+          - application: foo
+            namespace: bar
+            cluster: othercluster
+    tokenx:
+      enabled: true
+
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "egress and ingress network policies"
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: bar
+                    podSelector:
+                      matchLabels:
+                        app: foo
+
+  - apiVersion: nais.io/v1
+    kind: Jwker
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "outbound access policy rules for jwker"
+        resource:
+          spec:
+            accessPolicy:
+              outbound:
+                rules:
+                  - application: foo
+                    cluster: mycluster
+                    namespace: bar
+                  - application: foo
+                    cluster: othercluster
+                    namespace: bar
+
+  - apiVersion: nais.io/v1
+    kind: Jwker
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "auto-generated secret name"
+        resource:
+          spec:
+            secretName: ^myapplication-.+$
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains jwker secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^myapplication-.+$
+                    secret:
+                      secretName: ^myapplication-.+$
+                containers:
+                  - volumeMounts:
+                      - name: ^myapplication-.+$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/jwker

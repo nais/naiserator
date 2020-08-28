@@ -92,10 +92,12 @@ The tool _controller-gen_ is used by `make crd` to generate a CRD YAML file usin
 `pkg/apis/nais.io/v1alpha1/*_types.go`. This YAML file should not be edited by hand. Any changes needed should
 go directly into the Go file as magic annotations.
 
+The CRD spec will be generated in `config/crd/nais.io_applications.yaml`.
+
 Check out the [controller-gen documentation](https://book.kubebuilder.io/reference/generating-crd.html) if unsure.
 
-A known working version of controller-gen is `v0.2.1`. Download with
+A known working version of controller-gen is `v0.2.5`. Download with
 
 ```
-go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.1
+go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
 ```

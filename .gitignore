@@ -5,5 +5,4 @@ cmd/naiserator/naiserator
 vendor/
 cover.out
 ./naiserator
-/config/crd/
 *.proto

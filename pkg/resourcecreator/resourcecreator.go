@@ -34,7 +34,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	}
 
-	if resourceOptions.JwkerEnabled {
+	if resourceOptions.JwkerEnabled && app.Spec.TokenX != nil && app.Spec.TokenX.Enabled {
 		jwker := Jwker(app, resourceOptions.ClusterName)
 		if jwker != nil {
 			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
