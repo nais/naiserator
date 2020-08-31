@@ -127,6 +127,11 @@ spec:
                       items:
                         type: string
                       type: array
+                    tenant:
+                      enum:
+                      - nav.no
+                      - trygdeetaten.no
+                      type: string
                   required:
                   - enabled
                   type: object

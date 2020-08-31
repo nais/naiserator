@@ -1,0 +1,36 @@
+config:
+  description: azure application with explicitly targeted tenant
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  AzureratorEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    azure:
+      application:
+        enabled: true
+        tenant: trygdeetaten.no
+
+tests:
+  - apiVersion: nais.io/v1
+    kind: AzureAdApplication
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "tenant is set"
+        resource:
+          spec:
+            tenant: trygdeetaten.no

@@ -29,13 +29,14 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: exact
-        name: "spec contains only secretName and nothing else"
+        name: "spec contains only secretName and tenant and nothing else"
         exclude:
           - .status
           - .metadata
           - .spec.secretName
         resource:
-          spec: {}
+          spec:
+            tenant: nav.no
 
   - apiVersion: nais.io/v1
     kind: AzureAdApplication
