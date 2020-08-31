@@ -18,7 +18,7 @@ type PortSelector struct {
 
 type Destination struct {
 	Host   string       `json:"host"`
-	Subset string       `json:"subset"`
+	Subset string       `json:"subset,omitempty"`
 	Port   PortSelector `json:"port"`
 }
 
