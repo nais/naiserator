@@ -53,7 +53,6 @@ func ingressGatewayRule() *istio.Rule {
 		To: []*istio.Rule_To{
 			{
 				Operation: &istio.Operation{
-					Methods: []string{"*"},
 					Paths:   []string{"*"},
 				},
 			},
