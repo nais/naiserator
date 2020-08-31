@@ -18,6 +18,8 @@ input:
       team: myteam
   spec:
     image: navikt/myapplication:1.2.3
+    ingresses:
+      - 'https://myapplication.dev.adeo.no'
     accessPolicy:
       inbound:
         rules:
@@ -70,6 +72,13 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         name: t1
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                    podSelector:
+                      matchLabels:
+                        istio: ingressgateway
             egress:
               - to:
                   - podSelector:
@@ -141,13 +150,19 @@ tests:
               - from:
                   - source:
                       principals:
+                        - 'cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account'
+                to:
+                  - operation:
+                      paths:
+                        - '*'
+              - from:
+                  - source:
+                      principals:
                         - cluster.local/ns/mynamespace/sa/app1
                         - cluster.local/ns/q1/sa/app2
                         - cluster.local/ns/t1/sa/*
                 to:
                   - operation:
-                      methods:
-                        - '*'
                       paths:
                         - '*'
 
