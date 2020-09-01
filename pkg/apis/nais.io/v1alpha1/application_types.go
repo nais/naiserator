@@ -103,6 +103,8 @@ type Azure struct {
 type TokenX struct {
 	// if enabled, the application will have a jwker secret injected
 	Enabled bool `json:"enabled"`
+	// if enabled, secrets for TokenX will be mounted as files only, i.e. not as env.
+	MountSecretsAsFilesOnly bool `json:"mountSecretsAsFilesOnly,omitempty"`
 }
 
 type AzureApplication struct {
