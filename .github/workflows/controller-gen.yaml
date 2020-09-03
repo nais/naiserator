@@ -17,7 +17,7 @@ jobs:
       - name: Run make crd
         run: make crd
       - name: Check if no diff
-        run: git diff-index --quiet HEAD --
+        run: git status --porcelain=v1 2>/dev/null && "git is clean"
       - name: Was there a diff?
         if: ${{ failure() }}
         run: |
