@@ -1,0 +1,27 @@
+name: Have you rememberd to run code generation
+
+on: push
+jobs:
+  make-crd:
+    name: Checking for missing code generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: Go get controller-gen
+        run: go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
+      - name: Go get goimports
+        run: go get golang.org/x/tools/cmd/goimports
+      - name: Run code generation
+        run: make crd codegen-crd codegen-updater
+      - name: Check if no diff
+        run: test -z "$(git status --porcelain=v1 2>/dev/null)"
+      - name: Code generation has been forgotten
+        if: ${{ failure() }}
+        run: |
+          echo "Looks like you forgot to run code generation"
+          git status
