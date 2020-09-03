@@ -37,7 +37,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		maintenanceHour := 9
 		spec := nais.CloudSqlInstance{
 			Name:           app.Name,
-			Type:           "POSTGRES_11",
+			Type:           nais.CloudSqlInstanceTypePostgres12,
 			AutoBackupHour: &backupHour,
 			Maintenance: &nais.Maintenance{
 				Day:  maintenanceDay,

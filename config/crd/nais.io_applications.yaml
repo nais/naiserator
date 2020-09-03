@@ -255,6 +255,7 @@ spec:
                       type:
                         enum:
                         - POSTGRES_11
+                        - POSTGRES_12
                         type: string
                     required:
                     - type

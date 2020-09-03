@@ -317,7 +317,7 @@ func TestCreate(t *testing.T) {
 		dbName := "mydb"
 		app.Spec.GCP = &nais.GCP{SqlInstances: []nais.CloudSqlInstance{
 			{
-				Type: nais.CloudSqlInstanceTypePostgres,
+				Type: nais.CloudSqlInstanceTypePostgres11,
 				Databases: []nais.CloudSqlDatabase{
 					{
 						Name: dbName,

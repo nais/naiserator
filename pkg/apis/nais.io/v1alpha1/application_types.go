@@ -169,7 +169,8 @@ type CloudStorageBucket struct {
 type CloudSqlInstanceType string
 
 const (
-	CloudSqlInstanceTypePostgres CloudSqlInstanceType = "POSTGRES_11"
+	CloudSqlInstanceTypePostgres11 CloudSqlInstanceType = "POSTGRES_11"
+	CloudSqlInstanceTypePostgres12 CloudSqlInstanceType = "POSTGRES_12"
 )
 
 type CloudSqlInstanceDiskType string
@@ -190,7 +191,7 @@ type CloudSqlDatabase struct {
 }
 
 type CloudSqlInstance struct {
-	// +kubebuilder:validation:Enum=POSTGRES_11
+	// +kubebuilder:validation:Enum=POSTGRES_11;POSTGRES_12
 	// +kubebuilder:validation:Required
 	Type CloudSqlInstanceType `json:"type"`
 	Name string               `json:"name,omitempty"`
