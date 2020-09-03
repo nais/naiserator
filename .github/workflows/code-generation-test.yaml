@@ -1,9 +1,9 @@
-name: Validate code gen
+name: Have you rememberd to run code generation
 
 on: push
 jobs:
   make-crd:
-    name: Have you rememberd to run code gen?
+    name: Checking for missing code generation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -14,12 +14,12 @@ jobs:
           go-version: 1.15
       - name: Go get controller-gen
         run: go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
-      - name: Run make crd
-        run: make crd
+      - name: Run code generation
+        run: make crd codegen-crd codegen-updater
       - name: Check if no diff
         run: test -z "$(git status --porcelain=v1 2>/dev/null)"
-      - name: Was there a diff?
+      - name: Code generation has been forgotten
         if: ${{ failure() }}
         run: |
-          echo "Looks like you forgot to run 'make crd'"
+          echo "Looks like you forgot to run code generation"
           git status
