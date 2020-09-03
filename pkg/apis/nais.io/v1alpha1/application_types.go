@@ -71,6 +71,7 @@ type ApplicationSpec struct {
 	TokenX          *TokenX               `json:"tokenx,omitempty"`
 	Vault           *Vault                `json:"vault,omitempty"`
 	WebProxy        bool                  `json:"webproxy,omitempty"`
+	Test            string                `json:"test"`
 
 	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
 	Logformat string `json:"logformat,omitempty"`
