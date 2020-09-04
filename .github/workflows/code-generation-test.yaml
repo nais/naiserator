@@ -15,7 +15,7 @@ jobs:
       - name: Go get controller-gen
         run: go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
       - name: Go get goimports
-        run: go get golang.org/x/tools/cmd/goimports
+        run: GO111MODULE=off go get golang.org/x/tools/cmd/goimports
       - name: Run code generation
         run: make crd codegen-crd codegen-updater
       - name: Check if no diff
