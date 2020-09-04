@@ -1,0 +1,48 @@
+name: Build and deploy
+on: push
+
+jobs:
+  build-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout naiserator
+        uses: actions/checkout@v2
+      - run: docker build -t docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:$(./version.sh) .
+      - name: Login to Github Package Registry
+        env:
+          DOCKER_USERNAME: x-access-token
+          DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin docker.pkg.github.com
+      - run: docker push docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:$(./version.sh)
+
+  nais-yaml:
+    name: Release to nais-yaml
+    runs-on: ubuntu-latest
+    needs: build-push
+    steps:
+      - name: Checkout naiserator
+        uses: actions/checkout@v2
+        with:
+          path: naiserator
+      - name: Checkout nais-yaml
+        uses: actions/checkout@v2
+        with:
+          repository: navikt/nais-yaml
+          token: ${{ secrets.NAIS_YAML_TOKEN }}
+          path: nais-yaml
+      - name: Update nais-yaml
+        run: |
+          cd naiserator
+          version=$(./version.sh)
+          res="hack/resources"
+          static_file="../nais-yaml/templates/zz-generated-naiserator.yaml"
+          cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrole.yaml $res/03-clusterrolebinding.yaml config/crd/*.yaml > $static_file
+          cd ../nais-yaml
+          git config user.name "NAIS deploy pipeline"
+          git config user.email "aura@nav.no"
+          sed -E -i "s#image: docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:.+#image: docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:${version}#" vars/naiserator.yaml
+          git add .
+          git --no-pager diff --cached
+          git commit -a -m "Bump Naiserator to version ${version}"
+          git push
