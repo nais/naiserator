@@ -39,16 +39,22 @@ jobs:
           path: nais-yaml
       - name: Update nais-yaml
         run: |
+          pwd
           cd naiserator
+          pwd
+          ls -la
           version=$(./version.sh)
           res="hack/resources"
           static_file="../nais-yaml/templates/zz-generated-naiserator.yaml"
           cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrole.yaml $res/03-clusterrolebinding.yaml config/crd/*.yaml > $static_file
           cd ../nais-yaml
+          pwd
+          ls -la
           git config user.name "NAIS deploy pipeline"
           git config user.email "aura@nav.no"
           sed -E -i "s#image: docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:.+#image: docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:${version}#" vars/naiserator.yaml
           git add .
           git --no-pager diff --cached
+          git status
           git commit -a -m "Bump Naiserator to version ${version}"
           git push
