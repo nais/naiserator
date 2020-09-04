@@ -31,6 +31,13 @@ jobs:
           repository: navikt/nais-yaml
           token: ${{ secrets.NAIS_YAML_TOKEN }}
           path: nais-yaml
+      - name: Wait for code generation checks
+        uses: lewagon/wait-on-check-action@v0.1-beta.2
+        with:
+          ref: master
+          check-name: "Checking for missing code generation"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
       - name: Update nais-yaml
         run: |
           cd naiserator
