@@ -9,6 +9,7 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-latest
     steps:
+      - uses: jitterbit/await-check-suites@v1
       - name: Checkout naiserator
         uses: actions/checkout@v2
       - run: docker build -t docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:$(./version.sh) .
