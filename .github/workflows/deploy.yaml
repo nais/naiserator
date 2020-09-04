@@ -1,11 +1,17 @@
 name: Build and deploy
-on: push
+on: 
+  repository_dispatch:
+    types:
+      - build-and-deploy
 
 jobs:
   build-push:
     name: Build and push image
     runs-on: ubuntu-latest
     steps:
+      - uses: jitterbit/await-check-suites@v1
+        with:
+          onlyFirstCheckSuite: true
       - name: Checkout naiserator
         uses: actions/checkout@v2
       - run: docker build -t docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:$(./version.sh) .
@@ -31,25 +37,24 @@ jobs:
           repository: navikt/nais-yaml
           token: ${{ secrets.NAIS_YAML_TOKEN }}
           path: nais-yaml
-      - name: Wait for code generation checks
-        uses: lewagon/wait-on-check-action@v0.1-beta.2
-        with:
-          ref: master
-          check-name: "Checking for missing code generation"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 20
       - name: Update nais-yaml
         run: |
+          pwd
           cd naiserator
+          pwd
+          ls -la
           version=$(./version.sh)
           res="hack/resources"
           static_file="../nais-yaml/templates/zz-generated-naiserator.yaml"
           cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrole.yaml $res/03-clusterrolebinding.yaml config/crd/*.yaml > $static_file
           cd ../nais-yaml
+          pwd
+          ls -la
           git config user.name "NAIS deploy pipeline"
           git config user.email "aura@nav.no"
           sed -E -i "s#image: docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:.+#image: docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:${version}#" vars/naiserator.yaml
           git add .
           git --no-pager diff --cached
+          git status
           git commit -a -m "Bump Naiserator to version ${version}"
           git push
