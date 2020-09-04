@@ -1,11 +1,21 @@
 name: Build and deploy
 on: push
+#  push:
+#    branches:
+#      - master
 
 jobs:
   build-push:
     name: Build and push image
     runs-on: ubuntu-latest
     steps:
+      - name: Wait for code generation checks
+        uses: lewagon/wait-on-check-action@v0.1-beta.2
+        with:
+          ref: $GITHUB_SHA
+          check-name: "Checking for missing code generation"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
       - name: Checkout naiserator
         uses: actions/checkout@v2
       - run: docker build -t docker.pkg.github.com/"$GITHUB_REPOSITORY"/naiserator:$(./version.sh) .
@@ -31,13 +41,6 @@ jobs:
           repository: navikt/nais-yaml
           token: ${{ secrets.NAIS_YAML_TOKEN }}
           path: nais-yaml
-      - name: Wait for code generation checks
-        uses: lewagon/wait-on-check-action@v0.1-beta.2
-        with:
-          ref: master
-          check-name: "Checking for missing code generation"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 20
       - name: Update nais-yaml
         run: |
           cd naiserator
