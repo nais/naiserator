@@ -105,6 +105,7 @@ func run() error {
 	resourceOptions.ClusterName = cfg.ClusterName
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
+	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
 
