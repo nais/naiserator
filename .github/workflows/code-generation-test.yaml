@@ -1,6 +1,10 @@
 name: Have you rememberd to run code generation
 
 on: push
+
+env:
+  REPO_URL: https://api.github.com/repos/nais/naiserator/dispatches
+
 jobs:
   make-crd:
     name: Checking for missing code generation
@@ -25,3 +29,10 @@ jobs:
         run: |
           echo "Looks like you forgot to run code generation"
           git status
+      - name: Trigger build and deploy workflow
+        #if: github.ref == 'master'
+        run: |
+          curl -X POST "${REPO_URL}" \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          -u ${{ secrets.GITHUB_TOKEN }} \
+          --data '{"event_type": build-and-deploy", "client_payload": {}'
