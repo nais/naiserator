@@ -35,4 +35,4 @@ jobs:
           curl -X POST "${REPO_URL}" \
           -H 'Accept: application/vnd.github.v3+json' \
           -u ${{ secrets.NAIS_YAML_TOKEN }} \
-          --data '{"event_type": build-and-deploy"'
+          --data '{"event_type": "build-and-deploy"}'
