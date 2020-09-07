@@ -2,6 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -21,6 +22,9 @@ import (
 
 const (
 	kafkaCredentialFilesVolumeName = "kafka-credentials"
+	kafkaCertificatePathKey        = "KAFKA_CERTIFICATE_PATH"
+	kafkaPrivateKeyPathKey         = "KAFKA_PRIVATE_KEY_PATH"
+	kafkaCAPathKey                 = "KAFKA_CA_PATH"
 	kafkaCertificateKey            = "KAFKA_CERTIFICATE"
 	kafkaPrivateKeyKey             = "KAFKA_PRIVATE_KEY"
 	kafkaCAKey                     = "KAFKA_CA"
@@ -142,22 +146,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	if len(resourceOptions.KafkaratorSecretName) > 0 {
-		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.KafkaratorSecretName)
-		credentialFilesVolume := fromFilesSecretVolume(kafkaCredentialFilesVolumeName, resourceOptions.KafkaratorSecretName, []corev1.KeyToPath{
-			{
-				Key:  kafkaCertificateKey,
-				Path: kafkaCertificateFilename,
-			},
-			{
-				Key:  kafkaPrivateKeyKey,
-				Path: kafkaPrivateKeyFilename,
-			},
-			{
-				Key:  kafkaCAKey,
-				Path: kafkaCAFilename,
-			},
-		})
-		podSpec = podSpecWithVolume(podSpec, credentialFilesVolume)
+		podSpec = podSpecWithKafka(podSpec, resourceOptions)
 	}
 
 	if vault.Enabled() && app.Spec.Vault.Enabled {
@@ -179,6 +168,46 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	return podSpec, err
+}
+
+func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) *corev1.PodSpec {
+	// Mount Kafkarator secret
+	podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.KafkaratorSecretName)
+
+	// Mount specific secret keys as credential files
+	credentialFilesVolume := fromFilesSecretVolume(kafkaCredentialFilesVolumeName, resourceOptions.KafkaratorSecretName, []corev1.KeyToPath{
+		{
+			Key:  kafkaCertificateKey,
+			Path: kafkaCertificateFilename,
+		},
+		{
+			Key:  kafkaPrivateKeyKey,
+			Path: kafkaPrivateKeyFilename,
+		},
+		{
+			Key:  kafkaCAKey,
+			Path: kafkaCAFilename,
+		},
+	})
+	podSpec = podSpecWithVolume(podSpec, credentialFilesVolume)
+
+	// Inject path environment variables to refer to mounted secrets
+	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, []corev1.EnvVar{
+		{
+			Name:  kafkaCertificatePathKey,
+			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaCertificateFilename),
+		},
+		{
+			Name:  kafkaPrivateKeyPathKey,
+			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaPrivateKeyFilename),
+		},
+		{
+			Name:  kafkaCAPathKey,
+			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaCAFilename),
+		},
+	}...)
+
+	return podSpec
 }
 
 func hostAliases(resourceOptions ResourceOptions) []corev1.HostAlias {

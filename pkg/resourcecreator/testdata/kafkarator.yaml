@@ -49,3 +49,10 @@ tests:
                       - name: kafka-credentials
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/kafka
+                    env:
+                      - name: KAFKA_CERTIFICATE_PATH
+                        value: /var/run/secrets/nais.io/kafka/kafka.crt
+                      - name: KAFKA_PRIVATE_KEY_PATH
+                        value: /var/run/secrets/nais.io/kafka/kafka.key
+                      - name: KAFKA_CA_PATH
+                        value: /var/run/secrets/nais.io/kafka/ca.crt
