@@ -24,9 +24,9 @@ const (
 	kafkaCertificateKey            = "KAFKA_CERTIFICATE"
 	kafkaPrivateKeyKey             = "KAFKA_PRIVATE_KEY"
 	kafkaCAKey                     = "KAFKA_CA"
-	kafkaCertificateFilename       = "/var/run/secrets/nais.io/kafka/kafka.crt"
-	kafkaPrivateKeyFilename        = "/var/run/secrets/nais.io/kafka/kafka.key"
-	kafkaCAFilename                = "/var/run/secrets/nais.io/kafka/ca.crt"
+	kafkaCertificateFilename       = "kafka.crt"
+	kafkaPrivateKeyFilename        = "kafka.key"
+	kafkaCAFilename                = "ca.crt"
 )
 
 func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {

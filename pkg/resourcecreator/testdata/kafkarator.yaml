@@ -36,11 +36,11 @@ tests:
                       secretName: kafka-myapplication-some-kafka-pool-87289b08
                       items:
                         - key: KAFKA_CERTIFICATE
-                          path: /var/run/secrets/nais.io/kafka/kafka.crt
+                          path: kafka.crt
                         - key: KAFKA_PRIVATE_KEY
-                          path: /var/run/secrets/nais.io/kafka/kafka.key
+                          path: kafka.key
                         - key: KAFKA_CA
-                          path: /var/run/secrets/nais.io/kafka/ca.crt
+                          path: ca.crt
                 containers:
                   - envFrom:
                       - secretRef:
