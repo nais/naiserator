@@ -17,6 +17,8 @@ type ResourceOptions struct {
 	JwkerSecretName             string
 	AzureratorEnabled           bool
 	AzureratorSecretName        string
+	KafkaratorEnabled           bool
+	KafkaratorSecretName        string
 	HostAliases                 []config.HostAlias
 	GatewayMappings             []config.GatewayMapping
 }

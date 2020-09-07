@@ -48,6 +48,14 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
 	}
 
+	if resourceOptions.KafkaratorEnabled && app.Spec.Kafka != nil {
+		var err error
+		resourceOptions.KafkaratorSecretName, err = generateKafkaSecretName(app)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
 		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)

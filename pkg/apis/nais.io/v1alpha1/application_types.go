@@ -22,6 +22,7 @@ const (
 	DefaultSecretMountPath            = "/var/run/secrets"
 	DefaultJwkerMountPath             = "/var/run/secrets/nais.io/jwker"
 	DefaultAzureratorMountPath        = "/var/run/secrets/nais.io/azure"
+	DefaultKafkaratorMountPath        = "/var/run/secrets/nais.io/kafka"
 )
 
 func GetDefaultMountPath(name string) string {
@@ -54,6 +55,7 @@ type ApplicationSpec struct {
 	FilesFrom       []FilesFrom           `json:"filesFrom,omitempty"`
 	Image           string                `json:"image"`
 	Ingresses       []string              `json:"ingresses,omitempty"`
+	Kafka           *Kafka                `json:"kafka,omitempty"`
 	LeaderElection  bool                  `json:"leaderElection,omitempty"`
 	Liveness        *Probe                `json:"liveness,omitempty"`
 	Logtransform    string                `json:"logtransform,omitempty"`
@@ -297,6 +299,10 @@ type AccessPolicyOutbound struct {
 type AccessPolicy struct {
 	Inbound  *AccessPolicyInbound  `json:"inbound,omitempty"`
 	Outbound *AccessPolicyOutbound `json:"outbound,omitempty"`
+}
+
+type Kafka struct {
+	Pool string `json:"pool"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {

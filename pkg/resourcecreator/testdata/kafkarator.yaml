@@ -1,0 +1,51 @@
+config:
+  description: if Kafkarator is enabled and pool name is specified, secret from Kafkarator should be injected in pod spec
+
+resourceoptions:
+  NumReplicas: 1
+  KafkaratorEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    kafka:
+      pool: some-kafka-pool
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains kafkarator secrets"
+        type: subset
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: kafka-credentials
+                    secret:
+                      secretName: kafka-myapplication-some-kafka-pool-87289b08
+                      items:
+                        - key: KAFKA_CERTIFICATE
+                          path: /var/run/secrets/nais.io/kafka/kafka.crt
+                        - key: KAFKA_PRIVATE_KEY
+                          path: /var/run/secrets/nais.io/kafka/kafka.key
+                        - key: KAFKA_CA
+                          path: /var/run/secrets/nais.io/kafka/ca.crt
+                containers:
+                  - envFrom:
+                      - secretRef:
+                          name: kafka-myapplication-some-kafka-pool-87289b08
+                    volumeMounts:
+                      - name: kafka-credentials
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/kafka

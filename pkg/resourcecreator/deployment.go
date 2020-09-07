@@ -19,6 +19,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	kafkaCredentialFilesVolumeName = "kafka-credentials"
+	kafkaCertificateKey            = "KAFKA_CERTIFICATE"
+	kafkaPrivateKeyKey             = "KAFKA_PRIVATE_KEY"
+	kafkaCAKey                     = "KAFKA_CA"
+	kafkaCertificateFilename       = "/var/run/secrets/nais.io/kafka/kafka.crt"
+	kafkaPrivateKeyFilename        = "/var/run/secrets/nais.io/kafka/kafka.key"
+	kafkaCAFilename                = "/var/run/secrets/nais.io/kafka/ca.crt"
+)
+
 func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {
 	spec, err := deploymentSpec(app, resourceOptions)
 	if err != nil {
@@ -131,6 +141,25 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.AzureratorSecretName)
 	}
 
+	if len(resourceOptions.KafkaratorSecretName) > 0 {
+		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.KafkaratorSecretName)
+		credentialFilesVolume := fromFilesSecretVolume(kafkaCredentialFilesVolumeName, resourceOptions.KafkaratorSecretName, []corev1.KeyToPath{
+			{
+				Key:  kafkaCertificateKey,
+				Path: kafkaCertificateFilename,
+			},
+			{
+				Key:  kafkaPrivateKeyKey,
+				Path: kafkaPrivateKeyFilename,
+			},
+			{
+				Key:  kafkaCAKey,
+				Path: kafkaCAFilename,
+			},
+		})
+		podSpec = podSpecWithVolume(podSpec, credentialFilesVolume)
+	}
+
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
 		if err != nil {
@@ -216,8 +245,14 @@ func envFromSecret(name string) corev1.EnvFromSource {
 	}
 }
 
+func podSpecWithVolume(spec *corev1.PodSpec, volume corev1.Volume) *corev1.PodSpec {
+	spec.Volumes = append(spec.Volumes, volume)
+	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts, fromFilesVolumeMount(volume.Name, nais.DefaultKafkaratorMountPath, ""))
+	return spec
+}
+
 func podSpecWithAdditionalSecret(spec *corev1.PodSpec, secretName, mountPath string) *corev1.PodSpec {
-	spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(secretName))
+	spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(secretName, secretName, nil))
 	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
 		fromFilesVolumeMount(secretName, "", mountPath))
 	return spec
@@ -237,7 +272,7 @@ func filesFrom(app *nais.Application, spec *corev1.PodSpec, nativeSecrets bool) 
 				fromFilesVolumeMount(name, file.MountPath, nais.GetDefaultMountPath(name)))
 		} else if nativeSecrets && len(file.Secret) > 0 {
 			name := file.Secret
-			spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(name))
+			spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(name, name, nil))
 			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
 				fromFilesVolumeMount(name, file.MountPath, nais.DefaultSecretMountPath))
 		}
@@ -258,12 +293,13 @@ func fromFilesVolumeMount(name string, mountPath string, defaultMountPath string
 	}
 }
 
-func fromFilesSecretVolume(name string) corev1.Volume {
+func fromFilesSecretVolume(volumeName, secretName string, items []corev1.KeyToPath) corev1.Volume {
 	return corev1.Volume{
-		Name: name,
+		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName: name,
+				SecretName: secretName,
+				Items:      items,
 			},
 		},
 	}

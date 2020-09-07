@@ -34,6 +34,7 @@ type Features struct {
 	Vault                       bool     `json:"vault"`
 	Jwker                       bool     `json:"jwker"`
 	Azurerator                  bool     `json:"azurerator"`
+	Kafkarator                  bool     `json:"kafkarator"`
 }
 
 type Securelogs struct {
@@ -92,6 +93,7 @@ const (
 	FeaturesVault                       = "features.vault"
 	FeaturesJwker                       = "features.jwker"
 	FeaturesAzurerator                  = "features.azurerator"
+	FeaturesKafkarator                  = "features.kafkarator"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
 	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
 	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
@@ -132,6 +134,7 @@ func init() {
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
+	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 
 	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
 
