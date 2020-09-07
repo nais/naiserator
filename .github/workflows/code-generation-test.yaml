@@ -33,6 +33,6 @@ jobs:
         #if: github.ref == 'master'
         run: |
           curl -X POST "${REPO_URL}" \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u ${{ secrets.GITHUB_TOKEN }} \
-          --data '{"event_type": build-and-deploy", "client_payload": {}'
+          -H 'Accept: application/vnd.github.v3+json' \
+          -u ${{ secrets.NAIS_YAML_TOKEN }} \
+          --data '{"event_type": build-and-deploy"'
