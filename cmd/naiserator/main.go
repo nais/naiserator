@@ -108,6 +108,7 @@ func run() error {
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
+	resourceOptions.ApiServerIp = cfg.ApiServerIp
 
 	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the Virtual Service based on the provided ingresses")

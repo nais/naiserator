@@ -72,6 +72,7 @@ type Config struct {
 	ClusterName                       string           `json:"cluster-name"`
 	GoogleProjectId                   string           `json:"google-project-id"`
 	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
+	ApiServerIp                       string           `json:"api-server-ip"`
 	Log                               Log              `json:"log"`
 	Features                          Features         `json:"features"`
 	Securelogs                        Securelogs       `json:"securelogs"`
@@ -87,6 +88,7 @@ const (
 	ClusterName                         = "cluster-name"
 	GoogleProjectId                     = "google-project-id"
 	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
+	ApiServerIp                         = "api-server-ip"
 	FeaturesAccessPolicy                = "features.access-policy"
 	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets               = "features.native-secrets"
@@ -127,7 +129,7 @@ func init() {
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
-
+	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
 	flag.Bool(FeaturesAccessPolicy, false, "enable access policy with Istio and NetworkPolicies")
 	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")

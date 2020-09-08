@@ -94,7 +94,20 @@ func egressPolicy(app *nais.Application, options ResourceOptions) []networkingv1
 		appRules := networkingv1.NetworkPolicyEgressRule{
 			To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules, options),
 		}
-		return append(defaultRules, appRules)
+		defaultRules = append(defaultRules, appRules)
+	}
+
+	if app.Spec.LeaderElection && len(options.GoogleProjectId) > 0 {
+		apiServerAccessRule := networkingv1.NetworkPolicyEgressRule{
+			To: []networkingv1.NetworkPolicyPeer{
+				{
+					IPBlock: &networkingv1.IPBlock{
+						CIDR: options.ApiServerIp,
+					},
+				},
+			},
+		}
+		defaultRules = append(defaultRules, apiServerAccessRule)
 	}
 
 	return defaultRules
@@ -110,7 +123,6 @@ func networkPolicySpec(app *nais.Application, options ResourceOptions) networkin
 		Ingress: ingressPolicy(app, options),
 		Egress:  egressPolicy(app, options),
 	}
-
 }
 
 func typeMeta() metav1.TypeMeta {

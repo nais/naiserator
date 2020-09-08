@@ -12,6 +12,7 @@ type ResourceOptions struct {
 	NativeSecrets               bool
 	GoogleProjectId             string
 	GoogleTeamProjectId         string
+	ApiServerIp                 string
 	ClusterName                 string
 	JwkerEnabled                bool
 	JwkerSecretName             string
