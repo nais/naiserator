@@ -16,6 +16,10 @@ func (c *FakeNaisV1) AzureAdApplications(namespace string) v1.AzureAdApplication
 	return &FakeAzureAdApplications{c, namespace}
 }
 
+func (c *FakeNaisV1) IDPortenClients(namespace string) v1.IDPortenClientInterface {
+	return &FakeIDPortenClients{c, namespace}
+}
+
 func (c *FakeNaisV1) Jwkers(namespace string) v1.JwkerInterface {
 	return &FakeJwkers{c, namespace}
 }

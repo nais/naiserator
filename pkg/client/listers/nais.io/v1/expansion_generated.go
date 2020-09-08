@@ -10,6 +10,14 @@ type AzureAdApplicationListerExpansion interface{}
 // AzureAdApplicationNamespaceLister.
 type AzureAdApplicationNamespaceListerExpansion interface{}
 
+// IDPortenClientListerExpansion allows custom methods to be added to
+// IDPortenClientLister.
+type IDPortenClientListerExpansion interface{}
+
+// IDPortenClientNamespaceListerExpansion allows custom methods to be added to
+// IDPortenClientNamespaceLister.
+type IDPortenClientNamespaceListerExpansion interface{}
+
 // JwkerListerExpansion allows custom methods to be added to
 // JwkerLister.
 type JwkerListerExpansion interface{}

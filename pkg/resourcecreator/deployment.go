@@ -147,6 +147,11 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.AzureratorSecretName)
 	}
 
+	if len(resourceOptions.DigdiratorSecretName) > 0 {
+		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.DigdiratorSecretName, nais.DefaultDigdiratorMountPath)
+		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.DigdiratorSecretName)
+	}
+
 	if len(resourceOptions.KafkaratorSecretName) > 0 {
 		podSpec = podSpecWithKafka(podSpec, resourceOptions)
 	}

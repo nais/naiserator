@@ -149,6 +149,12 @@ var i = []Service{
 		Type:      "*nais_v1.AzureAdApplication",
 		Client:    "customClient.NaisV1().AzureAdApplications",
 	},
+	{
+		Name:      "idPortenClient",
+		Interface: "typed_nais_v1.IDPortenClientInterface",
+		Type:      "*nais_v1.IDPortenClient",
+		Client:    "customClient.NaisV1().IDPortenClients",
+	},
 }
 
 func main() {

@@ -33,6 +33,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&AzureAdApplicationList{},
 		&Jwker{},
 		&JwkerList{},
+		&IDPortenClient{},
+		&IDPortenClientList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

@@ -1,0 +1,88 @@
+config:
+  description: idporten oauth2 client
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  DigdiratorEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    idporten:
+      enabled: true
+      clientName: my-client
+      clientURI: http://my-client
+      redirectURIs:
+        - http://my-client/whatever
+      frontchannelLogoutURI: http://my-client/logout
+      postLogoutRedirectURIs:
+        - http://my-client/something
+      refreshTokenLifetime: 3600
+
+tests:
+  - apiVersion: nais.io/v1
+    kind: IDPortenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "spec contains expected and nothing else"
+        exclude:
+          - .status
+          - .metadata
+          - .spec.secretName
+        resource:
+          spec:
+            clientName: my-client
+            clientURI: http://my-client
+            redirectURIs:
+              - http://my-client/whatever
+            frontchannelLogoutURI: http://my-client/logout
+            postLogoutRedirectURIs:
+              - http://my-client/something
+            refreshTokenLifetime: 3600
+
+  - apiVersion: nais.io/v1
+    kind: IDPortenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^myapplication-.{8}$
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains idporten secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^myapplication-.+$
+                    secret:
+                      secretName: ^myapplication-.+$
+                containers:
+                  - envFrom:
+                      - secretRef:
+                          name: ^myapplication-.+$
+                    volumeMounts:
+                      - name: ^myapplication-.+$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/idporten

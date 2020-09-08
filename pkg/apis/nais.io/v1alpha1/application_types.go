@@ -23,6 +23,7 @@ const (
 	DefaultJwkerMountPath             = "/var/run/secrets/nais.io/jwker"
 	DefaultAzureratorMountPath        = "/var/run/secrets/nais.io/azure"
 	DefaultKafkaratorMountPath        = "/var/run/secrets/nais.io/kafka"
+	DefaultDigdiratorMountPath        = "/var/run/secrets/nais.io/idporten"
 )
 
 func GetDefaultMountPath(name string) string {
@@ -73,6 +74,7 @@ type ApplicationSpec struct {
 	TokenX          *TokenX               `json:"tokenx,omitempty"`
 	Vault           *Vault                `json:"vault,omitempty"`
 	WebProxy        bool                  `json:"webproxy,omitempty"`
+	IDPorten        *IDPorten             `json:"idporten,omitempty"`
 
 	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
 	Logformat string `json:"logformat,omitempty"`
@@ -105,6 +107,16 @@ type TokenX struct {
 	Enabled bool `json:"enabled"`
 	// if enabled, secrets for TokenX will be mounted as files only, i.e. not as env.
 	MountSecretsAsFilesOnly bool `json:"mountSecretsAsFilesOnly,omitempty"`
+}
+
+type IDPorten struct {
+	Enabled                bool     `json:"enabled"`
+	ClientName             string   `json:"clientName,omitempty"`
+	ClientURI              string   `json:"clientURI,omitempty"`
+	RedirectURIs           []string `json:"redirectURIs"`
+	FrontchannelLogoutURI  string   `json:"frontchannelLogoutURI,omitempty"`
+	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs"`
+	RefreshTokenLifetime   int      `json:"refreshTokenLifetime"`
 }
 
 type AzureApplication struct {

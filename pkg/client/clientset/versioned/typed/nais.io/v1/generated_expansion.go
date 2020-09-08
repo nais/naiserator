@@ -4,4 +4,6 @@ package v1
 
 type AzureAdApplicationExpansion interface{}
 
+type IDPortenClientExpansion interface{}
+
 type JwkerExpansion interface{}

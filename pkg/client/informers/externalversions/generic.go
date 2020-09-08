@@ -52,6 +52,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=nais.io, Version=v1
 	case v1.SchemeGroupVersion.WithResource("azureadapplications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1().AzureAdApplications().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("idportenclients"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1().IDPortenClients().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("jwkers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Nais().V1().Jwkers().Informer()}, nil
 

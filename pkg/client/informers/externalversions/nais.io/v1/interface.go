@@ -10,6 +10,8 @@ import (
 type Interface interface {
 	// AzureAdApplications returns a AzureAdApplicationInformer.
 	AzureAdApplications() AzureAdApplicationInformer
+	// IDPortenClients returns a IDPortenClientInformer.
+	IDPortenClients() IDPortenClientInformer
 	// Jwkers returns a JwkerInformer.
 	Jwkers() JwkerInformer
 }
@@ -28,6 +30,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // AzureAdApplications returns a AzureAdApplicationInformer.
 func (v *version) AzureAdApplications() AzureAdApplicationInformer {
 	return &azureAdApplicationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// IDPortenClients returns a IDPortenClientInformer.
+func (v *version) IDPortenClients() IDPortenClientInformer {
+	return &iDPortenClientInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Jwkers returns a JwkerInformer.
