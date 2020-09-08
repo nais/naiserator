@@ -337,7 +337,7 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, jwkerSecret, appContainer.EnvFrom[0].SecretRef.Name)
 	})
 
-	t.Run("jwker secrets are mounted as files only when MountSecretsAsFilesOnly is true", func(t *testing.T) {
+	t.Run("jwker secrets are mounted as files and not exposed as env-variables if MountSecretsAsFilesOnly is true", func(t *testing.T) {
 		const jwkerSecret = "myJwkerSecret"
 		app := fixtures.MinimalApplication()
 		app.Spec.TokenX.MountSecretsAsFilesOnly = true
