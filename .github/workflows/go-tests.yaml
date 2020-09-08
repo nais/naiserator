@@ -1,4 +1,4 @@
-name: Have you rememberd to run code generation
+name: Runnings tests on your code
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   make-crd:
-    name: Checking for missing code generation
+    name: Go tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
