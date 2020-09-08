@@ -262,6 +262,32 @@ spec:
                     type: object
                   type: array
               type: object
+            idporten:
+              properties:
+                clientName:
+                  type: string
+                clientURI:
+                  type: string
+                enabled:
+                  type: boolean
+                frontchannelLogoutURI:
+                  type: string
+                postLogoutRedirectURIs:
+                  items:
+                    type: string
+                  type: array
+                redirectURIs:
+                  items:
+                    type: string
+                  type: array
+                refreshTokenLifetime:
+                  type: integer
+              required:
+              - enabled
+              - postLogoutRedirectURIs
+              - redirectURIs
+              - refreshTokenLifetime
+              type: object
             image:
               type: string
             ingresses:
