@@ -30,7 +30,7 @@ jobs:
           echo "Looks like you forgot to run code generation"
           git status
       - name: Trigger build and deploy workflow
-        #if: github.ref == 'master'
+        if: github.ref == 'refs/heads/master'
         run: |
           curl -X POST "${REPO_URL}" \
           -H 'Accept: application/vnd.github.v3+json' \
