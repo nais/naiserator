@@ -106,6 +106,7 @@ func run() error {
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
+	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
