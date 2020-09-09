@@ -23,7 +23,9 @@ jobs:
       - name: Run code generation
         run: make crd codegen-crd codegen-updater
       - name: Check if no diff
-        run: test -z "$(git status --porcelain=v1 2>/dev/null)"
+        run: |
+          git update-index --assume-unchanged go.mod
+          test -z "$(git status --porcelain=v1 2>/dev/null)"
       - name: Code generation has been forgotten
         if: ${{ failure() }}
         run: |
