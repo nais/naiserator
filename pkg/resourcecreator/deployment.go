@@ -137,7 +137,7 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 
 	if len(resourceOptions.JwkerSecretName) > 0 {
 		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.JwkerSecretName, nais.DefaultJwkerMountPath)
-		if app.Spec.TokenX != nil && !app.Spec.TokenX.MountSecretsAsFilesOnly {
+		if app.Spec.TokenX.Enabled && !app.Spec.TokenX.MountSecretsAsFilesOnly {
 			podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.JwkerSecretName)
 		}
 	}

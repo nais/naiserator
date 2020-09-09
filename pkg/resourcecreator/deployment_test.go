@@ -317,6 +317,7 @@ func TestDeployment(t *testing.T) {
 	t.Run("jwker secrets are mounted when JwkerSecretName is set", func(t *testing.T) {
 		const jwkerSecret = "myJwkerSecret"
 		app := fixtures.MinimalApplication()
+		app.Spec.TokenX.Enabled = true
 		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{JwkerSecretName: jwkerSecret})
 		assert.NoError(t, err)
 
@@ -340,6 +341,7 @@ func TestDeployment(t *testing.T) {
 	t.Run("jwker secrets are mounted as files and not exposed as env-variables if MountSecretsAsFilesOnly is true", func(t *testing.T) {
 		const jwkerSecret = "myJwkerSecret"
 		app := fixtures.MinimalApplication()
+		app.Spec.TokenX.Enabled = true
 		app.Spec.TokenX.MountSecretsAsFilesOnly = true
 		deployment, err := resourcecreator.Deployment(app, resourcecreator.ResourceOptions{JwkerSecretName: jwkerSecret})
 		assert.NoError(t, err)
