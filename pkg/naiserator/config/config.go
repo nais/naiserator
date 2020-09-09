@@ -97,7 +97,7 @@ const (
 	FeaturesJwker                       = "features.jwker"
 	FeaturesAzurerator                  = "features.azurerator"
 	FeaturesKafkarator                  = "features.kafkarator"
-	FeaturesDigdirator                 = "features.digdirator"
+	FeaturesDigdirator                  = "features.digdirator"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
 	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
 	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"

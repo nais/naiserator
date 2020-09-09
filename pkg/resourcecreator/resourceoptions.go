@@ -20,10 +20,10 @@ type ResourceOptions struct {
 	AzureratorSecretName        string
 	KafkaratorEnabled           bool
 	KafkaratorSecretName        string
+	DigdiratorEnabled           bool
+	DigdiratorSecretName        string
 	HostAliases                 []config.HostAlias
 	GatewayMappings             []config.GatewayMapping
-	DigdiratorEnabled			bool
-	DigdiratorSecretName		string
 }
 
 // NewResourceOptions creates a struct with the default resource options.

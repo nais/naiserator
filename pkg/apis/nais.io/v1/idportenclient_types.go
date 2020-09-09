@@ -56,4 +56,3 @@ type IDPortenClientStatus struct {
 	// KeyIDs is the list of key IDs for valid JWKs registered for the client at ID-porten
 	KeyIDs []string `json:"keyIDs"`
 }
-

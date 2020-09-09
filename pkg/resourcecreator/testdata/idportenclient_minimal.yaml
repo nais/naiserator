@@ -1,5 +1,5 @@
 config:
-  description: idporten oauth2 client
+  description: minimal idporten config in application spec should result in idportenclient with defaults
 
 resourceoptions:
   AccessPolicy: true
@@ -34,7 +34,7 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: exact
-        name: "spec contains expected and nothing else"
+        name: "spec contains expected fields with defaults and nothing else"
         exclude:
           - .status
           - .metadata

@@ -81,10 +81,10 @@ func getAppDefaults() *Application {
 				Enabled:                 false,
 				MountSecretsAsFilesOnly: false,
 			},
-			IDPorten: &IDPorten {
-				Enabled: false,
+			IDPorten: &IDPorten{
+				Enabled:    false,
 				ClientName: "NAV",
-				ClientURI: "https://www.nav.no",
+				ClientURI:  "https://www.nav.no",
 			},
 		},
 	}

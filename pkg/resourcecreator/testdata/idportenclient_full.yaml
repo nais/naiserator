@@ -1,5 +1,5 @@
 config:
-  description: idporten oauth2 client
+  description: idporten enabled should result in expected resources created
 
 resourceoptions:
   AccessPolicy: true
@@ -36,7 +36,7 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: exact
-        name: "spec contains expected and nothing else"
+        name: "spec contains expected fields and nothing else"
         exclude:
           - .status
           - .metadata

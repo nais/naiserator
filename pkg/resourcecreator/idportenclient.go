@@ -7,13 +7,13 @@ import (
 )
 
 func IDPortenClient(application nais.Application) idportenClient.IDPortenClient {
-	return idportenClient.IDPortenClient {
+	return idportenClient.IDPortenClient{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "IDPortenClient",
 			APIVersion: "nais.io/v1",
 		},
 		ObjectMeta: application.CreateObjectMeta(),
-		Spec:       idportenClient.IDPortenClientSpec{
+		Spec: idportenClient.IDPortenClientSpec{
 			ClientName:             application.Spec.IDPorten.ClientName,
 			ClientURI:              application.Spec.IDPorten.ClientURI,
 			RedirectURIs:           application.Spec.IDPorten.RedirectURIs,
