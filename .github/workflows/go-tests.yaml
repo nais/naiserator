@@ -2,9 +2,8 @@ name: Runnings tests on your code
 
 on:
   push:
-    branches:
-      - '*'
-      - '!master'
+    branches-ignore:
+      - master
 
 env:
   REPO_URL: https://api.github.com/repos/nais/naiserator/dispatches
