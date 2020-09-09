@@ -6,7 +6,20 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	IDPortenDefaultClientName = "NAV"
+	IDPortenDefaultClientURI  = "https://www.nav.no"
+)
+
 func IDPortenClient(application nais.Application) idportenClient.IDPortenClient {
+	if len(application.Spec.IDPorten.ClientName) == 0 {
+		application.Spec.IDPorten.ClientName = IDPortenDefaultClientName
+	}
+
+	if len(application.Spec.IDPorten.ClientURI) == 0 {
+		application.Spec.IDPorten.ClientURI = IDPortenDefaultClientURI
+	}
+
 	return idportenClient.IDPortenClient{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "IDPortenClient",

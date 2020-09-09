@@ -55,7 +55,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		}
 	}
 
-	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten.Enabled {
+	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled {
 		idportenClient := IDPortenClient(*app)
 		ops = append(ops, ResourceOperation{&idportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorSecretName = idportenClient.Spec.SecretName
