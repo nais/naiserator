@@ -431,6 +431,10 @@ spec:
                   description: if enabled, the application will have a jwker secret
                     injected
                   type: boolean
+                mountSecretsAsFilesOnly:
+                  description: if enabled, secrets for TokenX will be mounted as files
+                    only, i.e. not as env.
+                  type: boolean
               required:
               - enabled
               type: object

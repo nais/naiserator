@@ -77,6 +77,10 @@ func getAppDefaults() *Application {
 					External: []AccessPolicyExternalRule{},
 				},
 			},
+			TokenX: &TokenX{
+				Enabled:                 false,
+				MountSecretsAsFilesOnly: false,
+			},
 		},
 	}
 }

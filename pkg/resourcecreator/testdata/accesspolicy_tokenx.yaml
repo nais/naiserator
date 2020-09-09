@@ -83,7 +83,7 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: "deployment contains jwker secrets"
+      - name: "deployment contains jwker secrets as files and env"
         type: regex
         resource:
           spec:
@@ -94,7 +94,10 @@ tests:
                     secret:
                       secretName: ^myapplication-.+$
                 containers:
-                  - volumeMounts:
+                  - envFrom:
+                      - secretRef:
+                          name: ^myapplication-.+$
+                    volumeMounts:
                       - name: ^myapplication-.+$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/jwker
