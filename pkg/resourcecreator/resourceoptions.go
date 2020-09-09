@@ -20,6 +20,8 @@ type ResourceOptions struct {
 	AzureratorSecretName        string
 	KafkaratorEnabled           bool
 	KafkaratorSecretName        string
+	DigdiratorEnabled           bool
+	DigdiratorSecretName        string
 	HostAliases                 []config.HostAlias
 	GatewayMappings             []config.GatewayMapping
 }

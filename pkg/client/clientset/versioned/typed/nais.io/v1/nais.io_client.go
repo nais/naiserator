@@ -11,6 +11,7 @@ import (
 type NaisV1Interface interface {
 	RESTClient() rest.Interface
 	AzureAdApplicationsGetter
+	IDPortenClientsGetter
 	JwkersGetter
 }
 
@@ -21,6 +22,10 @@ type NaisV1Client struct {
 
 func (c *NaisV1Client) AzureAdApplications(namespace string) AzureAdApplicationInterface {
 	return newAzureAdApplications(c, namespace)
+}
+
+func (c *NaisV1Client) IDPortenClients(namespace string) IDPortenClientInterface {
+	return newIDPortenClients(c, namespace)
 }
 
 func (c *NaisV1Client) Jwkers(namespace string) JwkerInterface {

@@ -1,0 +1,51 @@
+config:
+  description: minimal idporten config in application spec should result in idportenclient with defaults
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  DigdiratorEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    idporten:
+      enabled: true
+      redirectURIs:
+        - http://my-client/whatever
+      frontchannelLogoutURI: http://my-client/logout
+      postLogoutRedirectURIs:
+        - http://my-client/something
+      refreshTokenLifetime: 3600
+
+tests:
+  - apiVersion: nais.io/v1
+    kind: IDPortenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "spec contains expected fields with defaults and nothing else"
+        exclude:
+          - .status
+          - .metadata
+          - .spec.secretName
+        resource:
+          spec:
+            clientName: NAV
+            clientURI: https://www.nav.no
+            redirectURIs:
+              - http://my-client/whatever
+            frontchannelLogoutURI: http://my-client/logout
+            postLogoutRedirectURIs:
+              - http://my-client/something
+            refreshTokenLifetime: 3600
