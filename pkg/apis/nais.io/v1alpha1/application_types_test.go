@@ -12,17 +12,29 @@ import (
 
 const (
 	// Change this value to accept re-synchronization of ALL application resources when deploying a new version.
-	applicationHash = "8417214d046876cd"
+	applicationHash = "ba79fcde22026d1d"
 )
 
 func TestApplication_Hash(t *testing.T) {
-	a1, err := v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{}}.Hash()
-	a2, _ := v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{}, ObjectMeta: v1.ObjectMeta{Annotations: map[string]string{"a": "b", "team": "banan"}}}.Hash()
-	a3, _ := v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{}, ObjectMeta: v1.ObjectMeta{Labels: map[string]string{"a": "b", "team": "banan"}}}.Hash()
+	apps := []*v1alpha1.Application{
+		{Spec: v1alpha1.ApplicationSpec{}},
+		{Spec: v1alpha1.ApplicationSpec{}, ObjectMeta: v1.ObjectMeta{Annotations: map[string]string{"a": "b", "team": "banan"}}},
+		{Spec: v1alpha1.ApplicationSpec{}, ObjectMeta: v1.ObjectMeta{Labels: map[string]string{"a": "b", "team": "banan"}}},
+	}
+	hashes := make([]string, len(apps))
+	for i := range apps {
+		err := v1alpha1.ApplyDefaults(apps[i])
+		if err != nil {
+			panic(err)
+		}
+		hashes[i], err = apps[i].Hash()
+		if err != nil {
+			panic(err)
+		}
+	}
 
-	assert.NoError(t, err)
-	assert.Equal(t, a1, a2, "matches, as annotations is ignored")
-	assert.NotEqual(t, a2, a3, "must not match ")
+	assert.Equal(t, hashes[0], hashes[1], "matches, as annotations is ignored")
+	assert.NotEqual(t, hashes[1], hashes[2], "should not match")
 }
 
 func TestApplication_CreateAppNamespaceHash(t *testing.T) {
@@ -78,7 +90,11 @@ func TestHashJSONMarshalling(t *testing.T) {
 
 func TestNewCRD(t *testing.T) {
 	app := &v1alpha1.Application{}
+	err := v1alpha1.ApplyDefaults(app)
+	if err != nil {
+		panic(err)
+	}
 	hash, err := app.Hash()
 	assert.NoError(t, err)
-	assert.Equalf(t, applicationHash, hash, "Application spec changes trigger a complete re-synchronization of all application resources. If this is what you really want, change the `applicationHash` constant in this test file to `%s`.", hash)
+	assert.Equalf(t, applicationHash, hash, "Your Application default value changes will trigger a FULL REDEPLOY of ALL APPLICATIONS in ALL NAMESPACES across ALL CLUSTERS. If this is what you really want, change the `applicationHash` constant in this test file to `%s`.", hash)
 }
