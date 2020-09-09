@@ -23,6 +23,7 @@ type Informer struct {
 }
 
 type Synchronizer struct {
+	QueueSize            int           `json:"queue-size"`
 	RolloutTimeout       time.Duration `json:"rollout-timeout"`
 	RolloutCheckInterval time.Duration `json:"rollout-check-interval"`
 }
@@ -97,6 +98,7 @@ const (
 	FeaturesAzurerator                  = "features.azurerator"
 	FeaturesKafkarator                  = "features.kafkarator"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
+	SynchronizerQueueSize               = "synchronizer.queue-size"
 	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
 	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
 	KubeConfig                          = "kubeconfig"
@@ -140,6 +142,7 @@ func init() {
 
 	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
 
+	flag.Int(SynchronizerQueueSize, 4096, "how many Applications from informer to cache in the internal deployment queue")
 	flag.Duration(SynchronizerRolloutCheckInterval, time.Duration(5*time.Second), "how often to check if a deployment has rolled out successfully")
 	flag.Duration(SynchronizerRolloutTimeout, time.Duration(5*time.Minute), "how long to keep checking for a successful deployment rollout")
 

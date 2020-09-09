@@ -48,13 +48,14 @@ type Synchronizer struct {
 
 type Config struct {
 	KafkaEnabled               bool
+	QueueSize                  int
 	DeploymentMonitorFrequency time.Duration
 	DeploymentMonitorTimeout   time.Duration
 }
 
 func New(clientSet kubernetes.Interface, appClient clientV1Alpha1.Interface, istioClient istioClient.Interface, resourceOptions resourcecreator.ResourceOptions, config Config) *Synchronizer {
 	naiserator := Synchronizer{
-		workQueue:       make(chan v1alpha1.Application, 1024),
+		workQueue:       make(chan v1alpha1.Application, config.QueueSize),
 		ClientSet:       clientSet,
 		AppClient:       appClient,
 		IstioClient:     istioClient,

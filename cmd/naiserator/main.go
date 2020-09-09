@@ -121,6 +121,7 @@ func run() error {
 
 	syncerConfig := synchronizer.Config{
 		KafkaEnabled:               cfg.Kafka.Enabled,
+		QueueSize:                  cfg.Synchronizer.QueueSize,
 		DeploymentMonitorFrequency: cfg.Synchronizer.RolloutCheckInterval,
 		DeploymentMonitorTimeout:   cfg.Synchronizer.RolloutTimeout,
 	}
