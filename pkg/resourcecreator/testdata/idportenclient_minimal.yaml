@@ -1,5 +1,5 @@
 config:
-  description: minimal idporten config in application spec should result in idportenclient with defaults
+  description: minimal idporten config in application spec should result in idportenclient with generated defaults
 
 resourceoptions:
   AccessPolicy: true
@@ -20,12 +20,8 @@ input:
     image: foo/bar
     idporten:
       enabled: true
-      redirectURIs:
-        - http://my-client/whatever
-      frontchannelLogoutURI: http://my-client/logout
-      postLogoutRedirectURIs:
-        - http://my-client/something
-      refreshTokenLifetime: 3600
+    ingresses:
+      - "https://my-client.nav.no/"
 
 tests:
   - apiVersion: nais.io/v1
@@ -44,8 +40,7 @@ tests:
             clientName: NAV
             clientURI: https://www.nav.no
             redirectURIs:
-              - http://my-client/whatever
-            frontchannelLogoutURI: http://my-client/logout
+              - "https://my-client.nav.no/oauth2/callback"
             postLogoutRedirectURIs:
-              - http://my-client/something
-            refreshTokenLifetime: 3600
+              - "https://www.nav.no"
+            refreshTokenLifetime: 43200
