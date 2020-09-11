@@ -31,8 +31,8 @@ type IDPortenClientSpec struct {
 	ClientName string `json:"clientName"`
 	// ClientURI is the URL to the client to be used at DigDir when displaying a 'back' button or on errors
 	ClientURI string `json:"clientURI"`
-	// RedirectURIs is a list of redirect URIs to be registered at DigDir
-	RedirectURIs []string `json:"redirectURIs"`
+	// RedirectURI is the redirect URI to be registered at DigDir
+	RedirectURI string `json:"redirectURI"`
 	// SecretName is the name of the resulting Secret resource to be created
 	SecretName string `json:"secretName"`
 	// FrontchannelLogoutURI is the URL that ID-porten sends a requests to whenever a logout is triggered by another application using the same session

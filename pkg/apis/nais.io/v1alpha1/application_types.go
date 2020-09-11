@@ -113,7 +113,7 @@ type IDPorten struct {
 	Enabled                bool     `json:"enabled"`
 	ClientName             string   `json:"clientName,omitempty"`
 	ClientURI              string   `json:"clientURI,omitempty"`
-	RedirectURIs           []string `json:"redirectURIs,omitempty"`
+	RedirectURI            string   `json:"redirectURI,omitempty"`
 	FrontchannelLogoutURI  string   `json:"frontchannelLogoutURI,omitempty"`
 	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs,omitempty"`
 	RefreshTokenLifetime   *int     `json:"refreshTokenLifetime,omitempty"`

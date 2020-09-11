@@ -39,8 +39,7 @@ tests:
           spec:
             clientName: NAV
             clientURI: https://www.nav.no
-            redirectURIs:
-              - "https://my-client.nav.no/oauth2/callback"
+            redirectURI: "https://my-client.nav.no/oauth2/callback"
             postLogoutRedirectURIs:
               - "https://www.nav.no"
             refreshTokenLifetime: 43200

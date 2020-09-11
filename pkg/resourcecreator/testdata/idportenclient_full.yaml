@@ -21,13 +21,14 @@ input:
     idporten:
       enabled: true
       clientName: my-client
-      clientURI: http://my-client
-      redirectURIs:
-        - http://my-client/whatever
-      frontchannelLogoutURI: http://my-client/logout
+      clientURI: https://my-client
+      redirectURI: https://my-client/whatever
+      frontchannelLogoutURI: https://my-client/logout
       postLogoutRedirectURIs:
-        - http://my-client/something
+        - https://my-client/something
       refreshTokenLifetime: 3600
+    ingresses:
+     - https://my-client
 
 tests:
   - apiVersion: nais.io/v1
@@ -44,12 +45,11 @@ tests:
         resource:
           spec:
             clientName: my-client
-            clientURI: http://my-client
-            redirectURIs:
-              - http://my-client/whatever
-            frontchannelLogoutURI: http://my-client/logout
+            clientURI: https://my-client
+            redirectURI: https://my-client/whatever
+            frontchannelLogoutURI: https://my-client/logout
             postLogoutRedirectURIs:
-              - http://my-client/something
+              - https://my-client/something
             refreshTokenLifetime: 3600
 
   - apiVersion: nais.io/v1
