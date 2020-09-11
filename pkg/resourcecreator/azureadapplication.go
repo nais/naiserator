@@ -45,11 +45,15 @@ func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
 func oauthCallbackURLs(ingresses []string) []string {
 	urls := make([]string, len(ingresses))
 	for i := range ingresses {
-		u, _ := url.Parse(ingresses[i])
-		u.Path = path.Join(u.Path, "/oauth2/callback")
-		urls[i] = u.String()
+		urls[i] = oauthCallbackURL(ingresses[i])
 	}
 	return urls
+}
+
+func oauthCallbackURL(ingress string) string {
+	u, _ := url.Parse(ingress)
+	u.Path = path.Join(u.Path, "/oauth2/callback")
+	return u.String()
 }
 
 func getTenant(app nais.Application) string {
