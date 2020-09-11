@@ -7,17 +7,41 @@ import (
 )
 
 const (
-	IDPortenDefaultClientName = "NAV"
-	IDPortenDefaultClientURI  = "https://www.nav.no"
+	IDPortenDefaultClientName            = "NAV"
+	IDPortenDefaultClientURI             = "https://www.nav.no"
+	IDPortenDefaultPostLogoutRedirectURI = "https://www.nav.no"
+	IDPortenDefaultRefreshTokenLifetime  = 3600 * 12 // 12 hours, in seconds
 )
 
-func IDPortenClient(application nais.Application) idportenClient.IDPortenClient {
-	if len(application.Spec.IDPorten.ClientName) == 0 {
-		application.Spec.IDPorten.ClientName = IDPortenDefaultClientName
+func IDPortenClient(app nais.Application) idportenClient.IDPortenClient {
+	clientName := app.Spec.IDPorten.ClientName
+	clientURI := app.Spec.IDPorten.ClientURI
+	redirectURIs := app.Spec.IDPorten.RedirectURIs
+	frontchannelLogoutURI := app.Spec.IDPorten.FrontchannelLogoutURI
+	postLogoutRedirectURIs := app.Spec.IDPorten.PostLogoutRedirectURIs
+	refreshTokenLifetime := app.Spec.IDPorten.RefreshTokenLifetime
+
+	if len(clientName) == 0 {
+		clientName = IDPortenDefaultClientName
 	}
 
-	if len(application.Spec.IDPorten.ClientURI) == 0 {
-		application.Spec.IDPorten.ClientURI = IDPortenDefaultClientURI
+	if len(clientURI) == 0 {
+		clientURI = IDPortenDefaultClientURI
+	}
+
+	if len(redirectURIs) == 0 {
+		redirectURIs = oauthCallbackURLs(app.Spec.Ingresses)
+	}
+
+	if len(postLogoutRedirectURIs) == 0 {
+		postLogoutRedirectURIs = []string{
+			IDPortenDefaultPostLogoutRedirectURI,
+		}
+	}
+
+	if refreshTokenLifetime == nil {
+		lifetime := IDPortenDefaultRefreshTokenLifetime
+		refreshTokenLifetime = &lifetime
 	}
 
 	return idportenClient.IDPortenClient{
@@ -25,15 +49,15 @@ func IDPortenClient(application nais.Application) idportenClient.IDPortenClient 
 			Kind:       "IDPortenClient",
 			APIVersion: "nais.io/v1",
 		},
-		ObjectMeta: application.CreateObjectMeta(),
+		ObjectMeta: app.CreateObjectMeta(),
 		Spec: idportenClient.IDPortenClientSpec{
-			ClientName:             application.Spec.IDPorten.ClientName,
-			ClientURI:              application.Spec.IDPorten.ClientURI,
-			RedirectURIs:           application.Spec.IDPorten.RedirectURIs,
-			SecretName:             getSecretName(application),
-			FrontchannelLogoutURI:  application.Spec.IDPorten.FrontchannelLogoutURI,
-			PostLogoutRedirectURIs: application.Spec.IDPorten.PostLogoutRedirectURIs,
-			RefreshTokenLifetime:   application.Spec.IDPorten.RefreshTokenLifetime,
+			ClientName:             clientName,
+			ClientURI:              clientURI,
+			RedirectURIs:           redirectURIs,
+			SecretName:             getSecretName(app),
+			FrontchannelLogoutURI:  frontchannelLogoutURI,
+			PostLogoutRedirectURIs: postLogoutRedirectURIs,
+			RefreshTokenLifetime:   *refreshTokenLifetime,
 		},
 	}
 }

@@ -547,6 +547,11 @@ func (in *IDPorten) DeepCopyInto(out *IDPorten) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.RefreshTokenLifetime != nil {
+		in, out := &in.RefreshTokenLifetime, &out.RefreshTokenLifetime
+		*out = new(int)
+		**out = **in
+	}
 	return
 }
 

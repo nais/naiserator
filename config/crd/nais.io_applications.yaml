@@ -284,9 +284,6 @@ spec:
                   type: integer
               required:
               - enabled
-              - postLogoutRedirectURIs
-              - redirectURIs
-              - refreshTokenLifetime
               type: object
             image:
               type: string
