@@ -352,4 +352,45 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("google-sql-%s", instanceName), objects.deployment.Spec.Template.Spec.Containers[0].EnvFrom[0].SecretRef.Name)
 	})
 
+	t.Run("ensure that the ingresses and redirect URIs for idporten are valid", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.IDPorten = &nais.IDPorten{Enabled: true}
+
+		opts := resourcecreator.NewResourceOptions()
+		opts.DigdiratorEnabled = true
+
+		_, err := resourcecreator.Create(app, opts)
+		assert.Error(t, err, "return error if no ingresses are specified")
+
+		app.Spec.Ingresses = []string{
+			"https://yolo-ingress.nais.io",
+			"https://very-cool-ingress.nais.io",
+		}
+		_, err = resourcecreator.Create(app, opts)
+		assert.Error(t, err, "return error if multiple ingresses are specified")
+
+		app.Spec.Ingresses = []string{
+			"https://yolo-ingress.nais.io",
+		}
+		_, err = resourcecreator.Create(app, opts)
+		assert.NoError(t, err, "should not return error if exactly one ingress specified")
+
+		app.Spec.IDPorten.RedirectURI = "https://not-yolo.nais.io/oauth2/callback"
+		_, err = resourcecreator.Create(app, opts)
+		assert.Error(t, err, "return error if redirect URI is not subpath of ingress")
+
+		app.Spec.Ingresses = []string{
+			"http://localhost/oauth2/callback",
+		}
+		app.Spec.IDPorten.RedirectURI = "http://localhost/oauth2/callback"
+		_, err = resourcecreator.Create(app, opts)
+		assert.Error(t, err, "return error if redirect URI and ingress does not start with https://")
+
+		app.Spec.IDPorten.RedirectURI = "https://yolo-ingress.nais.io/oauth2/callback"
+		app.Spec.Ingresses = []string{
+			"https://yolo-ingress.nais.io",
+		}
+		_, err = resourcecreator.Create(app, opts)
+		assert.NoError(t, err, "should not return error if redirect URI is subpath of ingress")
+	})
 }

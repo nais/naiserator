@@ -5,6 +5,7 @@ import (
 	idportenClient "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 const (
@@ -29,12 +30,20 @@ func IDPortenClient(app nais.Application) (*idportenClient.IDPortenClient, error
 		return nil, fmt.Errorf("you must specify an ingress to be able to use the idporten integration")
 	}
 
+	if len(app.Spec.Ingresses) > 1 {
+		return nil, fmt.Errorf("cannot have more than one ingress when using the idporten integration")
+	}
+
 	if len(redirectURI) == 0 {
-		if len(app.Spec.Ingresses) == 1 {
-			redirectURI = oauthCallbackURL(app.Spec.Ingresses[0])
-		} else {
-			return nil, fmt.Errorf("multiple ingresses exist with no redirect URI set for idporten, must be exactly one")
-		}
+		redirectURI = oauthCallbackURL(app.Spec.Ingresses[0])
+	}
+
+	if !strings.HasPrefix(redirectURI, app.Spec.Ingresses[0]) {
+		return nil, fmt.Errorf("redirect URI must be a subpath of the ingress")
+	}
+
+	if !strings.HasPrefix(redirectURI, "https://") {
+		return nil, fmt.Errorf("redirect URI must start with https://")
 	}
 
 	if len(postLogoutRedirectURIs) == 0 {
