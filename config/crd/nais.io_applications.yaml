@@ -264,8 +264,6 @@ spec:
               type: object
             idporten:
               properties:
-                clientName:
-                  type: string
                 clientURI:
                   type: string
                 enabled:

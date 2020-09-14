@@ -15,16 +15,11 @@ const (
 )
 
 func IDPortenClient(app nais.Application) (*idportenClient.IDPortenClient, error) {
-	clientName := app.Spec.IDPorten.ClientName
 	clientURI := app.Spec.IDPorten.ClientURI
 	redirectURI := app.Spec.IDPorten.RedirectURI
 	frontchannelLogoutURI := app.Spec.IDPorten.FrontchannelLogoutURI
 	postLogoutRedirectURIs := app.Spec.IDPorten.PostLogoutRedirectURIs
 	refreshTokenLifetime := app.Spec.IDPorten.RefreshTokenLifetime
-
-	if len(clientName) == 0 {
-		clientName = IDPortenDefaultClientName
-	}
 
 	if len(clientURI) == 0 {
 		clientURI = IDPortenDefaultClientURI
@@ -60,7 +55,6 @@ func IDPortenClient(app nais.Application) (*idportenClient.IDPortenClient, error
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: idportenClient.IDPortenClientSpec{
-			ClientName:             clientName,
 			ClientURI:              clientURI,
 			RedirectURI:            redirectURI,
 			SecretName:             getSecretName(app),

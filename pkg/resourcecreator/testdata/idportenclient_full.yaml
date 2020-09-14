@@ -20,7 +20,6 @@ input:
     image: foo/bar
     idporten:
       enabled: true
-      clientName: my-client
       clientURI: https://my-client
       redirectURI: https://my-client/whatever
       frontchannelLogoutURI: https://my-client/logout
@@ -44,7 +43,6 @@ tests:
           - .spec.secretName
         resource:
           spec:
-            clientName: my-client
             clientURI: https://my-client
             redirectURI: https://my-client/whatever
             frontchannelLogoutURI: https://my-client/logout

@@ -111,7 +111,6 @@ type TokenX struct {
 
 type IDPorten struct {
 	Enabled                bool     `json:"enabled"`
-	ClientName             string   `json:"clientName,omitempty"`
 	ClientURI              string   `json:"clientURI,omitempty"`
 	RedirectURI            string   `json:"redirectURI,omitempty"`
 	FrontchannelLogoutURI  string   `json:"frontchannelLogoutURI,omitempty"`
