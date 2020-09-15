@@ -1,6 +1,6 @@
 # Naiserator
 
-[![CircleCI](https://circleci.com/gh/nais/naiserator/tree/master.svg?style=svg)](https://circleci.com/gh/nais/naiserator/tree/master)
+[![Github Actions](https://github.com/nais/naiserator/workflows/Build%20and%20deploy/badge.svg)](https://github.com/nais/naiserator/actions?query=workflow%3A%22Build+and+deploy%22)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nais/naiserator)](https://goreportcard.com/report/github.com/nais/naiserator)
 
 Naiserator is a Kubernetes operator that handles the lifecycle of the custom resource `nais.io/Application`.
