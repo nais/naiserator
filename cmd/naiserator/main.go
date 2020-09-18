@@ -84,7 +84,7 @@ func run() error {
 
 	stopCh := StopCh()
 
-	kubeconfig, err := getK8sConfig(cfg.Kubeconfig)
+	kubeconfig, err := getK8sConfig(cfg)
 	if err != nil {
 		return fmt.Errorf("unable to initialize kubernetes config: %s", err)
 	}
@@ -186,15 +186,20 @@ func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
 	return cs
 }
 
-func getK8sConfig(configPath string) (*rest.Config, error) {
-	kubeconfig := configPath
+func getK8sConfig(cfg config.Config) (conf *rest.Config, err error) {
+	kubeconfig := cfg.Kubeconfig
 	if kubeconfig == "" {
 		log.Infof("using in-cluster configuration")
-		return rest.InClusterConfig()
+		conf, err = rest.InClusterConfig()
 	} else {
 		log.Infof("using configuration from '%s'", kubeconfig)
-		return clientcmd.BuildConfigFromFlags("", kubeconfig)
+		conf, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
+	if conf != nil {
+		conf.Burst = cfg.Ratelimit.Burst
+		conf.QPS = float32(cfg.Ratelimit.QPS)
+	}
+	return
 }
 
 func StopCh() (stopCh <-chan struct{}) {

@@ -66,6 +66,11 @@ type HostAlias struct {
 	Address string `json:"address"`
 }
 
+type Ratelimit struct {
+	QPS   int `json:"qps"`
+	Burst int `json:"burst"`
+}
+
 type Config struct {
 	Bind                              string           `json:"bind"`
 	Informer                          Informer         `json:"informer"`
@@ -75,6 +80,7 @@ type Config struct {
 	GoogleProjectId                   string           `json:"google-project-id"`
 	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
 	ApiServerIp                       string           `json:"api-server-ip"`
+	Ratelimit                         Ratelimit        `json:"ratelimit"`
 	Log                               Log              `json:"log"`
 	Features                          Features         `json:"features"`
 	Securelogs                        Securelogs       `json:"securelogs"`
@@ -100,6 +106,8 @@ const (
 	FeaturesKafkarator                  = "features.kafkarator"
 	FeaturesDigdirator                  = "features.digdirator"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
+	RateLimitQPS                        = "ratelimit.qps"
+	RateLimitBurst                      = "ratelimit.burst"
 	SynchronizerQueueSize               = "synchronizer.queue-size"
 	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
 	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
@@ -144,6 +152,9 @@ func init() {
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 
 	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
+
+	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
+	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 
 	flag.Int(SynchronizerQueueSize, 4096, "how many Applications from informer to cache in the internal deployment queue")
 	flag.Duration(SynchronizerRolloutCheckInterval, time.Duration(5*time.Second), "how often to check if a deployment has rolled out successfully")
