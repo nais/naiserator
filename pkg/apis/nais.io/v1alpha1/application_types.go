@@ -217,7 +217,7 @@ type CloudSqlInstance struct {
 	HighAvailability bool                     `json:"highAvailability,omitempty"`
 	// +kubebuilder:validation:Minimum=10
 	DiskSize       int  `json:"diskSize,omitempty"`
-	DiskAutoresize bool `json:"diskAutore:wsize,omitempty"`
+	DiskAutoresize bool `json:"diskAutoresize,omitempty"`
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=23
 	AutoBackupHour *int         `json:"autoBackupHour,omitempty"` // must use pointer here to be able to distinguish between no/zero value and value 0 from user.
