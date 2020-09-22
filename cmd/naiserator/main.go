@@ -186,7 +186,7 @@ func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
 	return cs
 }
 
-func getK8sConfig(cfg config.Config) (conf *rest.Config, err error) {
+func getK8sConfig(cfg *config.Config) (conf *rest.Config, err error) {
 	kubeconfig := cfg.Kubeconfig
 	if kubeconfig == "" {
 		log.Infof("using in-cluster configuration")
