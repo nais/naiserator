@@ -19,7 +19,6 @@ func Service(app *nais.Application) *corev1.Service {
 			Selector: map[string]string{"app": app.Name},
 			Ports: []corev1.ServicePort{
 				{
-					Name:     nais.DefaultPortName,
 					Protocol: corev1.ProtocolTCP,
 					Port:     app.Spec.Service.Port,
 					TargetPort: intstr.IntOrString{

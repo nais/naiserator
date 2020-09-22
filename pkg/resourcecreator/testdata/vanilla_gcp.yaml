@@ -48,7 +48,6 @@ tests:
             ports:
               - port: 80
                 targetPort: http
-                name: http
                 protocol: TCP
             selector:
               app: myapplication
