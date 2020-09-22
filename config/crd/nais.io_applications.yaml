@@ -224,7 +224,7 @@ spec:
                           - name
                           type: object
                         type: array
-                      diskAutore:wsize:
+                      diskAutoresize:
                         type: boolean
                       diskSize:
                         minimum: 10
