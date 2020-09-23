@@ -29,7 +29,7 @@ func VirtualServices(app *nais.Application, gatewayMappings []config.GatewayMapp
 
 		name := fmt.Sprintf("%s-%02d", app.Name, index)
 		gateways := ResolveGateway(*parsedUrl, gatewayMappings)
-		if gateways != nil {
+		if len(gateways) > 0 {
 			vs := virtualService(*parsedUrl, app, gateways, name)
 			vses = append(vses, &vs)
 		}
