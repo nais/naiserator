@@ -2,6 +2,9 @@ package resourcecreator
 
 import (
 	"fmt"
+	"net/url"
+	"sort"
+	"strings"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio "istio.io/api/security/v1beta1"
@@ -10,16 +13,46 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AuthorizationPolicy(app *nais.Application, options ResourceOptions) *istio_security_client.AuthorizationPolicy {
+func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio_security_client.AuthorizationPolicy, error) {
 	var rules []*istio.Rule
 
+	// TODO: This is the old ingress-gateway, need this until it is removed from the clusters
+	gateways := []string{"istio-system/istio-ingressgateway"}
+	for _, ingress := range app.Spec.Ingresses {
+		parsedUrl, err := url.Parse(ingress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+		}
+		if len(parsedUrl.Path) == 0 {
+			parsedUrl.Path = "/"
+		}
+		err = validateUrl(parsedUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		// Avoid duplicate gateways, as this will look messy and lead to unnecessary app synchronizations
+		for _, gateway := range ResolveGateway(*parsedUrl, options.GatewayMappings) {
+			found := false
+			for _, existingGateway := range gateways {
+				if gateway == existingGateway {
+					found = true
+				}
+			}
+
+			if !found {
+				gateways = append(gateways, gateway)
+			}
+		}
+
+	}
 	// Authorization policy does not apply if app doesn't receive incoming traffic
 	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	if len(app.Spec.Ingresses) > 0 {
-		rules = append(rules, ingressGatewayRule())
+		rules = append(rules, ingressGatewayRule(gateways))
 	}
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
@@ -38,15 +71,25 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) *istio_
 			},
 			Rules: rules,
 		},
-	}
+	}, nil
 }
 
-func ingressGatewayRule() *istio.Rule {
+func ingressGatewayRule(gateways []string) *istio.Rule {
+	var principals []string
+	for _, gateway := range gateways {
+		parts := strings.Split(gateway, "/")
+		namespace, serviceAccount := parts[0], parts[1]
+		principals = append(principals, fmt.Sprintf("cluster.local/ns/%s/sa/%s-service-account", namespace, serviceAccount))
+	}
+
+	// Avoid unnecessary synchronization if order changes
+	sort.Strings(principals)
+
 	return &istio.Rule{
 		From: []*istio.Rule_From{
 			{
 				Source: &istio.Source{
-					Principals: []string{fmt.Sprintf("cluster.local/ns/%s/sa/%s", IstioNamespace, IstioIngressGatewayServiceAccount)},
+					Principals: principals,
 				},
 			},
 		},
