@@ -108,6 +108,12 @@ tests:
               - to:
                   - podSelector:
                       matchLabels:
+                        app: jaeger
+                    namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                  - podSelector:
+                      matchLabels:
                         istio: istiod
                     namespaceSelector:
                       matchLabels:
