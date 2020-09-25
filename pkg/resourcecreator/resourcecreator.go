@@ -56,7 +56,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	}
 
 	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled {
-		idportenClient, err := IDPortenClient(*app)
+		idportenClient, err := IDPortenClient(app)
 		if err != nil {
 			return nil, err
 		}
