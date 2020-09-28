@@ -408,7 +408,7 @@ spec:
               type: object
             service:
               properties:
-                name:
+                appProtocol:
                   enum:
                   - grpc
                   - grpc-web

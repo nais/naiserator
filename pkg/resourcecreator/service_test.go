@@ -23,7 +23,7 @@ func TestGetService(t *testing.T) {
 
 	t.Run("check if correct value is used when set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Service.Name = "redis"
+		app.Spec.Service.AppProtocol = "redis"
 		app.Spec.Service.Port = 1337
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)

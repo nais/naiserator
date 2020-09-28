@@ -280,8 +280,8 @@ type Strategy struct {
 
 type Service struct {
 	// +kubebuilder:validation:Enum=grpc;grpc-web;http;http2;https;mongo;mysql;redis;tcp;tls;udp
-	Name string `json:"name,omitempty"`
-	Port int32 `json:"port"`
+	AppProtocol string `json:"appProtocol,omitempty"`
+	Port        int32  `json:"port"`
 }
 
 type AccessPolicyPortRule struct {
