@@ -10,22 +10,27 @@ import (
 )
 
 func TestGetService(t *testing.T) {
-	t.Run("Check if default port is used", func(t *testing.T) {
+	t.Run("Check if default values is used", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		svc := resourcecreator.Service(app)
-		assert.Equal(t, nais.DefaultServicePort, int(svc.Spec.Ports[0].Port))
+		port := svc.Spec.Ports[0]
+		assert.Equal(t, nais.DefaultPortName, port.Name)
+		assert.Equal(t, nais.DefaultServicePort, int(port.Port))
 	})
 
-	t.Run("check if correct port is used when set", func(t *testing.T) {
+	t.Run("check if correct value is used when set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
+		app.Spec.Service.Name = "redis"
 		app.Spec.Service.Port = 1337
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		svc := resourcecreator.Service(app)
-		assert.Equal(t, 1337, int(svc.Spec.Ports[0].Port))
+		port := svc.Spec.Ports[0]
+		assert.Equal(t, "redis", port.Name)
+		assert.Equal(t, 1337, int(port.Port))
 	})
 }
