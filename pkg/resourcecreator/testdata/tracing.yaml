@@ -1,0 +1,37 @@
+config:
+  description: egress to jaeger allowed when tracing enabled
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    tracing:
+      enabled: true
+
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "egress to jaeger defined"
+        resource:
+          spec:
+            egress:
+              - to:
+                - namespaceSelector:
+                    matchLabels:
+                      name: istio-system
+                  podSelector:
+                    matchLabels:
+                      app: jaeger

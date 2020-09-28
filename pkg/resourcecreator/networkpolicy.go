@@ -6,6 +6,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func egressRule(appName, namespace string) networkingv1.NetworkPolicyEgressRule {
+	return networkingv1.NetworkPolicyEgressRule{
+		To: []networkingv1.NetworkPolicyPeer {{
+			NamespaceSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"name": namespace,
+				},
+			},
+			PodSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": appName,
+				},
+			},
+		}},
+	}
+}
+
 func networkPolicyRules(rules []nais.AccessPolicyRule, options ResourceOptions) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules {
 
@@ -90,6 +107,11 @@ func ingressPolicy(app *nais.Application, options ResourceOptions) []networkingv
 
 func egressPolicy(app *nais.Application, options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
 	defaultRules := defaultAllowEgress(options.AccessPolicyNotAllowedCIDRs)
+
+	if (app.Spec.Tracing != nil && app.Spec.Tracing.Enabled) {
+		defaultRules = append(defaultRules, egressRule("jaeger", "istio-system"))
+	}
+
 	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
 		appRules := networkingv1.NetworkPolicyEgressRule{
 			To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules, options),

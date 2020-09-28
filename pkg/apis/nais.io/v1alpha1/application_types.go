@@ -72,6 +72,7 @@ type ApplicationSpec struct {
 	Startup         *Probe                `json:"startup,omitempty"`
 	Strategy        *Strategy             `json:"strategy,omitempty"`
 	TokenX          *TokenX               `json:"tokenx,omitempty"`
+	Tracing         *Tracing              `json:"tracing,omitempty"`
 	Vault           *Vault                `json:"vault,omitempty"`
 	WebProxy        bool                  `json:"webproxy,omitempty"`
 	IDPorten        *IDPorten             `json:"idporten,omitempty"`
@@ -100,6 +101,12 @@ type ApplicationList struct {
 
 type Azure struct {
 	Application *AzureApplication `json:"application"`
+}
+
+type Tracing struct {
+	// if enabled, a rule allowing egress to app:jaeger will be appended to
+	// NetworkPolicy
+	Enabled bool `json:"enabled"`
 }
 
 type TokenX struct {
