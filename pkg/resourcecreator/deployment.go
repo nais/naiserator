@@ -493,7 +493,7 @@ func lifeCycle(path string) *corev1.Lifecycle {
 		return &corev1.Lifecycle{
 			PreStop: &corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Path: path,
+					Path: strings.TrimLeft(path, "/"),
 					Port: intstr.FromString(nais.DefaultPortName),
 				},
 			},
