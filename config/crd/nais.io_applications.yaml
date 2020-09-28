@@ -408,7 +408,10 @@ spec:
               type: object
             service:
               properties:
-                appProtocol:
+                port:
+                  format: int32
+                  type: integer
+                protocol:
                   enum:
                   - grpc
                   - grpc-web
@@ -422,9 +425,6 @@ spec:
                   - tls
                   - udp
                   type: string
-                port:
-                  format: int32
-                  type: integer
               required:
               - port
               type: object
