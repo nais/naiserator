@@ -413,17 +413,9 @@ spec:
                   type: integer
                 protocol:
                   enum:
-                  - grpc
-                  - grpc-web
                   - http
-                  - http2
-                  - https
-                  - mongo
-                  - mysql
                   - redis
                   - tcp
-                  - tls
-                  - udp
                   type: string
               required:
               - port

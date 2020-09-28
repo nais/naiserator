@@ -279,7 +279,7 @@ type Strategy struct {
 }
 
 type Service struct {
-	// +kubebuilder:validation:Enum=grpc;grpc-web;http;http2;https;mongo;mysql;redis;tcp;tls;udp
+	// +kubebuilder:validation:Enum=http;redis;tcp
 	Protocol string `json:"protocol,omitempty"`
 	Port     int32  `json:"port"`
 }
