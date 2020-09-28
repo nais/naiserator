@@ -408,6 +408,20 @@ spec:
               type: object
             service:
               properties:
+                name:
+                  enum:
+                  - grpc
+                  - grpc-web
+                  - http
+                  - http2
+                  - https
+                  - mongo
+                  - mysql
+                  - redis
+                  - tcp
+                  - tls
+                  - udp
+                  type: string
                 port:
                   format: int32
                   type: integer
