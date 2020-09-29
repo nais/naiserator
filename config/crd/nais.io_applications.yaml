@@ -411,6 +411,12 @@ spec:
                 port:
                   format: int32
                   type: integer
+                protocol:
+                  enum:
+                  - http
+                  - redis
+                  - tcp
+                  type: string
               required:
               - port
               type: object
