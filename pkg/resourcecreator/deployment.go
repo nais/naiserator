@@ -472,6 +472,14 @@ func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 		objectMeta.Labels["kafka"] = "enabled"
 	}
 
+	if (app.Spec.Tracing != nil && app.Spec.Tracing.Enabled) {
+		objectMeta.Annotations["proxy.istio.io/config"] =
+                    "tracing:\n" +
+                    "  sampling: 0\n" +
+                    "  zipkin:\n" +
+                    "    address: zipkin.istio-system:9411\n"
+	}
+
 	return objectMeta
 }
 
