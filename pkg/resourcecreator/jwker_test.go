@@ -26,10 +26,13 @@ func TestJwker(t *testing.T) {
 		return app
 	}
 
-	t.Run("no jwker for app with no access policy", func(t *testing.T) {
+	t.Run("jwker for app with no access policy", func(t *testing.T) {
 		app := fixture()
 		jwker := resourcecreator.Jwker(app, clusterName)
-		assert.Empty(t, jwker)
+		assert.NotEmpty(t, jwker)
+		assert.NotEmpty(t, jwker.Spec.SecretName)
+		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 0)
+		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 0)
 	})
 
 	t.Run("one inbound without cluster/namespace and no outbound", func(t *testing.T) {
