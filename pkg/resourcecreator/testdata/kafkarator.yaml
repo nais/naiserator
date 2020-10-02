@@ -41,6 +41,10 @@ tests:
                           path: kafka.key
                         - key: KAFKA_CA
                           path: ca.crt
+                        - key: KAFKA_KEYSTORE
+                          path: client.keystore.p12
+                        - key: KAFKA_TRUSTSTORE
+                          path: client.truststore.jks
                 containers:
                   - envFrom:
                       - secretRef:
@@ -56,3 +60,7 @@ tests:
                         value: /var/run/secrets/nais.io/kafka/kafka.key
                       - name: KAFKA_CA_PATH
                         value: /var/run/secrets/nais.io/kafka/ca.crt
+                      - name: KAFKA_KEYSTORE_PATH
+                        value: /var/run/secrets/nais.io/kafka/client.keystore.p12
+                      - name: KAFKA_TRUSTSTORE_PATH
+                        value: /var/run/secrets/nais.io/kafka/client.truststore.jks

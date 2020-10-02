@@ -25,12 +25,18 @@ const (
 	kafkaCertificatePathKey        = "KAFKA_CERTIFICATE_PATH"
 	kafkaPrivateKeyPathKey         = "KAFKA_PRIVATE_KEY_PATH"
 	kafkaCAPathKey                 = "KAFKA_CA_PATH"
+	kafkaKeystorePathKey           = "KAFKA_KEYSTORE_PATH"
+	kafkaTruststorePathKey         = "KAFKA_TRUSTSTORE_PATH"
 	kafkaCertificateKey            = "KAFKA_CERTIFICATE"
 	kafkaPrivateKeyKey             = "KAFKA_PRIVATE_KEY"
 	kafkaCAKey                     = "KAFKA_CA"
+	kafkaKeystoreKey               = "KAFKA_KEYSTORE"
+	kafkaTruststoreKey             = "KAFKA_TRUSTSTORE"
 	kafkaCertificateFilename       = "kafka.crt"
 	kafkaPrivateKeyFilename        = "kafka.key"
 	kafkaCAFilename                = "ca.crt"
+	kafkaKeystoreFilename          = "client.keystore.p12"
+	kafkaTruststoreFilename        = "client.truststore.jks"
 )
 
 func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {
@@ -195,6 +201,14 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) 
 			Key:  kafkaCAKey,
 			Path: kafkaCAFilename,
 		},
+		{
+			Key:  kafkaKeystoreKey,
+			Path: kafkaKeystoreFilename,
+		},
+		{
+			Key:  kafkaTruststoreKey,
+			Path: kafkaTruststoreFilename,
+		},
 	})
 	podSpec = podSpecWithVolume(podSpec, credentialFilesVolume)
 
@@ -211,6 +225,14 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) 
 		{
 			Name:  kafkaCAPathKey,
 			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaCAFilename),
+		},
+		{
+			Name:  kafkaKeystorePathKey,
+			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaKeystoreFilename),
+		},
+		{
+			Name:  kafkaTruststorePathKey,
+			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaTruststoreFilename),
 		},
 	}...)
 
