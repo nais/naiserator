@@ -39,6 +39,7 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 				Location:   IstioServiceEntryLocationExternal,
 				Resolution: IstioServiceEntryResolutionDNS,
 				Ports:      ports,
+				ExportTo:   []string{"."},
 			},
 		}
 		entries = append(entries, entry)

@@ -63,6 +63,8 @@ tests:
               - number: 13579
                 protocol: TCP
                 name: someservice
+            exportTo:
+              - "."
   - operation: CreateOrUpdate
     apiVersion: networking.istio.io/v1alpha3
     kind: ServiceEntry
@@ -82,3 +84,5 @@ tests:
               - number: 2
                 protocol: GRPC
                 name: grpc
+            exportTo:
+              - "."
