@@ -1,5 +1,5 @@
 config:
-  description: egress to jaeger allowed when tracing enabled
+  description: Tracing is configured
 
 resourceoptions:
   AccessPolicy: true
@@ -35,3 +35,20 @@ tests:
                   podSelector:
                     matchLabels:
                       app: jaeger
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "istio proxy configured to send traces to Zipkin"
+        resource:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  proxy.istio.io/config: |
+                    tracing:
+                      sampling: 0
+                      zipkin:
+                        address: zipkin.istio-system:9411
