@@ -104,9 +104,12 @@ func run() error {
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.ClusterName = cfg.ClusterName
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
+	resourceOptions.JwkerServiceEntryHosts = cfg.ServiceEntryHosts.Jwker
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
+	resourceOptions.AzureratorServiceEntryHosts = cfg.ServiceEntryHosts.Azurerator
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
+	resourceOptions.DigdiratorServiceEntryHosts = cfg.ServiceEntryHosts.Digdirator
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
 	resourceOptions.ApiServerIp = cfg.ApiServerIp

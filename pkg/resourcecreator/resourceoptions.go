@@ -16,12 +16,15 @@ type ResourceOptions struct {
 	ClusterName                 string
 	JwkerEnabled                bool
 	JwkerSecretName             string
+	JwkerServiceEntryHosts      []string
 	AzureratorEnabled           bool
 	AzureratorSecretName        string
+	AzureratorServiceEntryHosts []string
 	KafkaratorEnabled           bool
 	KafkaratorSecretName        string
 	DigdiratorEnabled           bool
 	DigdiratorSecretName        string
+	DigdiratorServiceEntryHosts []string
 	HostAliases                 []config.HostAlias
 	GatewayMappings             []config.GatewayMapping
 }
