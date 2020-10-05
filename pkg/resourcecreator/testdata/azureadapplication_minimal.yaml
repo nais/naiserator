@@ -7,6 +7,9 @@ resourceoptions:
   NumReplicas: 1
   ClusterName: mycluster
   AzureratorEnabled: true
+  AzureratorServiceEntryHosts:
+    - login.azure-ad.test
+    - graph.microsoft.test
 
 input:
   kind: Application
@@ -72,3 +75,47 @@ tests:
                       - name: ^myapplication-.+$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/azure
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-01
+    match:
+      - name: "service entry created for outbound traffic to Azure AD"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - login.azure-ad.test
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 443
+                protocol: HTTPS
+                name: https
+            exportTo:
+              - "."
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-02
+    match:
+      - name: "service entry created for outbound traffic to Azure AD"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - "graph.microsoft.test"
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 443
+                protocol: HTTPS
+                name: https
+            exportTo:
+              - "."

@@ -442,3 +442,25 @@ func (in AccessPolicyRule) MatchesCluster(clusterName string) bool {
 func (in *Application) ClientID() string {
 	return fmt.Sprintf("%s:%s:%s", in.Cluster(), in.ObjectMeta.Namespace, in.ObjectMeta.Name)
 }
+
+func (in *Application) AddAccessPolicyExternalHosts(hosts []string) {
+	var empty struct{}
+	seen := map[string]struct{}{}
+	rules := make([]AccessPolicyExternalRule, 0)
+
+	for _, rule := range in.Spec.AccessPolicy.Outbound.External {
+		seen[rule.Host] = empty
+	}
+
+	for _, host := range hosts {
+		if len(host) == 0 {
+			continue
+		}
+		if _, found := seen[host]; !found {
+			seen[host] = empty
+			rules = append(rules, AccessPolicyExternalRule{Host: host})
+		}
+	}
+
+	in.Spec.AccessPolicy.Outbound.External = append(in.Spec.AccessPolicy.Outbound.External, rules...)
+}

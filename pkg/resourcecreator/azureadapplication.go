@@ -12,7 +12,7 @@ const (
 	AzureApplicationTenantNav = "nav.no"
 )
 
-func AzureAdApplication(app nais.Application, options ResourceOptions) azureapp.AzureAdApplication {
+func AzureAdApplication(app nais.Application, clusterName string) azureapp.AzureAdApplication {
 	replyURLs := app.Spec.Azure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
@@ -27,7 +27,7 @@ func AzureAdApplication(app nais.Application, options ResourceOptions) azureapp.
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: azureapp.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
-			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, options.ClusterName),
+			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
 			Tenant:                    getTenant(app),
 			SecretName:                getSecretName(app),
 		},

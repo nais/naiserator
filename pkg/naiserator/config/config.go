@@ -71,24 +71,31 @@ type Ratelimit struct {
 	Burst int `json:"burst"`
 }
 
+type ServiceEntryHosts struct {
+	Azurerator []string `json:"azurerator"`
+	Digdirator []string `json:"digdirator"`
+	Jwker      []string `json:"jwker"`
+}
+
 type Config struct {
-	Bind                              string           `json:"bind"`
-	Informer                          Informer         `json:"informer"`
-	Synchronizer                      Synchronizer     `json:"synchronizer"`
-	Kubeconfig                        string           `json:"kubeconfig"`
-	ClusterName                       string           `json:"cluster-name"`
-	GoogleProjectId                   string           `json:"google-project-id"`
-	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
-	ApiServerIp                       string           `json:"api-server-ip"`
-	Ratelimit                         Ratelimit        `json:"ratelimit"`
-	Log                               Log              `json:"log"`
-	Features                          Features         `json:"features"`
-	Securelogs                        Securelogs       `json:"securelogs"`
-	Proxy                             Proxy            `json:"proxy"`
-	Vault                             Vault            `json:"vault"`
-	Kafka                             kafka.Config     `json:"kafka"`
-	HostAliases                       []HostAlias      `json:"host-aliases"`
-	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
+	Bind                              string            `json:"bind"`
+	Informer                          Informer          `json:"informer"`
+	Synchronizer                      Synchronizer      `json:"synchronizer"`
+	Kubeconfig                        string            `json:"kubeconfig"`
+	ClusterName                       string            `json:"cluster-name"`
+	GoogleProjectId                   string            `json:"google-project-id"`
+	GoogleCloudSQLProxyContainerImage string            `json:"google-cloud-sql-proxy-container-image"`
+	ApiServerIp                       string            `json:"api-server-ip"`
+	Ratelimit                         Ratelimit         `json:"ratelimit"`
+	Log                               Log               `json:"log"`
+	Features                          Features          `json:"features"`
+	Securelogs                        Securelogs        `json:"securelogs"`
+	Proxy                             Proxy             `json:"proxy"`
+	Vault                             Vault             `json:"vault"`
+	Kafka                             kafka.Config      `json:"kafka"`
+	HostAliases                       []HostAlias       `json:"host-aliases"`
+	GatewayMappings                   []GatewayMapping  `json:"gateway-mappings"`
+	ServiceEntryHosts                 ServiceEntryHosts `json:"service-entry-hosts"`
 }
 
 const (
@@ -116,6 +123,9 @@ const (
 	ProxyExclude                        = "proxy.exclude"
 	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
 	SecurelogsFluentdImage              = "securelogs.fluentd-image"
+	ServiceEntryHostsAzurerator         = "service-entry-hosts.azurerator"
+	ServiceEntryHostsDigdirator         = "service-entry-hosts.digdirator"
+	ServiceEntryHostsJwker              = "service-entry-hosts.jwker"
 	VaultAddress                        = "vault.address"
 	VaultAuthPath                       = "vault.auth-path"
 	VaultInitContainerImage             = "vault.init-container-image"
@@ -162,6 +172,10 @@ func init() {
 
 	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
 	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")
+
+	flag.StringSlice(ServiceEntryHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator")
+	flag.StringSlice(ServiceEntryHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator")
+	flag.StringSlice(ServiceEntryHostsJwker, []string{}, "list of hosts to output to ServiceEntry for Applications using Jwker")
 
 	flag.String(ProxyAddress, "", "HTTPS?_PROXY environment variable injected into containers")
 	flag.StringSlice(ProxyExclude, []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
