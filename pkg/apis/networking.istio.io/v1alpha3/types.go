@@ -81,6 +81,7 @@ type ServiceEntrySpec struct {
 	Location   string   `json:"location,omitempty"`
 	Resolution string   `json:"resolution"`
 	Ports      []Port   `json:"ports"`
+	ExportTo   []string `json:"exportTo,omitempty"`
 }
 
 type Port struct {

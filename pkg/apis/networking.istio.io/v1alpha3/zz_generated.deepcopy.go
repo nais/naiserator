@@ -190,6 +190,11 @@ func (in *ServiceEntrySpec) DeepCopyInto(out *ServiceEntrySpec) {
 		*out = make([]Port, len(*in))
 		copy(*out, *in)
 	}
+	if in.ExportTo != nil {
+		in, out := &in.ExportTo, &out.ExportTo
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
