@@ -3,7 +3,9 @@ package resourcecreator_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -21,6 +23,43 @@ import (
 var (
 	defaultExclude = []string{".apiVersion", ".kind", ".metadata.name"}
 )
+
+const (
+	testDataDirectory = "testdata"
+)
+
+type testCaseConfig struct {
+	Description  string
+	MatchType    string
+	VaultEnabled bool
+}
+
+type testCase struct {
+	Config          testCaseConfig
+	ResourceOptions resourcecreator.ResourceOptions
+	Error           *string
+	Input           json.RawMessage
+	Output          []json.RawMessage
+}
+
+type meta struct {
+	Operation string
+	Resource  struct {
+		ApiVersion string
+		Kind       string
+		Metadata   struct {
+			Name string
+		}
+	}
+}
+
+func fileReader(file string) io.Reader {
+	f, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
 
 type SubTest struct {
 	ApiVersion string
