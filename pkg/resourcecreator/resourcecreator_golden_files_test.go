@@ -2,230 +2,184 @@ package resourcecreator_test
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
 
+	"github.com/ghodss/yaml"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
-	"github.com/nsf/jsondiff"
+	"github.com/nais/naiserator/pkg/test/deepcomp"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-const (
-	testDataDirectory = "testdata"
-	matchSubset       = "subset"
+var (
+	defaultExclude = []string{".apiVersion", ".kind", ".metadata.name"}
 )
 
-type testCaseConfig struct {
-	Description  string
-	MatchType    string
-	VaultEnabled bool
+type SubTest struct {
+	ApiVersion string
+	Kind       string
+	Name       string
+	Operation  string
+	Match      []Match
 }
 
-type testCase struct {
+type Match struct {
+	Type     deepcomp.MatchType
+	Name     string
+	Exclude  []string // list of keys
+	Resource interface{}
+}
+
+type yamlTestCase struct {
 	Config          testCaseConfig
 	ResourceOptions resourcecreator.ResourceOptions
 	Error           *string
-	Input           json.RawMessage
-	Output          []json.RawMessage
+	Input           nais.Application
+	Tests           []SubTest
 }
 
-type match struct {
-	distance int
-	err      error
+func (m meta) String() string {
+	return fmt.Sprintf("%s %s/%s %s", m.Operation, m.Resource.ApiVersion, m.Resource.Kind, m.Resource.Metadata.Name)
 }
 
-type meta struct {
-	Operation string
-	Resource  struct {
-		ApiVersion string
-		Kind       string
-		Metadata   struct {
-			Name string
+func (m SubTest) String() string {
+	return fmt.Sprintf("operation=%s apiVersion=%s kind=%s name=%s", m.Operation, m.ApiVersion, m.Kind, m.Name)
+}
+
+func yamlSubtestMatchesResource(resource meta, test SubTest) bool {
+	switch {
+	case len(test.Name) > 0 && test.Name != resource.Resource.Metadata.Name:
+	case len(test.Kind) > 0 && test.Kind != resource.Resource.Kind:
+	case len(test.ApiVersion) > 0 && test.ApiVersion != resource.Resource.ApiVersion:
+	case len(test.Operation) > 0 && test.Operation != resource.Operation:
+	default:
+		return true
+	}
+	return false
+}
+
+func resourcemeta(resource interface{}) meta {
+	ym := meta{}
+	raw, _ := json.Marshal(resource)
+	_ = json.Unmarshal(raw, &ym)
+	return ym
+}
+
+func rawResource(resource runtime.Object) interface{} {
+	r := new(interface{})
+	raw, _ := yaml.Marshal(resource)
+	_ = yaml.Unmarshal(raw, r)
+	return r
+}
+
+func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepcomp.Diffset {
+	diffs := make(deepcomp.Diffset, 0, len(diffset))
+	for _, diff := range diffset {
+		if !deny(diff) {
+			diffs = append(diffs, diff)
 		}
 	}
+	return diffs
 }
 
-func fileReader(file string) io.Reader {
-	f, err := os.Open(file)
-	if err != nil {
-		panic(err)
+func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test SubTest) {
+	matched := false
+
+	for _, resource := range resources {
+		rm := resourcemeta(resource)
+
+		if !yamlSubtestMatchesResource(rm, test) {
+			continue
+		}
+		matched = true
+
+		raw := rawResource(resource.Resource)
+		diffs := make(deepcomp.Diffset, 0)
+
+		// retrieve all failure cases
+		for _, match := range test.Match {
+
+			// filter out all cases in the exclusion list
+			callback := func(diff deepcomp.Diff) bool {
+				for _, path := range append(match.Exclude, defaultExclude...) {
+					if path == diff.Path {
+						return true
+					}
+				}
+				return false
+			}
+
+			t.Logf("Assert '%s' against '%s'", match.Name, rm)
+
+			diffs = append(diffs, filter(deepcomp.Compare(match.Type, &match.Resource, raw), callback)...)
+		}
+
+		// anything left is an error.
+		if len(diffs) > 0 {
+			t.Log(diffs.String())
+			t.Fail()
+		}
 	}
-	return f
+
+	if !matched {
+		t.Logf("No resources matching criteria '%s'", test)
+		t.Fail()
+	}
 }
 
-func subTest(t *testing.T, file string) {
-	fixture := fileReader(file)
+func yamlSubTest(t *testing.T, path string) {
+	fixture := fileReader(path)
 	data, err := ioutil.ReadAll(fixture)
 	if err != nil {
 		t.Errorf("unable to read test data: %s", err)
 		t.Fail()
+		return
 	}
 
-	test := testCase{}
-	err = json.Unmarshal(data, &test)
+	test := yamlTestCase{}
+	err = yaml.Unmarshal(data, &test)
 	if err != nil {
 		t.Errorf("unable to parse unmarshal test data: %s", err)
 		t.Fail()
+		return
 	}
 
-	if test.Output != nil && err != nil {
-		t.Errorf("unable to re-encode test data: %s", err)
+	if test.Config.VaultEnabled {
+		viper.Set("features.vault", true)
+		viper.Set("vault.address", "https://vault.adeo.no")
+		viper.Set("vault.kv-path", "/kv/preprod/fss")
+		viper.Set("vault.auth-path", "auth/kubernetes/preprod/fss/login")
+		viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-d122b16")
+	}
+
+	err = nais.ApplyDefaults(&test.Input)
+	if err != nil {
+		t.Errorf("apply default values to Application object: %s", err)
 		t.Fail()
+		return
 	}
 
-	t.Run(test.Config.Description, func(t *testing.T) {
-		if test.Config.VaultEnabled {
-			viper.Set("features.vault", true)
-			viper.Set("vault.address", "https://vault.adeo.no")
-			viper.Set("vault.kv-path", "/kv/preprod/fss")
-			viper.Set("vault.auth-path", "auth/kubernetes/preprod/fss/login")
-			viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-d122b16")
-		}
-
-		app := &nais.Application{}
-		err = json.Unmarshal(test.Input, app)
-		if err != nil {
-			t.Errorf("unable to unmarshal Application object: %s", err)
-			t.Fail()
-		}
-
-		err = nais.ApplyDefaults(app)
-		if err != nil {
-			t.Errorf("apply default values to Application object: %s", err)
-			t.Fail()
-		}
-
-		resources, err := resourcecreator.Create(app, test.ResourceOptions)
-		if test.Error != nil {
-			assert.EqualError(t, err, *test.Error)
-		} else {
-			assert.NoError(t, err)
-
-			if test.Config.MatchType == matchSubset {
-				err = comparedeep(test, resources)
-			} else {
-				err = compareexact(test, resources)
-			}
-			if err != nil {
-				t.Error(err)
-				t.Fail()
-			}
-		}
-	})
-}
-
-// given two Kubernetes objects, calculate the likelyhood that they might refer to the same object.
-func distance(a, b json.RawMessage) int {
-	distance := 0
-	ma, mb := meta{}, meta{}
-	_ = json.Unmarshal(a, &ma)
-	_ = json.Unmarshal(b, &mb)
-	if ma.Operation != mb.Operation {
-		distance++
+	resources, err := resourcecreator.Create(&test.Input, test.ResourceOptions)
+	if test.Error != nil {
+		assert.EqualError(t, err, *test.Error)
+		return
 	}
-	if ma.Resource.ApiVersion != mb.Resource.ApiVersion {
-		distance++
-	}
-	if ma.Resource.Metadata.Name != mb.Resource.Metadata.Name {
-		distance += 2
-	}
-	if ma.Resource.Kind != mb.Resource.Kind {
-		distance += 5
-	}
-	return distance
-}
 
-// compare two Kubernetes objects against one another.
-func compare(test testCase, a, b json.RawMessage) match {
-	opts := jsondiff.DefaultConsoleOptions()
-	result, diff := jsondiff.Compare(a, b, &opts)
+	assert.NoError(t, err)
 
-	switch {
-	case result == jsondiff.FullMatch:
-		return match{}
-	case result == jsondiff.SupersetMatch && test.Config.MatchType == matchSubset:
-		return match{}
-	default:
-		return match{
-			distance: distance(a, b),
-			err:      errors.New(diff),
-		}
+	for _, subtest := range test.Tests {
+		yamlRunner(t, resources, subtest)
 	}
 }
 
-func compareexact(test testCase, resources resourcecreator.ResourceOperations) error {
-	serialized, err := json.Marshal(resources)
-	if err != nil {
-		return err
-	}
-
-	expected, err := json.Marshal(test.Output)
-	if err != nil {
-		return err
-	}
-
-	match := compare(test, serialized, expected)
-	return match.err
-}
-
-// Compare a real-world set of Kubernetes objects against an expected set of Kubernetes objects.
-// The function ignores array order and uses heuristics to figure out the most likely error message.
-func comparedeep(test testCase, resources resourcecreator.ResourceOperations) error {
-	var err error
-
-	serialized := make([]json.RawMessage, len(resources))
-	for i := range resources {
-		serialized[i], err = json.Marshal(resources[i])
-		if err != nil {
-			return fmt.Errorf("unable to marshal resource %d: %s", i, err)
-		}
-	}
-
-	matched := make([]bool, len(serialized))
-
-OUTER:
-	for i := range test.Output {
-		errs := make([]match, 0)
-
-		for j := range resources {
-			if matched[j] {
-				continue
-			}
-			match := compare(test, serialized[j], test.Output[i])
-			if match.err == nil {
-				matched[j] = true
-				continue OUTER
-			} else {
-				errs = append(errs, match)
-			}
-		}
-
-		if len(errs) == 0 {
-			return nil
-		}
-
-		// In case of match error against all possible array indices, return the diff
-		// that is most likely the object tried matching against.
-		sort.Slice(errs, func(i, j int) bool {
-			return errs[i].distance < errs[j].distance
-		})
-		return errs[0].err
-	}
-
-	return nil
-}
-
-func TestResourceCreator(t *testing.T) {
+func TestNewGoldenFile(t *testing.T) {
 	files, err := ioutil.ReadDir(testDataDirectory)
 	if err != nil {
 		t.Error(err)
@@ -241,12 +195,12 @@ func TestResourceCreator(t *testing.T) {
 			continue
 		}
 		name := file.Name()
-		if !strings.HasSuffix(name, ".json") {
+		if !strings.HasSuffix(name, ".yaml") {
 			continue
 		}
 		path := filepath.Join(testDataDirectory, name)
 		t.Run(name, func(t *testing.T) {
-			subTest(t, path)
+			yamlSubTest(t, path)
 		})
 	}
 }
