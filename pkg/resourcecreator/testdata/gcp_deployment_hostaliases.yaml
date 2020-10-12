@@ -11,7 +11,7 @@ resourceoptions:
     - Host: b27apvl00046.preprod.local
       Address: 10.183.32.47
     - Host: b27apvl00047.preprod.local
-      Address: 10.184.32.48
+      Address: 10.183.32.48
 input:
   kind: Application
   apiVersion: v1alpha1
@@ -57,4 +57,4 @@ tests:
                   ip: 10.183.32.47
                 - hostnames:
                   - b27apvl00047.preprod.local
-                  ip: 10.184.32.48
+                  ip: 10.183.32.48
