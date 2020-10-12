@@ -234,7 +234,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.Equal(t, "cluster.local/ns/othernamespace/sa/otherapp", objects.authorizationPolicy.Spec.Rules[0].From[0].Source.Principals[0])
+		assert.Equal(t, "cluster.local/ns/othernamespace/sa/otherapp", objects.authorizationPolicy.Spec.Rules[1].From[0].Source.Principals[0])
 	})
 
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {

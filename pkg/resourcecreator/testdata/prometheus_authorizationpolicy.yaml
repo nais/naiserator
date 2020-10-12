@@ -1,0 +1,59 @@
+config:
+  description: prometheus config is defined
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    prometheus:
+      enabled: true
+      port: "8080"
+      path: "/metrics"
+
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "ingress from prometheus defined"
+        resource:
+          spec:
+            ingress:
+              - from:
+                - namespaceSelector:
+                    matchLabels:
+                      name: istio-system
+                  podSelector:
+                    matchLabels:
+                      app: prometheus
+
+  - operation: CreateOrUpdate
+    apiVersion: security.istio.io/v1beta1
+    kind: AuthorizationPolicy
+    name: myapplication
+    match:
+      - name: "authorization policy created"
+        type: subset
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            selector:
+              matchLabels:
+                app: myapplication
+            rules:
+              - from:
+                  - source:
+                      principals:
+                        - 'cluster.local/ns/istio-system/sa/prometheus'

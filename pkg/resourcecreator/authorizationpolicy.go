@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
@@ -12,6 +13,8 @@ import (
 	istio_security_client "istio.io/client-go/pkg/apis/security/v1beta1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const PrometheusServiceAccountPrincipal = "cluster.local/ns/istio-system/sa/prometheus"
 
 func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio_security_client.AuthorizationPolicy, error) {
 	var rules []*istio.Rule
@@ -46,9 +49,9 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio
 		}
 
 	}
-	// Authorization policy does not apply if app doesn't receive incoming traffic
-	if len(app.Spec.AccessPolicy.Inbound.Rules) == 0 && len(app.Spec.Ingresses) == 0 {
-		return nil, nil
+
+	if app.Spec.Prometheus.Enabled {
+		rules = append(rules, prometheusRule(app))
 	}
 
 	if len(app.Spec.Ingresses) > 0 {
@@ -57,6 +60,10 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, accessPolicyRules(app, options))
+	}
+
+	if len(rules) == 0 {
+		return nil, nil
 	}
 
 	return &istio_security_client.AuthorizationPolicy{
@@ -116,6 +123,31 @@ func accessPolicyRules(app *nais.Application, options ResourceOptions) *istio.Ru
 			{
 				Operation: &istio.Operation{
 					Paths: []string{"*"},
+				},
+			},
+		},
+	}
+}
+
+func prometheusRule(app *nais.Application) *istio.Rule {
+	port := app.Spec.Prometheus.Port
+	if len(port) == 0 {
+		port = strconv.Itoa(app.Spec.Port)
+	}
+	return &istio.Rule{
+		From: []*istio.Rule_From{
+			{
+				Source: &istio.Source{
+					Principals: []string{PrometheusServiceAccountPrincipal},
+				},
+			},
+		},
+		To: []*istio.Rule_To{
+			{
+				Operation: &istio.Operation{
+					Paths:   []string{app.Spec.Prometheus.Path},
+					Ports:   []string{port},
+					Methods: []string{"GET"},
 				},
 			},
 		},
