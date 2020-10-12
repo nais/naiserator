@@ -25,12 +25,19 @@ const (
 	kafkaCertificatePathKey        = "KAFKA_CERTIFICATE_PATH"
 	kafkaPrivateKeyPathKey         = "KAFKA_PRIVATE_KEY_PATH"
 	kafkaCAPathKey                 = "KAFKA_CA_PATH"
+	kafkaKeystorePathKey           = "KAFKA_KEYSTORE_PATH"
+	kafkaTruststorePathKey         = "KAFKA_TRUSTSTORE_PATH"
 	kafkaCertificateKey            = "KAFKA_CERTIFICATE"
 	kafkaPrivateKeyKey             = "KAFKA_PRIVATE_KEY"
 	kafkaCAKey                     = "KAFKA_CA"
+	kafkaBrokersKey                = "KAFKA_BROKERS"
+	kafkaSchemaRegistryKey         = "KAFKA_SCHEMA_REGISTRY"
+	kafkaCredStorePasswordKey      = "KAFKA_CREDSTORE_PASSWORD"
 	kafkaCertificateFilename       = "kafka.crt"
 	kafkaPrivateKeyFilename        = "kafka.key"
 	kafkaCAFilename                = "ca.crt"
+	kafkaKeystoreFilename          = "client.keystore.p12"
+	kafkaTruststoreFilename        = "client.truststore.jks"
 )
 
 func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {
@@ -177,10 +184,21 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	return podSpec, err
 }
 
-func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) *corev1.PodSpec {
-	// Mount Kafkarator secret
-	podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.KafkaratorSecretName)
+func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
+	return corev1.EnvVar{
+		Name: key,
+		ValueFrom: &corev1.EnvVarSource{
+			SecretKeyRef: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: key,
+			},
+		},
+	}
+}
 
+func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) *corev1.PodSpec {
 	// Mount specific secret keys as credential files
 	credentialFilesVolume := fromFilesSecretVolume(kafkaCredentialFilesVolumeName, resourceOptions.KafkaratorSecretName, []corev1.KeyToPath{
 		{
@@ -195,8 +213,26 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) 
 			Key:  kafkaCAKey,
 			Path: kafkaCAFilename,
 		},
+		{
+			Key:  kafkaKeystoreFilename,
+			Path: kafkaKeystoreFilename,
+		},
+		{
+			Key:  kafkaTruststoreFilename,
+			Path: kafkaTruststoreFilename,
+		},
 	})
 	podSpec = podSpecWithVolume(podSpec, credentialFilesVolume)
+
+	// Add environment variables for string data
+	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, []corev1.EnvVar{
+		makeKafkaSecretEnvVar(kafkaCertificateKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(kafkaPrivateKeyKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(kafkaBrokersKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(kafkaSchemaRegistryKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(kafkaCAKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(kafkaCredStorePasswordKey, resourceOptions.KafkaratorSecretName),
+	}...)
 
 	// Inject path environment variables to refer to mounted secrets
 	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, []corev1.EnvVar{
@@ -211,6 +247,14 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) 
 		{
 			Name:  kafkaCAPathKey,
 			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaCAFilename),
+		},
+		{
+			Name:  kafkaKeystorePathKey,
+			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaKeystoreFilename),
+		},
+		{
+			Name:  kafkaTruststorePathKey,
+			Value: filepath.Join(nais.DefaultKafkaratorMountPath, kafkaTruststoreFilename),
 		},
 	}...)
 
