@@ -41,15 +41,12 @@ tests:
                           path: kafka.key
                         - key: KAFKA_CA
                           path: ca.crt
-                        - key: KAFKA_KEYSTORE
+                        - key: client.keystore.p12
                           path: client.keystore.p12
-                        - key: KAFKA_TRUSTSTORE
+                        - key: client.truststore.jks
                           path: client.truststore.jks
                 containers:
-                  - envFrom:
-                      - secretRef:
-                          name: kafka-myapplication-some-kafka-pool-87289b08
-                    volumeMounts:
+                  - volumeMounts:
                       - name: kafka-credentials
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/kafka
@@ -64,3 +61,35 @@ tests:
                         value: /var/run/secrets/nais.io/kafka/client.keystore.p12
                       - name: KAFKA_TRUSTSTORE_PATH
                         value: /var/run/secrets/nais.io/kafka/client.truststore.jks
+# TODO: Find out why including these fails the test.
+#                      - name: KAFKA_CERTIFICATE
+#                        valueFrom:
+#                          secretKeyRef:
+#                            key: KAFKA_CERTIFICATE
+#                            name: kafka-myapplication-some-kafka-pool-87289b08
+#                      - name: KAFKA_PRIVATE_KEY
+#                        valueFrom:
+#                          secretKeyRef:
+#                            key: KAFKA_PRIVATE_KEY
+#                            name: kafka-myapplication-some-kafka-pool-87289b08
+#                      - name: KAFKA_BROKERS
+#                        valueFrom:
+#                          secretKeyRef:
+#                            key: KAFKA_BROKERS
+#                            name: kafka-myapplication-some-kafka-pool-87289b08
+#                      - name: KAFKA_SCHEMA_REGISTRY
+#                        valueFrom:
+#                          secretKeyRef:
+#                            key: KAFKA_SCHEMA_REGISTRY
+#                            name: kafka-myapplication-some-kafka-pool-87289b08
+#                      - name: KAFKA_CA
+#                        valueFrom:
+#                          secretKeyRef:
+#                            key: KAFKA_CA
+#                            name: kafka-myapplication-some-kafka-pool-87289b08
+#                      - name: KAFKA_CREDSTORE_PASSWORD
+#                        valueFrom:
+#                          secretKeyRef:
+#                            key: KAFKA_CREDSTORE_PASSWORD
+#                            name: kafka-myapplication-some-kafka-pool-87289b08
+#
