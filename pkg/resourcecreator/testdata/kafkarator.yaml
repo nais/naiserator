@@ -51,6 +51,36 @@ tests:
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/kafka
                     env:
+                      - name: KAFKA_CERTIFICATE
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_CERTIFICATE
+                            name: kafka-myapplication-some-kafka-pool-87289b08
+                      - name: KAFKA_PRIVATE_KEY
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_PRIVATE_KEY
+                            name: kafka-myapplication-some-kafka-pool-87289b08
+                      - name: KAFKA_BROKERS
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_BROKERS
+                            name: kafka-myapplication-some-kafka-pool-87289b08
+                      - name: KAFKA_SCHEMA_REGISTRY
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_SCHEMA_REGISTRY
+                            name: kafka-myapplication-some-kafka-pool-87289b08
+                      - name: KAFKA_CA
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_CA
+                            name: kafka-myapplication-some-kafka-pool-87289b08
+                      - name: KAFKA_CREDSTORE_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_CREDSTORE_PASSWORD
+                            name: kafka-myapplication-some-kafka-pool-87289b08
                       - name: KAFKA_CERTIFICATE_PATH
                         value: /var/run/secrets/nais.io/kafka/kafka.crt
                       - name: KAFKA_PRIVATE_KEY_PATH
@@ -61,35 +91,3 @@ tests:
                         value: /var/run/secrets/nais.io/kafka/client.keystore.p12
                       - name: KAFKA_TRUSTSTORE_PATH
                         value: /var/run/secrets/nais.io/kafka/client.truststore.jks
-# TODO: Find out why including these fails the test.
-#                      - name: KAFKA_CERTIFICATE
-#                        valueFrom:
-#                          secretKeyRef:
-#                            key: KAFKA_CERTIFICATE
-#                            name: kafka-myapplication-some-kafka-pool-87289b08
-#                      - name: KAFKA_PRIVATE_KEY
-#                        valueFrom:
-#                          secretKeyRef:
-#                            key: KAFKA_PRIVATE_KEY
-#                            name: kafka-myapplication-some-kafka-pool-87289b08
-#                      - name: KAFKA_BROKERS
-#                        valueFrom:
-#                          secretKeyRef:
-#                            key: KAFKA_BROKERS
-#                            name: kafka-myapplication-some-kafka-pool-87289b08
-#                      - name: KAFKA_SCHEMA_REGISTRY
-#                        valueFrom:
-#                          secretKeyRef:
-#                            key: KAFKA_SCHEMA_REGISTRY
-#                            name: kafka-myapplication-some-kafka-pool-87289b08
-#                      - name: KAFKA_CA
-#                        valueFrom:
-#                          secretKeyRef:
-#                            key: KAFKA_CA
-#                            name: kafka-myapplication-some-kafka-pool-87289b08
-#                      - name: KAFKA_CREDSTORE_PASSWORD
-#                        valueFrom:
-#                          secretKeyRef:
-#                            key: KAFKA_CREDSTORE_PASSWORD
-#                            name: kafka-myapplication-some-kafka-pool-87289b08
-#
