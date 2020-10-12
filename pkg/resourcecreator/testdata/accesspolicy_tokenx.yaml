@@ -7,6 +7,8 @@ resourceoptions:
   NumReplicas: 1
   ClusterName: mycluster
   JwkerEnabled: true
+  JwkerServiceEntryHosts:
+    - dev.tokendings.test
 
 input:
   kind: Application
@@ -20,6 +22,8 @@ input:
     image: foo/bar
     accessPolicy:
       outbound:
+        external:
+          - host: some.external.test
         rules:
           - application: foo
             namespace: bar
@@ -101,3 +105,25 @@ tests:
                       - name: ^myapplication-.+$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/jwker
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-02
+    match:
+      - name: "service entry created for outbound traffic to tokendings"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - "dev.tokendings.test"
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 443
+                protocol: HTTPS
+                name: https
+            exportTo:
+              - "."

@@ -98,3 +98,22 @@ func TestNewCRD(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equalf(t, applicationHash, hash, "Your Application default value changes will trigger a FULL REDEPLOY of ALL APPLICATIONS in ALL NAMESPACES across ALL CLUSTERS. If this is what you really want, change the `applicationHash` constant in this test file to `%s`.", hash)
 }
+
+func TestAddAccessPolicyExternalHosts(t *testing.T) {
+	app := &v1alpha1.Application{}
+	err := v1alpha1.ApplyDefaults(app)
+	assert.NoError(t, err)
+
+	hosts := []string{
+		"some-host.example.test",
+		"existing.host.test",
+	}
+	app.Spec.AccessPolicy.Outbound.External = append(app.Spec.AccessPolicy.Outbound.External,
+		v1alpha1.AccessPolicyExternalRule{Host: "existing.host.test"},
+	)
+	app.AddAccessPolicyExternalHosts(hosts)
+
+	assert.Len(t, app.Spec.AccessPolicy.Outbound.External, 2)
+	assert.Contains(t, app.Spec.AccessPolicy.Outbound.External, v1alpha1.AccessPolicyExternalRule{Host: "existing.host.test"})
+	assert.Contains(t, app.Spec.AccessPolicy.Outbound.External, v1alpha1.AccessPolicyExternalRule{Host: "some-host.example.test"})
+}

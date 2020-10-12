@@ -17,8 +17,7 @@ jobs:
       - name: Generate image environment variable
         run: |
           version=$(./version.sh)
-          echo ::set-env name=version::${version}
-          echo ::set-env name=IMAGE::${image}:${version}
+          echo "IMAGE=${image}:${version}" >> $GITHUB_ENV
       - name: Build docker image
         run: docker build . --tag $IMAGE
       - name: Login to Github package registry
@@ -47,8 +46,8 @@ jobs:
         run: |
           cd naiserator
           version=$(./version.sh)
-          echo ::set-env name=version::${version}
-          echo ::set-env name=IMAGE::${image}:${version}
+          echo "version=${version}" >> $GITHUB_ENV
+          echo "IMAGE=${image}:${version}" >> $GITHUB_ENV
           cd ..
       - name: Generate nais-yaml files
         run: |

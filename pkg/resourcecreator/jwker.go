@@ -2,7 +2,6 @@ package resourcecreator
 
 import (
 	"fmt"
-
 	jwker "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"

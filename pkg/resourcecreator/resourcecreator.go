@@ -36,13 +36,17 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
 		jwker := Jwker(app, resourceOptions.ClusterName)
 		if jwker != nil {
+			app.AddAccessPolicyExternalHosts(resourceOptions.JwkerServiceEntryHosts)
+
 			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
 			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
 		}
 	}
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
-		azureapp := AzureAdApplication(*app, resourceOptions)
+		azureapp := AzureAdApplication(*app, resourceOptions.ClusterName)
+		app.AddAccessPolicyExternalHosts(resourceOptions.AzureratorServiceEntryHosts)
+
 		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
 	}
@@ -60,6 +64,8 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		if err != nil {
 			return nil, err
 		}
+		app.AddAccessPolicyExternalHosts(resourceOptions.DigdiratorServiceEntryHosts)
+
 		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorSecretName = idportenClient.Spec.SecretName
 	}

@@ -185,3 +185,5 @@ tests:
               - number: 443
                 protocol: HTTPS
                 name: https
+            exportTo:
+              - "."
