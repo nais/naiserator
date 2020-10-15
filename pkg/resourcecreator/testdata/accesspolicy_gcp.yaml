@@ -161,10 +161,6 @@ tests:
                         - cluster.local/ns/mynamespace/sa/app1
                         - cluster.local/ns/q1/sa/app2
                         - cluster.local/ns/t1/sa/*
-                to:
-                  - operation:
-                      paths:
-                        - '*'
 
   - operation: CreateOrUpdate
     apiVersion: networking.istio.io/v1alpha3

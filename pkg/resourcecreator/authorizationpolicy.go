@@ -119,13 +119,6 @@ func accessPolicyRules(app *nais.Application, options ResourceOptions) *istio.Ru
 				},
 			},
 		},
-		To: []*istio.Rule_To{
-			{
-				Operation: &istio.Operation{
-					Paths: []string{"*"},
-				},
-			},
-		},
 	}
 }
 
