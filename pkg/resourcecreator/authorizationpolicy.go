@@ -59,7 +59,10 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio
 	}
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
-		rules = append(rules, accessPolicyRules(app, options))
+		accessPolicyRules := accessPolicyRules(app, options)
+		if accessPolicyRules != nil {
+			rules = append(rules, accessPolicyRules)
+		}
 	}
 
 	if len(rules) == 0 {
@@ -111,11 +114,15 @@ func ingressGatewayRule(gateways []string) *istio.Rule {
 }
 
 func accessPolicyRules(app *nais.Application, options ResourceOptions) *istio.Rule {
+	principals := principals(app, options)
+	if len(principals) < 1 {
+		return nil
+	}
 	return &istio.Rule{
 		From: []*istio.Rule_From{
 			{
 				Source: &istio.Source{
-					Principals: principals(app, options),
+					Principals: principals,
 				},
 			},
 		},

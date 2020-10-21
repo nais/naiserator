@@ -19,6 +19,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	otherNamespace2 := "othernamespace2"
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".test.no", GatewayName: "istio-system/gw-test"}}
+	resourceOptions.ClusterName = "test-cluster"
 
 	t.Run("auth policy with no ingresses or access policies", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
@@ -71,5 +72,12 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
 		assert.Len(t, authorizationPolicy.Spec.Rules[0].From[0].Source.Principals, 2)
+	})
+	t.Run("auth policy for app with inbound access policy containing only non-local principals", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, "non-local"}}
+		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
+		assert.NoError(t, err)
+		assert.Nil(t, authorizationPolicy)
 	})
 }
