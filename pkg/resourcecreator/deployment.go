@@ -274,6 +274,16 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 	connectionName := fmt.Sprintf("%s:%s:%s", projectId, GoogleRegion, sqlInstance.Name)
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
+	cloudSqlProxyContainerResourceSpec := nais.ResourceRequirements{
+		Limits:   &nais.ResourceSpec{
+			Cpu:    "250m",
+			Memory: "256Mi",
+		},
+		Requests: &nais.ResourceSpec{
+			Cpu:    "20m",
+			Memory: "32Mi",
+		},
+	}
 	return corev1.Container{
 		Name:            "cloudsql-proxy",
 		Image:           viper.GetString(config2.GoogleCloudSQLProxyContainerImage),
@@ -286,6 +296,7 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 			"/cloud_sql_proxy",
 			fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
 		},
+		Resources:       resourceLimits(cloudSqlProxyContainerResourceSpec),
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser:                &runAsUser,
 			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
