@@ -350,6 +350,7 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, instanceName, objects.secret.StringData["NAIS_DATABASE_MYAPPLICATION_MYDB_USERNAME"])
 		assert.Equal(t, instanceName, objects.googleIAMPolicyMember.Name)
 		assert.Equal(t, fmt.Sprintf("google-sql-%s", instanceName), objects.deployment.Spec.Template.Spec.Containers[0].EnvFrom[0].SecretRef.Name)
+		assert.True(t, objects.sqlInstance.Spec.Settings.IpConfiguration.RequireSsl)
 	})
 
 	t.Run("ensure that the ingresses and redirect URIs for idporten are valid", func(t *testing.T) {

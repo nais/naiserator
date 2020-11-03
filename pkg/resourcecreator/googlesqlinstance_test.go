@@ -28,6 +28,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 	assert.Equal(t, projectId, sqlInstance.Annotations[resourcecreator.GoogleProjectIdAnnotation])
 	assert.Equal(t, "02:00", sqlInstance.Spec.Settings.BackupConfiguration.StartTime)
 	assert.True(t, sqlInstance.Spec.Settings.BackupConfiguration.Enabled)
+	assert.True(t, sqlInstance.Spec.Settings.IpConfiguration.RequireSsl)
 	assert.Nil(t, sqlInstance.Spec.Settings.MaintenanceWindow, "user not specifying maintenance window leaves it unconfigured")
 
 	t.Run("setting configuring maintenance and backup works as expected", func(t *testing.T) {

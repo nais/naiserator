@@ -42,10 +42,12 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 			Settings: google_sql_crd.SQLInstanceSettings{
 				AvailabilityType:    availabilityType(instance.HighAvailability),
 				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{Enabled: true, StartTime: fmt.Sprintf("%02d:00", *instance.AutoBackupHour)},
+				IpConfiguration:	 google_sql_crd.SQLInstanceIpConfiguration{RequireSsl: true},
 				DiskAutoresize:      instance.DiskAutoresize,
 				DiskSize:            instance.DiskSize,
 				DiskType:            instance.DiskType.GoogleType(),
 				Tier:                instance.Tier,
+
 			},
 		},
 	}
