@@ -70,13 +70,13 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		resourceOptions.DigdiratorSecretName = idportenClient.Spec.SecretName
 	}
 
-	if len(resourceOptions.GoogleProjectId) > 0 && app.Spec.GCP != nil {
+	if len(resourceOptions.GoogleProjectId) > 0 {
 		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
 		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
 		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
-		if app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
+		if app.Spec.GCP != nil && app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
 			for _, b := range app.Spec.GCP.Buckets {
 				bucket := GoogleStorageBucket(app, b)
 				ops = append(ops, ResourceOperation{bucket, OperationCreateIfNotExists})
@@ -86,7 +86,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			}
 		}
 
-		if app.Spec.GCP.SqlInstances != nil {
+		if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
 			vars := make(map[string]string)
 
 			for i, sqlInstance := range app.Spec.GCP.SqlInstances {
