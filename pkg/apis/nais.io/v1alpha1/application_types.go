@@ -129,8 +129,18 @@ type AzureApplication struct {
 	Enabled   bool     `json:"enabled"`
 	ReplyURLs []string `json:"replyURLs,omitempty"`
 	// +kubebuilder:validation:Enum=nav.no;trygdeetaten.no
-	Tenant string `json:"tenant,omitempty"`
+	Tenant           string                   `json:"tenant,omitempty"`
+	// Claims defines additional configuration of the emitted claims in tokens returned to the AzureAdApplication
+	Claims *AzureAdClaims `json:"claims,omitempty"`
 }
+
+type AzureAdClaims struct {
+	// Extra is a list of additional claims to be mapped from an associated claim-mapping policy.
+	Extra []AzureAdExtraClaim `json:"extra,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=NAVident
+type AzureAdExtraClaim string
 
 type SecureLogs struct {
 	// Whether or not to enable a sidecar container for secure logging.

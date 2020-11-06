@@ -21,6 +21,10 @@ input:
     azure:
       application:
         enabled: true
+        tenant: nav.no
+        claims:
+          extra:
+            - "NAVident"
     accessPolicy:
       inbound:
         rules:
@@ -33,7 +37,6 @@ input:
     ingresses:
       - https://my.application/foo/bar
       - https://my.application/foo/bar/baz
-    tenant: nav.no
 
 tests:
   - apiVersion: nais.io/v1
@@ -41,9 +44,15 @@ tests:
     name: myapplication
     operation: CreateOrUpdate
     match:
-      - type: subset
+      - type: exact
         name: "spec is populated with correct values"
+        exclude:
+          - .status
+          - .metadata
+          - .spec.secretName
         resource:
+          apiVersion: nais.io/v1
+          kind: AzureAdApplication
           spec:
             preAuthorizedApplications:
               - application: app1
@@ -59,3 +68,6 @@ tests:
               - url: "https://my.application/foo/bar/oauth2/callback"
               - url: "https://my.application/foo/bar/baz/oauth2/callback"
             tenant: nav.no
+            claims:
+              extra:
+              - "NAVident"

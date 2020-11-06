@@ -121,6 +121,19 @@ spec:
               properties:
                 application:
                   properties:
+                    claims:
+                      description: Claims defines additional configuration of the
+                        emitted claims in tokens returned to the AzureAdApplication
+                      properties:
+                        extra:
+                          description: Extra is a list of additional claims to be
+                            mapped from an associated claim-mapping policy.
+                          items:
+                            enum:
+                            - NAVident
+                            type: string
+                          type: array
+                      type: object
                     enabled:
                       type: boolean
                     replyURLs:
