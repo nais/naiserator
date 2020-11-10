@@ -20,7 +20,7 @@ const (
 	DefaultSqlInstanceDiskSize       = 10
 )
 
-func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
+func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string, ) *google_sql_crd.SQLInstance {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = instance.Name
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
@@ -40,12 +40,18 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 			DatabaseVersion: string(instance.Type),
 			Region:          GoogleRegion,
 			Settings: google_sql_crd.SQLInstanceSettings{
-				AvailabilityType:    availabilityType(instance.HighAvailability),
-				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{Enabled: true, StartTime: fmt.Sprintf("%02d:00", *instance.AutoBackupHour)},
-				DiskAutoresize:      instance.DiskAutoresize,
-				DiskSize:            instance.DiskSize,
-				DiskType:            instance.DiskType.GoogleType(),
-				Tier:                instance.Tier,
+				AvailabilityType: availabilityType(instance.HighAvailability),
+				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{
+					Enabled:   true,
+					StartTime: fmt.Sprintf("%02d:00", *instance.AutoBackupHour),
+				},
+				IpConfiguration: google_sql_crd.SQLInstanceIpConfiguration{
+					RequireSsl: true,
+				},
+				DiskAutoresize: instance.DiskAutoresize,
+				DiskSize:       instance.DiskSize,
+				DiskType:       instance.DiskType.GoogleType(),
+				Tier:           instance.Tier,
 			},
 		},
 	}
@@ -91,7 +97,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string, ) *google_iam_crd.IAMPolicyMember {
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{

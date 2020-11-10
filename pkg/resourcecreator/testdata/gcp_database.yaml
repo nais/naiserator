@@ -99,6 +99,8 @@ tests:
               backupConfiguration:
                 enabled: true
                 startTime: "02:00"
+              ipConfiguration:
+                requireSsl: true
               diskAutoresize: false
               diskSize: 10
               diskType: PD_SSD

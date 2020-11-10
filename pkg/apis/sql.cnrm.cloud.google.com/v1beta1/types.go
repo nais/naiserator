@@ -18,6 +18,7 @@ type MaintenanceWindow struct {
 type SQLInstanceSettings struct {
 	AvailabilityType    string                         `json:"availabilityType"`
 	BackupConfiguration SQLInstanceBackupConfiguration `json:"backupConfiguration"`
+	IpConfiguration	    SQLInstanceIpConfiguration     `json:"ipConfiguration"`
 	DiskAutoresize      bool                           `json:"diskAutoresize"`
 	DiskSize            int                            `json:"diskSize"`
 	DiskType            string                         `json:"diskType"`
@@ -28,6 +29,10 @@ type SQLInstanceSettings struct {
 type SQLInstanceBackupConfiguration struct {
 	Enabled   bool   `json:"enabled"`
 	StartTime string `json:"startTime"`
+}
+
+type SQLInstanceIpConfiguration struct {
+	RequireSsl bool `json:"requireSsl"`
 }
 
 // +genclient
