@@ -200,6 +200,10 @@ spec:
                         type: boolean
                       name:
                         type: string
+                      retentionPeriod:
+                        minimum: 0
+                        maximum: 3155760000
+                        type: integer
                     required:
                     - name
                     type: object

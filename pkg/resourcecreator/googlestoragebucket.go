@@ -24,6 +24,9 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 		ObjectMeta: objectMeta,
 		Spec: google_storage_crd.StorageBucketSpec{
 			Location: GoogleRegion,
+			RetentionPolicy: google_storage_crd.RetentionPolicy{
+				RetentionPeriod: bucket.RetentionPeriod,
+			},
 		},
 	}
 }

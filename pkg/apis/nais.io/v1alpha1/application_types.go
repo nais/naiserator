@@ -186,6 +186,7 @@ type EnvVarSource struct {
 type CloudStorageBucket struct {
 	Name            string `json:"name"`
 	CascadingDelete bool   `json:"cascadingDelete,omitempty"`
+	RetentionPeriod int    `json:"retentionPeriod,omitempty"`
 }
 
 type CloudSqlInstanceType string
