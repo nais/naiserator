@@ -186,7 +186,9 @@ type EnvVarSource struct {
 type CloudStorageBucket struct {
 	Name            string `json:"name"`
 	CascadingDelete bool   `json:"cascadingDelete,omitempty"`
-	RetentionPeriod int    `json:"retentionPeriod,omitempty"`
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=36500
+	RetentionPeriodDays int `json:"retentionPeriodDays,omitempty"`
 }
 
 type CloudSqlInstanceType string
