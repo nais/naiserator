@@ -32,6 +32,8 @@ const (
 	kafkaCAKey                     = "KAFKA_CA"
 	kafkaBrokersKey                = "KAFKA_BROKERS"
 	kafkaSchemaRegistryKey         = "KAFKA_SCHEMA_REGISTRY"
+	kafkaSchemaRegistryUserKey     = "KAFKA_SCHEMA_REGISTRY_USER"
+	kafkaSchemaRegistryPasswordKey = "KAFKA_SCHEMA_REGISTRY_PASSWORD"
 	kafkaCredStorePasswordKey      = "KAFKA_CREDSTORE_PASSWORD"
 	kafkaCertificateFilename       = "kafka.crt"
 	kafkaPrivateKeyFilename        = "kafka.key"
@@ -230,6 +232,8 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) 
 		makeKafkaSecretEnvVar(kafkaPrivateKeyKey, resourceOptions.KafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaBrokersKey, resourceOptions.KafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaSchemaRegistryKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(kafkaSchemaRegistryUserKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(kafkaSchemaRegistryPasswordKey, resourceOptions.KafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaCAKey, resourceOptions.KafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaCredStorePasswordKey, resourceOptions.KafkaratorSecretName),
 	}...)
@@ -275,7 +279,7 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
 	cloudSqlProxyContainerResourceSpec := nais.ResourceRequirements{
-		Limits:   &nais.ResourceSpec{
+		Limits: &nais.ResourceSpec{
 			Cpu:    "250m",
 			Memory: "256Mi",
 		},
@@ -296,7 +300,7 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 			"/cloud_sql_proxy",
 			fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
 		},
-		Resources:       resourceLimits(cloudSqlProxyContainerResourceSpec),
+		Resources: resourceLimits(cloudSqlProxyContainerResourceSpec),
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser:                &runAsUser,
 			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
@@ -534,7 +538,7 @@ func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 		objectMeta.Labels["kafka"] = "enabled"
 	}
 
-	if (app.Spec.Tracing != nil && app.Spec.Tracing.Enabled) {
+	if app.Spec.Tracing != nil && app.Spec.Tracing.Enabled {
 		objectMeta.Annotations["proxy.istio.io/config"] = tracingAnnotation
 	}
 

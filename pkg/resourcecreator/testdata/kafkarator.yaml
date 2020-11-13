@@ -71,6 +71,16 @@ tests:
                           secretKeyRef:
                             key: KAFKA_SCHEMA_REGISTRY
                             name: kafka-myapplication-some-kafka-pool-87289b08
+                      - name: KAFKA_SCHEMA_REGISTRY_USER
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_SCHEMA_REGISTRY_USER
+                            name: kafka-myapplication-some-kafka-pool-87289b08
+                      - name: KAFKA_SCHEMA_REGISTRY_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            key: KAFKA_SCHEMA_REGISTRY_PASSWORD
+                            name: kafka-myapplication-some-kafka-pool-87289b08
                       - name: KAFKA_CA
                         valueFrom:
                           secretKeyRef:
