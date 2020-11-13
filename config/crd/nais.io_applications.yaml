@@ -201,6 +201,8 @@ spec:
                       name:
                         type: string
                       retentionPeriod:
+                        maximum: 3155760000
+                        minimum: 1
                         type: integer
                     required:
                     - name
