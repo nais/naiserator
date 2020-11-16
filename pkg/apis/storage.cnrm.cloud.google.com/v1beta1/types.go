@@ -13,7 +13,8 @@ type StorageBucket struct {
 }
 
 type StorageBucketSpec struct {
-	Location string `json:"location"`
+	Location        string          `json:"location"`
+	RetentionPolicy RetentionPolicy `json:"retentionPolicy"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -46,4 +47,8 @@ type StorageBucketAccessControlList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []StorageBucketAccessControl `json:"items"`
+}
+
+type RetentionPolicy struct {
+	RetentionPeriod int `json:"retentionPeriod,omitempty"`
 }

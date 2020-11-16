@@ -2,8 +2,9 @@ package resourcecreator_test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -11,15 +12,15 @@ import (
 
 func TestGetGoogleStorageBucket(t *testing.T) {
 	t.Run("bucket creation", func(t *testing.T) {
-		bucketname := "buckowens"
 		app := fixtures.MinimalApplication()
-		app.Spec.GCP = &v1alpha1.GCP{
-			Buckets: []v1alpha1.CloudStorageBucket{
-				{Name: bucketname},
-			},
-		}
-		bucket := resourcecreator.GoogleStorageBucket(app, app.Spec.GCP.Buckets[0])
-		assert.Equal(t, "buckowens", bucket.Name)
+		csb := nais.CloudStorageBucket{Name: "mystoragebucket", RetentionPeriodDays: 7}
+		expectedRetentionPeriod := csb.RetentionPeriodDays * int(time.Hour.Seconds() * 24)
+
+		bucket := resourcecreator.GoogleStorageBucket(app, csb)
+		assert.Equal(t, csb.Name, bucket.Name)
+		assert.Equal(t, expectedRetentionPeriod, bucket.Spec.RetentionPolicy.RetentionPeriod)
 		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
+		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
+			GoogleDeletionPolicyAnnotation])
 	})
 }
