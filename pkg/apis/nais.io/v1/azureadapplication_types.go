@@ -48,24 +48,24 @@ type AzureAdApplicationSpec struct {
 
 // AzureAdApplicationStatus defines the observed state of AzureAdApplication
 type AzureAdApplicationStatus struct {
-	// Synchronized denotes whether the provisioning of the AzureAdApplication has been successfully completed or not
-	Synchronized bool `json:"synchronized"`
-	// Timestamp is the last time the Status subresource was updated
-	Timestamp metav1.Time `json:"timestamp,omitempty"`
-	// ProvisionHash is the hash of the AzureAdApplication object
-	ProvisionHash string `json:"provisionHash,omitempty"`
+	// SynchronizationState denotes whether the provisioning of the AzureAdApplication has been successfully completed or not
+	SynchronizationState string `json:"synchronizationState,omitempty"`
+	// SynchronizationTime is the last time the Status subresource was updated
+	SynchronizationTime *metav1.Time `json:"synchronizationTime,omitempty"`
+	// SynchronizationHash is the hash of the AzureAdApplication object
+	SynchronizationHash string `json:"synchronizationHash,omitempty"`
 	// CorrelationId is the ID referencing the processing transaction last performed on this resource
-	CorrelationId string `json:"correlationId"`
+	CorrelationId string `json:"correlationId,omitempty"`
 	// PasswordKeyIds is the list of key IDs for the latest valid password credentials in use
-	PasswordKeyIds []string `json:"passwordKeyIds"`
+	PasswordKeyIds []string `json:"passwordKeyIds,omitempty"`
 	// CertificateKeyIds is the list of key IDs for the latest valid certificate credentials in use
-	CertificateKeyIds []string `json:"certificateKeyIds"`
+	CertificateKeyIds []string `json:"certificateKeyIds,omitempty"`
 	// ClientId is the Azure application client ID
-	ClientId string `json:"clientId"`
+	ClientId string `json:"clientId,omitempty"`
 	// ObjectId is the Azure AD Application object ID
-	ObjectId string `json:"objectId"`
+	ObjectId string `json:"objectId,omitempty"`
 	// ServicePrincipalId is the Azure applications service principal object ID
-	ServicePrincipalId string `json:"servicePrincipalId"`
+	ServicePrincipalId string `json:"servicePrincipalId,omitempty"`
 }
 
 // AzureAdReplyUrl defines the valid reply URLs for callbacks after OIDC flows for this application
