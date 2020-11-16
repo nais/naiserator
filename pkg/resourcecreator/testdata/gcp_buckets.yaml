@@ -21,7 +21,7 @@ input:
     gcp:
       buckets:
       - name: myapplication
-        retentionPeriod: 7
+        retentionPeriodDays: 7
 
 tests:
   - match:
@@ -90,7 +90,8 @@ tests:
             namespace: mynamespace
           spec:
             location: europe-north1
-            retentionPolicy: {}
+            retentionPolicy:
+              retentionPeriod: 604800
   - apiVersion: storage.cnrm.cloud.google.com/v1beta1
     kind: StorageBucketAccessControl
     operation: CreateOrUpdate
