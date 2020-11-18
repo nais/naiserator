@@ -14,7 +14,7 @@ type StorageBucket struct {
 
 type StorageBucketSpec struct {
 	Location        string          `json:"location"`
-	RetentionPolicy RetentionPolicy `json:"retentionPolicy"`
+	RetentionPolicy RetentionPolicy `json:"retentionPolicy,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

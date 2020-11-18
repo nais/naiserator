@@ -23,4 +23,16 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
 			GoogleDeletionPolicyAnnotation])
 	})
+
+	t.Run("bucket without retention", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		csb := nais.CloudStorageBucket{Name: "mystoragebucket"}
+
+		bucket := resourcecreator.GoogleStorageBucket(app, csb)
+		assert.Equal(t, csb.Name, bucket.Name)
+		assert.Equal(t, 0, bucket.Spec.RetentionPolicy.RetentionPeriod)
+		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
+		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
+			GoogleDeletionPolicyAnnotation])
+	})
 }
