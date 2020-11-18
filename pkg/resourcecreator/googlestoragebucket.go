@@ -23,7 +23,7 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 		retentionPeriod := bucket.RetentionPeriodDays * int(time.Hour.Seconds()*24)
 		storageBucketSpec = google_storage_crd.StorageBucketSpec{
 			Location:        GoogleRegion,
-			RetentionPolicy: google_storage_crd.RetentionPolicy{RetentionPeriod: retentionPeriod},
+			RetentionPolicy: google_storage_crd.RetentionPolicy{RetentionPeriod: &retentionPeriod},
 		}
 	}
 
