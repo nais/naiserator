@@ -39,9 +39,7 @@ tests:
           - .spec.secretName
         resource:
           spec:
-            clientURI: ""
             redirectURI: "https://my-client.nav.no/oauth2/callback"
-            postLogoutRedirectURIs: []
   - apiVersion: nais.io/v1
     kind: IDPortenClient
     name: myapplication

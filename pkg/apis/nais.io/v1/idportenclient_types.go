@@ -28,7 +28,7 @@ type IDPortenClientList struct {
 // IDPortenClientSpec defines the desired state of IDPortenClient
 type IDPortenClientSpec struct {
 	// ClientURI is the URL to the client to be used at DigDir when displaying a 'back' button or on errors
-	ClientURI string `json:"clientURI"`
+	ClientURI string `json:"clientURI,omitempty"`
 	// RedirectURI is the redirect URI to be registered at DigDir
 	// +kubebuilder:validation:Pattern=`^https:\/\/`
 	RedirectURI string `json:"redirectURI"`
@@ -37,7 +37,7 @@ type IDPortenClientSpec struct {
 	// FrontchannelLogoutURI is the URL that ID-porten sends a requests to whenever a logout is triggered by another application using the same session
 	FrontchannelLogoutURI string `json:"frontchannelLogoutURI,omitempty"`
 	// PostLogoutRedirectURI is a list of valid URIs that ID-porten may redirect to after logout
-	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs"`
+	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs,omitempty"`
 	// SessionLifetime is the maximum session lifetime in seconds for a logged in end-user for this client.
 	// +kubebuilder:validation:Minimum=3600
 	// +kubebuilder:validation:Maximum=7200
