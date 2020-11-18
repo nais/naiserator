@@ -8,18 +8,18 @@ import (
 	"strings"
 )
 
-const (
-	IDPortenDefaultClientURI             = "https://www.nav.no"
-	IDPortenDefaultPostLogoutRedirectURI = "https://www.nav.no"
-	IDPortenDefaultRefreshTokenLifetime  = 3600 * 12 // 12 hours, in seconds
-)
-
 func IDPortenClient(app *nais.Application) (*idportenClient.IDPortenClient, error) {
 	if err := validateIngresses(*app); err != nil {
 		return nil, err
 	}
 
-	setIDPortenDefaultsIfMissing(app)
+	if len(app.Spec.IDPorten.RedirectURI) == 0 {
+		app.Spec.IDPorten.RedirectURI = oauthCallbackURL(app.Spec.Ingresses[0])
+	}
+
+	if len(app.Spec.IDPorten.PostLogoutRedirectURIs) == 0 {
+		app.Spec.IDPorten.PostLogoutRedirectURIs = []string{}
+	}
 
 	if err := validateRedirectURI(*app); err != nil {
 		return nil, err
@@ -37,28 +37,10 @@ func IDPortenClient(app *nais.Application) (*idportenClient.IDPortenClient, erro
 			SecretName:             getSecretName(*app),
 			FrontchannelLogoutURI:  app.Spec.IDPorten.FrontchannelLogoutURI,
 			PostLogoutRedirectURIs: app.Spec.IDPorten.PostLogoutRedirectURIs,
-			RefreshTokenLifetime:   *app.Spec.IDPorten.RefreshTokenLifetime,
+			SessionLifetime:        app.Spec.IDPorten.SessionLifetime,
+			AccessTokenLifetime:    app.Spec.IDPorten.AccessTokenLifetime,
 		},
 	}, nil
-}
-
-func setIDPortenDefaultsIfMissing(app *nais.Application) {
-	if len(app.Spec.IDPorten.RedirectURI) == 0 {
-		app.Spec.IDPorten.RedirectURI = oauthCallbackURL(app.Spec.Ingresses[0])
-	}
-
-	if len(app.Spec.IDPorten.ClientURI) == 0 {
-		app.Spec.IDPorten.ClientURI = IDPortenDefaultClientURI
-	}
-
-	if len(app.Spec.IDPorten.PostLogoutRedirectURIs) == 0 {
-		app.Spec.IDPorten.PostLogoutRedirectURIs = []string{IDPortenDefaultPostLogoutRedirectURI}
-	}
-
-	if app.Spec.IDPorten.RefreshTokenLifetime == nil {
-		lifetime := IDPortenDefaultRefreshTokenLifetime
-		app.Spec.IDPorten.RefreshTokenLifetime = &lifetime
-	}
 }
 
 func validateIngresses(app nais.Application) error {

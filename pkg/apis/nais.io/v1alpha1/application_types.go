@@ -117,12 +117,18 @@ type TokenX struct {
 }
 
 type IDPorten struct {
-	Enabled                bool     `json:"enabled"`
-	ClientURI              string   `json:"clientURI,omitempty"`
+	Enabled   bool   `json:"enabled"`
+	ClientURI string `json:"clientURI,omitempty"`
+	// +kubebuilder:validation:Pattern=`^https:\/\/`
 	RedirectURI            string   `json:"redirectURI,omitempty"`
 	FrontchannelLogoutURI  string   `json:"frontchannelLogoutURI,omitempty"`
 	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs,omitempty"`
-	RefreshTokenLifetime   *int     `json:"refreshTokenLifetime,omitempty"`
+	// +kubebuilder:validation:Minimum=3600
+	// +kubebuilder:validation:Maximum=7200
+	SessionLifetime *int `json:"sessionLifetime,omitempty"`
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=3600
+	AccessTokenLifetime *int `json:"accessTokenLifetime,omitempty"`
 }
 
 type AzureApplication struct {

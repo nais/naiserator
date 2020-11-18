@@ -25,7 +25,8 @@ input:
       frontchannelLogoutURI: https://my-client/logout
       postLogoutRedirectURIs:
         - https://my-client/something
-      refreshTokenLifetime: 3600
+      sessionLifetime: 7200
+      accessTokenLifetime: 3600
     ingresses:
      - https://my-client
 
@@ -48,4 +49,5 @@ tests:
             frontchannelLogoutURI: https://my-client/logout
             postLogoutRedirectURIs:
               - https://my-client/something
-            refreshTokenLifetime: 3600
+            sessionLifetime: 7200
+            accessTokenLifetime: 3600

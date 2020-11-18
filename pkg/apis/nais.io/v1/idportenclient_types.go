@@ -28,29 +28,38 @@ type IDPortenClientList struct {
 // IDPortenClientSpec defines the desired state of IDPortenClient
 type IDPortenClientSpec struct {
 	// ClientURI is the URL to the client to be used at DigDir when displaying a 'back' button or on errors
-	ClientURI string `json:"clientURI"`
+	ClientURI string `json:"clientURI,omitempty"`
 	// RedirectURI is the redirect URI to be registered at DigDir
+	// +kubebuilder:validation:Pattern=`^https:\/\/`
 	RedirectURI string `json:"redirectURI"`
 	// SecretName is the name of the resulting Secret resource to be created
 	SecretName string `json:"secretName"`
 	// FrontchannelLogoutURI is the URL that ID-porten sends a requests to whenever a logout is triggered by another application using the same session
 	FrontchannelLogoutURI string `json:"frontchannelLogoutURI,omitempty"`
 	// PostLogoutRedirectURI is a list of valid URIs that ID-porten may redirect to after logout
-	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs"`
-	// RefreshTokenLifetime is the lifetime in seconds for the issued refresh token from ID-porten
-	RefreshTokenLifetime int `json:"refreshTokenLifetime"`
+	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs,omitempty"`
+	// SessionLifetime is the maximum session lifetime in seconds for a logged in end-user for this client.
+	// +kubebuilder:validation:Minimum=3600
+	// +kubebuilder:validation:Maximum=7200
+	SessionLifetime *int `json:"sessionLifetime,omitempty"`
+	// AccessTokenLifetime is the maximum lifetime in seconds for the returned access_token from ID-porten.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=3600
+	AccessTokenLifetime *int `json:"accessTokenLifetime,omitempty"`
 }
 
 // IDPortenClientStatus defines the observed state of IDPortenClient
 type IDPortenClientStatus struct {
-	// ClientID is the ID-porten client ID
-	ClientID string `json:"clientID"`
-	// Timestamp is the last time the Status subresource was updated
-	Timestamp metav1.Time `json:"timestamp,omitempty"`
-	// ProvisionHash is the hash of the IDPortenClient object
-	ProvisionHash string `json:"provisionHash,omitempty"`
+	// SynchronizationState denotes the last known state of the Instance during synchronization
+	SynchronizationState string `json:"synchronizationState,omitempty"`
+	// SynchronizationTime is the last time the Status subresource was updated
+	SynchronizationTime *metav1.Time `json:"synchronizationTime,omitempty"`
+	// SynchronizationHash is the hash of the Instance object
+	SynchronizationHash string `json:"synchronizationHash,omitempty"`
+	// ClientID is the corresponding client ID for this client at Digdir
+	ClientID string `json:"clientID,omitempty"`
 	// CorrelationID is the ID referencing the processing transaction last performed on this resource
-	CorrelationID string `json:"correlationID"`
-	// KeyIDs is the list of key IDs for valid JWKs registered for the client at ID-porten
-	KeyIDs []string `json:"keyIDs"`
+	CorrelationID string `json:"correlationID,omitempty"`
+	// KeyIDs is the list of key IDs for valid JWKs registered for the client at Digdir
+	KeyIDs []string `json:"keyIDs,omitempty"`
 }
