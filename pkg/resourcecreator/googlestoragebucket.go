@@ -12,7 +12,7 @@ import (
 func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = fmt.Sprintf("%s", bucket.Name)
-	retentionPolicy := google_storage_crd.RetentionPolicy{}
+	storageBucketSpec := google_storage_crd.StorageBucketSpec{Location: GoogleRegion}
 
 	if !bucket.CascadingDelete {
 		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
@@ -21,8 +21,9 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 	// Converting days to seconds if retention is set
 	if bucket.RetentionPeriodDays != 0 {
 		retentionPeriod := bucket.RetentionPeriodDays * int(time.Hour.Seconds()*24)
-		retentionPolicy = google_storage_crd.RetentionPolicy{
-			RetentionPeriod: retentionPeriod,
+		storageBucketSpec = google_storage_crd.StorageBucketSpec{
+			Location:        GoogleRegion,
+			RetentionPolicy: google_storage_crd.RetentionPolicy{RetentionPeriod: retentionPeriod},
 		}
 	}
 
@@ -32,9 +33,6 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 			APIVersion: GoogleStorageAPIVersion,
 		},
 		ObjectMeta: objectMeta,
-		Spec: google_storage_crd.StorageBucketSpec{
-			Location: GoogleRegion,
-			RetentionPolicy: retentionPolicy,
-		},
+		Spec:       storageBucketSpec,
 	}
 }
