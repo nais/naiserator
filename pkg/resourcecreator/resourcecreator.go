@@ -69,7 +69,16 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.DigdiratorServiceEntryHosts)
 
 		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
-		resourceOptions.DigdiratorSecretName = idportenClient.Spec.SecretName
+		resourceOptions.DigdiratorIDPortenSecretName = idportenClient.Spec.SecretName
+	}
+
+	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
+		maskinportenClient := MaskinportenClient(app)
+
+		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.DigdiratorServiceEntryHosts)
+
+		ops = append(ops, ResourceOperation{maskinportenClient, OperationCreateOrUpdate})
+		resourceOptions.DigdiratorMaskinportenSecretName = maskinportenClient.Spec.SecretName
 	}
 
 	if app.Spec.Elastic != nil {

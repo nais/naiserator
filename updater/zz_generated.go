@@ -434,6 +434,23 @@ func idPortenClient(client typed_nais_v1.IDPortenClientInterface, old, new *nais
 	}
 }
 
+func maskinportenClient(client typed_nais_v1.MaskinportenClientInterface, old, new *nais_v1.MaskinportenClient) func() error {
+	log.Infof("creating or updating *nais_v1.MaskinportenClient for %s", new.Name)
+	if old == nil {
+		return func() error {
+			_, err := client.Create(new)
+			return err
+		}
+	}
+
+	CopyMeta(old, new)
+
+	return func() error {
+		_, err := client.Update(new)
+		return err
+	}
+}
+
 func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interface, istioClient istioClientSet.Interface, resource runtime.Object) func() error {
 	switch new := resource.(type) {
 
@@ -689,6 +706,17 @@ func CreateOrUpdate(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 			return idPortenClient(c, nil, new)
 		}
 		return idPortenClient(c, old, new)
+
+	case *nais_v1.MaskinportenClient:
+		c := customClient.NaisV1().MaskinportenClients(new.Namespace)
+		old, err := c.Get(new.Name, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return func() error { return err }
+			}
+			return maskinportenClient(c, nil, new)
+		}
+		return maskinportenClient(c, old, new)
 
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
@@ -997,6 +1025,19 @@ func CreateOrRecreate(clientSet kubernetes.Interface, customClient clientV1Alpha
 			return err
 		}
 
+	case *nais_v1.MaskinportenClient:
+		c := customClient.NaisV1().MaskinportenClients(new.Namespace)
+		return func() error {
+			log.Infof("pre-deleting *nais_v1.MaskinportenClient for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && !errors.IsNotFound(err) {
+				return err
+			}
+			log.Infof("creating new *nais_v1.MaskinportenClient for %s", new.Name)
+			_, err = c.Create(new)
+			return err
+		}
+
 	default:
 		panic(fmt.Errorf("BUG! You didn't specify a case for type '%T' in the file hack/generator/updater.go", new))
 	}
@@ -1251,6 +1292,17 @@ func CreateIfNotExists(clientSet kubernetes.Interface, customClient clientV1Alph
 		c := customClient.NaisV1().IDPortenClients(new.Namespace)
 		return func() error {
 			log.Infof("creating new *nais_v1.IDPortenClient for %s", new.Name)
+			_, err := c.Create(new)
+			if err != nil && errors.IsAlreadyExists(err) {
+				return nil
+			}
+			return err
+		}
+
+	case *nais_v1.MaskinportenClient:
+		c := customClient.NaisV1().MaskinportenClients(new.Namespace)
+		return func() error {
+			log.Infof("creating new *nais_v1.MaskinportenClient for %s", new.Name)
 			_, err := c.Create(new)
 			if err != nil && errors.IsAlreadyExists(err) {
 				return nil
@@ -1588,6 +1640,20 @@ func FindAll(clientSet kubernetes.Interface, customClient clientV1Alpha1.Interfa
 		}
 	}
 
+	{
+		c := customClient.NaisV1().MaskinportenClients(app.Namespace)
+		existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("discover %s: %s", "*nais_v1.MaskinportenClient", err)
+		} else if existing != nil {
+			items, err := meta.ExtractList(existing)
+			if err != nil {
+				return nil, fmt.Errorf("extract list of %s: %s", "*nais_v1.MaskinportenClient", err)
+			}
+			resources = append(resources, items...)
+		}
+	}
+
 	return withOwnerReference(app, resources), nil
 }
 
@@ -1888,6 +1954,18 @@ func DeleteIfExists(clientSet kubernetes.Interface, customClient clientV1Alpha1.
 		c := customClient.NaisV1().IDPortenClients(new.Namespace)
 		return func() error {
 			log.Infof("deleting *nais_v1.IDPortenClient for %s", new.Name)
+			err := c.Delete(new.Name, &metav1.DeleteOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				return nil
+			}
+
+			return err
+		}
+
+	case *nais_v1.MaskinportenClient:
+		c := customClient.NaisV1().MaskinportenClients(new.Namespace)
+		return func() error {
+			log.Infof("deleting *nais_v1.MaskinportenClient for %s", new.Name)
 			err := c.Delete(new.Name, &metav1.DeleteOptions{})
 			if err != nil && errors.IsNotFound(err) {
 				return nil

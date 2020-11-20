@@ -7,3 +7,5 @@ type AzureAdApplicationExpansion interface{}
 type IDPortenClientExpansion interface{}
 
 type JwkerExpansion interface{}
+
+type MaskinportenClientExpansion interface{}

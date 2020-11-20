@@ -14,6 +14,8 @@ type Interface interface {
 	IDPortenClients() IDPortenClientInformer
 	// Jwkers returns a JwkerInformer.
 	Jwkers() JwkerInformer
+	// MaskinportenClients returns a MaskinportenClientInformer.
+	MaskinportenClients() MaskinportenClientInformer
 }
 
 type version struct {
@@ -40,4 +42,9 @@ func (v *version) IDPortenClients() IDPortenClientInformer {
 // Jwkers returns a JwkerInformer.
 func (v *version) Jwkers() JwkerInformer {
 	return &jwkerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MaskinportenClients returns a MaskinportenClientInformer.
+func (v *version) MaskinportenClients() MaskinportenClientInformer {
+	return &maskinportenClientInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

@@ -1,0 +1,100 @@
+config:
+  description: minimal maskinporten config in application spec should result in MaskinportenClient
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  DigdiratorEnabled: true
+  DigdiratorServiceEntryHosts:
+    - dev.maskinporten.test
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    maskinporten:
+      enabled: true
+      scopes:
+        - name: "org:some/scope"
+
+tests:
+  - apiVersion: nais.io/v1
+    kind: MaskinportenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "spec contains expected fields with defaults and nothing else"
+        exclude:
+          - .status
+          - .metadata
+          - .spec.secretName
+        resource:
+          spec:
+            scopes:
+              - name: "org:some/scope"
+
+  - apiVersion: nais.io/v1
+    kind: MaskinportenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^myapplication-.{8}$
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+    - name: "deployment contains maskinporten secrets"
+      type: regex
+      resource:
+        spec:
+          template:
+            spec:
+              volumes:
+              - name: ^myapplication-.+$
+                secret:
+                  secretName: ^myapplication-.+$
+              containers:
+              - envFrom:
+                - secretRef:
+                    name: ^myapplication-.+$
+                volumeMounts:
+                - name: ^myapplication-.+$
+                  readOnly: true
+                  mountPath: /var/run/secrets/nais.io/maskinporten
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-01
+    match:
+    - name: "service entry created for outbound traffic to maskinporten"
+      type: exact
+      exclude:
+        - .metadata
+      resource:
+        spec:
+          hosts:
+            - dev.maskinporten.test
+          location: MESH_EXTERNAL
+          resolution: DNS
+          ports:
+            - number: 443
+              protocol: HTTPS
+              name: https
+          exportTo:
+            - "."

@@ -6,27 +6,28 @@ import (
 
 // ResourceOptions defines customizations for resource objects.
 type ResourceOptions struct {
-	NumReplicas                 int32
-	AccessPolicy                bool
-	AccessPolicyNotAllowedCIDRs []string
-	NativeSecrets               bool
-	GoogleProjectId             string
-	GoogleTeamProjectId         string
-	ApiServerIp                 string
-	ClusterName                 string
-	JwkerEnabled                bool
-	JwkerSecretName             string
-	JwkerServiceEntryHosts      []string
-	AzureratorEnabled           bool
-	AzureratorSecretName        string
-	AzureratorServiceEntryHosts []string
-	KafkaratorEnabled           bool
-	KafkaratorSecretName        string
-	DigdiratorEnabled           bool
-	DigdiratorSecretName        string
-	DigdiratorServiceEntryHosts []string
-	HostAliases                 []config.HostAlias
-	GatewayMappings             []config.GatewayMapping
+	NumReplicas                      int32
+	AccessPolicy                     bool
+	AccessPolicyNotAllowedCIDRs      []string
+	NativeSecrets                    bool
+	GoogleProjectId                  string
+	GoogleTeamProjectId              string
+	ApiServerIp                      string
+	ClusterName                      string
+	JwkerEnabled                     bool
+	JwkerSecretName                  string
+	JwkerServiceEntryHosts           []string
+	AzureratorEnabled                bool
+	AzureratorSecretName             string
+	AzureratorServiceEntryHosts      []string
+	KafkaratorEnabled                bool
+	KafkaratorSecretName             string
+	DigdiratorEnabled                bool
+	DigdiratorIDPortenSecretName     string
+	DigdiratorMaskinportenSecretName string
+	DigdiratorServiceEntryHosts      []string
+	HostAliases                      []config.HostAlias
+	GatewayMappings                  []config.GatewayMapping
 }
 
 // NewResourceOptions creates a struct with the default resource options.

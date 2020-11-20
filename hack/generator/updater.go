@@ -155,6 +155,12 @@ var i = []Service{
 		Type:      "*nais_v1.IDPortenClient",
 		Client:    "customClient.NaisV1().IDPortenClients",
 	},
+	{
+		Name:      "maskinportenClient",
+		Interface: "typed_nais_v1.MaskinportenClientInterface",
+		Type:      "*nais_v1.MaskinportenClient",
+		Client:    "customClient.NaisV1().MaskinportenClients",
+	},
 }
 
 func main() {

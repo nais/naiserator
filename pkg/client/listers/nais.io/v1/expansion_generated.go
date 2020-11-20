@@ -25,3 +25,11 @@ type JwkerListerExpansion interface{}
 // JwkerNamespaceListerExpansion allows custom methods to be added to
 // JwkerNamespaceLister.
 type JwkerNamespaceListerExpansion interface{}
+
+// MaskinportenClientListerExpansion allows custom methods to be added to
+// MaskinportenClientLister.
+type MaskinportenClientListerExpansion interface{}
+
+// MaskinportenClientNamespaceListerExpansion allows custom methods to be added to
+// MaskinportenClientNamespaceLister.
+type MaskinportenClientNamespaceListerExpansion interface{}
