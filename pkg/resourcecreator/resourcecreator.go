@@ -10,6 +10,7 @@ import (
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
@@ -68,6 +69,23 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorSecretName = idportenClient.Spec.SecretName
+	}
+
+	if app.Spec.Elastic != nil {
+		env := strings.Split(resourceOptions.ClusterName, "-")[0]
+		instanceName := fmt.Sprintf("elastic-%s-nav-%s.aivencloud.com", app.Spec.Elastic.Instance, env)
+		app.AddAccessPolicyExternalHosts([]nais.AccessPolicyExternalRule{
+			{
+				Host: instanceName,
+				Ports: []nais.AccessPolicyPortRule{
+					{
+						Name:     "https",
+						Port:     26482,
+						Protocol: "HTTPS",
+					},
+				},
+			},
+		})
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 {

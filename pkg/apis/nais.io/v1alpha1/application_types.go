@@ -51,6 +51,7 @@ type ApplicationSpec struct {
 	AccessPolicy    *AccessPolicy         `json:"accessPolicy,omitempty"`
 	Azure           *Azure                `json:"azure,omitempty"`
 	GCP             *GCP                  `json:"gcp,omitempty"`
+	Elastic         *Elastic              `json:"elastic,omitempty"`
 	Env             []EnvVar              `json:"env,omitempty"`
 	EnvFrom         []EnvFrom             `json:"envFrom,omitempty"`
 	FilesFrom       []FilesFrom           `json:"filesFrom,omitempty"`
@@ -252,6 +253,10 @@ type Maintenance struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=23
 	Hour *int `json:"hour,omitempty"` // must use pointer here to be able to distinguish between no value and value 0 from user.
+}
+
+type Elastic struct {
+	Instance string `json:"instance"`
 }
 
 type GCP struct {

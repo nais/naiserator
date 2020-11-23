@@ -534,6 +534,10 @@ func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 		objectMeta.Annotations["nais.io/logtransform"] = app.Spec.Logtransform
 	}
 
+	if app.Spec.Elastic != nil {
+		objectMeta.Labels["elastic"] = "enabled"
+	}
+
 	if app.Spec.Kafka != nil {
 		objectMeta.Labels["kafka"] = "enabled"
 	}
