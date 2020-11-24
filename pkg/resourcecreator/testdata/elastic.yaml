@@ -50,7 +50,7 @@ tests:
         resource:
           spec:
             hosts:
-              - elastic-naistest-nav-dev.aivencloud.com
+              - elastic-myteam-naistest-nav-dev.aivencloud.com
             location: MESH_EXTERNAL
             resolution: DNS
             ports:

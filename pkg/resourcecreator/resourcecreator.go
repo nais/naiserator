@@ -73,7 +73,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	if app.Spec.Elastic != nil {
 		env := strings.Split(resourceOptions.ClusterName, "-")[0]
-		instanceName := fmt.Sprintf("elastic-%s-nav-%s.aivencloud.com", app.Spec.Elastic.Instance, env)
+		instanceName := fmt.Sprintf("elastic-%s-%s-nav-%s.aivencloud.com", team, app.Spec.Elastic.Instance, env)
 		app.AddAccessPolicyExternalHosts([]nais.AccessPolicyExternalRule{
 			{
 				Host: instanceName,
