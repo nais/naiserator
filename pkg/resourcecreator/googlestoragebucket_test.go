@@ -14,7 +14,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 	t.Run("bucket creation", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		csb := nais.CloudStorageBucket{Name: "mystoragebucket", RetentionPeriodDays: 7}
-		expectedRetentionPeriod := csb.RetentionPeriodDays * int(time.Hour.Seconds() * 24)
+		expectedRetentionPeriod := csb.RetentionPeriodDays * int(time.Hour.Seconds()*24)
 
 		bucket := resourcecreator.GoogleStorageBucket(app, csb)
 		assert.Equal(t, csb.Name, bucket.Name)

@@ -8,7 +8,7 @@ import (
 
 func egressRule(appName, namespace string) networkingv1.NetworkPolicyEgressRule {
 	return networkingv1.NetworkPolicyEgressRule{
-		To: []networkingv1.NetworkPolicyPeer {{
+		To: []networkingv1.NetworkPolicyPeer{{
 			NamespaceSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"name": namespace,
@@ -108,7 +108,7 @@ func ingressPolicy(app *nais.Application, options ResourceOptions) []networkingv
 func egressPolicy(app *nais.Application, options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
 	defaultRules := defaultAllowEgress(options.AccessPolicyNotAllowedCIDRs)
 
-	if (app.Spec.Tracing != nil && app.Spec.Tracing.Enabled) {
+	if app.Spec.Tracing != nil && app.Spec.Tracing.Enabled {
 		defaultRules = append(defaultRules, egressRule("jaeger", "istio-system"))
 	}
 

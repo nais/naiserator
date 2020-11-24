@@ -15,15 +15,21 @@ type MaintenanceWindow struct {
 	Hour int `json:"hour"`
 }
 
+type SQLDatabaseFlag struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type SQLInstanceSettings struct {
 	AvailabilityType    string                         `json:"availabilityType"`
 	BackupConfiguration SQLInstanceBackupConfiguration `json:"backupConfiguration"`
-	IpConfiguration	    SQLInstanceIpConfiguration     `json:"ipConfiguration"`
+	IpConfiguration     SQLInstanceIpConfiguration     `json:"ipConfiguration"`
 	DiskAutoresize      bool                           `json:"diskAutoresize"`
 	DiskSize            int                            `json:"diskSize"`
 	DiskType            string                         `json:"diskType"`
 	Tier                string                         `json:"tier"`
 	MaintenanceWindow   *MaintenanceWindow             `json:"maintenanceWindow,omitempty"`
+	DatabaseFlags       []SQLDatabaseFlag              `json:"databaseFlags"`
 }
 
 type SQLInstanceBackupConfiguration struct {
