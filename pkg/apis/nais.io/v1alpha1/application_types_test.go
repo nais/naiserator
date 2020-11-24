@@ -104,16 +104,26 @@ func TestAddAccessPolicyExternalHosts(t *testing.T) {
 	err := v1alpha1.ApplyDefaults(app)
 	assert.NoError(t, err)
 
-	hosts := []string{
-		"some-host.example.test",
+	stringHosts := []string{
+		"some-host.example.string",
 		"existing.host.test",
 	}
+
+	hosts := []v1alpha1.AccessPolicyExternalRule{
+		{Host: "some-host.example.host"},
+		{Host: "some-port.example.host", Ports: []v1alpha1.AccessPolicyPortRule{{Port: 1337}}},
+	}
+
 	app.Spec.AccessPolicy.Outbound.External = append(app.Spec.AccessPolicy.Outbound.External,
 		v1alpha1.AccessPolicyExternalRule{Host: "existing.host.test"},
 	)
+	app.AddAccessPolicyExternalHostsAsStrings(stringHosts)
 	app.AddAccessPolicyExternalHosts(hosts)
 
-	assert.Len(t, app.Spec.AccessPolicy.Outbound.External, 2)
+	assert.Len(t, app.Spec.AccessPolicy.Outbound.External, 4)
 	assert.Contains(t, app.Spec.AccessPolicy.Outbound.External, v1alpha1.AccessPolicyExternalRule{Host: "existing.host.test"})
-	assert.Contains(t, app.Spec.AccessPolicy.Outbound.External, v1alpha1.AccessPolicyExternalRule{Host: "some-host.example.test"})
+	assert.Contains(t, app.Spec.AccessPolicy.Outbound.External, v1alpha1.AccessPolicyExternalRule{Host: "some-host.example.string"})
+	assert.Contains(t, app.Spec.AccessPolicy.Outbound.External, v1alpha1.AccessPolicyExternalRule{Host: "some-host.example.host"})
+	assert.Contains(t, app.Spec.AccessPolicy.Outbound.External, v1alpha1.AccessPolicyExternalRule{Host: "some-port.example.host", Ports: []v1alpha1.AccessPolicyPortRule{{Port: 1337}}})
+
 }

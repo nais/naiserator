@@ -138,6 +138,13 @@ spec:
               required:
               - application
               type: object
+            elastic:
+              properties:
+                instance:
+                  type: string
+              required:
+              - instance
+              type: object
             env:
               items:
                 properties:

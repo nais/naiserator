@@ -51,6 +51,7 @@ type ApplicationSpec struct {
 	AccessPolicy    *AccessPolicy         `json:"accessPolicy,omitempty"`
 	Azure           *Azure                `json:"azure,omitempty"`
 	GCP             *GCP                  `json:"gcp,omitempty"`
+	Elastic         *Elastic              `json:"elastic,omitempty"`
 	Env             []EnvVar              `json:"env,omitempty"`
 	EnvFrom         []EnvFrom             `json:"envFrom,omitempty"`
 	FilesFrom       []FilesFrom           `json:"filesFrom,omitempty"`
@@ -254,6 +255,10 @@ type Maintenance struct {
 	Hour *int `json:"hour,omitempty"` // must use pointer here to be able to distinguish between no value and value 0 from user.
 }
 
+type Elastic struct {
+	Instance string `json:"instance"`
+}
+
 type GCP struct {
 	Buckets      []CloudStorageBucket `json:"buckets,omitempty"`
 	SqlInstances []CloudSqlInstance   `json:"sqlInstances,omitempty"`
@@ -452,7 +457,16 @@ func (in *Application) ClientID() string {
 	return fmt.Sprintf("%s:%s:%s", in.Cluster(), in.ObjectMeta.Namespace, in.ObjectMeta.Name)
 }
 
-func (in *Application) AddAccessPolicyExternalHosts(hosts []string) {
+func (in *Application) AddAccessPolicyExternalHostsAsStrings(hosts []string) {
+	externalRules := make([]AccessPolicyExternalRule, len(hosts))
+	for _, host := range hosts {
+		externalRules = append(externalRules, AccessPolicyExternalRule{Host: host})
+	}
+
+	in.AddAccessPolicyExternalHosts(externalRules)
+}
+
+func (in *Application) AddAccessPolicyExternalHosts(hosts []AccessPolicyExternalRule) {
 	var empty struct{}
 	seen := map[string]struct{}{}
 	rules := make([]AccessPolicyExternalRule, 0)
@@ -461,13 +475,13 @@ func (in *Application) AddAccessPolicyExternalHosts(hosts []string) {
 		seen[rule.Host] = empty
 	}
 
-	for _, host := range hosts {
-		if len(host) == 0 {
+	for _, externalRule := range hosts {
+		if len(externalRule.Host) == 0 {
 			continue
 		}
-		if _, found := seen[host]; !found {
-			seen[host] = empty
-			rules = append(rules, AccessPolicyExternalRule{Host: host})
+		if _, found := seen[externalRule.Host]; !found {
+			seen[externalRule.Host] = empty
+			rules = append(rules, externalRule)
 		}
 	}
 
