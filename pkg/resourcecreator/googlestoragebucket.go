@@ -19,8 +19,8 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 	}
 
 	// Converting days to seconds if retention is set
-	if bucket.RetentionPeriodDays != 0 {
-		retentionPeriod := bucket.RetentionPeriodDays * int(time.Hour.Seconds()*24)
+	if bucket.RetentionPeriodDays != nil {
+		retentionPeriod := *bucket.RetentionPeriodDays * int(time.Hour.Seconds()*24)
 		storageBucketSpec = google_storage_crd.StorageBucketSpec{
 			Location:        GoogleRegion,
 			RetentionPolicy: google_storage_crd.RetentionPolicy{RetentionPeriod: &retentionPeriod},
