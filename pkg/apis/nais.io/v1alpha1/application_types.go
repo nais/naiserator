@@ -195,7 +195,7 @@ type CloudStorageBucket struct {
 	CascadingDelete bool   `json:"cascadingDelete,omitempty"`
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=36500
-	RetentionPeriodDays int `json:"retentionPeriodDays,omitempty"`
+	RetentionPeriodDays *int `json:"retentionPeriodDays,omitempty"`
 }
 
 type CloudSqlInstanceType string
