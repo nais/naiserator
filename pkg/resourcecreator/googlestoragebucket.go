@@ -6,6 +6,7 @@ import (
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	google_storage_crd "github.com/nais/naiserator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
+	log "github.com/sirupsen/logrus"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -20,10 +21,11 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 
 	// Converting days to seconds if retention is set
 	if bucket.RetentionPeriodDays != nil {
+		log.Info("Retention period days set to ", *bucket.RetentionPeriodDays)
 		retentionPeriod := *bucket.RetentionPeriodDays * int(time.Hour.Seconds()*24)
 		storageBucketSpec = google_storage_crd.StorageBucketSpec{
 			Location:        GoogleRegion,
-			RetentionPolicy: google_storage_crd.RetentionPolicy{RetentionPeriod: &retentionPeriod},
+			RetentionPolicy: &google_storage_crd.RetentionPolicy{RetentionPeriod: retentionPeriod},
 		}
 	}
 
