@@ -18,7 +18,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 
 		bucket := resourcecreator.GoogleStorageBucket(app, csb)
 		assert.Equal(t, csb.Name, bucket.Name)
-		assert.Equal(t, intp(expectedRetentionPeriod), bucket.Spec.RetentionPolicy.RetentionPeriod)
+		assert.Equal(t, expectedRetentionPeriod, bucket.Spec.RetentionPolicy.RetentionPeriod)
 		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
 		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
 			GoogleDeletionPolicyAnnotation])
@@ -30,7 +30,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 
 		bucket := resourcecreator.GoogleStorageBucket(app, csb)
 		assert.Equal(t, csb.Name, bucket.Name)
-		assert.Nil(t, bucket.Spec.RetentionPolicy.RetentionPeriod)
+		assert.Nil(t, bucket.Spec.RetentionPolicy)
 		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
 		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
 			GoogleDeletionPolicyAnnotation])
