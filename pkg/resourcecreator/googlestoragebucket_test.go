@@ -13,6 +13,19 @@ import (
 func TestGetGoogleStorageBucket(t *testing.T) {
 	t.Run("bucket creation", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
+		csb := nais.CloudStorageBucket{Name: "mystoragebucket"}
+
+		bucket := resourcecreator.GoogleStorageBucket(app, csb)
+		assert.Equal(t, csb.Name, bucket.Name)
+		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
+		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
+			GoogleDeletionPolicyAnnotation])
+		assert.Nil(t, bucket.Spec.RetentionPolicy)
+		assert.Nil(t, bucket.Spec.LifecycleRules)
+	})
+
+	t.Run("bucket creation with retention", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
 		csb := nais.CloudStorageBucket{Name: "mystoragebucket", RetentionPeriodDays: intp(7)}
 		expectedRetentionPeriod := *csb.RetentionPeriodDays * int(time.Hour.Seconds()*24)
 
@@ -22,19 +35,32 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
 		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
 			GoogleDeletionPolicyAnnotation])
+		assert.Nil(t, bucket.Spec.LifecycleRules)
 	})
 
-	t.Run("bucket without retention", func(t *testing.T) {
+	t.Run("bucket with life cycle rules", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		csb := nais.CloudStorageBucket{Name: "mystoragebucket"}
-
+		lifecycleCondition := nais.LifecycleCondition{
+			Age:              7,
+			CreatedBefore:    "2019-01-01",
+			NumNewerVersions: 2,
+			WithState:        "ANY",
+		}
+		csb := nais.CloudStorageBucket{Name: "mystoragebucket", LifecycleCondition: &lifecycleCondition}
 		bucket := resourcecreator.GoogleStorageBucket(app, csb)
+		lifecycleRule := bucket.Spec.LifecycleRules[0]
+
 		assert.Equal(t, csb.Name, bucket.Name)
-		assert.Nil(t, bucket.Spec.RetentionPolicy)
+		assert.Equal(t, csb.LifecycleCondition.Age, lifecycleRule.Condition.Age)
+		assert.Equal(t, csb.LifecycleCondition.CreatedBefore, lifecycleRule.Condition.CreatedBefore)
+		assert.Equal(t, csb.LifecycleCondition.NumNewerVersions, lifecycleRule.Condition.NumNewerVersions)
+		assert.Equal(t, csb.LifecycleCondition.WithState, lifecycleRule.Condition.WithState)
 		assert.Equal(t, resourcecreator.GoogleRegion, bucket.Spec.Location)
 		assert.Equal(t, resourcecreator.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[resourcecreator.
 			GoogleDeletionPolicyAnnotation])
+		assert.Nil(t, bucket.Spec.RetentionPolicy)
 	})
+
 }
 
 func intp(i int) *int {

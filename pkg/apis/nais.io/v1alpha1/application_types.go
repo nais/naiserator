@@ -196,6 +196,14 @@ type CloudStorageBucket struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=36500
 	RetentionPeriodDays *int `json:"retentionPeriodDays,omitempty"`
+	LifecycleCondition *LifecycleCondition `json:"lifecycleCondition,omitempty"`
+}
+
+type LifecycleCondition struct {
+	Age int `json:"age,omitempty"`
+	CreatedBefore string `json:"createdBefore,omitempty"`
+	NumNewerVersions int `json:"numNewerVersions,omitempty"`
+	WithState string `json:"withState,omitempty"`
 }
 
 type CloudSqlInstanceType string
