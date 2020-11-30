@@ -220,7 +220,7 @@ func TestCreate(t *testing.T) {
 		assert.NotNil(t, objects.networkPolicy)
 	})
 
-	t.Run("servicerolebinding and prometheus servicerolebinding resources are created when access policy creation is enabled", func(t *testing.T) {
+	t.Run("authorization policy resource are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
