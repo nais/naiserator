@@ -38,6 +38,7 @@ type IAMPolicySpec struct {
 
 type ResourceRef struct {
 	ApiVersion string `json:"apiVersion"`
+	External   string `json:"external"`
 	Kind       string `json:"kind"`
 	Name       string `json:"name"`
 }

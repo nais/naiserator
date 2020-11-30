@@ -215,6 +215,24 @@ spec:
                     - name
                     type: object
                   type: array
+                iamPolicyMembers:
+                  items:
+                    properties:
+                      apiVersion:
+                        type: string
+                      external:
+                        type: string
+                      kind:
+                        type: string
+                      role:
+                        type: string
+                    required:
+                    - apiVersion
+                    - external
+                    - kind
+                    - role
+                    type: object
+                  type: array
                 sqlInstances:
                   items:
                     properties:

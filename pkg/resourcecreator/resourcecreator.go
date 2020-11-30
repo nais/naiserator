@@ -155,6 +155,16 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
 			ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 		}
+
+		if app.Spec.GCP != nil && app.Spec.GCP.IAMPolicyMembers != nil {
+			for _, p := range app.Spec.GCP.IAMPolicyMembers {
+				policy, err := GoogleIAMPolicyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				if err != nil {
+					return nil, fmt.Errorf("unable to create iampolicymember: %w", err)
+				}
+				ops = append(ops, ResourceOperation{policy, OperationCreateIfNotExists})
+			}
+		}
 	}
 
 	if resourceOptions.AccessPolicy {
