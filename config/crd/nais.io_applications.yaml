@@ -240,7 +240,6 @@ spec:
                         required:
                         - apiVersion
                         - kind
-                        - name
                         type: object
                       role:
                         type: string

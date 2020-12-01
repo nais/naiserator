@@ -29,7 +29,7 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: policy.Resource.APIVersion,
-				External:   fmt.Sprintf("projects/%s/%s", googleTeamProjectId, policy.Resource.Name),
+				External:   formatIAMExternalName(googleTeamProjectId, policy.Resource.Name),
 				Kind:       policy.Resource.Kind,
 			},
 		},
@@ -47,4 +47,11 @@ func createIAMPolicyMemberName(app *nais.Application, policy nais.CloudIAMPermis
 	}
 	basename := fmt.Sprintf("%s-%s-%x", app.Name, strings.ToLower(policy.Resource.Kind), hash)
 	return util.StrShortName(basename, maxLengthResourceName)
+}
+
+func formatIAMExternalName(googleTeamProjectId, resourceName string) string {
+	if len(resourceName) == 0 {
+		return fmt.Sprintf("projects/%s", googleTeamProjectId)
+	}
+	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
 }

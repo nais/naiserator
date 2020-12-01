@@ -352,7 +352,7 @@ type Kafka struct {
 type CloudIAMResource struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
-	Name       string `json:"name"`
+	Name       string `json:"name,omitempty"`
 }
 
 type CloudIAMPermission struct {
