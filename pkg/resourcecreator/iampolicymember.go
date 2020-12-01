@@ -15,6 +15,7 @@ const maxLengthResourceName = 63
 
 func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
 	name, err := createIAMPolicyMemberName(app, policy)
+	externalName := formatIAMExternalName(googleTeamProjectId, policy.Resource.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +30,7 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: policy.Resource.APIVersion,
-				External:   formatIAMExternalName(googleTeamProjectId, policy.Resource.Name),
+				External:   &externalName,
 				Kind:       policy.Resource.Kind,
 			},
 		},

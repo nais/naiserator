@@ -2,6 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
+	"k8s.io/utils/pointer"
 
 	"github.com/imdario/mergo"
 
@@ -110,6 +111,7 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 			Role:   "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
+				Name: pointer.StringPtr(""),
 			},
 		},
 	}

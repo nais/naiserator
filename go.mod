@@ -26,6 +26,7 @@ require (
 	k8s.io/api v0.17.0 // kubernetes-1.15.6
 	k8s.io/apimachinery v0.17.0 // kubernetes-1.15.6
 	k8s.io/client-go v0.17.0 // kubernetes-1.15.6
+	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f
 	sigs.k8s.io/controller-tools v0.2.5 // indirect
 )
 
