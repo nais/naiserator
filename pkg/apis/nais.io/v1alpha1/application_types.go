@@ -39,8 +39,8 @@ func GetDefaultMountPath(name string) string {
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.synchronizationState"
 // +kubebuilder:resource:path="applications",shortName="app",singular="application"
 type Application struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta          `json:",inline"`
+	metav1.ObjectMeta        `json:"metadata,omitempty"`
 
 	Spec   ApplicationSpec   `json:"spec"`
 	Status ApplicationStatus `json:"status,omitempty"`
@@ -94,9 +94,8 @@ type ApplicationStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type ApplicationList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-
+	metav1.TypeMeta     `json:",inline"`
+	metav1.ListMeta     `json:"metadata,omitempty"`
 	Items []Application `json:"items"`
 }
 
@@ -112,31 +111,31 @@ type Tracing struct {
 
 type TokenX struct {
 	// if enabled, the application will have a jwker secret injected
-	Enabled bool `json:"enabled"`
+	Enabled                 bool `json:"enabled"`
 	// if enabled, secrets for TokenX will be mounted as files only, i.e. not as env.
 	MountSecretsAsFilesOnly bool `json:"mountSecretsAsFilesOnly,omitempty"`
 }
 
 type IDPorten struct {
-	Enabled   bool   `json:"enabled"`
-	ClientURI string `json:"clientURI,omitempty"`
+	Enabled                bool     `json:"enabled"`
+	ClientURI              string   `json:"clientURI,omitempty"`
 	// +kubebuilder:validation:Pattern=`^https:\/\/`
 	RedirectURI            string   `json:"redirectURI,omitempty"`
 	FrontchannelLogoutURI  string   `json:"frontchannelLogoutURI,omitempty"`
 	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs,omitempty"`
 	// +kubebuilder:validation:Minimum=3600
 	// +kubebuilder:validation:Maximum=7200
-	SessionLifetime *int `json:"sessionLifetime,omitempty"`
+	SessionLifetime        *int     `json:"sessionLifetime,omitempty"`
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=3600
-	AccessTokenLifetime *int `json:"accessTokenLifetime,omitempty"`
+	AccessTokenLifetime    *int     `json:"accessTokenLifetime,omitempty"`
 }
 
 type AzureApplication struct {
 	Enabled   bool     `json:"enabled"`
 	ReplyURLs []string `json:"replyURLs,omitempty"`
 	// +kubebuilder:validation:Enum=nav.no;trygdeetaten.no
-	Tenant string `json:"tenant,omitempty"`
+	Tenant    string   `json:"tenant,omitempty"`
 }
 
 type SecureLogs struct {
@@ -162,16 +161,16 @@ type PrometheusConfig struct {
 
 type Replicas struct {
 	// The minimum amount of replicas acceptable for a successful deployment.
-	Min int `json:"min,omitempty"`
+	Min                    int `json:"min,omitempty"`
 	// The pod autoscaler will scale deployments on demand until this maximum has been reached.
-	Max int `json:"max,omitempty"`
+	Max                    int `json:"max,omitempty"`
 	// Amount of CPU usage before the autoscaler kicks in.
 	CpuThresholdPercentage int `json:"cpuThresholdPercentage,omitempty"`
 }
 
 type ResourceSpec struct {
 	// +kubebuilder:validation:Pattern=^\d+m?$
-	Cpu string `json:"cpu,omitempty"`
+	Cpu    string `json:"cpu,omitempty"`
 	// +kubebuilder:validation:Pattern=^\d+[KMG]i$
 	Memory string `json:"memory,omitempty"`
 }
@@ -191,19 +190,19 @@ type EnvVarSource struct {
 }
 
 type CloudStorageBucket struct {
-	Name            string `json:"name"`
-	CascadingDelete bool   `json:"cascadingDelete,omitempty"`
+	Name                string              `json:"name"`
+	CascadingDelete     bool                `json:"cascadingDelete,omitempty"`
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=36500
-	RetentionPeriodDays *int `json:"retentionPeriodDays,omitempty"`
-	LifecycleCondition *LifecycleCondition `json:"lifecycleCondition,omitempty"`
+	RetentionPeriodDays *int                `json:"retentionPeriodDays,omitempty"`
+	LifecycleCondition  *LifecycleCondition `json:"lifecycleCondition,omitempty"`
 }
 
 type LifecycleCondition struct {
-	Age int `json:"age,omitempty"`
-	CreatedBefore string `json:"createdBefore,omitempty"`
-	NumNewerVersions int `json:"numNewerVersions,omitempty"`
-	WithState string `json:"withState,omitempty"`
+	Age              int    `json:"age,omitempty"`
+	CreatedBefore    string `json:"createdBefore,omitempty"`
+	NumNewerVersions int    `json:"numNewerVersions,omitempty"`
+	WithState        string `json:"withState,omitempty"`
 }
 
 type CloudSqlInstanceType string
@@ -233,30 +232,30 @@ type CloudSqlDatabase struct {
 type CloudSqlInstance struct {
 	// +kubebuilder:validation:Enum=POSTGRES_11;POSTGRES_12
 	// +kubebuilder:validation:Required
-	Type CloudSqlInstanceType `json:"type"`
-	Name string               `json:"name,omitempty"`
+	Type             CloudSqlInstanceType     `json:"type"`
+	Name             string                   `json:"name,omitempty"`
 	// +kubebuilder:validation:Pattern="db-.+"
-	Tier string `json:"tier,omitempty"`
+	Tier             string                   `json:"tier,omitempty"`
 	// +kubebuilder:validation:Enum=SSD;HDD
 	DiskType         CloudSqlInstanceDiskType `json:"diskType,omitempty"`
 	HighAvailability bool                     `json:"highAvailability,omitempty"`
 	// +kubebuilder:validation:Minimum=10
-	DiskSize       int  `json:"diskSize,omitempty"`
-	DiskAutoresize bool `json:"diskAutoresize,omitempty"`
+	DiskSize         int                      `json:"diskSize,omitempty"`
+	DiskAutoresize   bool                     `json:"diskAutoresize,omitempty"`
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=23
-	AutoBackupHour *int         `json:"autoBackupHour,omitempty"` // must use pointer here to be able to distinguish between no/zero value and value 0 from user.
-	Maintenance    *Maintenance `json:"maintenance,omitempty"`
+	AutoBackupHour   *int                     `json:"autoBackupHour,omitempty"`
+	Maintenance      *Maintenance             `json:"maintenance,omitempty"`
 	// +kubebuilder:validation:Required
-	Databases       []CloudSqlDatabase `json:"databases,omitempty"`
-	CascadingDelete bool               `json:"cascadingDelete,omitempty"`
+	Databases        []CloudSqlDatabase       `json:"databases,omitempty"`
+	CascadingDelete  bool                     `json:"cascadingDelete,omitempty"`
 }
 
 type Maintenance struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=7
-	Day int `json:"day,omitempty"`
+	Day  int  `json:"day,omitempty"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=23
@@ -293,7 +292,7 @@ type SecretPath struct {
 	MountPath string `json:"mountPath"`
 	KvPath    string `json:"kvPath"`
 	// +kubebuilder:validation:Enum=flatten;json;yaml;env;properties;""
-	Format string `json:"format,omitempty"`
+	Format    string `json:"format,omitempty"`
 }
 
 type Vault struct {
@@ -314,8 +313,8 @@ type Service struct {
 }
 
 type AccessPolicyPortRule struct {
-	Name string `json:"name"`
-	Port uint32 `json:"port"`
+	Name     string `json:"name"`
+	Port     uint32 `json:"port"`
 	// +kubebuilder:validation:Enum=HTTP;HTTPS;GRPC;HTTP2;MONGO;TCP;TLS
 	Protocol string `json:"protocol"`
 }
