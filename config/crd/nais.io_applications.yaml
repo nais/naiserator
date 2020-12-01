@@ -215,21 +215,26 @@ spec:
                     - name
                     type: object
                   type: array
-                iamPolicyMembers:
+                permissions:
                   items:
                     properties:
-                      apiVersion:
-                        type: string
-                      external:
-                        type: string
-                      kind:
-                        type: string
+                      resource:
+                        properties:
+                          apiVersion:
+                            type: string
+                          kind:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - apiVersion
+                        - kind
+                        - name
+                        type: object
                       role:
                         type: string
                     required:
-                    - apiVersion
-                    - external
-                    - kind
+                    - resource
                     - role
                     type: object
                   type: array

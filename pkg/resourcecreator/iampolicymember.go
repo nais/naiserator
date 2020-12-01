@@ -2,18 +2,19 @@ package resourcecreator
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/mitchellh/hashstructure"
 	google_iam_crd "github.com/nais/naiserator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 const maxLengthResourceName = 63
 
-func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPolicyMember, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
-	name, err :=createIAMPolicyMemberName(app, policy)
+func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
+	name, err := createIAMPolicyMemberName(app, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -27,9 +28,9 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPolicyMemb
 			Member: fmt.Sprintf("serviceAccount:%s", GcpServiceAccountName(app, googleProjectId)),
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
-				ApiVersion: policy.APIVersion,
-				External:   fmt.Sprintf("projects/%s/%s", googleTeamProjectId, policy.External),
-				Kind:       policy.Kind,
+				ApiVersion: policy.Resource.APIVersion,
+				External:   fmt.Sprintf("projects/%s/%s", googleTeamProjectId, policy.Resource.Name),
+				Kind:       policy.Resource.Kind,
 			},
 		},
 	}
@@ -39,11 +40,11 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPolicyMemb
 	return policyMember, nil
 }
 
-func createIAMPolicyMemberName(app *nais.Application, policy nais.CloudIAMPolicyMember) (string, error) {
+func createIAMPolicyMemberName(app *nais.Application, policy nais.CloudIAMPermission) (string, error) {
 	hash, err := hashstructure.Hash(policy, nil)
 	if err != nil {
 		return "", fmt.Errorf("while calculating hash from policy: %w", err)
 	}
-	basename := fmt.Sprintf("%s-%s-%x", app.Name, strings.ToLower(policy.Kind), hash)
+	basename := fmt.Sprintf("%s-%s-%x", app.Name, strings.ToLower(policy.Resource.Kind), hash)
 	return util.StrShortName(basename, maxLengthResourceName)
 }
