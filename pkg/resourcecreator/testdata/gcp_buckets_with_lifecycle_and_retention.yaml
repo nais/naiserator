@@ -21,6 +21,12 @@ input:
     gcp:
       buckets:
       - name: myapplication
+        retentionPeriodDays: 7
+        lifecycleCondition:
+          age: 7
+          createdBefore: 2019-01-01
+          numNewerVersions: 2
+          withState: ANY
 
 tests:
   - match:
@@ -89,6 +95,16 @@ tests:
             namespace: mynamespace
           spec:
             location: europe-north1
+            retentionPolicy:
+              retentionPeriod: 604800
+            lifecycleRule:
+            - action:
+                type: Delete
+              condition:
+                age: 7
+                createdBefore: 2019-01-01
+                numNewerVersions: 2
+                withState: ANY
   - apiVersion: storage.cnrm.cloud.google.com/v1beta1
     kind: StorageBucketAccessControl
     operation: CreateOrUpdate

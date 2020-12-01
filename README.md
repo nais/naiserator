@@ -21,7 +21,7 @@ Optionally, if enabled in the application manifest, the following resources:
 If Istio support is enabled with `--features.access-policy`:
   * `NetworkPolicy`
   * A set of `VirtualService`
-  * `ServiceRole` and `ServiceRoleBinding` resources
+  * `AuthorizationPolicy` resource
   * `ServiceEntry`
 
 These resources will remain in Kubernetes until the `Application` resource is deleted.

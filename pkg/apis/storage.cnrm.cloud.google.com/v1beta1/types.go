@@ -13,8 +13,9 @@ type StorageBucket struct {
 }
 
 type StorageBucketSpec struct {
-	Location        string          `json:"location"`
+	Location        string           `json:"location"`
 	RetentionPolicy *RetentionPolicy `json:"retentionPolicy,omitempty"`
+	LifecycleRules  []LifecycleRules `json:"lifecycleRule,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -51,4 +52,20 @@ type StorageBucketAccessControlList struct {
 
 type RetentionPolicy struct {
 	RetentionPeriod int `json:"retentionPeriod,omitempty"`
+}
+
+type LifecycleRules struct {
+	Action    Action    `json:"action"`
+	Condition Condition `json:"condition"`
+}
+
+type Action struct {
+	Type string `json:"type,omitempty"`
+}
+
+type Condition struct {
+	Age              int    `json:"age,omitempty"`
+	CreatedBefore    string `json:"createdBefore,omitempty"`
+	NumNewerVersions int    `json:"numNewerVersions,omitempty"`
+	WithState        string `json:"withState,omitempty"`
 }

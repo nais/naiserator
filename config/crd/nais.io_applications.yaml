@@ -205,6 +205,17 @@ spec:
                     properties:
                       cascadingDelete:
                         type: boolean
+                      lifecycleCondition:
+                        properties:
+                          age:
+                            type: integer
+                          createdBefore:
+                            type: string
+                          numNewerVersions:
+                            type: integer
+                          withState:
+                            type: string
+                        type: object
                       name:
                         type: string
                       retentionPeriodDays:
