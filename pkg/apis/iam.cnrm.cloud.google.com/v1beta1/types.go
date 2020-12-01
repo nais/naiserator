@@ -40,7 +40,7 @@ type ResourceRef struct {
 	ApiVersion string `json:"apiVersion"`
 	External   string `json:"external,omitempty"`
 	Kind       string `json:"kind"`
-	Name       string `json:"name"`
+	Name       string `json:"name,omitempty"`
 }
 
 type Bindings struct {
