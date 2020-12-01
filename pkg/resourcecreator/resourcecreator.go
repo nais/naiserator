@@ -7,10 +7,11 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
+
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
@@ -154,6 +155,16 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 			secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
 			ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
+		}
+
+		if app.Spec.GCP != nil && app.Spec.GCP.Permissions != nil {
+			for _, p := range app.Spec.GCP.Permissions {
+				policy, err := GoogleIAMPolicyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				if err != nil {
+					return nil, fmt.Errorf("unable to create iampolicymember: %w", err)
+				}
+				ops = append(ops, ResourceOperation{policy, OperationCreateIfNotExists})
+			}
 		}
 	}
 

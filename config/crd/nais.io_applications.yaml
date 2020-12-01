@@ -226,6 +226,29 @@ spec:
                     - name
                     type: object
                   type: array
+                permissions:
+                  items:
+                    properties:
+                      resource:
+                        properties:
+                          apiVersion:
+                            type: string
+                          kind:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - apiVersion
+                        - kind
+                        - name
+                        type: object
+                      role:
+                        type: string
+                    required:
+                    - resource
+                    - role
+                    type: object
+                  type: array
                 sqlInstances:
                   items:
                     properties:

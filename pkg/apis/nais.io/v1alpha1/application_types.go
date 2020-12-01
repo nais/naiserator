@@ -269,6 +269,7 @@ type Elastic struct {
 type GCP struct {
 	Buckets      []CloudStorageBucket `json:"buckets,omitempty"`
 	SqlInstances []CloudSqlInstance   `json:"sqlInstances,omitempty"`
+	Permissions  []CloudIAMPermission `json:"permissions,omitempty"`
 }
 
 type EnvVar struct {
@@ -346,6 +347,17 @@ type AccessPolicy struct {
 
 type Kafka struct {
 	Pool string `json:"pool"`
+}
+
+type CloudIAMResource struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+}
+
+type CloudIAMPermission struct {
+	Role     string           `json:"role"`
+	Resource CloudIAMResource `json:"resource"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
