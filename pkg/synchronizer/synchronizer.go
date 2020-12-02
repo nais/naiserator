@@ -287,7 +287,7 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 		return nil, fmt.Errorf("query existing deployment: %s", err)
 	}
 
-	if app.Spec.GCP != nil {
+	if app.Spec.GCP != nil && (app.Spec.GCP.SqlInstances != nil || app.Spec.GCP.Permissions != nil) {
 		namespace, err := n.ClientSet.CoreV1().Namespaces().Get(app.GetNamespace(), v1.GetOptions{})
 
 		if err != nil && !errors.IsNotFound(err) {
