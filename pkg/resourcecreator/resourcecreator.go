@@ -7,6 +7,8 @@ package resourcecreator
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
+
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +38,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
 		jwker := Jwker(app, resourceOptions.ClusterName)
 		if jwker != nil {
-			app.AddAccessPolicyExternalHosts(resourceOptions.JwkerServiceEntryHosts)
+			app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.JwkerServiceEntryHosts)
 
 			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
 			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
@@ -45,7 +47,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
 		azureapp := AzureAdApplication(*app, resourceOptions.ClusterName)
-		app.AddAccessPolicyExternalHosts(resourceOptions.AzureratorServiceEntryHosts)
+		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.AzureratorServiceEntryHosts)
 
 		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
@@ -64,10 +66,27 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 		if err != nil {
 			return nil, err
 		}
-		app.AddAccessPolicyExternalHosts(resourceOptions.DigdiratorServiceEntryHosts)
+		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.DigdiratorServiceEntryHosts)
 
 		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorSecretName = idportenClient.Spec.SecretName
+	}
+
+	if app.Spec.Elastic != nil {
+		env := strings.Split(resourceOptions.ClusterName, "-")[0]
+		instanceName := fmt.Sprintf("elastic-%s-%s-nav-%s.aivencloud.com", team, app.Spec.Elastic.Instance, env)
+		app.AddAccessPolicyExternalHosts([]nais.AccessPolicyExternalRule{
+			{
+				Host: instanceName,
+				Ports: []nais.AccessPolicyPortRule{
+					{
+						Name:     "https",
+						Port:     26482,
+						Protocol: "HTTPS",
+					},
+				},
+			},
+		})
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 {
@@ -136,6 +155,16 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 
 			secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
 			ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
+		}
+
+		if app.Spec.GCP != nil && app.Spec.GCP.Permissions != nil {
+			for _, p := range app.Spec.GCP.Permissions {
+				policy, err := GoogleIAMPolicyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				if err != nil {
+					return nil, fmt.Errorf("unable to create iampolicymember: %w", err)
+				}
+				ops = append(ops, ResourceOperation{policy, OperationCreateIfNotExists})
+			}
 		}
 	}
 

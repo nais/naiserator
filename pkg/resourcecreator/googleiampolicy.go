@@ -23,7 +23,7 @@ func GoogleIAMPolicy(app *nais.Application, sa *google_iam_crd.IAMServiceAccount
 			ResourceRef: &google_iam_crd.ResourceRef{
 				ApiVersion: GoogleIAMAPIVersion,
 				Kind:       "IAMServiceAccount",
-				Name:       sa.Name,
+				Name:       &sa.Name,
 			},
 			Bindings: []google_iam_crd.Bindings{
 				{

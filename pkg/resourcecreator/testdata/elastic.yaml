@@ -1,0 +1,61 @@
+config:
+  description: Elastic Search labling and access policy
+
+resourceoptions:
+  AccessPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: dev-localtest
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    elastic:
+      instance: naistest
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created with elastic args"
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  elastic: "enabled"
+              spec:
+                containers:
+                  - name: "myapplication"
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-01
+    match:
+      - name: "service entry created for outbound traffic to elastic"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - elastic-myteam-naistest-nav-dev.aivencloud.com
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 26482
+                protocol: HTTPS
+                name: https
+            exportTo:
+              - "."

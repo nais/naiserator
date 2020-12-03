@@ -29,8 +29,6 @@ rules:
       - 'secrets'
       - 'serviceaccounts'
       - 'serviceentries'
-      - 'servicerolebindings'
-      - 'serviceroles'
       - 'services'
       - 'sqldatabases'
       - 'sqlinstances'

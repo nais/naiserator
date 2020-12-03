@@ -2,6 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
+	"k8s.io/utils/pointer"
 
 	"github.com/imdario/mergo"
 
@@ -20,7 +21,7 @@ const (
 	DefaultSqlInstanceDiskSize       = 10
 )
 
-func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string, ) *google_sql_crd.SQLInstance {
+func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = instance.Name
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
@@ -52,6 +53,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 				DiskSize:       instance.DiskSize,
 				DiskType:       instance.DiskType.GoogleType(),
 				Tier:           instance.Tier,
+				DatabaseFlags:  []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}},
 			},
 		},
 	}
@@ -97,7 +99,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string, ) *google_iam_crd.IAMPolicyMember {
+func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{
@@ -109,6 +111,7 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 			Role:   "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
+				Name: pointer.StringPtr(""),
 			},
 		},
 	}

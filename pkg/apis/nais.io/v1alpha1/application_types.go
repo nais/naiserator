@@ -51,6 +51,7 @@ type ApplicationSpec struct {
 	AccessPolicy    *AccessPolicy         `json:"accessPolicy,omitempty"`
 	Azure           *Azure                `json:"azure,omitempty"`
 	GCP             *GCP                  `json:"gcp,omitempty"`
+	Elastic         *Elastic              `json:"elastic,omitempty"`
 	Env             []EnvVar              `json:"env,omitempty"`
 	EnvFrom         []EnvFrom             `json:"envFrom,omitempty"`
 	FilesFrom       []FilesFrom           `json:"filesFrom,omitempty"`
@@ -95,8 +96,7 @@ type ApplicationStatus struct {
 type ApplicationList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-
-	Items []Application `json:"items"`
+	Items           []Application `json:"items"`
 }
 
 type Azure struct {
@@ -117,19 +117,25 @@ type TokenX struct {
 }
 
 type IDPorten struct {
-	Enabled                bool     `json:"enabled"`
-	ClientURI              string   `json:"clientURI,omitempty"`
+	Enabled   bool   `json:"enabled"`
+	ClientURI string `json:"clientURI,omitempty"`
+	// +kubebuilder:validation:Pattern=`^https:\/\/`
 	RedirectURI            string   `json:"redirectURI,omitempty"`
 	FrontchannelLogoutURI  string   `json:"frontchannelLogoutURI,omitempty"`
 	PostLogoutRedirectURIs []string `json:"postLogoutRedirectURIs,omitempty"`
-	RefreshTokenLifetime   *int     `json:"refreshTokenLifetime,omitempty"`
+	// +kubebuilder:validation:Minimum=3600
+	// +kubebuilder:validation:Maximum=7200
+	SessionLifetime *int `json:"sessionLifetime,omitempty"`
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=3600
+	AccessTokenLifetime *int `json:"accessTokenLifetime,omitempty"`
 }
 
 type AzureApplication struct {
 	Enabled   bool     `json:"enabled"`
 	ReplyURLs []string `json:"replyURLs,omitempty"`
 	// +kubebuilder:validation:Enum=nav.no;trygdeetaten.no
-	Tenant           string                   `json:"tenant,omitempty"`
+	Tenant string `json:"tenant,omitempty"`
 	// Claims defines additional configuration of the emitted claims in tokens returned to the AzureAdApplication
 	Claims *AzureAdClaims `json:"claims,omitempty"`
 }
@@ -196,6 +202,17 @@ type EnvVarSource struct {
 type CloudStorageBucket struct {
 	Name            string `json:"name"`
 	CascadingDelete bool   `json:"cascadingDelete,omitempty"`
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=36500
+	RetentionPeriodDays *int                `json:"retentionPeriodDays,omitempty"`
+	LifecycleCondition  *LifecycleCondition `json:"lifecycleCondition,omitempty"`
+}
+
+type LifecycleCondition struct {
+	Age              int    `json:"age,omitempty"`
+	CreatedBefore    string `json:"createdBefore,omitempty"`
+	NumNewerVersions int    `json:"numNewerVersions,omitempty"`
+	WithState        string `json:"withState,omitempty"`
 }
 
 type CloudSqlInstanceType string
@@ -237,7 +254,7 @@ type CloudSqlInstance struct {
 	DiskAutoresize bool `json:"diskAutoresize,omitempty"`
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=23
-	AutoBackupHour *int         `json:"autoBackupHour,omitempty"` // must use pointer here to be able to distinguish between no/zero value and value 0 from user.
+	AutoBackupHour *int         `json:"autoBackupHour,omitempty"`
 	Maintenance    *Maintenance `json:"maintenance,omitempty"`
 	// +kubebuilder:validation:Required
 	Databases       []CloudSqlDatabase `json:"databases,omitempty"`
@@ -255,9 +272,14 @@ type Maintenance struct {
 	Hour *int `json:"hour,omitempty"` // must use pointer here to be able to distinguish between no value and value 0 from user.
 }
 
+type Elastic struct {
+	Instance string `json:"instance"`
+}
+
 type GCP struct {
 	Buckets      []CloudStorageBucket `json:"buckets,omitempty"`
 	SqlInstances []CloudSqlInstance   `json:"sqlInstances,omitempty"`
+	Permissions  []CloudIAMPermission `json:"permissions,omitempty"`
 }
 
 type EnvVar struct {
@@ -335,6 +357,17 @@ type AccessPolicy struct {
 
 type Kafka struct {
 	Pool string `json:"pool"`
+}
+
+type CloudIAMResource struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name,omitempty"`
+}
+
+type CloudIAMPermission struct {
+	Role     string           `json:"role"`
+	Resource CloudIAMResource `json:"resource"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {
@@ -453,7 +486,16 @@ func (in *Application) ClientID() string {
 	return fmt.Sprintf("%s:%s:%s", in.Cluster(), in.ObjectMeta.Namespace, in.ObjectMeta.Name)
 }
 
-func (in *Application) AddAccessPolicyExternalHosts(hosts []string) {
+func (in *Application) AddAccessPolicyExternalHostsAsStrings(hosts []string) {
+	externalRules := make([]AccessPolicyExternalRule, len(hosts))
+	for _, host := range hosts {
+		externalRules = append(externalRules, AccessPolicyExternalRule{Host: host})
+	}
+
+	in.AddAccessPolicyExternalHosts(externalRules)
+}
+
+func (in *Application) AddAccessPolicyExternalHosts(hosts []AccessPolicyExternalRule) {
 	var empty struct{}
 	seen := map[string]struct{}{}
 	rules := make([]AccessPolicyExternalRule, 0)
@@ -462,13 +504,13 @@ func (in *Application) AddAccessPolicyExternalHosts(hosts []string) {
 		seen[rule.Host] = empty
 	}
 
-	for _, host := range hosts {
-		if len(host) == 0 {
+	for _, externalRule := range hosts {
+		if len(externalRule.Host) == 0 {
 			continue
 		}
-		if _, found := seen[host]; !found {
-			seen[host] = empty
-			rules = append(rules, AccessPolicyExternalRule{Host: host})
+		if _, found := seen[externalRule.Host]; !found {
+			seen[externalRule.Host] = empty
+			rules = append(rules, externalRule)
 		}
 	}
 

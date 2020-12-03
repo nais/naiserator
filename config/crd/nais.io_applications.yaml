@@ -151,6 +151,13 @@ spec:
               required:
               - application
               type: object
+            elastic:
+              properties:
+                instance:
+                  type: string
+              required:
+              - instance
+              type: object
             env:
               items:
                 properties:
@@ -211,10 +218,47 @@ spec:
                     properties:
                       cascadingDelete:
                         type: boolean
+                      lifecycleCondition:
+                        properties:
+                          age:
+                            type: integer
+                          createdBefore:
+                            type: string
+                          numNewerVersions:
+                            type: integer
+                          withState:
+                            type: string
+                        type: object
                       name:
                         type: string
+                      retentionPeriodDays:
+                        maximum: 36500
+                        minimum: 1
+                        type: integer
                     required:
                     - name
+                    type: object
+                  type: array
+                permissions:
+                  items:
+                    properties:
+                      resource:
+                        properties:
+                          apiVersion:
+                            type: string
+                          kind:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - apiVersion
+                        - kind
+                        type: object
+                      role:
+                        type: string
+                    required:
+                    - resource
+                    - role
                     type: object
                   type: array
                 sqlInstances:
@@ -277,6 +321,10 @@ spec:
               type: object
             idporten:
               properties:
+                accessTokenLifetime:
+                  maximum: 3600
+                  minimum: 1
+                  type: integer
                 clientURI:
                   type: string
                 enabled:
@@ -288,8 +336,11 @@ spec:
                     type: string
                   type: array
                 redirectURI:
+                  pattern: ^https:\/\/
                   type: string
-                refreshTokenLifetime:
+                sessionLifetime:
+                  maximum: 7200
+                  minimum: 3600
                   type: integer
               required:
               - enabled

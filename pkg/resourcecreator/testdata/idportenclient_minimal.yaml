@@ -39,11 +39,7 @@ tests:
           - .spec.secretName
         resource:
           spec:
-            clientURI: https://www.nav.no
             redirectURI: "https://my-client.nav.no/oauth2/callback"
-            postLogoutRedirectURIs:
-              - "https://www.nav.no"
-            refreshTokenLifetime: 43200
   - apiVersion: nais.io/v1
     kind: IDPortenClient
     name: myapplication
