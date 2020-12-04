@@ -171,14 +171,6 @@ func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolic
 					NamespaceSelector: labelSelector("name", IstioNamespace),
 				},
 				{
-					PodSelector:       labelSelector("istio", "pilot"),
-					NamespaceSelector: labelSelector("name", IstioNamespace),
-				},
-				{
-					PodSelector:       labelSelector("istio", "mixer"),
-					NamespaceSelector: labelSelector("name", IstioNamespace),
-				},
-				{
 					PodSelector:       labelSelector("istio", "ingressgateway"),
 					NamespaceSelector: labelSelector("name", IstioNamespace),
 				},
