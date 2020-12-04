@@ -83,6 +83,11 @@ func (in *AzureAdApplicationSpec) DeepCopyInto(out *AzureAdApplicationSpec) {
 		*out = make([]v1alpha1.AccessPolicyRule, len(*in))
 		copy(*out, *in)
 	}
+	if in.Claims != nil {
+		in, out := &in.Claims, &out.Claims
+		*out = new(v1alpha1.AzureAdClaims)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

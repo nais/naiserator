@@ -30,6 +30,7 @@ func AzureAdApplication(app nais.Application, clusterName string) azureapp.Azure
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
 			Tenant:                    getTenant(app),
 			SecretName:                getSecretName(app),
+			Claims:                    app.Spec.Azure.Application.Claims,
 		},
 	}
 }
