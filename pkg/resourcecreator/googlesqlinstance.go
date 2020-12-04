@@ -19,6 +19,7 @@ const (
 	DefaultSqlInstanceAutoBackupHour = 2
 	DefaultSqlInstanceTier           = "db-f1-micro"
 	DefaultSqlInstanceDiskSize       = 10
+	DefaultSqlInstanceCollation      = "en_US.UTF8"
 )
 
 func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
@@ -77,6 +78,7 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		DiskType:  DefaultSqlInstanceDiskType,
 		DiskSize:  DefaultSqlInstanceDiskSize,
 		Databases: []nais.CloudSqlDatabase{{Name: appName}},
+		Collation: DefaultSqlInstanceCollation,
 	}
 
 	if err = mergo.Merge(&instance, defaultInstance); err != nil {

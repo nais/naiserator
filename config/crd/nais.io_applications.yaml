@@ -33,20 +33,15 @@ spec:
       description: Application defines a NAIS application.
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         spec:
-          description: ApplicationSpec contains the NAIS manifest. Please keep this
-            list sorted for clarity.
+          description: ApplicationSpec contains the NAIS manifest. Please keep this list sorted for clarity.
           properties:
             accessPolicy:
               properties:
@@ -123,12 +118,10 @@ spec:
                 application:
                   properties:
                     claims:
-                      description: Claims defines additional configuration of the
-                        emitted claims in tokens returned to the AzureAdApplication
+                      description: Claims defines additional configuration of the emitted claims in tokens returned to the AzureAdApplication
                       properties:
                         extra:
-                          description: Extra is a list of additional claims to be
-                            mapped from an associated claim-mapping policy.
+                          description: Extra is a list of additional claims to be mapped from an associated claim-mapping policy.
                           items:
                             enum:
                             - NAVident
@@ -271,6 +264,8 @@ spec:
                         type: integer
                       cascadingDelete:
                         type: boolean
+                      collation:
+                        type: string
                       databases:
                         items:
                           properties:
@@ -434,12 +429,10 @@ spec:
                   description: Amount of CPU usage before the autoscaler kicks in.
                   type: integer
                 max:
-                  description: The pod autoscaler will scale deployments on demand
-                    until this maximum has been reached.
+                  description: The pod autoscaler will scale deployments on demand until this maximum has been reached.
                   type: integer
                 min:
-                  description: The minimum amount of replicas acceptable for a successful
-                    deployment.
+                  description: The minimum amount of replicas acceptable for a successful deployment.
                   type: integer
               type: object
             resources:
@@ -466,8 +459,7 @@ spec:
             secureLogs:
               properties:
                 enabled:
-                  description: Whether or not to enable a sidecar container for secure
-                    logging.
+                  description: Whether or not to enable a sidecar container for secure logging.
                   type: boolean
               required:
               - enabled
@@ -519,12 +511,10 @@ spec:
             tokenx:
               properties:
                 enabled:
-                  description: if enabled, the application will have a jwker secret
-                    injected
+                  description: if enabled, the application will have a jwker secret injected
                   type: boolean
                 mountSecretsAsFilesOnly:
-                  description: if enabled, secrets for TokenX will be mounted as files
-                    only, i.e. not as env.
+                  description: if enabled, secrets for TokenX will be mounted as files only, i.e. not as env.
                   type: boolean
               required:
               - enabled
@@ -532,8 +522,7 @@ spec:
             tracing:
               properties:
                 enabled:
-                  description: if enabled, a rule allowing egress to app:jaeger will
-                    be appended to NetworkPolicy
+                  description: if enabled, a rule allowing egress to app:jaeger will be appended to NetworkPolicy
                   type: boolean
               required:
               - enabled

@@ -263,6 +263,7 @@ type CloudSqlInstance struct {
 	// +kubebuilder:validation:Required
 	Databases       []CloudSqlDatabase `json:"databases,omitempty"`
 	CascadingDelete bool               `json:"cascadingDelete,omitempty"`
+	Collation       string             `json:"collation,omitempty"`
 }
 
 type Maintenance struct {
