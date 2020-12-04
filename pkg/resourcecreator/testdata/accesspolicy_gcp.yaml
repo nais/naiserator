@@ -89,18 +89,6 @@ tests:
                         name: istio-system
                   - podSelector:
                       matchLabels:
-                        istio: pilot
-                    namespaceSelector:
-                      matchLabels:
-                        name: istio-system
-                  - podSelector:
-                      matchLabels:
-                        istio: mixer
-                    namespaceSelector:
-                      matchLabels:
-                        name: istio-system
-                  - podSelector:
-                      matchLabels:
                         istio: ingressgateway
                     namespaceSelector:
                       matchLabels:
