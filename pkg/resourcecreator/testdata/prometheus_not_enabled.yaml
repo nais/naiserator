@@ -1,0 +1,32 @@
+config:
+  description: prometheus port is set in deployment and annotations
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    port: 11335
+    prometheus:
+      path: "/scrape/path"
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: absent
+        name: "deployment created without promethes config"
+        resource:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  prometheus.io/path: "MUST NOT EXIST"
+                  prometheus.io/port: "MUST NOT EXIST"
+                  prometheus.io/scrape: "MUST NOT EXIST"

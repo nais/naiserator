@@ -16,6 +16,7 @@ const (
 	MatchRegex  MatchType = "regex"
 	MatchExact  MatchType = "exact"
 	MatchSubset MatchType = "subset"
+	MatchAbsent MatchType = "absent"
 
 	ErrMissingField ErrorType = "ErrMissingField"
 	ErrExtraField   ErrorType = "ErrExtraField"

@@ -128,7 +128,7 @@ func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepco
 	return diffs
 }
 
-func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test SubTest) {
+func yamlRunner(t *testing.T, filename string, resources resourcecreator.ResourceOperations, test SubTest) {
 	matched := false
 
 	for _, resource := range resources {
@@ -155,7 +155,7 @@ func yamlRunner(t *testing.T, resources resourcecreator.ResourceOperations, test
 				return false
 			}
 
-			t.Logf("Assert '%s' against '%s'", match.Name, rm)
+			t.Logf("%s: Assert '%s' against '%s'", filename, match.Name, rm)
 
 			diffs = append(diffs, filter(deepcomp.Compare(match.Type, &match.Resource, raw), callback)...)
 		}
@@ -214,7 +214,7 @@ func yamlSubTest(t *testing.T, path string) {
 	assert.NoError(t, err)
 
 	for _, subtest := range test.Tests {
-		yamlRunner(t, resources, subtest)
+		yamlRunner(t, filepath.Base(path), resources, subtest)
 	}
 }
 
