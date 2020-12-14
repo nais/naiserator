@@ -132,7 +132,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"https://foo.bar/baz"}
+		app.Spec.Ingresses = []nais.Ingress{"https://foo.bar/baz"}
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -146,7 +146,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("erroneous ingress uris create errors", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"gopher://lol"}
+		app.Spec.Ingresses = []nais.Ingress{"gopher://lol"}
 		opts := resourcecreator.NewResourceOptions()
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -185,7 +185,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"https://host.domain.tld"}
+		app.Spec.Ingresses = []nais.Ingress{"https://host.domain.tld"}
 		opts := resourcecreator.NewResourceOptions()
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", GatewayName: "namespace/gateway"}}
 		opts.AccessPolicy = true
@@ -206,7 +206,7 @@ func TestCreate(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".bar", GatewayName: "namespace/gateway"}}
-		app.Spec.Ingresses = []string{"https://foo.bar"}
+		app.Spec.Ingresses = []nais.Ingress{"https://foo.bar"}
 
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -363,14 +363,14 @@ func TestCreate(t *testing.T) {
 		_, err := resourcecreator.Create(app, opts)
 		assert.Error(t, err, "return error if no ingresses are specified")
 
-		app.Spec.Ingresses = []string{
+		app.Spec.Ingresses = []nais.Ingress{
 			"https://yolo-ingress.nais.io",
 			"https://very-cool-ingress.nais.io",
 		}
 		_, err = resourcecreator.Create(app, opts)
 		assert.Error(t, err, "return error if multiple ingresses are specified")
 
-		app.Spec.Ingresses = []string{
+		app.Spec.Ingresses = []nais.Ingress{
 			"https://yolo-ingress.nais.io",
 		}
 		_, err = resourcecreator.Create(app, opts)
@@ -380,7 +380,7 @@ func TestCreate(t *testing.T) {
 		_, err = resourcecreator.Create(app, opts)
 		assert.Error(t, err, "return error if redirect URI is not subpath of ingress")
 
-		app.Spec.Ingresses = []string{
+		app.Spec.Ingresses = []nais.Ingress{
 			"http://localhost/oauth2/callback",
 		}
 		app.Spec.IDPorten.RedirectURI = "http://localhost/oauth2/callback"
@@ -388,7 +388,7 @@ func TestCreate(t *testing.T) {
 		assert.Error(t, err, "return error if redirect URI and ingress does not start with https://")
 
 		app.Spec.IDPorten.RedirectURI = "https://yolo-ingress.nais.io/oauth2/callback"
-		app.Spec.Ingresses = []string{
+		app.Spec.Ingresses = []nais.Ingress{
 			"https://yolo-ingress.nais.io",
 		}
 		_, err = resourcecreator.Create(app, opts)

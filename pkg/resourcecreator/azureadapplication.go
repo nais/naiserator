@@ -1,11 +1,12 @@
 package resourcecreator
 
 import (
+	"net/url"
+	"path"
+
 	azureapp "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/url"
-	"path"
 )
 
 const (
@@ -43,7 +44,7 @@ func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
 	return maps
 }
 
-func oauthCallbackURLs(ingresses []string) []string {
+func oauthCallbackURLs(ingresses []nais.Ingress) []string {
 	urls := make([]string, len(ingresses))
 	for i := range ingresses {
 		urls[i] = oauthCallbackURL(ingresses[i])
@@ -51,8 +52,8 @@ func oauthCallbackURLs(ingresses []string) []string {
 	return urls
 }
 
-func oauthCallbackURL(ingress string) string {
-	u, _ := url.Parse(ingress)
+func oauthCallbackURL(ingress nais.Ingress) string {
+	u, _ := url.Parse(string(ingress))
 	u.Path = path.Join(u.Path, "/oauth2/callback")
 	return u.String()
 }

@@ -2,10 +2,11 @@ package resourcecreator
 
 import (
 	"fmt"
+	"strings"
+
 	idportenClient "github.com/nais/naiserator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func IDPortenClient(app *nais.Application) (*idportenClient.IDPortenClient, error) {
@@ -58,7 +59,7 @@ func validateRedirectURI(app nais.Application) error {
 	ingress := app.Spec.Ingresses[0]
 	redirectURI := app.Spec.IDPorten.RedirectURI
 
-	if !strings.HasPrefix(redirectURI, ingress) {
+	if !strings.HasPrefix(redirectURI, string(ingress)) {
 		return fmt.Errorf("redirect URI ('%s') must be a subpath of the ingress ('%s')", redirectURI, ingress)
 	}
 

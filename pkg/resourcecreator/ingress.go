@@ -40,11 +40,11 @@ func ingressRule(app *nais.Application, u *url.URL) networkingv1beta1.IngressRul
 	}
 }
 
-func ingressRules(app *nais.Application, urls []string) ([]networkingv1beta1.IngressRule, error) {
+func ingressRules(app *nais.Application, urls []nais.Ingress) ([]networkingv1beta1.IngressRule, error) {
 	var rules []networkingv1beta1.IngressRule
 
 	for _, ingress := range urls {
-		parsedUrl, err := url.Parse(ingress)
+		parsedUrl, err := url.Parse(string(ingress))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 		}

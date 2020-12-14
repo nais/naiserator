@@ -47,7 +47,7 @@ func getAppDefaults() *Application {
 			Prometheus: &PrometheusConfig{
 				Path: "/metrics",
 			},
-			Ingresses: []string{},
+			Ingresses: []Ingress{},
 			Resources: &ResourceRequirements{
 				Limits: &ResourceSpec{
 					Cpu:    "500m",

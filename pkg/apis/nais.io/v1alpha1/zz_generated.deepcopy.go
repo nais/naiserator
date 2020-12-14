@@ -210,11 +210,6 @@ func (in *ApplicationSpec) DeepCopyInto(out *ApplicationSpec) {
 		*out = new(Azure)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.GCP != nil {
-		in, out := &in.GCP, &out.GCP
-		*out = new(GCP)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.Elastic != nil {
 		in, out := &in.Elastic, &out.Elastic
 		*out = new(Elastic)
@@ -237,9 +232,19 @@ func (in *ApplicationSpec) DeepCopyInto(out *ApplicationSpec) {
 		*out = make([]FilesFrom, len(*in))
 		copy(*out, *in)
 	}
+	if in.GCP != nil {
+		in, out := &in.GCP, &out.GCP
+		*out = new(GCP)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.IDPorten != nil {
+		in, out := &in.IDPorten, &out.IDPorten
+		*out = new(IDPorten)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Ingresses != nil {
 		in, out := &in.Ingresses, &out.Ingresses
-		*out = make([]string, len(*in))
+		*out = make([]Ingress, len(*in))
 		copy(*out, *in)
 	}
 	if in.Kafka != nil {
@@ -305,11 +310,6 @@ func (in *ApplicationSpec) DeepCopyInto(out *ApplicationSpec) {
 	if in.Vault != nil {
 		in, out := &in.Vault, &out.Vault
 		*out = new(Vault)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.IDPorten != nil {
-		in, out := &in.IDPorten, &out.IDPorten
-		*out = new(IDPorten)
 		(*in).DeepCopyInto(*out)
 	}
 	return

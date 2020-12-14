@@ -80,7 +80,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{
+		app.Spec.Ingresses = []nais.Ingress{
 			"https://gief.api.plz",
 		}
 		err := nais.ApplyDefaults(app)
@@ -99,7 +99,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("specifying ingresses when all traffic is allowed still creates an explicit rule for istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{
+		app.Spec.Ingresses = []nais.Ingress{
 			"https://gief.api.plz",
 		}
 		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais.AccessPolicyRule{Application: "*"})

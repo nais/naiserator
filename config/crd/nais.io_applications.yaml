@@ -45,7 +45,8 @@ spec:
         metadata:
           type: object
         spec:
-          description: ApplicationSpec contains the NAIS manifest.
+          description: ApplicationSpec contains the NAIS manifest. Please keep this
+            list sorted for clarity.
           properties:
             accessPolicy:
               properties:
@@ -349,6 +350,7 @@ spec:
               type: string
             ingresses:
               items:
+                pattern: ^https:\/\/
                 type: string
               type: array
             kafka:
