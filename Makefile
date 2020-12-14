@@ -25,7 +25,7 @@ install:
 	cd cmd/naiserator && go install
 
 test:
-	go test ./... -count=1
+	go test ./... -count=1 --coverprofile=cover.out
 
 golden_file_test:
 	go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1
