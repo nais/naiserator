@@ -22,7 +22,7 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio
 	// TODO: This is the old ingress-gateway, need this until it is removed from the clusters
 	gateways := []string{"istio-system/istio-ingressgateway"}
 	for _, ingress := range app.Spec.Ingresses {
-		parsedUrl, err := url.Parse(ingress)
+		parsedUrl, err := url.Parse(string(ingress))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 		}

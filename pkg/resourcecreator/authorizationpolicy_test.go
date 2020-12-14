@@ -2,12 +2,12 @@ package resourcecreator_test
 
 import (
 	"fmt"
-	"github.com/nais/naiserator/pkg/naiserator/config"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 )
@@ -39,7 +39,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 
 	t.Run("auth policy for app with ingress and no access policies", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"https://asd.test.no"}
+		app.Spec.Ingresses = []nais.Ingress{"https://asd.test.no"}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
@@ -48,7 +48,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	})
 	t.Run("auth policy for app with ingress and policy", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{"https://asd.test.no"}
+		app.Spec.Ingresses = []nais.Ingress{"https://asd.test.no"}
 		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, ""}, {otherApplication2, "", ""}}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)

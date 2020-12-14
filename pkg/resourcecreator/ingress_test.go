@@ -13,7 +13,7 @@ import (
 func TestIngress(t *testing.T) {
 	t.Run("ingress creation is successful and resources look correct", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []string{
+		app.Spec.Ingresses = []nais.Ingress{
 			"https://app.nais.adeo.no/",
 			"https://tjenester.nav.no/app",
 			"https://app.foo.bar",
@@ -45,9 +45,9 @@ func TestIngress(t *testing.T) {
 	})
 
 	t.Run("invalid ingress URLs are rejected", func(t *testing.T) {
-		for _, i := range []string{"crap", "htp:/foo", "http://valid.fqdn/foo", "ftp://test"} {
+		for _, i := range []nais.Ingress{"crap", "htp:/foo", "http://valid.fqdn/foo", "ftp://test"} {
 			app := fixtures.MinimalApplication()
-			app.Spec.Ingresses = []string{i}
+			app.Spec.Ingresses = []nais.Ingress{i}
 			err := nais.ApplyDefaults(app)
 			assert.NoError(t, err)
 

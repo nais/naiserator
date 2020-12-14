@@ -6,7 +6,7 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	nais_fake "github.com/nais/naiserator/pkg/client/clientset/versioned/fake"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
@@ -27,7 +27,7 @@ func TestSynchronizer(t *testing.T) {
 	name := app.GetName()
 	namespace := app.GetNamespace()
 	app.SetAnnotations(map[string]string{
-		v1alpha1.DeploymentCorrelationIDAnnotation: "deploy-id",
+		nais.DeploymentCorrelationIDAnnotation: "deploy-id",
 	})
 
 	// Test that a resource has been created in the fake cluster
@@ -75,9 +75,9 @@ func TestSynchronizer(t *testing.T) {
 	}
 
 	// Create an Ingress object that should be deleted once processing has run.
-	app.Spec.Ingresses = []string{"https://foo.bar"}
+	app.Spec.Ingresses = []nais.Ingress{"https://foo.bar"}
 	ingress, err := resourcecreator.Ingress(app)
-	app.Spec.Ingresses = []string{}
+	app.Spec.Ingresses = []nais.Ingress{}
 	ingress, err = clientSet.NetworkingV1beta1().Ingresses(namespace).Create(ingress)
 	if err != nil || len(ingress.Spec.Rules) == 0 {
 		t.Fatalf("BUG: error creating ingress for testing: %s", err)
@@ -85,11 +85,11 @@ func TestSynchronizer(t *testing.T) {
 
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
-	app.Spec.Ingresses = []string{"https://foo.bar"}
+	app.Spec.Ingresses = []nais.Ingress{"https://foo.bar"}
 	ingress, _ = resourcecreator.Ingress(app)
 	ingress.SetName("disowned-ingress")
 	ingress.SetOwnerReferences(nil)
-	app.Spec.Ingresses = []string{}
+	app.Spec.Ingresses = []nais.Ingress{}
 	ingress, err = clientSet.NetworkingV1beta1().Ingresses(namespace).Create(ingress)
 	if err != nil || len(ingress.Spec.Rules) == 0 {
 		t.Fatalf("BUG: error creating ingress 2 for testing: %s", err)
@@ -130,9 +130,9 @@ func TestSynchronizer(t *testing.T) {
 func TestSynchronizerResourceOptions(t *testing.T) {
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
-	app.Spec.GCP = &v1alpha1.GCP{
-		SqlInstances: []v1alpha1.CloudSqlInstance{{
-			Databases: []v1alpha1.CloudSqlDatabase{{Name: app.Name}},
+	app.Spec.GCP = &nais.GCP{
+		SqlInstances: []nais.CloudSqlInstance{{
+			Databases: []nais.CloudSqlDatabase{{Name: app.Name}},
 		}},
 	}
 

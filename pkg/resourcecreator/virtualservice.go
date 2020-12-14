@@ -15,7 +15,7 @@ func VirtualServices(app *nais.Application, gatewayMappings []config.GatewayMapp
 	var vses []*istio.VirtualService
 
 	for index, ingress := range app.Spec.Ingresses {
-		parsedUrl, err := url.Parse(ingress)
+		parsedUrl, err := url.Parse(string(ingress))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 		}

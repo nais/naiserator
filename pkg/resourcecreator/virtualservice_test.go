@@ -43,7 +43,7 @@ func asUrl(ingress string) url.URL {
 
 func TestVirtualService(t *testing.T) {
 	t.Run("virtualservices not created on invalid ingress", func(t *testing.T) {
-		ingresses := []string{
+		ingresses := []nais.Ingress{
 			"host.no",
 		}
 
@@ -58,7 +58,7 @@ func TestVirtualService(t *testing.T) {
 	})
 
 	t.Run("virtualservice created according to spec", func(t *testing.T) {
-		ingresses := []string{
+		ingresses := []nais.Ingress{
 			"https://first.host.no/prefixed/with/url",
 		}
 

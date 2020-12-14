@@ -46,17 +46,22 @@ type Application struct {
 	Status ApplicationStatus `json:"status,omitempty"`
 }
 
+// +kubebuilder:validation:Pattern=`^https:\/\/`
+type Ingress string
+
 // ApplicationSpec contains the NAIS manifest.
+// Please keep this list sorted for clarity.
 type ApplicationSpec struct {
 	AccessPolicy    *AccessPolicy         `json:"accessPolicy,omitempty"`
 	Azure           *Azure                `json:"azure,omitempty"`
-	GCP             *GCP                  `json:"gcp,omitempty"`
 	Elastic         *Elastic              `json:"elastic,omitempty"`
 	Env             []EnvVar              `json:"env,omitempty"`
 	EnvFrom         []EnvFrom             `json:"envFrom,omitempty"`
 	FilesFrom       []FilesFrom           `json:"filesFrom,omitempty"`
+	GCP             *GCP                  `json:"gcp,omitempty"`
+	IDPorten        *IDPorten             `json:"idporten,omitempty"`
 	Image           string                `json:"image"`
-	Ingresses       []string              `json:"ingresses,omitempty"`
+	Ingresses       []Ingress             `json:"ingresses,omitempty"`
 	Kafka           *Kafka                `json:"kafka,omitempty"`
 	LeaderElection  bool                  `json:"leaderElection,omitempty"`
 	Liveness        *Probe                `json:"liveness,omitempty"`
@@ -76,7 +81,6 @@ type ApplicationSpec struct {
 	Tracing         *Tracing              `json:"tracing,omitempty"`
 	Vault           *Vault                `json:"vault,omitempty"`
 	WebProxy        bool                  `json:"webproxy,omitempty"`
-	IDPorten        *IDPorten             `json:"idporten,omitempty"`
 
 	// +kubebuilder:validation:Enum="";accesslog;accesslog_with_processing_time;accesslog_with_referer_useragent;capnslog;logrus;gokit;redis;glog;simple;influxdb;log15
 	Logformat string `json:"logformat,omitempty"`
