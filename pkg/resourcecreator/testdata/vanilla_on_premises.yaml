@@ -109,10 +109,6 @@ tests:
                 labels:
                   team: myteam
                   app: myapplication
-                annotations:
-                  prometheus.io/path: /metrics
-                  prometheus.io/port: "8080"
-                  prometheus.io/scrape: "false"
               spec:
                 volumes:
                   - name: ca-bundle-jks
