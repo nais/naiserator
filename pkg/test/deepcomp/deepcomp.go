@@ -15,6 +15,8 @@ func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 		return Exact(expected, actual, matchType)
 	case MatchRegex, MatchSubset:
 		return Subset(expected, actual, matchType)
+	case MatchAbsent:
+		return Absent(expected, actual, matchType)
 	default:
 		panic(fmt.Errorf("unhandled type %v", matchType))
 	}
@@ -24,6 +26,12 @@ func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 func Subset(expected, actual interface{}, matchType MatchType) Diffset {
 	diffs := Exact(expected, actual, matchType)
 	return diffs.Filter(ErrExtraField)
+}
+
+// Like Subset, but matching fields error out, extra fields are ignored, and absent fields are OK
+func Absent(expected, actual interface{}, matchType MatchType) Diffset {
+	diffs := Exact(expected, actual, matchType)
+	return diffs.Filter(ErrMissingField).Filter(ErrExtraField)
 }
 
 // Match expected data against actual data, and return a set of all the differences.

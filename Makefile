@@ -25,7 +25,10 @@ install:
 	cd cmd/naiserator && go install
 
 test:
-	go test ./... --coverprofile=cover.out
+	go test ./... -count=1
+
+golden_file_test:
+	go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1
 
 crd:
 	controller-gen "crd:trivialVersions=true" paths=github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1 output:crd:artifacts:config=config/crd
