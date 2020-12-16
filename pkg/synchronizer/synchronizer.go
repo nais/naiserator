@@ -297,7 +297,8 @@ func (n *Synchronizer) Prepare(app *v1alpha1.Application) (*Rollout, error) {
 		if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
 			rollout.SetGoogleTeamProjectId(val)
 		} else {
-			return nil, fmt.Errorf("team project id annotation not set on namespace %s", app.GetNamespace())
+			return nil, fmt.Errorf("Are you trying to use GCP resources in a non GCP-cluster? " +
+				"Team project id annotation is not set on namespace %s", app.GetNamespace())
 		}
 	}
 
