@@ -18,11 +18,10 @@ jobs:
           go-version: 1.15
       - name: Go get controller-gen
         run: |
-          export GO111MODULE=off
           dest=$(mktemp -d)
           git clone -b v0.2.5 https://github.com/kubernetes-sigs/controller-tools ${dest}
           cd ${dest}/cmd/controller-gen
-          go get -v
+          go get
           go install .
       - name: Go get goimports
         run: GO111MODULE=off go get golang.org/x/tools/cmd/goimports
