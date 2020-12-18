@@ -17,20 +17,25 @@ jobs:
         with:
           go-version: 1.15
       - name: Go get controller-gen
-        run: go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
+        run: |
+          dest=$(mktemp -d)
+          git clone -b v0.2.5 https://github.com/kubernetes-sigs/controller-tools ${dest}
+          cd ${dest}/cmd/controller-gen
+          go get
+          go install .
       - name: Go get goimports
         run: GO111MODULE=off go get golang.org/x/tools/cmd/goimports
       - name: Run code generation
         run: make crd codegen-crd codegen-updater
       - name: Check if no diff
         run: |
-          git update-index --assume-unchanged go.mod
-          test -z "$(git status --porcelain=v1 2>/dev/null)"
+          test -z "$(git ls-files --exclude-standard --others)"
       - name: Code generation has been forgotten
         if: ${{ failure() }}
         run: |
           echo "Looks like you forgot to run code generation"
           git status
+          git --no-pager diff
       - name: Trigger build and deploy workflow
         if: github.ref == 'refs/heads/master'
         run: |

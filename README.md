@@ -100,5 +100,5 @@ Check out the [controller-gen documentation](https://book.kubebuilder.io/referen
 A known working version of controller-gen is `v0.2.5`. Download with
 
 ```
-go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
+GO111MODULE=off go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
 ```
