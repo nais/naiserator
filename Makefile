@@ -12,7 +12,7 @@ build:
 	cd cmd/naiserator && go build
 
 docker:
-	docker image build -t ${TAG}:$(shell /bin/cat ./version) -t ${TAG} -t ${NAME} -t ${LATEST} -f Dockerfile .
+	docker image build -t ${TAG}:$(shell ./version.sh) -t ${TAG} -t ${NAME} -t ${LATEST} -f Dockerfile .
 
 docker-push:
 	docker image push ${TAG}:$(shell /bin/cat ./version)
