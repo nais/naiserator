@@ -19,12 +19,12 @@ require (
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
-	gopkg.in/yaml.v2 v2.2.4
+	gopkg.in/yaml.v2 v2.2.8
 	istio.io/api v0.0.0-20200122214507-9fbb385560b6
 	istio.io/client-go v0.0.0-20200124005443-c05d78c7fe10
-	k8s.io/api v0.17.0 // kubernetes-1.15.6
-	k8s.io/apimachinery v0.17.0 // kubernetes-1.15.6
-	k8s.io/client-go v0.17.0 // kubernetes-1.15.6
+	k8s.io/api v0.17.16
+	k8s.io/apimachinery v0.17.16
+	k8s.io/client-go v0.17.16
 	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f
 )
 
