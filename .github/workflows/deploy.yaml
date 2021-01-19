@@ -1,15 +1,45 @@
 name: Build and deploy
-on: 
-  repository_dispatch:
-    types:
-      - build-and-deploy
+on: push
 
 env:
   image: docker.pkg.github.com/${{ github.repository }}/naiserator
 
 jobs:
+  make-crd:
+    name: Checking for missing code generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: Go get controller-gen
+        run: |
+          dest=$(mktemp -d)
+          git clone -b v0.2.5 https://github.com/kubernetes-sigs/controller-tools ${dest}
+          cd ${dest}/cmd/controller-gen
+          go get
+          go install .
+      - name: Go get goimports
+        run: GO111MODULE=off go get golang.org/x/tools/cmd/goimports
+      - name: Run code generation
+        run: make crd codegen-crd codegen-updater
+      - name: Check if no diff
+        run: |
+          test -z "$(git ls-files --exclude-standard --others)"
+      - name: Code generation has been forgotten
+        if: ${{ failure() }}
+        run: |
+          echo "Looks like you forgot to run code generation"
+          git status
+          git --no-pager diff
+
   build-push:
     name: Build and push image
+    needs: make-crd
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout naiserator
@@ -31,6 +61,7 @@ jobs:
     name: Release to nais-yaml
     runs-on: ubuntu-latest
     needs: build-push
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout naiserator
         uses: actions/checkout@v2
