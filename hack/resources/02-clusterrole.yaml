@@ -22,6 +22,7 @@ rules:
       - 'idportenclients'
       - 'ingresses'
       - 'jwkers'
+      - 'maskinportenclients'
       - 'namespaces'
       - 'networkpolicies'
       - 'rolebindings'

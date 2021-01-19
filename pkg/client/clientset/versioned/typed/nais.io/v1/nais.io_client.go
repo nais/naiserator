@@ -13,6 +13,7 @@ type NaisV1Interface interface {
 	AzureAdApplicationsGetter
 	IDPortenClientsGetter
 	JwkersGetter
+	MaskinportenClientsGetter
 }
 
 // NaisV1Client is used to interact with features provided by the nais.io group.
@@ -30,6 +31,10 @@ func (c *NaisV1Client) IDPortenClients(namespace string) IDPortenClientInterface
 
 func (c *NaisV1Client) Jwkers(namespace string) JwkerInterface {
 	return newJwkers(c, namespace)
+}
+
+func (c *NaisV1Client) MaskinportenClients(namespace string) MaskinportenClientInterface {
+	return newMaskinportenClients(c, namespace)
 }
 
 // NewForConfig creates a new NaisV1Client for the given config.

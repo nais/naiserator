@@ -17,13 +17,14 @@ import (
 )
 
 const (
-	DeploymentCorrelationIDAnnotation = "nais.io/deploymentCorrelationID"
-	SkipDeploymentMessageAnnotation   = "nais.io/skipDeploymentMessage"
-	DefaultSecretMountPath            = "/var/run/secrets"
-	DefaultJwkerMountPath             = "/var/run/secrets/nais.io/jwker"
-	DefaultAzureratorMountPath        = "/var/run/secrets/nais.io/azure"
-	DefaultKafkaratorMountPath        = "/var/run/secrets/nais.io/kafka"
-	DefaultDigdiratorMountPath        = "/var/run/secrets/nais.io/idporten"
+	DeploymentCorrelationIDAnnotation      = "nais.io/deploymentCorrelationID"
+	SkipDeploymentMessageAnnotation        = "nais.io/skipDeploymentMessage"
+	DefaultSecretMountPath                 = "/var/run/secrets"
+	DefaultJwkerMountPath                  = "/var/run/secrets/nais.io/jwker"
+	DefaultAzureratorMountPath             = "/var/run/secrets/nais.io/azure"
+	DefaultKafkaratorMountPath             = "/var/run/secrets/nais.io/kafka"
+	DefaultDigdiratorIDPortenMountPath     = "/var/run/secrets/nais.io/idporten"
+	DefaultDigdiratorMaskinportenMountPath = "/var/run/secrets/nais.io/maskinporten"
 )
 
 func GetDefaultMountPath(name string) string {
@@ -66,6 +67,7 @@ type ApplicationSpec struct {
 	LeaderElection  bool                  `json:"leaderElection,omitempty"`
 	Liveness        *Probe                `json:"liveness,omitempty"`
 	Logtransform    string                `json:"logtransform,omitempty"`
+	Maskinporten    *Maskinporten         `json:"maskinporten,omitempty"`
 	Port            int                   `json:"port,omitempty"`
 	PreStopHookPath string                `json:"preStopHookPath,omitempty"`
 	Prometheus      *PrometheusConfig     `json:"prometheus,omitempty"`
@@ -373,6 +375,15 @@ type CloudIAMResource struct {
 type CloudIAMPermission struct {
 	Role     string           `json:"role"`
 	Resource CloudIAMResource `json:"resource"`
+}
+
+type Maskinporten struct {
+	Enabled bool                `json:"enabled"`
+	Scopes  []MaskinportenScope `json:"scopes,omitempty"`
+}
+
+type MaskinportenScope struct {
+	Name string `json:"name"`
 }
 
 func (in *Application) GetObjectKind() schema.ObjectKind {

@@ -35,6 +35,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&JwkerList{},
 		&IDPortenClient{},
 		&IDPortenClientList{},
+		&MaskinportenClient{},
+		&MaskinportenClientList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
