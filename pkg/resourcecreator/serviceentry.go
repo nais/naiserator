@@ -2,17 +2,19 @@ package resourcecreator
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
+func ServiceEntries(app *nais.Application) ([]*istio.ServiceEntry, error) {
 	entries := make([]*istio.ServiceEntry, 0)
 
 	if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
-		return entries
+		return entries, nil
 	}
 
 	for i, ext := range app.Spec.AccessPolicy.Outbound.External {
@@ -28,6 +30,10 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 				Number:   443,
 			})
 		}
+		host, err := stripProtocolFromHost(ext.Host)
+		if err != nil {
+			return nil, err
+		}
 		entry := &istio.ServiceEntry{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ServiceEntry",
@@ -35,7 +41,7 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 			},
 			ObjectMeta: meta,
 			Spec: istio.ServiceEntrySpec{
-				Hosts:      []string{ext.Host},
+				Hosts:      []string{host},
 				Location:   IstioServiceEntryLocationExternal,
 				Resolution: IstioServiceEntryResolutionDNS,
 				Ports:      ports,
@@ -45,7 +51,7 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 		entries = append(entries, entry)
 	}
 
-	return entries
+	return entries, nil
 }
 
 func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
@@ -54,4 +60,15 @@ func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
 		Number:   rule.Port,
 		Protocol: rule.Protocol,
 	}
+}
+
+func stripProtocolFromHost(host string) (string, error) {
+	if strings.HasPrefix(host, "https://") || strings.HasPrefix(host, "http://") {
+		u, err := url.Parse(host)
+		if err != nil {
+			return "", fmt.Errorf("parsing URL from '%s': %s", host, err)
+		}
+		return u.Host, nil
+	}
+	return host, nil
 }
