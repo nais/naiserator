@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

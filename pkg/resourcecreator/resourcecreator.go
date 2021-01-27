@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )

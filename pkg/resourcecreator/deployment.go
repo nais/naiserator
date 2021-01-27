@@ -9,7 +9,7 @@ import (
 	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
 
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/securelogs"
 	"github.com/nais/naiserator/pkg/vault"
 	log "github.com/sirupsen/logrus"

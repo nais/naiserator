@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	istio "istio.io/api/security/v1beta1"
 	"istio.io/api/type/v1beta1"
 	istio_security_client "istio.io/client-go/pkg/apis/security/v1beta1"

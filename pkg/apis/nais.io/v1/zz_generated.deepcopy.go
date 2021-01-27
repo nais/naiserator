@@ -5,7 +5,7 @@
 package v1
 
 import (
-	v1alpha1 "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 

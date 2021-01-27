@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	config2 "github.com/nais/naiserator/pkg/naiserator/config"
 	"k8s.io/apimachinery/pkg/api/resource"
 

@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"path"
 
-	azureapp "github.com/nais/naiserator/pkg/apis/nais.io/v1"
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

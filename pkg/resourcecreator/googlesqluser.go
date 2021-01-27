@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
-	google_sql_crd "github.com/nais/naiserator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

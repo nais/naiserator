@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/mitchellh/hashstructure"
-	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )

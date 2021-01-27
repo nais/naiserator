@@ -7,10 +7,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/spf13/viper"
 	istioClient "istio.io/client-go/pkg/clientset/versioned"
 
 	"github.com/Shopify/sarama"
-	"github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
 	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
 	"github.com/nais/naiserator/pkg/informer"
@@ -75,6 +77,12 @@ func run() error {
 		}
 		go kafkaClient.ProducerLoop()
 	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		SyncPeriod:         &syncPeriod,
+		Scheme:             scheme,
+		MetricsBindAddress: viper.GetString(MetricsAddress),
+	})
 
 	// register custom types
 	err = v1alpha1.AddToScheme(scheme.Scheme)
