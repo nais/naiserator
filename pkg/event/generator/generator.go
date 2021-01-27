@@ -7,7 +7,9 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	docker "github.com/novln/docker-parser"
+	"github.com/spf13/viper"
 )
 
 func NewDeploymentEvent(app nais.Application) deployment.Event {
@@ -23,10 +25,10 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 		Deployer:        nil,
 		Team:            app.Labels["team"],
 		RolloutStatus:   deployment.RolloutStatus_initialized,
-		Environment:     environment(app),
+		Environment:     environment(),
 		SkyaEnvironment: "",
 		Namespace:       app.Namespace,
-		Cluster:         app.Cluster(),
+		Cluster:         viper.GetString(config.ClusterName),
 		Application:     app.Name,
 		Version:         image.GetTag(),
 		Image:           &image,
@@ -36,13 +38,13 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 
 func convertTimestamp(t time.Time) timestamp.Timestamp {
 	return timestamp.Timestamp{
-		Seconds: int64(t.Unix()),
+		Seconds: t.Unix(),
 		Nanos:   int32(t.UnixNano()),
 	}
 }
 
-func environment(app nais.Application) deployment.Environment {
-	if strings.HasPrefix(app.Cluster(), "prod-") {
+func environment() deployment.Environment {
+	if strings.HasPrefix(viper.GetString(config.ClusterName), "prod-") {
 		return deployment.Environment_production
 	}
 	return deployment.Environment_development

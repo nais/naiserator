@@ -3,12 +3,13 @@ package resourcecreator
 import (
 	"fmt"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
+func ServiceEntries(app *nais_io_v1alpha1.Application) []*istio.ServiceEntry {
 	entries := make([]*istio.ServiceEntry, 0)
 
 	if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
@@ -48,7 +49,7 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 	return entries
 }
 
-func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
+func serviceEntryPort(rule nais_io_v1.AccessPolicyPortRule) istio.Port {
 	return istio.Port{
 		Name:     rule.Name,
 		Number:   rule.Port,

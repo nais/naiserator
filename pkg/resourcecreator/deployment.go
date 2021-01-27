@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	config2 "github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -295,7 +295,7 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 	}
 	return corev1.Container{
 		Name:            "cloudsql-proxy",
-		Image:           viper.GetString(config2.GoogleCloudSQLProxyContainerImage),
+		Image:           viper.GetString(config.GoogleCloudSQLProxyContainerImage),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
@@ -482,12 +482,13 @@ func vaultSidecar(app *nais.Application, podSpec *corev1.PodSpec) (*corev1.PodSp
 }
 
 func defaultEnvVars(app *nais.Application) []corev1.EnvVar {
+	cluster := viper.GetString(config.ClusterName)
 	return []corev1.EnvVar{
 		{Name: NaisAppNameEnv, Value: app.ObjectMeta.Name},
 		{Name: NaisNamespaceEnv, Value: app.ObjectMeta.Namespace},
 		{Name: NaisAppImageEnv, Value: app.Spec.Image},
-		{Name: NaisClusterNameEnv, Value: app.Cluster()},
-		{Name: NaisClientId, Value: app.ClientID()},
+		{Name: NaisClusterNameEnv, Value: cluster},
+		{Name: NaisClientId, Value: app.ClientID(cluster)},
 	}
 }
 

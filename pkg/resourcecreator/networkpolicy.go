@@ -1,7 +1,8 @@
 package resourcecreator
 
 import (
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -23,7 +24,7 @@ func egressRule(appName, namespace string) networkingv1.NetworkPolicyEgressRule 
 	}
 }
 
-func networkPolicyRules(rules []nais.AccessPolicyRule, options ResourceOptions) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+func networkPolicyRules(rules []nais_io_v1.AccessPolicyRule, options ResourceOptions) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules {
 
 		// non-local access policy rules do not result in network policies
@@ -57,7 +58,7 @@ func networkPolicyRules(rules []nais.AccessPolicyRule, options ResourceOptions) 
 	return
 }
 
-func ingressPolicy(app *nais.Application, options ResourceOptions) []networkingv1.NetworkPolicyIngressRule {
+func ingressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
 	rules = append(rules, networkingv1.NetworkPolicyIngressRule{
@@ -105,7 +106,7 @@ func ingressPolicy(app *nais.Application, options ResourceOptions) []networkingv
 	return rules
 }
 
-func egressPolicy(app *nais.Application, options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
+func egressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
 	defaultRules := defaultAllowEgress(options.AccessPolicyNotAllowedCIDRs)
 
 	if app.Spec.Tracing != nil && app.Spec.Tracing.Enabled {
@@ -135,7 +136,7 @@ func egressPolicy(app *nais.Application, options ResourceOptions) []networkingv1
 	return defaultRules
 }
 
-func networkPolicySpec(app *nais.Application, options ResourceOptions) networkingv1.NetworkPolicySpec {
+func networkPolicySpec(app *nais_io_v1alpha1.Application, options ResourceOptions) networkingv1.NetworkPolicySpec {
 	return networkingv1.NetworkPolicySpec{
 		PodSelector: *labelSelector("app", app.Name),
 		PolicyTypes: []networkingv1.PolicyType{
@@ -193,7 +194,7 @@ func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolic
 	}
 }
 
-func NetworkPolicy(app *nais.Application, options ResourceOptions) *networkingv1.NetworkPolicy {
+func NetworkPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		TypeMeta:   typeMeta(),
 		ObjectMeta: app.CreateObjectMeta(),

@@ -9,14 +9,15 @@ import (
 	"fmt"
 	"strings"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOperations, error) {
+func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) (ResourceOperations, error) {
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
@@ -84,10 +85,10 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 	if app.Spec.Elastic != nil {
 		env := strings.Split(resourceOptions.ClusterName, "-")[0]
 		instanceName := fmt.Sprintf("elastic-%s-%s-nav-%s.aivencloud.com", team, app.Spec.Elastic.Instance, env)
-		app.AddAccessPolicyExternalHosts([]nais.AccessPolicyExternalRule{
+		app.AddAccessPolicyExternalHosts([]nais_io_v1.AccessPolicyExternalRule{
 			{
 				Host: instanceName,
-				Ports: []nais.AccessPolicyPortRule{
+				Ports: []nais_io_v1.AccessPolicyPortRule{
 					{
 						Name:     "https",
 						Port:     26482,

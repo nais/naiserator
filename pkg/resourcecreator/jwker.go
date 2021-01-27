@@ -2,22 +2,23 @@ package resourcecreator
 
 import (
 	"fmt"
-	jwker "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func accessPolicyRulesWithDefaults(rules []nais.AccessPolicyRule, namespace, clusterName string) []nais.AccessPolicyRule {
-	mangled := make([]nais.AccessPolicyRule, len(rules))
+func accessPolicyRulesWithDefaults(rules []nais_io_v1.AccessPolicyRule, namespace, clusterName string) []nais_io_v1.AccessPolicyRule {
+	mangled := make([]nais_io_v1.AccessPolicyRule, len(rules))
 	for i := range rules {
 		mangled[i] = accessPolicyRuleWithDefaults(rules[i], namespace, clusterName)
 	}
 	return mangled
 }
 
-func accessPolicyRuleWithDefaults(rule nais.AccessPolicyRule, namespaceName, clusterName string) nais.AccessPolicyRule {
-	accessPolicyRule := nais.AccessPolicyRule{
+func accessPolicyRuleWithDefaults(rule nais_io_v1.AccessPolicyRule, namespaceName, clusterName string) nais_io_v1.AccessPolicyRule {
+	accessPolicyRule := nais_io_v1.AccessPolicyRule{
 		Application: rule.Application,
 		Namespace:   rule.Namespace,
 		Cluster:     rule.Cluster,
@@ -31,29 +32,29 @@ func accessPolicyRuleWithDefaults(rule nais.AccessPolicyRule, namespaceName, clu
 	return accessPolicyRule
 }
 
-func accessPoliciesWithDefaults(policy *nais.AccessPolicy, namespaceName, clusterName string) *nais.AccessPolicy {
-	return &nais.AccessPolicy{
-		Inbound: &nais.AccessPolicyInbound{
+func accessPoliciesWithDefaults(policy *nais_io_v1.AccessPolicy, namespaceName, clusterName string) *nais_io_v1.AccessPolicy {
+	return &nais_io_v1.AccessPolicy{
+		Inbound: &nais_io_v1.AccessPolicyInbound{
 			Rules: accessPolicyRulesWithDefaults(policy.Inbound.Rules, namespaceName, clusterName),
 		},
-		Outbound: &nais.AccessPolicyOutbound{
+		Outbound: &nais_io_v1.AccessPolicyOutbound{
 			Rules: accessPolicyRulesWithDefaults(policy.Outbound.Rules, namespaceName, clusterName),
 		},
 	}
 }
 
-func getSecretName(app nais.Application) string {
+func getSecretName(app nais_io_v1alpha1.Application) string {
 	return fmt.Sprintf("%s-%s", app.Name, util.RandStringBytes(8))
 }
 
-func Jwker(app *nais.Application, clusterName string) *jwker.Jwker {
-	return &jwker.Jwker{
+func Jwker(app *nais_io_v1alpha1.Application, clusterName string) *nais_io_v1.Jwker {
+	return &nais_io_v1.Jwker{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Jwker",
 			APIVersion: "nais.io/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec: jwker.JwkerSpec{
+		Spec: nais_io_v1.JwkerSpec{
 			AccessPolicy: accessPoliciesWithDefaults(app.Spec.AccessPolicy, app.Namespace, clusterName),
 			SecretName:   getSecretName(*app),
 		},
