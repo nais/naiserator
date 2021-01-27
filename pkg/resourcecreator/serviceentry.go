@@ -2,10 +2,10 @@ package resourcecreator
 
 import (
 	"fmt"
-
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"net/url"
 )
 
 func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
@@ -28,6 +28,7 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 				Number:   443,
 			})
 		}
+
 		entry := &istio.ServiceEntry{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ServiceEntry",
@@ -35,7 +36,7 @@ func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 			},
 			ObjectMeta: meta,
 			Spec: istio.ServiceEntrySpec{
-				Hosts:      []string{ext.Host},
+				Hosts:      []string{stripProtocolFromHost(ext.Host)},
 				Location:   IstioServiceEntryLocationExternal,
 				Resolution: IstioServiceEntryResolutionDNS,
 				Ports:      ports,
@@ -54,4 +55,12 @@ func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
 		Number:   rule.Port,
 		Protocol: rule.Protocol,
 	}
+}
+
+func stripProtocolFromHost(host string) string {
+	u, err := url.Parse(host)
+	if err != nil || len(u.Host) == 0 {
+		return host
+	}
+	return u.Host
 }

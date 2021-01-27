@@ -37,6 +37,8 @@ input:
             namespace: t2
         external:
           - host: www.external-application.com
+          - host: https://www.another-external-application.com
+          - host: http://www.yet-another-external-application.com
 
 tests:
   - operation: CreateOrUpdate
@@ -163,6 +165,50 @@ tests:
           spec:
             hosts:
               - www.external-application.com
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 443
+                protocol: HTTPS
+                name: https
+            exportTo:
+              - "."
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-02
+    match:
+      - name: "service entry created for outbound traffic to www.another-external-application.com"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - www.another-external-application.com
+            location: MESH_EXTERNAL
+            resolution: DNS
+            ports:
+              - number: 443
+                protocol: HTTPS
+                name: https
+            exportTo:
+              - "."
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: myapplication-03
+    match:
+      - name: "service entry created for outbound traffic to www.yet-another-external-application.com"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - www.yet-another-external-application.com
             location: MESH_EXTERNAL
             resolution: DNS
             ports:
