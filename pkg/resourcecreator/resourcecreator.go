@@ -197,10 +197,7 @@ func Create(app *nais.Application, resourceOptions ResourceOptions) (ResourceOpe
 			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
 		}
 
-		serviceEntries, err := ServiceEntries(app)
-		if err != nil {
-			return nil, fmt.Errorf("while creating service entries: %s", err)
-		}
+		serviceEntries := ServiceEntries(app)
 		for _, serviceEntry := range serviceEntries {
 			ops = append(ops, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
 		}

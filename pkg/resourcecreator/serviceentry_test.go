@@ -15,8 +15,7 @@ func TestServiceEntry(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		serviceEntries, err := resourcecreator.ServiceEntries(app)
-		assert.NoError(t, err)
+		serviceEntries := resourcecreator.ServiceEntries(app)
 		assert.Len(t, serviceEntries, 0)
 	})
 }

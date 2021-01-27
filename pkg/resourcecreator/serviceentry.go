@@ -2,19 +2,17 @@ package resourcecreator
 
 import (
 	"fmt"
-	"net/url"
-	"strings"
-
 	nais "github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/naiserator/pkg/apis/networking.istio.io/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"net/url"
 )
 
-func ServiceEntries(app *nais.Application) ([]*istio.ServiceEntry, error) {
+func ServiceEntries(app *nais.Application) []*istio.ServiceEntry {
 	entries := make([]*istio.ServiceEntry, 0)
 
 	if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
-		return entries, nil
+		return entries
 	}
 
 	for i, ext := range app.Spec.AccessPolicy.Outbound.External {
@@ -30,10 +28,7 @@ func ServiceEntries(app *nais.Application) ([]*istio.ServiceEntry, error) {
 				Number:   443,
 			})
 		}
-		host, err := stripProtocolFromHost(ext.Host)
-		if err != nil {
-			return nil, err
-		}
+
 		entry := &istio.ServiceEntry{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ServiceEntry",
@@ -41,7 +36,7 @@ func ServiceEntries(app *nais.Application) ([]*istio.ServiceEntry, error) {
 			},
 			ObjectMeta: meta,
 			Spec: istio.ServiceEntrySpec{
-				Hosts:      []string{host},
+				Hosts:      []string{stripProtocolFromHost(ext.Host)},
 				Location:   IstioServiceEntryLocationExternal,
 				Resolution: IstioServiceEntryResolutionDNS,
 				Ports:      ports,
@@ -51,7 +46,7 @@ func ServiceEntries(app *nais.Application) ([]*istio.ServiceEntry, error) {
 		entries = append(entries, entry)
 	}
 
-	return entries, nil
+	return entries
 }
 
 func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
@@ -62,13 +57,10 @@ func serviceEntryPort(rule nais.AccessPolicyPortRule) istio.Port {
 	}
 }
 
-func stripProtocolFromHost(host string) (string, error) {
-	if strings.HasPrefix(host, "https://") || strings.HasPrefix(host, "http://") {
-		u, err := url.Parse(host)
-		if err != nil {
-			return "", fmt.Errorf("parsing URL from '%s': %s", host, err)
-		}
-		return u.Host, nil
+func stripProtocolFromHost(host string) string {
+	u, err := url.Parse(host)
+	if err != nil || len(u.Host) == 0 {
+		return host
 	}
-	return host, nil
+	return u.Host
 }
