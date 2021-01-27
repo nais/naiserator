@@ -11,6 +11,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func CreateOrUpdate(ctx context.Context, client client.Client, resource runtime.Object) func() error {
+	return func() error {
+		log.Infof("creating new %s", resource)
+		err := client.Create(ctx, resource)
+		if errors.IsAlreadyExists(err) {
+			err = client.Update(ctx, resource)
+		}
+		return err
+	}
+}
+
 func CreateOrRecreate(ctx context.Context, client client.Client, resource runtime.Object) func() error {
 	return func() error {
 		log.Infof("pre-deleting %s", resource)

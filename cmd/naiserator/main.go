@@ -7,26 +7,25 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spf13/viper"
-	istioClient "istio.io/client-go/pkg/clientset/versioned"
+	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
+	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/Shopify/sarama"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	ctrl "sigs.k8s.io/controller-runtime"
-	clientset "github.com/nais/naiserator/pkg/client/clientset/versioned"
-	informers "github.com/nais/naiserator/pkg/client/informers/externalversions"
-	"github.com/nais/naiserator/pkg/informer"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	ctrl "sigs.k8s.io/controller-runtime"
+	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 func main() {
@@ -37,7 +36,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("Synchronizer shutting down")
+	log.Info("Naiserator shutting down")
+}
+
+func Scheme(schemes ...func(*runtime.Scheme) error) (*runtime.Scheme, error) {
+	scheme := runtime.NewScheme()
+	for _, fn := range schemes {
+		err := fn(scheme)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return scheme, nil
 }
 
 func run() error {
@@ -49,7 +59,7 @@ func run() error {
 	log.SetFormatter(&formatter)
 	log.SetLevel(log.DebugLevel)
 
-	log.Info("Synchronizer starting up")
+	log.Info("Naiserator starting up")
 
 	cfg, err := config.New()
 	if err != nil {
@@ -78,32 +88,31 @@ func run() error {
 		go kafkaClient.ProducerLoop()
 	}
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		SyncPeriod:         &syncPeriod,
-		Scheme:             scheme,
-		MetricsBindAddress: viper.GetString(MetricsAddress),
-	})
+	kscheme, err := Scheme(
+		clientgoscheme.AddToScheme,
+		nais_io_v1alpha1.AddToScheme,
+		nais_io_v1.AddToScheme,
+		iam_cnrm_cloud_google_com_v1beta1.AddToScheme,
+		sql_cnrm_cloud_google_com_v1beta1.AddToScheme,
+		storage_cnrm_cloud_google_com_v1beta1.AddToScheme,
+		networking_istio_io_v1alpha3.AddToScheme,
+	)
 
-	// register custom types
-	err = v1alpha1.AddToScheme(scheme.Scheme)
 	if err != nil {
-		return fmt.Errorf("unable to add scheme: %s", err)
+		return err
+	}
+
+	metrics.Register(kubemetrics.Registry)
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		SyncPeriod:         &cfg.Informer.FullSyncInterval,
+		Scheme:             kscheme,
+		MetricsBindAddress: cfg.Bind,
+	})
+	if err != nil {
+		return err
 	}
 
 	stopCh := StopCh()
-
-	kubeconfig, err := getK8sConfig(cfg)
-	if err != nil {
-		return fmt.Errorf("unable to initialize kubernetes config: %s", err)
-	}
-
-	// serve metrics
-	go metrics.Serve(
-		cfg.Bind,
-		"/metrics",
-		"/ready",
-		"/alive",
-	)
 
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.AccessPolicy = cfg.Features.AccessPolicy
@@ -126,11 +135,6 @@ func run() error {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the Virtual Service based on the provided ingresses")
 	}
 
-	applicationInformerFactory := createApplicationInformerFactory(kubeconfig, cfg.Informer.FullSyncInterval)
-	applicationClientset := createApplicationClientset(kubeconfig)
-	istioClient := createIstioClientset(kubeconfig)
-	genericClientset := createGenericClientset(kubeconfig)
-
 	syncerConfig := synchronizer.Config{
 		KafkaEnabled:               cfg.Kafka.Enabled,
 		QueueSize:                  cfg.Synchronizer.QueueSize,
@@ -138,79 +142,17 @@ func run() error {
 		DeploymentMonitorTimeout:   cfg.Synchronizer.RolloutTimeout,
 	}
 
-	syncer := synchronizer.New(
-		genericClientset,
-		applicationClientset,
-		istioClient,
-		resourceOptions,
-		syncerConfig,
-	)
-
-	inf := informer.New(syncer, applicationInformerFactory)
-
-	err = inf.Run()
-	if err != nil {
-		return fmt.Errorf("unable to start informer: %s", err)
+	syncer := &synchronizer.Synchronizer{
+		Client:          mgr.GetClient(),
+		ResourceOptions: resourceOptions,
+		Config:          syncerConfig,
 	}
 
-	go syncer.Main()
-	<-stopCh
-
-	inf.Stop()
-
-	return nil
-}
-
-func createApplicationInformerFactory(kubeconfig *rest.Config, interval time.Duration) informers.SharedInformerFactory {
-	config, err := clientset.NewForConfig(kubeconfig)
-	if err != nil {
-		log.Fatalf("unable to create naiserator clientset: %s", err)
+	if err = syncer.SetupWithManager(mgr); err != nil {
+		return err
 	}
 
-	return informers.NewSharedInformerFactory(config, interval)
-}
-
-func createApplicationClientset(kubeconfig *rest.Config) *clientset.Clientset {
-	clientSet, err := clientset.NewForConfig(kubeconfig)
-	if err != nil {
-		log.Fatalf("unable to create application clientset: %s", err)
-	}
-
-	return clientSet
-}
-
-func createIstioClientset(kubeconfig *rest.Config) *istioClient.Clientset {
-	clientSet, err := istioClient.NewForConfig(kubeconfig)
-	if err != nil {
-		log.Fatalf("unable to create istio clientset: %s", err)
-	}
-
-	return clientSet
-}
-
-func createGenericClientset(kubeconfig *rest.Config) *kubernetes.Clientset {
-	cs, err := kubernetes.NewForConfig(kubeconfig)
-	if err != nil {
-		log.Fatalf("unable to create generic clientset: %s", err)
-	}
-
-	return cs
-}
-
-func getK8sConfig(cfg *config.Config) (conf *rest.Config, err error) {
-	kubeconfig := cfg.Kubeconfig
-	if kubeconfig == "" {
-		log.Infof("using in-cluster configuration")
-		conf, err = rest.InClusterConfig()
-	} else {
-		log.Infof("using configuration from '%s'", kubeconfig)
-		conf, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	}
-	if conf != nil {
-		conf.Burst = cfg.Ratelimit.Burst
-		conf.QPS = float32(cfg.Ratelimit.QPS)
-	}
-	return
+	return mgr.Start(stopCh)
 }
 
 func StopCh() (stopCh <-chan struct{}) {
