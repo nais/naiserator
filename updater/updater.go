@@ -7,6 +7,7 @@ import (
 
 	nais_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/labels"
@@ -133,6 +134,39 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, app
 	}
 
 	return withOwnerReference(app, resources), nil
+}
+
+// CopyMeta copies resource metadata from one resource to another.
+// used when updating existing resources in the cluster.
+func CopyMeta(src, dst runtime.Object) error {
+	srcacc, err := meta.Accessor(src)
+	if err != nil {
+		return err
+	}
+
+	dstacc, err := meta.Accessor(dst)
+	if err != nil {
+		return err
+	}
+
+	dstacc.SetResourceVersion(srcacc.GetResourceVersion())
+	dstacc.SetUID(srcacc.GetUID())
+	dstacc.SetSelfLink(srcacc.GetSelfLink())
+
+	return err
+}
+
+func CopyImmutable(src, dst runtime.Object) error {
+	switch srcTyped := src.(type) {
+	case *corev1.Service:
+		// ClusterIP must be retained as the field is immutable.
+		dstTyped, ok := dst.(*corev1.Service)
+		if !ok {
+			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+		}
+		dstTyped.Spec.ClusterIP = srcTyped.Spec.ClusterIP
+	}
+	return nil
 }
 
 func withOwnerReference(app *nais_v1alpha1.Application, resources []runtime.Object) []runtime.Object {
