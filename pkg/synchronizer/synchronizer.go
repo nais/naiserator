@@ -299,7 +299,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 
 	if app.Spec.GCP != nil && (app.Spec.GCP.SqlInstances != nil || app.Spec.GCP.Permissions != nil) {
 		namespace := &corev1.Namespace{}
-		err = n.Get(ctx, client.ObjectKey{Namespace: app.GetNamespace()}, namespace)
+		err = n.Get(ctx, client.ObjectKey{Name: app.GetNamespace()}, namespace)
 
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("query existing namespace: %s", err)

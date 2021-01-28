@@ -67,7 +67,7 @@ tests:
               iam.gke.io/gcp-service-account: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
 
   - operation: CreateOrUpdate
-    apiVersion: v1
+    apiVersion: autoscaling/v1
     kind: HorizontalPodAutoscaler
     match:
       - type: exact

@@ -2,6 +2,7 @@ package resourcecreator
 
 import (
 	"fmt"
+
 	"k8s.io/utils/pointer"
 
 	"github.com/imdario/mergo"
@@ -35,7 +36,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 	sqlInstance := &google_sql_crd.SQLInstance{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "SQLInstance",
-			APIVersion: "sql.cnrm.cloud.google.com/v1alpha3",
+			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLInstanceSpec{

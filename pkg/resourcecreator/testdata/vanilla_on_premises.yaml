@@ -62,7 +62,7 @@ tests:
         resource: {}
 
   - operation: CreateOrUpdate
-    apiVersion: v1
+    apiVersion: autoscaling/v1
     kind: HorizontalPodAutoscaler
     match:
       - type: exact

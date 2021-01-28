@@ -6,17 +6,22 @@ import (
 	"testing"
 	"time"
 
+	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,7 +37,7 @@ type testRig struct {
 	synchronizer reconcile.Reconciler
 }
 
-func newTestRig() (*testRig, error) {
+func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 	rig := &testRig{}
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
@@ -69,13 +74,11 @@ func newTestRig() (*testRig, error) {
 		DeploymentMonitorFrequency: 5 * time.Second,
 		DeploymentMonitorTimeout:   20 * time.Second,
 	}
-	resourceOptions := resourcecreator.NewResourceOptions()
 
 	syncer := &synchronizer.Synchronizer{
-		// Client:          rig.manager.GetClient(),
 		Client:          rig.client,
 		Scheme:          kscheme,
-		ResourceOptions: resourceOptions,
+		ResourceOptions: options,
 		Config:          syncerConfig,
 	}
 
@@ -89,22 +92,14 @@ func newTestRig() (*testRig, error) {
 }
 
 func TestSynchronizer(t *testing.T) {
-	rig, err := newTestRig()
+	resourceOptions := resourcecreator.NewResourceOptions()
+	rig, err := newTestRig(resourceOptions)
 	if err != nil {
 		t.Errorf("unable to run synchronizer integration tests: %s", err)
 		t.FailNow()
 	}
 
 	defer rig.kubernetes.Stop()
-
-	/*
-		go func() {
-			err = rig.manager.Start(ctrl.SetupSignalHandler())
-			if err != nil {
-				panic(err)
-			}
-		}()
-	*/
 
 	// Allow no more than 15 seconds for these tests to run
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
@@ -203,5 +198,99 @@ func TestSynchronizer(t *testing.T) {
 	testResource(&corev1.Service{}, objectKey)
 	testResource(&corev1.ServiceAccount{}, objectKey)
 	testResource(&networkingv1beta1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
-	// nice function: client.ObjectKeyFromObject()
+}
+
+func TestSynchronizerResourceOptions(t *testing.T) {
+	resourceOptions := resourcecreator.NewResourceOptions()
+	resourceOptions.GoogleProjectId = "something"
+	viper.Set(config.GoogleCloudSQLProxyContainerImage, "cloudsqlproxy")
+
+	rig, err := newTestRig(resourceOptions)
+	if err != nil {
+		t.Errorf("unable to run synchronizer integration tests: %s", err)
+		t.FailNow()
+	}
+
+	defer rig.kubernetes.Stop()
+
+	// Allow no more than 15 seconds for these tests to run
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	// Create Application fixture
+	app := fixtures.MinimalApplication()
+	app.Spec.GCP = &nais_io_v1alpha1.GCP{
+		SqlInstances: []nais_io_v1alpha1.CloudSqlInstance{
+			{
+				Type: nais_io_v1alpha1.CloudSqlInstanceTypePostgres11,
+				Databases: []nais_io_v1alpha1.CloudSqlDatabase{
+					{
+						Name: app.Name,
+					},
+				},
+			},
+		},
+	}
+
+	// set resourceoptions?
+
+	// Test that the team project id is fetched from namespace annotation, and used to create the sql proxy sidecar
+	testProjectId := "test-project-id"
+	testNamespace := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: app.GetNamespace(),
+		},
+	}
+	testNamespace.SetAnnotations(map[string]string{
+		resourcecreator.GoogleProjectIdAnnotation: testProjectId,
+	})
+
+	err = rig.client.Create(ctx, testNamespace)
+	assert.NoError(t, err)
+
+	// Store the Application resource in the cluster before testing commences.
+	// This simulates a deployment into the cluster which is then picked up by the
+	// informer queue.
+	err = rig.client.Create(ctx, app)
+	if err != nil {
+		t.Fatalf("Application resource cannot be persisted to fake Kubernetes: %s", err)
+	}
+
+	req := ctrl.Request{
+		NamespacedName: types.NamespacedName{
+			Namespace: app.Namespace,
+			Name:      app.Name,
+		},
+	}
+
+	result, err := rig.synchronizer.Reconcile(req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	deploy := &appsv1.Deployment{}
+	sqlinstance := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}
+	sqluser := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}
+	sqldatabase := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}
+	iampolicymember := &iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember{}
+
+	err = rig.client.Get(ctx, req.NamespacedName, deploy)
+	assert.NoError(t, err)
+	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, resourcecreator.GoogleRegion, app.Name)
+	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[1])
+
+	err = rig.client.Get(ctx, req.NamespacedName, sqlinstance)
+	assert.NoError(t, err)
+	assert.Equal(t, testProjectId, sqlinstance.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+
+	err = rig.client.Get(ctx, req.NamespacedName, sqluser)
+	assert.NoError(t, err)
+	assert.Equal(t, testProjectId, sqluser.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+
+	err = rig.client.Get(ctx, req.NamespacedName, sqldatabase)
+	assert.NoError(t, err)
+	assert.Equal(t, testProjectId, sqldatabase.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+
+	err = rig.client.Get(ctx, req.NamespacedName, iampolicymember)
+	assert.NoError(t, err)
+	assert.Equal(t, testProjectId, iampolicymember.Annotations[resourcecreator.GoogleProjectIdAnnotation])
 }

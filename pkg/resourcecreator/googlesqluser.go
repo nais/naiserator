@@ -74,7 +74,7 @@ func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, 
 	return &google_sql_crd.SQLUser{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "SQLUser",
-			APIVersion: "sql.cnrm.cloud.google.com/v1alpha3",
+			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLUserSpec{

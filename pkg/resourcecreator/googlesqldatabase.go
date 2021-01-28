@@ -19,7 +19,7 @@ func GoogleSQLDatabase(app *nais.Application, db nais.CloudSqlDatabase, instance
 	return &google_sql_crd.SQLDatabase{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "SqlDatabase",
-			APIVersion: "sql.cnrm.cloud.google.com/v1alpha3",
+			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLDatabaseSpec{
