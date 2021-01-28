@@ -2,6 +2,8 @@ NAME       := naiserator
 TAG        := navikt/${NAME}
 LATEST     := ${TAG}:latest
 ROOT_DIR   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+arch       := amd64
+os         := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 PROTOC = $(shell which protoc)
 PROTOC_GEN_GO = $(shell which protoc-gen-go)
@@ -29,6 +31,10 @@ test:
 
 golden_file_test:
 	go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1
+
+kubebuilder:
+	curl -L https://go.kubebuilder.io/dl/2.3.1/${os}/${arch} | tar -xz -C /tmp/
+	mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
 
 crd:
 	controller-gen "crd:trivialVersions=true" paths=github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1 output:crd:artifacts:config=config/crd

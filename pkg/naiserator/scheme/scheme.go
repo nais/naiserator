@@ -24,12 +24,12 @@ func Scheme(schemes ...func(*runtime.Scheme) error) (*runtime.Scheme, error) {
 
 func All() (*runtime.Scheme, error) {
 	return Scheme(
-		clientgoscheme.AddToScheme,
 		nais_io_v1alpha1.AddToScheme,
 		nais_io_v1.AddToScheme,
 		iam_cnrm_cloud_google_com_v1beta1.AddToScheme,
 		sql_cnrm_cloud_google_com_v1beta1.AddToScheme,
 		storage_cnrm_cloud_google_com_v1beta1.AddToScheme,
 		networking_istio_io_v1alpha3.AddToScheme,
+		clientgoscheme.AddToScheme,
 	)
 }

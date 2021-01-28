@@ -39,6 +39,7 @@ const (
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
+	Scheme          *runtime.Scheme
 	ResourceOptions resourcecreator.ResourceOptions
 	Config          Config
 }
@@ -102,7 +103,15 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background() // fixme
 	err := n.Get(ctx, req.NamespacedName, app)
 	if err != nil {
-		panic("errors not handled; delete not implemented")
+		if errors.IsNotFound(err) {
+			log.WithFields(log.Fields{
+				"namespace":   req.Namespace,
+				"application": req.Name,
+			}).Infof("Application has been deleted from Kubernetes")
+
+			err = nil
+		}
+		return ctrl.Result{}, err
 	}
 
 	changed := true
@@ -213,7 +222,7 @@ func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
 		return false
 	}
 
-	resources, err := updater.FindAll(ctx, n, rollout.App)
+	resources, err := updater.FindAll(ctx, n, n.Scheme, rollout.App)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
@@ -322,7 +331,7 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 	for _, rop := range rollout.ResourceOperations {
 		switch rop.Operation {
 		case resourcecreator.OperationCreateOrUpdate:
-			fn = updater.CreateOrUpdate(ctx, n, rop.Resource)
+			fn = updater.CreateOrUpdate(ctx, n, n.Scheme, rop.Resource)
 		case resourcecreator.OperationCreateOrRecreate:
 			fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
 		case resourcecreator.OperationCreateIfNotExists:

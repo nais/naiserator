@@ -37,6 +37,9 @@ func MinimalApplication() *nais.Application {
 				"team": ApplicationTeam,
 			},
 		},
+		Spec: nais.ApplicationSpec{
+			Image: "example",
+		},
 	}
 	err := nais.ApplyDefaults(app)
 	if err != nil {

@@ -2,42 +2,82 @@ package updater
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	nais_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateOrUpdate(ctx context.Context, client client.Client, resource runtime.Object) func() error {
+func typename(resource runtime.Object) string {
+	var kind, name, namespace string
+	typ, err := meta.TypeAccessor(resource)
+	if err == nil {
+		kind = typ.GetKind()
+	}
+	obj, err := meta.Accessor(resource)
+	if err == nil {
+		name = obj.GetName()
+		namespace = obj.GetNamespace()
+	}
+	return fmt.Sprintf("resource '%s' named '%s' in namespace '%s'", kind, name, namespace)
+}
+
+func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("creating new %s", resource)
-		err := client.Create(ctx, resource)
-		if errors.IsAlreadyExists(err) {
-			err = client.Update(ctx, resource)
+		log.Infof("CreateOrUpdate %s", typename(resource))
+		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
+		if err != nil {
+			return fmt.Errorf("internal error: %w", err)
+		}
+		objectKey, err := client.ObjectKeyFromObject(resource)
+		if err != nil {
+			return fmt.Errorf("unable to derive object key: %w", err)
+		}
+		err = cli.Get(ctx, objectKey, existing)
+
+		if errors.IsNotFound(err) {
+			err = cli.Create(ctx, resource)
+		} else if err == nil {
+			err = CopyMeta(existing, resource)
+			if err != nil {
+				return err
+			}
+			err = CopyImmutable(existing, resource)
+			if err != nil {
+				return err
+			}
+			err = cli.Update(ctx, resource)
+		}
+
+		if err != nil {
+			return err
 		}
 		return err
 	}
 }
 
-func CreateOrRecreate(ctx context.Context, client client.Client, resource runtime.Object) func() error {
+func CreateOrRecreate(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("pre-deleting %s", resource)
-		err := client.Delete(ctx, resource)
+		log.Infof("CreateOrRecreate %s", typename(resource))
+		err := cli.Delete(ctx, resource)
 		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
-		log.Infof("creating new %s", resource)
-		return client.Create(ctx, resource)
+		return cli.Create(ctx, resource)
 	}
 }
 
-func CreateIfNotExists(ctx context.Context, client client.Client, resource runtime.Object) func() error {
+func CreateIfNotExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("creating new %s", resource)
-		err := client.Create(ctx, resource)
+		log.Infof("CreateIfNotExists %s", typename(resource))
+		err := cli.Create(ctx, resource)
 		if err != nil && errors.IsAlreadyExists(err) {
 			return nil
 		}
@@ -45,10 +85,10 @@ func CreateIfNotExists(ctx context.Context, client client.Client, resource runti
 	}
 }
 
-func DeleteIfExists(ctx context.Context, client client.Client, resource runtime.Object) func() error {
+func DeleteIfExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("creating new %s", resource)
-		err := client.Delete(ctx, resource)
+		log.Infof("DeleteIfExists %s", typename(resource))
+		err := cli.Delete(ctx, resource)
 		if err != nil && errors.IsNotFound(err) {
 			return nil
 		}
@@ -56,26 +96,43 @@ func DeleteIfExists(ctx context.Context, client client.Client, resource runtime.
 	}
 }
 
-func FindAll(ctx context.Context, client client.Client, app *nais_v1alpha1.Application) ([]runtime.Object, error) {
-	panic("not implemented")
+func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, app *nais_v1alpha1.Application) ([]runtime.Object, error) {
+	// Set up label selector 'app=NAME'
+	labelSelector := labels.NewSelector()
+	labelreq, err := labels.NewRequirement("app", selection.Equals, []string{app.Name})
+	if err != nil {
+		return nil, err
+	}
+	labelSelector.Add(*labelreq)
+	listopt := &client.ListOptions{
+		LabelSelector: labelSelector,
+	}
 
-	/*
-		{
-			c := clientSet.CoreV1().Services(app.Namespace)
-			existing, err := c.List(metav1.ListOptions{LabelSelector: "app=" + app.Name})
-			if err != nil && !errors.IsNotFound(err) {
-				return nil, fmt.Errorf("discover %s: %s", "*corev1.Service", err)
-			} else if existing != nil {
-				items, err := meta.ExtractList(existing)
-				if err != nil {
-					return nil, fmt.Errorf("extract list of %s: %s", "*corev1.Service", err)
-				}
-				resources = append(resources, items...)
-			}
+	resources := make([]runtime.Object, 0)
+	types := scheme.AllKnownTypes()
+
+	for gvk := range types {
+		// Only deal with listable types
+		if !strings.HasSuffix(gvk.Kind, "List") {
+			continue
 		}
-				return withOwnerReference(app, resources), nil
-	*/
 
+		// Instantiate new list
+		obj, err := scheme.New(gvk)
+		if err != nil {
+			return nil, err
+		}
+
+		// Run query
+		err = cli.List(ctx, obj, listopt)
+
+		_ = meta.EachListItem(obj, func(item runtime.Object) error {
+			resources = append(resources, item)
+			return nil
+		})
+	}
+
+	return withOwnerReference(app, resources), nil
 }
 
 func withOwnerReference(app *nais_v1alpha1.Application, resources []runtime.Object) []runtime.Object {

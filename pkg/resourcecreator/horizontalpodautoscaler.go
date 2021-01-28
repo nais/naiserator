@@ -10,7 +10,7 @@ func HorizontalPodAutoscaler(app *nais.Application) *autoscalingv1.HorizontalPod
 	return &autoscalingv1.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
-			APIVersion: "v1",
+			APIVersion: "autoscaling/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: autoscalingv1.HorizontalPodAutoscalerSpec{

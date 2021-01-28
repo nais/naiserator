@@ -117,6 +117,7 @@ func run() error {
 
 	syncer := &synchronizer.Synchronizer{
 		Client:          mgr.GetClient(),
+		Scheme:          kscheme,
 		ResourceOptions: resourceOptions,
 		Config:          syncerConfig,
 	}
