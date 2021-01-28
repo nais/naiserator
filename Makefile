@@ -36,15 +36,6 @@ kubebuilder:
 	curl -L https://go.kubebuilder.io/dl/2.3.1/${os}/${arch} | tar -xz -C /tmp/
 	mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
 
-crd:
-	controller-gen "crd:trivialVersions=true" paths=github.com/nais/naiserator/pkg/apis/nais.io/v1alpha1 output:crd:artifacts:config=config/crd
-
-codegen-crd:
-	${ROOT_DIR}/hack/update-codegen.sh
-
-codegen-updater:
-	go generate ${ROOT_DIR}/hack/generator/updater.go | goimports > ${ROOT_DIR}/updater/zz_generated.go
-
 proto:
 	wget https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
 	$(PROTOC) --plugin=$(PROTOC_GEN_GO) --go_out=. event.proto

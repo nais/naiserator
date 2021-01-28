@@ -7,6 +7,7 @@ COPY . /src
 WORKDIR /src
 RUN rm -f go.sum
 RUN go get
+RUN make kubebuilder
 RUN go test ./...
 RUN cd cmd/naiserator && go build -a -installsuffix cgo -o naiserator
 
