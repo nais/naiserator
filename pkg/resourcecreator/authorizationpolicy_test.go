@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAuthorizationPolicy(t *testing.T) {
@@ -30,7 +30,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 
 	t.Run("auth policy no namespace or ingress", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, "", ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, "", ""}}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
@@ -39,7 +39,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 
 	t.Run("auth policy for app with ingress and no access policies", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais.Ingress{"https://asd.test.no"}
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://asd.test.no"}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
@@ -48,8 +48,8 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	})
 	t.Run("auth policy for app with ingress and policy", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais.Ingress{"https://asd.test.no"}
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, ""}, {otherApplication2, "", ""}}
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://asd.test.no"}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, ""}, {otherApplication2, "", ""}}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 2)
@@ -58,7 +58,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	})
 	t.Run("auth policy for app with access policy and no ingress", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, ""}}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
@@ -67,7 +67,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	})
 	t.Run("auth policy for app with multiple inbound", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, ""}, {otherApplication2, otherNamespace2, ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, ""}, {otherApplication2, otherNamespace2, ""}}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)
 		assert.Len(t, authorizationPolicy.Spec.Rules, 1)
@@ -75,7 +75,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	})
 	t.Run("auth policy for app with inbound access policy containing only non-local principals", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, "non-local"}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, "non-local"}}
 		authorizationPolicy, err := resourcecreator.AuthorizationPolicy(app, resourceOptions)
 		assert.NoError(t, err)
 		assert.Nil(t, authorizationPolicy)

@@ -3,7 +3,8 @@ package resourcecreator_test
 import (
 	"testing"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
@@ -54,8 +55,8 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("allowed app in egress rule sets network policy pod selector to allowed app", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais.ApplyDefaults(app)
+		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
@@ -69,8 +70,8 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("allowed app in egress rule sets egress app rules and default rules", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais.ApplyDefaults(app)
+		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
@@ -80,10 +81,10 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais.Ingress{
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
 			"https://gief.api.plz",
 		}
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
@@ -99,11 +100,11 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("specifying ingresses when all traffic is allowed still creates an explicit rule for istio ingress gateway", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais.Ingress{
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
 			"https://gief.api.plz",
 		}
-		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais.AccessPolicyRule{Application: "*"})
-		err := nais.ApplyDefaults(app)
+		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
@@ -132,8 +133,8 @@ func TestNetworkPolicy(t *testing.T) {
 	t.Run("all traffic inside namespace sets from rule to empty podspec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 
-		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais.AccessPolicyRule{Application: "*"})
-		err := nais.ApplyDefaults(app)
+		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)

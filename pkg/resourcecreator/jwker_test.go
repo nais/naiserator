@@ -3,7 +3,8 @@ package resourcecreator_test
 import (
 	"testing"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -18,9 +19,9 @@ func TestJwker(t *testing.T) {
 	otherNamespace2 := "othernamespace2"
 	otherApplication3 := "c"
 
-	fixture := func() *nais.Application {
+	fixture := func() *nais_io_v1alpha1.Application {
 		app := fixtures.MinimalApplication()
-		app.Spec.TokenX = &nais.TokenX{
+		app.Spec.TokenX = &nais_io_v1alpha1.TokenX{
 			Enabled: true,
 		}
 		return app
@@ -37,7 +38,7 @@ func TestJwker(t *testing.T) {
 
 	t.Run("one inbound without cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, "", ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, "", ""}}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
@@ -49,7 +50,7 @@ func TestJwker(t *testing.T) {
 
 	t.Run("one inbound with cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
@@ -61,7 +62,7 @@ func TestJwker(t *testing.T) {
 
 	t.Run("one outbound and no inbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
+		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
 		jwker := resourcecreator.Jwker(app, clusterName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 1)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
@@ -73,7 +74,7 @@ func TestJwker(t *testing.T) {
 
 	t.Run("multiple inbound and no outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{
 			{
 				otherApplication, otherNamespace, otherCluster,
 			},
@@ -101,7 +102,7 @@ func TestJwker(t *testing.T) {
 
 	t.Run("multiple outbound and no inbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{
+		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{
 			{
 				otherApplication, otherNamespace, otherCluster,
 			},
@@ -129,7 +130,7 @@ func TestJwker(t *testing.T) {
 	//
 	t.Run("multiple inbound and multiple outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{
 			{
 				otherApplication, otherNamespace, otherCluster,
 			},
@@ -141,7 +142,7 @@ func TestJwker(t *testing.T) {
 			},
 		}
 
-		app.Spec.AccessPolicy.Outbound.Rules = []nais.AccessPolicyRule{
+		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{
 			{
 				otherApplication, otherNamespace, otherCluster,
 			},

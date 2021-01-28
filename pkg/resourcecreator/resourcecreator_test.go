@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	jwker "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	istio_networking_crd "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
-	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
-	google_storage_crd "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
+	"github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -29,22 +29,22 @@ type realObjects struct {
 	deployment              *v1.Deployment
 	hpa                     *autoscaling.HorizontalPodAutoscaler
 	ingress                 *networkingv1beta1.Ingress
-	jwker                   *jwker.Jwker
+	jwker                   *nais_io_v1.Jwker
 	networkPolicy           *networking.NetworkPolicy
 	role                    *rbac.Role
 	rolebinding             *rbac.RoleBinding
 	secret                  *core.Secret
 	service                 *core.Service
 	serviceAccount          *core.ServiceAccount
-	sqlDatabase             *google_sql_crd.SQLDatabase
-	sqlInstance             *google_sql_crd.SQLInstance
-	sqlUser                 *google_sql_crd.SQLUser
-	virtualServices         []*istio_networking_crd.VirtualService
-	googleIAMServiceAccount *google_iam_crd.IAMServiceAccount
-	googleIAMPolicy         *google_iam_crd.IAMPolicy
-	googleIAMPolicyMember   *google_iam_crd.IAMPolicyMember
-	bucket                  *google_storage_crd.StorageBucket
-	bucketAccessControl     *google_storage_crd.StorageBucketAccessControl
+	sqlDatabase             *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase
+	sqlInstance             *sql_cnrm_cloud_google_com_v1beta1.SQLInstance
+	sqlUser                 *sql_cnrm_cloud_google_com_v1beta1.SQLUser
+	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
+	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount
+	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy
+	googleIAMPolicyMember   *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember
+	bucket                  *storage_cnrm_cloud_google_com_v1beta1.StorageBucket
+	bucketAccessControl     *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl
 }
 
 func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
@@ -66,29 +66,29 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.networkPolicy = v
 		case *istio.AuthorizationPolicy:
 			o.authorizationPolicy = v
-		case *istio_networking_crd.VirtualService:
+		case *networking_istio_io_v1alpha3.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)
 		case *rbac.Role:
 			o.role = v
 		case *rbac.RoleBinding:
 			o.rolebinding = v
-		case *google_iam_crd.IAMServiceAccount:
+		case *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount:
 			o.googleIAMServiceAccount = v
-		case *google_iam_crd.IAMPolicy:
+		case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy:
 			o.googleIAMPolicy = v
-		case *google_iam_crd.IAMPolicyMember:
+		case *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember:
 			o.googleIAMPolicyMember = v
-		case *google_storage_crd.StorageBucket:
+		case *storage_cnrm_cloud_google_com_v1beta1.StorageBucket:
 			o.bucket = v
-		case *google_storage_crd.StorageBucketAccessControl:
+		case *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl:
 			o.bucketAccessControl = v
-		case *google_sql_crd.SQLInstance:
+		case *sql_cnrm_cloud_google_com_v1beta1.SQLInstance:
 			o.sqlInstance = v
-		case *google_sql_crd.SQLUser:
+		case *sql_cnrm_cloud_google_com_v1beta1.SQLUser:
 			o.sqlUser = v
-		case *google_sql_crd.SQLDatabase:
+		case *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase:
 			o.sqlDatabase = v
-		case *jwker.Jwker:
+		case *nais_io_v1.Jwker:
 			o.jwker = v
 		}
 	}
@@ -98,15 +98,15 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 // Test that a specified application spec results in the correct Kubernetes resources.
 func TestCreate(t *testing.T) {
 	t.Run("default application spec merges into empty struct", func(t *testing.T) {
-		app := &nais.Application{}
-		err := nais.ApplyDefaults(app)
+		app := &nais_io_v1alpha1.Application{}
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 	})
 
 	t.Run("application spec needs required parameters", func(t *testing.T) {
 		app := fixtures.MinimalFailingApplication()
 		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -117,7 +117,7 @@ func TestCreate(t *testing.T) {
 	t.Run("team label and application name is propagated to created resources", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -132,9 +132,9 @@ func TestCreate(t *testing.T) {
 
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais.Ingress{"https://foo.bar/baz"}
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar/baz"}
 		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -146,9 +146,9 @@ func TestCreate(t *testing.T) {
 
 	t.Run("erroneous ingress uris create errors", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais.Ingress{"gopher://lol"}
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"gopher://lol"}
 		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -159,7 +159,7 @@ func TestCreate(t *testing.T) {
 	t.Run("istio resources are omitted when access policy creation is disabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -174,7 +174,7 @@ func TestCreate(t *testing.T) {
 	t.Run("jwker resource is not created when access policy is empty", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 		resources, err := resourcecreator.Create(app, opts)
 		assert.NoError(t, err)
@@ -185,11 +185,11 @@ func TestCreate(t *testing.T) {
 
 	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais.Ingress{"https://host.domain.tld"}
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://host.domain.tld"}
 		opts := resourcecreator.NewResourceOptions()
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", GatewayName: "namespace/gateway"}}
 		opts.AccessPolicy = true
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -206,9 +206,9 @@ func TestCreate(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".bar", GatewayName: "namespace/gateway"}}
-		app.Spec.Ingresses = []nais.Ingress{"https://foo.bar"}
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
 
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -224,10 +224,10 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
-		app.Spec.AccessPolicy.Inbound.Rules = []nais.AccessPolicyRule{{"otherapp", "othernamespace", ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{"otherapp", "othernamespace", ""}}
 		app.Spec.Prometheus.Enabled = true
 
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -240,7 +240,7 @@ func TestCreate(t *testing.T) {
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.LeaderElection = true
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		opts := resourcecreator.NewResourceOptions()
@@ -259,7 +259,7 @@ func TestCreate(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		opts.AccessPolicy = true
 		opts.AccessPolicyNotAllowedCIDRs = []string{"101.0.0.0/8"}
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -276,15 +276,15 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.GoogleProjectId = "nais-foo-1234"
-		app.Spec.GCP = &nais.GCP{
-			Buckets: []nais.CloudStorageBucket{
+		app.Spec.GCP = &nais_io_v1alpha1.GCP{
+			Buckets: []nais_io_v1alpha1.CloudStorageBucket{
 				{
 					Name: "bucket-name",
 				},
 			},
 		}
 
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -315,10 +315,10 @@ func TestCreate(t *testing.T) {
 		opts.GoogleProjectId = "nais-foo-1234"
 		instanceName := app.Name
 		dbName := "mydb"
-		app.Spec.GCP = &nais.GCP{SqlInstances: []nais.CloudSqlInstance{
+		app.Spec.GCP = &nais_io_v1alpha1.GCP{SqlInstances: []nais_io_v1alpha1.CloudSqlInstance{
 			{
-				Type: nais.CloudSqlInstanceTypePostgres11,
-				Databases: []nais.CloudSqlDatabase{
+				Type: nais_io_v1alpha1.CloudSqlInstanceTypePostgres11,
+				Databases: []nais_io_v1alpha1.CloudSqlDatabase{
 					{
 						Name: dbName,
 					},
@@ -326,7 +326,7 @@ func TestCreate(t *testing.T) {
 			},
 		}}
 
-		err := nais.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.Create(app, opts)
@@ -355,7 +355,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("ensure that the ingresses and redirect URIs for idporten are valid", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.Spec.IDPorten = &nais.IDPorten{Enabled: true}
+		app.Spec.IDPorten = &nais_io_v1alpha1.IDPorten{Enabled: true}
 
 		opts := resourcecreator.NewResourceOptions()
 		opts.DigdiratorEnabled = true
@@ -363,14 +363,14 @@ func TestCreate(t *testing.T) {
 		_, err := resourcecreator.Create(app, opts)
 		assert.Error(t, err, "return error if no ingresses are specified")
 
-		app.Spec.Ingresses = []nais.Ingress{
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
 			"https://yolo-ingress.nais.io",
 			"https://very-cool-ingress.nais.io",
 		}
 		_, err = resourcecreator.Create(app, opts)
 		assert.Error(t, err, "return error if multiple ingresses are specified")
 
-		app.Spec.Ingresses = []nais.Ingress{
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
 			"https://yolo-ingress.nais.io",
 		}
 		_, err = resourcecreator.Create(app, opts)
@@ -380,7 +380,7 @@ func TestCreate(t *testing.T) {
 		_, err = resourcecreator.Create(app, opts)
 		assert.Error(t, err, "return error if redirect URI is not subpath of ingress")
 
-		app.Spec.Ingresses = []nais.Ingress{
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
 			"http://localhost/oauth2/callback",
 		}
 		app.Spec.IDPorten.RedirectURI = "http://localhost/oauth2/callback"
@@ -388,7 +388,7 @@ func TestCreate(t *testing.T) {
 		assert.Error(t, err, "return error if redirect URI and ingress does not start with https://")
 
 		app.Spec.IDPorten.RedirectURI = "https://yolo-ingress.nais.io/oauth2/callback"
-		app.Spec.Ingresses = []nais.Ingress{
+		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
 			"https://yolo-ingress.nais.io",
 		}
 		_, err = resourcecreator.Create(app, opts)
