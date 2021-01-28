@@ -1,10 +1,9 @@
 package synchronizer_test
 
+/*
 import (
 	"fmt"
 	"testing"
-
-	"k8s.io/api/core/v1"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	nais_fake "github.com/nais/naiserator/pkg/client/clientset/versioned/fake"
@@ -13,6 +12,7 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	istio_fake "istio.io/client-go/pkg/clientset/versioned/fake"
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -196,3 +196,6 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	assert.NotNil(t, iamPolicyMember)
 	assert.Equal(t, testProjectId, iamPolicyMember.Annotations[resourcecreator.GoogleProjectIdAnnotation])
 }
+
+
+ */

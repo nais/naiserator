@@ -7,22 +7,14 @@ import (
 	"syscall"
 	"time"
 
-	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
-	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
-	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
-	"k8s.io/apimachinery/pkg/runtime"
-
 	"github.com/Shopify/sarama"
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	log "github.com/sirupsen/logrus"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -37,17 +29,6 @@ func main() {
 	}
 
 	log.Info("Naiserator shutting down")
-}
-
-func Scheme(schemes ...func(*runtime.Scheme) error) (*runtime.Scheme, error) {
-	scheme := runtime.NewScheme()
-	for _, fn := range schemes {
-		err := fn(scheme)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return scheme, nil
 }
 
 func run() error {
@@ -88,16 +69,8 @@ func run() error {
 		go kafkaClient.ProducerLoop()
 	}
 
-	kscheme, err := Scheme(
-		clientgoscheme.AddToScheme,
-		nais_io_v1alpha1.AddToScheme,
-		nais_io_v1.AddToScheme,
-		iam_cnrm_cloud_google_com_v1beta1.AddToScheme,
-		sql_cnrm_cloud_google_com_v1beta1.AddToScheme,
-		storage_cnrm_cloud_google_com_v1beta1.AddToScheme,
-		networking_istio_io_v1alpha3.AddToScheme,
-	)
-
+	// Register CRDs with controller-tools
+	kscheme, err := naiserator_scheme.All()
 	if err != nil {
 		return err
 	}
