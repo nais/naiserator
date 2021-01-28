@@ -1,5 +1,5 @@
 FROM golang:1.15-alpine as builder
-RUN apk add --no-cache git
+RUN apk add --no-cache git make curl
 ENV GOOS=linux
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
