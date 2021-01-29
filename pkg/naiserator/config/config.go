@@ -23,9 +23,9 @@ type Informer struct {
 }
 
 type Synchronizer struct {
-	QueueSize            int           `json:"queue-size"`
-	RolloutTimeout       time.Duration `json:"rollout-timeout"`
-	RolloutCheckInterval time.Duration `json:"rollout-check-interval"`
+	SynchronizationTimeout time.Duration `json:"synchronization-timeout"`
+	RolloutTimeout         time.Duration `json:"rollout-timeout"`
+	RolloutCheckInterval   time.Duration `json:"rollout-check-interval"`
 }
 
 type Features struct {
@@ -115,7 +115,7 @@ const (
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
 	RateLimitQPS                        = "ratelimit.qps"
 	RateLimitBurst                      = "ratelimit.burst"
-	SynchronizerQueueSize               = "synchronizer.queue-size"
+	SynchronizerSynchronizationTimeout  = "synchronizer.synchronization-timeout"
 	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
 	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
 	KubeConfig                          = "kubeconfig"
@@ -166,7 +166,7 @@ func init() {
 	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
 	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 
-	flag.Int(SynchronizerQueueSize, 4096, "how many Applications from informer to cache in the internal deployment queue")
+	flag.Duration(SynchronizerSynchronizationTimeout, time.Duration(5*time.Second), "how long to allow for resource creation on a single application")
 	flag.Duration(SynchronizerRolloutCheckInterval, time.Duration(5*time.Second), "how often to check if a deployment has rolled out successfully")
 	flag.Duration(SynchronizerRolloutTimeout, time.Duration(5*time.Minute), "how long to keep checking for a successful deployment rollout")
 

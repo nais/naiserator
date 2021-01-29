@@ -71,6 +71,7 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 
 	syncerConfig := synchronizer.Config{
 		KafkaEnabled:               false,
+		SynchronizationTimeout:     2 * time.Second,
 		DeploymentMonitorFrequency: 5 * time.Second,
 		DeploymentMonitorTimeout:   20 * time.Second,
 	}

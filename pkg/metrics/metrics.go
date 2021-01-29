@@ -35,11 +35,6 @@ var (
 		Namespace: "naiserator",
 		Help:      "number of Kubernetes resources that have been generated as a result of application deployments",
 	})
-	QueueSize = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name:      "queue_size",
-		Namespace: "naiserator",
-		Help:      "number of applications in processing queue",
-	})
 	KubernetesResourceWriteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name:      "kubernetes_resource_write_duration",
 		Namespace: "naiserator",
@@ -56,7 +51,6 @@ func Register(registry prometheus.Registerer) {
 		ApplicationsFailed,
 		Retries,
 		ResourcesGenerated,
-		QueueSize,
 		KubernetesResourceWriteDuration,
 	)
 }
