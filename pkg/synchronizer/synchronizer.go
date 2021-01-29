@@ -364,13 +364,13 @@ func (n *Synchronizer) UpdateApplication(ctx context.Context, app *nais_io_v1alp
 	appsync.Lock()
 	defer appsync.Unlock()
 
-	newapp := &nais_io_v1alpha1.Application{}
-	err := n.Get(ctx, client.ObjectKey{Namespace: app.Namespace, Name: app.Name}, app)
+	existing := &nais_io_v1alpha1.Application{}
+	err := n.Get(ctx, client.ObjectKey{Namespace: app.Namespace, Name: app.Name}, existing)
 	if err != nil {
 		return fmt.Errorf("get newest version of Application: %s", err)
 	}
 
-	return updateFunc(newapp)
+	return updateFunc(existing)
 }
 
 func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
