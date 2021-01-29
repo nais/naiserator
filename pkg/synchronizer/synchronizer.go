@@ -46,7 +46,7 @@ type Synchronizer struct {
 
 type Config struct {
 	KafkaEnabled               bool
-	QueueSize                  int
+	SynchronizationTimeout     time.Duration // total allowed time for one Application synchronization
 	DeploymentMonitorFrequency time.Duration
 	DeploymentMonitorTimeout   time.Duration
 }
@@ -58,12 +58,11 @@ func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // Creates a Kubernetes event, or updates an existing one with an incremented counter
-func (n *Synchronizer) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, error) {
+func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Event) (*corev1.Event, error) {
 	selector, err := fields.ParseSelector(fmt.Sprintf("involvedObject.name=%s,involvedObject.uid=%s", reportedEvent.InvolvedObject.Name, reportedEvent.InvolvedObject.UID))
 	if err != nil {
 		return nil, err // fixme
 	}
-	ctx := context.Background() // fixme
 	events := &corev1.EventList{}
 	err = n.Client.List(ctx, events, &client.ListOptions{
 		FieldSelector: selector,
@@ -88,10 +87,10 @@ func (n *Synchronizer) reportEvent(reportedEvent *corev1.Event) (*corev1.Event, 
 }
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
-func (n *Synchronizer) reportError(source string, err error, app *nais_io_v1alpha1.Application) {
+func (n *Synchronizer) reportError(ctx context.Context, source string, err error, app *nais_io_v1alpha1.Application) {
 	logger := log.WithFields(app.LogFields())
 	logger.Error(err)
-	_, err = n.reportEvent(app.CreateEvent(source, err.Error(), "Warning"))
+	_, err = n.reportEvent(ctx, app.CreateEvent(source, err.Error(), "Warning"))
 	if err != nil {
 		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
@@ -123,12 +122,12 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if !changed {
 			return
 		}
-		err := n.UpdateApplication(app, func(existing *nais_io_v1alpha1.Application) error {
+		err := n.UpdateApplication(ctx, app, func(existing *nais_io_v1alpha1.Application) error {
 			existing.Status = app.Status
 			return n.Update(ctx, app)
 		})
 		if err != nil {
-			n.reportError(EventFailedStatusUpdate, err, app)
+			n.reportError(ctx, EventFailedStatusUpdate, err, app)
 		} else {
 			logger.Debugf("Application status: %+v'", app.Status)
 		}
@@ -137,7 +136,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	rollout, err := n.Prepare(app)
 	if err != nil {
 		app.Status.SynchronizationState = EventFailedPrepare
-		n.reportError(app.Status.SynchronizationState, err, app)
+		n.reportError(ctx, app.Status.SynchronizationState, err, app)
 		return ctrl.Result{}, err // fixme
 	}
 
@@ -153,7 +152,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	app.Status.CorrelationID = rollout.CorrelationID
 
-	err, retry := n.Sync(*rollout)
+	err, retry := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
 			app.Status.SynchronizationState = EventRetrying
@@ -163,7 +162,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			app.Status.SynchronizationHash = rollout.SynchronizationHash // permanent failure
 			metrics.ApplicationsFailed.Inc()
 		}
-		n.reportError(app.Status.SynchronizationState, err, app)
+		n.reportError(ctx, app.Status.SynchronizationState, err, app)
 		return ctrl.Result{}, nil // fixme?
 	}
 
@@ -174,7 +173,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	app.Status.SynchronizationTime = time.Now().UnixNano()
 	metrics.Deployments.Inc()
 
-	_, err = n.reportEvent(app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
+	_, err = n.reportEvent(ctx, app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
@@ -194,9 +193,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 // Return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
-func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
-	ctx := context.Background() // fixme
-
+func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]runtime.Object, error) {
 	// Return true if a cluster resource also is applied with the rollout.
 	intersects := func(existing runtime.Object) bool {
 		existingMeta, err := meta.Accessor(existing)
@@ -237,9 +234,9 @@ func (n *Synchronizer) Unreferenced(rollout Rollout) ([]runtime.Object, error) {
 	return unreferenced, nil
 }
 
-func (n *Synchronizer) Sync(rollout Rollout) (error, bool) {
+func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (error, bool) {
 
-	commits := n.ClusterOperations(rollout)
+	commits := n.ClusterOperations(ctx, rollout)
 
 	for _, fn := range commits {
 		if err := observeDuration(fn); err != nil {
@@ -322,8 +319,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 }
 
 // ClusterOperations generates a set of functions that will perform the rollout in the cluster.
-func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
-	ctx := context.Background() // fixme
+func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) []func() error {
 	var fn func() error
 
 	funcs := make([]func() error, 0)
@@ -344,7 +340,7 @@ func (n *Synchronizer) ClusterOperations(rollout Rollout) []func() error {
 	}
 
 	// Delete extraneous resources
-	unreferenced, err := n.Unreferenced(rollout)
+	unreferenced, err := n.Unreferenced(ctx, rollout)
 	if err != nil {
 		funcs = append(funcs, func() error {
 			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
@@ -362,11 +358,10 @@ var appsync sync.Mutex
 
 // Atomically update an Application resource.
 // Locks the resource to avoid race conditions.
-func (n *Synchronizer) UpdateApplication(app *nais_io_v1alpha1.Application, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
+func (n *Synchronizer) UpdateApplication(ctx context.Context, app *nais_io_v1alpha1.Application, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
 	appsync.Lock()
 	defer appsync.Unlock()
 
-	ctx := context.Background() // fixme
 	newapp := &nais_io_v1alpha1.Application{}
 	err := n.Get(ctx, client.ObjectKey{Namespace: app.Namespace, Name: app.Name}, app)
 	if err != nil {
@@ -378,7 +373,9 @@ func (n *Synchronizer) UpdateApplication(app *nais_io_v1alpha1.Application, upda
 
 func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
 	logger.Debugf("monitoring rollout status")
-	ctx := context.Background() // fixme
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	for {
 		select {
@@ -399,13 +396,13 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 					kafka.Events <- kafka.Message{Event: event, Logger: logger}
 				}
 
-				_, err = n.reportEvent(app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+				_, err = n.reportEvent(ctx, app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 				if err != nil {
 					logger.Errorf("monitor rollout: unable to report rollout complete event: %s", err)
 				}
 
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
-				err = n.UpdateApplication(&app, func(app *nais_io_v1alpha1.Application) error {
+				err = n.UpdateApplication(ctx, &app, func(app *nais_io_v1alpha1.Application) error {
 					app.Status.SynchronizationState = EventRolloutComplete
 					app.Status.RolloutCompleteTime = time.Now().UnixNano()
 					app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
@@ -418,7 +415,8 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 
 				return
 			}
-		case <-time.After(timeout):
+
+		case <-ctx.Done():
 			logger.Debugf("application has not rolled out completely in %s; giving up", timeout.String())
 			return
 		}
