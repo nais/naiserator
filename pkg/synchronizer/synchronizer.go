@@ -12,6 +12,7 @@ import (
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
+	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
@@ -39,6 +40,7 @@ const (
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
+	SimpleClient    client.Client
 	Scheme          *runtime.Scheme
 	ResourceOptions resourcecreator.ResourceOptions
 	Config          Config
@@ -61,14 +63,14 @@ func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
 func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Event) (*corev1.Event, error) {
 	selector, err := fields.ParseSelector(fmt.Sprintf("involvedObject.name=%s,involvedObject.uid=%s", reportedEvent.InvolvedObject.Name, reportedEvent.InvolvedObject.UID))
 	if err != nil {
-		return nil, err // fixme
+		return nil, fmt.Errorf("internal error: unable to parse query: %s", err)
 	}
 	events := &corev1.EventList{}
-	err = n.Client.List(ctx, events, &client.ListOptions{
+	err = n.SimpleClient.List(ctx, events, &client.ListOptions{
 		FieldSelector: selector,
 	})
 	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("while getting events for app %s, got error: %s", reportedEvent.InvolvedObject.Name, err)
+		return nil, fmt.Errorf("get events for app '%s': %s", reportedEvent.InvolvedObject.Name, err)
 	}
 
 	for _, event := range events.Items {
@@ -219,7 +221,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 		return false
 	}
 
-	resources, err := updater.FindAll(ctx, n, n.Scheme, rollout.App)
+	resources, err := updater.FindAll(ctx, n, n.Scheme, naiserator_scheme.Listers(), rollout.App)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}

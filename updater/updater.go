@@ -3,7 +3,6 @@ package updater
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	nais_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	log "github.com/sirupsen/logrus"
@@ -97,7 +96,8 @@ func DeleteIfExists(ctx context.Context, cli client.Client, resource runtime.Obj
 	}
 }
 
-func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, app *nais_v1alpha1.Application) ([]runtime.Object, error) {
+// Find all Kubernetes resource matching label selector 'app=NAME' for all specified types
+func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, types []runtime.Object, app *nais_v1alpha1.Application) ([]runtime.Object, error) {
 	// Set up label selector 'app=NAME'
 	labelSelector := labels.NewSelector()
 	labelreq, err := labels.NewRequirement("app", selection.Equals, []string{app.Name})
@@ -110,22 +110,12 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, app
 	}
 
 	resources := make([]runtime.Object, 0)
-	types := scheme.AllKnownTypes()
 
-	for gvk := range types {
-		// Only deal with listable types
-		if !strings.HasSuffix(gvk.Kind, "List") {
-			continue
-		}
-
-		// Instantiate new list
-		obj, err := scheme.New(gvk)
-		if err != nil {
-			return nil, err
-		}
-
-		// Run query
+	for _, obj := range types {
 		err = cli.List(ctx, obj, listopt)
+		if err != nil {
+			return nil, fmt.Errorf("list %T: %w", obj, err)
+		}
 
 		_ = meta.EachListItem(obj, func(item runtime.Object) error {
 			resources = append(resources, item)

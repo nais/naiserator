@@ -17,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
@@ -75,8 +76,13 @@ func run() error {
 		return err
 	}
 
+	kconfig, err := ctrl.GetConfig()
+	if err != nil {
+		return err
+	}
+
 	metrics.Register(kubemetrics.Registry)
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
 		SyncPeriod:         &cfg.Informer.FullSyncInterval,
 		Scheme:             kscheme,
 		MetricsBindAddress: cfg.Bind,
@@ -115,8 +121,13 @@ func run() error {
 		DeploymentMonitorTimeout:   cfg.Synchronizer.RolloutTimeout,
 	}
 
+	simpleClient, err := client.New(kconfig, client.Options{
+		Scheme: kscheme,
+	})
+
 	syncer := &synchronizer.Synchronizer{
 		Client:          mgr.GetClient(),
+		SimpleClient:    simpleClient,
 		Scheme:          kscheme,
 		ResourceOptions: resourceOptions,
 		Config:          syncerConfig,
