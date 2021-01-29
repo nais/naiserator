@@ -78,6 +78,7 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 
 	syncer := &synchronizer.Synchronizer{
 		Client:          rig.client,
+		SimpleClient:    rig.client,
 		Scheme:          kscheme,
 		ResourceOptions: options,
 		Config:          syncerConfig,
