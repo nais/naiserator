@@ -78,6 +78,7 @@ type ServiceEntryHosts struct {
 }
 
 type Config struct {
+	DryRun                            bool              `json:"dry-run"`
 	Bind                              string            `json:"bind"`
 	Informer                          Informer          `json:"informer"`
 	Synchronizer                      Synchronizer      `json:"synchronizer"`
@@ -101,6 +102,7 @@ type Config struct {
 const (
 	Bind                                = "bind"
 	ClusterName                         = "cluster-name"
+	DryRun                              = "dry-run"
 	GoogleProjectId                     = "google-project-id"
 	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
 	ApiServerIp                         = "api-server-ip"
@@ -146,6 +148,7 @@ func init() {
 	viper.AddConfigPath("/etc")
 
 	// Provide command-line flags
+	flag.Bool(DryRun, false, "set to true to run without any actual changes to the cluster")
 	flag.String(KubeConfig, "", "path to Kubernetes config file")
 	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")

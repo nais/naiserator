@@ -12,6 +12,7 @@ import (
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
+	"github.com/nais/naiserator/pkg/readonly"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	log "github.com/sirupsen/logrus"
@@ -121,12 +122,18 @@ func run() error {
 		DeploymentMonitorTimeout:   cfg.Synchronizer.RolloutTimeout,
 	}
 
+	mgrClient := mgr.GetClient()
 	simpleClient, err := client.New(kconfig, client.Options{
 		Scheme: kscheme,
 	})
 
+	if cfg.DryRun {
+		mgrClient = readonly.NewClient(mgrClient)
+		simpleClient = readonly.NewClient(simpleClient)
+	}
+
 	syncer := &synchronizer.Synchronizer{
-		Client:          mgr.GetClient(),
+		Client:          mgrClient,
 		SimpleClient:    simpleClient,
 		Scheme:          kscheme,
 		ResourceOptions: resourceOptions,

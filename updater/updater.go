@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	nais_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -15,23 +16,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func typename(resource runtime.Object) string {
-	var kind, name, namespace string
-	typ, err := meta.TypeAccessor(resource)
-	if err == nil {
-		kind = typ.GetKind()
-	}
-	obj, err := meta.Accessor(resource)
-	if err == nil {
-		name = obj.GetName()
-		namespace = obj.GetNamespace()
-	}
-	return fmt.Sprintf("resource '%s' named '%s' in namespace '%s'", kind, name, namespace)
-}
-
 func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("CreateOrUpdate %s", typename(resource))
+		log.Infof("CreateOrUpdate %s", naiserator_scheme.TypeName(resource))
 		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
 		if err != nil {
 			return fmt.Errorf("internal error: %w", err)
@@ -65,7 +52,7 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 
 func CreateOrRecreate(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("CreateOrRecreate %s", typename(resource))
+		log.Infof("CreateOrRecreate %s", naiserator_scheme.TypeName(resource))
 		err := cli.Delete(ctx, resource)
 		if err != nil && !errors.IsNotFound(err) {
 			return err
@@ -76,7 +63,7 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, resource runtime.O
 
 func CreateIfNotExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("CreateIfNotExists %s", typename(resource))
+		log.Infof("CreateIfNotExists %s", naiserator_scheme.TypeName(resource))
 		err := cli.Create(ctx, resource)
 		if err != nil && errors.IsAlreadyExists(err) {
 			return nil
@@ -87,7 +74,7 @@ func CreateIfNotExists(ctx context.Context, cli client.Client, resource runtime.
 
 func DeleteIfExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("DeleteIfExists %s", typename(resource))
+		log.Infof("DeleteIfExists %s", naiserator_scheme.TypeName(resource))
 		err := cli.Delete(ctx, resource)
 		if err != nil && errors.IsNotFound(err) {
 			return nil
