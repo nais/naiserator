@@ -9,6 +9,7 @@ import (
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
+	security_istio_io_v1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -34,6 +35,7 @@ func All() (*runtime.Scheme, error) {
 		storage_cnrm_cloud_google_com_v1beta1.AddToScheme,
 		networking_istio_io_v1alpha3.AddToScheme,
 		clientgoscheme.AddToScheme,
+		security_istio_io_v1beta1.AddToScheme,
 	)
 }
 

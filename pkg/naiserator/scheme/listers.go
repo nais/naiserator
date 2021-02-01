@@ -6,6 +6,7 @@ import (
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
+	security_istio_io_v1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -43,6 +44,7 @@ func Listers() []runtime.Object {
 		&nais_io_v1.IDPortenClientList{},
 		&nais_io_v1.JwkerList{},
 		&nais_io_v1.MaskinportenClientList{},
+		&security_istio_io_v1beta1.AuthorizationPolicyList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLInstanceList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLUserList{},
