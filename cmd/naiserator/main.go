@@ -81,6 +81,8 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	kconfig.QPS = float32(cfg.Ratelimit.QPS)
+	kconfig.Burst = cfg.Ratelimit.Burst
 
 	metrics.Register(kubemetrics.Registry)
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
