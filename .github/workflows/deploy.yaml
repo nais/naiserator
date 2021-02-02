@@ -85,7 +85,7 @@ jobs:
           cd naiserator
           res="hack/resources"
           static_file="../nais-yaml/templates/zz-generated-naiserator.yaml"
-          cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrole.yaml $res/03-clusterrolebinding.yaml config/crd/*.yaml > $static_file
+          cat $res/00-namespace.yaml $res/01-serviceaccount.yaml $res/02-clusterrole.yaml $res/03-clusterrolebinding.yaml > $static_file
           cd ..
       - name: Update nais-yaml
         run: |
