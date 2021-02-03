@@ -93,7 +93,10 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 	return rig, nil
 }
 
-// fixme: synopsis
+// This test sets up a complete in-memory Kubernetes rig, and tests the reconciler (Synchronizer) against it.
+// These tests ensure that resources are actually created or updated in the cluster,
+// and that orphaned resources are cleaned up properly.
+// The validity of resources generated are not tested here.
 func TestSynchronizer(t *testing.T) {
 	resourceOptions := resourcecreator.NewResourceOptions()
 	rig, err := newTestRig(resourceOptions)
@@ -107,6 +110,14 @@ func TestSynchronizer(t *testing.T) {
 	// Allow no more than 15 seconds for these tests to run
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
+
+	// Check that listing all resources work.
+	// If this test fails, it might mean CRDs are not registered in the test rig.
+	listers := naiserator_scheme.Listers()
+	for _, list := range listers {
+		err = rig.client.List(ctx, list)
+		assert.NoError(t, err)
+	}
 
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
@@ -202,9 +213,6 @@ func TestSynchronizer(t *testing.T) {
 	testResource(&corev1.ServiceAccount{}, objectKey)
 	testResource(&networkingv1beta1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
 }
-
-
-// fixme: get tests
 
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resourcecreator.NewResourceOptions()
