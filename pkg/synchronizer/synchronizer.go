@@ -145,7 +145,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		app.Status.SynchronizationState = EventFailedPrepare
 		n.reportError(ctx, app.Status.SynchronizationState, err, app)
-		return ctrl.Result{RequeueAfter: prepareRetryInterval}, err
+		return ctrl.Result{RequeueAfter: prepareRetryInterval}, nil
 	}
 
 	if rollout == nil {
@@ -228,7 +228,11 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 		return false
 	}
 
-	resources, err := updater.FindAll(ctx, n, n.Scheme, naiserator_scheme.Listers(), rollout.App)
+	listers := naiserator_scheme.GenericListers()
+	if len(n.ResourceOptions.GoogleProjectId) > 0 {
+		listers = append(listers, naiserator_scheme.GCPListers()...)
+	}
+	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.App)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}

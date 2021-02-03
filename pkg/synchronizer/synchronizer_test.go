@@ -113,7 +113,8 @@ func TestSynchronizer(t *testing.T) {
 
 	// Check that listing all resources work.
 	// If this test fails, it might mean CRDs are not registered in the test rig.
-	listers := naiserator_scheme.Listers()
+	listers := naiserator_scheme.GenericListers()
+	listers = append(listers, naiserator_scheme.GCPListers()...)
 	for _, list := range listers {
 		err = rig.client.List(ctx, list)
 		assert.NoError(t, err)

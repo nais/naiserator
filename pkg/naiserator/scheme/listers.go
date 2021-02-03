@@ -20,30 +20,37 @@ import (
 // Orphaned types with matching label 'app=NAME' but without owner references are automatically removed.
 // It is too expensive to list all known Kubernetes types, so we need to have some knowledge of which types to care about.
 // These are usually the types we persist to the cluster with names different than the application name.
-func Listers() []runtime.Object {
-	return []runtime.Object{
 
+// Resources that can be queried in all clusters
+func GenericListers() []runtime.Object {
+	return []runtime.Object{
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
 		&autoscalingv1.HorizontalPodAutoscalerList{},
 		&corev1.SecretList{},
 		&corev1.ServiceAccountList{},
 		&corev1.ServiceList{},
-		&networking_istio_io_v1alpha3.ServiceEntryList{},
-		&networking_istio_io_v1alpha3.VirtualServiceList{},
 		&networkingv1.NetworkPolicyList{},
 		&networkingv1beta1.IngressList{},
 		&rbacv1.RoleBindingList{},
 		&rbacv1.RoleList{},
 
 		// Custom resources
-		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
-		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberList{},
-		&iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{},
 		&nais_io_v1.AzureAdApplicationList{},
 		&nais_io_v1.IDPortenClientList{},
 		&nais_io_v1.JwkerList{},
 		&nais_io_v1.MaskinportenClientList{},
+	}
+}
+
+// Resources that exist only in GCP clusters
+func GCPListers() []runtime.Object {
+	return []runtime.Object{
+		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
+		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberList{},
+		&iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{},
+		&networking_istio_io_v1alpha3.ServiceEntryList{},
+		&networking_istio_io_v1alpha3.VirtualServiceList{},
 		&security_istio_io_v1beta1.AuthorizationPolicyList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLInstanceList{},
@@ -51,5 +58,4 @@ func Listers() []runtime.Object {
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControlList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
 	}
-
 }
