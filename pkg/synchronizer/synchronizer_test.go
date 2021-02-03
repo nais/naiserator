@@ -93,6 +93,7 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 	return rig, nil
 }
 
+// fixme: synopsis
 func TestSynchronizer(t *testing.T) {
 	resourceOptions := resourcecreator.NewResourceOptions()
 	rig, err := newTestRig(resourceOptions)
@@ -201,6 +202,9 @@ func TestSynchronizer(t *testing.T) {
 	testResource(&corev1.ServiceAccount{}, objectKey)
 	testResource(&networkingv1beta1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
 }
+
+
+// fixme: get tests
 
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resourcecreator.NewResourceOptions()

@@ -36,6 +36,10 @@ const (
 	EventRetrying              = "Retrying"
 )
 
+const (
+	prepareRetryInterval = time.Minute * 30
+)
+
 // Synchronizer creates child resources from Application resources in the cluster.
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
@@ -100,8 +104,10 @@ func (n *Synchronizer) reportError(ctx context.Context, source string, err error
 
 // Process work queue
 func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), n.Config.SynchronizationTimeout)
+	defer cancel()
+
 	app := &nais_io_v1alpha1.Application{}
-	ctx := context.Background() // fixme
 	err := n.Get(ctx, req.NamespacedName, app)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -139,7 +145,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		app.Status.SynchronizationState = EventFailedPrepare
 		n.reportError(ctx, app.Status.SynchronizationState, err, app)
-		return ctrl.Result{}, err // fixme
+		return ctrl.Result{RequeueAfter: prepareRetryInterval}, err
 	}
 
 	if rollout == nil {
@@ -156,16 +162,17 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	err, retry := n.Sync(ctx, *rollout)
 	if err != nil {
+		n.reportError(ctx, app.Status.SynchronizationState, err, app)
 		if retry {
 			app.Status.SynchronizationState = EventRetrying
 			metrics.Retries.Inc()
+			return ctrl.Result{}, err
 		} else {
 			app.Status.SynchronizationState = EventFailedSynchronization
 			app.Status.SynchronizationHash = rollout.SynchronizationHash // permanent failure
 			metrics.ApplicationsFailed.Inc()
+			return ctrl.Result{}, nil
 		}
-		n.reportError(ctx, app.Status.SynchronizationState, err, app)
-		return ctrl.Result{}, nil // fixme?
 	}
 
 	// Synchronization OK
