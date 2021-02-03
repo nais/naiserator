@@ -165,13 +165,14 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if retry {
 			app.Status.SynchronizationState = EventRetrying
 			metrics.Retries.Inc()
+			n.reportError(ctx, app.Status.SynchronizationState, err, app)
 		} else {
 			app.Status.SynchronizationState = EventFailedSynchronization
 			app.Status.SynchronizationHash = rollout.SynchronizationHash // permanent failure
 			metrics.ApplicationsFailed.Inc()
+			n.reportError(ctx, app.Status.SynchronizationState, err, app)
 			err = nil
 		}
-		n.reportError(ctx, app.Status.SynchronizationState, err, app)
 		return ctrl.Result{}, err
 	}
 
