@@ -80,7 +80,7 @@ func Ingress(app *nais.Application) (*networkingv1beta1.Ingress, error) {
 	return &networkingv1beta1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "networking/v1beta1",
+			APIVersion: "networking.k8s.io/v1beta1",
 		},
 		ObjectMeta: objectMeta,
 		Spec: networkingv1beta1.IngressSpec{
