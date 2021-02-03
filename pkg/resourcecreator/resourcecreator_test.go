@@ -9,13 +9,13 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
+	"github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
 	"github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
-	istio "istio.io/client-go/pkg/apis/security/v1beta1"
 	"k8s.io/api/apps/v1"
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
@@ -25,7 +25,7 @@ import (
 )
 
 type realObjects struct {
-	authorizationPolicy     *istio.AuthorizationPolicy
+	authorizationPolicy     *security_istio_io_v1beta1.AuthorizationPolicy
 	deployment              *v1.Deployment
 	hpa                     *autoscaling.HorizontalPodAutoscaler
 	ingress                 *networkingv1beta1.Ingress
@@ -64,7 +64,7 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.ingress = v
 		case *networking.NetworkPolicy:
 			o.networkPolicy = v
-		case *istio.AuthorizationPolicy:
+		case *security_istio_io_v1beta1.AuthorizationPolicy:
 			o.authorizationPolicy = v
 		case *networking_istio_io_v1alpha3.VirtualService:
 			o.virtualServices = append(o.virtualServices, v)

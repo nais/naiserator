@@ -8,16 +8,14 @@ import (
 	"strings"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	istio "istio.io/api/security/v1beta1"
-	"istio.io/api/type/v1beta1"
-	istio_security_client "istio.io/client-go/pkg/apis/security/v1beta1"
+	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const PrometheusServiceAccountPrincipal = "cluster.local/ns/istio-system/sa/prometheus"
 
-func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio_security_client.AuthorizationPolicy, error) {
-	var rules []*istio.Rule
+func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*security_istio_io_v1beta1.AuthorizationPolicy, error) {
+	var rules []*security_istio_io_v1beta1.Rule
 
 	// TODO: This is the old ingress-gateway, need this until it is removed from the clusters
 	gateways := []string{"istio-system/istio-ingressgateway"}
@@ -69,14 +67,14 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio
 		return nil, nil
 	}
 
-	return &istio_security_client.AuthorizationPolicy{
+	return &security_istio_io_v1beta1.AuthorizationPolicy{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "AuthorizationPolicy",
 			APIVersion: IstioAuthorizationPolicyVersion,
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec: istio.AuthorizationPolicy{
-			Selector: &v1beta1.WorkloadSelector{
+		Spec: security_istio_io_v1beta1.AuthorizationPolicySpec{
+			Selector: &security_istio_io_v1beta1.WorkloadSelector{
 				MatchLabels: map[string]string{"app": app.Name},
 			},
 			Rules: rules,
@@ -84,7 +82,7 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*istio
 	}, nil
 }
 
-func ingressGatewayRule(gateways []string) *istio.Rule {
+func ingressGatewayRule(gateways []string) *security_istio_io_v1beta1.Rule {
 	var principals []string
 	for _, gateway := range gateways {
 		parts := strings.Split(gateway, "/")
@@ -95,17 +93,17 @@ func ingressGatewayRule(gateways []string) *istio.Rule {
 	// Avoid unnecessary synchronization if order changes
 	sort.Strings(principals)
 
-	return &istio.Rule{
-		From: []*istio.Rule_From{
+	return &security_istio_io_v1beta1.Rule{
+		From: []*security_istio_io_v1beta1.Rule_From{
 			{
-				Source: &istio.Source{
+				Source: &security_istio_io_v1beta1.Source{
 					Principals: principals,
 				},
 			},
 		},
-		To: []*istio.Rule_To{
+		To: []*security_istio_io_v1beta1.Rule_To{
 			{
-				Operation: &istio.Operation{
+				Operation: &security_istio_io_v1beta1.Operation{
 					Paths: []string{"*"},
 				},
 			},
@@ -113,15 +111,15 @@ func ingressGatewayRule(gateways []string) *istio.Rule {
 	}
 }
 
-func accessPolicyRules(app *nais.Application, options ResourceOptions) *istio.Rule {
+func accessPolicyRules(app *nais.Application, options ResourceOptions) *security_istio_io_v1beta1.Rule {
 	principals := principals(app, options)
 	if len(principals) < 1 {
 		return nil
 	}
-	return &istio.Rule{
-		From: []*istio.Rule_From{
+	return &security_istio_io_v1beta1.Rule{
+		From: []*security_istio_io_v1beta1.Rule_From{
 			{
-				Source: &istio.Source{
+				Source: &security_istio_io_v1beta1.Source{
 					Principals: principals,
 				},
 			},
@@ -129,22 +127,22 @@ func accessPolicyRules(app *nais.Application, options ResourceOptions) *istio.Ru
 	}
 }
 
-func prometheusRule(app *nais.Application) *istio.Rule {
+func prometheusRule(app *nais.Application) *security_istio_io_v1beta1.Rule {
 	port := app.Spec.Prometheus.Port
 	if len(port) == 0 {
 		port = strconv.Itoa(app.Spec.Port)
 	}
-	return &istio.Rule{
-		From: []*istio.Rule_From{
+	return &security_istio_io_v1beta1.Rule{
+		From: []*security_istio_io_v1beta1.Rule_From{
 			{
-				Source: &istio.Source{
+				Source: &security_istio_io_v1beta1.Source{
 					Principals: []string{PrometheusServiceAccountPrincipal},
 				},
 			},
 		},
-		To: []*istio.Rule_To{
+		To: []*security_istio_io_v1beta1.Rule_To{
 			{
-				Operation: &istio.Operation{
+				Operation: &security_istio_io_v1beta1.Operation{
 					Paths:   []string{app.Spec.Prometheus.Path},
 					Ports:   []string{port},
 					Methods: []string{"GET"},
