@@ -35,7 +35,7 @@ tests:
                 name: myapplication
                 uid: "123456"
           spec:
-            minAvailable: 1
+            minAvailable: 2
             selector:
               matchLabels:
                 app: myapplication

@@ -203,7 +203,7 @@ tests:
           - .status
         resource:
           spec:
-            minAvailable: 1
+            minAvailable: 2
             selector:
               matchLabels:
                 app: myapplication

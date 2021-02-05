@@ -16,6 +16,8 @@ func PodDisruptionBudget(app *nais_io_v1alpha1.Application) *policyv1beta1.PodDi
 		return nil
 	}
 
+	min := intstr.FromInt(app.Spec.Replicas.Min)
+
 	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
@@ -23,10 +25,7 @@ func PodDisruptionBudget(app *nais_io_v1alpha1.Application) *policyv1beta1.PodDi
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
-			MinAvailable: &intstr.IntOrString{
-				Type:   intstr.Int,
-				IntVal: 1,
-			},
+			MinAvailable: &min,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": app.Name,
