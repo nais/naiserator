@@ -18,7 +18,7 @@ func PodDisruptionBudget(app *nais_io_v1alpha1.Application) *policyv1beta1.PodDi
 
 	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "PodDisruptionPudget",
+			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
