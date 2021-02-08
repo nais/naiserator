@@ -1,5 +1,5 @@
 config:
-  description: pod disruption budget should be created with default configuration
+  description: pod disruption budget should be removed when max replicas == 1
 
 resourceOptions:
   NumReplicas: 1
@@ -14,15 +14,17 @@ input:
     labels:
       team: myteam
   spec:
+    replicas:
+      max: 1
     image: navikt/myapplication:1.2.3
 
 tests:
   - apiVersion: policy/v1beta1
     kind: PodDisruptionBudget
     name: myapplication
-    operation: CreateOrUpdate
+    operation: DeleteIfExists
     match:
-      - name: "PodDisruptionBudget created with minAvailable 1"
+      - name: "PodDisruptionBudget should be removed"
         type: subset
         resource:
           metadata:
@@ -34,10 +36,6 @@ tests:
                 kind: Application
                 name: myapplication
                 uid: "123456"
-          spec:
-            minAvailable: 2
-            selector:
-              matchLabels:
-                app: myapplication
+          spec: {}
 
 
