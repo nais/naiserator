@@ -37,6 +37,7 @@ rules:
       - 'storagebucketaccesscontrols'
       - 'storagebuckets'
       - 'virtualservices'
+      - 'poddisruptionbudgets'
     verbs:
       - 'get'
       - 'create'
