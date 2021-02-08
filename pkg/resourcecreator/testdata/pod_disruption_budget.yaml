@@ -1,5 +1,5 @@
 config:
-  description: pod disruption budget should be created with default configuration
+  description: pod disruption budget on-premises with default configuration
 
 resourceOptions:
   NumReplicas: 1
