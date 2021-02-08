@@ -170,3 +170,20 @@ tests:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
               name: myapplicati-mynamespac-w4o5cwa
+
+  - operation: CreateOrUpdate
+    apiVersion: policy/v1beta1
+    kind: PodDisruptionBudget
+    name: myapplication
+    match:
+      - type: exact
+        name: "pdb created with 2 min available"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            minAvailable: 2
+            selector:
+              matchLabels:
+                app: myapplication

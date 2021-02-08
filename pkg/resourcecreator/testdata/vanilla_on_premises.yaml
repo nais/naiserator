@@ -197,7 +197,7 @@ tests:
     name: myapplication
     match:
       - type: exact
-        name: "pdb created with 1 min available"
+        name: "pdb created with 2 min available"
         exclude:
           - .metadata
           - .status
