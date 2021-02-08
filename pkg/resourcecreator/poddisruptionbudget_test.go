@@ -9,16 +9,6 @@ import (
 )
 
 func TestPodDisruptionBudget(t *testing.T) {
-	t.Run("min = max replicas should not have pdb", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.Replicas.Min = app.Spec.Replicas.Max
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		pdb := resourcecreator.PodDisruptionBudget(app)
-		assert.Nil(t, pdb)
-	})
-
 	t.Run("max replicas = 1 should not have pdb", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Replicas.Max = 1

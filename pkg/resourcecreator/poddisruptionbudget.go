@@ -12,10 +12,6 @@ func PodDisruptionBudget(app *nais_io_v1alpha1.Application) *policyv1beta1.PodDi
 		return nil
 	}
 
-	if app.Spec.Replicas.Min == app.Spec.Replicas.Max {
-		return nil
-	}
-
 	min := intstr.FromInt(app.Spec.Replicas.Min)
 
 	return &policyv1beta1.PodDisruptionBudget{
