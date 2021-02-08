@@ -11,6 +11,7 @@ const (
 	OperationCreateOrUpdate    Operation = `CreateOrUpdate`
 	OperationCreateOrRecreate            = `CreateOrRecreate`
 	OperationCreateIfNotExists           = `CreateIfNotExists`
+	OperationDeleteIfExists              = `DeleteIfExists`
 )
 
 // ResourceOperation is the combination of a Kubernetes resource and what operation to perform on it.

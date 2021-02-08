@@ -346,6 +346,8 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 			fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
 		case resourcecreator.OperationCreateIfNotExists:
 			fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
+		case resourcecreator.OperationDeleteIfExists:
+			fn = updater.DeleteIfExists(ctx, n, rop.Resource)
 		default:
 			log.Fatalf("BUG: no such operation %s", rop.Operation)
 		}
