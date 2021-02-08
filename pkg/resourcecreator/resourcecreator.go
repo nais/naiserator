@@ -27,6 +27,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		{Service(app), OperationCreateOrUpdate},
 		{ServiceAccount(app, resourceOptions), OperationCreateIfNotExists},
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
+		{PodDisruptionBudget(app), OperationCreateOrUpdate},
 	}
 
 	if app.Spec.LeaderElection {
