@@ -183,6 +183,7 @@ tests:
                 serviceAccountName: myapplication
                 imagePullSecrets:
                   - name: gpr-credentials
+                  - name: ghcr-credentials
             strategy:
               type: RollingUpdate
               rollingUpdate:
