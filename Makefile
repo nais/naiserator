@@ -1,7 +1,7 @@
 NAME       := naiserator
 TAG        := navikt/${NAME}
 LATEST     := ${TAG}:latest
-ROOT_DIR   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+ROOT_DIR   := $(shell git rev-parse --show-toplevel)
 arch       := amd64
 os         := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
