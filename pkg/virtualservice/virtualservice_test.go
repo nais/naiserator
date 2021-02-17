@@ -2,6 +2,7 @@ package virtualservice_test
 
 import (
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -83,17 +84,44 @@ func TestSortRoutes(t *testing.T) {
 func TestVirtualService(t *testing.T) {
 	app := fixtures.MinimalApplication()
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
-		"https://nav.no/base/some/thing",
+		"https://www.nav.no/base/some/thing",
 	}
-
-	registry := virtualservice.New()
+	gatewayMappings := []config.GatewayMapping{
+		{
+			DomainSuffix: ".nav.no",
+			GatewayName:  "istio-system/gw-nav-no",
+		},
+	}
+	registry := virtualservice.New(gatewayMappings)
 
 	err := registry.Add(app)
 	assert.NoError(t, err)
 
-	vs := registry.VirtualService("nav.no")
+	vs := registry.VirtualService("www.nav.no")
 
-	routes := []networking_istio_io_v1alpha3.HTTPRoute{
+	assert.Equal(t, []string{"istio-system/gw-nav-no"}, vs.Spec.Gateways)
+}
+
+func TestRoutes(t *testing.T) {
+	app := fixtures.MinimalApplication()
+	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/base/some/thing",
+	}
+
+	gatewayMappings := []config.GatewayMapping{
+		{
+			DomainSuffix: ".nav.no",
+			GatewayName:  "istio-system/gw-nav-no",
+		},
+	}
+	registry := virtualservice.New(gatewayMappings)
+
+	err := registry.Add(app)
+	assert.NoError(t, err)
+
+	routes := registry.Routes("www.nav.no")
+
+	expectedRoutes := []networking_istio_io_v1alpha3.HTTPRoute{
 		{
 			Match: []networking_istio_io_v1alpha3.HTTPMatchRequest{
 				{
@@ -116,5 +144,5 @@ func TestVirtualService(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, routes, vs.Spec.HTTP)
+	assert.Equal(t, expectedRoutes, routes)
 }

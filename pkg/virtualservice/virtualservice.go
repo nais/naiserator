@@ -30,10 +30,10 @@ type Registry struct {
 	mappings []config.GatewayMapping
 }
 
-func New() *Registry {
+func New(gatewayMapping []config.GatewayMapping) *Registry {
 	return &Registry{
 		routes:   make(RouteMap),
-		mappings: make([]config.GatewayMapping, 0),
+		mappings: gatewayMapping,
 	}
 }
 
