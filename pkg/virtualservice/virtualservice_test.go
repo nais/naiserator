@@ -1,11 +1,13 @@
 package virtualservice_test
 
 import (
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/test/fixtures"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/virtualservice"
-	"gotest.tools/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -76,4 +78,43 @@ func TestSortRoutes(t *testing.T) {
 	for i := range routes {
 		assert.Equal(t, correctOrder[i], routes[i].Match[0].URI.Regex)
 	}
+}
+
+func TestVirtualService(t *testing.T) {
+	app := fixtures.MinimalApplication()
+	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://nav.no/base/some/thing",
+	}
+
+	registry := virtualservice.New()
+
+	err := registry.Add(app)
+	assert.NoError(t, err)
+
+	vs := registry.VirtualService("nav.no")
+
+	routes := []networking_istio_io_v1alpha3.HTTPRoute{
+		{
+			Match: []networking_istio_io_v1alpha3.HTTPMatchRequest{
+				{
+					URI: networking_istio_io_v1alpha3.StringMatch{
+						Regex: "/base/some/thing(/.*)?",
+					},
+				},
+			},
+			Route: []networking_istio_io_v1alpha3.HTTPRouteDestination{
+				{
+					Destination: networking_istio_io_v1alpha3.Destination{
+						Host: app.Name,
+						Port: networking_istio_io_v1alpha3.PortSelector{
+							Number: uint32(app.Spec.Service.Port),
+						},
+					},
+					Weight: virtualservice.IstioVirtualServiceTotalWeight,
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, routes, vs.Spec.HTTP)
 }

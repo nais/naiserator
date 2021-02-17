@@ -30,6 +30,13 @@ type Registry struct {
 	mappings []config.GatewayMapping
 }
 
+func New() *Registry {
+	return &Registry{
+		routes:   make(RouteMap),
+		mappings: make([]config.GatewayMapping, 0),
+	}
+}
+
 func ResolveGateway(host string, mappings []config.GatewayMapping) []string {
 	for _, mapping := range mappings {
 		if strings.HasSuffix(host, mapping.DomainSuffix) {
