@@ -41,6 +41,7 @@ func (r *Registry) VirtualServices(app *nais_io_v1alpha1.Application) []networki
         }
         hostSet[ingressUrl.Host] = new(interface{})
     }
+
     for host := range hostSet {
         services = append(services, r.VirtualService(host))
     }

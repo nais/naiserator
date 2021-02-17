@@ -47,14 +47,6 @@ func simpleRoute(uri string) networking_istio_io_v1alpha3.HTTPRoute {
     }
 }
 
-func appWithIngress(ingress string) *nais_io_v1alpha1.Application {
-    app := fixtures.MinimalApplication()
-    app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
-        nais_io_v1alpha1.Ingress(ingress),
-    }
-    return app
-}
-
 func TestVirtualServices(t *testing.T) {
     gatewayMappings := []config.GatewayMapping{
         {
