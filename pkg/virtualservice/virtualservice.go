@@ -106,6 +106,15 @@ func (r *Registry) VirtualService(host string) (*networking_istio_io_v1alpha3.Vi
 	}, nil
 }
 
+func RouteOwnedBy(destinations []networking_istio_io_v1alpha3.HTTPRouteDestination, name, namespace string) error {
+	for _, dest := range destinations {
+		if dest.Destination.Host != name+"."+namespace {
+			return fmt.Errorf("already in use by %s", dest.Destination.Host)
+		}
+	}
+	return nil
+}
+
 func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
 	routes, err := httpRoutes(app)
 	if err != nil {
@@ -115,16 +124,37 @@ func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
 	for parsedURL, route := range routes {
 		existing, found := r.routes[parsedURL]
 		if found {
-			for _, route := range existing.Route {
-				if route.Destination.Host != app.Name+"."+app.Namespace {
-					return fmt.Errorf("the ingress %s is already in use by %s", parsedURL.String(), route.Destination.Host)
-				}
+			err := RouteOwnedBy(existing.Route, app.Name, app.Namespace)
+			if err != nil {
+				return fmt.Errorf("the ingress %s is %s", parsedURL.String(), err)
 			}
 		}
 		r.routes[parsedURL] = route
 	}
 
 	return nil
+}
+
+// Remove an application from the registry, and return the affected VirtualService resources
+func (r *Registry) Remove(name, namespace string) ([]*networking_istio_io_v1alpha3.VirtualService, error) {
+	hosts := make(map[string]interface{})
+
+	for parsedURL, routes := range r.routes {
+		if RouteOwnedBy(routes.Route, name, namespace) == nil {
+			hosts[parsedURL.Host] = new(interface{})
+			delete(r.routes, parsedURL)
+		}
+	}
+
+	services := make([]*networking_istio_io_v1alpha3.VirtualService, 0)
+	for host := range hosts {
+		vs, err := r.VirtualService(host)
+		if err != nil {
+			return nil, err
+		}
+		services = append(services, vs)
+	}
+	return services, nil
 }
 
 func httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, error) {

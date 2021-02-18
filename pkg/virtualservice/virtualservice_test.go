@@ -175,6 +175,40 @@ func TestVirtualServicesMultipleApps(t *testing.T) {
 	assert.Equal(t, "first-app."+appNamespace, vs.Spec.HTTP[2].Route[0].Destination.Host)
 }
 
+func TestDelete(t *testing.T) {
+	gatewayMappings := []config.GatewayMapping{
+		{
+			DomainSuffix: ".nav.no",
+			GatewayName:  "istio-system/gw-nav-no",
+		},
+	}
+	registry := virtualservice.NewRegistry(gatewayMappings, "namespace")
+
+	app1 := fixtures.MinimalApplication()
+	app1.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/one/path",
+	}
+	assert.NoError(t, registry.Add(app1))
+
+	app2 := fixtures.MinimalApplication()
+	app2.Name = "app-2"
+	app2.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/second/path",
+	}
+	assert.NoError(t, registry.Add(app2))
+
+	services, err := registry.Remove(app1.Name, app1.Namespace)
+	assert.NoError(t, err)
+
+	vs := services[0]
+	assert.Len(t, services, 1)
+	assert.Len(t, vs.Spec.HTTP, 1)
+	assert.Len(t, vs.Spec.HTTP[0].Match, 1)
+	assert.Len(t, vs.Spec.HTTP[0].Route, 1)
+	assert.Equal(t, "/second/path(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
+	assert.Equal(t, "app-2.mynamespace", vs.Spec.HTTP[0].Route[0].Destination.Host)
+}
+
 func TestSortRoutes(t *testing.T) {
 	routes := []networking_istio_io_v1alpha3.HTTPRoute{
 		simpleRoute("/base"),
