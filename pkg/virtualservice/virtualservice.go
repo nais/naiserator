@@ -32,8 +32,8 @@ type Registry struct {
 	namespace string
 }
 
-func (r *Registry) VirtualServices(app *nais_io_v1alpha1.Application) []networking_istio_io_v1alpha3.VirtualService {
-	services := make([]networking_istio_io_v1alpha3.VirtualService, 0)
+func (r *Registry) VirtualServices(app *nais_io_v1alpha1.Application) ([]*networking_istio_io_v1alpha3.VirtualService, error) {
+	services := make([]*networking_istio_io_v1alpha3.VirtualService, 0)
 	hostSet := make(map[string]interface{})
 	for _, ingress := range app.Spec.Ingresses {
 		ingressUrl, err := url.Parse(string(ingress))
@@ -44,9 +44,13 @@ func (r *Registry) VirtualServices(app *nais_io_v1alpha1.Application) []networki
 	}
 
 	for host := range hostSet {
-		services = append(services, r.VirtualService(host))
+		vs, err := r.VirtualService(host)
+		if err != nil {
+			return nil, err
+		}
+		services = append(services, vs)
 	}
-	return services
+	return services, nil
 }
 
 func NewRegistry(gatewayMapping []config.GatewayMapping, namespace string) *Registry {
@@ -80,8 +84,12 @@ func (r *Registry) Routes(host string) []networking_istio_io_v1alpha3.HTTPRoute 
 	return routes
 }
 
-func (r *Registry) VirtualService(host string) networking_istio_io_v1alpha3.VirtualService {
-	return networking_istio_io_v1alpha3.VirtualService{
+func (r *Registry) VirtualService(host string) (*networking_istio_io_v1alpha3.VirtualService, error) {
+	gateways := ResolveGateway(host, r.mappings)
+	if gateways == nil {
+		return nil, fmt.Errorf("%s is not a supported domain", host)
+	}
+	return &networking_istio_io_v1alpha3.VirtualService{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "VirtualService",
 			APIVersion: networking_istio_io_v1alpha3.GroupVersion.Identifier(),
@@ -91,11 +99,11 @@ func (r *Registry) VirtualService(host string) networking_istio_io_v1alpha3.Virt
 			Namespace: r.namespace,
 		},
 		Spec: networking_istio_io_v1alpha3.VirtualServiceSpec{
-			Gateways: ResolveGateway(host, r.mappings),
+			Gateways: gateways,
 			Hosts:    []string{host},
 			HTTP:     r.Routes(host),
 		},
-	}
+	}, nil
 }
 
 func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
@@ -104,10 +112,15 @@ func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
 		return err
 	}
 
-	// fixme: check gateway mappings
-	// fixme: collisions: check same app
-
 	for parsedURL, route := range routes {
+		existing, found := r.routes[parsedURL]
+		if found {
+			for _, route := range existing.Route {
+				if route.Destination.Host != app.Name+"."+app.Namespace {
+					return fmt.Errorf("the ingress %s is already in use by %s", parsedURL.String(), route.Destination.Host)
+				}
+			}
+		}
 		r.routes[parsedURL] = route
 	}
 

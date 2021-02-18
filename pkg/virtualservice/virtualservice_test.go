@@ -11,6 +11,7 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
+
 	"github.com/nais/naiserator/pkg/virtualservice"
 )
 
@@ -37,11 +38,44 @@ func simpleRoute(uri string) networking_istio_io_v1alpha3.HTTPRoute {
 	}
 }
 
+func TestAddIngressCollision(t *testing.T) {
+
+	const namespace = "vs-namespace"
+
+	gatewayMappings := []config.GatewayMapping{
+		{
+			DomainSuffix: ".nav.no",
+			GatewayName:  "istio-system/gw-nav-no",
+		},
+	}
+	registry := virtualservice.NewRegistry(gatewayMappings, namespace)
+
+	app1 := fixtures.MinimalApplication()
+	app1.Name = "first-app"
+	app1.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/first-app",
+	}
+
+	app2 := fixtures.MinimalApplication()
+	app2.Name = "second-app"
+	app2.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/first-app",
+	}
+
+	registry.Add(app1)
+	err := registry.Add(app2)
+	assert.EqualError(t, err, "the ingress https://www.nav.no/first-app is already in use by first-app.mynamespace")
+}
+
 func TestVirtualServices(t *testing.T) {
 	gatewayMappings := []config.GatewayMapping{
 		{
 			DomainSuffix: ".nav.no",
 			GatewayName:  "istio-system/gw-nav-no",
+		},
+		{
+			DomainSuffix: ".nav2.no",
+			GatewayName:  "istio-system/gw-nav2-no",
 		},
 	}
 	registry := virtualservice.NewRegistry(gatewayMappings, "namespace")
@@ -55,7 +89,8 @@ func TestVirtualServices(t *testing.T) {
 	}
 	assert.NoError(t, registry.Add(app))
 
-	services := registry.VirtualServices(app)
+	services, err := registry.VirtualServices(app)
+	assert.NoError(t, err)
 	hosts := make([]string, 0)
 	for _, vs := range services {
 		hosts = append(hosts, vs.Spec.Hosts...)
@@ -65,6 +100,28 @@ func TestVirtualServices(t *testing.T) {
 	sort.Strings(expectedHosts)
 	sort.Strings(hosts)
 	assert.Equal(t, expectedHosts, hosts)
+}
+
+func TestVirtualServicesGatewayMappingNotFound(t *testing.T) {
+	gatewayMappings := []config.GatewayMapping{
+		{
+			DomainSuffix: ".nav.no",
+			GatewayName:  "istio-system/gw-nav-no",
+		},
+	}
+	registry := virtualservice.NewRegistry(gatewayMappings, "namespace")
+
+	app := fixtures.MinimalApplication()
+	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/some",
+		"https://www.nav.no/other/path",
+		"https://app1.nav.no/some",
+		"https://www.nav2.no/some",
+	}
+	assert.NoError(t, registry.Add(app))
+
+	_, err := registry.VirtualServices(app)
+	assert.NotNil(t, err)
 }
 
 func TestVirtualServicesMultipleApps(t *testing.T) {
@@ -97,8 +154,8 @@ func TestVirtualServicesMultipleApps(t *testing.T) {
 	assert.NoError(t, registry.Add(app1))
 	assert.NoError(t, registry.Add(app2))
 
-	svc1 := registry.VirtualServices(app1)
-	svc2 := registry.VirtualServices(app2)
+	svc1, _ := registry.VirtualServices(app1)
+	svc2, _ := registry.VirtualServices(app2)
 
 	// both apps use only one domain, and they are the same, so config should be equal
 	assert.Equal(t, svc2, svc1)
@@ -180,7 +237,7 @@ func TestVirtualService(t *testing.T) {
 	err = registry.Add(app)
 	assert.NoError(t, err)
 
-	vs := registry.VirtualService("www.nav.no")
+	vs, _ := registry.VirtualService("www.nav.no")
 
 	assert.Equal(t, []string{"istio-system/gw-nav-no"}, vs.Spec.Gateways)
 

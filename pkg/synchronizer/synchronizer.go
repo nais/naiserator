@@ -338,10 +338,13 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		if err != nil {
 			return nil, fmt.Errorf("add application to virtual services registry: %w", err)
 		}
-		services := n.VirtualServiceRegistry.VirtualServices(app)
+		services, err := n.VirtualServiceRegistry.VirtualServices(app)
+		if err != nil {
+		    return nil, err
+        }
 		for _, vs := range services {
 			rollout.ResourceOperations = append(rollout.ResourceOperations, resourcecreator.ResourceOperation{
-				Resource:  &vs,
+				Resource:  vs,
 				Operation: resourcecreator.OperationCreateOrUpdate,
 			})
 			d := json.NewEncoder(os.Stdout)
