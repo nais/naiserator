@@ -15,6 +15,7 @@ import (
 	"github.com/nais/naiserator/pkg/readonly"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
+	"github.com/nais/naiserator/pkg/virtualservice"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -135,11 +136,12 @@ func run() error {
 	}
 
 	syncer := &synchronizer.Synchronizer{
-		Client:          mgrClient,
-		SimpleClient:    simpleClient,
-		Scheme:          kscheme,
-		ResourceOptions: resourceOptions,
-		Config:          syncerConfig,
+		Client:                 mgrClient,
+		SimpleClient:           simpleClient,
+		Scheme:                 kscheme,
+		ResourceOptions:        resourceOptions,
+		Config:                 syncerConfig,
+		VirtualServiceRegistry: virtualservice.NewRegistry(cfg.GatewayMappings, cfg.VirtualServiceNamespace),
 	}
 
 	if err = syncer.SetupWithManager(mgr); err != nil {

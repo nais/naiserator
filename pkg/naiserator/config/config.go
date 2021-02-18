@@ -87,6 +87,7 @@ type Config struct {
 	GoogleProjectId                   string            `json:"google-project-id"`
 	GoogleCloudSQLProxyContainerImage string            `json:"google-cloud-sql-proxy-container-image"`
 	ApiServerIp                       string            `json:"api-server-ip"`
+	VirtualServiceNamespace           string            `json:"virtual-service-namespace"`
 	Ratelimit                         Ratelimit         `json:"ratelimit"`
 	Log                               Log               `json:"log"`
 	Features                          Features          `json:"features"`
@@ -132,6 +133,7 @@ const (
 	VaultAuthPath                       = "vault.auth-path"
 	VaultInitContainerImage             = "vault.init-container-image"
 	VaultKvPath                         = "vault.kv-path"
+	VirtualServiceNamespace             = "virtual-service-namespace"
 )
 
 func init() {
@@ -187,6 +189,8 @@ func init() {
 	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
 	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
 	flag.String(VaultKvPath, "", "path to Vault KV mount")
+
+	flag.String(VirtualServiceNamespace, "default", "where to save VirtualService resources in GCP mode")
 
 	kafka.SetupFlags()
 }

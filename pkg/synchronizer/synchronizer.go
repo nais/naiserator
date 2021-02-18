@@ -2,7 +2,9 @@ package synchronizer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"sync"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/nais/naiserator/pkg/metrics"
 	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/virtualservice"
 	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
@@ -44,10 +47,11 @@ const (
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
-	SimpleClient    client.Client
-	Scheme          *runtime.Scheme
-	ResourceOptions resourcecreator.ResourceOptions
-	Config          Config
+	SimpleClient           client.Client
+	Scheme                 *runtime.Scheme
+	ResourceOptions        resourcecreator.ResourceOptions
+	Config                 Config
+	VirtualServiceRegistry *virtualservice.Registry
 }
 
 type Config struct {
@@ -327,6 +331,23 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
+	}
+
+	if len(n.ResourceOptions.GoogleProjectId) > 0 {
+		err = n.VirtualServiceRegistry.Add(app)
+		if err != nil {
+			return nil, fmt.Errorf("add application to virtual services registry: %w", err)
+		}
+		services := n.VirtualServiceRegistry.VirtualServices(app)
+		for _, vs := range services {
+			rollout.ResourceOperations = append(rollout.ResourceOperations, resourcecreator.ResourceOperation{
+				Resource:  &vs,
+				Operation: resourcecreator.OperationCreateOrUpdate,
+			})
+			d := json.NewEncoder(os.Stdout)
+			d.SetIndent("", "  ")
+			d.Encode(vs)
+		}
 	}
 
 	return rollout, nil
