@@ -115,10 +115,17 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	err := n.Get(ctx, req.NamespacedName, app)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.WithFields(log.Fields{
+			logger := log.WithFields(log.Fields{
 				"namespace":   req.Namespace,
 				"application": req.Name,
-			}).Infof("Application has been deleted from Kubernetes")
+			})
+			logger.Infof("Application has been deleted from Kubernetes")
+
+			virtualServices, err := n.VirtualServiceRegistry.Remove(req.Name, req.Namespace)
+			if err != nil {
+				logger.Errorf("Removing app from virtual service registry failed: %s", err)
+			}
+
 
 			err = nil
 		}
