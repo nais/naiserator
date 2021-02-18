@@ -126,6 +126,14 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				logger.Errorf("Removing app from virtual service registry failed: %s", err)
 			}
 
+			commits := make([]func() error, 0)
+			for _, vs := range virtualServices {
+				commits = append(commits, updater.CreateOrUpdate(ctx, n, n.Scheme, vs))
+			}
+			err, _ = n.rolloutWithRetryAndMetrics(commits)
+			if err != nil {
+				logger.Errorf("rollout virtual services: %s", err)
+			}
 
 			err = nil
 		}
@@ -259,10 +267,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	return unreferenced, nil
 }
 
-func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (error, bool) {
-
-	commits := n.ClusterOperations(ctx, rollout)
-
+func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (error, bool) {
 	for _, fn := range commits {
 		if err := observeDuration(fn); err != nil {
 			retry := false
@@ -275,8 +280,12 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (error, bool) 
 		}
 		metrics.ResourcesGenerated.Inc()
 	}
-
 	return nil, false
+}
+
+func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (error, bool) {
+	commits := n.ClusterOperations(ctx, rollout)
+	return n.rolloutWithRetryAndMetrics(commits)
 }
 
 // Prepare converts a NAIS application spec into a Rollout object.
@@ -347,8 +356,8 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		}
 		services, err := n.VirtualServiceRegistry.VirtualServices(app)
 		if err != nil {
-		    return nil, err
-        }
+			return nil, err
+		}
 		for _, vs := range services {
 			rollout.ResourceOperations = append(rollout.ResourceOperations, resourcecreator.ResourceOperation{
 				Resource:  vs,
