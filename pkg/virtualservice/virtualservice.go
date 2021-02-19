@@ -46,11 +46,7 @@ func (r *Registry) VirtualServices(app *nais_io_v1alpha1.Application) ([]*networ
 	}
 
 	for host := range hostSet {
-		vs, err := r.VirtualService(host)
-		if err != nil {
-			return nil, err
-		}
-		services = append(services, vs)
+		services = append(services, r.VirtualService(host))
 	}
 	return services, nil
 }
@@ -91,7 +87,7 @@ func (r *Registry) Routes(host string) []networking_istio_io_v1alpha3.HTTPRoute 
 	return routes
 }
 
-func (r *Registry) VirtualService(host string) (*networking_istio_io_v1alpha3.VirtualService, error) {
+func (r *Registry) VirtualService(host string) *networking_istio_io_v1alpha3.VirtualService {
 	return &networking_istio_io_v1alpha3.VirtualService{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "VirtualService",
@@ -102,11 +98,11 @@ func (r *Registry) VirtualService(host string) (*networking_istio_io_v1alpha3.Vi
 			Namespace: r.namespace,
 		},
 		Spec: networking_istio_io_v1alpha3.VirtualServiceSpec{
-			Gateways: r.gateways[host],
+			Gateways: r.ResolveAndCacheGateway(host),
 			Hosts:    []string{host},
 			HTTP:     r.Routes(host),
 		},
-	}, nil
+	}
 }
 
 func RouteOwnedBy(destinations []networking_istio_io_v1alpha3.HTTPRouteDestination, name, namespace string) error {
@@ -151,11 +147,7 @@ func (r *Registry) Remove(name, namespace string) ([]*networking_istio_io_v1alph
 
 	services := make([]*networking_istio_io_v1alpha3.VirtualService, 0)
 	for host := range hosts {
-		vs, err := r.VirtualService(host)
-		if err != nil {
-			return nil, err
-		}
-		services = append(services, vs)
+		services = append(services, r.VirtualService(host))
 	}
 	return services, nil
 }

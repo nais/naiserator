@@ -62,9 +62,8 @@ func TestAddIngressCollision(t *testing.T) {
 		"https://www.nav.no/first-app",
 	}
 
-	registry.Add(app1)
-	err := registry.Add(app2)
-	assert.EqualError(t, err, "the ingress https://www.nav.no/first-app is already in use by first-app.mynamespace")
+	assert.NoError(t, registry.Add(app1))
+	assert.EqualError(t, registry.Add(app2), "the ingress https://www.nav.no/first-app is already in use by first-app.mynamespace")
 }
 
 func TestVirtualServices(t *testing.T) {
@@ -268,7 +267,7 @@ func TestVirtualService(t *testing.T) {
 	err = registry.Add(app)
 	assert.NoError(t, err)
 
-	vs, _ := registry.VirtualService("www.nav.no")
+	vs := registry.VirtualService("www.nav.no")
 
 	assert.Equal(t, []string{"istio-system/gw-nav-no"}, vs.Spec.Gateways)
 
