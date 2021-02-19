@@ -1,15 +1,19 @@
 package virtualservice
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/util"
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
 )
@@ -32,6 +36,41 @@ type Registry struct {
 	mappings  []config.GatewayMapping
 	gateways  map[string][]string
 	namespace string
+}
+
+func (r *Registry) All() []*networking_istio_io_v1alpha3.VirtualService {
+	services := make([]*networking_istio_io_v1alpha3.VirtualService, 0)
+	for host := range r.gateways {
+		services = append(services, r.VirtualService(host))
+	}
+	return services
+}
+
+func (r *Registry) Populate(ctx context.Context, client client.Client) error {
+	log.Infof("Building virtual service registry...")
+
+	timer := time.Now()
+	errors := 0
+
+	appList := &nais_io_v1alpha1.ApplicationList{}
+	err := client.List(ctx, appList)
+
+	if err != nil {
+		return fmt.Errorf("get all applications: %w", err)
+	}
+
+	for _, app := range appList.Items {
+		err = r.Add(&app)
+		if err != nil {
+			log.WithFields(app.LogFields()).Errorf("unable to add to virtual service registry: %s", err)
+			errors++
+		}
+	}
+	log.Infof("Built virtual service registry with %d errors in %s", errors, time.Now().Sub(timer).String())
+	services := r.All()
+	log.Infof("Virtual service registry has %d URLs across %d domains", len(r.routes), len(services))
+
+	return nil
 }
 
 func (r *Registry) VirtualServices(app *nais_io_v1alpha1.Application) ([]*networking_istio_io_v1alpha3.VirtualService, error) {

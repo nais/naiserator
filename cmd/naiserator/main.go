@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -135,17 +136,27 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
+	virtualServiceRegistry := virtualservice.NewRegistry(cfg.GatewayMappings, cfg.VirtualServiceNamespace)
+
 	syncer := &synchronizer.Synchronizer{
 		Client:                 mgrClient,
 		SimpleClient:           simpleClient,
 		Scheme:                 kscheme,
 		ResourceOptions:        resourceOptions,
 		Config:                 syncerConfig,
-		VirtualServiceRegistry: virtualservice.NewRegistry(cfg.GatewayMappings, cfg.VirtualServiceNamespace),
+		VirtualServiceRegistry: virtualServiceRegistry,
 	}
 
 	if err = syncer.SetupWithManager(mgr); err != nil {
 		return err
+	}
+
+	if len(cfg.GoogleProjectId) > 0 {
+		ctx := context.Background()
+		err := virtualServiceRegistry.Populate(ctx, simpleClient)
+		if err != nil {
+			return fmt.Errorf("build virtual service registry: %w", err)
+		}
 	}
 
 	return mgr.Start(stopCh)
