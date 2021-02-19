@@ -9,6 +9,7 @@ import (
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
+	"github.com/nais/naiserator/pkg/util"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,7 +28,7 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*secur
 		if len(parsedUrl.Path) == 0 {
 			parsedUrl.Path = "/"
 		}
-		err = validateUrl(parsedUrl)
+		err = util.ValidateUrl(parsedUrl)
 		if err != nil {
 			return nil, err
 		}

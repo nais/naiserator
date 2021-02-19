@@ -8,6 +8,7 @@ import (
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
+	"github.com/nais/naiserator/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -29,6 +30,7 @@ type RouteMap map[url.URL]networking_istio_io_v1alpha3.HTTPRoute
 type Registry struct {
 	routes    RouteMap
 	mappings  []config.GatewayMapping
+	gateways  map[string][]string
 	namespace string
 }
 
@@ -57,14 +59,19 @@ func NewRegistry(gatewayMapping []config.GatewayMapping, namespace string) *Regi
 	return &Registry{
 		routes:    make(RouteMap),
 		mappings:  gatewayMapping,
+		gateways:  make(map[string][]string),
 		namespace: namespace,
 	}
 }
 
-func ResolveGateway(host string, mappings []config.GatewayMapping) []string {
-	for _, mapping := range mappings {
+func (r *Registry) ResolveAndCacheGateway(host string) []string {
+	if gateways, ok := r.gateways[host]; ok {
+		return gateways
+	}
+	for _, mapping := range r.mappings {
 		if strings.HasSuffix(host, mapping.DomainSuffix) {
-			return strings.Split(mapping.GatewayName, ",")
+			r.gateways[host] = strings.Split(mapping.GatewayName, ",")
+			return r.gateways[host]
 		}
 	}
 	return nil
@@ -85,10 +92,6 @@ func (r *Registry) Routes(host string) []networking_istio_io_v1alpha3.HTTPRoute 
 }
 
 func (r *Registry) VirtualService(host string) (*networking_istio_io_v1alpha3.VirtualService, error) {
-	gateways := ResolveGateway(host, r.mappings)
-	if gateways == nil {
-		return nil, fmt.Errorf("%s is not a supported domain", host)
-	}
 	return &networking_istio_io_v1alpha3.VirtualService{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "VirtualService",
@@ -99,7 +102,7 @@ func (r *Registry) VirtualService(host string) (*networking_istio_io_v1alpha3.Vi
 			Namespace: r.namespace,
 		},
 		Spec: networking_istio_io_v1alpha3.VirtualServiceSpec{
-			Gateways: gateways,
+			Gateways: r.gateways[host],
 			Hosts:    []string{host},
 			HTTP:     r.Routes(host),
 		},
@@ -116,7 +119,7 @@ func RouteOwnedBy(destinations []networking_istio_io_v1alpha3.HTTPRouteDestinati
 }
 
 func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
-	routes, err := httpRoutes(app)
+	routes, err := r.httpRoutes(app)
 	if err != nil {
 		return err
 	}
@@ -157,7 +160,7 @@ func (r *Registry) Remove(name, namespace string) ([]*networking_istio_io_v1alph
 	return services, nil
 }
 
-func httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, error) {
+func (r *Registry) httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, error) {
 	routes := make(RouteMap, 0)
 	for _, ingress := range app.Spec.Ingresses {
 
@@ -170,13 +173,14 @@ func httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, error) {
 			parsedUrl.Path = "/"
 		}
 
-		/* FIXME
-		   err = validateUrl(parsedUrl)
-		   if err != nil {
-		   	return nil, err
-		   }
+		err = util.ValidateUrl(parsedUrl)
+		if err != nil {
+			return nil, err
+		}
 
-		*/
+		if r.ResolveAndCacheGateway(parsedUrl.Host) == nil {
+			return nil, fmt.Errorf("'%s' is not a supported domain", parsedUrl.Host)
+		}
 
 		route := httpRoute(parsedUrl.Path, app)
 		routes[*parsedUrl] = route

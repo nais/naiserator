@@ -8,6 +8,7 @@ import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	istio "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -22,7 +23,7 @@ func VirtualServices(app *nais.Application, gatewayMappings []config.GatewayMapp
 		if len(parsedUrl.Path) == 0 {
 			parsedUrl.Path = "/"
 		}
-		err = validateUrl(parsedUrl)
+		err = util.ValidateUrl(parsedUrl)
 		if err != nil {
 			return nil, err
 		}

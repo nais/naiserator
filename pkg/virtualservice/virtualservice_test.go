@@ -118,10 +118,7 @@ func TestVirtualServicesGatewayMappingNotFound(t *testing.T) {
 		"https://app1.nav.no/some",
 		"https://www.nav2.no/some",
 	}
-	assert.NoError(t, registry.Add(app))
-
-	_, err := registry.VirtualServices(app)
-	assert.NotNil(t, err)
+	assert.EqualError(t, registry.Add(app), "'www.nav2.no' is not a supported domain")
 }
 
 func TestVirtualServicesMultipleApps(t *testing.T) {
@@ -292,6 +289,10 @@ func TestRoutes(t *testing.T) {
 		{
 			DomainSuffix: ".nav.no",
 			GatewayName:  "istio-system/gw-nav-no",
+		},
+		{
+			DomainSuffix: "other.domain",
+			GatewayName:  "istio-system/gw-other-domain",
 		},
 	}
 	registry := virtualservice.NewRegistry(gatewayMappings, "namespace")
