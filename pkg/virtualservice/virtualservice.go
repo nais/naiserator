@@ -135,7 +135,7 @@ func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
 }
 
 // Remove an application from the registry, and return the affected VirtualService resources
-func (r *Registry) Remove(name, namespace string) ([]*networking_istio_io_v1alpha3.VirtualService, error) {
+func (r *Registry) Remove(name, namespace string) []*networking_istio_io_v1alpha3.VirtualService {
 	hosts := make(map[string]interface{})
 
 	for parsedURL, routes := range r.routes {
@@ -149,7 +149,7 @@ func (r *Registry) Remove(name, namespace string) ([]*networking_istio_io_v1alph
 	for host := range hosts {
 		services = append(services, r.VirtualService(host))
 	}
-	return services, nil
+	return services
 }
 
 func (r *Registry) httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, error) {
@@ -159,10 +159,6 @@ func (r *Registry) httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, erro
 		parsedUrl, err := url.Parse(string(ingress))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
-		}
-
-		if len(parsedUrl.Path) == 0 {
-			parsedUrl.Path = "/"
 		}
 
 		err = util.ValidateUrl(parsedUrl)

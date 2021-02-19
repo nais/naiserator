@@ -121,10 +121,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			})
 			logger.Infof("Application has been deleted from Kubernetes")
 
-			virtualServices, err := n.VirtualServiceRegistry.Remove(req.Name, req.Namespace)
-			if err != nil {
-				logger.Errorf("Removing app from virtual service registry failed: %s", err)
-			}
+			virtualServices := n.VirtualServiceRegistry.Remove(req.Name, req.Namespace)
 
 			commits := make([]func() error, 0)
 			for _, vs := range virtualServices {

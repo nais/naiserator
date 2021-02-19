@@ -83,7 +83,7 @@ func TestVirtualServices(t *testing.T) {
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
 		"https://www.nav.no/some",
 		"https://www.nav.no/other/path",
-		"https://app1.nav.no/some", // fixme gatewaymappings
+		"https://app1.nav.no/some",
 		"https://www.nav2.no/some",
 	}
 	assert.NoError(t, registry.Add(app))
@@ -193,8 +193,7 @@ func TestDelete(t *testing.T) {
 	}
 	assert.NoError(t, registry.Add(app2))
 
-	services, err := registry.Remove(app1.Name, app1.Namespace)
-	assert.NoError(t, err)
+	services := registry.Remove(app1.Name, app1.Namespace)
 
 	vs := services[0]
 	assert.Len(t, services, 1)
