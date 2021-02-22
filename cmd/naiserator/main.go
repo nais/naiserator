@@ -17,6 +17,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/virtualservice"
+	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -136,7 +137,7 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
-	virtualServiceRegistry := virtualservice.NewRegistry(cfg.GatewayMappings, cfg.VirtualServiceNamespace)
+	virtualServiceRegistry := virtualservice.NewRegistry(cfg.GatewayMappings, cfg.VirtualServiceRegistry.Namespace)
 
 	syncer := &synchronizer.Synchronizer{
 		Client:                 mgrClient,
@@ -151,11 +152,26 @@ func run() error {
 		return err
 	}
 
-	if len(cfg.GoogleProjectId) > 0 {
+	if len(cfg.GoogleProjectId) > 0 && cfg.VirtualServiceRegistry.Enabled {
 		ctx := context.Background()
 		err := virtualServiceRegistry.Populate(ctx, simpleClient)
 		if err != nil {
 			return fmt.Errorf("build virtual service registry: %w", err)
+		}
+		if cfg.VirtualServiceRegistry.ApplyOnStartup {
+			timer := time.Now()
+			log.Infof("Applying all VirtualService entries...")
+			transactions := make([]func() error, 0)
+			for _, vs := range virtualServiceRegistry.All() {
+				transactions = append(transactions, updater.CreateOrUpdate(ctx, simpleClient, kscheme, vs))
+			}
+			for _, tx := range transactions {
+				err := tx()
+				if err != nil {
+					return fmt.Errorf("apply virtualservice: %w", err)
+				}
+			}
+			log.Infof("Done applying VirtualService entries in %s", time.Now().Sub(timer).String())
 		}
 	}
 
