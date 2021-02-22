@@ -60,6 +60,9 @@ func (r *Registry) Populate(ctx context.Context, client client.Client) error {
 	}
 
 	for _, app := range appList.Items {
+		if err = nais_io_v1alpha1.ApplyDefaults(&app); err != nil {
+			return fmt.Errorf("BUG: merge default values into application: %s", err)
+		}
 		err = r.Add(&app)
 		if err != nil {
 			log.WithFields(app.LogFields()).Errorf("unable to add to virtual service registry: %s", err)
