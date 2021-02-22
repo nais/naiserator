@@ -8,7 +8,7 @@ resourceoptions:
   JwkerEnabled: true
   GatewayMappings:
     - DomainSuffix: .adeo.no
-      GatewayName: istio-system/sa
+      GatewayName: yolo/anna
 
 input:
   kind: Application
@@ -50,7 +50,7 @@ tests:
     kind: VirtualService
     name: myapplication-00
     match:
-      - name: "network policy created"
+      - name: "virtual service created"
         type: exact
         exclude:
           - .metadata
@@ -171,6 +171,7 @@ tests:
                   - source:
                       principals:
                         - 'cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account'
+                        - 'cluster.local/ns/yolo/sa/anna-service-account'
                 to:
                   - operation:
                       paths:
