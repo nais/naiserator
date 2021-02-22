@@ -14,6 +14,7 @@ import (
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/virtualservice"
@@ -59,6 +60,7 @@ type Config struct {
 	SynchronizationTimeout     time.Duration // total allowed time for one Application synchronization
 	DeploymentMonitorFrequency time.Duration
 	DeploymentMonitorTimeout   time.Duration
+	VirtualServiceRegistry     config.VirtualServiceRegistry
 }
 
 func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
@@ -121,17 +123,18 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			})
 			logger.Infof("Application has been deleted from Kubernetes")
 
-			virtualServices := n.VirtualServiceRegistry.Remove(req.Name, req.Namespace)
+			if len(n.ResourceOptions.GoogleProjectId) > 0 && n.Config.VirtualServiceRegistry.Enabled {
+				virtualServices := n.VirtualServiceRegistry.Remove(req.Name, req.Namespace)
 
-			commits := make([]func() error, 0)
-			for _, vs := range virtualServices {
-				commits = append(commits, updater.CreateOrUpdate(ctx, n, n.Scheme, vs))
+				commits := make([]func() error, 0)
+				for _, vs := range virtualServices {
+					commits = append(commits, updater.CreateOrUpdate(ctx, n, n.Scheme, vs))
+				}
+				err, _ = n.rolloutWithRetryAndMetrics(commits)
+				if err != nil {
+					logger.Errorf("rollout virtual services: %s", err)
+				}
 			}
-			err, _ = n.rolloutWithRetryAndMetrics(commits)
-			if err != nil {
-				logger.Errorf("rollout virtual services: %s", err)
-			}
-
 			err = nil
 		}
 		return ctrl.Result{}, err
@@ -346,7 +349,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
 	}
 
-	if len(n.ResourceOptions.GoogleProjectId) > 0 {
+	if len(n.ResourceOptions.GoogleProjectId) > 0 && n.Config.VirtualServiceRegistry.Enabled {
 		err = n.VirtualServiceRegistry.Add(app)
 		if err != nil {
 			return nil, fmt.Errorf("add application to virtual services registry: %w", err)

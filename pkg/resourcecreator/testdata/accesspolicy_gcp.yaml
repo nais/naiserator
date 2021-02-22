@@ -6,6 +6,9 @@ resourceoptions:
   GoogleProjectID: google-project-id
   NumReplicas: 1
   JwkerEnabled: true
+  GatewayMappings:
+    - DomainSuffix: .adeo.no
+      GatewayName: istio-system/sa
 
 input:
   kind: Application
@@ -41,6 +44,33 @@ input:
           - host: http://www.yet-another-external-application.com
 
 tests:
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: VirtualService
+    name: myapplication-00
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            gateways:
+            - yolo/anna
+            hosts:
+            - myapplication.dev.adeo.no
+            http:
+            - match:
+              - uri:
+                  prefix: /
+              route:
+                - destination:
+                    host: myapplication
+                    port:
+                      number: 80
+                  weight: 100
+
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy

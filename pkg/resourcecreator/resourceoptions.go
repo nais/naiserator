@@ -28,6 +28,7 @@ type ResourceOptions struct {
 	DigdiratorServiceEntryHosts      []string
 	HostAliases                      []config.HostAlias
 	GatewayMappings                  []config.GatewayMapping
+	VirtualServiceRegistryEnabled    bool
 }
 
 // NewResourceOptions creates a struct with the default resource options.

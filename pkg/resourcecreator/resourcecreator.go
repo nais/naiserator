@@ -185,16 +185,17 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 
 	if resourceOptions.AccessPolicy {
 		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
-		vses, err := VirtualServices(app, resourceOptions.GatewayMappings)
+		if !resourceOptions.VirtualServiceRegistryEnabled {
+			vses, err := VirtualServices(app, resourceOptions.GatewayMappings)
 
-		if err != nil {
-			return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
+			}
+
+			for _, vs := range vses {
+				ops = append(ops, ResourceOperation{vs, OperationCreateOrUpdate})
+			}
 		}
-
-		for _, vs := range vses {
-			ops = append(ops, ResourceOperation{vs, OperationCreateOrUpdate})
-		}
-
 		authorizationPolicy, err := AuthorizationPolicy(app, resourceOptions)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create AuthorizationPolicy: %s", err)

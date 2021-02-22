@@ -9,6 +9,12 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	log "github.com/sirupsen/logrus"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
+
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -18,11 +24,6 @@ import (
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/virtualservice"
 	"github.com/nais/naiserator/updater"
-	log "github.com/sirupsen/logrus"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 func main() {
@@ -102,29 +103,31 @@ func run() error {
 	resourceOptions := resourcecreator.NewResourceOptions()
 	resourceOptions.AccessPolicy = cfg.Features.AccessPolicy
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
-	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
-	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
-	resourceOptions.ClusterName = cfg.ClusterName
-	resourceOptions.JwkerEnabled = cfg.Features.Jwker
-	resourceOptions.JwkerServiceEntryHosts = cfg.ServiceEntryHosts.Jwker
+	resourceOptions.ApiServerIp = cfg.ApiServerIp
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
 	resourceOptions.AzureratorServiceEntryHosts = cfg.ServiceEntryHosts.Azurerator
-	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
+	resourceOptions.ClusterName = cfg.ClusterName
 	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
 	resourceOptions.DigdiratorServiceEntryHosts = cfg.ServiceEntryHosts.Digdirator
-	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
-	resourceOptions.ApiServerIp = cfg.ApiServerIp
+	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
+	resourceOptions.HostAliases = cfg.HostAliases
+	resourceOptions.JwkerEnabled = cfg.Features.Jwker
+	resourceOptions.JwkerServiceEntryHosts = cfg.ServiceEntryHosts.Jwker
+	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
+	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
+	resourceOptions.VirtualServiceRegistryEnabled = cfg.VirtualServiceRegistry.Enabled
 
 	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the Virtual Service based on the provided ingresses")
 	}
 
 	syncerConfig := synchronizer.Config{
-		KafkaEnabled:               cfg.Kafka.Enabled,
-		SynchronizationTimeout:     cfg.Synchronizer.SynchronizationTimeout,
 		DeploymentMonitorFrequency: cfg.Synchronizer.RolloutCheckInterval,
 		DeploymentMonitorTimeout:   cfg.Synchronizer.RolloutTimeout,
+		KafkaEnabled:               cfg.Kafka.Enabled,
+		SynchronizationTimeout:     cfg.Synchronizer.SynchronizationTimeout,
+		VirtualServiceRegistry:     cfg.VirtualServiceRegistry,
 	}
 
 	mgrClient := mgr.GetClient()
