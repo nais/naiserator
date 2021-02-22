@@ -63,7 +63,7 @@ func TestAddIngressCollision(t *testing.T) {
 	}
 
 	assert.NoError(t, registry.Add(app1))
-	assert.EqualError(t, registry.Add(app2), "the ingress https://www.nav.no/first-app is already in use by first-app.mynamespace")
+	assert.EqualError(t, registry.Add(app2), "the ingress https://www.nav.no/first-app is already in use by first-app.mynamespace.svc.cluster.local")
 }
 
 func TestVirtualServices(t *testing.T) {
@@ -164,11 +164,11 @@ func TestVirtualServicesMultipleApps(t *testing.T) {
 	// should have three routes, one for first-app and two for second-app
 	assert.Len(t, vs.Spec.HTTP, 3)
 	assert.Equal(t, "/second-app-other-url(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
-	assert.Equal(t, "second-app."+appNamespace, vs.Spec.HTTP[0].Route[0].Destination.Host)
+	assert.Equal(t, "second-app."+appNamespace+virtualservice.ServiceSuffix, vs.Spec.HTTP[0].Route[0].Destination.Host)
 	assert.Equal(t, "/second-app(/.*)?", vs.Spec.HTTP[1].Match[0].URI.Regex)
-	assert.Equal(t, "second-app."+appNamespace, vs.Spec.HTTP[1].Route[0].Destination.Host)
+	assert.Equal(t, "second-app."+appNamespace+virtualservice.ServiceSuffix, vs.Spec.HTTP[1].Route[0].Destination.Host)
 	assert.Equal(t, "/first-app(/.*)?", vs.Spec.HTTP[2].Match[0].URI.Regex)
-	assert.Equal(t, "first-app."+appNamespace, vs.Spec.HTTP[2].Route[0].Destination.Host)
+	assert.Equal(t, "first-app."+appNamespace+virtualservice.ServiceSuffix, vs.Spec.HTTP[2].Route[0].Destination.Host)
 }
 
 func TestDelete(t *testing.T) {
@@ -201,7 +201,7 @@ func TestDelete(t *testing.T) {
 	assert.Len(t, vs.Spec.HTTP[0].Match, 1)
 	assert.Len(t, vs.Spec.HTTP[0].Route, 1)
 	assert.Equal(t, "/second/path(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
-	assert.Equal(t, "app-2.mynamespace", vs.Spec.HTTP[0].Route[0].Destination.Host)
+	assert.Equal(t, "app-2.mynamespace.svc.cluster.local", vs.Spec.HTTP[0].Route[0].Destination.Host)
 }
 
 func TestSortRoutes(t *testing.T) {
@@ -312,7 +312,7 @@ func TestRoutes(t *testing.T) {
 			Route: []networking_istio_io_v1alpha3.HTTPRouteDestination{
 				{
 					Destination: networking_istio_io_v1alpha3.Destination{
-						Host: app.Name + "." + app.Namespace,
+						Host: app.Name + "." + app.Namespace + virtualservice.ServiceSuffix,
 						Port: networking_istio_io_v1alpha3.PortSelector{
 							Number: uint32(app.Spec.Service.Port),
 						},

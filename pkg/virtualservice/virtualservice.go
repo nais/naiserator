@@ -22,6 +22,8 @@ const IstioVirtualServiceTotalWeight int32 = 100 // The total weight of all rout
 
 const regexSuffix = "(/.*)?"
 
+const ServiceSuffix = ".svc.cluster.local"
+
 type Gateway string
 
 type Route struct {
@@ -146,7 +148,7 @@ func (r *Registry) VirtualService(host string) *networking_istio_io_v1alpha3.Vir
 
 func RouteOwnedBy(destinations []networking_istio_io_v1alpha3.HTTPRouteDestination, name, namespace string) error {
 	for _, dest := range destinations {
-		if dest.Destination.Host != name+"."+namespace {
+		if dest.Destination.Host != name+"."+namespace+ServiceSuffix {
 			return fmt.Errorf("already in use by %s", dest.Destination.Host)
 		}
 	}
@@ -228,7 +230,7 @@ func httpRoute(path string, app *nais_io_v1alpha1.Application) networking_istio_
 		Route: []networking_istio_io_v1alpha3.HTTPRouteDestination{
 			{
 				Destination: networking_istio_io_v1alpha3.Destination{
-					Host: app.Name + "." + app.Namespace,
+					Host: app.Name + "." + app.Namespace + ServiceSuffix,
 					Port: networking_istio_io_v1alpha3.PortSelector{
 						Number: uint32(app.Spec.Service.Port),
 					},
