@@ -206,6 +206,8 @@ func TestDelete(t *testing.T) {
 
 func TestSortRoutes(t *testing.T) {
 	routes := []networking_istio_io_v1alpha3.HTTPRoute{
+		simpleRoute("/base/some/thing/changed"),
+		simpleRoute("/base/should/be/retained"),
 		simpleRoute("/base"),
 		simpleRoute("/base/some"),
 		simpleRoute("/base/some/thing"),
@@ -220,6 +222,8 @@ func TestSortRoutes(t *testing.T) {
 
 	correctOrder := []string{
 		"/zzzzzzz/many/path/segments/foo",
+		"/base/should/be/retained",
+		"/base/some/thing/changed",
 		"/base/some/thing",
 		"/base/verylongstring",
 		"/base/something",
@@ -288,6 +292,7 @@ func TestAppLifecycle(t *testing.T) {
 
 	app := fixtures.MinimalApplication()
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/base/should/be/retained",
 		"https://www.nav.no/base/some/thing",
 	}
 
@@ -295,6 +300,7 @@ func TestAppLifecycle(t *testing.T) {
 	assert.NoError(t, err)
 
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/base/should/be/retained",
 		"https://www.nav.no/base/some/thing/changed",
 	}
 
@@ -304,8 +310,9 @@ func TestAppLifecycle(t *testing.T) {
 	vs := registry.VirtualService("www.nav.no")
 
 	// Test that only the last HTTP route is set up
-	assert.Len(t, vs.Spec.HTTP, 1)
-	assert.Equal(t, "/base/some/thing/changed(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
+	assert.Len(t, vs.Spec.HTTP, 2)
+	assert.Equal(t, "/base/should/be/retained(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
+	assert.Equal(t, "/base/some/thing/changed(/.*)?", vs.Spec.HTTP[1].Match[0].URI.Regex)
 }
 
 func TestRoutes(t *testing.T) {

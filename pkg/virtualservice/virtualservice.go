@@ -165,7 +165,7 @@ func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
 	}
 
 	// Remove old ingresses before adding new ones
-	r.Remove(app.Name, app.Namespace)
+	r.RemoveUnused(app)
 
 	for parsedURL, route := range routes {
 		existing, found := r.routes[parsedURL]
@@ -179,6 +179,24 @@ func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
 	}
 
 	return nil
+}
+
+// Remove an application's old ingresses from the registry
+func (r *Registry) RemoveUnused(app *nais_io_v1alpha1.Application) {
+	routeInIngresses := func(parsedURL url.URL, routes networking_istio_io_v1alpha3.HTTPRoute) bool {
+		for _, ingress := range app.Spec.Ingresses {
+			if httpRouteMatchesIngress(string(ingress), routes) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for parsedURL, routes := range r.routes {
+		if RouteOwnedBy(routes.Route, app.Name, app.Namespace) == nil && !routeInIngresses(parsedURL, routes) {
+			delete(r.routes, parsedURL)
+		}
+	}
 }
 
 // Remove an application from the registry, and return the affected VirtualService resources
@@ -222,6 +240,14 @@ func (r *Registry) httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, erro
 
 	}
 	return routes, nil
+}
+
+func httpRouteMatchesIngress(ingress string, route networking_istio_io_v1alpha3.HTTPRoute) bool {
+	parsedUrl, err := url.Parse(ingress)
+	if err != nil {
+		return false
+	}
+	return len(route.Match) > 0 && route.Match[0].URI.Regex == parsedUrl.Path+regexSuffix
 }
 
 func httpRoute(path string, app *nais_io_v1alpha1.Application) networking_istio_io_v1alpha3.HTTPRoute {
