@@ -2,9 +2,7 @@ package synchronizer
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
 	"reflect"
 	"sync"
 	"time"
@@ -363,9 +361,6 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 				Resource:  vs,
 				Operation: resourcecreator.OperationCreateOrUpdate,
 			})
-			d := json.NewEncoder(os.Stdout)
-			d.SetIndent("", "  ")
-			d.Encode(vs)
 		}
 	}
 
