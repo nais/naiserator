@@ -263,6 +263,7 @@ func TestVirtualService(t *testing.T) {
 		"https://www.nav.no/base/other/path",
 	}
 
+	app.Name = "other-app"
 	err = registry.Add(app)
 	assert.NoError(t, err)
 
@@ -274,6 +275,37 @@ func TestVirtualService(t *testing.T) {
 	assert.Len(t, vs.Spec.HTTP, 2)
 	assert.Equal(t, "/base/other/path(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
 	assert.Equal(t, "/base/some/thing(/.*)?", vs.Spec.HTTP[1].Match[0].URI.Regex)
+}
+
+func TestAppLifecycle(t *testing.T) {
+	gatewayMappings := []config.GatewayMapping{
+		{
+			DomainSuffix: ".nav.no",
+			GatewayName:  "istio-system/gw-nav-no",
+		},
+	}
+	registry := virtualservice.NewRegistry(gatewayMappings, "namespace")
+
+	app := fixtures.MinimalApplication()
+	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/base/some/thing",
+	}
+
+	err := registry.Add(app)
+	assert.NoError(t, err)
+
+	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/base/some/thing/changed",
+	}
+
+	err = registry.Add(app)
+	assert.NoError(t, err)
+
+	vs := registry.VirtualService("www.nav.no")
+
+	// Test that only the last HTTP route is set up
+	assert.Len(t, vs.Spec.HTTP, 1)
+	assert.Equal(t, "/base/some/thing/changed(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
 }
 
 func TestRoutes(t *testing.T) {

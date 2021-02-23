@@ -164,6 +164,9 @@ func (r *Registry) Add(app *nais_io_v1alpha1.Application) error {
 		return err
 	}
 
+	// Remove old ingresses before adding new ones
+	//r.Remove(app.Name, app.Namespace)
+
 	for parsedURL, route := range routes {
 		existing, found := r.routes[parsedURL]
 		if found {
