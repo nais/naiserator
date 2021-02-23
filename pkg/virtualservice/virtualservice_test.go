@@ -315,6 +315,35 @@ func TestAppLifecycle(t *testing.T) {
 	assert.Equal(t, "/base/some/thing/changed(/.*)?", vs.Spec.HTTP[1].Match[0].URI.Regex)
 }
 
+func TestSlashMangling(t *testing.T) {
+	gatewayMappings := []config.GatewayMapping{
+		{
+			DomainSuffix: ".nav.no",
+			GatewayName:  "istio-system/gw-nav-no",
+		},
+	}
+	registry := virtualservice.NewRegistry(gatewayMappings, "namespace")
+
+	app := fixtures.MinimalApplication()
+	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
+		"https://www.nav.no/without/slash",
+		"https://www.nav.no/with/slash/",
+		"https://www.nav.no/duplicate/",
+		"https://www.nav.no/duplicate",
+	}
+
+	err := registry.Add(app)
+	assert.NoError(t, err)
+
+	vs := registry.VirtualService("www.nav.no")
+
+	// Test that only the last HTTP route is set up
+	assert.Len(t, vs.Spec.HTTP, 3)
+	assert.Equal(t, "/without/slash(/.*)?", vs.Spec.HTTP[0].Match[0].URI.Regex)
+	assert.Equal(t, "/with/slash(/.*)?", vs.Spec.HTTP[1].Match[0].URI.Regex)
+	assert.Equal(t, "/duplicate(/.*)?", vs.Spec.HTTP[2].Match[0].URI.Regex)
+}
+
 func TestRoutes(t *testing.T) {
 	app := fixtures.MinimalApplication()
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{

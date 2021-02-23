@@ -231,6 +231,8 @@ func (r *Registry) httpRoutes(app *nais_io_v1alpha1.Application) (RouteMap, erro
 			return nil, err
 		}
 
+		parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/")
+
 		if r.ResolveAndCacheGateway(parsedUrl.Host) == nil {
 			return nil, fmt.Errorf("'%s' is not a supported domain", parsedUrl.Host)
 		}
