@@ -85,6 +85,7 @@ func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Ev
 		if event.Message == reportedEvent.Message {
 			event.Count++
 			event.LastTimestamp = reportedEvent.LastTimestamp
+			event.SetAnnotations(reportedEvent.GetAnnotations())
 			return &event, n.Update(ctx, &event)
 		}
 	}
