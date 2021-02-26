@@ -313,10 +313,12 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		return nil, nil
 	}
 
-	rollout.CorrelationID, err = app.NextCorrelationID()
+	err = app.EnsureCorrelationID()
 	if err != nil {
 		return nil, err
 	}
+
+	rollout.CorrelationID = app.CorrelationID()
 
 	// Make a query to Kubernetes for this application's previous deployment.
 	// The number of replicas is significant, so we need to carry it over to match

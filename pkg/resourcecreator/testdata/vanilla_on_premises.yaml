@@ -11,6 +11,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    annotations:
+      nais.io/deploymentCorrelationID: corr
     labels:
       team: myteam
   spec:
@@ -22,6 +24,8 @@ tests:
         name: "common metadata"
         resource:
           metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: corr
             labels:
               app: myapplication
               team: myteam

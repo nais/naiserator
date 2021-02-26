@@ -35,6 +35,7 @@ type testRig struct {
 	client       client.Client
 	manager      ctrl.Manager
 	synchronizer reconcile.Reconciler
+	scheme       *runtime.Scheme
 }
 
 func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
@@ -49,20 +50,20 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 		return nil, fmt.Errorf("setup Kubernetes test environment: %w", err)
 	}
 
-	kscheme, err := naiserator_scheme.All()
+	rig.scheme, err = naiserator_scheme.All()
 	if err != nil {
 		return nil, fmt.Errorf("setup scheme: %w", err)
 	}
 
 	rig.client, err = client.New(cfg, client.Options{
-		Scheme: kscheme,
+		Scheme: rig.scheme,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize Kubernetes client: %w", err)
 	}
 
 	rig.manager, err = ctrl.NewManager(rig.kubernetes.Config, ctrl.Options{
-		Scheme:             kscheme,
+		Scheme:             rig.scheme,
 		MetricsBindAddress: "0",
 	})
 	if err != nil {
@@ -79,7 +80,7 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 	syncer := &synchronizer.Synchronizer{
 		Client:          rig.client,
 		SimpleClient:    rig.client,
-		Scheme:          kscheme,
+		Scheme:          rig.scheme,
 		ResourceOptions: options,
 		Config:          syncerConfig,
 	}
@@ -203,8 +204,21 @@ func TestSynchronizer(t *testing.T) {
 	// Test that the Ingress resource was removed
 	testResourceNotExist(&networkingv1beta1.Ingress{}, objectKey)
 
+	// Test that a Synchronized event was generated and has the correct deployment correlation id
+	eventList := &corev1.EventList{}
+	err = rig.client.List(ctx, eventList)
+	assert.NoError(t, err)
+	assert.Len(t, eventList.Items, 1)
+	assert.EqualValues(t, 1, eventList.Items[0].Count)
+	assert.Equal(t, "deploy-id", eventList.Items[0].Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
+
 	// Run synchronization processing again, and check that resources still exist.
+	persistedApp.DeepCopyInto(app)
 	app.Status.SynchronizationHash = ""
+	app.Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation] = "new-deploy-id"
+	err = rig.client.Update(ctx, app)
+	assert.NoError(t, err)
 	result, err = rig.synchronizer.Reconcile(req)
 
 	assert.NoError(t, err)
@@ -213,6 +227,14 @@ func TestSynchronizer(t *testing.T) {
 	testResource(&corev1.Service{}, objectKey)
 	testResource(&corev1.ServiceAccount{}, objectKey)
 	testResource(&networkingv1beta1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
+
+	// Test that the naiserator event was updated with increased count and new correlation id
+	err = rig.client.List(ctx, eventList)
+	assert.NoError(t, err)
+	assert.Len(t, eventList.Items, 1)
+	assert.EqualValues(t, 2, eventList.Items[0].Count)
+	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {

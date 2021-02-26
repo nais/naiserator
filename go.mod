@@ -34,3 +34,5 @@ require (
 )
 
 go 1.15
+
+replace github.com/nais/liberator => /Users/kimt/src/nais/liberator
