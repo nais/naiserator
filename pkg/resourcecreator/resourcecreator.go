@@ -42,7 +42,10 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
-		jwker := Jwker(app, resourceOptions.ClusterName)
+		jwker, err := Jwker(app, resourceOptions.ClusterName)
+		if err != nil {
+			return nil, err
+		}
 		if jwker != nil {
 			app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.JwkerServiceEntryHosts)
 
@@ -52,10 +55,13 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
-		azureapp := AzureAdApplication(*app, resourceOptions.ClusterName)
+		azureapp, err := AzureAdApplication(*app, resourceOptions.ClusterName)
+		if err != nil {
+			return nil, err
+		}
 		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.AzureratorServiceEntryHosts)
 
-		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
+		ops = append(ops, ResourceOperation{azureapp, OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
 	}
 
@@ -79,7 +85,10 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
-		maskinportenClient := MaskinportenClient(app)
+		maskinportenClient, err := MaskinportenClient(app)
+		if err != nil {
+			return nil, err
+		}
 
 		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.DigdiratorServiceEntryHosts)
 

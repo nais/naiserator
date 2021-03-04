@@ -50,7 +50,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^myapplication-.{8}$
+            secretName: ^idporten-myapplication-.{8}$
 
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -64,15 +64,15 @@ tests:
           template:
             spec:
               volumes:
-              - name: ^myapplication-.+$
+              - name: ^idporten-myapplication-.+$
                 secret:
-                  secretName: ^myapplication-.+$
+                  secretName: ^idporten-myapplication-.+$
               containers:
               - envFrom:
                 - secretRef:
-                    name: ^myapplication-.+$
+                    name: ^idporten-myapplication-.+$
                 volumeMounts:
-                - name: ^myapplication-.+$
+                - name: ^idporten-myapplication-.+$
                   readOnly: true
                   mountPath: /var/run/secrets/nais.io/idporten
 

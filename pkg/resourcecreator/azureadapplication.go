@@ -6,6 +6,7 @@ import (
 
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -14,14 +15,19 @@ const (
 	AzureApplicationDefaultCallbackPath = "/oauth2/callback"
 )
 
-func AzureAdApplication(app nais.Application, clusterName string) azureapp.AzureAdApplication {
+func AzureAdApplication(app nais.Application, clusterName string) (*azureapp.AzureAdApplication, error) {
 	replyURLs := app.Spec.Azure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
 		replyURLs = oauthCallbackURLs(app.Spec.Ingresses)
 	}
 
-	return azureapp.AzureAdApplication{
+	secretName, err := util.GenerateSecretName("azure-ad", app.Name, MaxSecretNameLength)
+	if err != nil {
+		return nil, err
+	}
+
+	return &azureapp.AzureAdApplication{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "AzureAdApplication",
 			APIVersion: "nais.io/v1",
@@ -31,10 +37,10 @@ func AzureAdApplication(app nais.Application, clusterName string) azureapp.Azure
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
 			Tenant:                    getTenant(app),
-			SecretName:                getSecretName(app),
+			SecretName:                secretName,
 			Claims:                    app.Spec.Azure.Application.Claims,
 		},
-	}
+	}, nil
 }
 
 func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {

@@ -6,6 +6,7 @@ import (
 
 	idportenClient "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -23,6 +24,11 @@ func IDPortenClient(app *nais.Application) (*idportenClient.IDPortenClient, erro
 		return nil, err
 	}
 
+	secretName, err := util.GenerateSecretName("idporten", app.Name, MaxSecretNameLength)
+	if err != nil {
+		return nil, err
+	}
+
 	return &idportenClient.IDPortenClient{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "IDPortenClient",
@@ -32,7 +38,7 @@ func IDPortenClient(app *nais.Application) (*idportenClient.IDPortenClient, erro
 		Spec: idportenClient.IDPortenClientSpec{
 			ClientURI:              app.Spec.IDPorten.ClientURI,
 			RedirectURI:            redirectURI(app),
-			SecretName:             getSecretName(*app),
+			SecretName:             secretName,
 			FrontchannelLogoutURI:  frontchannelLogoutURI(app),
 			PostLogoutRedirectURIs: postLogoutRedirectURIs(app),
 			SessionLifetime:        app.Spec.IDPorten.SessionLifetime,

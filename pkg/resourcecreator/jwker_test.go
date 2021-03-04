@@ -29,7 +29,8 @@ func TestJwker(t *testing.T) {
 
 	t.Run("jwker for app with no access policy", func(t *testing.T) {
 		app := fixture()
-		jwker := resourcecreator.Jwker(app, clusterName)
+		jwker, err := resourcecreator.Jwker(app, clusterName)
+		assert.NoError(t, err)
 		assert.NotEmpty(t, jwker)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 0)
@@ -39,7 +40,8 @@ func TestJwker(t *testing.T) {
 	t.Run("one inbound without cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, "", ""}}
-		jwker := resourcecreator.Jwker(app, clusterName)
+		jwker, err := resourcecreator.Jwker(app, clusterName)
+		assert.NoError(t, err)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
@@ -51,7 +53,8 @@ func TestJwker(t *testing.T) {
 	t.Run("one inbound with cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
-		jwker := resourcecreator.Jwker(app, clusterName)
+		jwker, err := resourcecreator.Jwker(app, clusterName)
+		assert.NoError(t, err)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Inbound.Rules[0].Application)
@@ -63,7 +66,8 @@ func TestJwker(t *testing.T) {
 	t.Run("one outbound and no inbound", func(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
-		jwker := resourcecreator.Jwker(app, clusterName)
+		jwker, err := resourcecreator.Jwker(app, clusterName)
+		assert.NoError(t, err)
 		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 1)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
 		assert.Equal(t, otherApplication, jwker.Spec.AccessPolicy.Outbound.Rules[0].Application)
@@ -85,7 +89,8 @@ func TestJwker(t *testing.T) {
 				otherApplication3, "", "",
 			},
 		}
-		jwker := resourcecreator.Jwker(app, clusterName)
+		jwker, err := resourcecreator.Jwker(app, clusterName)
+		assert.NoError(t, err)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 3)
 		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 0)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
@@ -113,7 +118,8 @@ func TestJwker(t *testing.T) {
 				otherApplication3, "", "",
 			},
 		}
-		jwker := resourcecreator.Jwker(app, clusterName)
+		jwker, err := resourcecreator.Jwker(app, clusterName)
+		assert.NoError(t, err)
 		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 3)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 0)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
@@ -153,7 +159,8 @@ func TestJwker(t *testing.T) {
 				otherApplication3, "", "",
 			},
 		}
-		jwker := resourcecreator.Jwker(app, clusterName)
+		jwker, err := resourcecreator.Jwker(app, clusterName)
+		assert.NoError(t, err)
 		assert.Len(t, jwker.Spec.AccessPolicy.Inbound.Rules, 3)
 		assert.Len(t, jwker.Spec.AccessPolicy.Outbound.Rules, 3)
 		assert.NotEmpty(t, jwker.Spec.SecretName)
