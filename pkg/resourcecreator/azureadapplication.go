@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	AzureApplicationTenantNav = "nav.no"
+	AzureApplicationTenantNav           = "nav.no"
+	AzureApplicationDefaultCallbackPath = "/oauth2/callback"
 )
 
 func AzureAdApplication(app nais.Application, clusterName string) azureapp.AzureAdApplication {
@@ -47,14 +48,14 @@ func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
 func oauthCallbackURLs(ingresses []nais.Ingress) []string {
 	urls := make([]string, len(ingresses))
 	for i := range ingresses {
-		urls[i] = oauthCallbackURL(ingresses[i])
+		urls[i] = appendPathToIngress(ingresses[i], AzureApplicationDefaultCallbackPath)
 	}
 	return urls
 }
 
-func oauthCallbackURL(ingress nais.Ingress) string {
+func appendPathToIngress(ingress nais.Ingress, joinPath string) string {
 	u, _ := url.Parse(string(ingress))
-	u.Path = path.Join(u.Path, "/oauth2/callback")
+	u.Path = path.Join(u.Path, joinPath)
 	return u.String()
 }
 

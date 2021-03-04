@@ -13,7 +13,7 @@ func MaskinportenClient(app *nais.Application) *v1.MaskinportenClient {
 			APIVersion: "nais.io/v1",
 		},
 		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       v1.MaskinportenClientSpec{
+		Spec: v1.MaskinportenClientSpec{
 			Scopes:     app.Spec.Maskinporten.Scopes,
 			SecretName: getSecretName(*app),
 		},
