@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	nais_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -142,6 +144,34 @@ func CopyImmutable(src, dst runtime.Object) error {
 			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
 		}
 		dstTyped.Spec.ClusterIP = srcTyped.Spec.ClusterIP
+
+	case *sql_cnrm_cloud_google_com_v1beta1.SQLInstance:
+		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLInstance)
+		if !ok {
+			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+		}
+		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
+
+	case *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase:
+		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLDatabase)
+		if !ok {
+			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+		}
+		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
+
+	case *sql_cnrm_cloud_google_com_v1beta1.SQLUser:
+		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLUser)
+		if !ok {
+			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+		}
+		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
+
+	case *storage_cnrm_cloud_google_com_v1beta1.StorageBucket:
+		dstTyped, ok := dst.(*storage_cnrm_cloud_google_com_v1beta1.StorageBucket)
+		if !ok {
+			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+		}
+		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
 	}
 	return nil
 }
