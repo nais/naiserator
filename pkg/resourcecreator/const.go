@@ -27,5 +27,4 @@ const (
 
 	NetworkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0" // The default IP block CIDR for the default allow network policies per app
 
-	MaxSecretNameLength = 63
 )

@@ -80,7 +80,7 @@ tests:
         name: "auto-generated secret name"
         resource:
           spec:
-            secretName: ^jwker-myapplication-.+$
+            secretName: ^myapplication-.+$
 
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -94,15 +94,15 @@ tests:
             template:
               spec:
                 volumes:
-                  - name: ^jwker-myapplication-.+$
+                  - name: ^myapplication-.+$
                     secret:
-                      secretName: ^jwker-myapplication-.+$
+                      secretName: ^myapplication-.+$
                 containers:
                   - envFrom:
                       - secretRef:
-                          name: ^jwker-myapplication-.+$
+                          name: ^myapplication-.+$
                     volumeMounts:
-                      - name: ^jwker-myapplication-.+$
+                      - name: ^myapplication-.+$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/jwker
 
