@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	AzureApplicationTenantNav           = "nav.no"
 	AzureApplicationDefaultCallbackPath = "/oauth2/callback"
 )
 
@@ -36,7 +35,7 @@ func AzureAdApplication(app nais.Application, clusterName string) (*azureapp.Azu
 		Spec: azureapp.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
-			Tenant:                    getTenant(app),
+			Tenant:                    app.Spec.Azure.Application.Tenant,
 			SecretName:                secretName,
 			Claims:                    app.Spec.Azure.Application.Claims,
 		},
@@ -63,12 +62,4 @@ func appendPathToIngress(ingress nais.Ingress, joinPath string) string {
 	u, _ := url.Parse(string(ingress))
 	u.Path = path.Join(u.Path, joinPath)
 	return u.String()
-}
-
-func getTenant(app nais.Application) string {
-	tenant := app.Spec.Azure.Application.Tenant
-	if len(tenant) == 0 {
-		return AzureApplicationTenantNav
-	}
-	return tenant
 }
