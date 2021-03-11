@@ -117,6 +117,9 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 
 				bucketAccessControl := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 				ops = append(ops, ResourceOperation{bucketAccessControl, OperationCreateOrUpdate})
+
+				iamPolicyMember := StorageBucketIamPolicyMember(app, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 			}
 		}
 
