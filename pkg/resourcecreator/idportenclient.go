@@ -6,6 +6,7 @@ import (
 
 	idportenClient "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/namegen"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,7 +33,7 @@ func IDPortenClient(app *nais.Application) (*idportenClient.IDPortenClient, erro
 		Spec: idportenClient.IDPortenClientSpec{
 			ClientURI:              app.Spec.IDPorten.ClientURI,
 			RedirectURI:            redirectURI(app),
-			SecretName:             getSecretName(*app),
+			SecretName:             idPortenSecretName(*app),
 			FrontchannelLogoutURI:  frontchannelLogoutURI(app),
 			PostLogoutRedirectURIs: postLogoutRedirectURIs(app),
 			SessionLifetime:        app.Spec.IDPorten.SessionLifetime,
@@ -106,4 +107,8 @@ func postLogoutRedirectURIs(app *nais.Application) (postLogoutRedirectURIs []str
 	}
 
 	return
+}
+
+func idPortenSecretName(app nais.Application) string {
+	return namegen.PrefixedRandShortName("idporten", app.Name, MaxSecretNameLength)
 }
