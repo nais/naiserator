@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/hashstructure"
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/util"
+	"github.com/nais/liberator/pkg/namegen"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -47,7 +47,7 @@ func createIAMPolicyMemberName(app *nais.Application, policy nais.CloudIAMPermis
 		return "", fmt.Errorf("while calculating hash from policy: %w", err)
 	}
 	basename := fmt.Sprintf("%s-%s-%x", app.Name, strings.ToLower(policy.Resource.Kind), hash)
-	return util.StrShortName(basename, maxLengthResourceName)
+	return namegen.ShortName(basename, maxLengthResourceName)
 }
 
 func formatIAMExternalName(googleTeamProjectId, resourceName string) string {
