@@ -29,6 +29,8 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 
+	outboundHostRules := make([]nais_io_v1.AccessPolicyExternalRule, 0)
+
 	pdb := PodDisruptionBudget(app)
 	if pdb != nil {
 		ops = append(ops, ResourceOperation{pdb, OperationCreateOrUpdate})
@@ -44,7 +46,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
 		jwker := Jwker(app, resourceOptions.ClusterName)
 		if jwker != nil {
-			app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.JwkerServiceEntryHosts)
+			outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.JwkerServiceEntryHosts)...)
 
 			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
 			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
@@ -53,7 +55,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
 		azureapp := AzureAdApplication(*app, resourceOptions.ClusterName)
-		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.AzureratorServiceEntryHosts)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.AzureratorServiceEntryHosts)...)
 
 		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
@@ -72,7 +74,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		if err != nil {
 			return nil, err
 		}
-		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.DigdiratorServiceEntryHosts)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorServiceEntryHosts)...)
 
 		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorIDPortenSecretName = idportenClient.Spec.SecretName
@@ -81,7 +83,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
 		maskinportenClient := MaskinportenClient(app)
 
-		app.AddAccessPolicyExternalHostsAsStrings(resourceOptions.DigdiratorServiceEntryHosts)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorServiceEntryHosts)...)
 
 		ops = append(ops, ResourceOperation{maskinportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorMaskinportenSecretName = maskinportenClient.Spec.SecretName
@@ -90,15 +92,13 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	if app.Spec.Elastic != nil {
 		env := strings.Split(resourceOptions.ClusterName, "-")[0]
 		instanceName := fmt.Sprintf("elastic-%s-%s-nav-%s.aivencloud.com", team, app.Spec.Elastic.Instance, env)
-		app.AddAccessPolicyExternalHosts([]nais_io_v1.AccessPolicyExternalRule{
-			{
-				Host: instanceName,
-				Ports: []nais_io_v1.AccessPolicyPortRule{
-					{
-						Name:     "https",
-						Port:     26482,
-						Protocol: "HTTPS",
-					},
+		outboundHostRules = append(outboundHostRules, nais_io_v1.AccessPolicyExternalRule{
+			Host: instanceName,
+			Ports: []nais_io_v1.AccessPolicyPortRule{
+				{
+					Name:     "https",
+					Port:     26482,
+					Protocol: "HTTPS",
 				},
 			},
 		})
@@ -207,7 +207,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
 		}
 
-		serviceEntries := ServiceEntries(app)
+		serviceEntries := ServiceEntries(app, outboundHostRules...)
 		for _, serviceEntry := range serviceEntries {
 			ops = append(ops, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
 		}
