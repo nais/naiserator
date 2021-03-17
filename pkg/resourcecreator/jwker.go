@@ -1,11 +1,9 @@
 package resourcecreator
 
 import (
-	"fmt"
-
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/util"
+	"github.com/nais/liberator/pkg/namegen"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -43,8 +41,8 @@ func accessPoliciesWithDefaults(policy *nais_io_v1.AccessPolicy, namespaceName, 
 	}
 }
 
-func getSecretName(app nais_io_v1alpha1.Application) string {
-	return fmt.Sprintf("%s-%s", app.Name, util.RandStringBytes(8))
+func jwkerSecretName(app nais_io_v1alpha1.Application) string {
+	return namegen.PrefixedRandShortName("tokenx", app.Name, MaxSecretNameLength)
 }
 
 func Jwker(app *nais_io_v1alpha1.Application, clusterName string) *nais_io_v1.Jwker {
@@ -56,7 +54,7 @@ func Jwker(app *nais_io_v1alpha1.Application, clusterName string) *nais_io_v1.Jw
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: nais_io_v1.JwkerSpec{
 			AccessPolicy: accessPoliciesWithDefaults(app.Spec.AccessPolicy, app.Namespace, clusterName),
-			SecretName:   getSecretName(*app),
+			SecretName:   jwkerSecretName(*app),
 		},
 	}
 }

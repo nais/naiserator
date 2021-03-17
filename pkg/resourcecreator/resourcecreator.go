@@ -11,7 +11,7 @@ import (
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/util"
+	"github.com/nais/liberator/pkg/keygen"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -140,7 +140,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
 
-				key, err := util.Keygen(32)
+				key, err := keygen.Keygen(32)
 				if err != nil {
 					return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
 				}

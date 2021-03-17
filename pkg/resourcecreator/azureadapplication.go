@@ -6,6 +6,7 @@ import (
 
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/namegen"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +31,7 @@ func AzureAdApplication(app nais.Application, clusterName string) azureapp.Azure
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
 			Tenant:                    app.Spec.Azure.Application.Tenant,
-			SecretName:                getSecretName(app),
+			SecretName:                azureSecretName(app),
 			Claims:                    app.Spec.Azure.Application.Claims,
 		},
 	}
@@ -56,4 +57,8 @@ func appendPathToIngress(ingress nais.Ingress, joinPath string) string {
 	u, _ := url.Parse(string(ingress))
 	u.Path = path.Join(u.Path, joinPath)
 	return u.String()
+}
+
+func azureSecretName(app nais.Application) string {
+	return namegen.PrefixedRandShortName("azure", app.Name, MaxSecretNameLength)
 }
