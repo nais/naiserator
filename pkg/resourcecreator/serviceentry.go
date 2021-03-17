@@ -10,14 +10,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ServiceEntries(app *nais_io_v1alpha1.Application) []*istio.ServiceEntry {
+func ServiceEntries(app *nais_io_v1alpha1.Application, additionalRules ...nais_io_v1.AccessPolicyExternalRule) []*istio.ServiceEntry {
 	entries := make([]*istio.ServiceEntry, 0)
+	externalRules := MergeExternalRules(app, additionalRules...)
 
-	if len(app.Spec.AccessPolicy.Outbound.External) == 0 {
+	if len(externalRules) == 0 {
 		return entries
 	}
 
-	for i, ext := range app.Spec.AccessPolicy.Outbound.External {
+	for i, ext := range externalRules {
 		meta := app.CreateObjectMetaWithName(fmt.Sprintf("%s-%02d", app.Name, i+1))
 		ports := make([]istio.Port, 0)
 		for _, port := range ext.Ports {
@@ -65,4 +66,42 @@ func stripProtocolFromHost(host string) string {
 		return host
 	}
 	return u.Host
+}
+
+func ToAccessPolicyExternalRules(hosts []string) []nais_io_v1.AccessPolicyExternalRule {
+	rules := make([]nais_io_v1.AccessPolicyExternalRule, 0)
+
+	for _, host := range hosts {
+		rules = append(rules, nais_io_v1.AccessPolicyExternalRule{
+			Host: host,
+		})
+	}
+	return rules
+}
+
+func MergeExternalRules(app *nais_io_v1alpha1.Application, additionalRules ...nais_io_v1.AccessPolicyExternalRule) []nais_io_v1.AccessPolicyExternalRule {
+	rules := app.Spec.AccessPolicy.Outbound.External
+	if len(additionalRules) == 0 {
+		return rules
+	}
+
+	var empty struct{}
+	seen := map[string]struct{}{}
+
+	for _, externalRule := range rules {
+		seen[externalRule.Host] = empty
+	}
+
+	for _, rule := range additionalRules {
+		if len(rule.Host) == 0 {
+			continue
+		}
+
+		if _, found := seen[rule.Host]; !found {
+			seen[rule.Host] = empty
+			rules = append(rules, rule)
+		}
+	}
+
+	return rules
 }
