@@ -35,16 +35,15 @@ func TestServiceEntry(t *testing.T) {
 }
 
 func TestToAccessPolicyExternalRule(t *testing.T) {
-	t.Run("list of hosts should return list of access policy external rule with duplicates removed", func(t *testing.T) {
+	t.Run("list of hosts should return list of access policy external rule", func(t *testing.T) {
 		hosts := []string{
 			"https://some-host",
-			"https://some-other-host",
 			"https://some-other-host",
 		}
 		rules := resourcecreator.ToAccessPolicyExternalRules(hosts)
 		assert.Len(t, rules, 2)
-		assert.Contains(t, rules, "https://some-host")
-		assert.Contains(t, rules, "https://some-other-host")
+		assert.Contains(t, rules, nais_io_v1.AccessPolicyExternalRule{Host: "https://some-host"})
+		assert.Contains(t, rules, nais_io_v1.AccessPolicyExternalRule{Host: "https://some-other-host"})
 	})
 }
 
