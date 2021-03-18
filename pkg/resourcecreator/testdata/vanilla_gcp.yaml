@@ -67,7 +67,7 @@ tests:
               iam.gke.io/gcp-service-account: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
 
   - operation: CreateOrUpdate
-    apiVersion: autoscaling/v1
+    apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
     match:
       - type: exact
@@ -83,7 +83,13 @@ tests:
               apiVersion: apps/v1
             minReplicas: 2
             maxReplicas: 4
-            targetCPUUtilizationPercentage: 50
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 50
 
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1

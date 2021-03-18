@@ -375,6 +375,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 	var fn func() error
 
 	funcs := make([]func() error, 0)
+	deletes := make([]func() error, 0)
 
 	for _, rop := range rollout.ResourceOperations {
 		switch rop.Operation {
@@ -394,16 +395,16 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 	// Delete extraneous resources
 	unreferenced, err := n.Unreferenced(ctx, rollout)
 	if err != nil {
-		funcs = append(funcs, func() error {
+		deletes = append(deletes, func() error {
 			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
 		})
 	} else {
 		for _, resource := range unreferenced {
-			funcs = append(funcs, updater.DeleteIfExists(ctx, n, resource))
+			deletes = append(deletes, updater.DeleteIfExists(ctx, n, resource))
 		}
 	}
 
-	return funcs
+	return append(deletes, funcs...)
 }
 
 var appsync sync.Mutex

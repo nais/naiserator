@@ -66,7 +66,7 @@ tests:
         resource: {}
 
   - operation: CreateOrUpdate
-    apiVersion: autoscaling/v1
+    apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
     match:
       - type: exact
@@ -82,7 +82,13 @@ tests:
               apiVersion: apps/v1
             minReplicas: 2
             maxReplicas: 4
-            targetCPUUtilizationPercentage: 50
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 50
 
   - operation: CreateOrUpdate
     apiVersion: apps/v1
