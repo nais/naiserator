@@ -122,7 +122,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			})
 			logger.Infof("Application has been deleted from Kubernetes")
 
-			if len(n.ResourceOptions.GoogleProjectId) > 0 && n.Config.VirtualServiceRegistry.Enabled {
+			if n.Config.VirtualServiceRegistry.Enabled {
 				virtualServices := n.VirtualServiceRegistry.Remove(req.Name, req.Namespace)
 
 				commits := make([]func() error, 0)
@@ -350,7 +350,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
 	}
 
-	if len(n.ResourceOptions.GoogleProjectId) > 0 && n.Config.VirtualServiceRegistry.Enabled {
+	if n.Config.VirtualServiceRegistry.Enabled {
 		err = n.VirtualServiceRegistry.Add(app)
 		if err != nil {
 			return nil, fmt.Errorf("add application to virtual services registry: %w", err)

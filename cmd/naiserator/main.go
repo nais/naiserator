@@ -155,7 +155,7 @@ func run() error {
 		return err
 	}
 
-	if len(cfg.GoogleProjectId) > 0 && cfg.VirtualServiceRegistry.Enabled {
+	if cfg.VirtualServiceRegistry.Enabled {
 		ctx := context.Background()
 		err := virtualServiceRegistry.Populate(ctx, simpleClient)
 		if err != nil {
