@@ -10,9 +10,10 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
+	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/naiserator/config"
-	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/spf13/viper"
@@ -50,7 +51,7 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 		return nil, fmt.Errorf("setup Kubernetes test environment: %w", err)
 	}
 
-	rig.scheme, err = naiserator_scheme.All()
+	rig.scheme, err = liberator_scheme.All()
 	if err != nil {
 		return nil, fmt.Errorf("setup scheme: %w", err)
 	}

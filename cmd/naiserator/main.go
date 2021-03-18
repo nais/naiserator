@@ -15,10 +15,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
+	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
-	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
 	"github.com/nais/naiserator/pkg/readonly"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
@@ -76,7 +76,7 @@ func run() error {
 	}
 
 	// Register CRDs with controller-tools
-	kscheme, err := naiserator_scheme.All()
+	kscheme, err := liberator_scheme.All()
 	if err != nil {
 		return err
 	}

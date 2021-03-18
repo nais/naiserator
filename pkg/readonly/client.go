@@ -3,7 +3,7 @@ package readonly
 import (
 	"context"
 
-	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
+	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,27 +33,27 @@ func (c *Client) List(ctx context.Context, list runtime.Object, opts ...client.L
 }
 
 func (c *Client) Create(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error {
-	log.Debugf("Read-only client ignoring CREATE %s", naiserator_scheme.TypeName(obj))
+	log.Debugf("Read-only client ignoring CREATE %s", liberator_scheme.TypeName(obj))
 	return nil
 }
 
 func (c *Client) Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOption) error {
-	log.Debugf("Read-only client ignoring DELETE %s", naiserator_scheme.TypeName(obj))
+	log.Debugf("Read-only client ignoring DELETE %s", liberator_scheme.TypeName(obj))
 	return nil
 }
 
 func (c *Client) Update(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error {
-	log.Debugf("Read-only client ignoring UPDATE %s", naiserator_scheme.TypeName(obj))
+	log.Debugf("Read-only client ignoring UPDATE %s", liberator_scheme.TypeName(obj))
 	return nil
 }
 
 func (c *Client) Patch(ctx context.Context, obj runtime.Object, patch client.Patch, opts ...client.PatchOption) error {
-	log.Debugf("Read-only client ignoring PATCH %s", naiserator_scheme.TypeName(obj))
+	log.Debugf("Read-only client ignoring PATCH %s", liberator_scheme.TypeName(obj))
 	return nil
 }
 
 func (c *Client) DeleteAllOf(ctx context.Context, obj runtime.Object, opts ...client.DeleteAllOfOption) error {
-	log.Debugf("Read-only client ignoring DELETE ALL OF %s", naiserator_scheme.TypeName(obj))
+	log.Debugf("Read-only client ignoring DELETE ALL OF %s", liberator_scheme.TypeName(obj))
 	return nil
 }
 

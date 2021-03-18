@@ -7,7 +7,7 @@ import (
 	nais_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
-	naiserator_scheme "github.com/nais/naiserator/pkg/naiserator/scheme"
+	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -20,7 +20,7 @@ import (
 
 func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("CreateOrUpdate %s", naiserator_scheme.TypeName(resource))
+		log.Infof("CreateOrUpdate %s", liberator_scheme.TypeName(resource))
 		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
 		if err != nil {
 			return fmt.Errorf("internal error: %w", err)
@@ -54,7 +54,7 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 
 func CreateOrRecreate(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("CreateOrRecreate %s", naiserator_scheme.TypeName(resource))
+		log.Infof("CreateOrRecreate %s", liberator_scheme.TypeName(resource))
 		err := cli.Delete(ctx, resource)
 		if err != nil && !errors.IsNotFound(err) {
 			return err
@@ -65,7 +65,7 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, resource runtime.O
 
 func CreateIfNotExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("CreateIfNotExists %s", naiserator_scheme.TypeName(resource))
+		log.Infof("CreateIfNotExists %s", liberator_scheme.TypeName(resource))
 		err := cli.Create(ctx, resource)
 		if err != nil && errors.IsAlreadyExists(err) {
 			return nil
@@ -76,7 +76,7 @@ func CreateIfNotExists(ctx context.Context, cli client.Client, resource runtime.
 
 func DeleteIfExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
 	return func() error {
-		log.Infof("DeleteIfExists %s", naiserator_scheme.TypeName(resource))
+		log.Infof("DeleteIfExists %s", liberator_scheme.TypeName(resource))
 		err := cli.Delete(ctx, resource)
 		if err != nil && errors.IsNotFound(err) {
 			return nil
