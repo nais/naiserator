@@ -1,5 +1,4 @@
 .idea/
-go.sum
 naiserator.iml
 cmd/naiserator/naiserator
 vendor/
