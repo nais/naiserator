@@ -40,6 +40,7 @@ const (
 	kafkaCAFilename                = "ca.crt"
 	kafkaKeystoreFilename          = "client.keystore.p12"
 	kafkaTruststoreFilename        = "client.truststore.jks"
+	cloudSQLProxyTermTimeout       = "30s"
 )
 
 func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {
@@ -303,6 +304,7 @@ func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, proje
 		}},
 		Command: []string{
 			"/cloud_sql_proxy",
+			fmt.Sprintf("-term_timeout=%s", cloudSQLProxyTermTimeout),
 			fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
 		},
 		Resources: resourceLimits(cloudSqlProxyContainerResourceSpec),
