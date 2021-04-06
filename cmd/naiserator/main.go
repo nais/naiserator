@@ -101,7 +101,6 @@ func run() error {
 	stopCh := StopCh()
 
 	resourceOptions := resourcecreator.NewResourceOptions()
-	resourceOptions.Istio = cfg.Features.Istio
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
