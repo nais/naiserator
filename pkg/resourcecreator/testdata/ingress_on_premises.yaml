@@ -1,0 +1,46 @@
+config:
+  description: ingress resource is created on-premises
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    ingresses:
+      - https://foo.bar/baz
+
+tests:
+  - apiVersion: networking.k8s.io/v1beta1
+    kind: Ingress
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "ingress created with correct config"
+        exclude:
+          - .status
+          - .metadata.creationTimestamp
+          - .metadata.ownerReferences
+          - .metadata.labels
+          - .metadata.name
+          - .metadata.namespace
+        resource:
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: ""
+              prometheus.io/path: ""
+              prometheus.io/scrape: "true"
+          spec:
+            rules:
+              - host: foo.bar
+                http:
+                  paths:
+                    - backend:
+                        serviceName: myapplication
+                        servicePort: 80
+                      path: /baz

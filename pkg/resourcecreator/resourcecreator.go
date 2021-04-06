@@ -186,8 +186,11 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		}
 	}
 
-	if resourceOptions.Istio {
+	if resourceOptions.Istio || resourceOptions.Linkerd {
 		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
+	}
+
+	if resourceOptions.Istio {
 		if !resourceOptions.VirtualServiceRegistryEnabled {
 			vses, err := VirtualServices(app, resourceOptions.GatewayMappings)
 
@@ -211,9 +214,21 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		for _, serviceEntry := range serviceEntries {
 			ops = append(ops, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
 		}
+	}
 
-	} else {
+	if !resourceOptions.Istio && !resourceOptions.Linkerd {
 		ingress, err := Ingress(app)
+		if err != nil {
+			return nil, fmt.Errorf("while creating ingress: %s", err)
+		}
+
+		if ingress != nil {
+			ops = append(ops, ResourceOperation{ingress, OperationCreateOrUpdate})
+		}
+	}
+
+	if resourceOptions.Linkerd {
+		ingress, err := NginxIngress(app)
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingress: %s", err)
 		}

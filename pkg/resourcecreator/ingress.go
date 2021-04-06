@@ -78,3 +78,12 @@ func Ingress(app *nais.Application) (*networkingv1beta1.Ingress, error) {
 		},
 	}, nil
 }
+
+func NginxIngress(app *nais.Application) (*networkingv1beta1.Ingress, error) {
+	ingress, err := Ingress(app)
+	if ingress == nil || err != nil {
+		return ingress, err
+	}
+	ingress.Annotations["kubernetes.io/ingress.class"] = "nginx"
+	return ingress, nil
+}
