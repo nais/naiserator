@@ -30,6 +30,7 @@ type Synchronizer struct {
 
 type Features struct {
 	Istio                       bool     `json:"istio"`
+	Linkerd                     bool     `json:"linkerd"`
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	NativeSecrets               bool     `json:"native-secrets"`
 	Vault                       bool     `json:"vault"`

@@ -337,6 +337,21 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		}
 	}
 
+	// Create Istio resources only if feature is enabled and namespace is Istio-enabled
+	if n.Config.Features.Istio && len(namespace.Labels["istio.io/rev"]) > 0 {
+		rollout.ResourceOptions.Istio = true
+	}
+
+	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
+	if n.Config.Features.Linkerd && namespace.Labels["linkerd.io/inject"] == "enabled" {
+		rollout.ResourceOptions.Linkerd = true
+	}
+
+	// Linkerd+Istio is not allowed
+	if rollout.ResourceOptions.Istio && rollout.ResourceOptions.Linkerd {
+		return nil, fmt.Errorf("refusing to rollout application in namespace with both Istio and Linkerd")
+	}
+
 	rollout.SetCurrentDeployment(previousDeployment)
 	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
 
