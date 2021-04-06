@@ -343,7 +343,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	}
 
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
-	if n.Config.Features.Linkerd && namespace.Labels["linkerd.io/inject"] == "enabled" {
+	if n.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
 		rollout.ResourceOptions.Linkerd = true
 	}
 
