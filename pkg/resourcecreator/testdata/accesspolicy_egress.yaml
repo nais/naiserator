@@ -2,7 +2,7 @@ config:
   description: egress rules will create network policies and service entries
 
 resourceoptions:
-  AccessPolicy: true
+  Istio: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster

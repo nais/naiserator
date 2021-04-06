@@ -186,7 +186,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		}
 	}
 
-	if resourceOptions.AccessPolicy {
+	if resourceOptions.Istio {
 		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
 		if !resourceOptions.VirtualServiceRegistryEnabled {
 			vses, err := VirtualServices(app, resourceOptions.GatewayMappings)

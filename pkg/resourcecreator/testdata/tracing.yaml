@@ -2,7 +2,7 @@ config:
   description: Tracing is configured
 
 resourceoptions:
-  AccessPolicy: true
+  Istio: true
   GoogleProjectID: google-project-id
 
 input:

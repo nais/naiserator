@@ -2,7 +2,7 @@ config:
   description: google cloud sql instances provisioned with databases and automatic configuration
 
 resourceoptions:
-  AccessPolicy: true
+  Istio: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
   NumReplicas: 1

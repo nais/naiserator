@@ -101,7 +101,7 @@ func run() error {
 	stopCh := StopCh()
 
 	resourceOptions := resourcecreator.NewResourceOptions()
-	resourceOptions.AccessPolicy = cfg.Features.AccessPolicy
+	resourceOptions.Istio = cfg.Features.Istio
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
@@ -122,14 +122,6 @@ func run() error {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the Virtual Service based on the provided ingresses")
 	}
 
-	syncerConfig := synchronizer.Config{
-		DeploymentMonitorFrequency: cfg.Synchronizer.RolloutCheckInterval,
-		DeploymentMonitorTimeout:   cfg.Synchronizer.RolloutTimeout,
-		KafkaEnabled:               cfg.Kafka.Enabled,
-		SynchronizationTimeout:     cfg.Synchronizer.SynchronizationTimeout,
-		VirtualServiceRegistry:     cfg.VirtualServiceRegistry,
-	}
-
 	mgrClient := mgr.GetClient()
 	simpleClient, err := client.New(kconfig, client.Options{
 		Scheme: kscheme,
@@ -147,7 +139,7 @@ func run() error {
 		SimpleClient:           simpleClient,
 		Scheme:                 kscheme,
 		ResourceOptions:        resourceOptions,
-		Config:                 syncerConfig,
+		Config:                 *cfg,
 		VirtualServiceRegistry: virtualServiceRegistry,
 	}
 

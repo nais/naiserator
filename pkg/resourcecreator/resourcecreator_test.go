@@ -188,7 +188,7 @@ func TestCreate(t *testing.T) {
 		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://host.domain.tld"}
 		opts := resourcecreator.NewResourceOptions()
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", GatewayName: "namespace/gateway"}}
-		opts.AccessPolicy = true
+		opts.Istio = true
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -204,7 +204,7 @@ func TestCreate(t *testing.T) {
 	t.Run("authorization policy resource are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
-		opts.AccessPolicy = true
+		opts.Istio = true
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".bar", GatewayName: "namespace/gateway"}}
 		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
 
@@ -223,7 +223,7 @@ func TestCreate(t *testing.T) {
 	t.Run("authorization policy resource are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
-		opts.AccessPolicy = true
+		opts.Istio = true
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{"otherapp", "othernamespace", ""}}
 		app.Spec.Prometheus.Enabled = true
 
@@ -257,7 +257,7 @@ func TestCreate(t *testing.T) {
 	t.Run("default network policy that allows egress to resources in kube-system and istio-system is created for app", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
-		opts.AccessPolicy = true
+		opts.Istio = true
 		opts.AccessPolicyNotAllowedCIDRs = []string{"101.0.0.0/8"}
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)

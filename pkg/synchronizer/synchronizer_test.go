@@ -71,11 +71,12 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 		return nil, fmt.Errorf("initialize manager: %w", err)
 	}
 
-	syncerConfig := synchronizer.Config{
-		KafkaEnabled:               false,
-		SynchronizationTimeout:     2 * time.Second,
-		DeploymentMonitorFrequency: 5 * time.Second,
-		DeploymentMonitorTimeout:   20 * time.Second,
+	syncerConfig := config.Config{
+		Synchronizer: config.Synchronizer{
+			SynchronizationTimeout: 2 * time.Second,
+			RolloutCheckInterval:   5 * time.Second,
+			RolloutTimeout:         20 * time.Second,
+		},
 	}
 
 	syncer := &synchronizer.Synchronizer{

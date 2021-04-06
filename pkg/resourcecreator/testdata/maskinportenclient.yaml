@@ -2,7 +2,7 @@ config:
   description: minimal maskinporten config in application spec should result in MaskinportenClient
 
 resourceoptions:
-  AccessPolicy: true
+  Istio: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster

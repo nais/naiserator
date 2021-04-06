@@ -49,16 +49,8 @@ type Synchronizer struct {
 	SimpleClient           client.Client
 	Scheme                 *runtime.Scheme
 	ResourceOptions        resourcecreator.ResourceOptions
-	Config                 Config
+	Config                 config.Config
 	VirtualServiceRegistry *virtualservice.Registry
-}
-
-type Config struct {
-	KafkaEnabled               bool
-	SynchronizationTimeout     time.Duration // total allowed time for one Application synchronization
-	DeploymentMonitorFrequency time.Duration
-	DeploymentMonitorTimeout   time.Duration
-	VirtualServiceRegistry     config.VirtualServiceRegistry
 }
 
 func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
@@ -109,7 +101,7 @@ func (n *Synchronizer) reportError(ctx context.Context, source string, err error
 
 // Process work queue
 func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), n.Config.SynchronizationTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
 	app := &nais_io_v1alpha1.Application{}
@@ -210,12 +202,12 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
 
-	if n.Config.KafkaEnabled && !app.SkipDeploymentMessage() {
+	if n.Config.Kafka.Enabled && !app.SkipDeploymentMessage() {
 		kafka.Events <- kafka.Message{Event: event, Logger: logger}
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(*app, logger, n.Config.DeploymentMonitorFrequency, n.Config.DeploymentMonitorTimeout)
+	go n.MonitorRollout(*app, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout)
 
 	return ctrl.Result{}, nil
 }
@@ -329,14 +321,15 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		return nil, fmt.Errorf("query existing deployment: %s", err)
 	}
 
+	// Retrieve current namespace to check for labels and annotations
+	namespace := &corev1.Namespace{}
+	err = n.Get(ctx, client.ObjectKey{Name: app.GetNamespace()}, namespace)
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, fmt.Errorf("query existing namespace: %s", err)
+	}
+
+	// Assert that CNRM annotations are set on namespaces when CNRM support is enabled
 	if app.Spec.GCP != nil && (app.Spec.GCP.SqlInstances != nil || app.Spec.GCP.Permissions != nil) {
-		namespace := &corev1.Namespace{}
-		err = n.Get(ctx, client.ObjectKey{Name: app.GetNamespace()}, namespace)
-
-		if err != nil && !errors.IsNotFound(err) {
-			return nil, fmt.Errorf("query existing namespace: %s", err)
-		}
-
 		if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
 			rollout.SetGoogleTeamProjectId(val)
 		} else {
@@ -346,6 +339,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 
 	rollout.SetCurrentDeployment(previousDeployment)
 	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
+
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
 	}
@@ -445,7 +439,7 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 			if deploymentComplete(deploy, &deploy.Status) {
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				if n.Config.KafkaEnabled && !app.SkipDeploymentMessage() {
+				if n.Config.Kafka.Enabled && !app.SkipDeploymentMessage() {
 					kafka.Events <- kafka.Message{Event: event, Logger: logger}
 				}
 

@@ -34,14 +34,6 @@ type testCaseConfig struct {
 	VaultEnabled bool
 }
 
-type testCase struct {
-	Config          testCaseConfig
-	ResourceOptions resourcecreator.ResourceOptions
-	Error           *string
-	Input           json.RawMessage
-	Output          []json.RawMessage
-}
-
 type meta struct {
 	Operation string
 	Resource  struct {

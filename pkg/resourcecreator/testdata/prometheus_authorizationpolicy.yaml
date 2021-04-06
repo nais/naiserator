@@ -2,7 +2,7 @@ config:
   description: prometheus config is defined
 
 resourceoptions:
-  AccessPolicy: true
+  Istio: true
   GoogleProjectID: google-project-id
 
 input:

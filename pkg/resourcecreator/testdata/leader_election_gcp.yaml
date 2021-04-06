@@ -2,7 +2,7 @@ config:
   description: vanilla application running in GCP with default configuration and access policies
 
 resourceoptions:
-  AccessPolicy: true
+  Istio: true
   AccessPolicyNotAllowedCIDRs: ["10.6.0.0/15", "192.168.0.0/16", "172.16.0.0/12"]
   GoogleProjectID: google-project-id
   NumReplicas: 1

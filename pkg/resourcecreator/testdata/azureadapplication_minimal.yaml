@@ -2,7 +2,7 @@ config:
   description: spec feature flag enabled will result in an AzureAdApplication resource
 
 resourceoptions:
-  AccessPolicy: true
+  Istio: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster
