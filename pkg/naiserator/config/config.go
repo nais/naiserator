@@ -115,6 +115,7 @@ const (
 	GoogleCloudSQLProxyContainerImage    = "google-cloud-sql-proxy-container-image"
 	ApiServerIp                          = "api-server-ip"
 	FeaturesIstio                        = "features.istio"
+	FeaturesLinkerd                      = "features.linkerd"
 	AccessPolicyNotAllowedCIDRs          = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets                = "features.native-secrets"
 	FeaturesVault                        = "features.vault"
@@ -166,7 +167,8 @@ func init() {
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
-	flag.Bool(FeaturesIstio, false, "enable access policy with Istio and NetworkPolicies")
+	flag.Bool(FeaturesIstio, false, "enable creation of Istio-specific resources")
+	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
 	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
