@@ -7,133 +7,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func egressRule(appName, namespace string) networkingv1.NetworkPolicyEgressRule {
-	return networkingv1.NetworkPolicyEgressRule{
-		To: []networkingv1.NetworkPolicyPeer{{
-			NamespaceSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"name": namespace,
-				},
-			},
-			PodSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": appName,
-				},
-			},
-		}},
-	}
-}
-
-func networkPolicyRules(rules []nais_io_v1.AccessPolicyRule, options ResourceOptions) (networkPolicy []networkingv1.NetworkPolicyPeer) {
-	for _, rule := range rules {
-
-		// non-local access policy rules do not result in network policies
-		if !rule.MatchesCluster(options.ClusterName) {
-			continue
-		}
-
-		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
-			PodSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": rule.Application,
-				},
-			},
-		}
-
-		if rule.Application == "*" {
-			networkPolicyPeer = networkingv1.NetworkPolicyPeer{PodSelector: &metav1.LabelSelector{}}
-		}
-
-		if rule.Namespace != "" {
-			networkPolicyPeer.NamespaceSelector = &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"name": rule.Namespace,
-				},
-			}
-		}
-
-		networkPolicy = append(networkPolicy, networkPolicyPeer)
-	}
-
-	return
-}
-
-func ingressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) []networkingv1.NetworkPolicyIngressRule {
-	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
-
-	rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-		From: []networkingv1.NetworkPolicyPeer{
-			{
-				PodSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app": IstioPrometheusLabelValue,
-					},
-				},
-				NamespaceSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"name": IstioNamespace,
-					},
-				},
-			},
+func NetworkPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) *networkingv1.NetworkPolicy {
+	return &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
 		},
-	})
-
-	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
-		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-			From: networkPolicyRules(app.Spec.AccessPolicy.Inbound.Rules, options),
-		})
+		ObjectMeta: app.CreateObjectMeta(),
+		Spec:       networkPolicySpec(app, options),
 	}
-
-	if len(app.Spec.Ingresses) > 0 {
-		rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-			From: []networkingv1.NetworkPolicyPeer{
-				{
-					PodSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"istio": IstioIngressGatewayLabelValue,
-						},
-					},
-					NamespaceSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"name": IstioNamespace,
-						},
-					},
-				},
-			},
-		})
-	}
-
-	return rules
 }
 
-func egressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
-	defaultRules := defaultAllowEgress(options.AccessPolicyNotAllowedCIDRs)
-
-	if app.Spec.Tracing != nil && app.Spec.Tracing.Enabled {
-		defaultRules = append(defaultRules, egressRule("jaeger", "istio-system"))
+func labelSelector(label string, value string) *metav1.LabelSelector {
+	return &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			label: value,
+		},
 	}
-
-	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
-		appRules := networkingv1.NetworkPolicyEgressRule{
-			To: networkPolicyRules(app.Spec.AccessPolicy.Outbound.Rules, options),
-		}
-		defaultRules = append(defaultRules, appRules)
-	}
-
-	if app.Spec.LeaderElection && len(options.GoogleProjectId) > 0 {
-		apiServerAccessRule := networkingv1.NetworkPolicyEgressRule{
-			To: []networkingv1.NetworkPolicyPeer{
-				{
-					IPBlock: &networkingv1.IPBlock{
-						CIDR: options.ApiServerIp,
-					},
-				},
-			},
-		}
-		defaultRules = append(defaultRules, apiServerAccessRule)
-	}
-
-	return defaultRules
 }
 
 func networkPolicySpec(app *nais_io_v1alpha1.Application, options ResourceOptions) networkingv1.NetworkPolicySpec {
@@ -148,56 +38,132 @@ func networkPolicySpec(app *nais_io_v1alpha1.Application, options ResourceOption
 	}
 }
 
-func typeMeta() metav1.TypeMeta {
-	return metav1.TypeMeta{
-		Kind:       "NetworkPolicy",
-		APIVersion: "networking.k8s.io/v1",
+func networkPolicyPeer(podLabelName, podLabelValue, namespace string) networkingv1.NetworkPolicyPeer {
+	return networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: labelSelector("name", namespace),
+		PodSelector:       labelSelector(podLabelName, podLabelValue),
 	}
 }
 
-func labelSelector(label string, value string) *metav1.LabelSelector {
-	return &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			label: value,
-		},
+func networkPolicyIngressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv1.NetworkPolicyIngressRule {
+	return networkingv1.NetworkPolicyIngressRule{
+		From: peer,
 	}
 }
 
-func defaultAllowEgress(ipBlockExceptCIDRs []string) []networkingv1.NetworkPolicyEgressRule {
-	return []networkingv1.NetworkPolicyEgressRule{
-		{
-			To: []networkingv1.NetworkPolicyPeer{
-				{
-					PodSelector:       labelSelector("istio", "istiod"),
-					NamespaceSelector: labelSelector("name", IstioNamespace),
-				},
-				{
-					PodSelector:       labelSelector("istio", "ingressgateway"),
-					NamespaceSelector: labelSelector("name", IstioNamespace),
-				},
-				{
-					PodSelector: labelSelector("k8s-app", "kube-dns"),
-					NamespaceSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							// select in all namespaces since labels on kube-system is regularly deleted in GCP
-						},
-					},
-				},
-				{
-					IPBlock: &networkingv1.IPBlock{
-						CIDR:   NetworkPolicyDefaultEgressAllowIPBlock,
-						Except: ipBlockExceptCIDRs,
-					},
-				},
+func networkPolicyEgressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv1.NetworkPolicyEgressRule {
+	return networkingv1.NetworkPolicyEgressRule{
+		To: peer,
+	}
+}
+
+func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options ResourceOptions) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+	for _, rule := range rules {
+
+		// non-local access policy rules do not result in network policies
+		if !rule.MatchesCluster(options.ClusterName) {
+			continue
+		}
+
+		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
+			PodSelector: labelSelector("app", rule.Application),
+		}
+
+		if rule.Application == "*" {
+			networkPolicyPeer = networkingv1.NetworkPolicyPeer{PodSelector: &metav1.LabelSelector{}}
+		}
+
+		if rule.Namespace != "" {
+			networkPolicyPeer.NamespaceSelector = labelSelector("name", rule.Namespace)
+		}
+
+		networkPolicy = append(networkPolicy, networkPolicyPeer)
+	}
+
+	return
+}
+
+func ingressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) []networkingv1.NetworkPolicyIngressRule {
+	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
+
+	if options.Istio {
+		rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, IstioNamespace)))
+	} else if options.Linkerd {
+		rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, PrometheusNamespace)))
+	}
+
+	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
+		rules = append(rules, networkPolicyIngressRule(networkPolicyApplicationRules(app.Spec.AccessPolicy.Inbound.Rules, options)...))
+	}
+
+	if len(app.Spec.Ingresses) > 0 {
+		if options.Istio {
+			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+				PodSelector:       labelSelector("istio", IstioIngressGatewayLabelValue),
+				NamespaceSelector: labelSelector("name", IstioNamespace),
+			}))
+		} else if options.Linkerd {
+			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+				PodSelector:       labelSelector(NginxPodSelectorLabelName, NginxPodSelectorLabelValue),
+				NamespaceSelector: labelSelector("name", NginxNamespace),
+			}))
+		}
+	}
+
+	return rules
+}
+
+func egressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
+	defaultRules := defaultAllowEgress(options)
+
+	if app.Spec.Tracing != nil && app.Spec.Tracing.Enabled {
+		defaultRules = append(defaultRules, networkPolicyEgressRule(networkPolicyPeer("app", "jaeger", "istio-system")))
+	}
+
+	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
+		appRules := networkPolicyEgressRule(networkPolicyApplicationRules(app.Spec.AccessPolicy.Outbound.Rules, options)...)
+		defaultRules = append(defaultRules, appRules)
+	}
+
+	if app.Spec.LeaderElection && len(options.GoogleProjectId) > 0 {
+		apiServerAccessRule := networkPolicyEgressRule(networkingv1.NetworkPolicyPeer{
+			IPBlock: &networkingv1.IPBlock{
+				CIDR: options.ApiServerIp,
+			},
+		})
+		defaultRules = append(defaultRules, apiServerAccessRule)
+	}
+
+	return defaultRules
+}
+
+func defaultAllowEgress(options ResourceOptions) []networkingv1.NetworkPolicyEgressRule {
+	peers := make([]networkingv1.NetworkPolicyPeer, 0, 4)
+
+	if options.Istio {
+		peers = append(peers, networkPolicyPeer("istio", "istiod", IstioNamespace))
+		peers = append(peers, networkPolicyPeer("istio", "ingressgateway", IstioNamespace))
+	} else if options.Linkerd {
+		peers = append(peers, networkPolicyPeer(NginxPodSelectorLabelName, NginxPodSelectorLabelValue, NginxNamespace))
+	}
+
+	peers = append(peers, networkingv1.NetworkPolicyPeer{
+		PodSelector: labelSelector("k8s-app", "kube-dns"),
+		NamespaceSelector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				// select in all namespaces since labels on kube-system is regularly deleted in GCP
 			},
 		},
-	}
-}
+	})
 
-func NetworkPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) *networkingv1.NetworkPolicy {
-	return &networkingv1.NetworkPolicy{
-		TypeMeta:   typeMeta(),
-		ObjectMeta: app.CreateObjectMeta(),
-		Spec:       networkPolicySpec(app, options),
+	peers = append(peers, networkingv1.NetworkPolicyPeer{
+		IPBlock: &networkingv1.IPBlock{
+			CIDR:   NetworkPolicyDefaultEgressAllowIPBlock,
+			Except: options.AccessPolicyNotAllowedCIDRs,
+		},
+	})
+
+	return []networkingv1.NetworkPolicyEgressRule{
+		networkPolicyEgressRule(peers...),
 	}
 }
