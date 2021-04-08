@@ -1,0 +1,120 @@
+config:
+  description: vanilla application running with Linkerd, default configuration and network policies
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  JwkerEnabled: true
+  GatewayMappings:
+    - DomainSuffix: .adeo.no
+      GatewayName: yolo/anna
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    ingresses:
+      - 'https://myapplication.dev.adeo.no'
+    accessPolicy:
+      inbound:
+        rules:
+          - application: app1
+          - application: app2
+            namespace: q1
+          - application: '*'
+            namespace: t1
+      outbound:
+        rules:
+          - application: app3
+          - application: app4
+            namespace: q2
+          - application: '*'
+            namespace: t2
+        external:
+          - host: www.external-application.com
+          - host: https://www.another-external-application.com
+          - host: http://www.yet-another-external-application.com
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            ingress:
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app: prometheus
+                    namespaceSelector:
+                      matchLabels:
+                        name: nais
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app: app1
+                  - podSelector:
+                      matchLabels:
+                        app: app2
+                    namespaceSelector:
+                      matchLabels:
+                        name: q1
+                  - podSelector: {}
+                    namespaceSelector:
+                      matchLabels:
+                        name: t1
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nginx
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: ingress-nginx
+            egress:
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: ingress-nginx
+                    namespaceSelector:
+                      matchLabels:
+                        name: nginx
+                  - podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+                    namespaceSelector: {}
+                  - ipBlock:
+                      cidr: 0.0.0.0/0
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        app: app3
+                  - podSelector:
+                      matchLabels:
+                        app: app4
+                    namespaceSelector:
+                      matchLabels:
+                        name: q2
+                  - podSelector: {}
+                    namespaceSelector:
+                      matchLabels:
+                        name: t2
+            policyTypes:
+              - Ingress
+              - Egress
+            podSelector:
+              matchLabels:
+                app: myapplication

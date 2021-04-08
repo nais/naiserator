@@ -1,5 +1,5 @@
 config:
-  description: vanilla application running in GCP with default configuration and access policies
+  description: vanilla application running with Istio, default configuration and access policies
 
 resourceoptions:
   Istio: true
