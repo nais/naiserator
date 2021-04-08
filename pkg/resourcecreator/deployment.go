@@ -35,6 +35,7 @@ const (
 	kafkaSchemaRegistryUserKey     = "KAFKA_SCHEMA_REGISTRY_USER"
 	kafkaSchemaRegistryPasswordKey = "KAFKA_SCHEMA_REGISTRY_PASSWORD"
 	kafkaCredStorePasswordKey      = "KAFKA_CREDSTORE_PASSWORD"
+	KafkaSecretUpdated             = "KAFKA_SECRET_UPDATED"
 	kafkaCertificateFilename       = "kafka.crt"
 	kafkaPrivateKeyFilename        = "kafka.key"
 	kafkaCAFilename                = "ca.crt"
@@ -242,6 +243,7 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) 
 		makeKafkaSecretEnvVar(kafkaSchemaRegistryPasswordKey, resourceOptions.KafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaCAKey, resourceOptions.KafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaCredStorePasswordKey, resourceOptions.KafkaratorSecretName),
+		makeKafkaSecretEnvVar(KafkaSecretUpdated, resourceOptions.KafkaratorSecretName),
 	}...)
 
 	// Inject path environment variables to refer to mounted secrets
