@@ -34,7 +34,7 @@ func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*secur
 		}
 
 		// Avoid duplicate gateways, as this will look messy and lead to unnecessary app synchronizations
-		for _, gateway := range ResolveGateway(*parsedUrl, options.GatewayMappings) {
+		for _, gateway := range ResolveGateway(parsedUrl.Host, options.GatewayMappings) {
 			found := false
 			for _, existingGateway := range gateways {
 				if gateway == existingGateway {

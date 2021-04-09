@@ -59,7 +59,8 @@ type Vault struct {
 
 type GatewayMapping struct {
 	DomainSuffix string `json:"domainSuffix"`
-	GatewayName  string `json:"gatewayName"`
+	GatewayName  string `json:"gatewayName"`  // Istio
+	IngressClass string `json:"ingressClass"` // Nginx
 }
 
 type HostAlias struct {

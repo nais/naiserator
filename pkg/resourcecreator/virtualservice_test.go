@@ -17,8 +17,8 @@ func TestGatewayResolving(t *testing.T) {
 	subDomain := ".sub.domain.tld"
 
 	mappings := []config.GatewayMapping{
-		{dashDomain, "dashdomain-gateway"},
-		{subDomain, "subdomain-gateway,subdomain-gateway2"},
+		{DomainSuffix: dashDomain, GatewayName: "dashdomain-gateway"},
+		{DomainSuffix: subDomain, GatewayName: "subdomain-gateway,subdomain-gateway2"},
 	}
 
 	ingressDashDomain := "https://x" + dashDomain
@@ -26,19 +26,19 @@ func TestGatewayResolving(t *testing.T) {
 	ingressSubDomain := "https://x" + subDomain
 	ingressSubDomainWithPath := "https://x" + subDomain + "/path"
 
-	assert.Equal(t, []string{"dashdomain-gateway"}, resourcecreator.ResolveGateway(asUrl(ingressDashDomain), mappings))
-	assert.Equal(t, []string{"dashdomain-gateway"}, resourcecreator.ResolveGateway(asUrl(ingressDashDomainWithPath), mappings))
-	assert.Equal(t, []string{"subdomain-gateway", "subdomain-gateway2"}, resourcecreator.ResolveGateway(asUrl(ingressSubDomain), mappings))
-	assert.Equal(t, []string{"subdomain-gateway", "subdomain-gateway2"}, resourcecreator.ResolveGateway(asUrl(ingressSubDomainWithPath), mappings))
-	assert.Equal(t, []string{"subdomain-gateway", "subdomain-gateway2"}, resourcecreator.ResolveGateway(asUrl(ingressSubDomainWithPath), mappings))
+	assert.Equal(t, []string{"dashdomain-gateway"}, resourcecreator.ResolveGateway(domainHost(ingressDashDomain), mappings))
+	assert.Equal(t, []string{"dashdomain-gateway"}, resourcecreator.ResolveGateway(domainHost(ingressDashDomainWithPath), mappings))
+	assert.Equal(t, []string{"subdomain-gateway", "subdomain-gateway2"}, resourcecreator.ResolveGateway(domainHost(ingressSubDomain), mappings))
+	assert.Equal(t, []string{"subdomain-gateway", "subdomain-gateway2"}, resourcecreator.ResolveGateway(domainHost(ingressSubDomainWithPath), mappings))
+	assert.Equal(t, []string{"subdomain-gateway", "subdomain-gateway2"}, resourcecreator.ResolveGateway(domainHost(ingressSubDomainWithPath), mappings))
 }
 
-func asUrl(ingress string) url.URL {
+func domainHost(ingress string) string {
 	u, err := url.Parse(ingress)
 	if err != nil {
 		panic("unable to parse url: " + ingress)
 	}
-	return *u
+	return u.Host
 }
 
 func TestVirtualService(t *testing.T) {

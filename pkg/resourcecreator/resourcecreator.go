@@ -228,13 +228,15 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if resourceOptions.Linkerd {
-		ingress, err := NginxIngress(app)
+		ingresses, err := NginxIngresses(app, resourceOptions)
 		if err != nil {
-			return nil, fmt.Errorf("while creating ingress: %s", err)
+			return nil, fmt.Errorf("while creating ingresses: %s", err)
 		}
 
-		if ingress != nil {
-			ops = append(ops, ResourceOperation{ingress, OperationCreateOrUpdate})
+		if ingresses != nil {
+			for _, ingress := range ingresses {
+				ops = append(ops, ResourceOperation{ingress, OperationCreateOrUpdate})
+			}
 		}
 	}
 

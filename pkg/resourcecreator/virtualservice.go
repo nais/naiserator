@@ -29,7 +29,7 @@ func VirtualServices(app *nais.Application, gatewayMappings []config.GatewayMapp
 		}
 
 		name := fmt.Sprintf("%s-%02d", app.Name, index)
-		gateways := ResolveGateway(*parsedUrl, gatewayMappings)
+		gateways := ResolveGateway(parsedUrl.Host, gatewayMappings)
 		if len(gateways) > 0 {
 			vs := virtualService(*parsedUrl, app, gateways, name)
 			vses = append(vses, &vs)
@@ -39,9 +39,9 @@ func VirtualServices(app *nais.Application, gatewayMappings []config.GatewayMapp
 	return vses, nil
 }
 
-func ResolveGateway(ingress url.URL, mappings []config.GatewayMapping) []string {
+func ResolveGateway(host string, mappings []config.GatewayMapping) []string {
 	for _, mapping := range mappings {
-		if strings.HasSuffix(ingress.Host, mapping.DomainSuffix) {
+		if strings.HasSuffix(host, mapping.DomainSuffix) {
 			return strings.Split(mapping.GatewayName, ",")
 		}
 	}

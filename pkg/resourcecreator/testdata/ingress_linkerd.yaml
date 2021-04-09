@@ -3,6 +3,11 @@ config:
 
 resourceoptions:
   Linkerd: true
+  GatewayMappings:
+    - DomainSuffix: .bar
+      IngressClass: very-nginx
+    - DomainSuffix: .baz
+      IngressClass: something-else
 
 input:
   kind: Application
@@ -16,15 +21,16 @@ input:
   spec:
     ingresses:
       - https://foo.bar/baz
+      - https://bar.baz/foo
 
 tests:
   - apiVersion: networking.k8s.io/v1beta1
     kind: Ingress
-    name: myapplication
+    name: myapplication-01
     operation: CreateOrUpdate
     match:
       - type: exact
-        name: "ingress created with Linkerd config"
+        name: "ingress for foo.bar created with Linkerd config"
         exclude:
             - .status
             - .metadata.creationTimestamp
@@ -38,7 +44,7 @@ tests:
               nais.io/deploymentCorrelationID: ""
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
-              kubernetes.io/ingress.class: "nginx"
+              kubernetes.io/ingress.class: "very-nginx"
           spec:
             rules:
               - host: foo.bar
@@ -48,3 +54,34 @@ tests:
                         serviceName: myapplication
                         servicePort: 80
                       path: /baz
+
+  - apiVersion: networking.k8s.io/v1beta1
+    kind: Ingress
+    name: myapplication-02
+    operation: CreateOrUpdate
+    match:
+        - type: exact
+          name: "ingress for bar.baz created with Linkerd config"
+          exclude:
+              - .status
+              - .metadata.creationTimestamp
+              - .metadata.ownerReferences
+              - .metadata.labels
+              - .metadata.name
+              - .metadata.namespace
+          resource:
+              metadata:
+                  annotations:
+                      nais.io/deploymentCorrelationID: ""
+                      prometheus.io/path: ""
+                      prometheus.io/scrape: "true"
+                      kubernetes.io/ingress.class: "something-else"
+              spec:
+                  rules:
+                      - host: bar.baz
+                        http:
+                            paths:
+                                - backend:
+                                      serviceName: myapplication
+                                      servicePort: 80
+                                  path: /foo
