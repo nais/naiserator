@@ -26,7 +26,7 @@ input:
 tests:
   - apiVersion: networking.k8s.io/v1beta1
     kind: Ingress
-    name: myapplication-01
+    name: myapplication-very-nginx-e55d5da0
     operation: CreateOrUpdate
     match:
       - type: exact
@@ -57,7 +57,7 @@ tests:
 
   - apiVersion: networking.k8s.io/v1beta1
     kind: Ingress
-    name: myapplication-02
+    name: myapplication-something-else-f697018e
     operation: CreateOrUpdate
     match:
         - type: exact

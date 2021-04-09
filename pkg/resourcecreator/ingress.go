@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
@@ -108,8 +109,6 @@ func ResolveIngressClass(host string, mappings []config.GatewayMapping) *string 
 }
 
 func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networkingv1beta1.Ingress, error) {
-	var i int
-
 	rules, err := ingressRules(app, app.Spec.Ingresses)
 	if err != nil {
 		return nil, err
@@ -121,12 +120,15 @@ func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networki
 	}
 
 	createIngressBase := func(host string) (*networkingv1beta1.Ingress, error) {
-		i++
 		ingress := ingressBase(app)
-		ingress.Name = fmt.Sprintf("%s-%02d", app.Name, i)
 		ingressClass := ResolveIngressClass(host, options.GatewayMappings)
 		if ingressClass == nil {
 			return nil, fmt.Errorf("domain '%s' is not supported", host)
+		}
+		baseName := fmt.Sprintf("%s-%s", app.Name, *ingressClass)
+		ingress.Name, err = namegen.ShortName(baseName, maxLengthResourceName)
+		if err != nil {
+			return nil, err
 		}
 		ingress.Annotations["kubernetes.io/ingress.class"] = *ingressClass
 		return ingress, nil
