@@ -410,7 +410,11 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		case resourcecreator.OperationDeleteIfExists:
 			fn = updater.DeleteIfExists(ctx, n, rop.Resource)
 		default:
-			log.Fatalf("BUG: no such operation %s", rop.Operation)
+			return []func() error{
+				func() error {
+					return fmt.Errorf("BUG: no such operation %s", rop.Operation)
+				},
+			}
 		}
 
 		funcs = append(funcs, fn)
