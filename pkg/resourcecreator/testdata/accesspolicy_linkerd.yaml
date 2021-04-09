@@ -64,6 +64,10 @@ tests:
                       matchLabels:
                         name: nais
               - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/is-control-plane: "true"
+              - from:
                   - podSelector:
                       matchLabels:
                         app: app1

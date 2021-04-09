@@ -90,6 +90,9 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) [
 		rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, IstioNamespace)))
 	} else if options.Linkerd {
 		rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, PrometheusNamespace)))
+		rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+			NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+		}))
 	}
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
