@@ -119,7 +119,11 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 				commits := make([]func() error, 0)
 				for _, vs := range virtualServices {
-					commits = append(commits, updater.CreateOrUpdate(ctx, n, n.Scheme, vs))
+					if len(vs.Spec.HTTP) == 0 {
+						commits = append(commits, updater.DeleteIfExists(ctx, n.Client, vs))
+					} else {
+						commits = append(commits, updater.CreateOrUpdate(ctx, n, n.Scheme, vs))
+					}
 				}
 				err, _ = n.rolloutWithRetryAndMetrics(commits)
 				if err != nil {
@@ -373,10 +377,15 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 			return nil, err
 		}
 		for _, vs := range services {
-			rollout.ResourceOperations = append(rollout.ResourceOperations, resourcecreator.ResourceOperation{
+			op := resourcecreator.ResourceOperation{
 				Resource:  vs,
 				Operation: resourcecreator.OperationCreateOrUpdate,
-			})
+			}
+			if len(vs.Spec.HTTP) == 0 {
+				// delete vs if routes are empty
+				op.Operation = resourcecreator.OperationDeleteIfExists
+			}
+			rollout.ResourceOperations = append(rollout.ResourceOperations, op)
 		}
 	}
 
@@ -398,6 +407,8 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 			fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
 		case resourcecreator.OperationCreateIfNotExists:
 			fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
+		case resourcecreator.OperationDeleteIfExists:
+			fn = updater.DeleteIfExists(ctx, n, rop.Resource)
 		default:
 			log.Fatalf("BUG: no such operation %s", rop.Operation)
 		}
