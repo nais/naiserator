@@ -360,9 +360,13 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	}
 
 	if n.Config.VirtualServiceRegistry.Enabled {
-		err = n.VirtualServiceRegistry.Add(app)
-		if err != nil {
-			return nil, fmt.Errorf("add application to virtual services registry: %w", err)
+		if rollout.ResourceOptions.Istio {
+			err = n.VirtualServiceRegistry.Add(app)
+			if err != nil {
+				return nil, fmt.Errorf("add application to virtual services registry: %w", err)
+			}
+		} else {
+			n.VirtualServiceRegistry.Remove(app.Name, app.Namespace)
 		}
 		services, err := n.VirtualServiceRegistry.VirtualServices(app)
 		if err != nil {
