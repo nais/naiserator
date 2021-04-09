@@ -14,6 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const regexSuffix = "(/.*)?"
+
 func ingressRule(app *nais.Application, u *url.URL) networkingv1beta1.IngressRule {
 	return networkingv1beta1.IngressRule{
 		Host: u.Host,
@@ -48,6 +50,30 @@ func ingressRules(app *nais.Application, urls []nais.Ingress) ([]networkingv1bet
 		if err != nil {
 			return nil, err
 		}
+
+		rules = append(rules, ingressRule(app, parsedUrl))
+	}
+
+	return rules, nil
+}
+
+func ingressRulesNginx(app *nais.Application) ([]networkingv1beta1.IngressRule, error) {
+	var rules []networkingv1beta1.IngressRule
+
+	for _, ingress := range app.Spec.Ingresses {
+		parsedUrl, err := url.Parse(string(ingress))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+		}
+
+		if len(parsedUrl.Path) > 0 {
+			err = util.ValidateUrl(parsedUrl)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		parsedUrl.Path += regexSuffix
 
 		rules = append(rules, ingressRule(app, parsedUrl))
 	}
@@ -109,7 +135,7 @@ func ResolveIngressClass(host string, mappings []config.GatewayMapping) *string 
 }
 
 func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networkingv1beta1.Ingress, error) {
-	rules, err := ingressRules(app, app.Spec.Ingresses)
+	rules, err := ingressRulesNginx(app)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +157,7 @@ func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networki
 			return nil, err
 		}
 		ingress.Annotations["kubernetes.io/ingress.class"] = *ingressClass
+		ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 		return ingress, nil
 	}
 
