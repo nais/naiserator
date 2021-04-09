@@ -90,12 +90,9 @@ tests:
                         app.kubernetes.io/name: ingress-nginx
             egress:
               - to:
-                  - podSelector:
+                  - namespaceSelector:
                       matchLabels:
-                        app.kubernetes.io/name: ingress-nginx
-                    namespaceSelector:
-                      matchLabels:
-                        name: nginx
+                        linkerd.io/is-control-plane: "true"
                   - podSelector:
                       matchLabels:
                         k8s-app: kube-dns

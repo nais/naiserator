@@ -147,7 +147,9 @@ func defaultAllowEgress(options ResourceOptions) []networkingv1.NetworkPolicyEgr
 		peers = append(peers, networkPolicyPeer("istio", "istiod", IstioNamespace))
 		peers = append(peers, networkPolicyPeer("istio", "ingressgateway", IstioNamespace))
 	} else if options.Linkerd {
-		peers = append(peers, networkPolicyPeer(NginxPodSelectorLabelName, NginxPodSelectorLabelValue, NginxNamespace))
+		peers = append(peers, networkingv1.NetworkPolicyPeer{
+			NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+		})
 	}
 
 	peers = append(peers, networkingv1.NetworkPolicyPeer{
