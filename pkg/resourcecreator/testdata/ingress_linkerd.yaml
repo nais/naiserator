@@ -55,7 +55,7 @@ tests:
                     - backend:
                         serviceName: myapplication
                         servicePort: 80
-                      path: (/.*)?
+                      path: /
               - host: foo.bar
                 http:
                   paths:
