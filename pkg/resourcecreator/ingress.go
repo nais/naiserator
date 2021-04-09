@@ -71,9 +71,10 @@ func ingressRulesNginx(app *nais.Application) ([]networkingv1beta1.IngressRule, 
 			if err != nil {
 				return nil, err
 			}
+			parsedUrl.Path += regexSuffix
+		} else {
+			parsedUrl.Path = "/"
 		}
-
-		parsedUrl.Path += regexSuffix
 
 		rules = append(rules, ingressRule(app, parsedUrl))
 	}
