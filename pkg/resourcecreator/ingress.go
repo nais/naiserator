@@ -135,6 +135,19 @@ func ResolveIngressClass(host string, mappings []config.GatewayMapping) *string 
 	return nil
 }
 
+// https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#backend-protocol
+// Using backend-protocol annotations is possible to indicate how NGINX should communicate with the backend service.
+// Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI
+// By default NGINX uses HTTP.
+func backendProtocol(portName string) string {
+	switch portName {
+	case "grpc":
+		return "GRPC"
+	default:
+		return "HTTP"
+	}
+}
+
 func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networkingv1beta1.Ingress, error) {
 	rules, err := ingressRulesNginx(app)
 	if err != nil {
@@ -159,6 +172,7 @@ func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networki
 		}
 		ingress.Annotations["kubernetes.io/ingress.class"] = *ingressClass
 		ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
+		ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(app.Spec.Service.Protocol)
 		return ingress, nil
 	}
 

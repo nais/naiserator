@@ -1,0 +1,62 @@
+config:
+  description: ingress resource is created on-premises
+
+resourceoptions:
+  Linkerd: true
+  GatewayMappings:
+    - DomainSuffix: .bar
+      IngressClass: very-nginx
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    ingresses:
+      - https://foo.bar
+    service:
+      protocol: grpc
+
+tests:
+  - apiVersion: networking.k8s.io/v1beta1
+    kind: Ingress
+    name: myapplication-very-nginx-e55d5da0
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "ingress for foo.bar created with GRPC backend protocol"
+        resource:
+          metadata:
+            annotations:
+              kubernetes.io/ingress.class: "very-nginx"
+              nginx.ingress.kubernetes.io/use-regex: "true"
+              nginx.ingress.kubernetes.io/backend-protocol: GRPC
+          spec:
+            rules:
+              - host: foo.bar
+                http:
+                  paths:
+                    - backend:
+                        serviceName: myapplication
+                        servicePort: 80
+                      path: /
+
+  - apiVersion: v1
+    kind: Service
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "service created with different port name"
+        resource:
+          spec:
+            ports:
+              - port: 80
+                targetPort: http
+                name: grpc
+                protocol: TCP

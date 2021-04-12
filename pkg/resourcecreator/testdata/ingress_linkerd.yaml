@@ -47,6 +47,7 @@ tests:
               prometheus.io/scrape: "true"
               kubernetes.io/ingress.class: "very-nginx"
               nginx.ingress.kubernetes.io/use-regex: "true"
+              nginx.ingress.kubernetes.io/backend-protocol: HTTP
           spec:
             rules:
               - host: foo.bar
@@ -86,6 +87,7 @@ tests:
               prometheus.io/scrape: "true"
               kubernetes.io/ingress.class: "something-else"
               nginx.ingress.kubernetes.io/use-regex: "true"
+              nginx.ingress.kubernetes.io/backend-protocol: HTTP
           spec:
             rules:
               - host: bar.baz
