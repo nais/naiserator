@@ -3,6 +3,7 @@ config:
 
 resourceoptions:
   Istio: true
+  NetworkPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
 

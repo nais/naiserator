@@ -33,6 +33,7 @@ type Features struct {
 	Linkerd                     bool     `json:"linkerd"`
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	NativeSecrets               bool     `json:"native-secrets"`
+	NetworkPolicy               bool     `json:"network-policy"`
 	Vault                       bool     `json:"vault"`
 	Jwker                       bool     `json:"jwker"`
 	Azurerator                  bool     `json:"azurerator"`
@@ -119,6 +120,7 @@ const (
 	FeaturesLinkerd                      = "features.linkerd"
 	AccessPolicyNotAllowedCIDRs          = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets                = "features.native-secrets"
+	FeaturesNetworkPolicy                = "features.network-policy"
 	FeaturesVault                        = "features.vault"
 	FeaturesJwker                        = "features.jwker"
 	FeaturesAzurerator                   = "features.azurerator"
@@ -172,6 +174,7 @@ func init() {
 	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
 	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
+	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")

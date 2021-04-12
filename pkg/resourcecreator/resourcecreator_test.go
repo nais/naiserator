@@ -189,7 +189,7 @@ func TestCreate(t *testing.T) {
 		opts := resourcecreator.NewResourceOptions()
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", GatewayName: "namespace/gateway"}}
 		opts.Istio = true
-		opts.GoogleProjectId = "something"
+		opts.NetworkPolicy = true
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -206,7 +206,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.Istio = true
-		opts.GoogleProjectId = "something"
+		opts.NetworkPolicy = true
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".bar", GatewayName: "namespace/gateway"}}
 		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
 
@@ -226,7 +226,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.Istio = true
-		opts.GoogleProjectId = "something"
+		opts.NetworkPolicy = true
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{"otherapp", "othernamespace", ""}}
 		app.Spec.Prometheus.Enabled = true
 
@@ -261,7 +261,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourcecreator.NewResourceOptions()
 		opts.Istio = true
-		opts.GoogleProjectId = "something"
+		opts.NetworkPolicy = true
 		opts.AccessPolicyNotAllowedCIDRs = []string{"101.0.0.0/8"}
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)

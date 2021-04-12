@@ -189,10 +189,8 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		}
 	}
 
-	if len(resourceOptions.GoogleProjectId) > 0 {
-		if resourceOptions.Istio || resourceOptions.Linkerd {
-			ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
-		}
+	if resourceOptions.NetworkPolicy {
+		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
 	}
 
 	if resourceOptions.Istio {

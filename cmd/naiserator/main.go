@@ -115,6 +115,7 @@ func run() error {
 	resourceOptions.JwkerServiceEntryHosts = cfg.ServiceEntryHosts.Jwker
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
+	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
 	resourceOptions.VirtualServiceRegistryEnabled = cfg.VirtualServiceRegistry.Enabled
 
 	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {

@@ -24,6 +24,7 @@ type ResourceOptions struct {
 	JwkerEnabled                     bool
 	JwkerSecretName                  string
 	JwkerServiceEntryHosts           []string
+	NetworkPolicy                    bool
 	KafkaratorEnabled                bool
 	KafkaratorSecretName             string
 	Linkerd                          bool
