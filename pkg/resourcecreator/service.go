@@ -8,10 +8,6 @@ import (
 )
 
 func Service(app *nais.Application) *corev1.Service {
-	portName := nais.DefaultPortName
-	if app.Spec.Service.Protocol != "" {
-		portName = app.Spec.Service.Protocol
-	}
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -23,7 +19,7 @@ func Service(app *nais.Application) *corev1.Service {
 			Selector: map[string]string{"app": app.Name},
 			Ports: []corev1.ServicePort{
 				{
-					Name:     portName,
+					Name:     app.Spec.Service.Protocol,
 					Protocol: corev1.ProtocolTCP,
 					Port:     app.Spec.Service.Port,
 					TargetPort: intstr.IntOrString{
