@@ -68,13 +68,15 @@ func appendPathToIngress(ingress nais.Ingress, joinPath string) string {
 
 func azureSecretName(app nais.Application) (string, error) {
 	prefixedName := fmt.Sprintf("%s-%s", "azure", app.Name)
-	dateSuffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
-	maxlen := MaxSecretNameLength - len(dateSuffix)
+	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
 
-	shortname, err := namegen.ShortName(prefixedName, maxlen)
+	maxLen := MaxSecretNameLength
+	maxLen -= len(suffix) + 1 // length of suffix + 1 byte of separator
+
+	shortName, err := namegen.ShortName(prefixedName, maxLen)
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s-%s", shortname, dateSuffix), nil
+	return fmt.Sprintf("%s-%s", shortName, suffix), nil
 }
