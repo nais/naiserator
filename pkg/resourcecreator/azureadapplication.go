@@ -1,8 +1,10 @@
 package resourcecreator
 
 import (
+	"fmt"
 	"net/url"
 	"path"
+	"time"
 
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -14,11 +16,16 @@ const (
 	AzureApplicationDefaultCallbackPath = "/oauth2/callback"
 )
 
-func AzureAdApplication(app nais.Application, clusterName string) azureapp.AzureAdApplication {
+func AzureAdApplication(app nais.Application, clusterName string) (azureapp.AzureAdApplication, error) {
 	replyURLs := app.Spec.Azure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
 		replyURLs = oauthCallbackURLs(app.Spec.Ingresses)
+	}
+
+	secretName, err := azureSecretName(app)
+	if err != nil {
+		return azureapp.AzureAdApplication{}, err
 	}
 
 	return azureapp.AzureAdApplication{
@@ -31,10 +38,10 @@ func AzureAdApplication(app nais.Application, clusterName string) azureapp.Azure
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
 			Tenant:                    app.Spec.Azure.Application.Tenant,
-			SecretName:                azureSecretName(app),
+			SecretName:                secretName,
 			Claims:                    app.Spec.Azure.Application.Claims,
 		},
-	}
+	}, nil
 }
 
 func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
@@ -59,6 +66,15 @@ func appendPathToIngress(ingress nais.Ingress, joinPath string) string {
 	return u.String()
 }
 
-func azureSecretName(app nais.Application) string {
-	return namegen.PrefixedRandShortName("azure", app.Name, MaxSecretNameLength)
+func azureSecretName(app nais.Application) (string, error) {
+	prefixedName := fmt.Sprintf("%s-%s", "azure", app.Name)
+	dateSuffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
+	maxlen := MaxSecretNameLength - len(dateSuffix)
+
+	shortname, err := namegen.ShortName(prefixedName, maxlen)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s-%s", shortname, dateSuffix), nil
 }

@@ -54,7 +54,10 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
-		azureapp := AzureAdApplication(*app, resourceOptions.ClusterName)
+		azureapp, err := AzureAdApplication(*app, resourceOptions.ClusterName)
+		if err != nil {
+			return nil, err
+		}
 		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.AzureratorServiceEntryHosts)...)
 
 		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
