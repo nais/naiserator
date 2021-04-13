@@ -1,6 +1,8 @@
 package resourcecreator
 
 import (
+	"net/url"
+
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -106,10 +108,20 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) [
 				NamespaceSelector: labelSelector("name", IstioNamespace),
 			}))
 		} else if options.Linkerd {
-			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-				PodSelector:       labelSelector(NginxPodSelectorLabelName, NginxPodSelectorLabelValue),
-				NamespaceSelector: labelSelector("name", NginxNamespace),
-			}))
+			for _, ingress := range app.Spec.Ingresses {
+				ur, err := url.Parse(string(ingress))
+				if err != nil {
+					continue
+				}
+				gw := ResolveIngressClass(ur.Host, options.GatewayMappings)
+				if gw == nil {
+					continue
+				}
+				rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+					PodSelector:       labelSelector("app.kubernetes.io/instance", *gw),
+					NamespaceSelector: labelSelector("name", NginxNamespace),
+				}))
+			}
 		}
 	}
 

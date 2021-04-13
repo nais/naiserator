@@ -9,7 +9,9 @@ resourceoptions:
   JwkerEnabled: true
   GatewayMappings:
     - DomainSuffix: .adeo.no
-      GatewayName: yolo/anna
+      IngressClass: adeo-gateway
+    - DomainSuffix: .domain
+      IngressClass: domain-gateway
 
 input:
   kind: Application
@@ -24,6 +26,7 @@ input:
     image: navikt/myapplication:1.2.3
     ingresses:
       - 'https://myapplication.dev.adeo.no'
+      - 'https://myapplication.other.domain'
     accessPolicy:
       inbound:
         rules:
@@ -88,7 +91,14 @@ tests:
                         name: nginx
                     podSelector:
                       matchLabels:
-                        app.kubernetes.io/name: ingress-nginx
+                        app.kubernetes.io/instance: adeo-gateway
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nginx
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: domain-gateway
             egress:
               - to:
                   - namespaceSelector:

@@ -16,8 +16,6 @@ const (
 	IstioNamespace                          = "istio-system"                         // Which namespace Istio is installed in
 	PrometheusNamespace                     = "nais"                                 // Which namespace Prometheus is installed in (todo: config?)
 	NginxNamespace                          = "nginx"                                // Which namespace Nginx ingress controller runs in (todo: config?)
-	NginxPodSelectorLabelName               = "app.kubernetes.io/name"
-	NginxPodSelectorLabelValue              = "ingress-nginx"
 	IstioServiceEntryLocationExternal       = "MESH_EXTERNAL" // Service entries external to the cluster
 	IstioServiceEntryResolutionDNS          = "DNS"           // Service entry lookup type
 	IstioVirtualServiceTotalWeight    int32 = 100             // The total weight of all routes must equal 100
