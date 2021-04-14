@@ -168,13 +168,9 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 					return nil, fmt.Errorf("unable to assign sql password: %s", err)
 				}
 
-				sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId, instance.Name)
-				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
-				if sqlInstance.AdditionalUsers != nil {
-					for _, user := range sqlInstance.AdditionalUsers {
-						sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId, user.Name)
-						ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
-					}
+				for _, user := range mergeStandardUserWithAdditional(sqlInstance.AdditionalUsers, instance.Name) {
+					sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId, user.Name)
+					ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 				}
 
 				// FIXME: take into account when refactoring default values

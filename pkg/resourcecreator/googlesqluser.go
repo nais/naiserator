@@ -42,6 +42,20 @@ func firstKeyWithSuffix(vars map[string]string, suffix string) (string, error) {
 	return "", fmt.Errorf("no variable found matching suffix %s", suffix)
 }
 
+func mergeStandardUserWithAdditional(additionalUsers []nais.AdditionalUser, sqlUserName string) []nais.AdditionalUser {
+	standardUser := nais.AdditionalUser{
+		Name: sqlUserName,
+	}
+
+	if additionalUsers != nil {
+		return append(additionalUsers, standardUser)
+	} else {
+		return []nais.AdditionalUser{
+			standardUser,
+		}
+	}
+}
+
 func GoogleSQLEnvVars(db *nais.CloudSqlDatabase, instanceName, username, password string) map[string]string {
 	var prefix string
 
