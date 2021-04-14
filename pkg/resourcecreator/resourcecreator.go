@@ -189,7 +189,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 			for _, p := range app.Spec.GCP.Permissions {
 				policy, err := GoogleIAMPolicyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				if err != nil {
-					return nil, fmt.Errorf("unable to createObjectMetadataAndSQLUser iampolicymember: %w", err)
+					return nil, fmt.Errorf("unable to create iampolicymember: %w", err)
 				}
 				ops = append(ops, ResourceOperation{policy, OperationCreateIfNotExists})
 			}
@@ -205,7 +205,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 			vses, err := VirtualServices(app, resourceOptions.GatewayMappings)
 
 			if err != nil {
-				return nil, fmt.Errorf("unable to createObjectMetadataAndSQLUser VirtualServices: %s", err)
+				return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
 			}
 
 			for _, vs := range vses {
@@ -214,7 +214,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		}
 		authorizationPolicy, err := AuthorizationPolicy(app, resourceOptions)
 		if err != nil {
-			return nil, fmt.Errorf("unable to createObjectMetadataAndSQLUser AuthorizationPolicy: %s", err)
+			return nil, fmt.Errorf("unable to create AuthorizationPolicy: %s", err)
 		}
 		if authorizationPolicy != nil {
 			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
