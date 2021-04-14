@@ -61,16 +61,21 @@ func GoogleSQLSecretName(app *nais.Application) string {
 	return fmt.Sprintf("google-sql-%s", app.Name)
 }
 
-func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, secretKeyRefEnvName string, cascadingDelete bool, projectId string) *google_sql_crd.SQLUser {
-	objectMeta := app.CreateObjectMetaWithName(instance.Name)
+func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, secretKeyRefEnvName string, cascadingDelete bool, projectId string, sqlUserName string) *google_sql_crd.SQLUser {
+	objectMetadata := app.CreateObjectMetaWithName(sqlUserName)
+	setAnnotations(objectMetadata, cascadingDelete, projectId)
+	return createSQLUser(app, objectMetadata, instance.Name, secretKeyRefEnvName)
+}
 
+func setAnnotations(objectMeta k8s_meta.ObjectMeta, cascadingDelete bool, projectId string) {
 	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
-
 	if !cascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
 		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
 	}
+}
 
+func createSQLUser(app *nais.Application, objectMeta k8s_meta.ObjectMeta, instanceName string, secretKeyRefEnvName string) *google_sql_crd.SQLUser {
 	return &google_sql_crd.SQLUser{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "SQLUser",
@@ -78,7 +83,7 @@ func GoogleSqlUser(app *nais.Application, instance *google_sql_crd.SQLInstance, 
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLUserSpec{
-			InstanceRef: google_sql_crd.InstanceRef{Name: instance.Name},
+			InstanceRef: google_sql_crd.InstanceRef{Name: instanceName},
 			Password: google_sql_crd.SqlUserPasswordValue{
 				ValueFrom: google_sql_crd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: google_sql_crd.SecretRef{

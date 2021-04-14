@@ -167,8 +167,15 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 				if err != nil {
 					return nil, fmt.Errorf("unable to assign sql password: %s", err)
 				}
-				sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+
+				sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId, instance.Name)
 				ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
+				if sqlInstance.AdditionalUsers != nil {
+					for _, user := range sqlInstance.AdditionalUsers {
+						sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId, user.Name)
+						ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
+					}
+				}
 
 				// FIXME: take into account when refactoring default values
 				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
@@ -182,7 +189,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 			for _, p := range app.Spec.GCP.Permissions {
 				policy, err := GoogleIAMPolicyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				if err != nil {
-					return nil, fmt.Errorf("unable to create iampolicymember: %w", err)
+					return nil, fmt.Errorf("unable to createObjectMetadataAndSQLUser iampolicymember: %w", err)
 				}
 				ops = append(ops, ResourceOperation{policy, OperationCreateIfNotExists})
 			}
@@ -198,7 +205,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 			vses, err := VirtualServices(app, resourceOptions.GatewayMappings)
 
 			if err != nil {
-				return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
+				return nil, fmt.Errorf("unable to createObjectMetadataAndSQLUser VirtualServices: %s", err)
 			}
 
 			for _, vs := range vses {
@@ -207,7 +214,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		}
 		authorizationPolicy, err := AuthorizationPolicy(app, resourceOptions)
 		if err != nil {
-			return nil, fmt.Errorf("unable to create AuthorizationPolicy: %s", err)
+			return nil, fmt.Errorf("unable to createObjectMetadataAndSQLUser AuthorizationPolicy: %s", err)
 		}
 		if authorizationPolicy != nil {
 			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
