@@ -1,0 +1,38 @@
+config:
+  description: vanilla application running with Linkerd gets scuttle env var
+
+resourceoptions:
+  Linkerd: true
+  NetworkPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "scuttle env var"
+        resource:
+          spec:
+            template:
+               spec:
+                 containers:
+                   - name: "myapplication"
+                     env:
+                       - name: "START_WITHOUT_ENVOY"
+                         value: "true"

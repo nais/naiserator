@@ -171,6 +171,10 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		podSpec = podSpecWithKafka(podSpec, resourceOptions)
 	}
 
+	if resourceOptions.Linkerd {
+		podSpec = podSpecWithEnv(podSpec, corev1.EnvVar{Name: "START_WITHOUT_ENVOY", Value: "true"})
+	}
+
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
 		if err != nil {
@@ -190,6 +194,11 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	return podSpec, err
+}
+
+func podSpecWithEnv(spec *corev1.PodSpec, envVar corev1.EnvVar) *corev1.PodSpec {
+	spec.Containers[0].Env = append(spec.Containers[0].Env, envVar)
+	return spec
 }
 
 func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
@@ -425,7 +434,7 @@ func podSpecBase(app *nais.Application) *corev1.PodSpec {
 		ServiceAccountName: app.Name,
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
-		ImagePullSecrets:   []corev1.LocalObjectReference{
+		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gpr-credentials"},
 			{Name: "ghcr-credentials"},
 		},
