@@ -1,5 +1,5 @@
 config:
-  description: custom environment variable name on cloud sql databases
+  description: additional cloudsql users with costume env for each user
 
 resourceoptions:
   Istio: true
@@ -22,6 +22,8 @@ input:
       sqlInstances:
       - databases:
         - name: mydb
+          additionalUsers:
+          - name: additional
           envVarPrefix: "PWNED"
         type: POSTGRES_11
 
@@ -67,6 +69,9 @@ tests:
             PWNED_PORT: "5432"
             PWNED_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
             PWNED_USERNAME: myapplication
+            PWNED_ADDITIONAL_PASSWORD: ".{43}"
+            PWNED_ADDITIONAL_USERNAME: additional
+            PWNED_ADDITIONAL_URL: postgres://additional:.{43}@127.0.0.1:5432/mydb
           type: Opaque
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
@@ -74,7 +79,7 @@ tests:
     name: myapplication
     match:
       - type: subset
-        name: "sql user"
+        name: "additional costume env - sql user: myapplication"
         resource:
           metadata:
             name: myapplication
@@ -91,3 +96,26 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication
                   key: PWNED_PASSWORD
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: additional
+    match:
+      - type: subset
+        name: "additional costume env - sql user: additional"
+        resource:
+          metadata:
+            name: additional
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myapplication
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication
+                  key: PWNED_ADDITIONAL_PASSWORD

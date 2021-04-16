@@ -1,0 +1,148 @@
+config:
+  description: additional cloudsql users with costume env for each user
+
+resourceoptions:
+  Istio: true
+  GoogleProjectID: google-project-id
+  GoogleTeamProjectID: team-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    gcp:
+      sqlInstances:
+      - databases:
+        - name: mydb
+          additionalUsers:
+           - name: additional
+           - name: extra
+        type: POSTGRES_11
+
+tests:
+  - match:
+    - type: subset
+      name: "common metadata"
+      resource:
+        metadata:
+          labels:
+            app: myapplication
+            team: myteam
+          ownerReferences:
+            - apiVersion: v1alpha1
+              kind: Application
+              name: myapplication
+              uid: "123456"
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    match:
+      - type: regex
+        name: "secret"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+            - kind: Application
+              name: myapplication
+              uid: "123456"
+              apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_MYAPPLICATION_MYDB_DATABASE: mydb
+            NAIS_DATABASE_MYAPPLICATION_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_MYAPPLICATION_MYDB_PORT: "5432"
+            NAIS_DATABASE_MYAPPLICATION_MYDB_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_MYAPPLICATION_MYDB_USERNAME: myapplication
+            NAIS_DATABASE_ADDITIONAL_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_ADDITIONAL_MYDB_USERNAME: additional
+            NAIS_DATABASE_ADDITIONAL_MYDB_URL: postgres://additional:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_EXTRA_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_EXTRA_MYDB_USERNAME: extra
+            NAIS_DATABASE_EXTRA_MYDB_URL: postgres://extra:.{43}@127.0.0.1:5432/mydb
+
+          type: Opaque
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: myapplication
+    match:
+      - type: subset
+        name: "additional - sql user: myapplication"
+        resource:
+          metadata:
+            name: myapplication
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myapplication
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication
+                  key: NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: additional
+    match:
+      - type: subset
+        name: "additional sql user: additional"
+        resource:
+          metadata:
+            name: additional
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myapplication
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication
+                  key: NAIS_DATABASE_ADDITIONAL_MYDB_PASSWORD
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: extra
+    match:
+      - type: subset
+        name: "additional - sql user: extra"
+        resource:
+          metadata:
+            name: extra
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myapplication
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication
+                  key: NAIS_DATABASE_EXTRA_MYDB_PASSWORD
