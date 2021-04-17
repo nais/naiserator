@@ -127,6 +127,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 		}
 
 		if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
+
 			vars := make(map[string]string)
 
 			for i, sqlInstance := range app.Spec.GCP.SqlInstances {
@@ -143,42 +144,49 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
 
-				key, err := keygen.Keygen(32)
-				if err != nil {
-					return nil, fmt.Errorf("unable to generate secret for sql user: %s", err)
-				}
-				username := instance.Name
-				password := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key)
-
 				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
 				for _, db := range sqlInstance.Databases {
+					sqlUsers := MergeStandardSQLUser(db.AdditionalUsers, instance.Name)
+
 					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
 					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
-					env := GoogleSQLEnvVars(&db, instance.Name, username, password)
-					for k, v := range env {
-						vars[k] = v
+
+					googleSqlUser := SetupNewGoogleSqlUser(&db, instance)
+					env := GoogleSQLCommonEnvVars(&db, instance.Name)
+					vars = MapEnvToVars(env, vars)
+
+					for _, user := range sqlUsers {
+						googleSqlUser.Name = user.Name
+						password, err := generatePassword()
+						if err != nil {
+							return nil, err
+						}
+
+						env := googleSqlUser.SecretEnvVars(password)
+						vars = MapEnvToVars(env, vars)
+
+						secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, googleSQLPasswordSuffix)
+						if err != nil {
+							return nil, fmt.Errorf("unable to assign sql password: %s", err)
+						}
+
+						sqlUser, err := googleSqlUser.Create(app, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+						if err != nil {
+							return nil, fmt.Errorf("unable to create sql user: %s", err)
+						}
+						ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 					}
 				}
 
-				// FIXME: only works when there is one sql instance
-				secretKeyRefEnvName, err := firstKeyWithSuffix(vars, googleSQLPasswordSuffix)
-				if err != nil {
-					return nil, fmt.Errorf("unable to assign sql password: %s", err)
-				}
-
-				for _, user := range mergeStandardUserWithAdditional(sqlInstance.AdditionalUsers, instance.Name) {
-					sqlUser := GoogleSqlUser(app, instance, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId, user.Name)
-					ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
-				}
+				// Should Operation be OperationCreateOrUpdate?
+				secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
+				ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 
 				// FIXME: take into account when refactoring default values
 				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
 			}
-
-			secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
-			ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 		}
 
 		if app.Spec.GCP != nil && app.Spec.GCP.Permissions != nil {
@@ -267,4 +275,12 @@ func setAnnotation(resource v1.ObjectMetaAccessor, key, value string) {
 	m := resource.GetObjectMeta().GetAnnotations()
 	m[key] = value
 	resource.GetObjectMeta().SetAnnotations(m)
+}
+
+func generatePassword() (string, error) {
+	key, err := keygen.Keygen(32)
+	if err != nil {
+		return "", fmt.Errorf("unable to generate secret for sql user: %s", err)
+	}
+	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key), nil
 }

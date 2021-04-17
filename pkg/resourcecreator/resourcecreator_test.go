@@ -327,11 +327,6 @@ func TestCreate(t *testing.T) {
 						Name: dbName,
 					},
 				},
-				AdditionalUsers: []nais_io_v1alpha1.AdditionalUser{
-					{
-						Name: fmt.Sprintf("%s-%s", instanceName, "read"),
-					},
-				},
 			},
 		}}
 
@@ -353,15 +348,7 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, instanceName, objects.sqlInstance.Name)
 		assert.Equal(t, "02:00", objects.sqlInstance.Spec.Settings.BackupConfiguration.StartTime)
 
-		// to be able to test both outcome of username of templates
-		splitSqlUserName := strings.Split(objects.sqlUser.Name, "-")
-		if len(splitSqlUserName) > 1 {
-			lastIndexInSqlUserName := splitSqlUserName[len(splitSqlUserName)-1]
-			assert.Equal(t, fmt.Sprintf("%s-%s", app.Name, lastIndexInSqlUserName), objects.sqlUser.Name)
-		} else {
-			assert.Equal(t, app.Name, objects.sqlUser.Name)
-		}
-
+		assert.Equal(t, app.Name, objects.sqlUser.Name)
 		assert.Equal(t, dbName, objects.sqlDatabase.Name)
 		assert.Equal(t, instanceName, objects.sqlDatabase.Spec.InstanceRef.Name)
 		assert.Equal(t, instanceName, objects.sqlUser.Spec.InstanceRef.Name)
