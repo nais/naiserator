@@ -42,12 +42,7 @@ func SetupNewGoogleSqlUser(db *nais.CloudSqlDatabase, instance *googlesqlcrd.SQL
 func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix string) (string, error) {
 	for k := range vars {
 		if strings.HasSuffix(k, suffix) {
-			println(k)
-			println(in.Name)
 			toUpperName := strings.ToUpper(in.Name)
-			println(toUpperName)
-			println(strings.Contains(k, toUpperName))
-
 			key := in.filterDefaultUserKey(k, suffix)
 			if len(key) > 0 {
 				return key, nil
