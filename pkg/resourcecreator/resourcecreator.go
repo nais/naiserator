@@ -153,12 +153,14 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
 					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
 
-					googleSqlUser := SetupNewGoogleSqlUser(&db, instance)
-					env := GoogleSQLCommonEnvVars(&db, instance.Name)
-					vars = MapEnvToVars(env, vars)
-
 					for _, user := range sqlUsers {
-						googleSqlUser.Name = user.Name
+						googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
+
+						if googleSqlUser.IsDefault() {
+							env := googleSqlUser.GoogleSQLCommonEnvVars()
+							vars = MapEnvToVars(env, vars)
+						}
+
 						password, err := generatePassword()
 						if err != nil {
 							return nil, err
@@ -180,7 +182,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 					}
 				}
 
-				// Should Operation be OperationCreateOrUpdate?
+				// FIXME: Should Operation be OperationCreateOrUpdate?
 				secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
 				ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 

@@ -31,9 +31,9 @@ type GoogleSqlUser struct {
 	Instance *googlesqlcrd.SQLInstance
 }
 
-func SetupNewGoogleSqlUser(db *nais.CloudSqlDatabase, instance *googlesqlcrd.SQLInstance) GoogleSqlUser {
+func SetupNewGoogleSqlUser(name string, db *nais.CloudSqlDatabase, instance *googlesqlcrd.SQLInstance) GoogleSqlUser {
 	return GoogleSqlUser{
-		Name:     "",
+		Name:     name,
 		DB:       db,
 		Instance: instance,
 	}
@@ -55,7 +55,7 @@ func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix
 }
 
 func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
-	if prefixIsSet(in.DB.EnvVarPrefix) && in.isDefault() {
+	if in.prefixIsSet() && in.IsDefault() {
 		prefix := in.getGoogleSecretPrefix()
 		noPrefixSubstring := strings.Replace(key, prefix, "", -1)
 		if noPrefixSubstring == suffix {
@@ -78,15 +78,15 @@ func (in GoogleSqlUser) SecretEnvVars(password string) map[string]string {
 }
 
 func (in GoogleSqlUser) getGoogleSecretPrefix() string {
-	prefix := googleSQLPrefix(in.DB, in.Name)
-	if prefixIsSet(in.DB.EnvVarPrefix) && !in.isDefault() {
+	prefix := in.googleSQLPrefix()
+	if in.prefixIsSet() && !in.IsDefault() {
 		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(in.Name))
 	}
 	return prefix
 }
 
 func (in GoogleSqlUser) uniqueObjectName() (string, error) {
-	if in.isDefault() {
+	if in.IsDefault() {
 		return in.Instance.Name, nil
 	}
 
@@ -99,7 +99,7 @@ func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 	return shortName, nil
 }
 
-func (in GoogleSqlUser) isDefault() bool {
+func (in GoogleSqlUser) IsDefault() bool {
 	return in.Instance.Name == in.Name
 }
 
@@ -121,23 +121,23 @@ func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, project
 	}
 }
 
-func GoogleSQLCommonEnvVars(db *nais.CloudSqlDatabase, sqlUser string) map[string]string {
+func (in GoogleSqlUser) GoogleSQLCommonEnvVars() map[string]string {
 	var prefix string
 
-	prefix = googleSQLPrefix(db, sqlUser)
+	prefix = in.googleSQLPrefix()
 
 	return map[string]string{
 		prefix + googleSQLHostSuffix:     googleSQLPostgresHost,
 		prefix + googleSQLPortSuffix:     googleSQLPostgresPort,
-		prefix + googleSQLDatabaseSuffix: db.Name,
+		prefix + googleSQLDatabaseSuffix: in.DB.Name,
 	}
 }
 
-func googleSQLPrefix(db *nais.CloudSqlDatabase, sqlUser string) string {
-	if prefixIsSet(db.EnvVarPrefix) {
-		return strings.TrimSuffix(db.EnvVarPrefix, "_")
+func (in GoogleSqlUser) googleSQLPrefix() string {
+	if in.prefixIsSet() {
+		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
 	}
-	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(sqlUser), googleSQLDatabaseCase(db.Name))
+	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(in.Name), googleSQLDatabaseCase(in.DB.Name))
 }
 
 func googleSQLDatabaseCase(x string) string {
@@ -152,8 +152,8 @@ func MergeStandardSQLUser(additionalUsers []nais.AdditionalUser, instanceName st
 	return append(additionalUsers, standardUser)
 }
 
-func prefixIsSet(envPrefix string) bool {
-	return len(envPrefix) > 0
+func (in GoogleSqlUser) prefixIsSet() bool {
+	return len(in.DB.EnvVarPrefix) > 0
 }
 
 func MapEnvToVars(env map[string]string, vars map[string]string) map[string]string {

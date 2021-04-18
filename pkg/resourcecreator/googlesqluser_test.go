@@ -27,7 +27,8 @@ func TestGoogleSQLEnvVars(t *testing.T) {
 		Name: "bar",
 	}
 
-	vars := resourcecreator.GoogleSQLCommonEnvVars(db, instance.Name)
+	sqlUser := resourcecreator.SetupNewGoogleSqlUser(instance.Name, db, instance)
+	vars := sqlUser.GoogleSQLCommonEnvVars()
 
 	assert.Equal(t, expected, vars)
 }
@@ -49,8 +50,7 @@ func TestGoogleSQLSecretEnvVars(t *testing.T) {
 		Name: "bar",
 	}
 
-	sqlUser := resourcecreator.SetupNewGoogleSqlUser(db, instance)
-	sqlUser.Name = instance.Name
+	sqlUser := resourcecreator.SetupNewGoogleSqlUser(instance.Name, db, instance)
 	vars := sqlUser.SecretEnvVars("password")
 
 	assert.Equal(t, expected, vars)
@@ -88,13 +88,13 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 
 	result := make(map[string]string)
 
-	googleSqlUser := resourcecreator.SetupNewGoogleSqlUser(db, instance)
 	for _, sqlUser := range sqlUsers {
-		googleSqlUser.Name = sqlUser.Name
+		googleSqlUser := resourcecreator.SetupNewGoogleSqlUser(sqlUser.Name, db, instance)
 		vars := googleSqlUser.SecretEnvVars("password")
 		result = resourcecreator.MapEnvToVars(vars, result)
 	}
 
+	assert.Equal(t, len(expected), len(result))
 	assert.Equal(t, expected, result)
 }
 
@@ -128,8 +128,7 @@ func TestKeyWithSuffixMatchingUser(t *testing.T) {
 		"YOLO_ADDITIONAL_URL":      "postgres://additional:password@127.0.0.1:5432/bar",
 	}
 
-	googleSqlUser := resourcecreator.SetupNewGoogleSqlUser(db, instance)
-	googleSqlUser.Name = sqlUsers[0].Name
+	googleSqlUser := resourcecreator.SetupNewGoogleSqlUser(sqlUsers[0].Name, db, instance)
 	key, nil := googleSqlUser.KeyWithSuffixMatchingUser(envs, "_PASSWORD")
 	assert.Nil(t, nil)
 	assert.Equal(t, "YOLO_PASSWORD", key)
