@@ -92,6 +92,7 @@ func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 
 	baseName := fmt.Sprintf("%s-%s-%s", in.Instance.Name, in.Instance.Namespace, in.Name)
 	shortName, err := namegen.ShortName(baseName, maxLengthShortName)
+
 	if err != nil {
 		return "", err
 	}
@@ -140,6 +141,10 @@ func (in GoogleSqlUser) googleSQLPrefix() string {
 	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(in.Name), googleSQLDatabaseCase(in.DB.Name))
 }
 
+func (in GoogleSqlUser) prefixIsSet() bool {
+	return len(in.DB.EnvVarPrefix) > 0
+}
+
 func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
 }
@@ -150,10 +155,6 @@ func MergeStandardSQLUser(additionalUsers []nais.AdditionalUser, instanceName st
 		return []nais.AdditionalUser{standardUser}
 	}
 	return append(additionalUsers, standardUser)
-}
-
-func (in GoogleSqlUser) prefixIsSet() bool {
-	return len(in.DB.EnvVarPrefix) > 0
 }
 
 func MapEnvToVars(env map[string]string, vars map[string]string) map[string]string {
