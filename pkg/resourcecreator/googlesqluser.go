@@ -78,7 +78,7 @@ func (in GoogleSqlUser) SecretEnvVars(password string) map[string]string {
 }
 
 func (in GoogleSqlUser) getGoogleSecretPrefix() string {
-	prefix := in.googleSQLPrefix()
+	prefix := in.sqlUserEnvPrefix()
 	if in.prefixIsSet() && !in.IsDefault() {
 		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(in.Name))
 	}
@@ -111,7 +111,7 @@ func (in GoogleSqlUser) Create(app *nais.Application, secretKeyRefEnvName string
 	}
 	objectMetadata := app.CreateObjectMetaWithName(objectDataName)
 	setAnnotations(objectMetadata, cascadingDelete, projectId)
-	return createSQLUser(app, objectMetadata, in.Instance.Name, secretKeyRefEnvName), nil
+	return create(app, objectMetadata, in.Instance.Name, secretKeyRefEnvName), nil
 }
 
 func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, projectId string) {
@@ -122,10 +122,10 @@ func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, project
 	}
 }
 
-func (in GoogleSqlUser) GoogleSQLCommonEnvVars() map[string]string {
+func (in GoogleSqlUser) CommonEnvVars() map[string]string {
 	var prefix string
 
-	prefix = in.googleSQLPrefix()
+	prefix = in.sqlUserEnvPrefix()
 
 	return map[string]string{
 		prefix + googleSQLHostSuffix:     googleSQLPostgresHost,
@@ -134,7 +134,7 @@ func (in GoogleSqlUser) GoogleSQLCommonEnvVars() map[string]string {
 	}
 }
 
-func (in GoogleSqlUser) googleSQLPrefix() string {
+func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
 	}
@@ -149,7 +149,7 @@ func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
 }
 
-func MergeStandardSQLUser(additionalUsers []nais.AdditionalUser, instanceName string) []nais.AdditionalUser {
+func MergeDefaultSQLUser(additionalUsers []nais.AdditionalUser, instanceName string) []nais.AdditionalUser {
 	standardUser := nais.AdditionalUser{Name: instanceName}
 	if additionalUsers == nil {
 		return []nais.AdditionalUser{standardUser}
@@ -168,7 +168,7 @@ func GoogleSQLSecretName(app *nais.Application) string {
 	return fmt.Sprintf("google-sql-%s", app.Name)
 }
 
-func createSQLUser(app *nais.Application, objectMeta k8smeta.ObjectMeta, instanceName string, secretKeyRefEnvName string) *googlesqlcrd.SQLUser {
+func create(app *nais.Application, objectMeta k8smeta.ObjectMeta, instanceName string, secretKeyRefEnvName string) *googlesqlcrd.SQLUser {
 	return &googlesqlcrd.SQLUser{
 		TypeMeta: k8smeta.TypeMeta{
 			Kind:       "SQLUser",

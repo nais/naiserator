@@ -28,7 +28,7 @@ func TestGoogleSQLEnvVars(t *testing.T) {
 	}
 
 	sqlUser := resourcecreator.SetupNewGoogleSqlUser(instance.Name, db, instance)
-	vars := sqlUser.GoogleSQLCommonEnvVars()
+	vars := sqlUser.CommonEnvVars()
 
 	assert.Equal(t, expected, vars)
 }

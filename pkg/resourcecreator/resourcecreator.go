@@ -148,7 +148,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
 				for _, db := range sqlInstance.Databases {
-					sqlUsers := MergeStandardSQLUser(db.AdditionalUsers, instance.Name)
+					sqlUsers := MergeDefaultSQLUser(db.AdditionalUsers, instance.Name)
 
 					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
 					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
@@ -157,7 +157,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 						googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
 
 						if googleSqlUser.IsDefault() {
-							env := googleSqlUser.GoogleSQLCommonEnvVars()
+							env := googleSqlUser.CommonEnvVars()
 							vars = MapEnvToVars(env, vars)
 						}
 
