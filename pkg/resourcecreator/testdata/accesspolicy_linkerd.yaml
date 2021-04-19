@@ -72,6 +72,13 @@ tests:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
               - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/extension: viz
+                    podSelector:
+                      matchLabels:
+                        component: tap
+              - from:
                   - podSelector:
                       matchLabels:
                         app: app1
