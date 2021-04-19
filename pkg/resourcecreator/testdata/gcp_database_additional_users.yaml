@@ -1,5 +1,5 @@
 config:
-  description: additional cloudsql users with costume env for each user
+  description: additional cloudsql users
 
 resourceoptions:
   Istio: true
@@ -22,9 +22,9 @@ input:
       sqlInstances:
       - databases:
         - name: mydb
-          additionalUsers:
-           - name: additional
-           - name: extra
+          users:
+           - name: user-two
+           - name: user-three
         type: POSTGRES_11
 
 tests:
@@ -45,9 +45,10 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
+    name: google-sql-myapplication
     match:
       - type: regex
-        name: "secret"
+        name: "secret default"
         exclude:
           - metadata.creationTimestamp
         resource:
@@ -69,14 +70,68 @@ tests:
             NAIS_DATABASE_MYAPPLICATION_MYDB_PORT: "5432"
             NAIS_DATABASE_MYAPPLICATION_MYDB_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
             NAIS_DATABASE_MYAPPLICATION_MYDB_USERNAME: myapplication
-            NAIS_DATABASE_ADDITIONAL_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_ADDITIONAL_MYDB_USERNAME: additional
-            NAIS_DATABASE_ADDITIONAL_MYDB_URL: postgres://additional:.{43}@127.0.0.1:5432/mydb
-            NAIS_DATABASE_EXTRA_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_EXTRA_MYDB_USERNAME: extra
-            NAIS_DATABASE_EXTRA_MYDB_URL: postgres://extra:.{43}@127.0.0.1:5432/mydb
-
           type: Opaque
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication-user-two
+    match:
+      - type: regex
+        name: "secret two"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication-user-two
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+            - kind: Application
+              name: myapplication
+              uid: "123456"
+              apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_USER_TWO_MYDB_DATABASE: mydb
+            NAIS_DATABASE_USER_TWO_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_USER_TWO_MYDB_PORT: "5432"
+            NAIS_DATABASE_USER_TWO_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: user-two
+            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://user-two:.{43}@127.0.0.1:5432/mydb
+          type: Opaque
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication-user-three
+    match:
+      - type: regex
+        name: "secret three"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication-user-three
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+            - kind: Application
+              name: myapplication
+              uid: "123456"
+              apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_USER_THREE_MYDB_DATABASE: mydb
+            NAIS_DATABASE_USER_THREE_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_USER_THREE_MYDB_PORT: "5432"
+            NAIS_DATABASE_USER_THREE_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_USER_THREE_MYDB_USERNAME: user-three
+            NAIS_DATABASE_USER_THREE_MYDB_URL: postgres://user-three:.{43}@127.0.0.1:5432/mydb
+          type: Opaque
+
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -103,10 +158,10 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication-mynamespace-additional-6f8a9bfd
+    name: myapplication-user-two-df860d3e
     match:
       - type: subset
-        name: "additional sql user: additional"
+        name: "sql user: user-two"
         resource:
           metadata:
             name: additional
@@ -121,15 +176,15 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication
-                  key: NAIS_DATABASE_ADDITIONAL_MYDB_PASSWORD
+                  name: google-sql-myapplication-user-two
+                  key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication-mynamespace-extra-e2159c39
+    name: myapplication-user-three-477bd766
     match:
       - type: subset
-        name: "additional - sql user: extra"
+        name: "sql user: user-three"
         resource:
           metadata:
             name: extra
@@ -144,5 +199,5 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication
-                  key: NAIS_DATABASE_EXTRA_MYDB_PASSWORD
+                  name: google-sql-myapplication-user-three
+                  key: NAIS_DATABASE_USER_THREE_MYDB_PASSWORD

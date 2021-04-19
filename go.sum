@@ -275,6 +275,8 @@ github.com/nais/liberator v0.0.0-20210414105606-6e19a1abe9fd h1:inTQcoxqJDtrgnXK
 github.com/nais/liberator v0.0.0-20210414105606-6e19a1abe9fd/go.mod h1:WKolMbHDQm5+/ivAhJ7Tyv7kimsXFy9eKY1MyWr+96s=
 github.com/nais/liberator v0.0.0-20210416102540-c04054f5779d h1:B2dJflOq/aoGxDOR+H8L9mKXaitdBLyUVzE+evvCPpc=
 github.com/nais/liberator v0.0.0-20210416102540-c04054f5779d/go.mod h1:WKolMbHDQm5+/ivAhJ7Tyv7kimsXFy9eKY1MyWr+96s=
+github.com/nais/liberator v0.0.0-20210419210851-54796085dfc3 h1:EidCZSDfTiJ1lIupj1VI98OeBMTw4i1DeucjEYYivDY=
+github.com/nais/liberator v0.0.0-20210419210851-54796085dfc3/go.mod h1:WKolMbHDQm5+/ivAhJ7Tyv7kimsXFy9eKY1MyWr+96s=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=

@@ -128,8 +128,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 
 		if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
 
-			vars := make(map[string]string)
-
 			for i, sqlInstance := range app.Spec.GCP.SqlInstances {
 				if i > 0 {
 					return nil, fmt.Errorf("only one sql instance is supported")
@@ -148,25 +146,22 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
 				for _, db := range sqlInstance.Databases {
-					sqlUsers := MergeDefaultSQLUser(db.AdditionalUsers, instance.Name)
+					sqlUsers := MergeDefaultSQLUser(db.Users, instance.Name)
 
 					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
 					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
 
 					for _, user := range sqlUsers {
-						googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
+						vars := make(map[string]string)
 
-						if googleSqlUser.IsDefault() {
-							env := googleSqlUser.CommonEnvVars()
-							vars = MapEnvToVars(env, vars)
-						}
+						googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
 
 						password, err := generatePassword()
 						if err != nil {
 							return nil, err
 						}
 
-						env := googleSqlUser.SecretEnvVars(password)
+						env := googleSqlUser.CreateUserEnvVars(password)
 						vars = MapEnvToVars(env, vars)
 
 						secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, googleSQLPasswordSuffix)
@@ -179,12 +174,11 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 							return nil, fmt.Errorf("unable to create sql user: %s", err)
 						}
 						ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
+
+						secret := OpaqueSecret(app, GoogleSQLSecretName(app, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
+						ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 					}
 				}
-
-				// FIXME: Should Operation be OperationCreateOrUpdate?
-				secret := OpaqueSecret(app, GoogleSQLSecretName(app), vars)
-				ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
 
 				// FIXME: take into account when refactoring default values
 				app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name

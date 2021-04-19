@@ -42,7 +42,7 @@ func SetupNewGoogleSqlUser(name string, db *nais.CloudSqlDatabase, instance *goo
 func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix string) (string, error) {
 	for k := range vars {
 		if strings.HasSuffix(k, suffix) {
-			toUpperName := strings.ToUpper(in.Name)
+			toUpperName := googleSQLDatabaseCase(in.Name)
 			key := in.filterDefaultUserKey(k, suffix)
 			if len(key) > 0 {
 				return key, nil
@@ -55,8 +55,8 @@ func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix
 }
 
 func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
-	if in.prefixIsSet() && in.IsDefault() {
-		prefix := in.getGoogleSecretPrefix()
+	if in.prefixIsSet() && in.isDefault() {
+		prefix := in.googleSqlUserPrefix()
 		noPrefixSubstring := strings.Replace(key, prefix, "", -1)
 		if noPrefixSubstring == suffix {
 			return key
@@ -65,73 +65,27 @@ func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
 	return ""
 }
 
-func (in GoogleSqlUser) SecretEnvVars(password string) map[string]string {
+func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 	var prefix string
 
-	prefix = in.getGoogleSecretPrefix()
+	prefix = in.googleSqlUserPrefix()
 
 	return map[string]string{
+		prefix + googleSQLHostSuffix:     googleSQLPostgresHost,
+		prefix + googleSQLPortSuffix:     googleSQLPostgresPort,
+		prefix + googleSQLDatabaseSuffix: in.DB.Name,
 		prefix + googleSQLUsernameSuffix: in.Name,
 		prefix + googleSQLPasswordSuffix: password,
 		prefix + googleSQLURLSuffix:      fmt.Sprintf(googleSQLPostgresURL, in.Name, password, googleSQLPostgresHost, googleSQLPostgresPort, in.DB.Name),
 	}
 }
 
-func (in GoogleSqlUser) getGoogleSecretPrefix() string {
+func (in GoogleSqlUser) googleSqlUserPrefix() string {
 	prefix := in.sqlUserEnvPrefix()
-	if in.prefixIsSet() && !in.IsDefault() {
+	if in.prefixIsSet() && !in.isDefault() {
 		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(in.Name))
 	}
 	return prefix
-}
-
-func (in GoogleSqlUser) uniqueObjectName() (string, error) {
-	if in.IsDefault() {
-		return in.Instance.Name, nil
-	}
-
-	baseName := fmt.Sprintf("%s-%s-%s", in.Instance.Name, in.Instance.Namespace, in.Name)
-	shortName, err := namegen.ShortName(baseName, maxLengthShortName)
-
-	if err != nil {
-		return "", err
-	}
-
-	return shortName, nil
-}
-
-func (in GoogleSqlUser) IsDefault() bool {
-	return in.Instance.Name == in.Name
-}
-
-func (in GoogleSqlUser) Create(app *nais.Application, secretKeyRefEnvName string, cascadingDelete bool, projectId string) (*googlesqlcrd.SQLUser, error) {
-	objectDataName, err := in.uniqueObjectName()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create meatadata: %s", err)
-	}
-	objectMetadata := app.CreateObjectMetaWithName(objectDataName)
-	setAnnotations(objectMetadata, cascadingDelete, projectId)
-	return create(app, objectMetadata, in.Instance.Name, secretKeyRefEnvName), nil
-}
-
-func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, projectId string) {
-	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
-	if !cascadingDelete {
-		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
-		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
-	}
-}
-
-func (in GoogleSqlUser) CommonEnvVars() map[string]string {
-	var prefix string
-
-	prefix = in.sqlUserEnvPrefix()
-
-	return map[string]string{
-		prefix + googleSQLHostSuffix:     googleSQLPostgresHost,
-		prefix + googleSQLPortSuffix:     googleSQLPostgresPort,
-		prefix + googleSQLDatabaseSuffix: in.DB.Name,
-	}
 }
 
 func (in GoogleSqlUser) sqlUserEnvPrefix() string {
@@ -145,30 +99,37 @@ func (in GoogleSqlUser) prefixIsSet() bool {
 	return len(in.DB.EnvVarPrefix) > 0
 }
 
-func googleSQLDatabaseCase(x string) string {
-	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
+func (in GoogleSqlUser) isDefault() bool {
+	return in.Instance.Name == in.Name
 }
 
-func MergeDefaultSQLUser(additionalUsers []nais.AdditionalUser, instanceName string) []nais.AdditionalUser {
-	standardUser := nais.AdditionalUser{Name: instanceName}
-	if additionalUsers == nil {
-		return []nais.AdditionalUser{standardUser}
+func (in GoogleSqlUser) Create(app *nais.Application, secretKeyRefEnvName string, cascadingDelete bool, projectId string) (*googlesqlcrd.SQLUser, error) {
+	objectDataName, err := in.uniqueObjectName()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create meatadata: %s", err)
 	}
-	return append(additionalUsers, standardUser)
+	objectMetadata := app.CreateObjectMetaWithName(objectDataName)
+	setAnnotations(objectMetadata, cascadingDelete, projectId)
+	return in.create(app, objectMetadata, secretKeyRefEnvName), nil
 }
 
-func MapEnvToVars(env map[string]string, vars map[string]string) map[string]string {
-	for k, v := range env {
-		vars[k] = v
+func (in GoogleSqlUser) uniqueObjectName() (string, error) {
+	if in.isDefault() {
+		return in.Instance.Name, nil
 	}
-	return vars
+	baseName := fmt.Sprintf("%s-%s", in.Instance.Name, in.Name)
+	return namegen.ShortName(baseName, maxLengthShortName)
 }
 
-func GoogleSQLSecretName(app *nais.Application) string {
-	return fmt.Sprintf("google-sql-%s", app.Name)
+func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, projectId string) {
+	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
+	if !cascadingDelete {
+		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
+		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
+	}
 }
 
-func create(app *nais.Application, objectMeta k8smeta.ObjectMeta, instanceName string, secretKeyRefEnvName string) *googlesqlcrd.SQLUser {
+func (in GoogleSqlUser) create(app *nais.Application, objectMeta k8smeta.ObjectMeta, secretKeyRefEnvName string) *googlesqlcrd.SQLUser {
 	return &googlesqlcrd.SQLUser{
 		TypeMeta: k8smeta.TypeMeta{
 			Kind:       "SQLUser",
@@ -176,15 +137,62 @@ func create(app *nais.Application, objectMeta k8smeta.ObjectMeta, instanceName s
 		},
 		ObjectMeta: objectMeta,
 		Spec: googlesqlcrd.SQLUserSpec{
-			InstanceRef: googlesqlcrd.InstanceRef{Name: instanceName},
+			InstanceRef: googlesqlcrd.InstanceRef{Name: in.Instance.Name},
 			Password: googlesqlcrd.SqlUserPasswordValue{
 				ValueFrom: googlesqlcrd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: googlesqlcrd.SecretRef{
 						Key:  secretKeyRefEnvName,
-						Name: GoogleSQLSecretName(app),
+						Name: GoogleSQLSecretName(app, in.Instance.Name, in.Name),
 					},
 				},
 			},
 		},
 	}
+}
+
+func GoogleSQLSecretName(app *nais.Application, instanceName string, sqlUserName string) string {
+	if isDefault(instanceName, sqlUserName) {
+		return fmt.Sprintf("google-sql-%s", app.Name)
+	}
+	return fmt.Sprintf("google-sql-%s-%s", app.Name, sqlUserName)
+}
+
+func isDefault(instanceName string, sqlUserName string) bool {
+	return instanceName == sqlUserName
+}
+
+func googleSQLDatabaseCase(x string) string {
+	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
+}
+
+func MergeDefaultSQLUser(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) []nais.CloudSqlDatabaseUser {
+	defaultUser := nais.CloudSqlDatabaseUser{Name: instanceName}
+
+	if dbUsers == nil {
+		return []nais.CloudSqlDatabaseUser{defaultUser}
+	}
+
+	return removeDuplicates(append(dbUsers, defaultUser))
+
+}
+
+func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDatabaseUser {
+	keys := make(map[string]bool)
+	var set []nais.CloudSqlDatabaseUser
+
+	for _, user := range dbUsers {
+		toLowerCaseUser := strings.ToLower(user.Name)
+		if _, value := keys[toLowerCaseUser]; !value {
+			keys[user.Name] = true
+			set = append(set, user)
+		}
+	}
+	return set
+}
+
+func MapEnvToVars(env map[string]string, vars map[string]string) map[string]string {
+	for k, v := range env {
+		vars[k] = v
+	}
+	return vars
 }

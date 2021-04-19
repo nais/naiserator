@@ -122,11 +122,10 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	podSpec := podSpecBase(app)
 
 	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
-		podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GoogleSQLSecretName(app)))
+		podSpec = appendGoogleSQLUserSecretEnvs(podSpec, app)
 		for _, instance := range app.Spec.GCP.SqlInstances {
 			podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 5432, resourceOptions.GoogleTeamProjectId))
 		}
-
 	}
 
 	if len(resourceOptions.HostAliases) > 0 {
@@ -190,6 +189,18 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	}
 
 	return podSpec, err
+}
+
+func appendGoogleSQLUserSecretEnvs(podSpec *corev1.PodSpec, app *nais.Application) *corev1.PodSpec {
+	for _, instance := range app.Spec.GCP.SqlInstances {
+		for _, db := range instance.Databases {
+			googleSQLUsers := MergeDefaultSQLUser(db.Users, instance.Name)
+			for _, user := range googleSQLUsers {
+				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GoogleSQLSecretName(app, instance.Name, user.Name)))
+			}
+		}
+	}
+	return podSpec
 }
 
 func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
@@ -425,7 +436,7 @@ func podSpecBase(app *nais.Application) *corev1.PodSpec {
 		ServiceAccountName: app.Name,
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
-		ImagePullSecrets:   []corev1.LocalObjectReference{
+		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gpr-credentials"},
 			{Name: "ghcr-credentials"},
 		},
