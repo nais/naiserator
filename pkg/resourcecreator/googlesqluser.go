@@ -42,7 +42,7 @@ func SetupNewGoogleSqlUser(name string, db *nais.CloudSqlDatabase, instance *goo
 func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix string) (string, error) {
 	for k := range vars {
 		if strings.HasSuffix(k, suffix) {
-			toUpperName := googleSQLDatabaseCase(in.Name)
+			toUpperName := googleSQLDatabaseCase(trim(in.Name))
 			key := in.filterDefaultUserKey(k, suffix)
 			if len(key) > 0 {
 				return key, nil
@@ -57,7 +57,7 @@ func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix
 func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
 	if in.prefixIsSet() && in.isDefault() {
 		prefix := in.googleSqlUserPrefix()
-		noPrefixSubstring := strings.Replace(key, prefix, "", -1)
+		noPrefixSubstring := strings.TrimPrefix(key, prefix)
 		if noPrefixSubstring == suffix {
 			return key
 		}
@@ -83,7 +83,7 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 func (in GoogleSqlUser) googleSqlUserPrefix() string {
 	prefix := in.sqlUserEnvPrefix()
 	if in.prefixIsSet() && !in.isDefault() {
-		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(in.Name))
+		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trim(in.Name)))
 	}
 	return prefix
 }
@@ -92,7 +92,7 @@ func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
 	}
-	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(in.Name), googleSQLDatabaseCase(in.DB.Name))
+	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trim(in.Name)), googleSQLDatabaseCase(in.DB.Name))
 }
 
 func (in GoogleSqlUser) prefixIsSet() bool {
@@ -117,7 +117,7 @@ func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 	if in.isDefault() {
 		return in.Instance.Name, nil
 	}
-	baseName := fmt.Sprintf("%s-%s", in.Instance.Name, in.Name)
+	baseName := fmt.Sprintf("%s-%s", in.Instance.Name, replace(trim(in.Name)))
 	return namegen.ShortName(baseName, maxLengthShortName)
 }
 
@@ -151,10 +151,11 @@ func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, project
 }
 
 func GoogleSQLSecretName(app *nais.Application, instanceName string, sqlUserName string) string {
+	// isDefault is a legacy compatibility
 	if isDefault(instanceName, sqlUserName) {
 		return fmt.Sprintf("google-sql-%s", app.Name)
 	}
-	return fmt.Sprintf("google-sql-%s-%s", app.Name, sqlUserName)
+	return fmt.Sprintf("google-sql-%s-%s", app.Name, replace(trim(sqlUserName)))
 }
 
 func isDefault(instanceName string, sqlUserName string) bool {
@@ -165,6 +166,14 @@ func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
 }
 
+func trim(x string) string {
+	return strings.TrimPrefix(x, "_")
+}
+
+func replace(x string) string {
+	return strings.ReplaceAll(x, "_", "-")
+}
+
 func MergeAndFilterSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) []nais.CloudSqlDatabaseUser {
 	defaultUser := nais.CloudSqlDatabaseUser{Name: instanceName}
 
@@ -173,7 +182,6 @@ func MergeAndFilterSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName st
 	}
 
 	return removeDuplicates(append(dbUsers, defaultUser))
-
 }
 
 func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDatabaseUser {
@@ -181,8 +189,8 @@ func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDataba
 	var set []nais.CloudSqlDatabaseUser
 
 	for _, user := range dbUsers {
-		filteredUser := ignoreCaseAndReplaceFilter(user.Name)
-		if _, value := keys[filteredUser]; !value {
+		ignoreCaseUser := ignoreCase(user.Name)
+		if _, value := keys[ignoreCaseUser]; !value {
 			keys[user.Name] = true
 			set = append(set, user)
 		}
@@ -190,8 +198,8 @@ func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDataba
 	return set
 }
 
-func ignoreCaseAndReplaceFilter(x string) string {
-	return strings.ToLower(strings.ReplaceAll(x, "_", "-"))
+func ignoreCase(x string) string {
+	return strings.ToLower(x)
 }
 
 func MapEnvToVars(env map[string]string, vars map[string]string) map[string]string {

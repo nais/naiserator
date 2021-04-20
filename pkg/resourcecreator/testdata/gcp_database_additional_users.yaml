@@ -23,8 +23,8 @@ input:
       - databases:
         - name: mydb
           users:
-           - name: user-two
-           - name: user-three
+           - name: user_two
+           - name: _user_three3
         type: POSTGRES_11
 
 tests:
@@ -98,14 +98,14 @@ tests:
             NAIS_DATABASE_USER_TWO_MYDB_HOST: 127.0.0.1
             NAIS_DATABASE_USER_TWO_MYDB_PORT: "5432"
             NAIS_DATABASE_USER_TWO_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: user-two
-            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://user-two:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: user_two
+            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://user_two:.{43}@127.0.0.1:5432/mydb
           type: Opaque
 
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-myapplication-user-three
+    name: google-sql-myapplication-user-three3
     match:
       - type: regex
         name: "secret three"
@@ -113,7 +113,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-myapplication-user-three
+            name: google-sql-myapplication-user-three3
             namespace: mynamespace
             labels:
               app: myapplication
@@ -124,12 +124,12 @@ tests:
               uid: "123456"
               apiVersion: v1alpha1
           stringData:
-            NAIS_DATABASE_USER_THREE_MYDB_DATABASE: mydb
-            NAIS_DATABASE_USER_THREE_MYDB_HOST: 127.0.0.1
-            NAIS_DATABASE_USER_THREE_MYDB_PORT: "5432"
-            NAIS_DATABASE_USER_THREE_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_USER_THREE_MYDB_USERNAME: user-three
-            NAIS_DATABASE_USER_THREE_MYDB_URL: postgres://user-three:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_USER_THREE3_MYDB_DATABASE: mydb
+            NAIS_DATABASE_USER_THREE3_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_USER_THREE3_MYDB_PORT: "5432"
+            NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_USER_THREE3_MYDB_USERNAME: _user_three3
+            NAIS_DATABASE_USER_THREE3_MYDB_URL: postgres://_user_three3:.{43}@127.0.0.1:5432/mydb
           type: Opaque
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -181,7 +181,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication-user-three-477bd766
+    name: myapplication-user-three3-c9443121
     match:
       - type: subset
         name: "sql user: user-three"
@@ -199,5 +199,5 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication-user-three
-                  key: NAIS_DATABASE_USER_THREE_MYDB_PASSWORD
+                  name: google-sql-myapplication-user-three3
+                  key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD
