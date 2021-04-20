@@ -152,6 +152,9 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 			Name: "USER-THREE",
 		},
 		{
+			Name: "USER_THREE",
+		},
+		{
 			Name: instance.Name,
 		},
 		{
@@ -171,9 +174,9 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 		},
 	}
 
-	mergedUsers := resourcecreator.MergeDefaultSQLUser(nil, instance.Name)
+	mergedUsers := resourcecreator.MergeAndFilterSQLUsers(nil, instance.Name)
 	assert.Equal(t, []nais.CloudSqlDatabaseUser{{Name: instance.Name}}, mergedUsers)
 
-	mergedUsers = resourcecreator.MergeDefaultSQLUser(dbUsers, instance.Name)
+	mergedUsers = resourcecreator.MergeAndFilterSQLUsers(dbUsers, instance.Name)
 	assert.Equal(t, expected, mergedUsers)
 }

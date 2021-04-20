@@ -146,7 +146,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
 				for _, db := range sqlInstance.Databases {
-					sqlUsers := MergeDefaultSQLUser(db.Users, instance.Name)
+					sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
 
 					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
 					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})

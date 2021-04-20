@@ -121,14 +121,6 @@ func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 	return namegen.ShortName(baseName, maxLengthShortName)
 }
 
-func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, projectId string) {
-	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
-	if !cascadingDelete {
-		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
-		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
-	}
-}
-
 func (in GoogleSqlUser) create(app *nais.Application, objectMeta k8smeta.ObjectMeta, secretKeyRefEnvName string) *googlesqlcrd.SQLUser {
 	return &googlesqlcrd.SQLUser{
 		TypeMeta: k8smeta.TypeMeta{
@@ -150,6 +142,14 @@ func (in GoogleSqlUser) create(app *nais.Application, objectMeta k8smeta.ObjectM
 	}
 }
 
+func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, projectId string) {
+	setAnnotation(&objectMeta, GoogleProjectIdAnnotation, projectId)
+	if !cascadingDelete {
+		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
+		setAnnotation(&objectMeta, GoogleDeletionPolicyAnnotation, GoogleDeletionPolicyAbandon)
+	}
+}
+
 func GoogleSQLSecretName(app *nais.Application, instanceName string, sqlUserName string) string {
 	if isDefault(instanceName, sqlUserName) {
 		return fmt.Sprintf("google-sql-%s", app.Name)
@@ -165,7 +165,7 @@ func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
 }
 
-func MergeDefaultSQLUser(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) []nais.CloudSqlDatabaseUser {
+func MergeAndFilterSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) []nais.CloudSqlDatabaseUser {
 	defaultUser := nais.CloudSqlDatabaseUser{Name: instanceName}
 
 	if dbUsers == nil {
@@ -181,13 +181,17 @@ func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDataba
 	var set []nais.CloudSqlDatabaseUser
 
 	for _, user := range dbUsers {
-		toLowerCaseUser := strings.ToLower(user.Name)
-		if _, value := keys[toLowerCaseUser]; !value {
+		filteredUser := ignoreCaseAndReplaceFilter(user.Name)
+		if _, value := keys[filteredUser]; !value {
 			keys[user.Name] = true
 			set = append(set, user)
 		}
 	}
 	return set
+}
+
+func ignoreCaseAndReplaceFilter(x string) string {
+	return strings.ToLower(strings.ReplaceAll(x, "_", "-"))
 }
 
 func MapEnvToVars(env map[string]string, vars map[string]string) map[string]string {
