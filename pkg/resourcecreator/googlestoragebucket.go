@@ -27,7 +27,7 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 
 	if bucket.LifecycleCondition != nil {
 		lifecycleRule := google_storage_crd.LifecycleRules{
-			Action:    google_storage_crd.Action{Type: "Delete"},
+			Action: google_storage_crd.Action{Type: "Delete"},
 			Condition: google_storage_crd.Condition{
 				Age:              bucket.LifecycleCondition.Age,
 				CreatedBefore:    bucket.LifecycleCondition.CreatedBefore,
@@ -35,7 +35,7 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 				WithState:        bucket.LifecycleCondition.WithState,
 			},
 		}
-		storagebucketPolicySpec.LifecycleRules = append(storagebucketPolicySpec.LifecycleRules,lifecycleRule)
+		storagebucketPolicySpec.LifecycleRules = append(storagebucketPolicySpec.LifecycleRules, lifecycleRule)
 	}
 
 	return &google_storage_crd.StorageBucket{
@@ -44,7 +44,7 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 			APIVersion: GoogleStorageAPIVersion,
 		},
 		ObjectMeta: objectMeta,
-		Spec: storagebucketPolicySpec,
+		Spec:       storagebucketPolicySpec,
 	}
 }
 
@@ -61,8 +61,8 @@ func StorageBucketIamPolicyMember(app *nais.Application, bucket *google_storage_
 			Role:   "roles/storage.objectViewer",
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: bucket.APIVersion,
-				Kind: bucket.Kind,
-				Name: &bucket.Name,
+				Kind:       bucket.Kind,
+				Name:       &bucket.Name,
 			},
 		},
 	}

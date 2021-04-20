@@ -170,6 +170,10 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 		podSpec = podSpecWithKafka(podSpec, resourceOptions)
 	}
 
+	if resourceOptions.Linkerd {
+		podSpec = podSpecWithEnv(podSpec, corev1.EnvVar{Name: "START_WITHOUT_ENVOY", Value: "true"})
+	}
+
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
 		if err != nil {
@@ -191,16 +195,9 @@ func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.Po
 	return podSpec, err
 }
 
-func appendGoogleSQLUserSecretEnvs(podSpec *corev1.PodSpec, app *nais.Application) *corev1.PodSpec {
-	for _, instance := range app.Spec.GCP.SqlInstances {
-		for _, db := range instance.Databases {
-			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
-			for _, user := range googleSQLUsers {
-				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GoogleSQLSecretName(app, instance.Name, user.Name)))
-			}
-		}
-	}
-	return podSpec
+func podSpecWithEnv(spec *corev1.PodSpec, envVar corev1.EnvVar) *corev1.PodSpec {
+	spec.Containers[0].Env = append(spec.Containers[0].Env, envVar)
+	return spec
 }
 
 func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
@@ -215,6 +212,18 @@ func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
 			},
 		},
 	}
+}
+
+func appendGoogleSQLUserSecretEnvs(podSpec *corev1.PodSpec, app *nais.Application) *corev1.PodSpec {
+	for _, instance := range app.Spec.GCP.SqlInstances {
+		for _, db := range instance.Databases {
+			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+			for _, user := range googleSQLUsers {
+				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GoogleSQLSecretName(app, instance.Name, user.Name)))
+			}
+		}
+	}
+	return podSpec
 }
 
 func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) *corev1.PodSpec {
