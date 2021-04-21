@@ -161,6 +161,9 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 			Name: "_user_four4",
 		},
 		{
+			Name: "User_fivE",
+		},
+		{
 			Name: instance.Name,
 		},
 		{
@@ -177,6 +180,9 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 		},
 		{
 			Name: "_user_four4",
+		},
+		{
+			Name: "User_fivE",
 		},
 		{
 			Name: instance.Name,

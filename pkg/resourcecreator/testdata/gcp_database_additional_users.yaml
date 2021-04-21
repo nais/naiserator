@@ -23,7 +23,7 @@ input:
       - databases:
         - name: mydb
           users:
-           - name: user_two
+           - name: User_two
            - name: _user_three3
         type: POSTGRES_11
 
@@ -98,8 +98,8 @@ tests:
             NAIS_DATABASE_USER_TWO_MYDB_HOST: 127.0.0.1
             NAIS_DATABASE_USER_TWO_MYDB_PORT: "5432"
             NAIS_DATABASE_USER_TWO_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: user_two
-            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://user_two:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: User_two
+            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://User_two:.{43}@127.0.0.1:5432/mydb
           type: Opaque
 
   - apiVersion: v1

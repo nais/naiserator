@@ -42,7 +42,7 @@ func SetupNewGoogleSqlUser(name string, db *nais.CloudSqlDatabase, instance *goo
 func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix string) (string, error) {
 	for k := range vars {
 		if strings.HasSuffix(k, suffix) {
-			toUpperName := googleSQLDatabaseCase(trim(in.Name))
+			toUpperName := googleSQLDatabaseCase(trimPrefix(in.Name))
 			key := in.filterDefaultUserKey(k, suffix)
 			if len(key) > 0 {
 				return key, nil
@@ -83,7 +83,7 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 func (in GoogleSqlUser) googleSqlUserPrefix() string {
 	prefix := in.sqlUserEnvPrefix()
 	if in.prefixIsSet() && !in.isDefault() {
-		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trim(in.Name)))
+		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trimPrefix(in.Name)))
 	}
 	return prefix
 }
@@ -92,7 +92,7 @@ func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
 	}
-	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trim(in.Name)), googleSQLDatabaseCase(in.DB.Name))
+	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trimPrefix(in.Name)), googleSQLDatabaseCase(in.DB.Name))
 }
 
 func (in GoogleSqlUser) prefixIsSet() bool {
@@ -117,7 +117,7 @@ func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 	if in.isDefault() {
 		return in.Instance.Name, nil
 	}
-	baseName := fmt.Sprintf("%s-%s", in.Instance.Name, replace(trim(in.Name)))
+	baseName := fmt.Sprintf("%s-%s", in.Instance.Name, replaceToLowerWithNoPrefix(in.Name))
 	return namegen.ShortName(baseName, maxLengthShortName)
 }
 
@@ -151,13 +151,13 @@ func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, project
 }
 
 func GoogleSQLSecretName(app *nais.Application, instanceName string, sqlUserName string) string {
-	// isDefault is a legacy compatibility
 	if isDefault(instanceName, sqlUserName) {
 		return fmt.Sprintf("google-sql-%s", app.Name)
 	}
-	return fmt.Sprintf("google-sql-%s-%s", app.Name, replace(trim(sqlUserName)))
+	return fmt.Sprintf("google-sql-%s-%s", app.Name, replaceToLowerWithNoPrefix(sqlUserName))
 }
 
+// isDefault is a legacy compatibility function
 func isDefault(instanceName string, sqlUserName string) bool {
 	return instanceName == sqlUserName
 }
@@ -166,12 +166,13 @@ func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
 }
 
-func trim(x string) string {
-	return strings.TrimPrefix(x, "_")
+func replaceToLowerWithNoPrefix(x string) string {
+	noPrefixX := trimPrefix(x)
+	return strings.ToLower(strings.ReplaceAll(noPrefixX, "_", "-"))
 }
 
-func replace(x string) string {
-	return strings.ReplaceAll(x, "_", "-")
+func trimPrefix(x string) string {
+	return strings.TrimPrefix(x, "_")
 }
 
 func MergeAndFilterSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) []nais.CloudSqlDatabaseUser {
