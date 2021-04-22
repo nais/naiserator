@@ -347,6 +347,7 @@ func TestCreate(t *testing.T) {
 
 		assert.Equal(t, instanceName, objects.sqlInstance.Name)
 		assert.Equal(t, "02:00", objects.sqlInstance.Spec.Settings.BackupConfiguration.StartTime)
+
 		assert.Equal(t, app.Name, objects.sqlUser.Name)
 		assert.Equal(t, dbName, objects.sqlDatabase.Name)
 		assert.Equal(t, instanceName, objects.sqlDatabase.Spec.InstanceRef.Name)

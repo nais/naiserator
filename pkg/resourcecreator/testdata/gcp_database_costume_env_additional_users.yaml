@@ -1,5 +1,5 @@
 config:
-  description: custom environment variable name on cloud sql databases
+  description: additional cloudsql users with costume env for each user
 
 resourceoptions:
   Istio: true
@@ -22,6 +22,8 @@ input:
       sqlInstances:
       - databases:
         - name: mydb
+          users:
+          - name: user_two
           envVarPrefix: "PWNED"
         type: POSTGRES_11
 
@@ -43,9 +45,10 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
+    name: google-sql-myapplication
     match:
       - type: regex
-        name: "secret"
+        name: "secret default"
         exclude:
           - metadata.creationTimestamp
         resource:
@@ -68,13 +71,44 @@ tests:
             PWNED_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
             PWNED_USERNAME: myapplication
           type: Opaque
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication-user-two
+    match:
+      - type: regex
+        name: "secret two"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication-user-two
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+            - kind: Application
+              name: myapplication
+              uid: "123456"
+              apiVersion: v1alpha1
+          stringData:
+            PWNED_USER_TWO_DATABASE: mydb
+            PWNED_USER_TWO_HOST: 127.0.0.1
+            PWNED_USER_TWO_PORT: "5432"
+            PWNED_USER_TWO_PASSWORD: ".{43}"
+            PWNED_USER_TWO_USERNAME: user_two
+            PWNED_USER_TWO_URL: postgres://user_two:.{43}@127.0.0.1:5432/mydb
+          type: Opaque
+
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
     name: myapplication
     match:
       - type: subset
-        name: "sql user"
+        name: "costume env - sql user: myapplication"
         resource:
           metadata:
             name: myapplication
@@ -91,3 +125,26 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication
                   key: PWNED_PASSWORD
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: myapplication-user-two-df860d3e
+    match:
+      - type: subset
+        name: "costume env - sql user: user-two"
+        resource:
+          metadata:
+            name: user-two
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myapplication
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication-user-two
+                  key: PWNED_USER_TWO_PASSWORD

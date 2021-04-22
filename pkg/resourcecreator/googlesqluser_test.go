@@ -3,24 +3,24 @@ package resourcecreator_test
 import (
 	"testing"
 
-	"github.com/magiconair/properties/assert"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestGoogleSQLEnvVars(t *testing.T) {
+func TestGoogleSQLUserEnvVars(t *testing.T) {
 	expected := map[string]string{
-		"NAIS_DATABASE_FOO_BAR_USERNAME": "username",
-		"NAIS_DATABASE_FOO_BAR_PASSWORD": "password",
 		"NAIS_DATABASE_FOO_BAR_HOST":     "127.0.0.1",
 		"NAIS_DATABASE_FOO_BAR_PORT":     "5432",
 		"NAIS_DATABASE_FOO_BAR_DATABASE": "bar",
-		"NAIS_DATABASE_FOO_BAR_URL":      "postgres://username:password@127.0.0.1:5432/bar",
+		"NAIS_DATABASE_FOO_BAR_USERNAME": "foo",
+		"NAIS_DATABASE_FOO_BAR_PASSWORD": "password",
+		"NAIS_DATABASE_FOO_BAR_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
 	}
 
-	instance := &google_sql_crd.SQLInstance{
+	instance := &googlesqlcrd.SQLInstance{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "foo",
 		},
@@ -30,7 +30,168 @@ func TestGoogleSQLEnvVars(t *testing.T) {
 		Name: "bar",
 	}
 
-	vars := resourcecreator.GoogleSQLEnvVars(db, instance.Name, "username", "password")
+	sqlUser := resourcecreator.SetupNewGoogleSqlUser(instance.Name, db, instance)
+	vars := sqlUser.CreateUserEnvVars("password")
 
 	assert.Equal(t, expected, vars)
+}
+
+func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
+	instance := &googlesqlcrd.SQLInstance{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+		},
+	}
+
+	db := &nais.CloudSqlDatabase{
+		Name:         "bar",
+		EnvVarPrefix: "YOLO",
+	}
+
+	sqlUsers := []nais.CloudSqlDatabaseUser{
+		{
+			Name: instance.Name,
+		},
+		{
+			Name: "user_two",
+		},
+	}
+
+	expectedDefault := map[string]string{
+		"YOLO_PASSWORD": "password",
+		"YOLO_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
+		"YOLO_USERNAME": "foo",
+		"YOLO_HOST":     "127.0.0.1",
+		"YOLO_PORT":     "5432",
+		"YOLO_DATABASE": "bar",
+	}
+
+	result := make(map[string]string)
+	defaultUser := resourcecreator.SetupNewGoogleSqlUser(sqlUsers[0].Name, db, instance)
+	vars := defaultUser.CreateUserEnvVars("password")
+	result = resourcecreator.MapEnvToVars(vars, result)
+
+	assert.Equal(t, expectedDefault, result)
+
+	expectedUserTwo := map[string]string{
+		"YOLO_USER_TWO_USERNAME": "user_two",
+		"YOLO_USER_TWO_PASSWORD": "password",
+		"YOLO_USER_TWO_URL":      "postgres://user_two:password@127.0.0.1:5432/bar",
+		"YOLO_USER_TWO_HOST":     "127.0.0.1",
+		"YOLO_USER_TWO_PORT":     "5432",
+		"YOLO_USER_TWO_DATABASE": "bar",
+	}
+
+	result = make(map[string]string)
+	userTwo := resourcecreator.SetupNewGoogleSqlUser(sqlUsers[1].Name, db, instance)
+	vars = userTwo.CreateUserEnvVars("password")
+	result = resourcecreator.MapEnvToVars(vars, result)
+
+	assert.Equal(t, expectedUserTwo, result)
+}
+
+func TestKeyWithSuffixMatchingUser(t *testing.T) {
+	instance := &googlesqlcrd.SQLInstance{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+		},
+	}
+
+	db := &nais.CloudSqlDatabase{
+		Name:         "bar",
+		EnvVarPrefix: "YOLO",
+	}
+
+	sqlUsers := []nais.CloudSqlDatabaseUser{
+		{
+			Name: instance.Name,
+		},
+		{
+			Name: "additional",
+		},
+	}
+
+	envs := map[string]string{
+		"YOLO_URL":                 "postgres://foo:password@127.0.0.1:5432/bar",
+		"YOLO_USERNAME":            "foo",
+		"YOLO_ADDITIONAL_USERNAME": "additional",
+		"YOLO_ADDITIONAL_PASSWORD": "password",
+		"YOLO_PASSWORD":            "password",
+		"YOLO_ADDITIONAL_URL":      "postgres://additional:password@127.0.0.1:5432/bar",
+	}
+
+	googleSqlUser := resourcecreator.SetupNewGoogleSqlUser(sqlUsers[0].Name, db, instance)
+	key, nil := googleSqlUser.KeyWithSuffixMatchingUser(envs, "_PASSWORD")
+	assert.Nil(t, nil)
+	assert.Equal(t, "YOLO_PASSWORD", key)
+
+	googleSqlUser.Name = sqlUsers[1].Name
+	key, nil = googleSqlUser.KeyWithSuffixMatchingUser(envs, "_PASSWORD")
+	assert.Nil(t, nil)
+	assert.Equal(t, "YOLO_ADDITIONAL_PASSWORD", key)
+}
+
+func TestMergeDefaultSQLUser(t *testing.T) {
+	instance := &googlesqlcrd.SQLInstance{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+		},
+	}
+
+	dbUsers := []nais.CloudSqlDatabaseUser{
+		{
+			Name: "user_two",
+		},
+		{
+			Name: "user_three",
+		},
+		{
+			Name: "user_three",
+		},
+		{
+			Name: "USER_THREE",
+		},
+		{
+			Name: "USER_THREE",
+		},
+		{
+			Name: "_user_four4",
+		},
+		{
+			Name: "_user_four4",
+		},
+		{
+			Name: "User_fivE",
+		},
+		{
+			Name: instance.Name,
+		},
+		{
+			Name: instance.Name,
+		},
+	}
+
+	expected := []nais.CloudSqlDatabaseUser{
+		{
+			Name: "user_two",
+		},
+		{
+			Name: "user_three",
+		},
+		{
+			Name: "_user_four4",
+		},
+		{
+			Name: "User_fivE",
+		},
+		{
+			Name: instance.Name,
+		},
+	}
+
+	mergedUsers := resourcecreator.MergeAndFilterSQLUsers(nil, instance.Name)
+	assert.Equal(t, []nais.CloudSqlDatabaseUser{{Name: instance.Name}}, mergedUsers)
+
+	mergedUsers = resourcecreator.MergeAndFilterSQLUsers(dbUsers, instance.Name)
+	assert.Equal(t, expected, mergedUsers)
 }
