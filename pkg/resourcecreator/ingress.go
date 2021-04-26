@@ -159,18 +159,14 @@ func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networki
 		return nil, nil
 	}
 
-	createIngressBase := func(host string) (*networkingv1beta1.Ingress, error) {
+	createIngressBase := func(host, ingressClass string) (*networkingv1beta1.Ingress, error) {
 		ingress := ingressBase(app)
-		ingressClass := ResolveIngressClass(host, options.GatewayMappings)
-		if ingressClass == nil {
-			return nil, fmt.Errorf("domain '%s' is not supported", host)
-		}
-		baseName := fmt.Sprintf("%s-%s", app.Name, *ingressClass)
+		baseName := fmt.Sprintf("%s-%s", app.Name, ingressClass)
 		ingress.Name, err = namegen.ShortName(baseName, maxLengthResourceName)
 		if err != nil {
 			return nil, err
 		}
-		ingress.Annotations["kubernetes.io/ingress.class"] = *ingressClass
+		ingress.Annotations["kubernetes.io/ingress.class"] = ingressClass
 		ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 		ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(app.Spec.Service.Protocol)
 		return ingress, nil
@@ -179,13 +175,17 @@ func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networki
 	ingresses := make(map[string]*networkingv1beta1.Ingress)
 
 	for _, rule := range rules {
-		ingress := ingresses[rule.Host]
+		ingressClass := ResolveIngressClass(rule.Host, options.GatewayMappings)
+		if ingressClass == nil {
+			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
+		}
+		ingress := ingresses[*ingressClass]
 		if ingress == nil {
-			ingress, err = createIngressBase(rule.Host)
+			ingress, err = createIngressBase(rule.Host, *ingressClass)
 			if err != nil {
 				return nil, err
 			}
-			ingresses[rule.Host] = ingress
+			ingresses[*ingressClass] = ingress
 		}
 		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 	}
