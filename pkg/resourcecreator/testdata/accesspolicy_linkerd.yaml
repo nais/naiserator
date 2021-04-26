@@ -79,6 +79,13 @@ tests:
                       matchLabels:
                         component: tap
               - from:
+                    - namespaceSelector:
+                          matchLabels:
+                              linkerd.io/extension: viz
+                      podSelector:
+                          matchLabels:
+                              component: prometheus
+              - from:
                   - podSelector:
                       matchLabels:
                         app: app1

@@ -99,6 +99,10 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options ResourceOptions) [
 			NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
 			PodSelector:       labelSelector("component", "tap"),
 		}))
+		rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+			NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
+			PodSelector:       labelSelector("component", "prometheus"),
+		}))
 	}
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
