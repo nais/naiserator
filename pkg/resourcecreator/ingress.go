@@ -179,13 +179,17 @@ func NginxIngresses(app *nais.Application, options ResourceOptions) ([]*networki
 	ingresses := make(map[string]*networkingv1beta1.Ingress)
 
 	for _, rule := range rules {
-		ingress := ingresses[rule.Host]
+		ingressClass := ResolveIngressClass(rule.Host, options.GatewayMappings)
+		if ingressClass == nil {
+			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
+		}
+		ingress := ingresses[*ingressClass]
 		if ingress == nil {
 			ingress, err = createIngressBase(rule.Host)
 			if err != nil {
 				return nil, err
 			}
-			ingresses[rule.Host] = ingress
+			ingresses[*ingressClass] = ingress
 		}
 		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 	}
