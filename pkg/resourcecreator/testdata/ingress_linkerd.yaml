@@ -24,6 +24,7 @@ input:
       - https://foo.bar
       - https://foo.bar/baz
       - https://bar.baz/foo
+      - https://bar.baz/trailingslash/
 
 tests:
   - apiVersion: networking.k8s.io/v1beta1
@@ -105,3 +106,10 @@ tests:
                         serviceName: myapplication
                         servicePort: 80
                       path: /foo(/.*)?
+              - host: bar.baz
+                http:
+                  paths:
+                    - backend:
+                        serviceName: myapplication
+                        servicePort: 80
+                      path: /trailingslash(/.*)?
