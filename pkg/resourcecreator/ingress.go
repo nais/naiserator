@@ -66,7 +66,7 @@ func ingressRulesNginx(app *nais.Application) ([]networkingv1beta1.IngressRule, 
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 		}
 
-		if len(parsedUrl.Path) > 0 {
+		if len(parsedUrl.Path) > 1 {
 			err = util.ValidateUrl(parsedUrl)
 			if err != nil {
 				return nil, err

@@ -23,6 +23,7 @@ input:
       - https://baz.bar
       - https://foo.bar
       - https://foo.bar/baz
+      - https://bar.baz/
       - https://bar.baz/foo
       - https://bar.baz/trailingslash/
 
@@ -99,6 +100,13 @@ tests:
               nginx.ingress.kubernetes.io/backend-protocol: HTTP
           spec:
             rules:
+              - host: bar.baz
+                http:
+                  paths:
+                    - backend:
+                        serviceName: myapplication
+                        servicePort: 80
+                      path: /
               - host: bar.baz
                 http:
                   paths:
