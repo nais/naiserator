@@ -20,7 +20,7 @@ type config struct {
 	app                nais.Application
 }
 
-//Creates vault init/sidecar containers
+// Creates vault init/sidecar containers
 type Creator interface {
 	AddVaultContainer(podSpec *corev1.PodSpec) (*corev1.PodSpec, error)
 }
@@ -237,11 +237,11 @@ func createInitContainerMounts(paths []nais.SecretPath) []corev1.VolumeMount {
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
 			Name:      "vault-volume",
 			MountPath: path.MountPath,
-			SubPath:   filepath.Join("vault", path.MountPath), //Just to make sure subpath does not start with "/"
+			SubPath:   filepath.Join("vault", path.MountPath), // Just to make sure subpath does not start with "/"
 		})
 	}
 
-	//Adding default vault mount if it does not exists
+	// Adding default vault mount if it does not exists
 	var defaultMountExist = false
 	for _, path := range paths {
 		if filepath.Clean(nais.DefaultVaultMountPath) == filepath.Clean(path.MountPath) {
@@ -260,7 +260,7 @@ func createDefaultMount() corev1.VolumeMount {
 	return corev1.VolumeMount{
 		Name:      "vault-volume",
 		MountPath: nais.DefaultVaultMountPath,
-		SubPath:   filepath.Join("vault", nais.DefaultVaultMountPath), //Just to make sure subpath does not start with "/"
+		SubPath:   filepath.Join("vault", nais.DefaultVaultMountPath), // Just to make sure subpath does not start with "/"
 	}
 }
 

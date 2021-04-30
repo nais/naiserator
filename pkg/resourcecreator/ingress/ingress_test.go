@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	ingress "github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/intstr"

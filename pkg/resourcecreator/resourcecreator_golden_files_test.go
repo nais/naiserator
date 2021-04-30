@@ -3,13 +3,14 @@ package resourcecreator_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 
 	"github.com/ghodss/yaml"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"

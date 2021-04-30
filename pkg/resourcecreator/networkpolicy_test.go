@@ -1,8 +1,9 @@
 package resourcecreator_test
 
 import (
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"testing"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"

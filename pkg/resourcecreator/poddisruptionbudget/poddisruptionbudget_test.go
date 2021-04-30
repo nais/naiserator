@@ -1,11 +1,12 @@
 package poddisruptionbudget_test
 
 import (
+	"testing"
+
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestPodDisruptionBudget(t *testing.T) {
