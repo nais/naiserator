@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -20,7 +21,6 @@ import (
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/readonly"
-	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/virtualservice"
 	"github.com/nais/naiserator/updater"
@@ -100,7 +100,7 @@ func run() error {
 
 	stopCh := StopCh()
 
-	resourceOptions := resourcecreator.NewResourceOptions()
+	resourceOptions := resourceutils.NewResourceOptions()
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator

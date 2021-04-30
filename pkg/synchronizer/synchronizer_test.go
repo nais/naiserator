@@ -6,13 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	ingress2 "github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/nais/naiserator/pkg/resourcecreator"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -39,7 +42,7 @@ type testRig struct {
 	scheme       *runtime.Scheme
 }
 
-func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
+func newTestRig(options resourceutils.Options) (*testRig, error) {
 	rig := &testRig{}
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
@@ -101,7 +104,7 @@ func newTestRig(options resourcecreator.ResourceOptions) (*testRig, error) {
 // and that orphaned resources are cleaned up properly.
 // The validity of resources generated are not tested here.
 func TestSynchronizer(t *testing.T) {
-	resourceOptions := resourcecreator.NewResourceOptions()
+	resourceOptions := resourceutils.NewResourceOptions()
 	rig, err := newTestRig(resourceOptions)
 	if err != nil {
 		t.Errorf("unable to run synchronizer integration tests: %s", err)
@@ -153,7 +156,7 @@ func TestSynchronizer(t *testing.T) {
 
 	// Create an Ingress object that should be deleted once processing has run.
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	ingress, err := resourcecreator.Ingress(app)
+	ingress, err := ingress2.Ingress(app)
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
 	err = rig.client.Create(ctx, ingress)
 	if err != nil || len(ingress.Spec.Rules) == 0 {
@@ -163,7 +166,7 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	ingress, _ = resourcecreator.Ingress(app)
+	ingress, _ = ingress2.Ingress(app)
 	ingress.SetName("disowned-ingress")
 	ingress.SetOwnerReferences(nil)
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
@@ -240,7 +243,7 @@ func TestSynchronizer(t *testing.T) {
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
-	resourceOptions := resourcecreator.NewResourceOptions()
+	resourceOptions := resourceutils.NewResourceOptions()
 	resourceOptions.GoogleProjectId = "something"
 	viper.Set(config.GoogleCloudSQLProxyContainerImage, "cloudsqlproxy")
 
@@ -271,8 +274,6 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		},
 	}
 
-	// set resourceoptions?
-
 	// Test that the team project id is fetched from namespace annotation, and used to create the sql proxy sidecar
 	testProjectId := "test-project-id"
 	testNamespace := &corev1.Namespace{
@@ -281,7 +282,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		},
 	}
 	testNamespace.SetAnnotations(map[string]string{
-		resourcecreator.GoogleProjectIdAnnotation: testProjectId,
+		google.GoogleProjectIdAnnotation: testProjectId,
 	})
 
 	err = rig.client.Create(ctx, testNamespace)
@@ -314,22 +315,22 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	err = rig.client.Get(ctx, req.NamespacedName, deploy)
 	assert.NoError(t, err)
-	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, resourcecreator.GoogleRegion, app.Name)
+	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, google.GoogleRegion, app.Name)
 	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[2])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqlinstance)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, sqlinstance.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, sqlinstance.Annotations[google.GoogleProjectIdAnnotation])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqluser)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, sqluser.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, sqluser.Annotations[google.GoogleProjectIdAnnotation])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqldatabase)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, sqldatabase.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, sqldatabase.Annotations[google.GoogleProjectIdAnnotation])
 
 	err = rig.client.Get(ctx, req.NamespacedName, iampolicymember)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, iampolicymember.Annotations[resourcecreator.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, iampolicymember.Annotations[google.GoogleProjectIdAnnotation])
 }

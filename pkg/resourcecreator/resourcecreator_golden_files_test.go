@@ -3,6 +3,7 @@ package resourcecreator_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"io"
 	"io/ioutil"
 	"os"
@@ -70,7 +71,7 @@ type Match struct {
 
 type yamlTestCase struct {
 	Config          testCaseConfig
-	ResourceOptions resourcecreator.ResourceOptions
+	ResourceOptions resourceutils.Options
 	Error           *string
 	Input           nais.Application
 	Tests           []SubTest

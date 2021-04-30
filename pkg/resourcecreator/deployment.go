@@ -6,12 +6,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
+	"github.com/nais/naiserator/pkg/resourcecreator/vault"
+	"github.com/nais/naiserator/pkg/util"
+
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/spf13/viper"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/securelogs"
-	"github.com/nais/naiserator/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -43,7 +48,7 @@ const (
 	cloudSQLProxyTermTimeout       = "30s"
 )
 
-func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.Deployment, error) {
+func Deployment(app *nais.Application, resourceOptions resourceutils.Options) (*appsv1.Deployment, error) {
 	spec, err := deploymentSpec(app, resourceOptions)
 	if err != nil {
 		return nil, err
@@ -68,7 +73,7 @@ func Deployment(app *nais.Application, resourceOptions ResourceOptions) (*appsv1
 	}, nil
 }
 
-func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*appsv1.DeploymentSpec, error) {
+func deploymentSpec(app *nais.Application, resourceOptions resourceutils.Options) (*appsv1.DeploymentSpec, error) {
 	podSpec, err := podSpec(resourceOptions, app)
 	if err != nil {
 		return nil, err
@@ -102,13 +107,13 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 	}
 
 	return &appsv1.DeploymentSpec{
-		Replicas: int32p(resourceOptions.NumReplicas),
+		Replicas: util.Int32p(resourceOptions.NumReplicas),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.Name},
 		},
 		Strategy:                strategy,
-		ProgressDeadlineSeconds: int32p(300),
-		RevisionHistoryLimit:    int32p(10),
+		ProgressDeadlineSeconds: util.Int32p(300),
+		RevisionHistoryLimit:    util.Int32p(10),
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: podObjectMeta(app),
 			Spec:       *podSpec,
@@ -116,7 +121,7 @@ func deploymentSpec(app *nais.Application, resourceOptions ResourceOptions) (*ap
 	}, nil
 }
 
-func podSpec(resourceOptions ResourceOptions, app *nais.Application) (*corev1.PodSpec, error) {
+func podSpec(resourceOptions resourceutils.Options, app *nais.Application) (*corev1.PodSpec, error) {
 	var err error
 
 	podSpec := podSpecBase(app)
@@ -217,16 +222,16 @@ func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
 func appendGoogleSQLUserSecretEnvs(podSpec *corev1.PodSpec, app *nais.Application) *corev1.PodSpec {
 	for _, instance := range app.Spec.GCP.SqlInstances {
 		for _, db := range instance.Databases {
-			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+			googleSQLUsers := google_sql.MergeAndFilterSQLUsers(db.Users, instance.Name)
 			for _, user := range googleSQLUsers {
-				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(GoogleSQLSecretName(app, instance.Name, user.Name)))
+				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(google_sql.GoogleSQLSecretName(app, instance.Name, user.Name)))
 			}
 		}
 	}
 	return podSpec
 }
 
-func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) *corev1.PodSpec {
+func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions resourceutils.Options) *corev1.PodSpec {
 	// Mount specific secret keys as credential files
 	credentialFilesVolume := fromFilesSecretVolume(kafkaCredentialFilesVolumeName, resourceOptions.KafkaratorSecretName, []corev1.KeyToPath{
 		{
@@ -291,7 +296,7 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, resourceOptions ResourceOptions) 
 	return podSpec
 }
 
-func hostAliases(resourceOptions ResourceOptions) []corev1.HostAlias {
+func hostAliases(resourceOptions resourceutils.Options) []corev1.HostAlias {
 	var hostAliases []corev1.HostAlias
 
 	for _, hostAlias := range resourceOptions.HostAliases {
@@ -301,7 +306,7 @@ func hostAliases(resourceOptions ResourceOptions) []corev1.HostAlias {
 }
 
 func cloudSqlProxyContainer(sqlInstance nais.CloudSqlInstance, port int32, projectId string) corev1.Container {
-	connectionName := fmt.Sprintf("%s:%s:%s", projectId, GoogleRegion, sqlInstance.Name)
+	connectionName := fmt.Sprintf("%s:%s:%s", projectId, google.GoogleRegion, sqlInstance.Name)
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
 	cloudSqlProxyContainerResourceSpec := nais.ResourceRequirements{

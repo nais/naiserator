@@ -19,15 +19,6 @@ const (
 	IstioServiceEntryLocationExternal       = "MESH_EXTERNAL"                        // Service entries external to the cluster
 	IstioServiceEntryResolutionDNS          = "DNS"                                  // Service entry lookup type
 	IstioVirtualServiceTotalWeight    int32 = 100                                    // The total weight of all routes must equal 100
-	GoogleIAMAPIVersion                     = "iam.cnrm.cloud.google.com/v1beta1"
-	GoogleIAMServiceAccountNamespace        = "serviceaccounts"
-	GoogleStorageAPIVersion                 = "storage.cnrm.cloud.google.com/v1beta1"
-	GoogleRegion                            = "europe-north1"
-	GoogleDeletionPolicyAnnotation          = "cnrm.cloud.google.com/deletion-policy"
-	GoogleDeletionPolicyAbandon             = "abandon"
-	GoogleProjectIdAnnotation               = "cnrm.cloud.google.com/project-id"
 
 	NetworkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0" // The default IP block CIDR for the default allow network policies per app
-
-	MaxSecretNameLength = 63
 )

@@ -12,26 +12,38 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/keygen"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/nais/naiserator/pkg/resourcecreator/google/iam"
+	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
+	"github.com/nais/naiserator/pkg/resourcecreator/google/storagebucket"
+	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
+	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
+	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	"github.com/nais/naiserator/pkg/resourcecreator/kafka"
+	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
+	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/secret"
+	"github.com/nais/naiserator/pkg/resourcecreator/service"
+	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) (ResourceOperations, error) {
+func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Options) (ResourceOperations, error) {
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
 	ops := ResourceOperations{
-		{Service(app), OperationCreateOrUpdate},
-		{ServiceAccount(app, resourceOptions), OperationCreateIfNotExists},
-		{HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
+		{service.Service(app), OperationCreateOrUpdate},
+		{serviceaccount.ServiceAccount(app, resourceOptions), OperationCreateIfNotExists},
+		{horizontalpodautoscaler.HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
 	}
 
 	outboundHostRules := make([]nais_io_v1.AccessPolicyExternalRule, 0)
 
-	pdb := PodDisruptionBudget(app)
+	pdb := poddisruptionbudget.PodDisruptionBudget(app)
 	if pdb != nil {
 		ops = append(ops, ResourceOperation{pdb, OperationCreateOrUpdate})
 	}
@@ -66,14 +78,14 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 
 	if resourceOptions.KafkaratorEnabled && app.Spec.Kafka != nil {
 		var err error
-		resourceOptions.KafkaratorSecretName, err = generateKafkaSecretName(app)
+		resourceOptions.KafkaratorSecretName, err = kafka.GenerateKafkaSecretName(app)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled {
-		idportenClient, err := IDPortenClient(app)
+		idportenClient, err := idporten.IDPortenClient(app)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +96,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
-		maskinportenClient := MaskinportenClient(app)
+		maskinportenClient := maskinporten.MaskinportenClient(app)
 
 		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorServiceEntryHosts)...)
 
@@ -108,20 +120,20 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if len(resourceOptions.GoogleProjectId) > 0 {
-		googleServiceAccount := GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
-		googleServiceAccountBinding := GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
+		googleServiceAccount := google_iam.GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
+		googleServiceAccountBinding := google_iam.GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
 		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
 		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
 
 		if app.Spec.GCP != nil && app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
 			for _, b := range app.Spec.GCP.Buckets {
-				bucket := GoogleStorageBucket(app, b)
+				bucket := google_storagebucket.GoogleStorageBucket(app, b)
 				ops = append(ops, ResourceOperation{bucket, OperationCreateIfNotExists})
 
-				bucketAccessControl := GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+				bucketAccessControl := google_storagebucket.GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 				ops = append(ops, ResourceOperation{bucketAccessControl, OperationCreateOrUpdate})
 
-				iamPolicyMember := StorageBucketIamPolicyMember(app, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				iamPolicyMember := google_storagebucket.StorageBucketIamPolicyMember(app, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 			}
 		}
@@ -134,27 +146,27 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 				}
 
 				// TODO: name defaulting will break with more than one instance
-				sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
+				sqlInstance, err := google_sql.CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
 				if err != nil {
 					return nil, err
 				}
 
-				instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
+				instance := google_sql.GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
 
-				iamPolicyMember := SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				iamPolicyMember := google_sql.SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
 
 				for _, db := range sqlInstance.Databases {
-					sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+					sqlUsers := google_sql.MergeAndFilterSQLUsers(db.Users, instance.Name)
 
-					googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+					googledb := google_sql.GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
 					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
 
 					for _, user := range sqlUsers {
 						vars := make(map[string]string)
 
-						googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
+						googleSqlUser := google_sql.SetupNewGoogleSqlUser(user.Name, &db, instance)
 
 						password, err := generatePassword()
 						if err != nil {
@@ -162,9 +174,9 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 						}
 
 						env := googleSqlUser.CreateUserEnvVars(password)
-						vars = MapEnvToVars(env, vars)
+						vars = google_sql.MapEnvToVars(env, vars)
 
-						secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, googleSQLPasswordSuffix)
+						secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, google_sql.GoogleSQLPasswordSuffix)
 						if err != nil {
 							return nil, fmt.Errorf("unable to assign sql password: %s", err)
 						}
@@ -175,8 +187,8 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 						}
 						ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
 
-						secret := OpaqueSecret(app, GoogleSQLSecretName(app, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
-						ops = append(ops, ResourceOperation{secret, OperationCreateIfNotExists})
+						scrt := secret.OpaqueSecret(app, google_sql.GoogleSQLSecretName(app, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
+						ops = append(ops, ResourceOperation{scrt, OperationCreateIfNotExists})
 					}
 				}
 
@@ -187,7 +199,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 
 		if app.Spec.GCP != nil && app.Spec.GCP.Permissions != nil {
 			for _, p := range app.Spec.GCP.Permissions {
-				policy, err := GoogleIAMPolicyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+				policy, err := google_iam.GoogleIAMPolicyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 				if err != nil {
 					return nil, fmt.Errorf("unable to create iampolicymember: %w", err)
 				}
@@ -227,25 +239,25 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	}
 
 	if !resourceOptions.Istio && !resourceOptions.Linkerd {
-		ingress, err := Ingress(app)
+		ing, err := ingress.Ingress(app)
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingress: %s", err)
 		}
 
-		if ingress != nil {
-			ops = append(ops, ResourceOperation{ingress, OperationCreateOrUpdate})
+		if ing != nil {
+			ops = append(ops, ResourceOperation{ing, OperationCreateOrUpdate})
 		}
 	}
 
 	if resourceOptions.Linkerd {
-		ingresses, err := NginxIngresses(app, resourceOptions)
+		ingresses, err := ingress.NginxIngresses(app, resourceOptions)
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingresses: %s", err)
 		}
 
 		if ingresses != nil {
-			for _, ingress := range ingresses {
-				ops = append(ops, ResourceOperation{ingress, OperationCreateOrUpdate})
+			for _, ing := range ingresses {
+				ops = append(ops, ResourceOperation{ing, OperationCreateOrUpdate})
 			}
 		}
 	}
@@ -257,20 +269,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions ResourceOptions) 
 	ops = append(ops, ResourceOperation{deployment, OperationCreateOrUpdate})
 
 	return ops, nil
-}
-
-func intp(i int) *int {
-	return &i
-}
-
-func int32p(i int32) *int32 {
-	return &i
-}
-
-func setAnnotation(resource v1.ObjectMetaAccessor, key, value string) {
-	m := resource.GetObjectMeta().GetAnnotations()
-	m[key] = value
-	resource.GetObjectMeta().SetAnnotations(m)
 }
 
 func generatePassword() (string, error) {

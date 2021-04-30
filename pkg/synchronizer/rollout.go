@@ -3,13 +3,14 @@ package synchronizer
 import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	appsv1 "k8s.io/api/apps/v1"
 )
 
 // Rollout represents the data neccessary to rollout an application to Kubernetes.
 type Rollout struct {
 	App                 *nais.Application
-	ResourceOptions     resourcecreator.ResourceOptions
+	ResourceOptions     resourceutils.Options
 	ResourceOperations  resourcecreator.ResourceOperations
 	CorrelationID       string
 	SynchronizationHash string

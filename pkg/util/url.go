@@ -3,7 +3,10 @@ package util
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"regexp"
+
+	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 )
 
 var kubernetesFQDNValidation = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
@@ -22,3 +25,10 @@ func ValidateUrl(u *url.URL) error {
 
 	return nil
 }
+
+func AppendPathToIngress(ingress nais_io_v1alpha1.Ingress, joinPath string) string {
+	u, _ := url.Parse(string(ingress))
+	u.Path = path.Join(u.Path, joinPath)
+	return u.String()
+}
+
