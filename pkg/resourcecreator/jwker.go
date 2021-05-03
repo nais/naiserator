@@ -5,6 +5,7 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func accessPolicyRulesWithDefaults(rules []nais_io_v1.AccessPolicyRule, namespace, clusterName string) []nais_io_v1.AccessPolicyRule {
@@ -42,7 +43,7 @@ func accessPoliciesWithDefaults(policy *nais_io_v1.AccessPolicy, namespaceName, 
 }
 
 func jwkerSecretName(app nais_io_v1alpha1.Application) string {
-	return namegen.PrefixedRandShortName("tokenx", app.Name, MaxSecretNameLength)
+	return namegen.PrefixedRandShortName("tokenx", app.Name, validation.DNS1035LabelMaxLength)
 }
 
 func Jwker(app *nais_io_v1alpha1.Application, clusterName string) *nais_io_v1.Jwker {

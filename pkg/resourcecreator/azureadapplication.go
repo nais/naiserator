@@ -2,14 +2,14 @@ package resourcecreator
 
 import (
 	"fmt"
-	"net/url"
-	"path"
 	"time"
 
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
+	"github.com/nais/naiserator/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -55,22 +55,16 @@ func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
 func oauthCallbackURLs(ingresses []nais.Ingress) []string {
 	urls := make([]string, len(ingresses))
 	for i := range ingresses {
-		urls[i] = appendPathToIngress(ingresses[i], AzureApplicationDefaultCallbackPath)
+		urls[i] = util.AppendPathToIngress(ingresses[i], AzureApplicationDefaultCallbackPath)
 	}
 	return urls
-}
-
-func appendPathToIngress(ingress nais.Ingress, joinPath string) string {
-	u, _ := url.Parse(string(ingress))
-	u.Path = path.Join(u.Path, joinPath)
-	return u.String()
 }
 
 func azureSecretName(app nais.Application) (string, error) {
 	prefixedName := fmt.Sprintf("%s-%s", "azure", app.Name)
 	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
 
-	maxLen := MaxSecretNameLength
+	maxLen := validation.DNS1035LabelMaxLength
 	maxLen -= len(suffix) + 1 // length of suffix + 1 byte of separator
 
 	shortName, err := namegen.ShortName(prefixedName, maxLen)

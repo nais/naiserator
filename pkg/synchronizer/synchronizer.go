@@ -3,6 +3,7 @@ package synchronizer
 import (
 	"context"
 	"fmt"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"reflect"
 	"sync"
 	"time"
@@ -48,7 +49,7 @@ type Synchronizer struct {
 	client.Client
 	SimpleClient           client.Client
 	Scheme                 *runtime.Scheme
-	ResourceOptions        resourcecreator.ResourceOptions
+	ResourceOptions        resourceutils.Options
 	Config                 config.Config
 	VirtualServiceRegistry *virtualservice.Registry
 }

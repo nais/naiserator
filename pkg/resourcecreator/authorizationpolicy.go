@@ -9,13 +9,14 @@ import (
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"github.com/nais/naiserator/pkg/util"
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const PrometheusServiceAccountPrincipal = "cluster.local/ns/istio-system/sa/prometheus"
 
-func AuthorizationPolicy(app *nais.Application, options ResourceOptions) (*security_istio_io_v1beta1.AuthorizationPolicy, error) {
+func AuthorizationPolicy(app *nais.Application, options resourceutils.Options) (*security_istio_io_v1beta1.AuthorizationPolicy, error) {
 	var rules []*security_istio_io_v1beta1.Rule
 
 	// TODO: This is the old ingress-gateway, need this until it is removed from the clusters
@@ -112,7 +113,7 @@ func ingressGatewayRule(gateways []string) *security_istio_io_v1beta1.Rule {
 	}
 }
 
-func accessPolicyRules(app *nais.Application, options ResourceOptions) *security_istio_io_v1beta1.Rule {
+func accessPolicyRules(app *nais.Application, options resourceutils.Options) *security_istio_io_v1beta1.Rule {
 	principals := principals(app, options)
 	if len(principals) < 1 {
 		return nil
@@ -153,7 +154,7 @@ func prometheusRule(app *nais.Application) *security_istio_io_v1beta1.Rule {
 	}
 }
 
-func principals(app *nais.Application, options ResourceOptions) []string {
+func principals(app *nais.Application, options resourceutils.Options) []string {
 	var principals []string
 
 	for _, rule := range app.Spec.AccessPolicy.Inbound.Rules {

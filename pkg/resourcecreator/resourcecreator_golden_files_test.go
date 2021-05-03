@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+
 	"github.com/ghodss/yaml"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -70,7 +72,7 @@ type Match struct {
 
 type yamlTestCase struct {
 	Config          testCaseConfig
-	ResourceOptions resourcecreator.ResourceOptions
+	ResourceOptions resourceutils.Options
 	Error           *string
 	Input           nais.Application
 	Tests           []SubTest

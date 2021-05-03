@@ -8,6 +8,7 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +18,7 @@ func TestGetAuthorizationPolicy(t *testing.T) {
 	otherNamespace := "othernamespace"
 	otherApplication2 := "b"
 	otherNamespace2 := "othernamespace2"
-	resourceOptions := resourcecreator.NewResourceOptions()
+	resourceOptions := resourceutils.NewResourceOptions()
 	resourceOptions.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".test.no", GatewayName: "istio-system/gw-test"}}
 	resourceOptions.ClusterName = "test-cluster"
 
