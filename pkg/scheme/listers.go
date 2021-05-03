@@ -3,8 +3,6 @@ package naiserator_scheme
 import (
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
-	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -49,9 +47,6 @@ func GCPListers() []runtime.Object {
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{},
-		&networking_istio_io_v1alpha3.ServiceEntryList{},
-		&networking_istio_io_v1alpha3.VirtualServiceList{},
-		&security_istio_io_v1beta1.AuthorizationPolicyList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLInstanceList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLUserList{},
