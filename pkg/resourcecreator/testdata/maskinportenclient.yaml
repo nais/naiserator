@@ -2,7 +2,7 @@ config:
   description: minimal maskinporten config in application spec should result in MaskinportenClient
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster
@@ -76,25 +76,3 @@ tests:
                 - name: ^maskinporten-myapplication-.+$
                   readOnly: true
                   mountPath: /var/run/secrets/nais.io/maskinporten
-
-  - operation: CreateOrUpdate
-    apiVersion: networking.istio.io/v1alpha3
-    kind: ServiceEntry
-    name: myapplication-01
-    match:
-    - name: "service entry created for outbound traffic to maskinporten"
-      type: exact
-      exclude:
-        - .metadata
-      resource:
-        spec:
-          hosts:
-            - dev.maskinporten.test
-          location: MESH_EXTERNAL
-          resolution: DNS
-          ports:
-            - number: 443
-              protocol: HTTPS
-              name: https
-          exportTo:
-            - "."
