@@ -115,7 +115,7 @@ func run() error {
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
 
 	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
-		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the Virtual Service based on the provided ingresses")
+		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress.")
 	}
 
 	mgrClient := mgr.GetClient()

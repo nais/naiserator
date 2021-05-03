@@ -1,5 +1,5 @@
 config:
-  description: egress rules will create network policies and service entries
+  description: egress rules will create network policies
 
 resourceoptions:
   Linkerd: true
