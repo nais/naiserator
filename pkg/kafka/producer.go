@@ -50,8 +50,6 @@ func (p *Producer) Produce(msg Message) (offset int64, err error) {
 		Timestamp: time.Now(),
 	}
 
-	sarama.Logger.Printf("Produce message: %#v", producerMessage)
-
 	_, offset, err = p.producer.SendMessage(producerMessage)
 
 	return
