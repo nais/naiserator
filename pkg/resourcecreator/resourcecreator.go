@@ -58,7 +58,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
 		jwker := Jwker(app, resourceOptions.ClusterName)
 		if jwker != nil {
-			outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.JwkerServiceEntryHosts)...)
+			outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.JwkerHosts)...)
 
 			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
 			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
@@ -70,7 +70,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		if err != nil {
 			return nil, err
 		}
-		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.AzureratorServiceEntryHosts)...)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.AzureratorHosts)...)
 
 		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
@@ -89,7 +89,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		if err != nil {
 			return nil, err
 		}
-		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorServiceEntryHosts)...)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorHosts)...)
 
 		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorIDPortenSecretName = idportenClient.Spec.SecretName
@@ -98,7 +98,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
 		maskinportenClient := maskinporten.MaskinportenClient(app)
 
-		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorServiceEntryHosts)...)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorHosts)...)
 
 		ops = append(ops, ResourceOperation{maskinportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorMaskinportenSecretName = maskinportenClient.Spec.SecretName

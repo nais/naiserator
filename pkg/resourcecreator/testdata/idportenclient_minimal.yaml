@@ -7,7 +7,7 @@ resourceoptions:
   NumReplicas: 1
   ClusterName: mycluster
   DigdiratorEnabled: true
-  DigdiratorServiceEntryHosts:
+  DigdiratorHosts:
     - dev.difi.test
   GatewayMappings:
     - DomainSuffix: .nav.no

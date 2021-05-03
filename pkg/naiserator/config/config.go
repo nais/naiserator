@@ -72,65 +72,65 @@ type Ratelimit struct {
 	Burst int `json:"burst"`
 }
 
-type ServiceEntryHosts struct {
+type ServiceHosts struct {
 	Azurerator []string `json:"azurerator"`
 	Digdirator []string `json:"digdirator"`
 	Jwker      []string `json:"jwker"`
 }
 
 type Config struct {
-	DryRun                            bool                   `json:"dry-run"`
-	Bind                              string                 `json:"bind"`
-	Informer                          Informer               `json:"informer"`
-	Synchronizer                      Synchronizer           `json:"synchronizer"`
-	Kubeconfig                        string                 `json:"kubeconfig"`
-	ClusterName                       string                 `json:"cluster-name"`
-	GoogleProjectId                   string                 `json:"google-project-id"`
-	GoogleCloudSQLProxyContainerImage string                 `json:"google-cloud-sql-proxy-container-image"`
-	ApiServerIp                       string                 `json:"api-server-ip"`
-	Ratelimit                         Ratelimit              `json:"ratelimit"`
-	Log                               Log                    `json:"log"`
-	Features                          Features               `json:"features"`
-	Securelogs                        Securelogs             `json:"securelogs"`
-	Proxy                             Proxy                  `json:"proxy"`
-	Vault                             Vault                  `json:"vault"`
-	Kafka                             kafka.Config           `json:"kafka"`
-	HostAliases                       []HostAlias            `json:"host-aliases"`
-	GatewayMappings                   []GatewayMapping       `json:"gateway-mappings"`
-	ServiceEntryHosts                 ServiceEntryHosts      `json:"service-entry-hosts"`
+	DryRun                            bool             `json:"dry-run"`
+	Bind                              string           `json:"bind"`
+	Informer                          Informer         `json:"informer"`
+	Synchronizer                      Synchronizer     `json:"synchronizer"`
+	Kubeconfig                        string           `json:"kubeconfig"`
+	ClusterName                       string           `json:"cluster-name"`
+	GoogleProjectId                   string           `json:"google-project-id"`
+	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
+	ApiServerIp                       string           `json:"api-server-ip"`
+	Ratelimit                         Ratelimit        `json:"ratelimit"`
+	Log                               Log              `json:"log"`
+	Features                          Features         `json:"features"`
+	Securelogs                        Securelogs       `json:"securelogs"`
+	Proxy                             Proxy            `json:"proxy"`
+	Vault                             Vault            `json:"vault"`
+	Kafka                             kafka.Config     `json:"kafka"`
+	HostAliases                       []HostAlias      `json:"host-aliases"`
+	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
+	ServiceHosts                      ServiceHosts     `json:"service-hosts"`
 }
 
 const (
-	Bind                                 = "bind"
-	ClusterName                          = "cluster-name"
-	DryRun                               = "dry-run"
-	GoogleProjectId                      = "google-project-id"
-	GoogleCloudSQLProxyContainerImage    = "google-cloud-sql-proxy-container-image"
-	ApiServerIp                          = "api-server-ip"
-	FeaturesLinkerd                      = "features.linkerd"
-	AccessPolicyNotAllowedCIDRs          = "features.access-policy-not-allowed-cidrs"
-	FeaturesNativeSecrets                = "features.native-secrets"
-	FeaturesNetworkPolicy                = "features.network-policy"
-	FeaturesVault                        = "features.vault"
-	FeaturesJwker                        = "features.jwker"
-	FeaturesAzurerator                   = "features.azurerator"
-	FeaturesKafkarator                   = "features.kafkarator"
-	FeaturesDigdirator                   = "features.digdirator"
-	InformerFullSynchronizationInterval  = "informer.full-sync-interval"
-	RateLimitQPS                         = "ratelimit.qps"
-	RateLimitBurst                       = "ratelimit.burst"
-	SynchronizerSynchronizationTimeout   = "synchronizer.synchronization-timeout"
-	SynchronizerRolloutTimeout           = "synchronizer.rollout-timeout"
-	SynchronizerRolloutCheckInterval     = "synchronizer.rollout-check-interval"
-	KubeConfig                           = "kubeconfig"
-	ProxyAddress                         = "proxy.address"
-	ProxyExclude                         = "proxy.exclude"
-	SecurelogsConfigMapReloadImage       = "securelogs.configmap-reload-image"
-	SecurelogsFluentdImage               = "securelogs.fluentd-image"
-	VaultAddress                         = "vault.address"
-	VaultAuthPath                        = "vault.auth-path"
-	VaultInitContainerImage              = "vault.init-container-image"
-	VaultKvPath                          = "vault.kv-path"
+	Bind                                = "bind"
+	ClusterName                         = "cluster-name"
+	DryRun                              = "dry-run"
+	GoogleProjectId                     = "google-project-id"
+	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
+	ApiServerIp                         = "api-server-ip"
+	FeaturesLinkerd                     = "features.linkerd"
+	AccessPolicyNotAllowedCIDRs         = "features.access-policy-not-allowed-cidrs"
+	FeaturesNativeSecrets               = "features.native-secrets"
+	FeaturesNetworkPolicy               = "features.network-policy"
+	FeaturesVault                       = "features.vault"
+	FeaturesJwker                       = "features.jwker"
+	FeaturesAzurerator                  = "features.azurerator"
+	FeaturesKafkarator                  = "features.kafkarator"
+	FeaturesDigdirator                  = "features.digdirator"
+	InformerFullSynchronizationInterval = "informer.full-sync-interval"
+	RateLimitQPS                        = "ratelimit.qps"
+	RateLimitBurst                      = "ratelimit.burst"
+	SynchronizerSynchronizationTimeout  = "synchronizer.synchronization-timeout"
+	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
+	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
+	KubeConfig                          = "kubeconfig"
+	ProxyAddress                        = "proxy.address"
+	ProxyExclude                        = "proxy.exclude"
+	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
+	SecurelogsFluentdImage              = "securelogs.fluentd-image"
+	VaultAddress                        = "vault.address"
+	VaultAuthPath                       = "vault.auth-path"
+	VaultInitContainerImage             = "vault.init-container-image"
+	VaultKvPath                         = "vault.kv-path"
 )
 
 func init() {

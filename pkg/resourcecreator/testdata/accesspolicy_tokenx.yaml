@@ -8,7 +8,7 @@ resourceoptions:
   NumReplicas: 1
   ClusterName: mycluster
   JwkerEnabled: true
-  JwkerServiceEntryHosts:
+  JwkerHosts:
     - dev.tokendings.test
 
 input:

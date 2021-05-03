@@ -10,19 +10,19 @@ type Options struct {
 	ApiServerIp                      string
 	AzureratorEnabled                bool
 	AzureratorSecretName             string
-	AzureratorServiceEntryHosts      []string
+	AzureratorHosts                  []string
 	ClusterName                      string
 	DigdiratorEnabled                bool
 	DigdiratorIDPortenSecretName     string
 	DigdiratorMaskinportenSecretName string
-	DigdiratorServiceEntryHosts      []string
+	DigdiratorHosts                  []string
 	GatewayMappings                  []config.GatewayMapping
 	GoogleProjectId                  string
 	GoogleTeamProjectId              string
 	HostAliases                      []config.HostAlias
 	JwkerEnabled                     bool
 	JwkerSecretName                  string
-	JwkerServiceEntryHosts           []string
+	JwkerHosts                       []string
 	NetworkPolicy                    bool
 	KafkaratorEnabled                bool
 	KafkaratorSecretName             string

@@ -7,7 +7,7 @@ resourceoptions:
   NumReplicas: 1
   ClusterName: mycluster
   AzureratorEnabled: true
-  AzureratorServiceEntryHosts:
+  AzureratorHosts:
     - login.azure-ad.test
     - graph.microsoft.test
 
