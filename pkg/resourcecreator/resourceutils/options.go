@@ -20,7 +20,6 @@ type Options struct {
 	GoogleProjectId                  string
 	GoogleTeamProjectId              string
 	HostAliases                      []config.HostAlias
-	Istio                            bool
 	JwkerEnabled                     bool
 	JwkerSecretName                  string
 	JwkerServiceEntryHosts           []string
@@ -30,7 +29,6 @@ type Options struct {
 	Linkerd                          bool
 	NativeSecrets                    bool
 	NumReplicas                      int32
-	VirtualServiceRegistryEnabled    bool
 }
 
 // NewResourceOptions creates a struct with the default resource options.

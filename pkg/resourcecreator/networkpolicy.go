@@ -91,9 +91,7 @@ func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options 
 func ingressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Options) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
-	if options.Istio {
-		rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, IstioNamespace)))
-	} else if options.Linkerd {
+	if options.Linkerd {
 		rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, PrometheusNamespace)))
 		rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
 			NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
@@ -113,12 +111,7 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Opti
 	}
 
 	if len(app.Spec.Ingresses) > 0 {
-		if options.Istio {
-			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-				PodSelector:       labelSelector("istio", IstioIngressGatewayLabelValue),
-				NamespaceSelector: labelSelector("name", IstioNamespace),
-			}))
-		} else if options.Linkerd {
+		if options.Linkerd {
 			for _, ingress := range app.Spec.Ingresses {
 				ur, err := url.Parse(string(ingress))
 				if err != nil {
@@ -142,10 +135,6 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Opti
 func egressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Options) []networkingv1.NetworkPolicyEgressRule {
 	defaultRules := defaultAllowEgress(options)
 
-	if app.Spec.Tracing != nil && app.Spec.Tracing.Enabled {
-		defaultRules = append(defaultRules, networkPolicyEgressRule(networkPolicyPeer("app", "jaeger", "istio-system")))
-	}
-
 	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
 		appRules := networkPolicyEgressRule(networkPolicyApplicationRules(app.Spec.AccessPolicy.Outbound.Rules, options)...)
 		defaultRules = append(defaultRules, appRules)
@@ -166,10 +155,7 @@ func egressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Optio
 func defaultAllowEgress(options resourceutils.Options) []networkingv1.NetworkPolicyEgressRule {
 	peers := make([]networkingv1.NetworkPolicyPeer, 0, 4)
 
-	if options.Istio {
-		peers = append(peers, networkPolicyPeer("istio", "istiod", IstioNamespace))
-		peers = append(peers, networkPolicyPeer("istio", "ingressgateway", IstioNamespace))
-	} else if options.Linkerd {
+	if options.Linkerd {
 		peers = append(peers, networkingv1.NetworkPolicyPeer{
 			NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
 		})

@@ -542,12 +542,6 @@ func envVars(app *nais.Application) []corev1.EnvVar {
 	return newEnvVars
 }
 
-const tracingAnnotation = `tracing:
-  sampling: 0
-  zipkin:
-    address: zipkin.istio-system:9411
-`
-
 func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 	objectMeta := app.CreateObjectMeta()
 
@@ -577,10 +571,6 @@ func podObjectMeta(app *nais.Application) metav1.ObjectMeta {
 
 	if app.Spec.Kafka != nil {
 		objectMeta.Labels["kafka"] = "enabled"
-	}
-
-	if app.Spec.Tracing != nil && app.Spec.Tracing.Enabled {
-		objectMeta.Annotations["proxy.istio.io/config"] = tracingAnnotation
 	}
 
 	return objectMeta
