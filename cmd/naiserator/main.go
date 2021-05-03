@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/nais/liberator/pkg/tlsutil"
 	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -58,6 +59,8 @@ func run() error {
 		"kafka.sasl.password",
 	})
 
+	var kafkaClient kafka.Interface
+
 	if cfg.Kafka.Enabled {
 		kafkaLogger := log.New()
 		kafkaLogger.Level, err = log.ParseLevel(cfg.Kafka.LogVerbosity)
@@ -66,13 +69,19 @@ func run() error {
 		}
 		kafkaLogger.SetLevel(log.GetLevel())
 		kafkaLogger.SetFormatter(&formatter)
-		sarama.Logger = kafkaLogger
 
-		kafkaClient, err := kafka.NewClient(&cfg.Kafka)
+		kafkaTLS := &tls.Config{}
+		if cfg.Kafka.TLS.Enabled {
+			kafkaTLS, err = tlsutil.TLSConfigFromFiles(cfg.Kafka.TLS.CertificatePath, cfg.Kafka.TLS.PrivateKeyPath, cfg.Kafka.TLS.CAPath)
+			if err != nil {
+				log.Fatalf("load Kafka TLS credentials: %s", err)
+			}
+		}
+
+		kafkaClient, err = kafka.New(cfg.Kafka.Brokers, cfg.Kafka.Topic, kafkaTLS, kafkaLogger)
 		if err != nil {
 			log.Fatalf("unable to setup kafka: %s", err)
 		}
-		go kafkaClient.ProducerLoop()
 	}
 
 	// Register CRDs with controller-tools
@@ -136,10 +145,11 @@ func run() error {
 
 	syncer := &synchronizer.Synchronizer{
 		Client:                 mgrClient,
-		SimpleClient:           simpleClient,
-		Scheme:                 kscheme,
-		ResourceOptions:        resourceOptions,
 		Config:                 *cfg,
+		Kafka:                  kafkaClient,
+		ResourceOptions:        resourceOptions,
+		Scheme:                 kscheme,
+		SimpleClient:           simpleClient,
 		VirtualServiceRegistry: virtualServiceRegistry,
 	}
 

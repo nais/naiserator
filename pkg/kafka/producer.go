@@ -1,55 +1,58 @@
 package kafka
 
 import (
-	"fmt"
+	"crypto/tls"
+	"os"
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/golang/protobuf/proto"
-	"github.com/nais/naiserator/pkg/event"
 	log "github.com/sirupsen/logrus"
 )
 
-type Message struct {
-	Event  deployment.Event
-	Logger log.Entry
+type Producer struct {
+	producer sarama.SyncProducer
+	topic    string
 }
 
-var (
-	// Send deployment events here to dispatch them to Kafka.
-	Events = make(chan Message, 4096)
-)
+type Message []byte
 
-func (client *Client) ProducerLoop() {
-	for message := range Events {
-		if err := client.send(message); err != nil {
-			log.Errorf("while sending deployment event to kafka: %s", err)
-		}
+type Interface interface {
+	Produce(msg Message) (int64, error)
+}
+
+func New(brokers []string, topic string, tlsConfig *tls.Config, logger *log.Logger) (*Producer, error) {
+	config := sarama.NewConfig()
+	if tlsConfig != nil {
+		config.Net.TLS.Enable = true
+		config.Net.TLS.Config = tlsConfig
 	}
-}
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Return.Errors = true
+	config.Producer.Return.Successes = true
+	config.ClientID, _ = os.Hostname()
+	sarama.Logger = logger
 
-func (client *Client) send(message Message) error {
-	payload, err := proto.Marshal(&message.Event)
+	producer, err := sarama.NewSyncProducer(brokers, config)
 	if err != nil {
-		return fmt.Errorf("while encoding Protobuf: %s", err)
+		return nil, err
 	}
 
-	reply := &sarama.ProducerMessage{
-		Topic:     client.ProducerTopic,
+	return &Producer{
+		producer: producer,
+		topic:    topic,
+	}, nil
+}
+
+func (p *Producer) Produce(msg Message) (offset int64, err error) {
+	producerMessage := &sarama.ProducerMessage{
+		Topic:     p.topic,
+		Value:     sarama.ByteEncoder(msg),
 		Timestamp: time.Now(),
-		Value:     sarama.StringEncoder(payload),
 	}
 
-	_, offset, err := client.Producer.SendMessage(reply)
-	if err != nil {
-		return fmt.Errorf("while sending reply over Kafka: %s", err)
-	}
+	sarama.Logger.Printf("Produce message: %#v", producerMessage)
 
-	message.Logger.WithFields(log.Fields{
-		"kafka_offset":    offset,
-		"kafka_timestamp": reply.Timestamp,
-		"kafka_topic":     reply.Topic,
-	}).Infof("Deployment event sent successfully")
+	_, offset, err = p.producer.SendMessage(producerMessage)
 
-	return nil
+	return
 }

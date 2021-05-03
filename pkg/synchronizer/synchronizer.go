@@ -3,10 +3,12 @@ package synchronizer
 import (
 	"context"
 	"fmt"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
@@ -52,6 +54,7 @@ type Synchronizer struct {
 	ResourceOptions        resourceutils.Options
 	Config                 config.Config
 	VirtualServiceRegistry *virtualservice.Registry
+	Kafka                  kafka.Interface
 }
 
 func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
@@ -206,10 +209,6 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Create new deployment event
 	event := generator.NewDeploymentEvent(*app)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
-
-	if n.Config.Kafka.Enabled && !app.SkipDeploymentMessage() {
-		kafka.Events <- kafka.Message{Event: event, Logger: logger}
-	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
 	go n.MonitorRollout(*app, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout)
@@ -453,6 +452,14 @@ func (n *Synchronizer) UpdateApplication(ctx context.Context, app *nais_io_v1alp
 	return updateFunc(existing)
 }
 
+func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
+	payload, err := proto.Marshal(event)
+	if err != nil {
+		return 0, fmt.Errorf("encode Protobuf: %w", err)
+	}
+	return n.Kafka.Produce(payload)
+}
+
 func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
 	logger.Debugf("monitoring rollout status")
 
@@ -474,8 +481,15 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 			if deploymentComplete(deploy, &deploy.Status) {
 				event := generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				if n.Config.Kafka.Enabled && !app.SkipDeploymentMessage() {
-					kafka.Events <- kafka.Message{Event: event, Logger: logger}
+				if n.Kafka != nil && !app.SkipDeploymentMessage() {
+					offset, err := n.produceDeploymentEvent(&event)
+					if err == nil {
+						logger.WithFields(log.Fields{
+							"kafka_offset": offset,
+						}).Infof("Deployment event sent successfully")
+					} else {
+						logger.Errorf("Produce deployment message: %s", err)
+					}
 				}
 
 				_, err = n.reportEvent(ctx, app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))

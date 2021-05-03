@@ -5,13 +5,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nais/naiserator/pkg/kafka"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
+
+type KafkaTLS struct {
+	CAPath          string `json:"ca-path"`
+	CertificatePath string `json:"certificate-path"`
+	Enabled         bool   `json:"enabled"`
+	Insecure        bool   `json:"insecure"`
+	PrivateKeyPath  string `json:"private-key-path"`
+}
+
+type Kafka struct {
+	Brokers      []string `json:"brokers"`
+	Enabled      bool     `json:"enabled"`
+	LogVerbosity string   `json:"log-verbosity"`
+	TLS          KafkaTLS `json:"tls"`
+	Topic        string   `json:"topic"`
+}
 
 type Log struct {
 	Format string `json:"format"`
@@ -103,51 +118,67 @@ type Config struct {
 	Securelogs                        Securelogs             `json:"securelogs"`
 	Proxy                             Proxy                  `json:"proxy"`
 	Vault                             Vault                  `json:"vault"`
-	Kafka                             kafka.Config           `json:"kafka"`
+	Kafka                             Kafka                  `json:"kafka"`
 	HostAliases                       []HostAlias            `json:"host-aliases"`
 	GatewayMappings                   []GatewayMapping       `json:"gateway-mappings"`
 	ServiceEntryHosts                 ServiceEntryHosts      `json:"service-entry-hosts"`
 }
 
 const (
+	ApiServerIp                          = "api-server-ip"
 	Bind                                 = "bind"
 	ClusterName                          = "cluster-name"
 	DryRun                               = "dry-run"
-	GoogleProjectId                      = "google-project-id"
-	GoogleCloudSQLProxyContainerImage    = "google-cloud-sql-proxy-container-image"
-	ApiServerIp                          = "api-server-ip"
+	FeaturesAccessPolicyNotAllowedCIDRs  = "features.access-policy-not-allowed-cidrs"
+	FeaturesAzurerator                   = "features.azurerator"
+	FeaturesDigdirator                   = "features.digdirator"
 	FeaturesIstio                        = "features.istio"
+	FeaturesJwker                        = "features.jwker"
+	FeaturesKafkarator                   = "features.kafkarator"
 	FeaturesLinkerd                      = "features.linkerd"
-	AccessPolicyNotAllowedCIDRs          = "features.access-policy-not-allowed-cidrs"
 	FeaturesNativeSecrets                = "features.native-secrets"
 	FeaturesNetworkPolicy                = "features.network-policy"
 	FeaturesVault                        = "features.vault"
-	FeaturesJwker                        = "features.jwker"
-	FeaturesAzurerator                   = "features.azurerator"
-	FeaturesKafkarator                   = "features.kafkarator"
-	FeaturesDigdirator                   = "features.digdirator"
+	GoogleCloudSQLProxyContainerImage    = "google-cloud-sql-proxy-container-image"
+	GoogleProjectId                      = "google-project-id"
 	InformerFullSynchronizationInterval  = "informer.full-sync-interval"
-	RateLimitQPS                         = "ratelimit.qps"
-	RateLimitBurst                       = "ratelimit.burst"
-	SynchronizerSynchronizationTimeout   = "synchronizer.synchronization-timeout"
-	SynchronizerRolloutTimeout           = "synchronizer.rollout-timeout"
-	SynchronizerRolloutCheckInterval     = "synchronizer.rollout-check-interval"
+	KafkaBrokers                         = "kafka.brokers"
+	KafkaEnabled                         = "kafka.enabled"
+	KafkaLogVerbosity                    = "kafka.log-verbosity"
+	KafkaTLSCAPath                       = "kafka.tls.ca-path"
+	KafkaTLSCertificatePath              = "kafka.tls.certificate-path"
+	KafkaTLSEnabled                      = "kafka.tls.enabled"
+	KafkaTLSInsecure                     = "kafka.tls.insecure"
+	KafkaTLSPrivateKeyPath               = "kafka.tls.private-key-path"
+	KafkaTopic                           = "kafka.topic"
 	KubeConfig                           = "kubeconfig"
 	ProxyAddress                         = "proxy.address"
 	ProxyExclude                         = "proxy.exclude"
+	RateLimitBurst                       = "ratelimit.burst"
+	RateLimitQPS                         = "ratelimit.qps"
 	SecurelogsConfigMapReloadImage       = "securelogs.configmap-reload-image"
 	SecurelogsFluentdImage               = "securelogs.fluentd-image"
 	ServiceEntryHostsAzurerator          = "service-entry-hosts.azurerator"
 	ServiceEntryHostsDigdirator          = "service-entry-hosts.digdirator"
 	ServiceEntryHostsJwker               = "service-entry-hosts.jwker"
+	SynchronizerRolloutCheckInterval     = "synchronizer.rollout-check-interval"
+	SynchronizerRolloutTimeout           = "synchronizer.rollout-timeout"
+	SynchronizerSynchronizationTimeout   = "synchronizer.synchronization-timeout"
 	VaultAddress                         = "vault.address"
 	VaultAuthPath                        = "vault.auth-path"
 	VaultInitContainerImage              = "vault.init-container-image"
 	VaultKvPath                          = "vault.kv-path"
+	VirtualServiceRegistryApplyOnStartup = "virtual-service-registry.apply-on-startup"
 	VirtualServiceRegistryEnabled        = "virtual-service-registry.enabled"
 	VirtualServiceRegistryNamespace      = "virtual-service-registry.namespace"
-	VirtualServiceRegistryApplyOnStartup = "virtual-service-registry.apply-on-startup"
 )
+
+func bindNAIS() {
+	viper.BindEnv(KafkaBrokers, "KAFKA_BROKERS")
+	viper.BindEnv(KafkaTLSCAPath, "KAFKA_CA_PATH")
+	viper.BindEnv(KafkaTLSCertificatePath, "KAFKA_CERTIFICATE_PATH")
+	viper.BindEnv(KafkaTLSPrivateKeyPath, "KAFKA_PRIVATE_KEY_PATH")
+}
 
 func init() {
 	// Automatically read configuration options from environment variables.
@@ -162,6 +193,9 @@ func init() {
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("/etc")
 
+	// Ensure Kafkarator variables are used
+	bindNAIS()
+
 	// Provide command-line flags
 	flag.Bool(DryRun, false, "set to true to run without any actual changes to the cluster")
 	flag.String(KubeConfig, "", "path to Kubernetes config file")
@@ -172,7 +206,7 @@ func init() {
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
 	flag.Bool(FeaturesIstio, false, "enable creation of Istio-specific resources")
 	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
-	flag.StringSlice(AccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
+	flag.StringSlice(FeaturesAccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
@@ -209,7 +243,15 @@ func init() {
 	flag.String(VirtualServiceRegistryNamespace, "default", "where to save VirtualService resources in GCP mode")
 	flag.Bool(VirtualServiceRegistryApplyOnStartup, false, "update all VirtualService resources before starting reconciler")
 
-	kafka.SetupFlags()
+	flag.Bool(KafkaEnabled, false, "Enable connection to kafka")
+	flag.Bool(KafkaTLSEnabled, false, "Use TLS for connecting to Kafka.")
+	flag.Bool(KafkaTLSInsecure, false, "Allow insecure Kafka TLS connections.")
+	flag.String(KafkaLogVerbosity, "trace", "Log verbosity for Kafka client.")
+	flag.String(KafkaTLSCAPath, "", "Path to Kafka TLS CA certificate.")
+	flag.String(KafkaTLSCertificatePath, "", "Path to Kafka TLS certificate.")
+	flag.String(KafkaTLSPrivateKeyPath, "", "Path to Kafka TLS private key.")
+	flag.String(KafkaTopic, "deploymentEvents", "Kafka topic for deployment status.")
+	flag.StringSlice(KafkaBrokers, []string{"localhost:9092"}, "Comma-separated list of Kafka brokers, HOST:PORT.")
 }
 
 // Print out all configuration options except secret stuff.
