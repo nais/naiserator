@@ -8,8 +8,6 @@ import (
 	"github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
-	"github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
 	"github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -27,7 +25,6 @@ import (
 )
 
 type realObjects struct {
-	authorizationPolicy     *security_istio_io_v1beta1.AuthorizationPolicy
 	deployment              *v1.Deployment
 	hpa                     *autoscaling.HorizontalPodAutoscaler
 	ingress                 *networkingv1beta1.Ingress
@@ -41,7 +38,6 @@ type realObjects struct {
 	sqlDatabase             *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase
 	sqlInstance             *sql_cnrm_cloud_google_com_v1beta1.SQLInstance
 	sqlUser                 *sql_cnrm_cloud_google_com_v1beta1.SQLUser
-	virtualServices         []*networking_istio_io_v1alpha3.VirtualService
 	googleIAMServiceAccount *iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccount
 	googleIAMPolicy         *iam_cnrm_cloud_google_com_v1beta1.IAMPolicy
 	googleIAMPolicyMember   *iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember
@@ -66,10 +62,6 @@ func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects
 			o.ingress = v
 		case *networking.NetworkPolicy:
 			o.networkPolicy = v
-		case *security_istio_io_v1beta1.AuthorizationPolicy:
-			o.authorizationPolicy = v
-		case *networking_istio_io_v1alpha3.VirtualService:
-			o.virtualServices = append(o.virtualServices, v)
 		case *rbac.Role:
 			o.role = v
 		case *rbac.RoleBinding:
@@ -158,21 +150,6 @@ func TestCreate(t *testing.T) {
 		assert.Nil(t, resources)
 	})
 
-	t.Run("istio resources are omitted when access policy creation is disabled", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		objects := getRealObjects(resources)
-		assert.Nil(t, objects.virtualServices)
-		assert.Nil(t, objects.authorizationPolicy)
-		assert.Nil(t, objects.networkPolicy)
-	})
-
 	t.Run("jwker resource is not created when access policy is empty", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resourceutils.NewResourceOptions()
@@ -185,12 +162,11 @@ func TestCreate(t *testing.T) {
 		assert.Empty(t, objects.jwker)
 	})
 
-	t.Run("istio resources are created when access policy creation is enabled", func(t *testing.T) {
+	t.Run("network policies are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://host.domain.tld"}
 		opts := resourceutils.NewResourceOptions()
-		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", GatewayName: "namespace/gateway"}}
-		opts.Istio = true
+		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", IngressClass: "namespace/gateway"}}
 		opts.NetworkPolicy = true
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
@@ -199,47 +175,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
-		assert.Len(t, objects.virtualServices, 1)
-		assert.NotNil(t, objects.authorizationPolicy)
 		assert.NotNil(t, objects.networkPolicy)
-	})
-
-	t.Run("authorization policy resource are created when access policy creation is enabled", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
-		opts.Istio = true
-		opts.NetworkPolicy = true
-		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".bar", GatewayName: "namespace/gateway"}}
-		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-
-		err := nais_io_v1alpha1.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		objects := getRealObjects(resources)
-		assert.NotNil(t, objects.virtualServices)
-		assert.NotNil(t, objects.authorizationPolicy)
-		assert.NotNil(t, objects.networkPolicy)
-	})
-
-	t.Run("authorization policy resource are created when access policy creation is enabled", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
-		opts.Istio = true
-		opts.NetworkPolicy = true
-		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{"otherapp", "othernamespace", ""}}
-		app.Spec.Prometheus.Enabled = true
-
-		err := nais_io_v1alpha1.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		objects := getRealObjects(resources)
-		assert.Equal(t, "cluster.local/ns/othernamespace/sa/otherapp", objects.authorizationPolicy.Spec.Rules[1].From[0].Source.Principals[0])
 	})
 
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
@@ -257,25 +193,6 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, app.Name, objects.role.Name)
 		assert.NotNil(t, objects.rolebinding)
 		assert.Equal(t, app.Name, objects.rolebinding.Name)
-	})
-
-	t.Run("default network policy that allows egress to resources in kube-system and istio-system is created for app", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
-		opts.Istio = true
-		opts.NetworkPolicy = true
-		opts.AccessPolicyNotAllowedCIDRs = []string{"101.0.0.0/8"}
-		err := nais_io_v1alpha1.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		resources, err := resourcecreator.Create(app, opts)
-		assert.NoError(t, err)
-
-		objects := getRealObjects(resources)
-		assert.NotNil(t, objects.networkPolicy)
-
-		assert.NotNil(t, objects.networkPolicy)
-		assert.NotEmpty(t, objects.networkPolicy.Spec.Egress)
 	})
 
 	t.Run("google service account, bucket, and bucket policy resources are coherent", func(t *testing.T) {

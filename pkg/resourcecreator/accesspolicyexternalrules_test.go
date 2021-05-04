@@ -10,30 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServiceEntry(t *testing.T) {
-	t.Run("serviceentry not created if external hosts array omitted", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		serviceEntries := resourcecreator.ServiceEntries(app)
-		assert.Len(t, serviceEntries, 0)
-	})
-
-	t.Run("serviceentry created if additional hosts are defined", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		additionalHosts := resourcecreator.ToAccessPolicyExternalRules([]string{
-			"https://some-host",
-			"https://some-other-host",
-		})
-		serviceEntries := resourcecreator.ServiceEntries(app, additionalHosts...)
-		assert.Len(t, serviceEntries, 2)
-	})
-}
-
 func TestToAccessPolicyExternalRule(t *testing.T) {
 	t.Run("list of hosts should return list of access policy external rule", func(t *testing.T) {
 		hosts := []string{

@@ -1,14 +1,14 @@
 config:
-  description: egress rules with tokenx enabled will create network policies, service entries, and jwker resources
+  description: egress rules with tokenx enabled will create network policies and jwker resources
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster
   JwkerEnabled: true
-  JwkerServiceEntryHosts:
+  JwkerHosts:
     - dev.tokendings.test
 
 input:
@@ -106,25 +106,3 @@ tests:
                       - name: ^tokenx-myapplication-.+$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/jwker
-
-  - operation: CreateOrUpdate
-    apiVersion: networking.istio.io/v1alpha3
-    kind: ServiceEntry
-    name: myapplication-02
-    match:
-      - name: "service entry created for outbound traffic to tokendings"
-        type: exact
-        exclude:
-          - .metadata
-        resource:
-          spec:
-            hosts:
-              - "dev.tokendings.test"
-            location: MESH_EXTERNAL
-            resolution: DNS
-            ports:
-              - number: 443
-                protocol: HTTPS
-                name: https
-            exportTo:
-              - "."

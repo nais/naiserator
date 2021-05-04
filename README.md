@@ -18,12 +18,6 @@ Optionally, if enabled in the application manifest, the following resources:
   * `Ingress` adding TLS termination and virtualhost support
   * _Leader election_ sidecar which decides a cluster leader from available pods. This feature also creates a `Role` and `Role binding`.
 
-If Istio support is enabled with `--features.access-policy`:
-  * `NetworkPolicy`
-  * A set of `VirtualService`
-  * `AuthorizationPolicy` resource
-  * `ServiceEntry`
-
 These resources will remain in Kubernetes until the `Application` resource is deleted.
 Any unneeded resources will be automatically deleted if disabled by feature flags or is lacking in a application manifest.
 

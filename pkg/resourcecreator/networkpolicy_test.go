@@ -23,7 +23,7 @@ func TestNetworkPolicy(t *testing.T) {
 
 	defaultIpsOptions := resourceutils.NewResourceOptions()
 
-	defaultIpsOptions.Istio = true
+	defaultIpsOptions.Linkerd = true
 	defaultIpsOptions.AccessPolicyNotAllowedCIDRs = defaultIps
 
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
@@ -47,7 +47,53 @@ func TestNetworkPolicy(t *testing.T) {
 					},
 					NamespaceSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
-							"name": "istio-system",
+							"name": "nais",
+						},
+					},
+				},
+			},
+		})
+
+		testPolicy = append(testPolicy, networking.NetworkPolicyIngressRule{
+			From: []networking.NetworkPolicyPeer{
+				{
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"linkerd.io/is-control-plane": "true",
+						},
+					},
+				},
+			},
+		})
+
+		testPolicy = append(testPolicy, networking.NetworkPolicyIngressRule{
+			From: []networking.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"component": "tap",
+						},
+					},
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"linkerd.io/extension": "viz",
+						},
+					},
+				},
+			},
+		})
+
+		testPolicy = append(testPolicy, networking.NetworkPolicyIngressRule{
+			From: []networking.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"component": "prometheus",
+						},
+					},
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"linkerd.io/extension": "viz",
 						},
 					},
 				},
@@ -83,57 +129,6 @@ func TestNetworkPolicy(t *testing.T) {
 		assert.Len(t, networkPolicy.Spec.Egress, 2)
 	})
 
-	t.Run("specifying ingresses allows traffic from istio ingress gateway", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
-			"https://gief.api.plz",
-		}
-		err := nais_io_v1alpha1.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
-		assert.NotNil(t, networkPolicy)
-		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
-
-		podMatch := map[string]string{"istio": "ingressgateway"}
-		namespaceMatch := map[string]string{"name": "istio-system"}
-
-		assert.Equal(t, podMatch, networkPolicy.Spec.Ingress[1].From[0].PodSelector.MatchLabels)
-		assert.Equal(t, namespaceMatch, networkPolicy.Spec.Ingress[1].From[0].NamespaceSelector.MatchLabels)
-	})
-
-	t.Run("specifying ingresses when all traffic is allowed still creates an explicit rule for istio ingress gateway", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{
-			"https://gief.api.plz",
-		}
-		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		networkPolicy := resourcecreator.NetworkPolicy(app, defaultIpsOptions)
-		assert.NotNil(t, networkPolicy)
-		assert.Len(t, networkPolicy.Spec.Ingress, 3)
-		assert.Len(t, networkPolicy.Spec.Ingress[0].From, 1)
-		assert.Len(t, networkPolicy.Spec.Ingress[1].From, 1)
-
-		istioPodMatch := map[string]string{"istio": "ingressgateway"}
-		istioNamespaceMatch := map[string]string{"name": "istio-system"}
-		prometheusMatch := map[string]string{"app": "prometheus"}
-		asterix := networking.NetworkPolicyIngressRule{
-			Ports: nil,
-			From: []networking.NetworkPolicyPeer{{
-				PodSelector:       &metav1.LabelSelector{},
-				NamespaceSelector: nil,
-				IPBlock:           nil,
-			}},
-		}
-		assert.Equal(t, prometheusMatch, networkPolicy.Spec.Ingress[0].From[0].PodSelector.MatchLabels)
-		assert.Equal(t, istioNamespaceMatch, networkPolicy.Spec.Ingress[0].From[0].NamespaceSelector.MatchLabels)
-		assert.Equal(t, asterix, networkPolicy.Spec.Ingress[1])
-		assert.Equal(t, istioPodMatch, networkPolicy.Spec.Ingress[2].From[0].PodSelector.MatchLabels)
-		assert.Equal(t, istioNamespaceMatch, networkPolicy.Spec.Ingress[2].From[0].NamespaceSelector.MatchLabels)
-	})
 	t.Run("all traffic inside namespace sets from rule to empty podspec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 

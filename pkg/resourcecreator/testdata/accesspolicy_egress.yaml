@@ -1,8 +1,8 @@
 config:
-  description: egress rules will create network policies and service entries
+  description: egress rules will create network policies
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1

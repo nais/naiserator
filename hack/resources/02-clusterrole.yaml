@@ -10,7 +10,6 @@ rules:
       - '*'
     resources:
       - 'applications'
-      - 'authorizationpolicies'
       - 'azureadapplications'
       - 'deployments'
       - 'endpoints'
@@ -29,14 +28,12 @@ rules:
       - 'roles'
       - 'secrets'
       - 'serviceaccounts'
-      - 'serviceentries'
       - 'services'
       - 'sqldatabases'
       - 'sqlinstances'
       - 'sqlusers'
       - 'storagebucketaccesscontrols'
       - 'storagebuckets'
-      - 'virtualservices'
       - 'poddisruptionbudgets'
     verbs:
       - 'get'

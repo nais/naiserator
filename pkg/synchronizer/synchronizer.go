@@ -8,17 +8,16 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
-	"github.com/nais/naiserator/pkg/virtualservice"
 	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
@@ -49,12 +48,11 @@ const (
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
-	SimpleClient           client.Client
-	Scheme                 *runtime.Scheme
-	ResourceOptions        resourceutils.Options
-	Config                 config.Config
-	VirtualServiceRegistry *virtualservice.Registry
-	Kafka                  kafka.Interface
+	SimpleClient    client.Client
+	Scheme          *runtime.Scheme
+	ResourceOptions resourceutils.Options
+	Config          config.Config
+	Kafka           kafka.Interface
 }
 
 func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
@@ -118,22 +116,6 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			})
 			logger.Infof("Application has been deleted from Kubernetes")
 
-			if n.Config.VirtualServiceRegistry.Enabled {
-				virtualServices := n.VirtualServiceRegistry.Remove(req.Name, req.Namespace)
-
-				commits := make([]func() error, 0)
-				for _, vs := range virtualServices {
-					if len(vs.Spec.HTTP) == 0 {
-						commits = append(commits, updater.DeleteIfExists(ctx, n.Client, vs))
-					} else {
-						commits = append(commits, updater.CreateOrUpdate(ctx, n, n.Scheme, vs))
-					}
-				}
-				err, _ = n.rolloutWithRetryAndMetrics(commits)
-				if err != nil {
-					logger.Errorf("rollout virtual services: %s", err)
-				}
-			}
 			err = nil
 		}
 		return ctrl.Result{}, err
@@ -341,19 +323,9 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		}
 	}
 
-	// Create Istio resources only if feature is enabled and namespace is Istio-enabled
-	if n.Config.Features.Istio && len(namespace.Labels["istio.io/rev"]) > 0 {
-		rollout.ResourceOptions.Istio = true
-	}
-
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
 	if n.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
 		rollout.ResourceOptions.Linkerd = true
-	}
-
-	// Linkerd+Istio is not allowed
-	if rollout.ResourceOptions.Istio && rollout.ResourceOptions.Linkerd {
-		return nil, fmt.Errorf("refusing to rollout application in namespace with both Istio and Linkerd")
 	}
 
 	rollout.SetCurrentDeployment(previousDeployment)
@@ -361,32 +333,6 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
-	}
-
-	if n.Config.VirtualServiceRegistry.Enabled {
-		if rollout.ResourceOptions.Istio {
-			err = n.VirtualServiceRegistry.Add(app)
-			if err != nil {
-				return nil, fmt.Errorf("add application to virtual services registry: %w", err)
-			}
-		} else {
-			n.VirtualServiceRegistry.Remove(app.Name, app.Namespace)
-		}
-		services, err := n.VirtualServiceRegistry.VirtualServices(app)
-		if err != nil {
-			return nil, err
-		}
-		for _, vs := range services {
-			op := resourcecreator.ResourceOperation{
-				Resource:  vs,
-				Operation: resourcecreator.OperationCreateOrUpdate,
-			}
-			if len(vs.Spec.HTTP) == 0 {
-				// delete vs if routes are empty
-				op.Operation = resourcecreator.OperationDeleteIfExists
-			}
-			rollout.ResourceOperations = append(rollout.ResourceOperations, op)
-		}
 	}
 
 	return rollout, nil

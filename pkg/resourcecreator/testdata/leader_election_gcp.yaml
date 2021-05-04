@@ -2,7 +2,7 @@ config:
   description: vanilla application running in GCP with default configuration and access policies
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   NetworkPolicy: true
   AccessPolicyNotAllowedCIDRs: ["10.6.0.0/15", "192.168.0.0/16", "172.16.0.0/12"]
   GoogleProjectID: google-project-id
@@ -106,17 +106,8 @@ tests:
             - to:
               - namespaceSelector:
                   matchLabels:
-                    name: istio-system
-                podSelector:
-                  matchLabels:
-                    istio: istiod
-              - namespaceSelector:
-                  matchLabels:
-                    name: istio-system
-                podSelector:
-                  matchLabels:
-                    istio: ingressgateway
-              - namespaceSelector: {}
+                    linkerd.io/is-control-plane: "true"
+              - namespaceSelector: { }
                 podSelector:
                   matchLabels:
                     k8s-app: kube-dns
@@ -133,7 +124,7 @@ tests:
             - from:
               - namespaceSelector:
                   matchLabels:
-                    name: istio-system
+                    name: nais
                 podSelector:
                   matchLabels:
                     app: prometheus

@@ -58,7 +58,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
 		jwker := Jwker(app, resourceOptions.ClusterName)
 		if jwker != nil {
-			outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.JwkerServiceEntryHosts)...)
+			outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.JwkerHosts)...)
 
 			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
 			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
@@ -70,7 +70,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		if err != nil {
 			return nil, err
 		}
-		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.AzureratorServiceEntryHosts)...)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.AzureratorHosts)...)
 
 		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
@@ -89,7 +89,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		if err != nil {
 			return nil, err
 		}
-		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorServiceEntryHosts)...)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorHosts)...)
 
 		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorIDPortenSecretName = idportenClient.Spec.SecretName
@@ -98,7 +98,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
 		maskinportenClient := maskinporten.MaskinportenClient(app)
 
-		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorServiceEntryHosts)...)
+		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorHosts)...)
 
 		ops = append(ops, ResourceOperation{maskinportenClient, OperationCreateOrUpdate})
 		resourceOptions.DigdiratorMaskinportenSecretName = maskinportenClient.Spec.SecretName
@@ -212,33 +212,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
 	}
 
-	if resourceOptions.Istio {
-		if !resourceOptions.VirtualServiceRegistryEnabled {
-			vses, err := VirtualServices(app, resourceOptions.GatewayMappings)
-
-			if err != nil {
-				return nil, fmt.Errorf("unable to create VirtualServices: %s", err)
-			}
-
-			for _, vs := range vses {
-				ops = append(ops, ResourceOperation{vs, OperationCreateOrUpdate})
-			}
-		}
-		authorizationPolicy, err := AuthorizationPolicy(app, resourceOptions)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create AuthorizationPolicy: %s", err)
-		}
-		if authorizationPolicy != nil {
-			ops = append(ops, ResourceOperation{authorizationPolicy, OperationCreateOrUpdate})
-		}
-
-		serviceEntries := ServiceEntries(app, outboundHostRules...)
-		for _, serviceEntry := range serviceEntries {
-			ops = append(ops, ResourceOperation{serviceEntry, OperationCreateOrUpdate})
-		}
-	}
-
-	if !resourceOptions.Istio && !resourceOptions.Linkerd {
+	if !resourceOptions.Linkerd {
 		ing, err := ingress.Ingress(app)
 		if err != nil {
 			return nil, fmt.Errorf("while creating ingress: %s", err)

@@ -2,11 +2,17 @@ config:
   description: azure application with access policies
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster
   AzureratorEnabled: true
+  GatewayMappings:
+    - DomainSuffix: .adeo.no
+      IngressClass: adeo-gateway
+    - DomainSuffix: .domain
+      IngressClass: domain-gateway
+
 
 input:
   kind: Application
@@ -35,8 +41,8 @@ input:
             namespace: t1
             cluster: other-cluster
     ingresses:
-      - https://my.application/foo/bar
-      - https://my.application/foo/bar/baz
+      - https://my.application.adeo.no/foo/bar
+      - https://my.application.domain/foo/bar/baz
 
 tests:
   - apiVersion: nais.io/v1
@@ -65,8 +71,8 @@ tests:
                 cluster: other-cluster
                 namespace: t1
             replyUrls:
-              - url: "https://my.application/foo/bar/oauth2/callback"
-              - url: "https://my.application/foo/bar/baz/oauth2/callback"
+              - url: "https://my.application.adeo.no/foo/bar/oauth2/callback"
+              - url: "https://my.application.domain/foo/bar/baz/oauth2/callback"
             tenant: nav.no
             claims:
               extra:

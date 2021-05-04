@@ -44,7 +44,6 @@ type Synchronizer struct {
 }
 
 type Features struct {
-	Istio                       bool     `json:"istio"`
 	Linkerd                     bool     `json:"linkerd"`
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	NativeSecrets               bool     `json:"native-secrets"`
@@ -75,7 +74,6 @@ type Vault struct {
 
 type GatewayMapping struct {
 	DomainSuffix string `json:"domainSuffix"`
-	GatewayName  string `json:"gatewayName"`  // Istio
 	IngressClass string `json:"ingressClass"` // Nginx
 }
 
@@ -89,88 +87,77 @@ type Ratelimit struct {
 	Burst int `json:"burst"`
 }
 
-type ServiceEntryHosts struct {
+type ServiceHosts struct {
 	Azurerator []string `json:"azurerator"`
 	Digdirator []string `json:"digdirator"`
 	Jwker      []string `json:"jwker"`
 }
 
-type VirtualServiceRegistry struct {
-	Enabled        bool   `json:"enabled"`
-	Namespace      string `json:"namespace"`
-	ApplyOnStartup bool   `json:"apply-on-startup"`
-}
-
 type Config struct {
-	DryRun                            bool                   `json:"dry-run"`
-	Bind                              string                 `json:"bind"`
-	Informer                          Informer               `json:"informer"`
-	Synchronizer                      Synchronizer           `json:"synchronizer"`
-	Kubeconfig                        string                 `json:"kubeconfig"`
-	ClusterName                       string                 `json:"cluster-name"`
-	GoogleProjectId                   string                 `json:"google-project-id"`
-	GoogleCloudSQLProxyContainerImage string                 `json:"google-cloud-sql-proxy-container-image"`
-	ApiServerIp                       string                 `json:"api-server-ip"`
-	VirtualServiceRegistry            VirtualServiceRegistry `json:"virtual-service-registry"`
-	Ratelimit                         Ratelimit              `json:"ratelimit"`
-	Log                               Log                    `json:"log"`
-	Features                          Features               `json:"features"`
-	Securelogs                        Securelogs             `json:"securelogs"`
-	Proxy                             Proxy                  `json:"proxy"`
-	Vault                             Vault                  `json:"vault"`
-	Kafka                             Kafka                  `json:"kafka"`
-	HostAliases                       []HostAlias            `json:"host-aliases"`
-	GatewayMappings                   []GatewayMapping       `json:"gateway-mappings"`
-	ServiceEntryHosts                 ServiceEntryHosts      `json:"service-entry-hosts"`
+	DryRun                            bool             `json:"dry-run"`
+	Bind                              string           `json:"bind"`
+	Informer                          Informer         `json:"informer"`
+	Synchronizer                      Synchronizer     `json:"synchronizer"`
+	Kubeconfig                        string           `json:"kubeconfig"`
+	ClusterName                       string           `json:"cluster-name"`
+	GoogleProjectId                   string           `json:"google-project-id"`
+	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
+	ApiServerIp                       string           `json:"api-server-ip"`
+	Ratelimit                         Ratelimit        `json:"ratelimit"`
+	Log                               Log              `json:"log"`
+	Features                          Features         `json:"features"`
+	Securelogs                        Securelogs       `json:"securelogs"`
+	Proxy                             Proxy            `json:"proxy"`
+	Vault                             Vault            `json:"vault"`
+	Kafka                             Kafka            `json:"kafka"`
+	HostAliases                       []HostAlias      `json:"host-aliases"`
+	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
+	ServiceHosts                      ServiceHosts     `json:"service-hosts"`
 }
 
 const (
-	ApiServerIp                          = "api-server-ip"
-	Bind                                 = "bind"
-	ClusterName                          = "cluster-name"
-	DryRun                               = "dry-run"
-	FeaturesAccessPolicyNotAllowedCIDRs  = "features.access-policy-not-allowed-cidrs"
-	FeaturesAzurerator                   = "features.azurerator"
-	FeaturesDigdirator                   = "features.digdirator"
-	FeaturesIstio                        = "features.istio"
-	FeaturesJwker                        = "features.jwker"
-	FeaturesKafkarator                   = "features.kafkarator"
-	FeaturesLinkerd                      = "features.linkerd"
-	FeaturesNativeSecrets                = "features.native-secrets"
-	FeaturesNetworkPolicy                = "features.network-policy"
-	FeaturesVault                        = "features.vault"
-	GoogleCloudSQLProxyContainerImage    = "google-cloud-sql-proxy-container-image"
-	GoogleProjectId                      = "google-project-id"
-	InformerFullSynchronizationInterval  = "informer.full-sync-interval"
-	KafkaBrokers                         = "kafka.brokers"
-	KafkaEnabled                         = "kafka.enabled"
-	KafkaLogVerbosity                    = "kafka.log-verbosity"
-	KafkaTLSCAPath                       = "kafka.tls.ca-path"
-	KafkaTLSCertificatePath              = "kafka.tls.certificate-path"
-	KafkaTLSEnabled                      = "kafka.tls.enabled"
-	KafkaTLSInsecure                     = "kafka.tls.insecure"
-	KafkaTLSPrivateKeyPath               = "kafka.tls.private-key-path"
-	KafkaTopic                           = "kafka.topic"
-	KubeConfig                           = "kubeconfig"
-	ProxyAddress                         = "proxy.address"
-	ProxyExclude                         = "proxy.exclude"
-	RateLimitBurst                       = "ratelimit.burst"
-	RateLimitQPS                         = "ratelimit.qps"
-	SecurelogsConfigMapReloadImage       = "securelogs.configmap-reload-image"
-	SecurelogsFluentdImage               = "securelogs.fluentd-image"
-	ServiceEntryHostsAzurerator          = "service-entry-hosts.azurerator"
-	ServiceEntryHostsDigdirator          = "service-entry-hosts.digdirator"
-	ServiceEntryHostsJwker               = "service-entry-hosts.jwker"
-	SynchronizerRolloutCheckInterval     = "synchronizer.rollout-check-interval"
-	SynchronizerRolloutTimeout           = "synchronizer.rollout-timeout"
-	SynchronizerSynchronizationTimeout   = "synchronizer.synchronization-timeout"
-	VaultAddress                         = "vault.address"
-	VaultAuthPath                        = "vault.auth-path"
-	VaultInitContainerImage              = "vault.init-container-image"
-	VaultKvPath                          = "vault.kv-path"
-	VirtualServiceRegistryApplyOnStartup = "virtual-service-registry.apply-on-startup"
-	VirtualServiceRegistryEnabled        = "virtual-service-registry.enabled"
-	VirtualServiceRegistryNamespace      = "virtual-service-registry.namespace"
+	ApiServerIp                         = "api-server-ip"
+	Bind                                = "bind"
+	ClusterName                         = "cluster-name"
+	DryRun                              = "dry-run"
+	FeaturesAccessPolicyNotAllowedCIDRs = "features.access-policy-not-allowed-cidrs"
+	FeaturesAzurerator                  = "features.azurerator"
+	FeaturesDigdirator                  = "features.digdirator"
+	FeaturesJwker                       = "features.jwker"
+	FeaturesKafkarator                  = "features.kafkarator"
+	FeaturesLinkerd                     = "features.linkerd"
+	FeaturesNativeSecrets               = "features.native-secrets"
+	FeaturesNetworkPolicy               = "features.network-policy"
+	FeaturesVault                       = "features.vault"
+	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
+	GoogleProjectId                     = "google-project-id"
+	InformerFullSynchronizationInterval = "informer.full-sync-interval"
+	KafkaBrokers                        = "kafka.brokers"
+	KafkaEnabled                        = "kafka.enabled"
+	KafkaLogVerbosity                   = "kafka.log-verbosity"
+	KafkaTLSCAPath                      = "kafka.tls.ca-path"
+	KafkaTLSCertificatePath             = "kafka.tls.certificate-path"
+	KafkaTLSEnabled                     = "kafka.tls.enabled"
+	KafkaTLSInsecure                    = "kafka.tls.insecure"
+	KafkaTLSPrivateKeyPath              = "kafka.tls.private-key-path"
+	KafkaTopic                          = "kafka.topic"
+	KubeConfig                          = "kubeconfig"
+	ProxyAddress                        = "proxy.address"
+	ProxyExclude                        = "proxy.exclude"
+	RateLimitBurst                      = "ratelimit.burst"
+	RateLimitQPS                        = "ratelimit.qps"
+	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
+	SecurelogsFluentdImage              = "securelogs.fluentd-image"
+	ServiceHostsAzurerator              = "service-hosts.azurerator"
+	ServiceHostsDigdirator              = "service-hosts.digdirator"
+	ServiceHostsJwker                   = "service-hosts.jwker"
+	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
+	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
+	SynchronizerSynchronizationTimeout  = "synchronizer.synchronization-timeout"
+	VaultAddress                        = "vault.address"
+	VaultAuthPath                       = "vault.auth-path"
+	VaultInitContainerImage             = "vault.init-container-image"
+	VaultKvPath                         = "vault.kv-path"
 )
 
 func bindNAIS() {
@@ -204,7 +191,6 @@ func init() {
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
-	flag.Bool(FeaturesIstio, false, "enable creation of Istio-specific resources")
 	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
 	flag.StringSlice(FeaturesAccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
@@ -214,6 +200,10 @@ func init() {
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
+
+	flag.StringSlice(ServiceHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator")
+	flag.StringSlice(ServiceHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator")
+	flag.StringSlice(ServiceHostsJwker, []string{}, "list of hosts to output to ServiceEntry for Applications using Jwker")
 
 	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
 
@@ -227,10 +217,6 @@ func init() {
 	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
 	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")
 
-	flag.StringSlice(ServiceEntryHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator")
-	flag.StringSlice(ServiceEntryHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator")
-	flag.StringSlice(ServiceEntryHostsJwker, []string{}, "list of hosts to output to ServiceEntry for Applications using Jwker")
-
 	flag.String(ProxyAddress, "", "HTTPS?_PROXY environment variable injected into containers")
 	flag.StringSlice(ProxyExclude, []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
 
@@ -238,10 +224,6 @@ func init() {
 	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
 	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
 	flag.String(VaultKvPath, "", "path to Vault KV mount")
-
-	flag.Bool(VirtualServiceRegistryEnabled, false, "group VirtualService routes per domain instead of multiple per application")
-	flag.String(VirtualServiceRegistryNamespace, "default", "where to save VirtualService resources in GCP mode")
-	flag.Bool(VirtualServiceRegistryApplyOnStartup, false, "update all VirtualService resources before starting reconciler")
 
 	flag.Bool(KafkaEnabled, false, "Enable connection to kafka")
 	flag.Bool(KafkaTLSEnabled, false, "Use TLS for connecting to Kafka.")

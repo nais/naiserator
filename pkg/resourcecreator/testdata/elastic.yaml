@@ -2,7 +2,7 @@ config:
   description: Elastic Search labling and access policy
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: dev-localtest
@@ -37,25 +37,3 @@ tests:
               spec:
                 containers:
                   - name: "myapplication"
-
-  - operation: CreateOrUpdate
-    apiVersion: networking.istio.io/v1alpha3
-    kind: ServiceEntry
-    name: myapplication-01
-    match:
-      - name: "service entry created for outbound traffic to elastic"
-        type: exact
-        exclude:
-          - .metadata
-        resource:
-          spec:
-            hosts:
-              - elastic-myteam-naistest-nav-dev.aivencloud.com
-            location: MESH_EXTERNAL
-            resolution: DNS
-            ports:
-              - number: 26482
-                protocol: HTTPS
-                name: https
-            exportTo:
-              - "."

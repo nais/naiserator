@@ -2,11 +2,14 @@ config:
     description: idporten specifying paths should take precedence over URIs
 
 resourceoptions:
-    Istio: true
+    Linkerd: true
     GoogleProjectID: google-project-id
     NumReplicas: 1
     ClusterName: mycluster
     DigdiratorEnabled: true
+    GatewayMappings:
+        - DomainSuffix: .adeo.no
+          IngressClass: adeo-gateway
 
 input:
     kind: Application
@@ -20,13 +23,13 @@ input:
         image: foo/bar
         idporten:
             enabled: true
-            clientURI: https://my-client
-            redirectURI: https://my-client/oauth2/callback
+            clientURI: https://my-client.adeo.no
+            redirectURI: https://my-client.adeo.no/oauth2/callback
             redirectPath: /custom/callback/path
-            frontchannelLogoutURI: https://my-client/oauth2/callback
+            frontchannelLogoutURI: https://my-client.adeo.no/oauth2/callback
             frontchannelLogoutPath: /custom/logout/path
         ingresses:
-            - https://my-client
+            - https://my-client.adeo.no
 
 tests:
     - apiVersion: nais.io/v1
@@ -38,5 +41,5 @@ tests:
             name: "redirect URI should have expected path"
             resource:
                 spec:
-                    redirectURI: https://my-client/custom/callback/path
-                    frontchannelLogoutURI: https://my-client/custom/logout/path
+                    redirectURI: https://my-client.adeo.no/custom/callback/path
+                    frontchannelLogoutURI: https://my-client.adeo.no/custom/logout/path

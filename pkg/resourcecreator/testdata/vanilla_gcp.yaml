@@ -2,7 +2,7 @@ config:
   description: vanilla application running in GCP with default configuration and access policies
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
@@ -103,40 +103,49 @@ tests:
           - .metadata
         resource:
           spec:
-            ingress:
-              - from:
-                  - podSelector:
-                      matchLabels:
-                        app: prometheus
-                    namespaceSelector:
-                      matchLabels:
-                        name: istio-system
             egress:
-              - to:
-                  - podSelector:
-                      matchLabels:
-                        istio: istiod
-                    namespaceSelector:
-                      matchLabels:
-                        name: istio-system
-                  - namespaceSelector:
-                      matchLabels:
-                        name: istio-system
-                    podSelector:
-                      matchLabels:
-                        istio: ingressgateway
-                  - podSelector:
-                      matchLabels:
-                        k8s-app: kube-dns
-                    namespaceSelector: {}
-                  - ipBlock:
-                      cidr: 0.0.0.0/0
-            policyTypes:
-              - Ingress
-              - Egress
+            - to:
+              - namespaceSelector:
+                  matchLabels:
+                    linkerd.io/is-control-plane: "true"
+              - namespaceSelector: {}
+                podSelector:
+                  matchLabels:
+                    k8s-app: kube-dns
+              - ipBlock:
+                  cidr: 0.0.0.0/0
+            ingress:
+            - from:
+              - namespaceSelector:
+                  matchLabels:
+                    name: nais
+                podSelector:
+                  matchLabels:
+                    app: prometheus
+            - from:
+              - namespaceSelector:
+                  matchLabels:
+                    linkerd.io/is-control-plane: "true"
+            - from:
+              - namespaceSelector:
+                  matchLabels:
+                    linkerd.io/extension: viz
+                podSelector:
+                  matchLabels:
+                    component: tap
+            - from:
+              - namespaceSelector:
+                  matchLabels:
+                    linkerd.io/extension: viz
+                podSelector:
+                  matchLabels:
+                    component: prometheus
             podSelector:
               matchLabels:
                 app: myapplication
+            policyTypes:
+            - Ingress
+            - Egress
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
