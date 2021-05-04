@@ -1,8 +1,7 @@
-package resourcecreator
+package proxyopts
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -11,10 +10,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func proxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
+func ProxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	var err error
 	for i := range podSpec.Containers {
-		podSpec.Containers[i].Env, err = ProxyEnvironmentVariables(podSpec.Containers[i].Env)
+		podSpec.Containers[i].Env, err = EnvironmentVariables(podSpec.Containers[i].Env)
 		if err != nil {
 			return nil, fmt.Errorf("while injecting proxy options into container: %s", err)
 		}
@@ -33,7 +32,7 @@ func proxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 // On top of everything, the Java virtual machine does not honor these environment variables.
 // Instead, JVM must be started with a specific set of command-line options. These are also
 // provided as environment variables, for convenience.
-func ProxyEnvironmentVariables(envVars []corev1.EnvVar) ([]corev1.EnvVar, error) {
+func EnvironmentVariables(envVars []corev1.EnvVar) ([]corev1.EnvVar, error) {
 	excludedHosts := viper.GetStringSlice(config.ProxyExclude)
 	proxyURL := viper.GetString(config.ProxyAddress)
 	noProxy := strings.Join(excludedHosts, ",")
@@ -78,12 +77,4 @@ func appendDualCaseEnvVar(envVars []corev1.EnvVar, key, value string) []corev1.E
 	}
 
 	return envVars
-}
-
-func getEnvDualCase(name string) string {
-	value, found := os.LookupEnv(strings.ToUpper(name))
-	if found {
-		return value
-	}
-	return os.Getenv(strings.ToLower(name))
 }
