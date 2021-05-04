@@ -127,6 +127,9 @@ const (
 	ProxyExclude                        = "proxy.exclude"
 	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
 	SecurelogsFluentdImage              = "securelogs.fluentd-image"
+	ServiceHostsAzurerator              = "service-hosts.azurerator"
+	ServiceHostsDigdirator              = "service-hosts.digdirator"
+	ServiceHostsJwker                   = "service-hosts.jwker"
 	VaultAddress                        = "vault.address"
 	VaultAuthPath                       = "vault.auth-path"
 	VaultInitContainerImage             = "vault.init-container-image"
@@ -163,6 +166,10 @@ func init() {
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
+
+	flag.StringSlice(ServiceHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator")
+	flag.StringSlice(ServiceHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator")
+	flag.StringSlice(ServiceHostsJwker, []string{}, "list of hosts to output to ServiceEntry for Applications using Jwker")
 
 	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
 
