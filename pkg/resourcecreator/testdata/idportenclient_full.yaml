@@ -2,11 +2,14 @@ config:
   description: idporten enabled should result in expected resources created
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster
   DigdiratorEnabled: true
+  GatewayMappings:
+    - DomainSuffix: .adeo.no
+      IngressClass: adeo-gateway
 
 input:
   kind: Application
@@ -20,15 +23,15 @@ input:
     image: foo/bar
     idporten:
       enabled: true
-      clientURI: https://my-client
-      redirectURI: https://my-client/whatever
-      frontchannelLogoutURI: https://my-client/logout
+      clientURI: https://my-client.adeo.no
+      redirectURI: https://my-client.adeo.no/whatever
+      frontchannelLogoutURI: https://my-client.adeo.no/logout
       postLogoutRedirectURIs:
-        - https://my-client/something
+        - https://my-client.adeo.no/something
       sessionLifetime: 7200
       accessTokenLifetime: 3600
     ingresses:
-     - https://my-client
+     - https://my-client.adeo.no
 
 tests:
   - apiVersion: nais.io/v1
@@ -44,10 +47,10 @@ tests:
           - .spec.secretName
         resource:
           spec:
-            clientURI: https://my-client
-            redirectURI: https://my-client/whatever
-            frontchannelLogoutURI: https://my-client/logout
+            clientURI: https://my-client.adeo.no
+            redirectURI: https://my-client.adeo.no/whatever
+            frontchannelLogoutURI: https://my-client.adeo.no/logout
             postLogoutRedirectURIs:
-              - https://my-client/something
+              - https://my-client.adeo.no/something
             sessionLifetime: 7200
             accessTokenLifetime: 3600

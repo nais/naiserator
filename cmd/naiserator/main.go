@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -22,8 +21,6 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/readonly"
 	"github.com/nais/naiserator/pkg/synchronizer"
-	"github.com/nais/naiserator/pkg/virtualservice"
-	"github.com/nais/naiserator/updater"
 )
 
 func main() {
@@ -104,22 +101,21 @@ func run() error {
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
-	resourceOptions.AzureratorServiceEntryHosts = cfg.ServiceEntryHosts.Azurerator
+	resourceOptions.AzureratorHosts = cfg.ServiceHosts.Azurerator
 	resourceOptions.ClusterName = cfg.ClusterName
 	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
-	resourceOptions.DigdiratorServiceEntryHosts = cfg.ServiceEntryHosts.Digdirator
+	resourceOptions.DigdiratorHosts = cfg.ServiceHosts.Digdirator
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
-	resourceOptions.JwkerServiceEntryHosts = cfg.ServiceEntryHosts.Jwker
+	resourceOptions.JwkerHosts = cfg.ServiceHosts.Jwker
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
-	resourceOptions.VirtualServiceRegistryEnabled = cfg.VirtualServiceRegistry.Enabled
 
 	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
-		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the Virtual Service based on the provided ingresses")
+		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress.")
 	}
 
 	mgrClient := mgr.GetClient()
@@ -132,42 +128,16 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
-	virtualServiceRegistry := virtualservice.NewRegistry(cfg.GatewayMappings, cfg.VirtualServiceRegistry.Namespace)
-
 	syncer := &synchronizer.Synchronizer{
 		Client:                 mgrClient,
 		SimpleClient:           simpleClient,
 		Scheme:                 kscheme,
 		ResourceOptions:        resourceOptions,
 		Config:                 *cfg,
-		VirtualServiceRegistry: virtualServiceRegistry,
 	}
 
 	if err = syncer.SetupWithManager(mgr); err != nil {
 		return err
-	}
-
-	if cfg.VirtualServiceRegistry.Enabled {
-		ctx := context.Background()
-		err := virtualServiceRegistry.Populate(ctx, simpleClient)
-		if err != nil {
-			return fmt.Errorf("build virtual service registry: %w", err)
-		}
-		if cfg.VirtualServiceRegistry.ApplyOnStartup {
-			timer := time.Now()
-			log.Infof("Applying all VirtualService entries...")
-			transactions := make([]func() error, 0)
-			for _, vs := range virtualServiceRegistry.All() {
-				transactions = append(transactions, updater.CreateOrUpdate(ctx, simpleClient, kscheme, vs))
-			}
-			for _, tx := range transactions {
-				err := tx()
-				if err != nil {
-					return fmt.Errorf("apply virtualservice: %w", err)
-				}
-			}
-			log.Infof("Done applying VirtualService entries in %s", time.Now().Sub(timer).String())
-		}
 	}
 
 	return mgr.Start(stopCh)

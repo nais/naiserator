@@ -2,7 +2,7 @@ config:
   description: azure application with explicitly targeted tenant
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster

@@ -2,7 +2,7 @@ config:
   description: specifying custom port and protocol for mesh-external services in gcp
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   HostAliases:

@@ -2,7 +2,7 @@ config:
   description: prometheus config is defined
 
 resourceoptions:
-  Istio: true
+  Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id
 
@@ -34,27 +34,7 @@ tests:
               - from:
                 - namespaceSelector:
                     matchLabels:
-                      name: istio-system
+                      name: nais
                   podSelector:
                     matchLabels:
                       app: prometheus
-
-  - operation: CreateOrUpdate
-    apiVersion: security.istio.io/v1beta1
-    kind: AuthorizationPolicy
-    name: myapplication
-    match:
-      - name: "authorization policy created"
-        type: subset
-        exclude:
-          - .metadata
-        resource:
-          spec:
-            selector:
-              matchLabels:
-                app: myapplication
-            rules:
-              - from:
-                  - source:
-                      principals:
-                        - 'cluster.local/ns/istio-system/sa/prometheus'
