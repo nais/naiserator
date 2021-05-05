@@ -1,6 +1,9 @@
 package resourcecreator_test
 
 import (
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/test"
+
 	"testing"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
@@ -11,7 +14,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
 )
 
 const (
@@ -37,10 +39,10 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		c := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-init")
+		c := pod.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-init")
 		assert.NotNil(t, c, "contains vault initcontainer")
 
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 	})
 
@@ -60,7 +62,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, app.Spec.Port, appContainer.LivenessProbe.HTTPGet.Port.IntValue())
@@ -84,7 +86,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, app.Spec.Liveness.Path, appContainer.LivenessProbe.HTTPGet.Path)
@@ -112,7 +114,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, app.Spec.Readiness.Path, appContainer.ReadinessProbe.HTTPGet.Path)
@@ -125,8 +127,8 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("enabling webproxy in GCP is no-op", func(t *testing.T) {
 		viper.Reset()
-		viper.Set("proxy.address", httpProxy)
-		viper.Set("proxy.exclude", noProxy)
+		viper.Set("proxy.address", "http://foo.bar:5224")
+		viper.Set("proxy.exclude", []string{"foo", "bar", "baz"})
 		app := fixtures.MinimalApplication()
 		app.Spec.WebProxy = true
 		err := nais.ApplyDefaults(app)
@@ -137,14 +139,14 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 
-		assert.Zero(t, envValue(appContainer.Env, "HTTP_PROXY"))
-		assert.Zero(t, envValue(appContainer.Env, "HTTPS_PROXY"))
-		assert.Zero(t, envValue(appContainer.Env, "NO_PROXY"))
-		assert.Zero(t, envValue(appContainer.Env, "http_proxy"))
-		assert.Zero(t, envValue(appContainer.Env, "https_proxy"))
-		assert.Zero(t, envValue(appContainer.Env, "no_proxy"))
+		assert.Zero(t, test.EnvValue(appContainer.Env, "HTTP_PROXY"))
+		assert.Zero(t, test.EnvValue(appContainer.Env, "HTTPS_PROXY"))
+		assert.Zero(t, test.EnvValue(appContainer.Env, "NO_PROXY"))
+		assert.Zero(t, test.EnvValue(appContainer.Env, "http_proxy"))
+		assert.Zero(t, test.EnvValue(appContainer.Env, "https_proxy"))
+		assert.Zero(t, test.EnvValue(appContainer.Env, "no_proxy"))
 	})
 
 	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {
@@ -195,11 +197,11 @@ func TestDeployment(t *testing.T) {
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
-		assert.Equal(t, "bar", envValue(appContainer.Env, "foo"))
-		assert.Equal(t, "baz", envValue(appContainer.Env, "bar"))
+		assert.Equal(t, "bar", test.EnvValue(appContainer.Env, "foo"))
+		assert.Equal(t, "baz", test.EnvValue(appContainer.Env, "bar"))
 	})
 
 	t.Run("environment variables uses valueFrom.fieldRef.fieldPath if set", func(t *testing.T) {
@@ -217,7 +219,7 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
 
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 
 		for _, e := range appContainer.Env {
 			if e.Name == "podIP" {
@@ -242,10 +244,10 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
 
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
-		assert.Equal(t, nais.DefaultSecretMountPath, getVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
-		assert.Equal(t, customMountPath, getVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
+		assert.Equal(t, nais.DefaultSecretMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
+		assert.Equal(t, customMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
 	})
 
 	t.Run("froms are correctly configured", func(t *testing.T) {
@@ -272,22 +274,22 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
 
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 
 		assert.Equal(t, 2, len(appContainer.EnvFrom))
 		assert.Equal(t, envSecretName, appContainer.EnvFrom[0].SecretRef.Name)
 		assert.Equal(t, envConfigmapName, appContainer.EnvFrom[1].ConfigMapRef.Name)
 
-		secretVolumeMount := getVolumeMountByName(appContainer.VolumeMounts, fileSecretName)
-		secretVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, fileSecretName)
+		secretVolumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, fileSecretName)
+		secretVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, fileSecretName)
 		assert.Equal(t, fileSecretName, secretVolumeMount.Name)
 		assert.Equal(t, fileSecretMountPath, secretVolumeMount.MountPath)
 		assert.True(t, secretVolumeMount.ReadOnly)
 		assert.Equal(t, fileSecretName, secretVolume.Name)
 		assert.Equal(t, fileSecretName, secretVolume.Secret.SecretName)
 
-		configmapVolumeMount := getVolumeMountByName(appContainer.VolumeMounts, fileConfigmapName)
-		configmapVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, fileConfigmapName)
+		configmapVolumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, fileConfigmapName)
+		configmapVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, fileConfigmapName)
 		assert.Equal(t, fileConfigmapName, configmapVolumeMount.Name)
 		assert.Equal(t, nais.GetDefaultMountPath(fileConfigmapName), configmapVolumeMount.MountPath)
 		assert.True(t, configmapVolumeMount.ReadOnly)
@@ -309,10 +311,10 @@ func TestDeployment(t *testing.T) {
 
 		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{NativeSecrets: false})
 		assert.NoError(t, err)
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 		assert.Equal(t, 0, len(appContainer.EnvFrom))
-		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, "bar")
+		volumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, "bar")
 		assert.Nil(t, volumeMount)
 	})
 
@@ -323,15 +325,15 @@ func TestDeployment(t *testing.T) {
 		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{JwkerSecretName: jwkerSecret})
 		assert.NoError(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
-		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
+		volumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
 		assert.NotEmpty(t, volumeMount)
 		assert.Equal(t, jwkerSecret, volumeMount.Name)
 		assert.Equal(t, "/var/run/secrets/nais.io/jwker", volumeMount.MountPath)
 
-		jwkerVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
+		jwkerVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
 		assert.NotEmpty(t, jwkerVolume)
 		assert.Equal(t, jwkerSecret, jwkerVolume.Name)
 		assert.Equal(t, jwkerSecret, jwkerVolume.VolumeSource.Secret.SecretName)
@@ -348,15 +350,15 @@ func TestDeployment(t *testing.T) {
 		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{JwkerSecretName: jwkerSecret})
 		assert.NoError(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
-		volumeMount := getVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
+		volumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
 		assert.NotEmpty(t, volumeMount)
 		assert.Equal(t, jwkerSecret, volumeMount.Name)
 		assert.Equal(t, "/var/run/secrets/nais.io/jwker", volumeMount.MountPath)
 
-		jwkerVolume := getVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
+		jwkerVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
 		assert.NotEmpty(t, jwkerVolume)
 		assert.Equal(t, jwkerSecret, jwkerVolume.Name)
 		assert.Equal(t, jwkerSecret, jwkerVolume.VolumeSource.Secret.SecretName)
@@ -369,40 +371,11 @@ func TestDeployment(t *testing.T) {
 		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{})
 		assert.NoError(t, err)
 
-		appContainer := resourcecreator.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 		assert.Len(t, appContainer.VolumeMounts, 6)
 		for _, v := range appContainer.VolumeMounts {
 			assert.NotEqual(t, "/var/run/secrets", v.MountPath)
 		}
 	})
-}
-
-func getVolumeByName(volumes []v1.Volume, name string) *v1.Volume {
-	for _, v := range volumes {
-		if v.Name == name {
-			return &v
-		}
-	}
-
-	return nil
-}
-
-func getVolumeMountByName(volumeMounts []v1.VolumeMount, name string) *v1.VolumeMount {
-	for _, v := range volumeMounts {
-		if v.Name == name {
-			return &v
-		}
-	}
-
-	return nil
-}
-
-func envValue(envs []v1.EnvVar, name string) string {
-	for _, e := range envs {
-		if e.Name == name {
-			return e.Value
-		}
-	}
-	return ""
 }
