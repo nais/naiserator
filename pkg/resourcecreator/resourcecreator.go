@@ -30,30 +30,23 @@ import (
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Options) (ResourceOperations, error) {
+func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Options) (resourceutils.ResourceOperations, error) {
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	ops := ResourceOperations{
-		{service.Service(app), OperationCreateOrUpdate},
-		{serviceaccount.ServiceAccount(app, resourceOptions), OperationCreateIfNotExists},
-		{horizontalpodautoscaler.HorizontalPodAutoscaler(app), OperationCreateOrUpdate},
+	ops := resourceutils.ResourceOperations{
+		{service.Service(app), resourceutils.OperationCreateOrUpdate},
+		{serviceaccount.ServiceAccount(app, resourceOptions), resourceutils.OperationCreateIfNotExists},
+		{horizontalpodautoscaler.HorizontalPodAutoscaler(app), resourceutils.OperationCreateOrUpdate},
 	}
 
 	outboundHostRules := make([]nais_io_v1.AccessPolicyExternalRule, 0)
 
 	pdb := poddisruptionbudget.PodDisruptionBudget(app)
 	if pdb != nil {
-		ops = append(ops, ResourceOperation{pdb, OperationCreateOrUpdate})
-	}
-
-	if app.Spec.LeaderElection {
-		leRole := leaderelection.Role(app)
-		leRoleBinding := leaderelection.RoleBinding(app)
-		ops = append(ops, ResourceOperation{leRole, OperationCreateOrUpdate})
-		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
+		ops = append(ops, resourceutils.ResourceOperation{pdb, resourceutils.OperationCreateOrUpdate})
 	}
 
 	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
@@ -61,7 +54,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		if jwker != nil {
 			outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.JwkerHosts)...)
 
-			ops = append(ops, ResourceOperation{jwker, OperationCreateOrUpdate})
+			ops = append(ops, resourceutils.ResourceOperation{jwker, resourceutils.OperationCreateOrUpdate})
 			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
 		}
 	}
@@ -73,7 +66,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		}
 		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.AzureratorHosts)...)
 
-		ops = append(ops, ResourceOperation{&azureapp, OperationCreateOrUpdate})
+		ops = append(ops, resourceutils.ResourceOperation{&azureapp, resourceutils.OperationCreateOrUpdate})
 		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
 	}
 
@@ -92,7 +85,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		}
 		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorHosts)...)
 
-		ops = append(ops, ResourceOperation{idportenClient, OperationCreateOrUpdate})
+		ops = append(ops, resourceutils.ResourceOperation{idportenClient, resourceutils.OperationCreateOrUpdate})
 		resourceOptions.DigdiratorIDPortenSecretName = idportenClient.Spec.SecretName
 	}
 
@@ -101,7 +94,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 
 		outboundHostRules = append(outboundHostRules, ToAccessPolicyExternalRules(resourceOptions.DigdiratorHosts)...)
 
-		ops = append(ops, ResourceOperation{maskinportenClient, OperationCreateOrUpdate})
+		ops = append(ops, resourceutils.ResourceOperation{maskinportenClient, resourceutils.OperationCreateOrUpdate})
 		resourceOptions.DigdiratorMaskinportenSecretName = maskinportenClient.Spec.SecretName
 	}
 
@@ -123,19 +116,19 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 	if len(resourceOptions.GoogleProjectId) > 0 {
 		googleServiceAccount := google_iam.GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := google_iam.GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
-		ops = append(ops, ResourceOperation{&googleServiceAccount, OperationCreateOrUpdate})
-		ops = append(ops, ResourceOperation{&googleServiceAccountBinding, OperationCreateOrUpdate})
+		ops = append(ops, resourceutils.ResourceOperation{&googleServiceAccount, resourceutils.OperationCreateOrUpdate})
+		ops = append(ops, resourceutils.ResourceOperation{&googleServiceAccountBinding, resourceutils.OperationCreateOrUpdate})
 
 		if app.Spec.GCP != nil && app.Spec.GCP.Buckets != nil && len(app.Spec.GCP.Buckets) > 0 {
 			for _, b := range app.Spec.GCP.Buckets {
 				bucket := google_storagebucket.GoogleStorageBucket(app, b)
-				ops = append(ops, ResourceOperation{bucket, OperationCreateIfNotExists})
+				ops = append(ops, resourceutils.ResourceOperation{bucket, resourceutils.OperationCreateIfNotExists})
 
 				bucketAccessControl := google_storagebucket.GoogleStorageBucketAccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
-				ops = append(ops, ResourceOperation{bucketAccessControl, OperationCreateOrUpdate})
+				ops = append(ops, resourceutils.ResourceOperation{bucketAccessControl, resourceutils.OperationCreateOrUpdate})
 
 				iamPolicyMember := google_storagebucket.StorageBucketIamPolicyMember(app, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
+				ops = append(ops, resourceutils.ResourceOperation{iamPolicyMember, resourceutils.OperationCreateIfNotExists})
 			}
 		}
 
@@ -153,16 +146,16 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 				}
 
 				instance := google_sql.GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
-				ops = append(ops, ResourceOperation{instance, OperationCreateOrUpdate})
+				ops = append(ops, resourceutils.ResourceOperation{instance, resourceutils.OperationCreateOrUpdate})
 
 				iamPolicyMember := google_sql.SqlInstanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-				ops = append(ops, ResourceOperation{iamPolicyMember, OperationCreateIfNotExists})
+				ops = append(ops, resourceutils.ResourceOperation{iamPolicyMember, resourceutils.OperationCreateIfNotExists})
 
 				for _, db := range sqlInstance.Databases {
 					sqlUsers := google_sql.MergeAndFilterSQLUsers(db.Users, instance.Name)
 
 					googledb := google_sql.GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
-					ops = append(ops, ResourceOperation{googledb, OperationCreateIfNotExists})
+					ops = append(ops, resourceutils.ResourceOperation{googledb, resourceutils.OperationCreateIfNotExists})
 
 					for _, user := range sqlUsers {
 						vars := make(map[string]string)
@@ -186,10 +179,10 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 						if err != nil {
 							return nil, fmt.Errorf("unable to create sql user: %s", err)
 						}
-						ops = append(ops, ResourceOperation{sqlUser, OperationCreateIfNotExists})
+						ops = append(ops, resourceutils.ResourceOperation{sqlUser, resourceutils.OperationCreateIfNotExists})
 
 						scrt := secret.OpaqueSecret(app, google_sql.GoogleSQLSecretName(app, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
-						ops = append(ops, ResourceOperation{scrt, OperationCreateIfNotExists})
+						ops = append(ops, resourceutils.ResourceOperation{scrt, resourceutils.OperationCreateIfNotExists})
 					}
 				}
 
@@ -204,13 +197,13 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 				if err != nil {
 					return nil, fmt.Errorf("unable to create iampolicymember: %w", err)
 				}
-				ops = append(ops, ResourceOperation{policy, OperationCreateIfNotExists})
+				ops = append(ops, resourceutils.ResourceOperation{policy, resourceutils.OperationCreateIfNotExists})
 			}
 		}
 	}
 
 	if resourceOptions.NetworkPolicy {
-		ops = append(ops, ResourceOperation{NetworkPolicy(app, resourceOptions), OperationCreateOrUpdate})
+		ops = append(ops, resourceutils.ResourceOperation{NetworkPolicy(app, resourceOptions), resourceutils.OperationCreateOrUpdate})
 	}
 
 	if !resourceOptions.Linkerd {
@@ -220,7 +213,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 		}
 
 		if ing != nil {
-			ops = append(ops, ResourceOperation{ing, OperationCreateOrUpdate})
+			ops = append(ops, resourceutils.ResourceOperation{ing, resourceutils.OperationCreateOrUpdate})
 		}
 	}
 
@@ -232,7 +225,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 
 		if ingresses != nil {
 			for _, ing := range ingresses {
-				ops = append(ops, ResourceOperation{ing, OperationCreateOrUpdate})
+				ops = append(ops, resourceutils.ResourceOperation{ing, resourceutils.OperationCreateOrUpdate})
 			}
 		}
 	}
@@ -241,7 +234,9 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	ops = append(ops, ResourceOperation{deployment, OperationCreateOrUpdate})
+	ops = append(ops, resourceutils.ResourceOperation{deployment, resourceutils.OperationCreateOrUpdate})
+
+	leaderelection.Create(app, deployment, &ops)
 
 	return ops, nil
 }

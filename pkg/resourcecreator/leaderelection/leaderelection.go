@@ -4,13 +4,25 @@ import (
 	"fmt"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func RoleBinding(app *nais.Application) *rbacv1.RoleBinding {
+func Create(app *nais.Application, deployment *appsv1.Deployment, operations *resourceutils.ResourceOperations) {
+	if !app.Spec.LeaderElection {
+		return
+	}
+
+	*operations = append(*operations, resourceutils.ResourceOperation{Resource: role(app), Operation: resourceutils.OperationCreateOrUpdate})
+	*operations = append(*operations, resourceutils.ResourceOperation{Resource: roleBinding(app), Operation: resourceutils.OperationCreateOrRecreate})
+	podSpec(app, &deployment.Spec.Template.Spec)
+}
+
+func roleBinding(app *nais.Application) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		TypeMeta: v1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -32,7 +44,7 @@ func RoleBinding(app *nais.Application) *rbacv1.RoleBinding {
 	}
 }
 
-func Role(app *nais.Application) *rbacv1.Role {
+func role(app *nais.Application) *rbacv1.Role {
 	return &rbacv1.Role{
 		TypeMeta: v1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -59,8 +71,7 @@ func Role(app *nais.Application) *rbacv1.Role {
 	}
 }
 
-func LeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *corev1.PodSpec {
-	spec := podSpec.DeepCopy()
+func podSpec(app *nais.Application, spec *corev1.PodSpec) {
 	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Name, app.Namespace))
 	mainContainer := spec.Containers[0].DeepCopy()
 
@@ -71,8 +82,6 @@ func LeaderElection(app *nais.Application, podSpec *corev1.PodSpec) *corev1.PodS
 
 	mainContainer.Env = append(mainContainer.Env, electorPathEnv)
 	spec.Containers[0] = *mainContainer
-
-	return spec
 }
 
 func leaderElectionContainer(name, namespace string) corev1.Container {
