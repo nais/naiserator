@@ -1,4 +1,4 @@
-package resourcecreator
+package leaderelection
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func LeaderElectionRoleBinding(app *nais.Application) *rbacv1.RoleBinding {
+func RoleBinding(app *nais.Application) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		TypeMeta: v1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -32,7 +32,7 @@ func LeaderElectionRoleBinding(app *nais.Application) *rbacv1.RoleBinding {
 	}
 }
 
-func LeaderElectionRole(app *nais.Application) *rbacv1.Role {
+func Role(app *nais.Application) *rbacv1.Role {
 	return &rbacv1.Role{
 		TypeMeta: v1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",

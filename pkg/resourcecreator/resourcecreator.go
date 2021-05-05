@@ -19,6 +19,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/resourcecreator/kafka"
+	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
@@ -49,8 +50,8 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resourceutils.Opt
 	}
 
 	if app.Spec.LeaderElection {
-		leRole := LeaderElectionRole(app)
-		leRoleBinding := LeaderElectionRoleBinding(app)
+		leRole := leaderelection.Role(app)
+		leRoleBinding := leaderelection.RoleBinding(app)
 		ops = append(ops, ResourceOperation{leRole, OperationCreateOrUpdate})
 		ops = append(ops, ResourceOperation{leRoleBinding, OperationCreateOrRecreate})
 	}

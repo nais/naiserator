@@ -1,10 +1,11 @@
-package resourcecreator_test
+package leaderelection_test
 
 import (
 	"testing"
 
+	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
+
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,8 +17,8 @@ func TestLeaderElection(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		role := resourcecreator.LeaderElectionRole(app)
-		rolebinding := resourcecreator.LeaderElectionRoleBinding(app)
+		role := leaderelection.Role(app)
+		rolebinding := leaderelection.RoleBinding(app)
 
 		assert.Equal(t, app.Name, role.Name)
 		assert.Len(t, role.Rules, 1)

@@ -40,11 +40,31 @@ func NamedResource(resources []runtime.Object, kind string) runtime.Object {
 	panic("no matching resource kind found")
 }
 
-func EnvVar(envVars []v1.EnvVar, key string) string {
+func EnvValue(envVars []v1.EnvVar, key string) string {
 	for _, v := range envVars {
 		if v.Name == key {
 			return v.Value
 		}
 	}
 	return ""
+}
+
+func GetVolumeByName(volumes []v1.Volume, name string) *v1.Volume {
+	for _, v := range volumes {
+		if v.Name == name {
+			return &v
+		}
+	}
+
+	return nil
+}
+
+func GetVolumeMountByName(volumeMounts []v1.VolumeMount, name string) *v1.VolumeMount {
+	for _, v := range volumeMounts {
+		if v.Name == name {
+			return &v
+		}
+	}
+
+	return nil
 }
