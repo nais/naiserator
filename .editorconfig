@@ -12,6 +12,10 @@ ij_formatter_tags_enabled = false
 ij_smart_tabs = false
 ij_wrap_on_typing = false
 
+[{*.yml,*.yaml}]
+indent_style = space
+indent_size = 2
+
 [{*.go,*.go2}]
 indent_style = tab
 ij_continuation_indent_size = 4
