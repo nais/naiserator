@@ -6,7 +6,6 @@ arch       := amd64
 os         := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 PROTOC = $(shell which protoc)
-PROTOC_GEN_GO = $(shell which protoc-gen-go)
 
 .PHONY: build docker docker-push local install test crd codegen-crd codegen-updater proto
 
@@ -37,7 +36,10 @@ kubebuilder:
 	mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
 
 proto:
-	wget https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
-	$(PROTOC) --plugin=$(PROTOC_GEN_GO) --go_out=. event.proto
-	mv event.pb.go pkg/event/
-	rm -f event.proto
+	wget -O pkg/event/event.proto https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
+	$(PROTOC) --go_opt=Mpkg/event/event.proto=github.com/nais/naiserator/pkg/deployment,paths=source_relative --go_out=. pkg/event/event.proto
+	rm -f pkg/event/event.proto
+
+install-protobuf-go:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
