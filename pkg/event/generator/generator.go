@@ -33,6 +33,7 @@ func NewDeploymentEvent(app nais.Application) deployment.Event {
 		Version:         image.GetTag(),
 		Image:           &image,
 		Timestamp:       &ts,
+		GitCommitSha:    app.Annotations["deploy.nais.io/github-sha"],
 	}
 }
 
