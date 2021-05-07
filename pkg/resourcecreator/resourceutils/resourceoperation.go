@@ -1,4 +1,4 @@
-package resourcecreator
+package resourceutils
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,7 +22,7 @@ type ResourceOperation struct {
 
 type ResourceOperations []ResourceOperation
 
-// Return a new slice of ResourceOperations where only one type of operation matches.
+// Extract return a new slice of ResourceOperations where only one type of operation matches.
 func (r *ResourceOperations) Extract(operation Operation) ResourceOperations {
 	results := make(ResourceOperations, 0)
 	for _, rop := range *r {

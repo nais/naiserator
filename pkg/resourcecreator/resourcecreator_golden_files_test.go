@@ -122,7 +122,7 @@ func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepco
 	return diffs
 }
 
-func yamlRunner(t *testing.T, filename string, resources resourcecreator.ResourceOperations, test SubTest) {
+func yamlRunner(t *testing.T, filename string, resources resourceutils.ResourceOperations, test SubTest) {
 	matched := false
 
 	for _, resource := range resources {

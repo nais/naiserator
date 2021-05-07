@@ -45,7 +45,7 @@ type realObjects struct {
 	bucketAccessControl     *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl
 }
 
-func getRealObjects(resources resourcecreator.ResourceOperations) (o realObjects) {
+func getRealObjects(resources resourceutils.ResourceOperations) (o realObjects) {
 	for _, r := range resources {
 		switch v := r.Resource.(type) {
 		case *v1.Deployment:

@@ -27,13 +27,13 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: subset
-        name: "deployment created with elastic args"
+        name: "deployment network policy selector label"
         resource:
           spec:
             template:
               metadata:
                 labels:
-                  elastic: "enabled"
+                  aiven: "enabled"
               spec:
                 containers:
                   - name: "myapplication"

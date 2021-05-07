@@ -347,13 +347,13 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 
 	for _, rop := range rollout.ResourceOperations {
 		switch rop.Operation {
-		case resourcecreator.OperationCreateOrUpdate:
+		case resourceutils.OperationCreateOrUpdate:
 			fn = updater.CreateOrUpdate(ctx, n, n.Scheme, rop.Resource)
-		case resourcecreator.OperationCreateOrRecreate:
+		case resourceutils.OperationCreateOrRecreate:
 			fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
-		case resourcecreator.OperationCreateIfNotExists:
+		case resourceutils.OperationCreateIfNotExists:
 			fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
-		case resourcecreator.OperationDeleteIfExists:
+		case resourceutils.OperationDeleteIfExists:
 			fn = updater.DeleteIfExists(ctx, n, rop.Resource)
 		default:
 			return []func() error{

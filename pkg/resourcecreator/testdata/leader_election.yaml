@@ -14,6 +14,37 @@ input:
     leaderElection: true
 
 tests:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "role created with leader election args"
+        resource:
+          rules:
+            - apiGroups:
+                - ""
+              resourceNames:
+                - myapplication
+              resources:
+                - endpoints
+              verbs:
+                - get
+                - update
+
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    name: myapplication
+    operation: CreateOrRecreate
+    match:
+      - type: subset
+        resource:
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: Role
+            name: myapplication
+
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication
@@ -40,4 +71,3 @@ tests:
                       requests:
                         cpu: "100m"
                     imagePullPolicy: "IfNotPresent"
-

@@ -11,7 +11,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
-	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
 	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
@@ -44,11 +43,11 @@ const (
 	kafkaCAFilename                = "ca.crt"
 	kafkaKeystoreFilename          = "client.keystore.p12"
 	kafkaTruststoreFilename        = "client.truststore.jks"
-	naisAppNameEnv     = "NAIS_APP_NAME"
-	naisNamespaceEnv   = "NAIS_NAMESPACE"
-	naisAppImageEnv    = "NAIS_APP_IMAGE"
-	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
-	naisClientId       = "NAIS_CLIENT_ID"
+	naisAppNameEnv                 = "NAIS_APP_NAME"
+	naisNamespaceEnv               = "NAIS_NAMESPACE"
+	naisAppImageEnv                = "NAIS_APP_IMAGE"
+	naisClusterNameEnv             = "NAIS_CLUSTER_NAME"
+	naisClientId                   = "NAIS_CLIENT_ID"
 )
 
 func Spec(resourceOptions resourceutils.Options, app *nais_io_v1alpha1.Application) (*v1.PodSpec, error) {
@@ -65,10 +64,6 @@ func Spec(resourceOptions resourceutils.Options, app *nais_io_v1alpha1.Applicati
 
 	if len(resourceOptions.HostAliases) > 0 {
 		podSpec.HostAliases = hostAliases(resourceOptions)
-	}
-
-	if app.Spec.LeaderElection {
-		podSpec = leaderelection.LeaderElection(app, podSpec)
 	}
 
 	if !app.Spec.SkipCaBundle {
