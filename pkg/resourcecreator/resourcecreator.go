@@ -21,6 +21,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
 	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
+	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
@@ -179,10 +180,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		}
 	}
 
-	if resourceOptions.NetworkPolicy {
-		ops = append(ops, resource.Operation{NetworkPolicy(app, resourceOptions), resource.OperationCreateOrUpdate})
-	}
-
 	deployment, err := Deployment(app, resourceOptions)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
@@ -192,6 +189,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	leaderelection.Create(app, deployment, &ops)
 	aiven.Elastic(app, deployment)
 	linkerd.Create(resourceOptions, deployment)
+	networkpolicy.Create(app, resourceOptions, &ops)
 	err = ingress.Create(app, resourceOptions, &ops)
 	if err != nil {
 		return nil, fmt.Errorf("while creating ingress: %s", err)

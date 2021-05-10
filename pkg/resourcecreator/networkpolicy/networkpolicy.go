@@ -1,4 +1,4 @@
-package resourcecreator
+package networkpolicy
 
 import (
 	"net/url"
@@ -12,8 +12,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func NetworkPolicy(app *nais_io_v1alpha1.Application, options resource.Options) *networkingv1.NetworkPolicy {
-	return &networkingv1.NetworkPolicy{
+const (
+	prometheusPodSelectorLabelValue        = "prometheus" // Label value denoting the promethues pod-selector
+	prometheusNamespace                    = "nais"       // Which namespace Prometheus is installed in
+	nginxNamespac                          = "nginx"      // Which namespace Nginx ingress controller runs in
+	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"  // The default IP block CIDR for the default allow network policies per app
+)
+
+func Create(app *nais_io_v1alpha1.Application, options resource.Options, operations *resource.Operations) {
+	if !options.NetworkPolicy {
+		return
+	}
+
+	networkPolicy := &networkingv1.NetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "NetworkPolicy",
 			APIVersion: "networking.k8s.io/v1",
@@ -21,6 +32,8 @@ func NetworkPolicy(app *nais_io_v1alpha1.Application, options resource.Options) 
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec:       networkPolicySpec(app, options),
 	}
+
+	*operations = append(*operations, resource.Operation{Resource: networkPolicy, Operation: resource.OperationCreateOrUpdate})
 }
 
 func labelSelector(label string, value string) *metav1.LabelSelector {
@@ -91,7 +104,7 @@ func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options 
 func ingressPolicy(app *nais_io_v1alpha1.Application, options resource.Options) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
-	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, PrometheusNamespace)))
+	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", prometheusPodSelectorLabelValue, prometheusNamespace)))
 	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
 		NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
 	}))
@@ -120,7 +133,7 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options resource.Options) 
 			}
 			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
 				PodSelector:       labelSelector("app.kubernetes.io/instance", *gw),
-				NamespaceSelector: labelSelector("name", NginxNamespace),
+				NamespaceSelector: labelSelector("name", nginxNamespac),
 			}))
 		}
 	}
@@ -166,7 +179,7 @@ func defaultAllowEgress(options resource.Options) []networkingv1.NetworkPolicyEg
 
 	peers = append(peers, networkingv1.NetworkPolicyPeer{
 		IPBlock: &networkingv1.IPBlock{
-			CIDR:   NetworkPolicyDefaultEgressAllowIPBlock,
+			CIDR:   networkPolicyDefaultEgressAllowIPBlock,
 			Except: options.AccessPolicyNotAllowedCIDRs,
 		},
 	})
