@@ -91,41 +91,37 @@ func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options 
 func ingressPolicy(app *nais_io_v1alpha1.Application, options resource.Options) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
-	if options.Linkerd {
-		rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, PrometheusNamespace)))
-		rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-			NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-		}))
-		rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-			NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
-			PodSelector:       labelSelector("component", "tap"),
-		}))
-		rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-			NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
-			PodSelector:       labelSelector("component", "prometheus"),
-		}))
-	}
+	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", PrometheusPodSelectorLabelValue, PrometheusNamespace)))
+	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+	}))
+	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
+		PodSelector:       labelSelector("component", "tap"),
+	}))
+	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
+		PodSelector:       labelSelector("component", "prometheus"),
+	}))
 
 	if len(app.Spec.AccessPolicy.Inbound.Rules) > 0 {
 		rules = append(rules, networkPolicyIngressRule(networkPolicyApplicationRules(app.Spec.AccessPolicy.Inbound.Rules, options)...))
 	}
 
 	if len(app.Spec.Ingresses) > 0 {
-		if options.Linkerd { // TODO: Trenger ikke linkerd-sjekki netpol, alltid netpol med linkerd
-			for _, ingress := range app.Spec.Ingresses {
-				ur, err := url.Parse(string(ingress))
-				if err != nil {
-					continue
-				}
-				gw := util.ResolveIngressClass(ur.Host, options.GatewayMappings)
-				if gw == nil {
-					continue
-				}
-				rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-					PodSelector:       labelSelector("app.kubernetes.io/instance", *gw),
-					NamespaceSelector: labelSelector("name", NginxNamespace),
-				}))
+		for _, ingress := range app.Spec.Ingresses {
+			ur, err := url.Parse(string(ingress))
+			if err != nil {
+				continue
 			}
+			gw := util.ResolveIngressClass(ur.Host, options.GatewayMappings)
+			if gw == nil {
+				continue
+			}
+			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
+				PodSelector:       labelSelector("app.kubernetes.io/instance", *gw),
+				NamespaceSelector: labelSelector("name", NginxNamespace),
+			}))
 		}
 	}
 
@@ -155,11 +151,9 @@ func egressPolicy(app *nais_io_v1alpha1.Application, options resource.Options) [
 func defaultAllowEgress(options resource.Options) []networkingv1.NetworkPolicyEgressRule {
 	peers := make([]networkingv1.NetworkPolicyPeer, 0, 4)
 
-	if options.Linkerd {
-		peers = append(peers, networkingv1.NetworkPolicyPeer{
-			NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-		})
-	}
+	peers = append(peers, networkingv1.NetworkPolicyPeer{
+		NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+	})
 
 	peers = append(peers, networkingv1.NetworkPolicyPeer{
 		PodSelector: labelSelector("k8s-app", "kube-dns"),

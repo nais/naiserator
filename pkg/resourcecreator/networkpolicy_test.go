@@ -22,8 +22,6 @@ var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 func TestNetworkPolicy(t *testing.T) {
 
 	defaultIpsOptions := resource.NewOptions()
-
-	defaultIpsOptions.Linkerd = true
 	defaultIpsOptions.AccessPolicyNotAllowedCIDRs = defaultIps
 
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
