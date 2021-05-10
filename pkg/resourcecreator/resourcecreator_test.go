@@ -13,7 +13,7 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/apps/v1"
@@ -45,7 +45,7 @@ type realObjects struct {
 	bucketAccessControl     *storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControl
 }
 
-func getRealObjects(resources resourceutils.ResourceOperations) (o realObjects) {
+func getRealObjects(resources resource.Operations) (o realObjects) {
 	for _, r := range resources {
 		switch v := r.Resource.(type) {
 		case *v1.Deployment:
@@ -99,7 +99,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("application spec needs required parameters", func(t *testing.T) {
 		app := fixtures.MinimalFailingApplication()
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -110,7 +110,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("team label and application name is propagated to created resources", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -127,7 +127,7 @@ func TestCreate(t *testing.T) {
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar/baz"}
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -141,7 +141,7 @@ func TestCreate(t *testing.T) {
 	t.Run("erroneous ingress uris create errors", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"gopher://lol"}
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
@@ -152,7 +152,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("jwker resource is not created when access policy is empty", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 		resources, err := resourcecreator.Create(app, opts)
@@ -165,7 +165,7 @@ func TestCreate(t *testing.T) {
 	t.Run("network policies are created when access policy creation is enabled", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://host.domain.tld"}
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", IngressClass: "namespace/gateway"}}
 		opts.NetworkPolicy = true
 		err := nais_io_v1alpha1.ApplyDefaults(app)
@@ -184,7 +184,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		resources, err := resourcecreator.Create(app, opts)
 		assert.NoError(t, err)
 
@@ -197,7 +197,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("google service account, bucket, and bucket policy resources are coherent", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		opts.GoogleProjectId = "nais-foo-1234"
 		app.Spec.GCP = &nais_io_v1alpha1.GCP{
 			Buckets: []nais_io_v1alpha1.CloudStorageBucket{
@@ -234,7 +234,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("using gcp sqlinstance yields expected resources", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		opts.GoogleProjectId = "nais-foo-1234"
 		instanceName := app.Name
 		dbName := "mydb"
@@ -281,7 +281,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.IDPorten = &nais_io_v1alpha1.IDPorten{Enabled: true}
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		opts.DigdiratorEnabled = true
 
 		_, err := resourcecreator.Create(app, opts)

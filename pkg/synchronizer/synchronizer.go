@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	deployment "github.com/nais/naiserator/pkg/event"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event/generator"
@@ -50,7 +50,7 @@ type Synchronizer struct {
 	client.Client
 	SimpleClient    client.Client
 	Scheme          *runtime.Scheme
-	ResourceOptions resourceutils.Options
+	ResourceOptions resource.Options
 	Config          config.Config
 	Kafka           kafka.Interface
 }
@@ -347,13 +347,13 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 
 	for _, rop := range rollout.ResourceOperations {
 		switch rop.Operation {
-		case resourceutils.OperationCreateOrUpdate:
+		case resource.OperationCreateOrUpdate:
 			fn = updater.CreateOrUpdate(ctx, n, n.Scheme, rop.Resource)
-		case resourceutils.OperationCreateOrRecreate:
+		case resource.OperationCreateOrRecreate:
 			fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
-		case resourceutils.OperationCreateIfNotExists:
+		case resource.OperationCreateIfNotExists:
 			fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
-		case resourceutils.OperationDeleteIfExists:
+		case resource.OperationDeleteIfExists:
 			fn = updater.DeleteIfExists(ctx, n, rop.Resource)
 		default:
 			return []func() error{

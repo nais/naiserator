@@ -4,21 +4,21 @@ import (
 	"fmt"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(app *nais.Application, deployment *appsv1.Deployment, operations *resourceutils.ResourceOperations) {
+func Create(app *nais.Application, deployment *appsv1.Deployment, operations *resource.Operations) {
 	if !app.Spec.LeaderElection {
 		return
 	}
 
-	*operations = append(*operations, resourceutils.ResourceOperation{Resource: role(app), Operation: resourceutils.OperationCreateOrUpdate})
-	*operations = append(*operations, resourceutils.ResourceOperation{Resource: roleBinding(app), Operation: resourceutils.OperationCreateOrRecreate})
+	*operations = append(*operations, resource.Operation{Resource: role(app), Operation: resource.OperationCreateOrUpdate})
+	*operations = append(*operations, resource.Operation{Resource: roleBinding(app), Operation: resource.OperationCreateOrRecreate})
 	podSpec(app, &deployment.Spec.Template.Spec)
 }
 
@@ -91,7 +91,7 @@ func leaderElectionContainer(name, namespace string) corev1.Container {
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU: resource.MustParse("100m"),
+				corev1.ResourceCPU: k8sResource.MustParse("100m"),
 			},
 		},
 		Ports: []corev1.ContainerPort{{

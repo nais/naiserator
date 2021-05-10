@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	"github.com/ghodss/yaml"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -72,7 +72,7 @@ type Match struct {
 
 type yamlTestCase struct {
 	Config          testCaseConfig
-	ResourceOptions resourceutils.Options
+	ResourceOptions resource.Options
 	Error           *string
 	Input           nais.Application
 	Tests           []SubTest
@@ -122,7 +122,7 @@ func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepco
 	return diffs
 }
 
-func yamlRunner(t *testing.T, filename string, resources resourceutils.ResourceOperations, test SubTest) {
+func yamlRunner(t *testing.T, filename string, resources resource.Operations, test SubTest) {
 	matched := false
 
 	for _, resource := range resources {

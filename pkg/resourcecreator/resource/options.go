@@ -1,4 +1,4 @@
-package resourceutils
+package resource
 
 import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -31,8 +31,8 @@ type Options struct {
 	NumReplicas                      int32
 }
 
-// NewResourceOptions creates a struct with the default resource options.
-func NewResourceOptions() Options {
+// NewOptions creates a struct with the default resource options.
+func NewOptions() Options {
 	return Options{
 		NumReplicas: 1,
 	}

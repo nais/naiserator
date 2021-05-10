@@ -6,7 +6,7 @@ import (
 
 	"testing"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
@@ -35,7 +35,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
@@ -58,7 +58,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
@@ -82,7 +82,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
@@ -110,7 +110,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
@@ -134,7 +134,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		opts.GoogleProjectId = "googleprojectid"
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
@@ -155,7 +155,7 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		app.Spec.Strategy.Type = nais.DeploymentStrategyRecreate
-		deploy, err := resourcecreator.Deployment(app, resourceutils.NewResourceOptions())
+		deploy, err := resourcecreator.Deployment(app, resource.NewOptions())
 
 		assert.NoError(t, err)
 		assert.Equal(t, appsv1.RecreateDeploymentStrategyType, deploy.Spec.Strategy.Type)
@@ -168,7 +168,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
@@ -193,7 +193,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		opts := resourceutils.NewResourceOptions()
+		opts := resource.NewOptions()
 		deploy, err := resourcecreator.Deployment(app, opts)
 		assert.Nil(t, err)
 
@@ -215,7 +215,7 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{})
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
 
@@ -240,7 +240,7 @@ func TestDeployment(t *testing.T) {
 			{Secret: "bar", MountPath: customMountPath},
 		}
 
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{NativeSecrets: true})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{NativeSecrets: true})
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
 
@@ -270,7 +270,7 @@ func TestDeployment(t *testing.T) {
 			{ConfigMap: fileConfigmapName},
 		}
 
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{NativeSecrets: true})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{NativeSecrets: true})
 		assert.NoError(t, err)
 		assert.NotNil(t, deployment)
 
@@ -309,7 +309,7 @@ func TestDeployment(t *testing.T) {
 			{Secret: "bar"},
 		}
 
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{NativeSecrets: false})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{NativeSecrets: false})
 		assert.NoError(t, err)
 		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
@@ -322,7 +322,7 @@ func TestDeployment(t *testing.T) {
 		const jwkerSecret = "myJwkerSecret"
 		app := fixtures.MinimalApplication()
 		app.Spec.TokenX.Enabled = true
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{JwkerSecretName: jwkerSecret})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{JwkerSecretName: jwkerSecret})
 		assert.NoError(t, err)
 
 		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
@@ -347,7 +347,7 @@ func TestDeployment(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.TokenX.Enabled = true
 		app.Spec.TokenX.MountSecretsAsFilesOnly = true
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{JwkerSecretName: jwkerSecret})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{JwkerSecretName: jwkerSecret})
 		assert.NoError(t, err)
 
 		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
@@ -368,7 +368,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("when no jwkerSecretName is given there should be no jwker volume mount", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		deployment, err := resourcecreator.Deployment(app, resourceutils.Options{})
+		deployment, err := resourcecreator.Deployment(app, resource.Options{})
 		assert.NoError(t, err)
 
 		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)

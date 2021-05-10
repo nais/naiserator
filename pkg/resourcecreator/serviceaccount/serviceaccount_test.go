@@ -3,7 +3,7 @@ package serviceaccount_test
 import (
 	"testing"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -13,7 +13,7 @@ import (
 
 func TestGetServiceAccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	opts := resourceutils.NewResourceOptions()
+	opts := resource.NewOptions()
 	svcAcc := serviceaccount.ServiceAccount(app, opts)
 
 	assert.Equal(t, app.Name, svcAcc.Name)
@@ -22,7 +22,7 @@ func TestGetServiceAccount(t *testing.T) {
 
 func TestGetServiceAccountGoogleCluster(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	opts := resourceutils.NewResourceOptions()
+	opts := resource.NewOptions()
 	opts.GoogleProjectId = "nais-project-1234"
 	svcAcc := serviceaccount.ServiceAccount(app, opts)
 

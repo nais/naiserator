@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ServiceAccount(app *nais.Application, options resourceutils.Options) *corev1.ServiceAccount {
+func ServiceAccount(app *nais.Application, options resource.Options) *corev1.ServiceAccount {
 	objectMeta := app.CreateObjectMeta()
 	if len(options.GoogleProjectId) > 0 {
 		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = GcpServiceAccountName(app, options.GoogleProjectId)

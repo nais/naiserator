@@ -12,12 +12,12 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 	"github.com/spf13/viper"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -50,7 +50,7 @@ const (
 	naisClientId                   = "NAIS_CLIENT_ID"
 )
 
-func Spec(resourceOptions resourceutils.Options, app *nais_io_v1alpha1.Application) (*v1.PodSpec, error) {
+func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (*v1.PodSpec, error) {
 	var err error
 
 	podSpec := podSpecBase(app)
@@ -100,10 +100,6 @@ func Spec(resourceOptions resourceutils.Options, app *nais_io_v1alpha1.Applicati
 		podSpec = podSpecWithKafka(podSpec, resourceOptions)
 	}
 
-	if resourceOptions.Linkerd {
-		podSpec = podSpecWithEnv(podSpec, v1.EnvVar{Name: "START_WITHOUT_ENVOY", Value: "true"})
-	}
-
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
 		if err != nil {
@@ -123,11 +119,6 @@ func Spec(resourceOptions resourceutils.Options, app *nais_io_v1alpha1.Applicati
 	}
 
 	return podSpec, err
-}
-
-func podSpecWithEnv(spec *v1.PodSpec, envVar v1.EnvVar) *v1.PodSpec {
-	spec.Containers[0].Env = append(spec.Containers[0].Env, envVar)
-	return spec
 }
 
 func makeKafkaSecretEnvVar(key, secretName string) v1.EnvVar {
@@ -156,7 +147,7 @@ func appendGoogleSQLUserSecretEnvs(podSpec *v1.PodSpec, app *nais_io_v1alpha1.Ap
 	return podSpec
 }
 
-func podSpecWithKafka(podSpec *v1.PodSpec, resourceOptions resourceutils.Options) *v1.PodSpec {
+func podSpecWithKafka(podSpec *v1.PodSpec, resourceOptions resource.Options) *v1.PodSpec {
 	// Mount specific secret keys as credential files
 	credentialFilesVolume := fromFilesSecretVolume(kafkaCredentialFilesVolumeName, resourceOptions.KafkaratorSecretName, []v1.KeyToPath{
 		{
@@ -221,7 +212,7 @@ func podSpecWithKafka(podSpec *v1.PodSpec, resourceOptions resourceutils.Options
 	return podSpec
 }
 
-func hostAliases(resourceOptions resourceutils.Options) []v1.HostAlias {
+func hostAliases(resourceOptions resource.Options) []v1.HostAlias {
 	var hostAliases []v1.HostAlias
 
 	for _, hostAlias := range resourceOptions.HostAliases {
@@ -504,12 +495,12 @@ func ObjectMeta(app *nais_io_v1alpha1.Application) v12.ObjectMeta {
 func resourceLimits(reqs nais_io_v1alpha1.ResourceRequirements) v1.ResourceRequirements {
 	return v1.ResourceRequirements{
 		Requests: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse(reqs.Requests.Cpu),
-			v1.ResourceMemory: resource.MustParse(reqs.Requests.Memory),
+			v1.ResourceCPU:    k8sResource.MustParse(reqs.Requests.Cpu),
+			v1.ResourceMemory: k8sResource.MustParse(reqs.Requests.Memory),
 		},
 		Limits: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse(reqs.Limits.Cpu),
-			v1.ResourceMemory: resource.MustParse(reqs.Limits.Memory),
+			v1.ResourceCPU:    k8sResource.MustParse(reqs.Limits.Cpu),
+			v1.ResourceMemory: k8sResource.MustParse(reqs.Limits.Memory),
 		},
 	}
 }

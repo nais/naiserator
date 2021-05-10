@@ -3,8 +3,8 @@ package resourcecreator
 import (
 	"net/url"
 
-	ingress2 "github.com/nais/naiserator/pkg/resourcecreator/ingress"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func NetworkPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Options) *networkingv1.NetworkPolicy {
+func NetworkPolicy(app *nais_io_v1alpha1.Application, options resource.Options) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "NetworkPolicy",
@@ -31,7 +31,7 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 	}
 }
 
-func networkPolicySpec(app *nais_io_v1alpha1.Application, options resourceutils.Options) networkingv1.NetworkPolicySpec {
+func networkPolicySpec(app *nais_io_v1alpha1.Application, options resource.Options) networkingv1.NetworkPolicySpec {
 	return networkingv1.NetworkPolicySpec{
 		PodSelector: *labelSelector("app", app.Name),
 		PolicyTypes: []networkingv1.PolicyType{
@@ -62,7 +62,7 @@ func networkPolicyEgressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv
 	}
 }
 
-func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options resourceutils.Options) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options resource.Options) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules {
 
 		// non-local access policy rules do not result in network policies
@@ -88,7 +88,7 @@ func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options 
 	return
 }
 
-func ingressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Options) []networkingv1.NetworkPolicyIngressRule {
+func ingressPolicy(app *nais_io_v1alpha1.Application, options resource.Options) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
 	if options.Linkerd {
@@ -111,13 +111,13 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Opti
 	}
 
 	if len(app.Spec.Ingresses) > 0 {
-		if options.Linkerd {
+		if options.Linkerd { // TODO: Trenger ikke linkerd-sjekki netpol, alltid netpol med linkerd
 			for _, ingress := range app.Spec.Ingresses {
 				ur, err := url.Parse(string(ingress))
 				if err != nil {
 					continue
 				}
-				gw := ingress2.ResolveIngressClass(ur.Host, options.GatewayMappings)
+				gw := util.ResolveIngressClass(ur.Host, options.GatewayMappings)
 				if gw == nil {
 					continue
 				}
@@ -132,7 +132,7 @@ func ingressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Opti
 	return rules
 }
 
-func egressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Options) []networkingv1.NetworkPolicyEgressRule {
+func egressPolicy(app *nais_io_v1alpha1.Application, options resource.Options) []networkingv1.NetworkPolicyEgressRule {
 	defaultRules := defaultAllowEgress(options)
 
 	if len(app.Spec.AccessPolicy.Outbound.Rules) > 0 {
@@ -152,7 +152,7 @@ func egressPolicy(app *nais_io_v1alpha1.Application, options resourceutils.Optio
 	return defaultRules
 }
 
-func defaultAllowEgress(options resourceutils.Options) []networkingv1.NetworkPolicyEgressRule {
+func defaultAllowEgress(options resource.Options) []networkingv1.NetworkPolicyEgressRule {
 	peers := make([]networkingv1.NetworkPolicyPeer, 0, 4)
 
 	if options.Linkerd {

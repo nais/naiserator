@@ -3,7 +3,7 @@ package resourcecreator_test
 import (
 	"testing"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -21,7 +21,7 @@ var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 
 func TestNetworkPolicy(t *testing.T) {
 
-	defaultIpsOptions := resourceutils.NewResourceOptions()
+	defaultIpsOptions := resource.NewOptions()
 
 	defaultIpsOptions.Linkerd = true
 	defaultIpsOptions.AccessPolicyNotAllowedCIDRs = defaultIps

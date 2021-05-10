@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	ingress2 "github.com/nais/naiserator/pkg/resourcecreator/ingress"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	ingress "github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -42,7 +42,7 @@ type testRig struct {
 	scheme       *runtime.Scheme
 }
 
-func newTestRig(options resourceutils.Options) (*testRig, error) {
+func newTestRig(options resource.Options) (*testRig, error) {
 	rig := &testRig{}
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
@@ -104,7 +104,8 @@ func newTestRig(options resourceutils.Options) (*testRig, error) {
 // and that orphaned resources are cleaned up properly.
 // The validity of resources generated are not tested here.
 func TestSynchronizer(t *testing.T) {
-	resourceOptions := resourceutils.NewResourceOptions()
+	resourceOptions := resource.NewOptions()
+	ops := resource.Operations{}
 	rig, err := newTestRig(resourceOptions)
 	if err != nil {
 		t.Errorf("unable to run synchronizer integration tests: %s", err)
@@ -156,22 +157,26 @@ func TestSynchronizer(t *testing.T) {
 
 	// Create an Ingress object that should be deleted once processing has run.
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	ingress, err := ingress2.Ingress(app)
+	err = ingress.Create(app, resourceOptions, &ops)
+	assert.NoError(t, err)
+	ing := ops[0].Resource.(*networkingv1beta1.Ingress)
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
-	err = rig.client.Create(ctx, ingress)
-	if err != nil || len(ingress.Spec.Rules) == 0 {
+	err = rig.client.Create(ctx, ing)
+	if err != nil || len(ing.Spec.Rules) == 0 {
 		t.Fatalf("BUG: error creating ingress for testing: %s", err)
 	}
 
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	ingress, _ = ingress2.Ingress(app)
-	ingress.SetName("disowned-ingress")
-	ingress.SetOwnerReferences(nil)
+	err = ingress.Create(app, resourceOptions, &ops)
+	assert.NoError(t, err)
+	ing = ops[1].Resource.(*networkingv1beta1.Ingress)
+	ing.SetName("disowned-ingress")
+	ing.SetOwnerReferences(nil)
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
-	err = rig.client.Create(ctx, ingress)
-	if err != nil || len(ingress.Spec.Rules) == 0 {
+	err = rig.client.Create(ctx, ing)
+	if err != nil || len(ing.Spec.Rules) == 0 {
 		t.Fatalf("BUG: error creating ingress 2 for testing: %s", err)
 	}
 
@@ -243,7 +248,7 @@ func TestSynchronizer(t *testing.T) {
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
-	resourceOptions := resourceutils.NewResourceOptions()
+	resourceOptions := resource.NewOptions()
 	resourceOptions.GoogleProjectId = "something"
 	viper.Set(config.GoogleCloudSQLProxyContainerImage, "cloudsqlproxy")
 

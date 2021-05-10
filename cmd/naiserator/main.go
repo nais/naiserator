@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -106,7 +106,7 @@ func run() error {
 
 	stopCh := StopCh()
 
-	resourceOptions := resourceutils.NewResourceOptions()
+	resourceOptions := resource.NewOptions()
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator

@@ -2,7 +2,7 @@ package resourcecreator
 
 import (
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resourceutils"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Deployment(app *nais.Application, resourceOptions resourceutils.Options) (*appsv1.Deployment, error) {
+func Deployment(app *nais.Application, resourceOptions resource.Options) (*appsv1.Deployment, error) {
 	spec, err := deploymentSpec(app, resourceOptions)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func Deployment(app *nais.Application, resourceOptions resourceutils.Options) (*
 	}, nil
 }
 
-func deploymentSpec(app *nais.Application, resourceOptions resourceutils.Options) (*appsv1.DeploymentSpec, error) {
+func deploymentSpec(app *nais.Application, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {
 	podSpec, err := pod.Spec(resourceOptions, app)
 	if err != nil {
 		return nil, err
