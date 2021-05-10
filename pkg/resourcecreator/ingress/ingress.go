@@ -83,6 +83,14 @@ func ingressRulesNginx(app *nais.Application) ([]networkingv1beta1.IngressRule, 
 	return rules, nil
 }
 
+func copyNginxAnnotations(dst, src map[string]string) {
+	for k, v := range src {
+		if strings.HasPrefix(k, "nginx.ingress.kubernetes.io/") {
+			dst[k] = v
+		}
+	}
+}
+
 func createIngressBase(app *nais.Application, rules []networkingv1beta1.IngressRule) *networkingv1beta1.Ingress {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
@@ -108,6 +116,8 @@ func createIngressBaseNginx(app *nais.Application, ingressClass string) (*networ
 	if err != nil {
 		return nil, err
 	}
+
+	copyNginxAnnotations(ingress.Annotations, app.Annotations)
 
 	ingress.Annotations["kubernetes.io/ingress.class"] = ingressClass
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"

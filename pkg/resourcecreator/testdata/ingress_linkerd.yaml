@@ -15,6 +15,9 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
+    annotations:
+      nginx.ingress.kubernetes.io/foo: bar
+      whatever.ingress.kubernetes.io/test: foo
     uid: "123456"
     labels:
       team: myteam
@@ -49,6 +52,7 @@ tests:
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
               kubernetes.io/ingress.class: "very-nginx"
+              nginx.ingress.kubernetes.io/foo: bar
               nginx.ingress.kubernetes.io/use-regex: "true"
               nginx.ingress.kubernetes.io/backend-protocol: HTTP
           spec:
@@ -96,6 +100,7 @@ tests:
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
               kubernetes.io/ingress.class: "something-else"
+              nginx.ingress.kubernetes.io/foo: bar
               nginx.ingress.kubernetes.io/use-regex: "true"
               nginx.ingress.kubernetes.io/backend-protocol: HTTP
           spec:
