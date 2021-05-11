@@ -1,9 +1,11 @@
 package util
 
 import (
+	"encoding/base64"
+	"fmt"
 	"math"
-	"math/rand"
-	"time"
+
+	"github.com/nais/liberator/pkg/keygen"
 )
 
 const strTrimMiddleTruncate = "---[truncated]---"
@@ -29,13 +31,10 @@ func StrTrimMiddle(s string, maxlen int) string {
 	return s[:partlen] + strTrimMiddleTruncate + s[len(s)-partlen:]
 }
 
-func RandomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
-	b := make([]byte, length)
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
+func GeneratePassword() (string, error) {
+	key, err := keygen.Keygen(32)
+	if err != nil {
+		return "", fmt.Errorf("unable to generate secret for sql user: %s", err)
 	}
-	return string(b)
+	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key), nil
 }

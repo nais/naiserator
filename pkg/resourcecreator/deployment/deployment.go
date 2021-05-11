@@ -1,4 +1,4 @@
-package resourcecreator
+package deployment
 
 import (
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Deployment(app *nais.Application, resourceOptions resource.Options) (*appsv1.Deployment, error) {
+func Create(app *nais.Application, resourceOptions resource.Options, operations *resource.Operations) (*appsv1.Deployment, error) {
 	spec, err := deploymentSpec(app, resourceOptions)
 	if err != nil {
 		return nil, err
@@ -28,14 +28,17 @@ func Deployment(app *nais.Application, resourceOptions resource.Options) (*appsv
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
-	return &appsv1.Deployment{
+	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: objectMeta,
 		Spec:       *spec,
-	}, nil
+	}
+
+	*operations = append(*operations, resource.Operation{Resource: deployment, Operation: resource.OperationCreateOrUpdate})
+	return deployment, nil
 }
 
 func deploymentSpec(app *nais.Application, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {

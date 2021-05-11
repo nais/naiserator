@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/util"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
@@ -61,7 +60,7 @@ func StorageBucketIamPolicyMember(app *nais.Application, bucket *google_storage_
 			APIVersion: google.GoogleIAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", serviceaccount.GcpServiceAccountName(app, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
 			Role:   "roles/storage.objectViewer",
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: bucket.APIVersion,

@@ -5,12 +5,11 @@
 package resourcecreator
 
 import (
-	"encoding/base64"
 	"fmt"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/liberator/pkg/keygen"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
+	deployment "github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/iam"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/storagebucket"
@@ -27,6 +26,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
+	"github.com/nais/naiserator/pkg/util"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
@@ -37,11 +37,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	ops := resource.Operations{
-		{service.Service(app), resource.OperationCreateOrUpdate},
-		{serviceaccount.ServiceAccount(app, resourceOptions), resource.OperationCreateIfNotExists},
-		{horizontalpodautoscaler.HorizontalPodAutoscaler(app), resource.OperationCreateOrUpdate},
-	}
+	ops := resource.Operations{}
 
 	pdb := poddisruptionbudget.PodDisruptionBudget(app)
 	if pdb != nil {
@@ -140,7 +136,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 
 						googleSqlUser := google_sql.SetupNewGoogleSqlUser(user.Name, &db, instance)
 
-						password, err := generatePassword()
+						password, err := util.GeneratePassword()
 						if err != nil {
 							return nil, err
 						}
@@ -180,15 +176,16 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		}
 	}
 
-	deployment, err := Deployment(app, resourceOptions)
+	service.Create(app, &ops)
+	serviceaccount.Create(app, resourceOptions, &ops)
+	horizontalpodautoscaler.Create(app, &ops)
+	dplt, err := deployment.Create(app, resourceOptions, &ops)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	ops = append(ops, resource.Operation{deployment, resource.OperationCreateOrUpdate})
-
-	leaderelection.Create(app, deployment, &ops)
-	aiven.Elastic(app, deployment)
-	linkerd.Create(resourceOptions, deployment)
+	leaderelection.Create(app, dplt, &ops)
+	aiven.Elastic(app, dplt)
+	linkerd.Create(resourceOptions, dplt)
 	networkpolicy.Create(app, resourceOptions, &ops)
 	err = ingress.Create(app, resourceOptions, &ops)
 	if err != nil {
@@ -196,12 +193,4 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	}
 
 	return ops, nil
-}
-
-func generatePassword() (string, error) {
-	key, err := keygen.Keygen(32)
-	if err != nil {
-		return "", fmt.Errorf("unable to generate secret for sql user: %s", err)
-	}
-	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key), nil
 }

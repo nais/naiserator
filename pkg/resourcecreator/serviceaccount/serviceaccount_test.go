@@ -5,6 +5,7 @@ import (
 
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
+	core "k8s.io/api/core/v1"
 
 	"github.com/nais/naiserator/pkg/test/fixtures"
 
@@ -13,8 +14,10 @@ import (
 
 func TestGetServiceAccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
+	ops := resource.Operations{}
 	opts := resource.NewOptions()
-	svcAcc := serviceaccount.ServiceAccount(app, opts)
+	serviceaccount.Create(app, opts, &ops)
+	svcAcc := ops[0].Resource.(*core.ServiceAccount)
 
 	assert.Equal(t, app.Name, svcAcc.Name)
 	assert.Equal(t, app.Namespace, svcAcc.Namespace)
@@ -22,9 +25,11 @@ func TestGetServiceAccount(t *testing.T) {
 
 func TestGetServiceAccountGoogleCluster(t *testing.T) {
 	app := fixtures.MinimalApplication()
+	ops := resource.Operations{}
 	opts := resource.NewOptions()
 	opts.GoogleProjectId = "nais-project-1234"
-	svcAcc := serviceaccount.ServiceAccount(app, opts)
+	serviceaccount.Create(app, opts, &ops)
+	svcAcc := ops[0].Resource.(*core.ServiceAccount)
 
 	assert.Equal(t, app.Name, svcAcc.Name)
 	assert.Equal(t, app.Namespace, svcAcc.Namespace)

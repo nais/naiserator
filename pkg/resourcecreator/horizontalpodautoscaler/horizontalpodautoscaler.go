@@ -2,13 +2,14 @@ package horizontalpodautoscaler
 
 import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/api/autoscaling/v2beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func HorizontalPodAutoscaler(app *nais.Application) *v2beta2.HorizontalPodAutoscaler {
-	return &v2beta2.HorizontalPodAutoscaler{
+func Create(app *nais.Application, operations *resource.Operations) {
+	hpa := &v2beta2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
 			APIVersion: v2beta2.SchemeGroupVersion.Identifier(),
@@ -36,4 +37,6 @@ func HorizontalPodAutoscaler(app *nais.Application) *v2beta2.HorizontalPodAutosc
 			MaxReplicas: int32(app.Spec.Replicas.Max),
 		},
 	}
+
+	*operations = append(*operations, resource.Operation{Resource: hpa, Operation: resource.OperationCreateOrUpdate})
 }

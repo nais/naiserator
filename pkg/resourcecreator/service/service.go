@@ -2,13 +2,14 @@ package service
 
 import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Service(app *nais.Application) *corev1.Service {
-	return &corev1.Service{
+func Create(app *nais.Application, operations *resource.Operations) {
+	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
@@ -30,4 +31,6 @@ func Service(app *nais.Application) *corev1.Service {
 			},
 		},
 	}
+
+	*operations = append(*operations, resource.Operation{Resource: service, Operation: resource.OperationCreateOrUpdate})
 }

@@ -7,4 +7,3 @@ func Int32p(i int32) *int32 {
 func Intp(i int) *int {
 	return &i
 }
-

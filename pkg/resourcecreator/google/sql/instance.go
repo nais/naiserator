@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/util"
 
 	"k8s.io/utils/pointer"
@@ -114,7 +113,7 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 			APIVersion: google.GoogleIAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", serviceaccount.GcpServiceAccountName(app, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
 			Role:   "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",

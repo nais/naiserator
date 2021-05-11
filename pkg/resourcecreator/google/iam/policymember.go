@@ -9,7 +9,6 @@ import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -28,7 +27,7 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission
 			APIVersion: google.GoogleIAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", serviceaccount.GcpServiceAccountName(app, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: policy.Resource.APIVersion,
