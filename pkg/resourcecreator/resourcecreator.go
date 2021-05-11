@@ -42,7 +42,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 
 	poddisruptionbudget.Create(app, &ops)
 	jwker.Create(app, &resourceOptions, &ops)
-	print(resourceOptions.JwkerSecretName)
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
 		azureapp, err := AzureAdApplication(*app, resourceOptions.ClusterName)
