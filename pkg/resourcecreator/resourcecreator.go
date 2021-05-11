@@ -16,6 +16,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
 	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	jwker "github.com/nais/naiserator/pkg/resourcecreator/jwker"
 	"github.com/nais/naiserator/pkg/resourcecreator/kafka"
 	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
 	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
@@ -39,18 +40,9 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 
 	ops := resource.Operations{}
 
-	pdb := poddisruptionbudget.PodDisruptionBudget(app)
-	if pdb != nil {
-		ops = append(ops, resource.Operation{pdb, resource.OperationCreateOrUpdate})
-	}
-
-	if resourceOptions.JwkerEnabled && app.Spec.TokenX.Enabled {
-		jwker := Jwker(app, resourceOptions.ClusterName)
-		if jwker != nil {
-			ops = append(ops, resource.Operation{jwker, resource.OperationCreateOrUpdate})
-			resourceOptions.JwkerSecretName = jwker.Spec.SecretName
-		}
-	}
+	poddisruptionbudget.Create(app, &ops)
+	jwker.Create(app, &resourceOptions, &ops)
+	print(resourceOptions.JwkerSecretName)
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
 		azureapp, err := AzureAdApplication(*app, resourceOptions.ClusterName)

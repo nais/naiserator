@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
+
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -36,7 +38,7 @@ func AzureAdApplication(app nais.Application, clusterName string) (azureapp.Azur
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: azureapp.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
-			PreAuthorizedApplications: accessPolicyRulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
+			PreAuthorizedApplications: accesspolicy.RulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
 			Tenant:                    app.Spec.Azure.Application.Tenant,
 			SecretName:                secretName,
 			Claims:                    app.Spec.Azure.Application.Claims,

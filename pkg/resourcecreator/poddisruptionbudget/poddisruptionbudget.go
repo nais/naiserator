@@ -2,19 +2,20 @@ package poddisruptionbudget
 
 import (
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func PodDisruptionBudget(app *nais_io_v1alpha1.Application) *policyv1beta1.PodDisruptionBudget {
+func Create(app *nais_io_v1alpha1.Application, operations *resource.Operations) {
 	if app.Spec.Replicas.Max == 1 {
-		return nil
+		return
 	}
 
 	min := intstr.FromInt(app.Spec.Replicas.Min)
 
-	return &policyv1beta1.PodDisruptionBudget{
+	podDisruptionBudget := &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
@@ -29,4 +30,6 @@ func PodDisruptionBudget(app *nais_io_v1alpha1.Application) *policyv1beta1.PodDi
 			},
 		},
 	}
+
+	*operations = append(*operations, resource.Operation{podDisruptionBudget, resource.OperationCreateOrUpdate})
 }
