@@ -2,7 +2,6 @@ package deployment_test
 
 import (
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/test"
 
 	"testing"
@@ -40,10 +39,10 @@ func TestDeployment(t *testing.T) {
 		deploy, err := deployment.Create(app, opts, &ops)
 		assert.Nil(t, err)
 
-		c := pod.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-init")
+		c := test.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-init")
 		assert.NotNil(t, c, "contains vault initcontainer")
 
-		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 	})
 
@@ -63,7 +62,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := deployment.Create(app, opts, &ops)
 		assert.Nil(t, err)
 
-		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, app.Spec.Port, appContainer.LivenessProbe.HTTPGet.Port.IntValue())
@@ -87,7 +86,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := deployment.Create(app, opts, &ops)
 		assert.Nil(t, err)
 
-		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, app.Spec.Liveness.Path, appContainer.LivenessProbe.HTTPGet.Path)
@@ -115,7 +114,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := deployment.Create(app, opts, &ops)
 		assert.Nil(t, err)
 
-		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, app.Spec.Readiness.Path, appContainer.ReadinessProbe.HTTPGet.Path)
@@ -140,7 +139,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := deployment.Create(app, opts, &ops)
 		assert.Nil(t, err)
 
-		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 
 		assert.Zero(t, test.EnvValue(appContainer.Env, "HTTP_PROXY"))
 		assert.Zero(t, test.EnvValue(appContainer.Env, "HTTPS_PROXY"))
@@ -169,12 +168,12 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		deployment, err := deployment.Create(app, resource.Options{}, &ops)
+		dplt, err := deployment.Create(app, resource.Options{}, &ops)
 
 		assert.NoError(t, err)
-		assert.NotNil(t, deployment)
+		assert.NotNil(t, dplt)
 
-		spec := deployment.Spec.Template.Spec
+		spec := dplt.Spec.Template.Spec
 		assert.Len(t, spec.Volumes, 4)
 		assert.Len(t, spec.Containers, 3)
 	})
@@ -198,7 +197,7 @@ func TestDeployment(t *testing.T) {
 		deploy, err := deployment.Create(app, opts, &ops)
 		assert.Nil(t, err)
 
-		appContainer := pod.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 
 		assert.Equal(t, "bar", test.EnvValue(appContainer.Env, "foo"))
@@ -216,11 +215,11 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		deployment, err := deployment.Create(app, resource.Options{}, &ops)
+		dplt, err := deployment.Create(app, resource.Options{}, &ops)
 		assert.NoError(t, err)
-		assert.NotNil(t, deployment)
+		assert.NotNil(t, dplt)
 
-		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(dplt.Spec.Template.Spec.Containers, app.Name)
 
 		for _, e := range appContainer.Env {
 			if e.Name == "podIP" {
@@ -241,11 +240,11 @@ func TestDeployment(t *testing.T) {
 			{Secret: "bar", MountPath: customMountPath},
 		}
 
-		deployment, err := deployment.Create(app, resource.Options{NativeSecrets: true}, &ops)
+		dplt, err := deployment.Create(app, resource.Options{NativeSecrets: true}, &ops)
 		assert.NoError(t, err)
-		assert.NotNil(t, deployment)
+		assert.NotNil(t, dplt)
 
-		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(dplt.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 		assert.Equal(t, nais.DefaultSecretMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
 		assert.Equal(t, customMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
@@ -271,18 +270,18 @@ func TestDeployment(t *testing.T) {
 			{ConfigMap: fileConfigmapName},
 		}
 
-		deployment, err := deployment.Create(app, resource.Options{NativeSecrets: true}, &ops)
+		dplt, err := deployment.Create(app, resource.Options{NativeSecrets: true}, &ops)
 		assert.NoError(t, err)
-		assert.NotNil(t, deployment)
+		assert.NotNil(t, dplt)
 
-		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(dplt.Spec.Template.Spec.Containers, app.Name)
 
 		assert.Equal(t, 2, len(appContainer.EnvFrom))
 		assert.Equal(t, envSecretName, appContainer.EnvFrom[0].SecretRef.Name)
 		assert.Equal(t, envConfigmapName, appContainer.EnvFrom[1].ConfigMapRef.Name)
 
 		secretVolumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, fileSecretName)
-		secretVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, fileSecretName)
+		secretVolume := test.GetVolumeByName(dplt.Spec.Template.Spec.Volumes, fileSecretName)
 		assert.Equal(t, fileSecretName, secretVolumeMount.Name)
 		assert.Equal(t, fileSecretMountPath, secretVolumeMount.MountPath)
 		assert.True(t, secretVolumeMount.ReadOnly)
@@ -290,7 +289,7 @@ func TestDeployment(t *testing.T) {
 		assert.Equal(t, fileSecretName, secretVolume.Secret.SecretName)
 
 		configmapVolumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, fileConfigmapName)
-		configmapVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, fileConfigmapName)
+		configmapVolume := test.GetVolumeByName(dplt.Spec.Template.Spec.Volumes, fileConfigmapName)
 		assert.Equal(t, fileConfigmapName, configmapVolumeMount.Name)
 		assert.Equal(t, nais.GetDefaultMountPath(fileConfigmapName), configmapVolumeMount.MountPath)
 		assert.True(t, configmapVolumeMount.ReadOnly)
@@ -310,73 +309,12 @@ func TestDeployment(t *testing.T) {
 			{Secret: "bar"},
 		}
 
-		deployment, err := deployment.Create(app, resource.Options{NativeSecrets: false}, &ops)
+		dplt, err := deployment.Create(app, resource.Options{NativeSecrets: false}, &ops)
 		assert.NoError(t, err)
-		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
+		appContainer := test.GetContainerByName(dplt.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)
 		assert.Equal(t, 0, len(appContainer.EnvFrom))
 		volumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, "bar")
 		assert.Nil(t, volumeMount)
-	})
-
-	t.Run("jwker secrets are mounted when JwkerSecretName is set", func(t *testing.T) {
-		const jwkerSecret = "myJwkerSecret"
-		app := fixtures.MinimalApplication()
-		app.Spec.TokenX.Enabled = true
-		deployment, err := deployment.Create(app, resource.Options{JwkerSecretName: jwkerSecret}, &ops)
-		assert.NoError(t, err)
-
-		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-
-		volumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
-		assert.NotEmpty(t, volumeMount)
-		assert.Equal(t, jwkerSecret, volumeMount.Name)
-		assert.Equal(t, "/var/run/secrets/nais.io/jwker", volumeMount.MountPath)
-
-		jwkerVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
-		assert.NotEmpty(t, jwkerVolume)
-		assert.Equal(t, jwkerSecret, jwkerVolume.Name)
-		assert.Equal(t, jwkerSecret, jwkerVolume.VolumeSource.Secret.SecretName)
-
-		assert.Equal(t, 1, len(appContainer.EnvFrom))
-		assert.Equal(t, jwkerSecret, appContainer.EnvFrom[0].SecretRef.Name)
-	})
-
-	t.Run("jwker secrets are mounted as files and not exposed as env-variables if MountSecretsAsFilesOnly is true", func(t *testing.T) {
-		const jwkerSecret = "myJwkerSecret"
-		app := fixtures.MinimalApplication()
-		app.Spec.TokenX.Enabled = true
-		app.Spec.TokenX.MountSecretsAsFilesOnly = true
-		deployment, err := deployment.Create(app, resource.Options{JwkerSecretName: jwkerSecret}, &ops)
-		assert.NoError(t, err)
-
-		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-
-		volumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, jwkerSecret)
-		assert.NotEmpty(t, volumeMount)
-		assert.Equal(t, jwkerSecret, volumeMount.Name)
-		assert.Equal(t, "/var/run/secrets/nais.io/jwker", volumeMount.MountPath)
-
-		jwkerVolume := test.GetVolumeByName(deployment.Spec.Template.Spec.Volumes, jwkerSecret)
-		assert.NotEmpty(t, jwkerVolume)
-		assert.Equal(t, jwkerSecret, jwkerVolume.Name)
-		assert.Equal(t, jwkerSecret, jwkerVolume.VolumeSource.Secret.SecretName)
-
-		assert.Equal(t, 0, len(appContainer.EnvFrom))
-	})
-
-	t.Run("when no jwkerSecretName is given there should be no jwker volume mount", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		deployment, err := deployment.Create(app, resource.Options{}, &ops)
-		assert.NoError(t, err)
-
-		appContainer := pod.GetContainerByName(deployment.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-		assert.Len(t, appContainer.VolumeMounts, 6)
-		for _, v := range appContainer.VolumeMounts {
-			assert.NotEqual(t, "/var/run/secrets", v.MountPath)
-		}
 	})
 }

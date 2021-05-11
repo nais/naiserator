@@ -21,8 +21,6 @@ type Options struct {
 	GoogleTeamProjectId              string
 	HostAliases                      []config.HostAlias
 	JwkerEnabled                     bool
-	JwkerSecretName                  string
-	JwkerHosts                       []string
 	NetworkPolicy                    bool
 	KafkaratorEnabled                bool
 	KafkaratorSecretName             string

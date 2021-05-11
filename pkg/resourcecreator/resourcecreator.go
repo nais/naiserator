@@ -16,7 +16,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
 	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
-	jwker "github.com/nais/naiserator/pkg/resourcecreator/jwker"
+	"github.com/nais/naiserator/pkg/resourcecreator/jwker"
 	"github.com/nais/naiserator/pkg/resourcecreator/kafka"
 	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
 	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
@@ -39,9 +39,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	}
 
 	ops := resource.Operations{}
-
-	poddisruptionbudget.Create(app, &ops)
-	jwker.Create(app, &resourceOptions, &ops)
 
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
 		azureapp, err := AzureAdApplication(*app, resourceOptions.ClusterName)
@@ -174,6 +171,9 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
+
+	poddisruptionbudget.Create(app, &ops)
+	jwker.Create(app, resourceOptions, dplt, &ops)
 	leaderelection.Create(app, dplt, &ops)
 	aiven.Elastic(app, dplt)
 	linkerd.Create(resourceOptions, dplt)

@@ -118,13 +118,12 @@ func run() error {
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
-	resourceOptions.JwkerHosts = cfg.ServiceHosts.Jwker
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
 
 	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
-		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress.")
+		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
 	}
 
 	mgrClient := mgr.GetClient()

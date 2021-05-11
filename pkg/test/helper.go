@@ -68,3 +68,13 @@ func GetVolumeMountByName(volumeMounts []v1.VolumeMount, name string) *v1.Volume
 
 	return nil
 }
+
+func GetContainerByName(containers []v1.Container, name string) *v1.Container {
+	for i, v := range containers {
+		if v.Name == name {
+			return &containers[i]
+		}
+	}
+
+	return nil
+}

@@ -74,26 +74,19 @@ func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (
 
 	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
 
-	if len(resourceOptions.JwkerSecretName) > 0 {
-		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.JwkerSecretName, nais_io_v1alpha1.DefaultJwkerMountPath)
-		if app.Spec.TokenX.Enabled && !app.Spec.TokenX.MountSecretsAsFilesOnly {
-			podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.JwkerSecretName)
-		}
-	}
-
 	if len(resourceOptions.AzureratorSecretName) > 0 {
-		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.AzureratorSecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
-		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.AzureratorSecretName)
+		podSpec = WithAdditionalSecret(podSpec, resourceOptions.AzureratorSecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
+		podSpec = WithAdditionalEnvFromSecret(podSpec, resourceOptions.AzureratorSecretName)
 	}
 
 	if len(resourceOptions.DigdiratorIDPortenSecretName) > 0 {
-		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.DigdiratorIDPortenSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
-		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.DigdiratorIDPortenSecretName)
+		podSpec = WithAdditionalSecret(podSpec, resourceOptions.DigdiratorIDPortenSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
+		podSpec = WithAdditionalEnvFromSecret(podSpec, resourceOptions.DigdiratorIDPortenSecretName)
 	}
 
 	if len(resourceOptions.DigdiratorMaskinportenSecretName) > 0 {
-		podSpec = podSpecWithAdditionalSecret(podSpec, resourceOptions.DigdiratorMaskinportenSecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
-		podSpec = podSpecWithAdditionalEnvFromSecret(podSpec, resourceOptions.DigdiratorMaskinportenSecretName)
+		podSpec = WithAdditionalSecret(podSpec, resourceOptions.DigdiratorMaskinportenSecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
+		podSpec = WithAdditionalEnvFromSecret(podSpec, resourceOptions.DigdiratorMaskinportenSecretName)
 	}
 
 	if len(resourceOptions.KafkaratorSecretName) > 0 {
@@ -294,14 +287,14 @@ func podSpecWithVolume(spec *v1.PodSpec, volume v1.Volume) *v1.PodSpec {
 	return spec
 }
 
-func podSpecWithAdditionalSecret(spec *v1.PodSpec, secretName, mountPath string) *v1.PodSpec {
+func WithAdditionalSecret(spec *v1.PodSpec, secretName, mountPath string) *v1.PodSpec {
 	spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(secretName, secretName, nil))
 	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
 		fromFilesVolumeMount(secretName, "", mountPath))
 	return spec
 }
 
-func podSpecWithAdditionalEnvFromSecret(spec *v1.PodSpec, secretName string) *v1.PodSpec {
+func WithAdditionalEnvFromSecret(spec *v1.PodSpec, secretName string) *v1.PodSpec {
 	spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, envFromSecret(secretName))
 	return spec
 }
@@ -557,14 +550,4 @@ func leadingSlash(s string) string {
 		return s
 	}
 	return "/" + s
-}
-
-func GetContainerByName(containers []v1.Container, name string) *v1.Container {
-	for i, v := range containers {
-		if v.Name == name {
-			return &containers[i]
-		}
-	}
-
-	return nil
 }
