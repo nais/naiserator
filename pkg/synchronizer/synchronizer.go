@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event/generator"
@@ -399,7 +400,11 @@ func (n *Synchronizer) UpdateApplication(ctx context.Context, app *nais_io_v1alp
 }
 
 func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
-	payload, err := proto.Marshal(event)
+	an, err := anypb.New(event)
+	if err != nil {
+		return 0, fmt.Errorf("wrap Protobuf.Any: %w", err)
+	}
+	payload, err := proto.Marshal(an)
 	if err != nil {
 		return 0, fmt.Errorf("encode Protobuf: %w", err)
 	}
