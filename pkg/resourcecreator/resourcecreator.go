@@ -156,7 +156,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, err
 	}
-	err = idpo	rten.Create(app, resourceOptions, dplt, &ops)
+	err = idporten.Create(app, resourceOptions, dplt, &ops)
 	if err != nil {
 		return nil, err
 	}
