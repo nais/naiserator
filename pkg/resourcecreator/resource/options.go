@@ -9,8 +9,6 @@ type Options struct {
 	AccessPolicyNotAllowedCIDRs      []string
 	ApiServerIp                      string
 	AzureratorEnabled                bool
-	AzureratorSecretName             string
-	AzureratorHosts                  []string
 	ClusterName                      string
 	DigdiratorEnabled                bool
 	DigdiratorIDPortenSecretName     string

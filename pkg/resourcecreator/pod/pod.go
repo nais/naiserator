@@ -74,11 +74,6 @@ func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (
 
 	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
 
-	if len(resourceOptions.AzureratorSecretName) > 0 {
-		podSpec = WithAdditionalSecret(podSpec, resourceOptions.AzureratorSecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
-		podSpec = WithAdditionalEnvFromSecret(podSpec, resourceOptions.AzureratorSecretName)
-	}
-
 	if len(resourceOptions.DigdiratorIDPortenSecretName) > 0 {
 		podSpec = WithAdditionalSecret(podSpec, resourceOptions.DigdiratorIDPortenSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 		podSpec = WithAdditionalEnvFromSecret(podSpec, resourceOptions.DigdiratorIDPortenSecretName)

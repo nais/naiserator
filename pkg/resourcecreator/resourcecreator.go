@@ -9,6 +9,7 @@ import (
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
+	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	deployment "github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/iam"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
@@ -39,16 +40,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	}
 
 	ops := resource.Operations{}
-
-	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
-		azureapp, err := AzureAdApplication(*app, resourceOptions.ClusterName)
-		if err != nil {
-			return nil, err
-		}
-
-		ops = append(ops, resource.Operation{&azureapp, resource.OperationCreateOrUpdate})
-		resourceOptions.AzureratorSecretName = azureapp.Spec.SecretName
-	}
 
 	if resourceOptions.KafkaratorEnabled && app.Spec.Kafka != nil {
 		var err error
@@ -171,7 +162,10 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-
+	err = azure.Create(app, resourceOptions, dplt, &ops)
+	if err != nil {
+		return nil, err
+	}
 	poddisruptionbudget.Create(app, &ops)
 	jwker.Create(app, resourceOptions, dplt, &ops)
 	leaderelection.Create(app, dplt, &ops)

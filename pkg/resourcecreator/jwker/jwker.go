@@ -33,7 +33,7 @@ func Create(app *nais_io_v1alpha1.Application, options resource.Options, deploym
 		},
 	}
 
-	*operations = append(*operations, resource.Operation{jwker, resource.OperationCreateOrUpdate})
+	*operations = append(*operations, resource.Operation{Resource: jwker, Operation: resource.OperationCreateOrUpdate})
 
 	podSpec := &deployment.Spec.Template.Spec
 	podSpec = pod.WithAdditionalSecret(podSpec, jwker.Spec.SecretName, nais_io_v1alpha1.DefaultJwkerMountPath)

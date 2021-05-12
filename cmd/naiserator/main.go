@@ -110,7 +110,6 @@ func run() error {
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
 	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
-	resourceOptions.AzureratorHosts = cfg.ServiceHosts.Azurerator
 	resourceOptions.ClusterName = cfg.ClusterName
 	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
 	resourceOptions.DigdiratorHosts = cfg.ServiceHosts.Digdirator

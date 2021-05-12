@@ -1,13 +1,16 @@
-package resourcecreator
+package azure
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	appsv1 "k8s.io/api/apps/v1"
 
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,10 +18,10 @@ import (
 )
 
 const (
-	AzureApplicationDefaultCallbackPath = "/oauth2/callback"
+	applicationDefaultCallbackPath = "/oauth2/callback"
 )
 
-func AzureAdApplication(app nais.Application, clusterName string) (azureapp.AzureAdApplication, error) {
+func adApplication(app nais_io_v1alpha1.Application, clusterName string) (*azureapp.AzureAdApplication, error) {
 	replyURLs := app.Spec.Azure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
@@ -27,10 +30,10 @@ func AzureAdApplication(app nais.Application, clusterName string) (azureapp.Azur
 
 	secretName, err := azureSecretName(app)
 	if err != nil {
-		return azureapp.AzureAdApplication{}, err
+		return &azureapp.AzureAdApplication{}, err
 	}
 
-	return azureapp.AzureAdApplication{
+	return &azureapp.AzureAdApplication{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "AzureAdApplication",
 			APIVersion: "nais.io/v1",
@@ -54,15 +57,15 @@ func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
 	return maps
 }
 
-func oauthCallbackURLs(ingresses []nais.Ingress) []string {
+func oauthCallbackURLs(ingresses []nais_io_v1alpha1.Ingress) []string {
 	urls := make([]string, len(ingresses))
 	for i := range ingresses {
-		urls[i] = util.AppendPathToIngress(ingresses[i], AzureApplicationDefaultCallbackPath)
+		urls[i] = util.AppendPathToIngress(ingresses[i], applicationDefaultCallbackPath)
 	}
 	return urls
 }
 
-func azureSecretName(app nais.Application) (string, error) {
+func azureSecretName(app nais_io_v1alpha1.Application) (string, error) {
 	prefixedName := fmt.Sprintf("%s-%s", "azure", app.Name)
 	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
 
@@ -75,4 +78,22 @@ func azureSecretName(app nais.Application) (string, error) {
 	}
 
 	return fmt.Sprintf("%s-%s", shortName, suffix), nil
+}
+
+func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations) error {
+	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
+		azureapp, err := adApplication(*app, resourceOptions.ClusterName)
+		if err != nil {
+			return err
+		}
+
+		*operations = append(*operations, resource.Operation{Resource: azureapp, Operation: resource.OperationCreateOrUpdate})
+
+		podSpec := &deployment.Spec.Template.Spec
+		podSpec = pod.WithAdditionalSecret(podSpec, azureapp.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
+		podSpec = pod.WithAdditionalEnvFromSecret(podSpec, azureapp.Spec.SecretName)
+		deployment.Spec.Template.Spec = *podSpec
+	}
+
+	return nil
 }
