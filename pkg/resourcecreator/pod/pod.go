@@ -2,7 +2,6 @@ package pod
 
 import (
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -24,25 +23,6 @@ import (
 
 const (
 	cloudSQLProxyTermTimeout       = "30s"
-	kafkaCredentialFilesVolumeName = "kafka-credentials"
-	kafkaCertificatePathKey        = "KAFKA_CERTIFICATE_PATH"
-	kafkaPrivateKeyPathKey         = "KAFKA_PRIVATE_KEY_PATH"
-	kafkaCAPathKey                 = "KAFKA_CA_PATH"
-	kafkaKeystorePathKey           = "KAFKA_KEYSTORE_PATH"
-	kafkaTruststorePathKey         = "KAFKA_TRUSTSTORE_PATH"
-	kafkaCertificateKey            = "KAFKA_CERTIFICATE"
-	kafkaPrivateKeyKey             = "KAFKA_PRIVATE_KEY"
-	kafkaCAKey                     = "KAFKA_CA"
-	kafkaBrokersKey                = "KAFKA_BROKERS"
-	kafkaSchemaRegistryKey         = "KAFKA_SCHEMA_REGISTRY"
-	kafkaSchemaRegistryUserKey     = "KAFKA_SCHEMA_REGISTRY_USER"
-	kafkaSchemaRegistryPasswordKey = "KAFKA_SCHEMA_REGISTRY_PASSWORD"
-	kafkaCredStorePasswordKey      = "KAFKA_CREDSTORE_PASSWORD"
-	kafkaCertificateFilename       = "kafka.crt"
-	kafkaPrivateKeyFilename        = "kafka.key"
-	kafkaCAFilename                = "ca.crt"
-	kafkaKeystoreFilename          = "client.keystore.p12"
-	kafkaTruststoreFilename        = "client.truststore.jks"
 	naisAppNameEnv                 = "NAIS_APP_NAME"
 	naisNamespaceEnv               = "NAIS_NAMESPACE"
 	naisAppImageEnv                = "NAIS_APP_IMAGE"
@@ -74,10 +54,6 @@ func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (
 
 	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
 
-	if len(resourceOptions.KafkaratorSecretName) > 0 {
-		podSpec = podSpecWithKafka(podSpec, resourceOptions)
-	}
-
 	if vault.Enabled() && app.Spec.Vault.Enabled {
 		podSpec, err = vaultSidecar(app, podSpec)
 		if err != nil {
@@ -99,20 +75,6 @@ func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (
 	return podSpec, err
 }
 
-func makeKafkaSecretEnvVar(key, secretName string) v1.EnvVar {
-	return v1.EnvVar{
-		Name: key,
-		ValueFrom: &v1.EnvVarSource{
-			SecretKeyRef: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: secretName,
-				},
-				Key: key,
-			},
-		},
-	}
-}
-
 func appendGoogleSQLUserSecretEnvs(podSpec *v1.PodSpec, app *nais_io_v1alpha1.Application) *v1.PodSpec {
 	for _, instance := range app.Spec.GCP.SqlInstances {
 		for _, db := range instance.Databases {
@@ -122,71 +84,6 @@ func appendGoogleSQLUserSecretEnvs(podSpec *v1.PodSpec, app *nais_io_v1alpha1.Ap
 			}
 		}
 	}
-	return podSpec
-}
-
-func podSpecWithKafka(podSpec *v1.PodSpec, resourceOptions resource.Options) *v1.PodSpec {
-	// Mount specific secret keys as credential files
-	credentialFilesVolume := fromFilesSecretVolume(kafkaCredentialFilesVolumeName, resourceOptions.KafkaratorSecretName, []v1.KeyToPath{
-		{
-			Key:  kafkaCertificateKey,
-			Path: kafkaCertificateFilename,
-		},
-		{
-			Key:  kafkaPrivateKeyKey,
-			Path: kafkaPrivateKeyFilename,
-		},
-		{
-			Key:  kafkaCAKey,
-			Path: kafkaCAFilename,
-		},
-		{
-			Key:  kafkaKeystoreFilename,
-			Path: kafkaKeystoreFilename,
-		},
-		{
-			Key:  kafkaTruststoreFilename,
-			Path: kafkaTruststoreFilename,
-		},
-	})
-	podSpec = podSpecWithVolume(podSpec, credentialFilesVolume)
-
-	// Add environment variables for string data
-	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, []v1.EnvVar{
-		makeKafkaSecretEnvVar(kafkaCertificateKey, resourceOptions.KafkaratorSecretName),
-		makeKafkaSecretEnvVar(kafkaPrivateKeyKey, resourceOptions.KafkaratorSecretName),
-		makeKafkaSecretEnvVar(kafkaBrokersKey, resourceOptions.KafkaratorSecretName),
-		makeKafkaSecretEnvVar(kafkaSchemaRegistryKey, resourceOptions.KafkaratorSecretName),
-		makeKafkaSecretEnvVar(kafkaSchemaRegistryUserKey, resourceOptions.KafkaratorSecretName),
-		makeKafkaSecretEnvVar(kafkaSchemaRegistryPasswordKey, resourceOptions.KafkaratorSecretName),
-		makeKafkaSecretEnvVar(kafkaCAKey, resourceOptions.KafkaratorSecretName),
-		makeKafkaSecretEnvVar(kafkaCredStorePasswordKey, resourceOptions.KafkaratorSecretName),
-	}...)
-
-	// Inject path environment variables to refer to mounted secrets
-	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, []v1.EnvVar{
-		{
-			Name:  kafkaCertificatePathKey,
-			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaCertificateFilename),
-		},
-		{
-			Name:  kafkaPrivateKeyPathKey,
-			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaPrivateKeyFilename),
-		},
-		{
-			Name:  kafkaCAPathKey,
-			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaCAFilename),
-		},
-		{
-			Name:  kafkaKeystorePathKey,
-			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaKeystoreFilename),
-		},
-		{
-			Name:  kafkaTruststorePathKey,
-			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaTruststoreFilename),
-		},
-	}...)
-
 	return podSpec
 }
 
@@ -266,64 +163,22 @@ func envFromSecret(name string) v1.EnvFromSource {
 	}
 }
 
-func podSpecWithVolume(spec *v1.PodSpec, volume v1.Volume) *v1.PodSpec {
-	spec.Volumes = append(spec.Volumes, volume)
-	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts, fromFilesVolumeMount(volume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
-	return spec
-}
-
-func WithAdditionalSecret(spec *v1.PodSpec, secretName, mountPath string) *v1.PodSpec {
-	spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(secretName, secretName, nil))
-	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
-		fromFilesVolumeMount(secretName, "", mountPath))
-	return spec
-}
-
-func WithAdditionalEnvFromSecret(spec *v1.PodSpec, secretName string) *v1.PodSpec {
-	spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, envFromSecret(secretName))
-	return spec
-}
-
 func filesFrom(app *nais_io_v1alpha1.Application, spec *v1.PodSpec, nativeSecrets bool) *v1.PodSpec {
 	for _, file := range app.Spec.FilesFrom {
 		if len(file.ConfigMap) > 0 {
 			name := file.ConfigMap
 			spec.Volumes = append(spec.Volumes, fromFilesConfigmapVolume(name))
 			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
-				fromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name)))
+				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name)))
 		} else if nativeSecrets && len(file.Secret) > 0 {
 			name := file.Secret
-			spec.Volumes = append(spec.Volumes, fromFilesSecretVolume(name, name, nil))
+			spec.Volumes = append(spec.Volumes, FromFilesSecretVolume(name, name, nil))
 			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
-				fromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath))
+				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath))
 		}
 	}
 
 	return spec
-}
-
-func fromFilesVolumeMount(name string, mountPath string, defaultMountPath string) v1.VolumeMount {
-	if len(mountPath) == 0 {
-		mountPath = defaultMountPath
-	}
-
-	return v1.VolumeMount{
-		Name:      name,
-		ReadOnly:  true,
-		MountPath: mountPath,
-	}
-}
-
-func fromFilesSecretVolume(volumeName, secretName string, items []v1.KeyToPath) v1.Volume {
-	return v1.Volume{
-		Name: volumeName,
-		VolumeSource: v1.VolumeSource{
-			Secret: &v1.SecretVolumeSource{
-				SecretName: secretName,
-				Items:      items,
-			},
-		},
-	}
 }
 
 func fromFilesConfigmapVolume(name string) v1.Volume {

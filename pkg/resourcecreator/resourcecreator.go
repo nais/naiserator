@@ -41,14 +41,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 
 	ops := resource.Operations{}
 
-	if resourceOptions.KafkaratorEnabled && app.Spec.Kafka != nil {
-		var err error
-		resourceOptions.KafkaratorSecretName, err = kafka.GenerateKafkaSecretName(app)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	if len(resourceOptions.GoogleProjectId) > 0 {
 		googleServiceAccount := google_iam.GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := google_iam.GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
@@ -150,6 +142,10 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		return nil, err
 	}
 	err = idporten.Create(app, resourceOptions, dplt, &ops)
+	if err != nil {
+		return nil, err
+	}
+	err = kafka.Create(app, resourceOptions, dplt)
 	if err != nil {
 		return nil, err
 	}
