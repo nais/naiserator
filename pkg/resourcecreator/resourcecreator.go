@@ -49,13 +49,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		}
 	}
 
-	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
-		maskinportenClient := maskinporten.MaskinportenClient(app)
-
-		ops = append(ops, resource.Operation{maskinportenClient, resource.OperationCreateOrUpdate})
-		resourceOptions.DigdiratorMaskinportenSecretName = maskinportenClient.Spec.SecretName
-	}
-
 	if len(resourceOptions.GoogleProjectId) > 0 {
 		googleServiceAccount := google_iam.GoogleIAMServiceAccount(app, resourceOptions.GoogleProjectId)
 		googleServiceAccountBinding := google_iam.GoogleIAMPolicy(app, &googleServiceAccount, resourceOptions.GoogleProjectId)
@@ -160,6 +153,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, err
 	}
+	maskinporten.Create(app, resourceOptions, dplt, &ops)
 	poddisruptionbudget.Create(app, &ops)
 	jwker.Create(app, resourceOptions, dplt, &ops)
 	leaderelection.Create(app, dplt, &ops)
@@ -173,4 +167,3 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 
 	return ops, nil
 }
-

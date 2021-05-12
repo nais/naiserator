@@ -11,7 +11,6 @@ type Options struct {
 	AzureratorEnabled                bool
 	ClusterName                      string
 	DigdiratorEnabled                bool
-	DigdiratorMaskinportenSecretName string
 	DigdiratorHosts                  []string
 	GatewayMappings                  []config.GatewayMapping
 	GoogleProjectId                  string

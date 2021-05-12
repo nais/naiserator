@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	IDPortenClientDefaultCallbackPath = "/oauth2/callback"
-	IDPortenClientDefaultLogoutPath   = "/oauth2/logout"
+	clientDefaultCallbackPath = "/oauth2/callback"
+	clientDefaultLogoutPath   = "/oauth2/logout"
 )
 
 func client(app *nais.Application) (*idportenClient.IDPortenClient, error) {
@@ -80,7 +80,7 @@ func redirectURI(app *nais.Application) (redirectURI string) {
 	redirectURI = app.Spec.IDPorten.RedirectURI
 
 	if len(app.Spec.IDPorten.RedirectURI) == 0 {
-		redirectURI = util.AppendPathToIngress(app.Spec.Ingresses[0], IDPortenClientDefaultCallbackPath)
+		redirectURI = util.AppendPathToIngress(app.Spec.Ingresses[0], clientDefaultCallbackPath)
 	}
 
 	if len(app.Spec.IDPorten.RedirectPath) > 0 {
@@ -94,7 +94,7 @@ func frontchannelLogoutURI(app *nais.Application) (frontchannelLogoutURI string)
 	frontchannelLogoutURI = app.Spec.IDPorten.FrontchannelLogoutURI
 
 	if len(app.Spec.IDPorten.FrontchannelLogoutURI) == 0 {
-		frontchannelLogoutURI = util.AppendPathToIngress(app.Spec.Ingresses[0], IDPortenClientDefaultLogoutPath)
+		frontchannelLogoutURI = util.AppendPathToIngress(app.Spec.Ingresses[0], clientDefaultLogoutPath)
 	}
 
 	if len(app.Spec.IDPorten.FrontchannelLogoutPath) > 0 {
