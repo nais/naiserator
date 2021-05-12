@@ -1,11 +1,11 @@
-package resourcecreator_test
+package accesspolicy_test
 
 import (
 	"testing"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +16,7 @@ func TestToAccessPolicyExternalRule(t *testing.T) {
 			"https://some-host",
 			"https://some-other-host",
 		}
-		rules := resourcecreator.ToAccessPolicyExternalRules(hosts)
+		rules := accesspolicy.ToAccessPolicyExternalRules(hosts)
 		assert.Len(t, rules, 2)
 		assert.Contains(t, rules, nais_io_v1.AccessPolicyExternalRule{Host: "https://some-host"})
 		assert.Contains(t, rules, nais_io_v1.AccessPolicyExternalRule{Host: "https://some-other-host"})
@@ -29,7 +29,7 @@ func TestMergeExternalRules(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		additionalRules := resourcecreator.ToAccessPolicyExternalRules([]string{
+		additionalRules := accesspolicy.ToAccessPolicyExternalRules([]string{
 			"some-host.test",
 			"some-other-host.test",
 			"some-other-host-2.test",
@@ -41,7 +41,7 @@ func TestMergeExternalRules(t *testing.T) {
 			nais_io_v1.AccessPolicyExternalRule{Host: "some-other-host-4.test", Ports: []nais_io_v1.AccessPolicyPortRule{{Port: 1337}}},
 		)
 
-		rules := resourcecreator.MergeExternalRules(app, additionalRules...)
+		rules := accesspolicy.MergeExternalRules(app, additionalRules...)
 
 		assert.Len(t, rules, 5)
 		assert.Contains(t, rules, nais_io_v1.AccessPolicyExternalRule{Host: "some-host.test"})

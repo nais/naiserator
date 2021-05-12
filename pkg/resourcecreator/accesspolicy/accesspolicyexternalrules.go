@@ -1,4 +1,4 @@
-package resourcecreator
+package accesspolicy
 
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
