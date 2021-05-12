@@ -82,16 +82,16 @@ func azureSecretName(app nais_io_v1alpha1.Application) (string, error) {
 
 func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations) error {
 	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
-		azureapp, err := adApplication(*app, resourceOptions.ClusterName)
+		azureAdApplication, err := adApplication(*app, resourceOptions.ClusterName)
 		if err != nil {
 			return err
 		}
 
-		*operations = append(*operations, resource.Operation{Resource: azureapp, Operation: resource.OperationCreateOrUpdate})
+		*operations = append(*operations, resource.Operation{Resource: azureAdApplication, Operation: resource.OperationCreateOrUpdate})
 
 		podSpec := &deployment.Spec.Template.Spec
-		podSpec = pod.WithAdditionalSecret(podSpec, azureapp.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
-		podSpec = pod.WithAdditionalEnvFromSecret(podSpec, azureapp.Spec.SecretName)
+		podSpec = pod.WithAdditionalSecret(podSpec, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
+		podSpec = pod.WithAdditionalEnvFromSecret(podSpec, azureAdApplication.Spec.SecretName)
 		deployment.Spec.Template.Spec = *podSpec
 	}
 

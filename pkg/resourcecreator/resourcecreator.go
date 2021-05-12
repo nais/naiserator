@@ -49,16 +49,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		}
 	}
 
-	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled {
-		idportenClient, err := idporten.IDPortenClient(app)
-		if err != nil {
-			return nil, err
-		}
-
-		ops = append(ops, resource.Operation{idportenClient, resource.OperationCreateOrUpdate})
-		resourceOptions.DigdiratorIDPortenSecretName = idportenClient.Spec.SecretName
-	}
-
 	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
 		maskinportenClient := maskinporten.MaskinportenClient(app)
 
@@ -166,6 +156,10 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, err
 	}
+	err = idpo	rten.Create(app, resourceOptions, dplt, &ops)
+	if err != nil {
+		return nil, err
+	}
 	poddisruptionbudget.Create(app, &ops)
 	jwker.Create(app, resourceOptions, dplt, &ops)
 	leaderelection.Create(app, dplt, &ops)
@@ -179,3 +173,4 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 
 	return ops, nil
 }
+
