@@ -118,7 +118,7 @@ func (c config) addVaultContainer(spec *corev1.PodSpec, paths []nais.SecretPath)
 	spec.InitContainers = append(spec.InitContainers, c.createInitContainer(paths))
 
 	if c.app.Spec.Vault.Sidecar {
-		spec.Containers = append([]corev1.Container{c.createSideCarContainer()}, spec.Containers...)
+		spec.Containers = append(spec.Containers, c.createSideCarContainer())
 	}
 
 	spec.Volumes = append(spec.Volumes, corev1.Volume{
