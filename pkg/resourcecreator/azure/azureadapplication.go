@@ -13,7 +13,7 @@ import (
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/util"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -34,7 +34,7 @@ func adApplication(app nais_io_v1alpha1.Application, clusterName string) (*azure
 	}
 
 	return &azureapp.AzureAdApplication{
-		TypeMeta: v1.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "AzureAdApplication",
 			APIVersion: "nais.io/v1",
 		},

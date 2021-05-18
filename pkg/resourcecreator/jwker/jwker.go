@@ -8,7 +8,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -22,7 +22,7 @@ func Create(app *nais_io_v1alpha1.Application, options resource.Options, deploym
 	}
 
 	jwker := &nais_io_v1.Jwker{
-		TypeMeta: v1.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "Jwker",
 			APIVersion: "nais.io/v1",
 		},

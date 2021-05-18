@@ -10,8 +10,8 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	v12 "k8s.io/api/apps/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -30,7 +30,7 @@ func client(app *nais.Application) (*idportenClient.IDPortenClient, error) {
 	}
 
 	return &idportenClient.IDPortenClient{
-		TypeMeta: v1.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "IDPortenClient",
 			APIVersion: "nais.io/v1",
 		},
@@ -118,7 +118,7 @@ func idPortenSecretName(app nais.Application) string {
 	return namegen.PrefixedRandShortName("idporten", app.Name, validation.DNS1035LabelMaxLength)
 }
 
-func Create(app *nais.Application, resourceOptions resource.Options, deployment *v12.Deployment, operations *resource.Operations) error {
+func Create(app *nais.Application, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations) error {
 	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled {
 		idportenClient, err := client(app)
 		if err != nil {
