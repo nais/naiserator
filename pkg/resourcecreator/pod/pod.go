@@ -1,7 +1,6 @@
 package pod
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
-	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +24,7 @@ const (
 	naisClientId       = "NAIS_CLIENT_ID"
 )
 
-func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (*corev1.PodSpec, error) {
+func Spec(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (*corev1.PodSpec, error) {
 	var err error
 
 	podSpec := podSpecBase(app)
@@ -42,13 +40,6 @@ func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (
 	podSpec = filesFrom(app, podSpec, resourceOptions.NativeSecrets)
 
 	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
-
-	if vault.Enabled() && app.Spec.Vault.Enabled {
-		podSpec, err = vaultSidecar(app, podSpec)
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	if app.Spec.WebProxy && len(resourceOptions.GoogleProjectId) == 0 {
 		podSpec, err = proxyopts.ProxyOpts(podSpec)
@@ -182,14 +173,6 @@ func secureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	spec.Containers[0] = *mainContainer
 
 	return spec
-}
-
-func vaultSidecar(app *nais_io_v1alpha1.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
-	creator, err := vault.NewVaultContainerCreator(*app)
-	if err != nil {
-		return nil, fmt.Errorf("while creating Vault container: %s", err)
-	}
-	return creator.AddVaultContainer(podSpec)
 }
 
 func defaultEnvVars(app *nais_io_v1alpha1.Application) []corev1.EnvVar {

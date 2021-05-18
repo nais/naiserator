@@ -25,6 +25,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
+	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 )
 
 // Create takes an Application resource and returns a slice of Kubernetes resources
@@ -70,6 +71,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, fmt.Errorf("while creating ingress: %s", err)
 	}
+	vault.Create(app, resourceOptions, dplt)
 
 	return ops, nil
 }
