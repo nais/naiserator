@@ -8,4 +8,5 @@ const (
 	DeletionPolicyAnnotation   = "cnrm.cloud.google.com/deletion-policy"
 	DeletionPolicyAbandon      = "abandon"
 	ProjectIdAnnotation        = "cnrm.cloud.google.com/project-id"
+	CloudSQLProxyTermTimeout = "30s"
 )
