@@ -14,17 +14,17 @@ import (
 func GoogleIAMPolicy(app *nais.Application, sa *google_iam_crd.IAMServiceAccount, projectId string) google_iam_crd.IAMPolicy {
 	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, app.Namespace, app.Name)
 	objectMeta := app.CreateObjectMeta()
-	objectMeta.Namespace = google.GoogleIAMServiceAccountNamespace
+	objectMeta.Namespace = google.IAMServiceAccountNamespace
 	objectMeta.Name = app.CreateAppNamespaceHash()
 	iamPolicy := google_iam_crd.IAMPolicy{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMPolicy",
-			APIVersion: google.GoogleIAMAPIVersion,
+			APIVersion: google.IAMAPIVersion,
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_iam_crd.IAMPolicySpec{
 			ResourceRef: &google_iam_crd.ResourceRef{
-				ApiVersion: google.GoogleIAMAPIVersion,
+				ApiVersion: google.IAMAPIVersion,
 				Kind:       "IAMServiceAccount",
 				Name:       &sa.Name,
 			},
@@ -37,7 +37,7 @@ func GoogleIAMPolicy(app *nais.Application, sa *google_iam_crd.IAMServiceAccount
 		},
 	}
 
-	util.SetAnnotation(&iamPolicy, google.GoogleProjectIdAnnotation, projectId)
+	util.SetAnnotation(&iamPolicy, google.ProjectIdAnnotation, projectId)
 
 	return iamPolicy
 }

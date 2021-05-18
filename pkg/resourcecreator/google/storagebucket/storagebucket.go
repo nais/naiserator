@@ -16,10 +16,10 @@ import (
 func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = fmt.Sprintf("%s", bucket.Name)
-	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.GoogleRegion}
+	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
 
 	if !bucket.CascadingDelete {
-		util.SetAnnotation(&objectMeta, google.GoogleDeletionPolicyAnnotation, google.GoogleDeletionPolicyAbandon)
+		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
 	}
 
 	// Converting days to seconds if retention is set
@@ -44,7 +44,7 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 	return &google_storage_crd.StorageBucket{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "StorageBucket",
-			APIVersion: google.GoogleStorageAPIVersion,
+			APIVersion: google.StorageAPIVersion,
 		},
 		ObjectMeta: objectMeta,
 		Spec:       storagebucketPolicySpec,
@@ -57,7 +57,7 @@ func StorageBucketIamPolicyMember(app *nais.Application, bucket *google_storage_
 		ObjectMeta: (*app).CreateObjectMetaWithName(policyMemberName),
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMPolicyMember",
-			APIVersion: google.GoogleIAMAPIVersion,
+			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
@@ -70,7 +70,7 @@ func StorageBucketIamPolicyMember(app *nais.Application, bucket *google_storage_
 		},
 	}
 
-	util.SetAnnotation(policy, google.GoogleProjectIdAnnotation, googleTeamProjectId)
+	util.SetAnnotation(policy, google.ProjectIdAnnotation, googleTeamProjectId)
 
 	return policy
 }

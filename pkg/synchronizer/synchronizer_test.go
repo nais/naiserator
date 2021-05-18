@@ -287,7 +287,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		},
 	}
 	testNamespace.SetAnnotations(map[string]string{
-		google.GoogleProjectIdAnnotation: testProjectId,
+		google.ProjectIdAnnotation: testProjectId,
 	})
 
 	err = rig.client.Create(ctx, testNamespace)
@@ -320,22 +320,22 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	err = rig.client.Get(ctx, req.NamespacedName, deploy)
 	assert.NoError(t, err)
-	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, google.GoogleRegion, app.Name)
+	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, google.Region, app.Name)
 	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[2])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqlinstance)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, sqlinstance.Annotations[google.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, sqlinstance.Annotations[google.ProjectIdAnnotation])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqluser)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, sqluser.Annotations[google.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, sqluser.Annotations[google.ProjectIdAnnotation])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqldatabase)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, sqldatabase.Annotations[google.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, sqldatabase.Annotations[google.ProjectIdAnnotation])
 
 	err = rig.client.Get(ctx, req.NamespacedName, iampolicymember)
 	assert.NoError(t, err)
-	assert.Equal(t, testProjectId, iampolicymember.Annotations[google.GoogleProjectIdAnnotation])
+	assert.Equal(t, testProjectId, iampolicymember.Annotations[google.ProjectIdAnnotation])
 }

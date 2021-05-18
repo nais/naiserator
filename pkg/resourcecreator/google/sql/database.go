@@ -11,11 +11,11 @@ import (
 func GoogleSQLDatabase(app *nais.Application, db nais.CloudSqlDatabase, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLDatabase {
 	objectMeta := app.CreateObjectMetaWithName(db.Name)
 
-	util.SetAnnotation(&objectMeta, google.GoogleProjectIdAnnotation, projectId)
+	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 
 	if !instance.CascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
-		util.SetAnnotation(&objectMeta, google.GoogleDeletionPolicyAnnotation, google.GoogleDeletionPolicyAbandon)
+		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
 	}
 
 	return &google_sql_crd.SQLDatabase{

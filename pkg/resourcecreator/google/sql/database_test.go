@@ -19,6 +19,6 @@ func TestGoogleSqlDatabase(t *testing.T) {
 	assert.Equal(t, database.Name, sqlDatabase.Name)
 	assert.Equal(t, database.Name, sqlDatabase.Name)
 	assert.Equal(t, instanceName, sqlDatabase.Spec.InstanceRef.Name)
-	assert.Equal(t, google.GoogleDeletionPolicyAbandon, sqlDatabase.ObjectMeta.Annotations[google.GoogleDeletionPolicyAnnotation])
-	assert.Equal(t, projectId, sqlDatabase.ObjectMeta.Annotations[google.GoogleProjectIdAnnotation])
+	assert.Equal(t, google.DeletionPolicyAbandon, sqlDatabase.ObjectMeta.Annotations[google.DeletionPolicyAnnotation])
+	assert.Equal(t, projectId, sqlDatabase.ObjectMeta.Annotations[google.ProjectIdAnnotation])
 }

@@ -16,6 +16,6 @@ func TestCreateGoogleIAMServiceaccount(t *testing.T) {
 	iamServiceAccount := google_iam.GoogleIAMServiceAccount(app, projectId)
 
 	assert.Equal(t, app.CreateAppNamespaceHash(), iamServiceAccount.Name)
-	assert.Equal(t, google.GoogleIAMServiceAccountNamespace, iamServiceAccount.Namespace)
-	assert.Equal(t, projectId, iamServiceAccount.Annotations[google.GoogleProjectIdAnnotation])
+	assert.Equal(t, google.IAMServiceAccountNamespace, iamServiceAccount.Namespace)
+	assert.Equal(t, projectId, iamServiceAccount.Annotations[google.ProjectIdAnnotation])
 }

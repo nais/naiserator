@@ -18,9 +18,9 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 
 		bucket := storagebucket.GoogleStorageBucket(app, csb)
 		assert.Equal(t, csb.Name, bucket.Name)
-		assert.Equal(t, google.GoogleRegion, bucket.Spec.Location)
-		assert.Equal(t, google.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[google.
-			GoogleDeletionPolicyAnnotation])
+		assert.Equal(t, google.Region, bucket.Spec.Location)
+		assert.Equal(t, google.DeletionPolicyAbandon, bucket.ObjectMeta.Annotations[google.
+			DeletionPolicyAnnotation])
 		assert.Nil(t, bucket.Spec.RetentionPolicy)
 		assert.Nil(t, bucket.Spec.LifecycleRules)
 	})
@@ -33,9 +33,9 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		bucket := storagebucket.GoogleStorageBucket(app, csb)
 		assert.Equal(t, csb.Name, bucket.Name)
 		assert.Equal(t, expectedRetentionPeriod, bucket.Spec.RetentionPolicy.RetentionPeriod)
-		assert.Equal(t, google.GoogleRegion, bucket.Spec.Location)
-		assert.Equal(t, google.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[google.
-			GoogleDeletionPolicyAnnotation])
+		assert.Equal(t, google.Region, bucket.Spec.Location)
+		assert.Equal(t, google.DeletionPolicyAbandon, bucket.ObjectMeta.Annotations[google.
+			DeletionPolicyAnnotation])
 		assert.Nil(t, bucket.Spec.LifecycleRules)
 	})
 
@@ -56,9 +56,9 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		assert.Equal(t, csb.LifecycleCondition.CreatedBefore, lifecycleRule.Condition.CreatedBefore)
 		assert.Equal(t, csb.LifecycleCondition.NumNewerVersions, lifecycleRule.Condition.NumNewerVersions)
 		assert.Equal(t, csb.LifecycleCondition.WithState, lifecycleRule.Condition.WithState)
-		assert.Equal(t, google.GoogleRegion, bucket.Spec.Location)
-		assert.Equal(t, google.GoogleDeletionPolicyAbandon, bucket.ObjectMeta.Annotations[google.
-			GoogleDeletionPolicyAnnotation])
+		assert.Equal(t, google.Region, bucket.Spec.Location)
+		assert.Equal(t, google.DeletionPolicyAbandon, bucket.ObjectMeta.Annotations[google.
+			DeletionPolicyAnnotation])
 		assert.Nil(t, bucket.Spec.RetentionPolicy)
 	})
 

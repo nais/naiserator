@@ -26,7 +26,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("PD_%s", google_sql.DefaultSqlInstanceDiskType), sqlInstance.Spec.Settings.DiskType)
 	assert.Equal(t, google_sql.DefaultSqlInstanceDiskSize, sqlInstance.Spec.Settings.DiskSize)
 	assert.Equal(t, google_sql.DefaultSqlInstanceTier, sqlInstance.Spec.Settings.Tier)
-	assert.Equal(t, projectId, sqlInstance.Annotations[google.GoogleProjectIdAnnotation])
+	assert.Equal(t, projectId, sqlInstance.Annotations[google.ProjectIdAnnotation])
 	assert.Equal(t, "02:00", sqlInstance.Spec.Settings.BackupConfiguration.StartTime)
 	assert.True(t, sqlInstance.Spec.Settings.BackupConfiguration.Enabled)
 	assert.True(t, sqlInstance.Spec.Settings.IpConfiguration.RequireSsl)

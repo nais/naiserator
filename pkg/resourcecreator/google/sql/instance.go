@@ -29,11 +29,11 @@ const (
 func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = instance.Name
-	util.SetAnnotation(&objectMeta, google.GoogleProjectIdAnnotation, projectId)
+	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 
 	if !instance.CascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
-		util.SetAnnotation(&objectMeta, google.GoogleDeletionPolicyAnnotation, google.GoogleDeletionPolicyAbandon)
+		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
 	}
 
 	sqlInstance := &google_sql_crd.SQLInstance{
@@ -44,7 +44,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLInstanceSpec{
 			DatabaseVersion: string(instance.Type),
-			Region:          google.GoogleRegion,
+			Region:          google.Region,
 			Settings: google_sql_crd.SQLInstanceSettings{
 				AvailabilityType: availabilityType(instance.HighAvailability),
 				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{
@@ -110,7 +110,7 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMPolicyMember",
-			APIVersion: google.GoogleIAMAPIVersion,
+			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
@@ -122,7 +122,7 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 		},
 	}
 
-	util.SetAnnotation(policy, google.GoogleProjectIdAnnotation, googleTeamProjectId)
+	util.SetAnnotation(policy, google.ProjectIdAnnotation, googleTeamProjectId)
 
 	return policy
 }

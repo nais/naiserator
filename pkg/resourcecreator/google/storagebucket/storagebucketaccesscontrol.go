@@ -17,7 +17,7 @@ func GoogleStorageBucketAccessControl(app *nais.Application, bucketName, project
 	return &google_storage_crd.StorageBucketAccessControl{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "StorageBucketAccessControl",
-			APIVersion: google.GoogleStorageAPIVersion,
+			APIVersion: google.StorageAPIVersion,
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_storage_crd.StorageBucketAccessControlSpec{

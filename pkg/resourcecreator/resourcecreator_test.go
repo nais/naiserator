@@ -225,11 +225,11 @@ func TestCreate(t *testing.T) {
 		// There must be a connection between Bucket, Bucket IAM Policy, and Google Service Account.
 		assert.True(t, strings.HasPrefix(objects.bucket.Name, app.Spec.GCP.Buckets[0].Name))
 		assert.Equal(t, objects.bucket.Name, objects.bucketAccessControl.Spec.BucketRef.Name)
-		assert.Equal(t, objects.bucket.Spec.Location, google.GoogleRegion)
+		assert.Equal(t, objects.bucket.Spec.Location, google.Region)
 		assert.Equal(t, fmt.Sprintf("user-%s", objects.googleIAMServiceAccount.Name), entityTokens[0])
 		assert.Equal(t, "nais-foo-1234.iam.gserviceaccount.com", entityTokens[1])
 
-		assert.Equal(t, "abandon", objects.bucket.Annotations[google.GoogleDeletionPolicyAnnotation])
+		assert.Equal(t, "abandon", objects.bucket.Annotations[google.DeletionPolicyAnnotation])
 	})
 
 	t.Run("using gcp sqlinstance yields expected resources", func(t *testing.T) {

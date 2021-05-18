@@ -11,13 +11,13 @@ import (
 func GoogleIAMServiceAccount(app *nais.Application, projectId string) google_iam_crd.IAMServiceAccount {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Annotations["nais.io/team"] = app.Namespace
-	objectMeta.Namespace = google.GoogleIAMServiceAccountNamespace
+	objectMeta.Namespace = google.IAMServiceAccountNamespace
 	objectMeta.Name = app.CreateAppNamespaceHash()
 
 	iamServiceAccount := google_iam_crd.IAMServiceAccount{
 		TypeMeta: k8s_meta.TypeMeta{
 			Kind:       "IAMServiceAccount",
-			APIVersion: google.GoogleIAMAPIVersion,
+			APIVersion: google.IAMAPIVersion,
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_iam_crd.IAMServiceAccountSpec{
@@ -26,7 +26,7 @@ func GoogleIAMServiceAccount(app *nais.Application, projectId string) google_iam
 	}
 
 	util.SetAnnotation(&iamServiceAccount, "nais.io/team", app.Namespace)
-	util.SetAnnotation(&iamServiceAccount, google.GoogleProjectIdAnnotation, projectId)
+	util.SetAnnotation(&iamServiceAccount, google.ProjectIdAnnotation, projectId)
 
 	return iamServiceAccount
 }

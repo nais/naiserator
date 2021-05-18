@@ -24,7 +24,7 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission
 		ObjectMeta: (*app).CreateObjectMetaWithName(name),
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMPolicyMember",
-			APIVersion: google.GoogleIAMAPIVersion,
+			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
@@ -37,7 +37,7 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission
 		},
 	}
 
-	util.SetAnnotation(policyMember, google.GoogleProjectIdAnnotation, googleTeamProjectId)
+	util.SetAnnotation(policyMember, google.ProjectIdAnnotation, googleTeamProjectId)
 
 	return policyMember, nil
 }

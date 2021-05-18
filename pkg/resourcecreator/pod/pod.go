@@ -97,7 +97,7 @@ func hostAliases(resourceOptions resource.Options) []v1.HostAlias {
 }
 
 func cloudSqlProxyContainer(sqlInstance nais_io_v1alpha1.CloudSqlInstance, port int32, projectId string) v1.Container {
-	connectionName := fmt.Sprintf("%s:%s:%s", projectId, google.GoogleRegion, sqlInstance.Name)
+	connectionName := fmt.Sprintf("%s:%s:%s", projectId, google.Region, sqlInstance.Name)
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
 	cloudSqlProxyContainerResourceSpec := nais_io_v1alpha1.ResourceRequirements{

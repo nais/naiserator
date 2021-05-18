@@ -144,10 +144,10 @@ func (in GoogleSqlUser) create(app *nais.Application, objectMeta k8smeta.ObjectM
 }
 
 func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, projectId string) {
-	util.SetAnnotation(&objectMeta, google.GoogleProjectIdAnnotation, projectId)
+	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	if !cascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
-		util.SetAnnotation(&objectMeta, google.GoogleDeletionPolicyAnnotation, google.GoogleDeletionPolicyAbandon)
+		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
 	}
 }
 
