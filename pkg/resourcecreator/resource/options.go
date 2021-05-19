@@ -24,6 +24,7 @@ type Options struct {
 	NativeSecrets               bool
 	NumReplicas                 int32
 	VaultEnabled                bool
+	Vault                       config.Vault
 }
 
 // NewOptions creates a struct with the default resource options.

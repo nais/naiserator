@@ -33,7 +33,6 @@ const (
 type testCaseConfig struct {
 	Description  string
 	MatchType    string
-	VaultEnabled bool
 }
 
 type meta struct {
@@ -125,15 +124,15 @@ func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepco
 func yamlRunner(t *testing.T, filename string, resources resource.Operations, test SubTest) {
 	matched := false
 
-	for _, resource := range resources {
-		rm := resourcemeta(resource)
+	for _, rsce := range resources {
+		rm := resourcemeta(rsce)
 
 		if !yamlSubtestMatchesResource(rm, test) {
 			continue
 		}
 		matched = true
 
-		raw := rawResource(resource.Resource)
+		raw := rawResource(rsce.Resource)
 		diffs := make(deepcomp.Diffset, 0)
 
 		// retrieve all failure cases
@@ -182,14 +181,6 @@ func yamlSubTest(t *testing.T, path string) {
 		t.Errorf("unable to parse unmarshal test data: %s", err)
 		t.Fail()
 		return
-	}
-
-	if test.Config.VaultEnabled {
-		viper.Set("features.vault", true)
-		viper.Set("vault.address", "https://vault.adeo.no")
-		viper.Set("vault.kv-path", "/kv/preprod/fss")
-		viper.Set("vault.auth-path", "auth/kubernetes/preprod/fss/login")
-		viper.Set("vault.init-container-image", "navikt/vault-sidekick:v0.3.10-d122b16")
 	}
 
 	err = nais.ApplyDefaults(&test.Input)

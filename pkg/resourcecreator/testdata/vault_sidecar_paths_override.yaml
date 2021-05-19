@@ -1,6 +1,13 @@
 config:
   description: vault enabled with sidecar enabled and user specified path for default app secrets
+
+resourceoptions:
   vaultEnabled: true
+  vault:
+    address: https://vault.adeo.no
+    kv-path: /kv/preprod/fss
+    auth-path: auth/kubernetes/preprod/fss/login
+    init-container-image: navikt/vault-sidekick:v0.3.10-d122b16
 
 input:
   kind: Application

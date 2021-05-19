@@ -5,11 +5,10 @@ import (
 	"path/filepath"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	config2 "github.com/nais/naiserator/pkg/naiserator/config"
-	"k8s.io/apimachinery/pkg/api/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -17,6 +16,7 @@ type config struct {
 	vaultAddr          string
 	initContainerImage string
 	authPath           string
+	kvPath             string
 	app                nais.Application
 }
 
@@ -61,20 +61,12 @@ func (c config) validate() (bool, error) {
 
 }
 
-// Enabled checks if this Initializer is enabled
-func Enabled() bool {
-	return viper.GetBool(config2.FeaturesVault)
-}
-
-func defaultKVPath() string {
-	return viper.GetString(config2.VaultKvPath)
-}
-
-func NewVaultContainerCreator(app nais.Application) (Creator, error) {
+func NewVaultContainerCreator(app nais.Application, resourceOptions resource.Options) (Creator, error) {
 	config := config{
-		vaultAddr:          viper.GetString(config2.VaultAddress),
-		initContainerImage: viper.GetString(config2.VaultInitContainerImage),
-		authPath:           viper.GetString(config2.VaultAuthPath),
+		vaultAddr:          resourceOptions.Vault.Address,
+		initContainerImage: resourceOptions.Vault.InitContainerImage,
+		authPath:           resourceOptions.Vault.AuthPath,
+		kvPath:             resourceOptions.Vault.KeyValuePath,
 		app:                app,
 	}
 
@@ -85,7 +77,7 @@ func NewVaultContainerCreator(app nais.Application) (Creator, error) {
 	return config, nil
 }
 
-// Add init/sidecar container to pod spec.
+// AddVaultContainer add init/sidecar containers to pod spec.
 func (c config) AddVaultContainer(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	if len(c.app.Spec.Vault.Paths) == 0 {
 		return c.addVaultContainer(podSpec, []nais.SecretPath{c.defaultSecretPath()})
@@ -212,7 +204,7 @@ func (c config) createSideCarContainer() corev1.Container {
 		Image:        c.initContainerImage,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU: resource.MustParse("10m"),
+				corev1.ResourceCPU: k8sResource.MustParse("10m"),
 			},
 		},
 		Env: []corev1.EnvVar{
@@ -267,6 +259,6 @@ func createDefaultMount() corev1.VolumeMount {
 func (c config) defaultSecretPath() nais.SecretPath {
 	return nais.SecretPath{
 		MountPath: nais.DefaultVaultMountPath,
-		KvPath:    fmt.Sprintf("%s/%s/%s", defaultKVPath(), c.app.Name, c.app.Namespace),
+		KvPath:    fmt.Sprintf("%s/%s/%s", c.kvPath, c.app.Name, c.app.Namespace),
 	}
 }

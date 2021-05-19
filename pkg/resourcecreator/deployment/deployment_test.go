@@ -15,39 +15,8 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
-const (
-	clusterName = "my.test.cluster.local"
-)
-
 func TestDeployment(t *testing.T) {
 	ops := resource.Operations{}
-
-	t.Run("vault integration is set up correctly", func(t *testing.T) {
-		viper.Reset()
-		viper.Set("features.vault", true)
-		viper.Set("vault.address", "adr")
-		viper.Set("vault.auth-path", "authpath")
-		viper.Set("vault.kv-path", "/base/kv")
-		viper.Set("vault.init-container-image", "image")
-
-		app := fixtures.MinimalApplication()
-		app.Spec.Vault.Enabled = true
-		err := nais.ApplyDefaults(app)
-		assert.NoError(t, err)
-
-		opts := resource.NewOptions()
-		deploy, err := deployment.Create(app, opts, &ops)
-		assert.Nil(t, err)
-
-		c := test.GetContainerByName(deploy.Spec.Template.Spec.InitContainers, "vks-init")
-		assert.NotNil(t, c, "contains vault initcontainer")
-
-		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
-		assert.NotNil(t, appContainer)
-	})
-
-	viper.Reset()
-	viper.Set("cluster-name", clusterName)
 
 	t.Run("check if default port is used when liveness port is missing", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
