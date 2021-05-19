@@ -9,7 +9,7 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleStorageBucketAccessControl(app *nais.Application, bucketName, projectId, serviceAccountName string) *google_storage_crd.StorageBucketAccessControl {
+func AccessControl(app *nais.Application, bucketName, projectId, serviceAccountName string) *google_storage_crd.StorageBucketAccessControl {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Namespace = app.Namespace
 	objectMeta.Name = bucketName

@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/util"
+	"k8s.io/api/apps/v1"
 
 	"k8s.io/utils/pointer"
 
@@ -105,7 +108,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+func instanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
 		TypeMeta: k8s_meta.TypeMeta{
@@ -126,3 +129,72 @@ func SqlInstanceIamPolicyMember(app *nais.Application, resourceName string, goog
 
 	return policy
 }
+
+func CreateSqlInstance(app *nais.Application, resourceOptions resource.Options, deployment *v1.Deployment, operations *resource.Operations) error {
+	if app.Spec.GCP.SqlInstances != nil {
+		for i, sqlInstance := range app.Spec.GCP.SqlInstances {
+			if i > 0 {
+				return fmt.Errorf("only one sql instance is supported")
+			}
+
+			// TODO: name defaulting will break with more than one instance
+			sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
+			if err != nil {
+				return err
+			}
+
+			instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
+			*operations = append(*operations, resource.Operation{Resource: instance, Operation: resource.OperationCreateOrUpdate})
+
+			iamPolicyMember := instanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+			*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
+
+			for _, db := range sqlInstance.Databases {
+				sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+
+				googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+				*operations = append(*operations, resource.Operation{Resource: googledb, Operation: resource.OperationCreateIfNotExists})
+
+				for _, user := range sqlUsers {
+					vars := make(map[string]string)
+
+					googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
+
+					password, err := util.GeneratePassword()
+					if err != nil {
+						return err
+					}
+
+					env := googleSqlUser.CreateUserEnvVars(password)
+					vars = MapEnvToVars(env, vars)
+
+					secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
+					if err != nil {
+						return fmt.Errorf("unable to assign sql password: %s", err)
+					}
+
+					sqlUser, err := googleSqlUser.Create(app, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+					if err != nil {
+						return fmt.Errorf("unable to create sql user: %s", err)
+					}
+					*operations = append(*operations, resource.Operation{Resource: sqlUser, Operation: resource.OperationCreateIfNotExists})
+
+					scrt := secret.OpaqueSecret(app, GoogleSQLSecretName(app, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
+					*operations = append(*operations, resource.Operation{Resource: scrt, Operation: resource.OperationCreateIfNotExists})
+				}
+			}
+
+			// FIXME: take into account when refactoring default values
+			app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
+
+			podSpec := &deployment.Spec.Template.Spec
+			podSpec = AppendGoogleSQLUserSecretEnvs(podSpec, app)
+			for _, instance := range app.Spec.GCP.SqlInstances {
+				podSpec.Containers = append(podSpec.Containers, google.CloudSqlProxyContainer(instance, 5432, resourceOptions.GoogleTeamProjectId))
+			}
+			deployment.Spec.Template.Spec = *podSpec
+		}
+	}
+	return nil
+}
+

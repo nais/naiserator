@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
@@ -13,7 +14,7 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
+func CreateBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Name = fmt.Sprintf("%s", bucket.Name)
 	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
@@ -51,7 +52,7 @@ func GoogleStorageBucket(app *nais.Application, bucket nais.CloudStorageBucket) 
 	}
 }
 
-func StorageBucketIamPolicyMember(app *nais.Application, bucket *google_storage_crd.StorageBucket, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+func iAMPolicyMember(app *nais.Application, bucket *google_storage_crd.StorageBucket, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
 	policyMemberName := fmt.Sprintf("%s-object-viewer", bucket.Name)
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: (*app).CreateObjectMetaWithName(policyMemberName),
@@ -73,4 +74,19 @@ func StorageBucketIamPolicyMember(app *nais.Application, bucket *google_storage_
 	util.SetAnnotation(policy, google.ProjectIdAnnotation, googleTeamProjectId)
 
 	return policy
+}
+
+func Create(app *nais.Application, resourceOptions resource.Options, operations *resource.Operations, googleServiceAccount google_iam_crd.IAMServiceAccount) {
+	if app.Spec.GCP.Buckets != nil {
+		for _, b := range app.Spec.GCP.Buckets {
+			bucket := CreateBucket(app, b)
+			*operations = append(*operations, resource.Operation{Resource: bucket, Operation: resource.OperationCreateIfNotExists})
+
+			bucketAccessControl := AccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+			*operations = append(*operations, resource.Operation{Resource: bucketAccessControl, Operation: resource.OperationCreateOrUpdate})
+
+			iamPolicyMember := iAMPolicyMember(app, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+			*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
+		}
+	}
 }
