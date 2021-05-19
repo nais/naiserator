@@ -8,7 +8,9 @@ import (
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/util"
+	"k8s.io/api/core/v1"
 	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -210,3 +212,16 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 	}
 	return vars
 }
+
+func AppendGoogleSQLUserSecretEnvs(podSpec *v1.PodSpec, app *nais.Application) *v1.PodSpec {
+	for _, instance := range app.Spec.GCP.SqlInstances {
+		for _, db := range instance.Databases {
+			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+			for _, user := range googleSQLUsers {
+				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, pod.EnvFromSecret(GoogleSQLSecretName(app, instance.Name, user.Name)))
+			}
+		}
+	}
+	return podSpec
+}
+

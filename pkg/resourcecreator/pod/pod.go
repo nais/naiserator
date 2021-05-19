@@ -1,46 +1,33 @@
 package pod
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
-	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
-	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
-	cloudSQLProxyTermTimeout = "30s"
-	naisAppNameEnv           = "NAIS_APP_NAME"
-	naisNamespaceEnv         = "NAIS_NAMESPACE"
-	naisAppImageEnv          = "NAIS_APP_IMAGE"
-	naisClusterNameEnv       = "NAIS_CLUSTER_NAME"
-	naisClientId             = "NAIS_CLIENT_ID"
+	naisAppNameEnv     = "NAIS_APP_NAME"
+	naisNamespaceEnv   = "NAIS_NAMESPACE"
+	naisAppImageEnv    = "NAIS_APP_IMAGE"
+	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
+	naisClientId       = "NAIS_CLIENT_ID"
 )
 
-func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (*corev1.PodSpec, error) {
+func Spec(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (*corev1.PodSpec, error) {
 	var err error
 
 	podSpec := podSpecBase(app)
-
-	if app.Spec.GCP != nil && app.Spec.GCP.SqlInstances != nil {
-		podSpec = appendGoogleSQLUserSecretEnvs(podSpec, app)
-		for _, instance := range app.Spec.GCP.SqlInstances {
-			podSpec.Containers = append(podSpec.Containers, cloudSqlProxyContainer(instance, 5432, resourceOptions.GoogleTeamProjectId))
-		}
-	}
 
 	if len(resourceOptions.HostAliases) > 0 {
 		podSpec.HostAliases = hostAliases(resourceOptions)
@@ -53,13 +40,6 @@ func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (
 	podSpec = filesFrom(app, podSpec, resourceOptions.NativeSecrets)
 
 	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
-
-	if vault.Enabled() && app.Spec.Vault.Enabled {
-		podSpec, err = vaultSidecar(app, podSpec)
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	if app.Spec.WebProxy && len(resourceOptions.GoogleProjectId) == 0 {
 		podSpec, err = proxyopts.ProxyOpts(podSpec)
@@ -75,18 +55,6 @@ func Spec(resourceOptions resource.Options, app *nais_io_v1alpha1.Application) (
 	return podSpec, err
 }
 
-func appendGoogleSQLUserSecretEnvs(podSpec *corev1.PodSpec, app *nais_io_v1alpha1.Application) *corev1.PodSpec {
-	for _, instance := range app.Spec.GCP.SqlInstances {
-		for _, db := range instance.Databases {
-			googleSQLUsers := google_sql.MergeAndFilterSQLUsers(db.Users, instance.Name)
-			for _, user := range googleSQLUsers {
-				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, envFromSecret(google_sql.GoogleSQLSecretName(app, instance.Name, user.Name)))
-			}
-		}
-	}
-	return podSpec
-}
-
 func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
 	var hostAliases []corev1.HostAlias
 
@@ -96,47 +64,12 @@ func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
 	return hostAliases
 }
 
-func cloudSqlProxyContainer(sqlInstance nais_io_v1alpha1.CloudSqlInstance, port int32, projectId string) corev1.Container {
-	connectionName := fmt.Sprintf("%s:%s:%s", projectId, google.Region, sqlInstance.Name)
-	var runAsUser int64 = 2
-	allowPrivilegeEscalation := false
-	cloudSqlProxyContainerResourceSpec := nais_io_v1alpha1.ResourceRequirements{
-		Limits: &nais_io_v1alpha1.ResourceSpec{
-			Cpu:    "250m",
-			Memory: "256Mi",
-		},
-		Requests: &nais_io_v1alpha1.ResourceSpec{
-			Cpu:    "20m",
-			Memory: "32Mi",
-		},
-	}
-	return corev1.Container{
-		Name:            "cloudsql-proxy",
-		Image:           viper.GetString(config.GoogleCloudSQLProxyContainerImage),
-		ImagePullPolicy: corev1.PullIfNotPresent,
-		Ports: []corev1.ContainerPort{{
-			ContainerPort: port,
-			Protocol:      corev1.ProtocolTCP,
-		}},
-		Command: []string{
-			"/cloud_sql_proxy",
-			fmt.Sprintf("-term_timeout=%s", cloudSQLProxyTermTimeout),
-			fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
-		},
-		Resources: resourceLimits(cloudSqlProxyContainerResourceSpec),
-		SecurityContext: &corev1.SecurityContext{
-			RunAsUser:                &runAsUser,
-			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-		},
-	}
-}
-
 func envFrom(app *nais_io_v1alpha1.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
 	for _, env := range app.Spec.EnvFrom {
 		if len(env.ConfigMap) > 0 {
 			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvConfigmap(env.ConfigMap))
 		} else if nativeSecrets && len(env.Secret) > 0 {
-			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, envFromSecret(env.Secret))
+			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, EnvFromSecret(env.Secret))
 		}
 	}
 
@@ -146,16 +79,6 @@ func envFrom(app *nais_io_v1alpha1.Application, spec *corev1.PodSpec, nativeSecr
 func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	return corev1.EnvFromSource{
 		ConfigMapRef: &corev1.ConfigMapEnvSource{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: name,
-			},
-		},
-	}
-}
-
-func envFromSecret(name string) corev1.EnvFromSource {
-	return corev1.EnvFromSource{
-		SecretRef: &corev1.SecretEnvSource{
 			LocalObjectReference: corev1.LocalObjectReference{
 				Name: name,
 			},
@@ -213,7 +136,7 @@ func appContainer(app *nais_io_v1alpha1.Application) corev1.Container {
 		Ports: []corev1.ContainerPort{
 			{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
 		},
-		Resources:       resourceLimits(*app.Spec.Resources),
+		Resources:       ResourceLimits(*app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
 		Env:             envVars(app),
@@ -250,14 +173,6 @@ func secureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	spec.Containers[0] = *mainContainer
 
 	return spec
-}
-
-func vaultSidecar(app *nais_io_v1alpha1.Application, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
-	creator, err := vault.NewVaultContainerCreator(*app)
-	if err != nil {
-		return nil, fmt.Errorf("while creating Vault container: %s", err)
-	}
-	return creator.AddVaultContainer(podSpec)
 }
 
 func defaultEnvVars(app *nais_io_v1alpha1.Application) []corev1.EnvVar {
@@ -323,19 +238,6 @@ func ObjectMeta(app *nais_io_v1alpha1.Application) metav1.ObjectMeta {
 	}
 
 	return objectMeta
-}
-
-func resourceLimits(reqs nais_io_v1alpha1.ResourceRequirements) corev1.ResourceRequirements {
-	return corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    k8sResource.MustParse(reqs.Requests.Cpu),
-			corev1.ResourceMemory: k8sResource.MustParse(reqs.Requests.Memory),
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    k8sResource.MustParse(reqs.Limits.Cpu),
-			corev1.ResourceMemory: k8sResource.MustParse(reqs.Limits.Memory),
-		},
-	}
 }
 
 func lifeCycle(path string) *corev1.Lifecycle {

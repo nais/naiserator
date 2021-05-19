@@ -120,6 +120,8 @@ func run() error {
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
+	resourceOptions.VaultEnabled = cfg.Features.Vault
+	resourceOptions.Vault = cfg.Vault
 
 	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
