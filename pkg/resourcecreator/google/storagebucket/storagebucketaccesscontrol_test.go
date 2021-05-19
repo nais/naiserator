@@ -15,7 +15,7 @@ func TestGoogleStorageBucketAccessControl(t *testing.T) {
 		projectId := "project-1234"
 		serviceAccountName := "app-namespace-54203aa"
 		app := fixtures.MinimalApplication()
-		bac := storagebucket.GoogleStorageBucketAccessControl(app, bucketname, projectId, serviceAccountName)
+		bac := storagebucket.AccessControl(app, bucketname, projectId, serviceAccountName)
 
 		assert.Equal(t, bac.Spec.BucketRef.Name, bucketname)
 		assert.Equal(t, bac.Spec.Entity, fmt.Sprintf("user-%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId))

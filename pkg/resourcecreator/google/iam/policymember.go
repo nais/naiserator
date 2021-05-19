@@ -9,14 +9,15 @@ import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
-	name, err := createIAMPolicyMemberName(app, policy)
-	externalName := formatIAMExternalName(googleTeamProjectId, policy.Resource.Name)
+func policyMember(app *nais.Application, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
+	name, err := createName(app, policy)
+	externalName := formatExternalName(googleTeamProjectId, policy.Resource.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func GoogleIAMPolicyMember(app *nais.Application, policy nais.CloudIAMPermission
 	return policyMember, nil
 }
 
-func createIAMPolicyMemberName(app *nais.Application, policy nais.CloudIAMPermission) (string, error) {
+func createName(app *nais.Application, policy nais.CloudIAMPermission) (string, error) {
 	hash, err := hashstructure.Hash(policy, nil)
 	if err != nil {
 		return "", fmt.Errorf("while calculating hash from policy: %w", err)
@@ -51,9 +52,23 @@ func createIAMPolicyMemberName(app *nais.Application, policy nais.CloudIAMPermis
 	return namegen.ShortName(basename, validation.DNS1035LabelMaxLength)
 }
 
-func formatIAMExternalName(googleTeamProjectId, resourceName string) string {
+func formatExternalName(googleTeamProjectId, resourceName string) string {
 	if len(resourceName) == 0 {
 		return fmt.Sprintf("projects/%s", googleTeamProjectId)
 	}
 	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
 }
+
+func Create(app *nais.Application, resourceOptions resource.Options, operations *resource.Operations) error {
+	if app.Spec.GCP.Permissions != nil {
+		for _, p := range app.Spec.GCP.Permissions {
+			policy, err := policyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+			if err != nil {
+				return fmt.Errorf("unable to create iampolicymember: %w", err)
+			}
+			*operations = append(*operations, resource.Operation{Resource: policy, Operation: resource.OperationCreateIfNotExists})
+		}
+	}
+	return nil
+}
+

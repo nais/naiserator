@@ -8,7 +8,7 @@ import (
 	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleIAMServiceAccount(app *nais.Application, projectId string) google_iam_crd.IAMServiceAccount {
+func ServiceAccount(app *nais.Application, projectId string) google_iam_crd.IAMServiceAccount {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Annotations["nais.io/team"] = app.Namespace
 	objectMeta.Namespace = google.IAMServiceAccountNamespace
