@@ -217,6 +217,9 @@ tests:
                   envFrom:
                     - secretRef:
                         name: google-sql-myapplication
+                  env:
+                    - name: GCP_TEAM_PROJECT_ID
+                      value: team-project-id
                 - name: cloudsql-proxy
                   command:
                   - /cloud_sql_proxy

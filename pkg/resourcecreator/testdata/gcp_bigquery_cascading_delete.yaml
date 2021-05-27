@@ -1,0 +1,87 @@
+config:
+  description: Google BigQuery dataset instance
+
+resourceoptions:
+  AccessPolicy: false
+  GoogleProjectID: google-project-id
+  GoogleTeamProjectID: team-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    gcp:
+      bigQueryDatasets:
+      - name: my_Big_Query_Instance
+        description: tralalalala
+        cascadingDelete: true
+        permission: READ
+
+tests:
+  - match:
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
+
+  - apiVersion: bigquery.cnrm.cloud.google.com/v1beta1
+    kind: BigQueryDataset
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "BigQuery Dataset instance created in team namespace"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/delete-contents-on-destroy: "true"
+            name: myapplication
+            namespace: mynamespace
+          spec:
+            access:
+              - role: READER
+                userByEmail: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+            resourceID: my_big_query_instance
+            description: tralalalala
+            location: europe-north1
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    operation: CreateOrUpdate
+    name: myapplication
+    match:
+      - type: subset
+        name: "deployment created"
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - image: navikt/myapplication:1.2.3
+                    env:
+                      - name: GCP_TEAM_PROJECT_ID
+                        value: team-project-id
+                dnsPolicy: ClusterFirst
+                imagePullSecrets:
+                  - name: gpr-credentials
+                restartPolicy: Always
+                serviceAccountName: myapplication

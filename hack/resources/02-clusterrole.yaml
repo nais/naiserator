@@ -38,6 +38,7 @@ rules:
       - 'storagebucketaccesscontrols'
       - 'storagebuckets'
       - 'poddisruptionbudgets'
+      - 'bigquerydatasets'
     verbs:
       - 'get'
       - 'create'
