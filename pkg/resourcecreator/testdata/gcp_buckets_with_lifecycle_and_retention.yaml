@@ -156,6 +156,9 @@ tests:
               spec:
                 containers:
                 - image: navikt/myapplication:1.2.3
+                  env:
+                    - name: GCP_TEAM_PROJECT_ID
+                      value: team-project-id
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
                 - name: gpr-credentials
