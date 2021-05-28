@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"modernc.org/cc/v2"
 )
 
 const (
@@ -108,6 +109,38 @@ func podSpecBase(objectMeta metav1.ObjectMeta, options resource.Options, image, 
 	}
 }
 
+func CreateAppContainer(ast *resource.Ast, options resource.Options, app *nais_io_v1alpha1.Application) {
+	ast.Envs = append(ast.Envs, app.Spec.EnvVar.ToKubernetes())
+	defaultEnvVars(app, ast, options.ClusterName, app.Spec.Image)
+	container := corev1.Container{
+		Name:  app.Name,
+		Image: app.Spec.Image,
+		Ports: []corev1.ContainerPort{
+			{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
+		},
+		Resources:       ResourceLimits(*app.Spec.Resources),
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
+		Env:             ast.Envs,
+		VolumeMounts:    ast.VolumeMounts,
+	}
+
+	if app.Spec.Liveness != nil && len(app.Spec.Liveness.Path) > 0 {
+		container.LivenessProbe = probe(app.Spec.Port, *app.Spec.Liveness)
+	}
+
+	if app.Spec.Readiness != nil && len(app.Spec.Readiness.Path) > 0 {
+		container.ReadinessProbe = probe(app.Spec.Port, *app.Spec.Readiness)
+	}
+
+	if app.Spec.Startup != nil && len(app.Spec.Startup.Path) > 0 {
+		container.StartupProbe = probe(app.Spec.Port, *app.Spec.Startup)
+	}
+
+	ast.Containers = append(ast.Containers, container)
+
+}
+
 func appContainer(objectMeta metav1.ObjectMeta, options resource.Options, appImage, preStopHookPath string, appPort int, naisResources nais_io_v1alpha1.ResourceRequirements, livenessProbe, readinessProbe, startupProbe *nais_io_v1alpha1.Probe, naisEnvVars []nais_io_v1alpha1.EnvVar) corev1.Container {
 	c := corev1.Container{
 		Name:  objectMeta.Name,
@@ -136,34 +169,14 @@ func appContainer(objectMeta metav1.ObjectMeta, options resource.Options, appIma
 	return c
 }
 
-func defaultEnvVars(objectMeta metav1.ObjectMeta, options resource.Options, appImage string) []corev1.EnvVar {
-	return []corev1.EnvVar{
-		{Name: naisAppNameEnv, Value: objectMeta.Name},
-		{Name: naisNamespaceEnv, Value: objectMeta.Namespace},
+func defaultEnvVars(source resource.Source, ast *resource.Ast, clusterName, appImage string) {
+	ast.Envs = append(ast.Envs, []corev1.EnvVar{
+		{Name: naisAppNameEnv, Value: source.GetName()},
+		{Name: naisNamespaceEnv, Value: source.GetNamespace()},
 		{Name: naisAppImageEnv, Value: appImage},
-		{Name: naisClusterNameEnv, Value: options.ClusterName},
-		{Name: naisClientId, Value: AppClientID(objectMeta, options.ClusterName)},
-	}
-}
-
-// Maps environment variables from ApplicationSpec to the ones we use in CreateSpec
-func envVars(objectMeta metav1.ObjectMeta, options resource.Options, appImage string, naisEnvVars []nais_io_v1alpha1.EnvVar) []corev1.EnvVar {
-	newEnvVars := defaultEnvVars(objectMeta, options, appImage)
-
-	for _, envVar := range naisEnvVars {
-		if envVar.ValueFrom != nil && envVar.ValueFrom.FieldRef.FieldPath != "" {
-			newEnvVars = append(newEnvVars, corev1.EnvVar{
-				Name: envVar.Name,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{FieldPath: envVar.ValueFrom.FieldRef.FieldPath},
-				},
-			})
-		} else {
-			newEnvVars = append(newEnvVars, corev1.EnvVar{Name: envVar.Name, Value: envVar.Value})
-		}
-	}
-
-	return newEnvVars
+		{Name: naisClusterNameEnv, Value: clusterName},
+		{Name: naisClientId, Value: AppClientID(source, clusterName)},
+	}...)
 }
 
 func ObjectMeta(objectMeta metav1.ObjectMeta, appPort int, prometheusConfig *nais_io_v1alpha1.PrometheusConfig, logFormat, logTransform string) metav1.ObjectMeta {

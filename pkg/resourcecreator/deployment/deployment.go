@@ -76,9 +76,11 @@ func deploymentSpec(objectMeta metav1.ObjectMeta, resourceOptions resource.Optio
 		ProgressDeadlineSeconds: util.Int32p(300),
 		RevisionHistoryLimit:    util.Int32p(10),
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: pod.ObjectMeta(objectMeta, appPort, prometheusConfig, logFormat, logTransform),
-			Spec:       *podSpec,
+			ObjectMeta: pod.CreateObjectMeta(ast),//pod.ObjectMeta(objectMeta, appPort, prometheusConfig, logFormat, logTransform),
+			Spec:       pod.CreateAppPodSpec(ast, app),
 		},
 	}, nil
 }
 
+func jobSpec(ast, job)
+   	Spec: pod.CreateJobPodSpec(ast, job)

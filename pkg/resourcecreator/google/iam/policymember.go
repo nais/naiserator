@@ -60,16 +60,18 @@ func formatExternalName(googleTeamProjectId, resourceName string) string {
 	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
 }
 
-func CreatePolicyMember(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, operations *resource.Operations,  appNamespaceHash string, naisGcpPermission []nais.CloudIAMPermission) error {
-	if naisGcpPermission != nil {
-		for _, p := range naisGcpPermission {
-			policyMember, err := policyMember(*objectMeta.DeepCopy(), p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
-			if err != nil {
-				return fmt.Errorf("unable to create iampolicymember: %w", err)
-			}
-			*operations = append(*operations, resource.Operation{Resource: policyMember, Operation: resource.OperationCreateIfNotExists})
-		}
+func CreatePolicyMember(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, operations *resource.Operations, appNamespaceHash string, naisGcpPermission []nais.CloudIAMPermission) error {
+	if naisGcpPermission == nil {
+		return nil
 	}
+
+	for _, p := range naisGcpPermission {
+		policyMember, err := policyMember(*objectMeta.DeepCopy(), p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
+		if err != nil {
+			return fmt.Errorf("unable to create iampolicymember: %w", err)
+		}
+		*operations = append(*operations, resource.Operation{Resource: policyMember, Operation: resource.OperationCreateIfNotExists})
+	}
+
 	return nil
 }
-

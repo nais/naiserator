@@ -77,16 +77,18 @@ func iAMPolicyMember(objectMeta metav1.ObjectMeta, bucket *google_storage_crd.St
 }
 
 func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, operations *resource.Operations, googleServiceAccount google_iam_crd.IAMServiceAccount, appNamespaceHash string, naisBucket []nais.CloudStorageBucket) {
-	if naisBucket != nil {
-		for _, b := range naisBucket {
-			bucket := CreateBucket(*objectMeta.DeepCopy(), b)
-			*operations = append(*operations, resource.Operation{Resource: bucket, Operation: resource.OperationCreateIfNotExists})
+	if naisBucket == nil {
+		return
+	}
 
-			bucketAccessControl := AccessControl(*objectMeta.DeepCopy(), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
-			*operations = append(*operations, resource.Operation{Resource: bucketAccessControl, Operation: resource.OperationCreateOrUpdate})
+	for _, b := range naisBucket {
+		bucket := CreateBucket(*objectMeta.DeepCopy(), b)
+		*operations = append(*operations, resource.Operation{Resource: bucket, Operation: resource.OperationCreateIfNotExists})
 
-			iamPolicyMember := iAMPolicyMember(*objectMeta.DeepCopy(), bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
-			*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
-		}
+		bucketAccessControl := AccessControl(*objectMeta.DeepCopy(), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+		*operations = append(*operations, resource.Operation{Resource: bucketAccessControl, Operation: resource.OperationCreateOrUpdate})
+
+		iamPolicyMember := iAMPolicyMember(*objectMeta.DeepCopy(), bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
+		*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
 	}
 }

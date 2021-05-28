@@ -22,6 +22,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -41,50 +42,52 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 
 	objectMeta := app.CreateObjectMeta()
 	appNamespaceHash := app.CreateAppNamespaceHash()
+	ast := resource.NewAst(app)
 	ops := resource.Operations{}
 	service.Create(objectMeta, &ops, *app.Spec.Service)
 	serviceaccount.Create(objectMeta, resourceOptions, &ops, appNamespaceHash)
 	horizontalpodautoscaler.Create(objectMeta, &ops, *app.Spec.Replicas)
-	dplt, err := deployment.Create(objectMeta, resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+	leaderelection.Create(ast, app.Spec.LeaderElection)
+	pod.CreateAppContainer(ast, app)
+	deploy, err := deployment.Create(objectMeta, resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
 		app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
 		app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	err = azure.Create(objectMeta, resourceOptions, dplt, &ops, *app.Spec.Azure, app.Spec.Ingresses, *app.Spec.AccessPolicy)
+	err = azure.Create(objectMeta, resourceOptions, deploy, &ops, *app.Spec.Azure, app.Spec.Ingresses, *app.Spec.AccessPolicy)
 	if err != nil {
 		return nil, err
 	}
-	err = idporten.Create(objectMeta, resourceOptions, dplt, &ops, app.Spec.IDPorten, app.Spec.Ingresses)
+	err = idporten.Create(objectMeta, resourceOptions, deploy, &ops, app.Spec.IDPorten, app.Spec.Ingresses)
 	if err != nil {
 		return nil, err
 	}
-	err = kafka.Create(objectMeta, resourceOptions, dplt, app.Spec.Kafka)
+	err = kafka.Create(objectMeta, resourceOptions, deploy, app.Spec.Kafka)
 	if err != nil {
 		return nil, err
 	}
-	err = gcp.Create(objectMeta, resourceOptions, dplt, &ops, appNamespaceHash, app.Spec.GCP)
+	err = gcp.Create(objectMeta, resourceOptions, deploy, &ops, appNamespaceHash, app.Spec.GCP)
 	if err != nil {
 		return nil, err
 	}
-	err = proxyopts.Create(resourceOptions, dplt, app.Spec.WebProxy)
+	err = proxyopts.Create(resourceOptions, deploy, app.Spec.WebProxy)
 	if err != nil {
 		return nil, err
 	}
-	certificateauthority.Create(dplt, app.Spec.SkipCaBundle)
-	securelogs.Create(resourceOptions, dplt, app.Spec.SecureLogs)
-	maskinporten.Create(objectMeta, resourceOptions, dplt, &ops, app.Spec.Maskinporten)
+	certificateauthority.Create(deploy, app.Spec.SkipCaBundle)
+	securelogs.Create(resourceOptions, deploy, app.Spec.SecureLogs)
+	maskinporten.Create(objectMeta, resourceOptions, deploy, &ops, app.Spec.Maskinporten)
 	poddisruptionbudget.Create(objectMeta, &ops, *app.Spec.Replicas)
-	jwker.Create(objectMeta, resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
-	leaderelection.Create(objectMeta, dplt, &ops, app.Spec.LeaderElection)
-	aiven.Elastic(dplt, app.Spec.Elastic)
-	linkerd.Create(resourceOptions, dplt)
+	jwker.Create(objectMeta, resourceOptions, deploy, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
+	aiven.Elastic(deploy, app.Spec.Elastic)
+	linkerd.Create(resourceOptions, deploy)
 	networkpolicy.Create(objectMeta, resourceOptions, &ops, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
 	err = ingress.Create(objectMeta, resourceOptions, &ops, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	if err != nil {
 		return nil, fmt.Errorf("while creating ingress: %s", err)
 	}
-	vault.Create(objectMeta, resourceOptions, dplt, app.Spec.Vault)
+	vault.Create(objectMeta, resourceOptions, deploy, app.Spec.Vault)
 
 	return ops, nil
 }

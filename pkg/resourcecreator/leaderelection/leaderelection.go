@@ -4,21 +4,21 @@ import (
 	"fmt"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(objectMeta metav1.ObjectMeta, deployment *appsv1.Deployment, operations *resource.Operations, leaderElection bool) {
+func Create(source resource.Source, ast *resource.Ast, leaderElection bool) {
 	if !leaderElection {
 		return
 	}
 
-	*operations = append(*operations, resource.Operation{Resource: role(objectMeta), Operation: resource.OperationCreateOrUpdate})
-	*operations = append(*operations, resource.Operation{Resource: roleBinding(objectMeta), Operation: resource.OperationCreateOrRecreate})
-	podSpec(objectMeta, &deployment.Spec.Template.Spec)
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: role(source.CreateObjectMeta()), Operation: resource.OperationCreateOrUpdate})
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: roleBinding(source.CreateObjectMeta()), Operation: resource.OperationCreateOrRecreate})
+	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace()))
+	ast.Envs = append(ast.Envs, electorPathEnv())
 }
 
 func roleBinding(objectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
@@ -70,20 +70,14 @@ func role(objectMeta metav1.ObjectMeta) *rbacv1.Role {
 	}
 }
 
-func podSpec(objectMeta metav1.ObjectMeta, spec *corev1.PodSpec) {
-	spec.Containers = append(spec.Containers, leaderElectionContainer(objectMeta.Name, objectMeta.Namespace))
-	mainContainer := spec.Containers[0].DeepCopy()
-
-	electorPathEnv := corev1.EnvVar{
+func electorPathEnv() corev1.EnvVar {
+	return corev1.EnvVar{
 		Name:  "ELECTOR_PATH",
 		Value: "localhost:4040",
 	}
-
-	mainContainer.Env = append(mainContainer.Env, electorPathEnv)
-	spec.Containers[0] = *mainContainer
 }
 
-func leaderElectionContainer(name, namespace string) corev1.Container {
+func container(name, namespace string) corev1.Container {
 	return corev1.Container{
 		Name:            "elector",
 		Image:           "gcr.io/google_containers/leader-elector:0.5",

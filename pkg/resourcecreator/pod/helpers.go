@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	resource "github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 )
 
 func FromFilesSecretVolume(volumeName, secretName string, items []corev1.KeyToPath) corev1.Volume {
@@ -58,16 +58,16 @@ func EnvFromSecret(name string) corev1.EnvFromSource {
 func ResourceLimits(reqs nais_io_v1alpha1.ResourceRequirements) corev1.ResourceRequirements {
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse(reqs.Requests.Cpu),
-			corev1.ResourceMemory: resource.MustParse(reqs.Requests.Memory),
+			corev1.ResourceCPU:    k8sResource.MustParse(reqs.Requests.Cpu),
+			corev1.ResourceMemory: k8sResource.MustParse(reqs.Requests.Memory),
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse(reqs.Limits.Cpu),
-			corev1.ResourceMemory: resource.MustParse(reqs.Limits.Memory),
+			corev1.ResourceCPU:    k8sResource.MustParse(reqs.Limits.Cpu),
+			corev1.ResourceMemory: k8sResource.MustParse(reqs.Limits.Memory),
 		},
 	}
 }
 
-func AppClientID(objectMeta metav1.ObjectMeta, cluster string) string {
-	return fmt.Sprintf("%s:%s:%s", cluster, objectMeta.Namespace, objectMeta.Name)
+func AppClientID(source resource.Source, cluster string) string {
+	return fmt.Sprintf("%s:%s:%s", cluster, source.GetNamespace(), source.GetName())
 }

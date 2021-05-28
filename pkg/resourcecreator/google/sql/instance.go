@@ -131,70 +131,72 @@ func instanceIamPolicyMember(objectMeta metav1.ObjectMeta, resourceName string, 
 }
 
 func CreateInstance(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, deployment *v1.Deployment, operations *resource.Operations, naisSqlInstances *[]nais.CloudSqlInstance, appNamespaceHash string) error {
-	if naisSqlInstances != nil {
-		for i, sqlInstance := range *naisSqlInstances {
-			if i > 0 {
-				return fmt.Errorf("only one sql instance is supported")
-			}
-
-			// TODO: name defaulting will break with more than one instance
-			sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, objectMeta.Name)
-			if err != nil {
-				return err
-			}
-
-			instance := GoogleSqlInstance(*objectMeta.DeepCopy(), sqlInstance, resourceOptions.GoogleTeamProjectId)
-			*operations = append(*operations, resource.Operation{Resource: instance, Operation: resource.OperationCreateOrUpdate})
-
-			iamPolicyMember := instanceIamPolicyMember(*objectMeta.DeepCopy(), sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
-			*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
-
-			for _, db := range sqlInstance.Databases {
-				sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
-
-				googledb := GoogleSQLDatabase(*objectMeta.DeepCopy(), db, sqlInstance, resourceOptions.GoogleTeamProjectId)
-				*operations = append(*operations, resource.Operation{Resource: googledb, Operation: resource.OperationCreateIfNotExists})
-
-				for _, user := range sqlUsers {
-					vars := make(map[string]string)
-
-					googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
-
-					password, err := util.GeneratePassword()
-					if err != nil {
-						return err
-					}
-
-					env := googleSqlUser.CreateUserEnvVars(password)
-					vars = MapEnvToVars(env, vars)
-
-					secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
-					if err != nil {
-						return fmt.Errorf("unable to assign sql password: %s", err)
-					}
-
-					sqlUser, err := googleSqlUser.Create(*objectMeta.DeepCopy(), secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
-					if err != nil {
-						return fmt.Errorf("unable to create sql user: %s", err)
-					}
-					*operations = append(*operations, resource.Operation{Resource: sqlUser, Operation: resource.OperationCreateIfNotExists})
-
-					scrt := secret.OpaqueSecret(*objectMeta.DeepCopy(), GoogleSQLSecretName(objectMeta.Name, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
-					*operations = append(*operations, resource.Operation{Resource: scrt, Operation: resource.OperationCreateIfNotExists})
-				}
-			}
-
-			// FIXME: take into account when refactoring default values
-			(*naisSqlInstances)[i].Name = sqlInstance.Name
-
-			podSpec := &deployment.Spec.Template.Spec
-			podSpec = AppendGoogleSQLUserSecretEnvs(naisSqlInstances, podSpec, objectMeta.Name)
-			for _, instance := range *naisSqlInstances {
-				podSpec.Containers = append(podSpec.Containers, google.CloudSqlProxyContainer( 5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name,))
-			}
-			deployment.Spec.Template.Spec = *podSpec
-		}
+	if naisSqlInstances == nil {
+		return nil
 	}
+
+	for i, sqlInstance := range *naisSqlInstances {
+		if i > 0 {
+			return fmt.Errorf("only one sql instance is supported")
+		}
+
+		// TODO: name defaulting will break with more than one instance
+		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, objectMeta.Name)
+		if err != nil {
+			return err
+		}
+
+		instance := GoogleSqlInstance(*objectMeta.DeepCopy(), sqlInstance, resourceOptions.GoogleTeamProjectId)
+		*operations = append(*operations, resource.Operation{Resource: instance, Operation: resource.OperationCreateOrUpdate})
+
+		iamPolicyMember := instanceIamPolicyMember(*objectMeta.DeepCopy(), sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
+		*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
+
+		for _, db := range sqlInstance.Databases {
+			sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+
+			googledb := GoogleSQLDatabase(*objectMeta.DeepCopy(), db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+			*operations = append(*operations, resource.Operation{Resource: googledb, Operation: resource.OperationCreateIfNotExists})
+
+			for _, user := range sqlUsers {
+				vars := make(map[string]string)
+
+				googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
+
+				password, err := util.GeneratePassword()
+				if err != nil {
+					return err
+				}
+
+				env := googleSqlUser.CreateUserEnvVars(password)
+				vars = MapEnvToVars(env, vars)
+
+				secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
+				if err != nil {
+					return fmt.Errorf("unable to assign sql password: %s", err)
+				}
+
+				sqlUser, err := googleSqlUser.Create(*objectMeta.DeepCopy(), secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+				if err != nil {
+					return fmt.Errorf("unable to create sql user: %s", err)
+				}
+				*operations = append(*operations, resource.Operation{Resource: sqlUser, Operation: resource.OperationCreateIfNotExists})
+
+				scrt := secret.OpaqueSecret(*objectMeta.DeepCopy(), GoogleSQLSecretName(objectMeta.Name, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
+				*operations = append(*operations, resource.Operation{Resource: scrt, Operation: resource.OperationCreateIfNotExists})
+			}
+		}
+
+		// FIXME: take into account when refactoring default values
+		(*naisSqlInstances)[i].Name = sqlInstance.Name
+
+		podSpec := &deployment.Spec.Template.Spec
+		podSpec = AppendGoogleSQLUserSecretEnvs(naisSqlInstances, podSpec, objectMeta.Name)
+		for _, instance := range *naisSqlInstances {
+			podSpec.Containers = append(podSpec.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))
+		}
+		deployment.Spec.Template.Spec = *podSpec
+	}
+
 	return nil
 }
-
