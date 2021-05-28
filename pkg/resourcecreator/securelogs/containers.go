@@ -1,21 +1,20 @@
 package securelogs
 
 import (
-	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/spf13/viper"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-func FluentdSidecar() corev1.Container {
+func FluentdSidecar(options resource.Options) corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-fluentd",
-		Image:           viper.GetString(config.SecurelogsFluentdImage),
+		Image:           options.Securelogs.FluentdImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("10m"),
-				corev1.ResourceMemory: resource.MustParse("200m"),
+				corev1.ResourceCPU:    k8sResource.MustParse("10m"),
+				corev1.ResourceMemory: k8sResource.MustParse("200m"),
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
@@ -72,10 +71,10 @@ func FluentdSidecar() corev1.Container {
 	}
 }
 
-func ConfigmapReloadSidecar() corev1.Container {
+func ConfigmapReloadSidecar(options resource.Options) corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-configmap-reload",
-		Image:           viper.GetString(config.SecurelogsConfigMapReloadImage),
+		Image:           options.Securelogs.ConfigMapReloadImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Args: []string{
 			"--volume-dir=/config",
@@ -84,8 +83,8 @@ func ConfigmapReloadSidecar() corev1.Container {
 		},
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("10m"),
-				corev1.ResourceMemory: resource.MustParse("50m"),
+				corev1.ResourceCPU:    k8sResource.MustParse("10m"),
+				corev1.ResourceMemory: k8sResource.MustParse("50m"),
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{

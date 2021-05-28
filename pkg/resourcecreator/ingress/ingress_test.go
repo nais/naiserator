@@ -22,7 +22,7 @@ func TestIngress(t *testing.T) {
 			err := nais.ApplyDefaults(app)
 			assert.NoError(t, err)
 
-			err = ingress.Create(app, options, &ops)
+			err = ingress.Create(app.CreateObjectMeta(), options, &ops, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 
 			assert.NotNil(t, err)
 			assert.Len(t, ops, 0)

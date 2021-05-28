@@ -31,7 +31,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
+		networkpolicy.Create(app.CreateObjectMeta(), resourceOptions, &ops, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
 		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 1)
@@ -111,7 +111,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
+		networkpolicy.Create(app.CreateObjectMeta(), resourceOptions, &ops, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
 		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
 
 		matchLabels := map[string]string{
@@ -128,7 +128,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
+		networkpolicy.Create(app.CreateObjectMeta(), resourceOptions, &ops, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
 		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 2)
@@ -141,7 +141,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
+		networkpolicy.Create(app.CreateObjectMeta(), resourceOptions, &ops, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
 		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
 		assert.NotNil(t, networkPolicy)
 

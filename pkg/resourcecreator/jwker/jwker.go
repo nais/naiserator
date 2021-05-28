@@ -12,12 +12,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func jwkerSecretName(app nais_io_v1alpha1.Application) string {
-	return namegen.PrefixedRandShortName("tokenx", app.Name, validation.DNS1035LabelMaxLength)
+func jwkerSecretName(name string) string {
+	return namegen.PrefixedRandShortName("tokenx", name, validation.DNS1035LabelMaxLength)
 }
 
-func Create(app *nais_io_v1alpha1.Application, options resource.Options, deployment *appsv1.Deployment, operations *resource.Operations) {
-	if !options.JwkerEnabled || !app.Spec.TokenX.Enabled {
+func Create(objectMeta metav1.ObjectMeta, options resource.Options, deployment *appsv1.Deployment, operations *resource.Operations, naisTokenX nais_io_v1alpha1.TokenX, naisAccessPolicy *nais_io_v1.AccessPolicy) {
+	if !options.JwkerEnabled || !naisTokenX.Enabled {
 		return
 	}
 
@@ -26,10 +26,10 @@ func Create(app *nais_io_v1alpha1.Application, options resource.Options, deploym
 			Kind:       "Jwker",
 			APIVersion: "nais.io/v1",
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		Spec: nais_io_v1.JwkerSpec{
-			AccessPolicy: accesspolicy.WithDefaults(app.Spec.AccessPolicy, app.Namespace, options.ClusterName),
-			SecretName:   jwkerSecretName(*app),
+			AccessPolicy: accesspolicy.WithDefaults(naisAccessPolicy, objectMeta.Namespace, options.ClusterName),
+			SecretName:   jwkerSecretName(objectMeta.Name),
 		},
 	}
 
@@ -37,7 +37,7 @@ func Create(app *nais_io_v1alpha1.Application, options resource.Options, deploym
 
 	podSpec := &deployment.Spec.Template.Spec
 	podSpec = pod.WithAdditionalSecret(podSpec, jwker.Spec.SecretName, nais_io_v1alpha1.DefaultJwkerMountPath)
-	if !app.Spec.TokenX.MountSecretsAsFilesOnly {
+	if !naisTokenX.MountSecretsAsFilesOnly {
 		podSpec = pod.WithAdditionalEnvFromSecret(podSpec, jwker.Spec.SecretName)
 	}
 

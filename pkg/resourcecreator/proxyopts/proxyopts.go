@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/proxyopts"
-	"github.com/spf13/viper"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func ProxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
+func proxyOpts(options resource.Options, podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 	var err error
 	for i := range podSpec.Containers {
-		podSpec.Containers[i].Env, err = EnvironmentVariables(podSpec.Containers[i].Env)
+		podSpec.Containers[i].Env, err = EnvironmentVariables(options, podSpec.Containers[i].Env)
 		if err != nil {
 			return nil, fmt.Errorf("while injecting proxy options into container: %s", err)
 		}
@@ -32,9 +32,9 @@ func ProxyOpts(podSpec *corev1.PodSpec) (*corev1.PodSpec, error) {
 // On top of everything, the Java virtual machine does not honor these environment variables.
 // Instead, JVM must be started with a specific set of command-line options. These are also
 // provided as environment variables, for convenience.
-func EnvironmentVariables(envVars []corev1.EnvVar) ([]corev1.EnvVar, error) {
-	excludedHosts := viper.GetStringSlice(config.ProxyExclude)
-	proxyURL := viper.GetString(config.ProxyAddress)
+func EnvironmentVariables(options resource.Options, envVars []corev1.EnvVar) ([]corev1.EnvVar, error) {
+	excludedHosts := options.Proxy.Exclude
+	proxyURL := options.Proxy.Address
 	noProxy := strings.Join(excludedHosts, ",")
 
 	// Set non-JVM environment variables
@@ -77,4 +77,17 @@ func appendDualCaseEnvVar(envVars []corev1.EnvVar, key, value string) []corev1.E
 	}
 
 	return envVars
+}
+
+func Create(resourceOptions resource.Options, deployment *appsv1.Deployment, webProxy bool) error {
+	if webProxy && len(resourceOptions.GoogleProjectId) == 0 {
+		podSpec := &deployment.Spec.Template.Spec
+		podSpec, err := proxyOpts(resourceOptions, podSpec)
+		if err != nil {
+			return err
+		}
+		deployment.Spec.Template.Spec = *podSpec
+	}
+
+	return nil
 }

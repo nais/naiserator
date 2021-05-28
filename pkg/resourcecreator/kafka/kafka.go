@@ -10,6 +10,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -55,8 +56,8 @@ func podSpecWithVolume(spec *corev1.PodSpec, volume corev1.Volume) *corev1.PodSp
 	return spec
 }
 
-func generateKafkaSecretName(app *nais_io_v1alpha1.Application) (string, error) {
-	secretName, err := namegen.ShortName(fmt.Sprintf("kafka-%s-%s", app.Name, app.Spec.Kafka.Pool), validation.DNS1035LabelMaxLength)
+func generateKafkaSecretName(name, pool string) (string, error) {
+	secretName, err := namegen.ShortName(fmt.Sprintf("kafka-%s-%s", name, pool), validation.DNS1035LabelMaxLength)
 
 	if err != nil {
 		return "", fmt.Errorf("unable to generate kafka secret name: %s", err)
@@ -128,9 +129,9 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, kafkaratorSecretName string) *cor
 	return podSpec
 }
 
-func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, deployment *appsv1.Deployment) error {
-	if resourceOptions.KafkaratorEnabled && app.Spec.Kafka != nil {
-		kafkaratorSecretName, err := generateKafkaSecretName(app)
+func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, deployment *appsv1.Deployment, naisKafka *nais_io_v1alpha1.Kafka) error {
+	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
+		kafkaratorSecretName, err := generateKafkaSecretName(objectMeta.Name, naisKafka.Pool)
 		if err != nil {
 			return err
 		}
@@ -138,6 +139,7 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options,
 		podSpec := &deployment.Spec.Template.Spec
 		podSpec = podSpecWithKafka(podSpec, kafkaratorSecretName)
 		deployment.Spec.Template.Spec = *podSpec
+		deployment.Spec.Template.ObjectMeta.Labels["kafka"] = "enabled"
 	}
 	return nil
 }

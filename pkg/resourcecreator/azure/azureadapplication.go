@@ -10,6 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/util"
@@ -21,14 +22,14 @@ const (
 	applicationDefaultCallbackPath = "/oauth2/callback"
 )
 
-func adApplication(app nais_io_v1alpha1.Application, clusterName string) (*azureapp.AzureAdApplication, error) {
-	replyURLs := app.Spec.Azure.Application.ReplyURLs
+func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy, clusterName string) (*azureapp.AzureAdApplication, error) {
+	replyURLs := naisAzure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
-		replyURLs = oauthCallbackURLs(app.Spec.Ingresses)
+		replyURLs = oauthCallbackURLs(naisIngress)
 	}
 
-	secretName, err := azureSecretName(app)
+	secretName, err := azureSecretName(objectMeta.Name)
 	if err != nil {
 		return &azureapp.AzureAdApplication{}, err
 	}
@@ -38,13 +39,13 @@ func adApplication(app nais_io_v1alpha1.Application, clusterName string) (*azure
 			Kind:       "AzureAdApplication",
 			APIVersion: "nais.io/v1",
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		Spec: azureapp.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
-			PreAuthorizedApplications: accesspolicy.RulesWithDefaults(app.Spec.AccessPolicy.Inbound.Rules, app.Namespace, clusterName),
-			Tenant:                    app.Spec.Azure.Application.Tenant,
+			PreAuthorizedApplications: accesspolicy.RulesWithDefaults(naisAccessPolicy.Inbound.Rules, objectMeta.Namespace, clusterName),
+			Tenant:                    naisAzure.Application.Tenant,
 			SecretName:                secretName,
-			Claims:                    app.Spec.Azure.Application.Claims,
+			Claims:                    naisAzure.Application.Claims,
 		},
 	}, nil
 }
@@ -65,8 +66,8 @@ func oauthCallbackURLs(ingresses []nais_io_v1alpha1.Ingress) []string {
 	return urls
 }
 
-func azureSecretName(app nais_io_v1alpha1.Application) (string, error) {
-	prefixedName := fmt.Sprintf("%s-%s", "azure", app.Name)
+func azureSecretName(name string) (string, error) {
+	prefixedName := fmt.Sprintf("%s-%s", "azure", name)
 	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
 
 	maxLen := validation.DNS1035LabelMaxLength
@@ -80,9 +81,9 @@ func azureSecretName(app nais_io_v1alpha1.Application) (string, error) {
 	return fmt.Sprintf("%s-%s", shortName, suffix), nil
 }
 
-func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations) error {
-	if resourceOptions.AzureratorEnabled && app.Spec.Azure.Application.Enabled {
-		azureAdApplication, err := adApplication(*app, resourceOptions.ClusterName)
+func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
+	if resourceOptions.AzureratorEnabled && naisAzure.Application.Enabled {
+		azureAdApplication, err := adApplication(objectMeta, naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
 		if err != nil {
 			return err
 		}

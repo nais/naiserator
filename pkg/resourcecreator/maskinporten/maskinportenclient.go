@@ -11,27 +11,27 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func client(app *nais_io_v1alpha1.Application) *nais_io_v1.MaskinportenClient {
+func maskinPortenSecretName(appName string) string {
+	return namegen.PrefixedRandShortName("maskinporten", appName, validation.DNS1035LabelMaxLength)
+}
+
+func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1alpha1.Maskinporten) *nais_io_v1.MaskinportenClient {
 	return &nais_io_v1.MaskinportenClient{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "MaskinportenClient",
 			APIVersion: "nais.io/v1",
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		Spec: nais_io_v1.MaskinportenClientSpec{
-			Scopes:     app.Spec.Maskinporten.Scopes,
-			SecretName: maskinPortenSecretName(*app),
+			Scopes:     naisMaskinporten.Scopes,
+			SecretName: maskinPortenSecretName(objectMeta.Name),
 		},
 	}
 }
 
-func maskinPortenSecretName(app nais_io_v1alpha1.Application) string {
-	return namegen.PrefixedRandShortName("maskinporten", app.Name, validation.DNS1035LabelMaxLength)
-}
-
-func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations) {
-	if resourceOptions.DigdiratorEnabled && app.Spec.Maskinporten != nil && app.Spec.Maskinporten.Enabled {
-		maskinportenClient := client(app)
+func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations, naisMaskinporten *nais_io_v1alpha1.Maskinporten) {
+	if resourceOptions.DigdiratorEnabled && naisMaskinporten != nil && naisMaskinporten.Enabled {
+		maskinportenClient := client(objectMeta, naisMaskinporten)
 
 		*operations = append(*operations, resource.Operation{Resource: maskinportenClient, Operation: resource.OperationCreateOrUpdate})
 

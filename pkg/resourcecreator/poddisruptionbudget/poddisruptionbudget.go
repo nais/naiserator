@@ -8,24 +8,24 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Create(app *nais_io_v1alpha1.Application, operations *resource.Operations) {
-	if app.Spec.Replicas.Max == 1 {
+func Create(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisReplicas nais_io_v1alpha1.Replicas) {
+	if naisReplicas.Max == 1 {
 		return
 	}
 
-	min := intstr.FromInt(app.Spec.Replicas.Min)
+	min := intstr.FromInt(naisReplicas.Min)
 
 	podDisruptionBudget := &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			MinAvailable: &min,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": app.Name,
+					"app": objectMeta.Name,
 				},
 			},
 		},

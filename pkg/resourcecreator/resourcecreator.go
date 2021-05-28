@@ -10,6 +10,7 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
+	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	deployment "github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/gcp"
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
@@ -22,7 +23,9 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
+	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
@@ -36,42 +39,52 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
+	objectMeta := app.CreateObjectMeta()
+	appNamespaceHash := app.CreateAppNamespaceHash()
 	ops := resource.Operations{}
-	service.Create(app, &ops)
-	serviceaccount.Create(app, resourceOptions, &ops)
-	horizontalpodautoscaler.Create(app, &ops)
-	dplt, err := deployment.Create(app, resourceOptions, &ops)
+	service.Create(objectMeta, &ops, *app.Spec.Service)
+	serviceaccount.Create(objectMeta, resourceOptions, &ops, appNamespaceHash)
+	horizontalpodautoscaler.Create(objectMeta, &ops, *app.Spec.Replicas)
+	dplt, err := deployment.Create(objectMeta, resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+		app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+		app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 	if err != nil {
 		return nil, fmt.Errorf("while creating deployment: %s", err)
 	}
-	err = azure.Create(app, resourceOptions, dplt, &ops)
+	err = azure.Create(objectMeta, resourceOptions, dplt, &ops, *app.Spec.Azure, app.Spec.Ingresses, *app.Spec.AccessPolicy)
 	if err != nil {
 		return nil, err
 	}
-	err = idporten.Create(app, resourceOptions, dplt, &ops)
+	err = idporten.Create(objectMeta, resourceOptions, dplt, &ops, app.Spec.IDPorten, app.Spec.Ingresses)
 	if err != nil {
 		return nil, err
 	}
-	err = kafka.Create(app, resourceOptions, dplt)
+	err = kafka.Create(objectMeta, resourceOptions, dplt, app.Spec.Kafka)
 	if err != nil {
 		return nil, err
 	}
-	err = gcp.Create(app, resourceOptions, dplt, &ops)
+	err = gcp.Create(objectMeta, resourceOptions, dplt, &ops, appNamespaceHash, app.Spec.GCP)
 	if err != nil {
 		return nil, err
 	}
-	maskinporten.Create(app, resourceOptions, dplt, &ops)
-	poddisruptionbudget.Create(app, &ops)
-	jwker.Create(app, resourceOptions, dplt, &ops)
-	leaderelection.Create(app, dplt, &ops)
-	aiven.Elastic(app, dplt)
+	err = proxyopts.Create(resourceOptions, dplt, app.Spec.WebProxy)
+	if err != nil {
+		return nil, err
+	}
+	certificateauthority.Create(dplt, app.Spec.SkipCaBundle)
+	securelogs.Create(resourceOptions, dplt, app.Spec.SecureLogs)
+	maskinporten.Create(objectMeta, resourceOptions, dplt, &ops, app.Spec.Maskinporten)
+	poddisruptionbudget.Create(objectMeta, &ops, *app.Spec.Replicas)
+	jwker.Create(objectMeta, resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
+	leaderelection.Create(objectMeta, dplt, &ops, app.Spec.LeaderElection)
+	aiven.Elastic(dplt, app.Spec.Elastic)
 	linkerd.Create(resourceOptions, dplt)
-	networkpolicy.Create(app, resourceOptions, &ops)
-	err = ingress.Create(app, resourceOptions, &ops)
+	networkpolicy.Create(objectMeta, resourceOptions, &ops, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+	err = ingress.Create(objectMeta, resourceOptions, &ops, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	if err != nil {
 		return nil, fmt.Errorf("while creating ingress: %s", err)
 	}
-	vault.Create(app, resourceOptions, dplt)
+	vault.Create(objectMeta, resourceOptions, dplt, app.Spec.Vault)
 
 	return ops, nil
 }

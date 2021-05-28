@@ -1,6 +1,7 @@
 package certificateauthority
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -63,8 +64,8 @@ func certificateAuthorityVolume(configMapName string) corev1.Volume {
 	}
 }
 
-// CABundle inserts the CA configuration into a PodSpec.
-func CABundle(podSpec *corev1.PodSpec) *corev1.PodSpec {
+// CaBundle inserts the CA configuration into a PodSpec.
+func CaBundle(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	envs := []corev1.EnvVar{
 		{
 			Name:  "NAV_TRUSTSTORE_PATH",
@@ -83,4 +84,12 @@ func CABundle(podSpec *corev1.PodSpec) *corev1.PodSpec {
 	podSpec.Volumes = append(podSpec.Volumes, certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_PEM_CONFIGMAP_NAME))
 
 	return podSpec
+}
+
+func Create(deployment *appsv1.Deployment, skipCaBundle bool) {
+	if !skipCaBundle {
+		podSpec := &deployment.Spec.Template.Spec
+		podSpec = CaBundle(podSpec)
+		deployment.Spec.Template.Spec = *podSpec
+	}
 }

@@ -3,58 +3,57 @@ package leaderelection
 import (
 	"fmt"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(app *nais.Application, deployment *appsv1.Deployment, operations *resource.Operations) {
-	if !app.Spec.LeaderElection {
+func Create(objectMeta metav1.ObjectMeta, deployment *appsv1.Deployment, operations *resource.Operations, leaderElection bool) {
+	if !leaderElection {
 		return
 	}
 
-	*operations = append(*operations, resource.Operation{Resource: role(app), Operation: resource.OperationCreateOrUpdate})
-	*operations = append(*operations, resource.Operation{Resource: roleBinding(app), Operation: resource.OperationCreateOrRecreate})
-	podSpec(app, &deployment.Spec.Template.Spec)
+	*operations = append(*operations, resource.Operation{Resource: role(objectMeta), Operation: resource.OperationCreateOrUpdate})
+	*operations = append(*operations, resource.Operation{Resource: roleBinding(objectMeta), Operation: resource.OperationCreateOrRecreate})
+	podSpec(objectMeta, &deployment.Spec.Template.Spec)
 }
 
-func roleBinding(app *nais.Application) *rbacv1.RoleBinding {
+func roleBinding(objectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
-		TypeMeta: v1.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
 			Kind:       "RoleBinding",
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
 			Kind:     "Role",
-			Name:     app.Name,
+			Name:     objectMeta.Name,
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
-				Name:      app.Name,
-				Namespace: app.Namespace,
+				Name:      objectMeta.Name,
+				Namespace: objectMeta.Namespace,
 			},
 		},
 	}
 }
 
-func role(app *nais.Application) *rbacv1.Role {
+func role(objectMeta metav1.ObjectMeta) *rbacv1.Role {
 	return &rbacv1.Role{
-		TypeMeta: v1.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
 			Kind:       "Role",
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: objectMeta,
 		Rules: []rbacv1.PolicyRule{
 			{
 				ResourceNames: []string{
-					app.Name,
+					objectMeta.Name,
 				},
 				APIGroups: []string{
 					"",
@@ -71,8 +70,8 @@ func role(app *nais.Application) *rbacv1.Role {
 	}
 }
 
-func podSpec(app *nais.Application, spec *corev1.PodSpec) {
-	spec.Containers = append(spec.Containers, leaderElectionContainer(app.Name, app.Namespace))
+func podSpec(objectMeta metav1.ObjectMeta, spec *corev1.PodSpec) {
+	spec.Containers = append(spec.Containers, leaderElectionContainer(objectMeta.Name, objectMeta.Namespace))
 	mainContainer := spec.Containers[0].DeepCopy()
 
 	electorPathEnv := corev1.EnvVar{

@@ -1,7 +1,10 @@
 package deployment_test
 
 import (
+	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
+	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
 	"github.com/nais/naiserator/pkg/test"
 
 	"testing"
@@ -10,7 +13,6 @@ import (
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 )
@@ -28,7 +30,9 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
-		deploy, err := deployment.Create(app, opts, &ops)
+		deploy, err := deployment.Create(app.CreateObjectMeta(), opts, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.Nil(t, err)
 
 		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
@@ -52,7 +56,9 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
-		deploy, err := deployment.Create(app, opts, &ops)
+		deploy, err := deployment.Create(app.CreateObjectMeta(), opts, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.Nil(t, err)
 
 		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
@@ -80,7 +86,9 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
-		deploy, err := deployment.Create(app, opts, &ops)
+		deploy, err := deployment.Create(app.CreateObjectMeta(), opts, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.Nil(t, err)
 
 		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
@@ -95,9 +103,6 @@ func TestDeployment(t *testing.T) {
 	})
 
 	t.Run("enabling webproxy in GCP is no-op", func(t *testing.T) {
-		viper.Reset()
-		viper.Set("proxy.address", "http://foo.bar:5224")
-		viper.Set("proxy.exclude", []string{"foo", "bar", "baz"})
 		app := fixtures.MinimalApplication()
 		app.Spec.WebProxy = true
 		err := nais.ApplyDefaults(app)
@@ -105,7 +110,13 @@ func TestDeployment(t *testing.T) {
 
 		opts := resource.NewOptions()
 		opts.GoogleProjectId = "googleprojectid"
-		deploy, err := deployment.Create(app, opts, &ops)
+		opts.Proxy = config.Proxy{
+			Address: "httpProxy",
+			Exclude: []string{"foo", "bar", "baz"},
+		}
+		deploy, err := deployment.Create(app.CreateObjectMeta(), opts, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.Nil(t, err)
 
 		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
@@ -124,7 +135,9 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		app.Spec.Strategy.Type = nais.DeploymentStrategyRecreate
-		deploy, err := deployment.Create(app, resource.NewOptions(), &ops)
+		deploy, err := deployment.Create(app.CreateObjectMeta(), resource.Options{}, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 
 		assert.NoError(t, err)
 		assert.Equal(t, appsv1.RecreateDeploymentStrategyType, deploy.Spec.Strategy.Type)
@@ -134,10 +147,19 @@ func TestDeployment(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.LeaderElection = false
 		app.Spec.SecureLogs.Enabled = true
+		options := resource.Options{}
+		options.Securelogs = config.Securelogs{
+			FluentdImage: "dummy-image",
+			ConfigMapReloadImage: "dummy-image",
+		}
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		dplt, err := deployment.Create(app, resource.Options{}, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), options, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		securelogs.Create(options, dplt, app.Spec.SecureLogs)
+		certificateauthority.Create(dplt, app.Spec.SkipCaBundle)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, dplt)
@@ -163,7 +185,9 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
-		deploy, err := deployment.Create(app, opts, &ops)
+		deploy, err := deployment.Create(app.CreateObjectMeta(), opts, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.Nil(t, err)
 
 		appContainer := test.GetContainerByName(deploy.Spec.Template.Spec.Containers, app.Name)
@@ -184,7 +208,9 @@ func TestDeployment(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		dplt, err := deployment.Create(app, resource.Options{}, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), resource.Options{}, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.NoError(t, err)
 		assert.NotNil(t, dplt)
 
@@ -209,7 +235,9 @@ func TestDeployment(t *testing.T) {
 			{Secret: "bar", MountPath: customMountPath},
 		}
 
-		dplt, err := deployment.Create(app, resource.Options{NativeSecrets: true}, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), resource.Options{NativeSecrets: true}, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.NoError(t, err)
 		assert.NotNil(t, dplt)
 
@@ -239,7 +267,9 @@ func TestDeployment(t *testing.T) {
 			{ConfigMap: fileConfigmapName},
 		}
 
-		dplt, err := deployment.Create(app, resource.Options{NativeSecrets: true}, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), resource.Options{NativeSecrets: true}, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.NoError(t, err)
 		assert.NotNil(t, dplt)
 
@@ -278,7 +308,9 @@ func TestDeployment(t *testing.T) {
 			{Secret: "bar"},
 		}
 
-		dplt, err := deployment.Create(app, resource.Options{NativeSecrets: false}, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), resource.Options{NativeSecrets: false}, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
 		assert.NoError(t, err)
 		appContainer := test.GetContainerByName(dplt.Spec.Template.Spec.Containers, app.Name)
 		assert.NotNil(t, appContainer)

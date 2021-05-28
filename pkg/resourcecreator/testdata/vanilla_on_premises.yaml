@@ -3,6 +3,7 @@ config:
 
 resourceOptions:
   NumReplicas: 1
+  ClusterName: test-cluster
 
 input:
   kind: Application

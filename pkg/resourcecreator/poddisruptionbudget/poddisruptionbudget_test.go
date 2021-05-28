@@ -18,7 +18,7 @@ func TestPodDisruptionBudget(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		poddisruptionbudget.Create(app, &ops)
+		poddisruptionbudget.Create(app.CreateObjectMeta(), &ops, *app.Spec.Replicas)
 		assert.Len(t, ops, 0)
 	})
 }

@@ -3,6 +3,7 @@ package jwker_test
 import (
 	"testing"
 
+	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/jwker"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -37,8 +38,10 @@ func TestJwker(t *testing.T) {
 	t.Run("jwker for app with no access policy", func(t *testing.T) {
 		app := fixture()
 		ops := resource.Operations{}
-		dplt, _ := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, _ := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker)
 		assert.NotEmpty(t, jkr)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
@@ -50,8 +53,10 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, "", ""}}
 		ops := resource.Operations{}
-		dplt, _ := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, _ := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
@@ -65,8 +70,10 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
 		ops := resource.Operations{}
-		dplt, _ := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, _ := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
@@ -80,8 +87,10 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
 		ops := resource.Operations{}
-		dplt, _ := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, _ := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 1)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
@@ -105,8 +114,10 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ops := resource.Operations{}
-		dplt, _ := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, _ := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 3)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 0)
@@ -136,8 +147,10 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ops := resource.Operations{}
-		dplt, _ := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, _ := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 3)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 0)
@@ -179,8 +192,10 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ops := resource.Operations{}
-		dplt, _ := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, _ := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 3)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 3)
@@ -210,8 +225,10 @@ func TestJwker(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ops := resource.Operations{}
 		app.Spec.TokenX.Enabled = true
-		dplt, err := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jwkerSecretName := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker).Spec.SecretName
 		assert.NoError(t, err)
 
@@ -237,8 +254,10 @@ func TestJwker(t *testing.T) {
 		ops := resource.Operations{}
 		app.Spec.TokenX.Enabled = true
 		app.Spec.TokenX.MountSecretsAsFilesOnly = true
-		dplt, err := deployment.Create(app, resourceOptions, &ops)
-		jwker.Create(app, resourceOptions, dplt, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jwkerSecretName := ops[len(ops)-1].Resource.(*nais_io_v1.Jwker).Spec.SecretName
 		assert.NoError(t, err)
 
@@ -262,8 +281,11 @@ func TestJwker(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		options := resource.Options{}
 		ops := resource.Operations{}
-		dplt, err := deployment.Create(app, options, &ops)
-		jwker.Create(app, options, dplt, &ops)
+		dplt, err := deployment.Create(app.CreateObjectMeta(), options, &ops, app.Annotations, *app.Spec.Strategy, app.Spec.Image,
+			app.Spec.PreStopHookPath, app.Spec.Logformat, app.Spec.Logtransform, app.Spec.Port, *app.Spec.Resources, app.Spec.Liveness, app.Spec.Readiness, app.Spec.Startup,
+			app.Spec.FilesFrom, app.Spec.EnvFrom, app.Spec.Env, app.Spec.Prometheus)
+		jwker.Create(app.CreateObjectMeta(), resourceOptions, dplt, &ops, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		certificateauthority.Create(dplt, app.Spec.SkipCaBundle)
 		assert.NoError(t, err)
 
 		appContainer := test.GetContainerByName(dplt.Spec.Template.Spec.Containers, app.Name)

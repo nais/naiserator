@@ -19,7 +19,6 @@ import (
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -157,7 +156,7 @@ func TestSynchronizer(t *testing.T) {
 
 	// Create an Ingress object that should be deleted once processing has run.
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, resourceOptions, &ops)
+	err = ingress.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
 	ing := ops[0].Resource.(*networkingv1beta1.Ingress)
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
@@ -169,7 +168,7 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, resourceOptions, &ops)
+	err = ingress.Create(app.CreateObjectMeta(), resourceOptions, &ops, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
 	ing = ops[1].Resource.(*networkingv1beta1.Ingress)
 	ing.SetName("disowned-ingress")
@@ -250,7 +249,7 @@ func TestSynchronizer(t *testing.T) {
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resource.NewOptions()
 	resourceOptions.GoogleProjectId = "something"
-	viper.Set(config.GoogleCloudSQLProxyContainerImage, "cloudsqlproxy")
+	resourceOptions.GoogleCloudSQLProxyContainerImage = "cloudsqlproxy"
 
 	rig, err := newTestRig(resourceOptions)
 	if err != nil {

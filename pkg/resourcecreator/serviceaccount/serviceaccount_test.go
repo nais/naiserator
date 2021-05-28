@@ -16,7 +16,7 @@ func TestGetServiceAccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
 	ops := resource.Operations{}
 	opts := resource.NewOptions()
-	serviceaccount.Create(app, opts, &ops)
+	serviceaccount.Create(app.CreateObjectMeta(), opts, &ops, app.CreateAppNamespaceHash())
 	svcAcc := ops[0].Resource.(*core.ServiceAccount)
 
 	assert.Equal(t, app.Name, svcAcc.Name)
@@ -28,7 +28,7 @@ func TestGetServiceAccountGoogleCluster(t *testing.T) {
 	ops := resource.Operations{}
 	opts := resource.NewOptions()
 	opts.GoogleProjectId = "nais-project-1234"
-	serviceaccount.Create(app, opts, &ops)
+	serviceaccount.Create(app.CreateObjectMeta(), opts, &ops, app.CreateAppNamespaceHash())
 	svcAcc := ops[0].Resource.(*core.ServiceAccount)
 
 	assert.Equal(t, app.Name, svcAcc.Name)

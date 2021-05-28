@@ -1,9 +1,12 @@
 package pod
 
 import (
+	"fmt"
+
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func FromFilesSecretVolume(volumeName, secretName string, items []corev1.KeyToPath) corev1.Volume {
@@ -63,4 +66,8 @@ func ResourceLimits(reqs nais_io_v1alpha1.ResourceRequirements) corev1.ResourceR
 			corev1.ResourceMemory: resource.MustParse(reqs.Limits.Memory),
 		},
 	}
+}
+
+func AppClientID(objectMeta metav1.ObjectMeta, cluster string) string {
+	return fmt.Sprintf("%s:%s:%s", cluster, objectMeta.Namespace, objectMeta.Name)
 }

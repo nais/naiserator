@@ -11,11 +11,10 @@ import (
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	google_storage_crd "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
-	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
-	objectMeta := app.CreateObjectMeta()
+func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
 	objectMeta.Name = fmt.Sprintf("%s", bucket.Name)
 	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
 
@@ -43,7 +42,7 @@ func CreateBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google
 	}
 
 	return &google_storage_crd.StorageBucket{
-		TypeMeta: k8s_meta.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "StorageBucket",
 			APIVersion: google.StorageAPIVersion,
 		},
@@ -52,16 +51,17 @@ func CreateBucket(app *nais.Application, bucket nais.CloudStorageBucket) *google
 	}
 }
 
-func iAMPolicyMember(app *nais.Application, bucket *google_storage_crd.StorageBucket, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+func iAMPolicyMember(objectMeta metav1.ObjectMeta, bucket *google_storage_crd.StorageBucket, googleProjectId, googleTeamProjectId, appNamespaceHash string) *google_iam_crd.IAMPolicyMember {
 	policyMemberName := fmt.Sprintf("%s-object-viewer", bucket.Name)
+	objectMeta.Name = policyMemberName
 	policy := &google_iam_crd.IAMPolicyMember{
-		ObjectMeta: (*app).CreateObjectMetaWithName(policyMemberName),
-		TypeMeta: k8s_meta.TypeMeta{
+		ObjectMeta: objectMeta,
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMPolicyMember",
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(appNamespaceHash, googleProjectId)),
 			Role:   "roles/storage.objectViewer",
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: bucket.APIVersion,
@@ -76,16 +76,16 @@ func iAMPolicyMember(app *nais.Application, bucket *google_storage_crd.StorageBu
 	return policy
 }
 
-func Create(app *nais.Application, resourceOptions resource.Options, operations *resource.Operations, googleServiceAccount google_iam_crd.IAMServiceAccount) {
-	if app.Spec.GCP.Buckets != nil {
-		for _, b := range app.Spec.GCP.Buckets {
-			bucket := CreateBucket(app, b)
+func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, operations *resource.Operations, googleServiceAccount google_iam_crd.IAMServiceAccount, appNamespaceHash string, naisBucket []nais.CloudStorageBucket) {
+	if naisBucket != nil {
+		for _, b := range naisBucket {
+			bucket := CreateBucket(*objectMeta.DeepCopy(), b)
 			*operations = append(*operations, resource.Operation{Resource: bucket, Operation: resource.OperationCreateIfNotExists})
 
-			bucketAccessControl := AccessControl(app, bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+			bucketAccessControl := AccessControl(*objectMeta.DeepCopy(), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 			*operations = append(*operations, resource.Operation{Resource: bucketAccessControl, Operation: resource.OperationCreateOrUpdate})
 
-			iamPolicyMember := iAMPolicyMember(app, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+			iamPolicyMember := iAMPolicyMember(*objectMeta.DeepCopy(), bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
 			*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
 		}
 	}

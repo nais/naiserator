@@ -18,7 +18,7 @@ func TestGetService(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		service.Create(app, &ops)
+		service.Create(app.CreateObjectMeta(), &ops, *app.Spec.Service)
 		svc := ops[0].Resource.(*core.Service)
 		port := svc.Spec.Ports[0]
 		assert.Equal(t, nais.DefaultPortName, port.Name)
@@ -33,7 +33,7 @@ func TestGetService(t *testing.T) {
 		err := nais.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		service.Create(app, &ops)
+		service.Create(app.CreateObjectMeta(), &ops, *app.Spec.Service)
 		svc := ops[0].Resource.(*core.Service)
 		port := svc.Spec.Ports[0]
 		assert.Equal(t, "redis", port.Name)

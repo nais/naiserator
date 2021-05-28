@@ -21,7 +21,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 	assert.NoError(t, err)
 
 	projectId := "projectid"
-	sqlInstance := google_sql.GoogleSqlInstance(app, spec, projectId)
+	sqlInstance := google_sql.GoogleSqlInstance(app.CreateObjectMeta(), spec, projectId)
 	assert.Equal(t, app.Name, sqlInstance.Name)
 	assert.Equal(t, fmt.Sprintf("PD_%s", google_sql.DefaultSqlInstanceDiskType), sqlInstance.Spec.Settings.DiskType)
 	assert.Equal(t, google_sql.DefaultSqlInstanceDiskSize, sqlInstance.Spec.Settings.DiskSize)
@@ -48,7 +48,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		}
 		spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		sqlInstance := google_sql.GoogleSqlInstance(app, spec, projectId)
+		sqlInstance := google_sql.GoogleSqlInstance(app.CreateObjectMeta(), spec, projectId)
 		assert.Equal(t, "00:00", sqlInstance.Spec.Settings.BackupConfiguration.StartTime, "setting backup hour to 0 yields 00:00 as start time")
 		assert.Equal(t, maintenanceHour, sqlInstance.Spec.Settings.MaintenanceWindow.Hour)
 		assert.Equal(t, maintenanceDay, sqlInstance.Spec.Settings.MaintenanceWindow.Day)

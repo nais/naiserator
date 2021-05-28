@@ -15,7 +15,7 @@ func TestGoogleSqlDatabase(t *testing.T) {
 	database := nais.CloudSqlDatabase{Name: "db1"}
 	instanceName := "instance-0"
 	projectId := "projectid"
-	sqlDatabase := google_sql.GoogleSQLDatabase(app, database, nais.CloudSqlInstance{Name: instanceName, Type: "POSTGRES_11"}, projectId)
+	sqlDatabase := google_sql.GoogleSQLDatabase(app.CreateObjectMeta(), database, nais.CloudSqlInstance{Name: instanceName, Type: "POSTGRES_11"}, projectId)
 	assert.Equal(t, database.Name, sqlDatabase.Name)
 	assert.Equal(t, database.Name, sqlDatabase.Name)
 	assert.Equal(t, instanceName, sqlDatabase.Spec.InstanceRef.Name)
