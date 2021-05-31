@@ -144,10 +144,16 @@ func defaultEnvVars(source resource.Source, clusterName, appImage string) []core
 	}
 }
 
+func mapMerge(dst, src map[string]string) {
+	for k, v := range src {
+		dst[k] = v
+	}
+}
+
 func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) metav1.ObjectMeta {
 	objectMeta := app.CreateObjectMeta()
 	objectMeta.Annotations = ast.Annotations
-	objectMeta.Labels = ast.Labels
+	mapMerge(objectMeta.Labels, ast.Labels)
 
 	port := app.Spec.Prometheus.Port
 	if len(port) == 0 {

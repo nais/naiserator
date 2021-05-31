@@ -15,7 +15,7 @@ func CreatePolicy(source resource.Source, sa *google_iam_crd.IAMServiceAccount, 
 	objectMeta := source.CreateObjectMeta()
 	objectMeta.Name = source.CreateAppNamespaceHash()
 	objectMeta.Namespace = google.IAMServiceAccountNamespace
-	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, objectMeta.Namespace, objectMeta.Name)
+	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, source.GetNamespace(), source.GetName())
 	iamPolicy := google_iam_crd.IAMPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMPolicy",
