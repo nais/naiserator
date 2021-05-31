@@ -2,9 +2,9 @@ config:
   description: secure logging volume
 
 resourceoptions:
-  securelogs:
-    fluentdImage: fluentd-image
-    configMapReloadImage: configmap-reload-image
+  Securelogs:
+    fluentd-image: fluentd-image
+    configmap-reload-image: configmap-reload-image
 
 input:
   kind: Application
@@ -51,6 +51,7 @@ tests:
                           fieldRef:
                             fieldPath: spec.nodeName
                     imagePullPolicy: IfNotPresent
+                    image: fluentd-image
                     resources:
                       requests:
                         cpu: 10m
@@ -71,6 +72,7 @@ tests:
                       - --webhook-url=http://localhost:24444/api/config.reload
                       - --webhook-method=GET
                     imagePullPolicy: IfNotPresent
+                    image: configmap-reload-image
                     resources:
                       requests:
                         cpu: 10m
