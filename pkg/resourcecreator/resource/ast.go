@@ -8,13 +8,14 @@ type Ast struct {
 	Operations Operations
 
 	// For podSpec
-	Annotations  map[string]string
-	Containers   []v1.Container
-	Env          []v1.EnvVar
-	EnvFrom      []v1.EnvFromSource
-	Labels       map[string]string
-	Volumes      []v1.Volume
-	VolumeMounts []v1.VolumeMount
+	Annotations    map[string]string
+	Containers     []v1.Container
+	Env            []v1.EnvVar
+	EnvFrom        []v1.EnvFromSource
+	InitContainers []v1.Container
+	Labels         map[string]string
+	Volumes        []v1.Volume
+	VolumeMounts   []v1.VolumeMount
 }
 
 func NewAst() *Ast {

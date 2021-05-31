@@ -1,7 +1,7 @@
 package certificateauthority
 
 import (
-	appsv1 "k8s.io/api/apps/v1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -25,6 +25,17 @@ var certFiles = []string{
 	"/etc/ssl/ca-bundle.pem",                            // OpenSUSE
 	"/etc/pki/tls/cacert.pem",                           // OpenELEC
 	"/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem", // CentOS/RHEL 7
+}
+
+var envs = []corev1.EnvVar{
+	{
+		Name:  "NAV_TRUSTSTORE_PATH",
+		Value: NAV_TRUSTSTORE_PATH,
+	},
+	{
+		Name:  "NAV_TRUSTSTORE_PASSWORD",
+		Value: NAV_TRUSTSTORE_PASSWORD,
+	},
 }
 
 // Mount certificate authority files in all locations expected by different kinds of systems.
@@ -64,32 +75,12 @@ func certificateAuthorityVolume(configMapName string) corev1.Volume {
 	}
 }
 
-// CaBundle inserts the CA configuration into a PodSpec.
-func CaBundle(podSpec *corev1.PodSpec) *corev1.PodSpec {
-	envs := []corev1.EnvVar{
-		{
-			Name:  "NAV_TRUSTSTORE_PATH",
-			Value: NAV_TRUSTSTORE_PATH,
-		},
-		{
-			Name:  "NAV_TRUSTSTORE_PASSWORD",
-			Value: NAV_TRUSTSTORE_PASSWORD,
-		},
+func Create(ast *resource.Ast, skipCaBundle bool) {
+	if skipCaBundle {
+		return
 	}
 
-	mainContainer := &podSpec.Containers[0]
-	mainContainer.Env = append(mainContainer.Env, envs...)
-	mainContainer.VolumeMounts = append(mainContainer.VolumeMounts, certificateAuthorityVolumeMounts()...)
-
-	podSpec.Volumes = append(podSpec.Volumes, certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_PEM_CONFIGMAP_NAME))
-
-	return podSpec
-}
-
-func Create(deployment *appsv1.Deployment, skipCaBundle bool) {
-	if !skipCaBundle {
-		podSpec := &deployment.Spec.Template.Spec
-		podSpec = CaBundle(podSpec)
-		deployment.Spec.Template.Spec = *podSpec
-	}
+	ast.Env = append(ast.Env, envs...)
+	ast.VolumeMounts = append(ast.VolumeMounts, certificateAuthorityVolumeMounts()...)
+	ast.Volumes = append(ast.Volumes, certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_PEM_CONFIGMAP_NAME))
 }

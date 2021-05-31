@@ -23,10 +23,12 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 	var err error
 
 	podSpec := &corev1.PodSpec{
+		InitContainers:     ast.InitContainers,
 		Containers:         ast.Containers,
 		ServiceAccountName: appName,
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
+		Volumes:            ast.Volumes,
 		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gpr-credentials"},
 			{Name: "ghcr-credentials"},
@@ -130,7 +132,6 @@ func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, op
 	}
 
 	ast.Containers = append(ast.Containers, container)
-
 }
 
 func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {

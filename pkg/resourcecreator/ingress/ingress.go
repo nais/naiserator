@@ -177,7 +177,7 @@ func nginxIngresses(source resource.Source, options resource.Options, naisIngres
 func linkerdIngresses(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
 	ingresses, err := nginxIngresses(source, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 	if err != nil {
-		return fmt.Errorf("while creating ingresses: %s", err)
+		return nil
 	}
 
 	if ingresses != nil {
@@ -208,12 +208,12 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options,
 	if options.Linkerd {
 		err := linkerdIngresses(source, ast, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 		if err != nil {
-			return err
+			return fmt.Errorf("create ingresses: %s", err)
 		}
 	} else {
 		err := onPremIngresses(source, ast, naisIngresses, livenessPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("create ingresses: %s", err)
 		}
 	}
 

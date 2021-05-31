@@ -79,18 +79,20 @@ func azureSecretName(name string) (string, error) {
 	return fmt.Sprintf("%s-%s", shortName, suffix), nil
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, operations *resource.Operations, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
-	if resourceOptions.AzureratorEnabled && naisAzure.Application.Enabled {
-		azureAdApplication, err := adApplication(source.CreateObjectMeta(), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
-		if err != nil {
-			return err
-		}
-
-		ast.Operations = append(ast.Operations, resource.Operation{Resource: azureAdApplication, Operation: resource.OperationCreateOrUpdate})
-
-		pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
-		pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
+	if !resourceOptions.AzureratorEnabled || !naisAzure.Application.Enabled {
+		return nil
 	}
+
+	azureAdApplication, err := adApplication(source.CreateObjectMeta(), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
+	if err != nil {
+		return err
+	}
+
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: azureAdApplication, Operation: resource.OperationCreateOrUpdate})
+
+	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
+	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
 
 	return nil
 }

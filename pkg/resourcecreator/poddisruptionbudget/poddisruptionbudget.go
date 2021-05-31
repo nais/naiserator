@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Create(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisReplicas nais_io_v1alpha1.Replicas) {
+func Create(source resource.Source, ast *resource.Ast, naisReplicas nais_io_v1alpha1.Replicas) {
 	if naisReplicas.Max == 1 {
 		return
 	}
@@ -20,16 +20,16 @@ func Create(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisR
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
 		},
-		ObjectMeta: objectMeta,
+		ObjectMeta: source.CreateObjectMeta(),
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			MinAvailable: &min,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": objectMeta.Name,
+					"app": source.GetName(),
 				},
 			},
 		},
 	}
 
-	*operations = append(*operations, resource.Operation{podDisruptionBudget, resource.OperationCreateOrUpdate})
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: podDisruptionBudget, Operation: resource.OperationCreateOrUpdate})
 }

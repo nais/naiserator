@@ -277,7 +277,7 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, 0, len(appContainer.EnvFrom))
 	})
 
-	t.Run("when no jwkerSecretName is given there should be no jwker volume mount", func(t *testing.T) {
+	t.Run("when no secretName is given there should be no jwker volume mount", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		options := resource.Options{}
 		ops := resource.Operations{}

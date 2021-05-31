@@ -56,6 +56,13 @@ func run() error {
 		"kafka.sasl.password",
 	})
 
+	if cfg.Features.Vault {
+		err = cfg.Vault.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
 	var kafkaClient kafka.Interface
 
 	if cfg.Kafka.Enabled {

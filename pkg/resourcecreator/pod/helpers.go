@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	resource "github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 )

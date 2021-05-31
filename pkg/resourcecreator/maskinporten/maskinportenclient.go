@@ -6,7 +6,6 @@ import (
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -29,16 +28,14 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1alpha1.Mas
 	}
 }
 
-func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations, naisMaskinporten *nais_io_v1alpha1.Maskinporten) {
-	if resourceOptions.DigdiratorEnabled && naisMaskinporten != nil && naisMaskinporten.Enabled {
-		maskinportenClient := client(objectMeta, naisMaskinporten)
-
-		*operations = append(*operations, resource.Operation{Resource: maskinportenClient, Operation: resource.OperationCreateOrUpdate})
-
-		podSpec := &deployment.Spec.Template.Spec
-		podSpec = pod.WithAdditionalSecret(podSpec, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
-		podSpec = pod.WithAdditionalEnvFromSecret(podSpec, maskinportenClient.Spec.SecretName)
-		deployment.Spec.Template.Spec = *podSpec
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisMaskinporten *nais_io_v1alpha1.Maskinporten) {
+	if !resourceOptions.DigdiratorEnabled || naisMaskinporten == nil || !naisMaskinporten.Enabled {
+		return
 	}
-	return
+
+	maskinportenClient := client(source.CreateObjectMeta(), naisMaskinporten)
+
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: maskinportenClient, Operation: resource.OperationCreateOrUpdate})
+	pod.WithAdditionalSecret(ast, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
+	pod.WithAdditionalEnvFromSecret(ast, maskinportenClient.Spec.SecretName)
 }

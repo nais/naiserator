@@ -1,6 +1,8 @@
 package deployment
 
 import (
+	"fmt"
+
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -15,7 +17,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	objectMeta := app.CreateObjectMeta()
 	spec, err := deploymentSpec(app, ast, resourceOptions)
 	if err != nil {
-		return err
+		return fmt.Errorf("create deployment: %w", err)
 	}
 
 	if val, ok := app.Annotations["kubernetes.io/change-cause"]; ok {
@@ -36,6 +38,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	}
 
 	ast.Operations = append(ast.Operations, resource.Operation{Resource: deployment, Operation: resource.OperationCreateOrUpdate})
+
 	return nil
 }
 
