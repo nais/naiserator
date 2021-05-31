@@ -298,12 +298,12 @@ github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8m
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
-github.com/nais/liberator v0.0.0-20210503113505-5a8c9b9e1ca6 h1:2hEg44/y6+lA22Jm4Rn8urrvdTgejg4JoWF52yDo0Gk=
-github.com/nais/liberator v0.0.0-20210503113505-5a8c9b9e1ca6/go.mod h1:VI5modocylevQ0DGQd+7LibwVjA+ghz+y56ALpXoKcU=
-github.com/nais/liberator v0.0.0-20210526112740-4e7fbc9e3a2f h1:IW+lg3kaUC0wVKZzKXEbIHK4050VYg64mkBJtXF2BHc=
-github.com/nais/liberator v0.0.0-20210526112740-4e7fbc9e3a2f/go.mod h1:6aAgt0a3+BZ1QTWp+D9K0GlwCHf+YTgnh0BsqyXrMow=
 github.com/nais/liberator v0.0.0-20210526113105-c183ea6494f5 h1:B3E1nA4yoYmoFPdpVLoISwD1wBlyJLeEZKM5wLJIOIw=
 github.com/nais/liberator v0.0.0-20210526113105-c183ea6494f5/go.mod h1:6aAgt0a3+BZ1QTWp+D9K0GlwCHf+YTgnh0BsqyXrMow=
+github.com/nais/liberator v0.0.0-20210528111704-3c43e9c89174 h1:q3VaAVzwqr5OCl9p+Hr0q96VDQTZ7UO00ucmamJXWlM=
+github.com/nais/liberator v0.0.0-20210528111704-3c43e9c89174/go.mod h1:VI5modocylevQ0DGQd+7LibwVjA+ghz+y56ALpXoKcU=
+github.com/nais/liberator v0.0.0-20210528121002-e9d88874e324 h1:7oDLev7Dx38N8/AGbLbrywbCevDi4SLLTuql1Hi6lwE=
+github.com/nais/liberator v0.0.0-20210528121002-e9d88874e324/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=

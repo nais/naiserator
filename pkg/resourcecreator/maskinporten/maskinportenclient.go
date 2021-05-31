@@ -19,7 +19,10 @@ func client(app *nais_io_v1alpha1.Application) *nais_io_v1.MaskinportenClient {
 		},
 		ObjectMeta: app.CreateObjectMeta(),
 		Spec: nais_io_v1.MaskinportenClientSpec{
-			Scopes:     app.Spec.Maskinporten.Scopes,
+			Scopes: nais_io_v1.MaskinportenScope{
+				ConsumedScopes: app.Spec.Maskinporten.Scopes.ConsumedScopes,
+				ExposedScopes:  app.Spec.Maskinporten.Scopes.ExposedScopes,
+			},
 			SecretName: maskinPortenSecretName(*app),
 		},
 	}

@@ -14,7 +14,7 @@ require (
 	github.com/magiconair/properties v1.8.0
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/nais/liberator v0.0.0-20210526113105-c183ea6494f5
+	github.com/nais/liberator v0.0.0-20210528121002-e9d88874e324
 	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e
 	github.com/prometheus/client_golang v1.0.0
 	github.com/sirupsen/logrus v1.4.2
@@ -32,6 +32,7 @@ require (
 	k8s.io/client-go v0.17.16
 	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f
 	sigs.k8s.io/controller-runtime v0.5.0
+	sigs.k8s.io/controller-tools v0.2.5 // indirect
 )
 
 go 1.15
