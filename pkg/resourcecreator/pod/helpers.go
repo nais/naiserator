@@ -21,16 +21,13 @@ func FromFilesSecretVolume(volumeName, secretName string, items []corev1.KeyToPa
 	}
 }
 
-func WithAdditionalSecret(spec *corev1.PodSpec, secretName, mountPath string) *corev1.PodSpec {
-	spec.Volumes = append(spec.Volumes, FromFilesSecretVolume(secretName, secretName, nil))
-	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
-		FromFilesVolumeMount(secretName, "", mountPath))
-	return spec
+func WithAdditionalSecret(ast *resource.Ast, secretName, mountPath string) {
+	ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(secretName, secretName, nil))
+	ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(secretName, "", mountPath))
 }
 
-func WithAdditionalEnvFromSecret(spec *corev1.PodSpec, secretName string) *corev1.PodSpec {
-	spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, EnvFromSecret(secretName))
-	return spec
+func WithAdditionalEnvFromSecret(ast *resource.Ast, secretName string) {
+	ast.EnvFrom = append(ast.EnvFrom, EnvFromSecret(secretName))
 }
 
 func FromFilesVolumeMount(name string, mountPath string, defaultMountPath string) corev1.VolumeMount {

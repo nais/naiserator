@@ -7,9 +7,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(objectMeta metav1.ObjectMeta, options resource.Options, operations *resource.Operations, appNamespaceHash string) {
+func Create(source resource.Source, ast *resource.Ast, options resource.Options) {
+	objectMeta := source.CreateObjectMeta()
 	if len(options.GoogleProjectId) > 0 {
-		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(appNamespaceHash, options.GoogleProjectId)
+		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(source.CreateAppNamespaceHash(), options.GoogleProjectId)
 	}
 
 	serviceAccount := &corev1.ServiceAccount{
@@ -20,5 +21,5 @@ func Create(objectMeta metav1.ObjectMeta, options resource.Options, operations *
 		ObjectMeta: objectMeta,
 	}
 
-	*operations = append(*operations, resource.Operation{Resource: serviceAccount, Operation: resource.OperationCreateIfNotExists})
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: serviceAccount, Operation: resource.OperationCreateIfNotExists})
 }

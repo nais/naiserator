@@ -36,7 +36,7 @@ func ingressRule(appName string, u *url.URL) networkingv1beta1.IngressRule {
 	}
 }
 
-func ingressRules(objectMeta metav1.ObjectMeta, naisIngresses []nais_io_v1alpha1.Ingress) ([]networkingv1beta1.IngressRule, error) {
+func ingressRules(source resource.Source, naisIngresses []nais_io_v1alpha1.Ingress) ([]networkingv1beta1.IngressRule, error) {
 	var rules []networkingv1beta1.IngressRule
 
 	for _, ingress := range naisIngresses {
@@ -52,13 +52,13 @@ func ingressRules(objectMeta metav1.ObjectMeta, naisIngresses []nais_io_v1alpha1
 			return nil, err
 		}
 
-		rules = append(rules, ingressRule(objectMeta.Name, parsedUrl))
+		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
 	}
 
 	return rules, nil
 }
 
-func ingressRulesNginx(objectMeta metav1.ObjectMeta, naisIngresses []nais_io_v1alpha1.Ingress) ([]networkingv1beta1.IngressRule, error) {
+func ingressRulesNginx(source resource.Source, naisIngresses []nais_io_v1alpha1.Ingress) ([]networkingv1beta1.IngressRule, error) {
 	var rules []networkingv1beta1.IngressRule
 
 	for _, ingress := range naisIngresses {
@@ -77,7 +77,7 @@ func ingressRulesNginx(objectMeta metav1.ObjectMeta, naisIngresses []nais_io_v1a
 			parsedUrl.Path = "/"
 		}
 
-		rules = append(rules, ingressRule(objectMeta.Name, parsedUrl))
+		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
 	}
 
 	return rules, nil
@@ -91,7 +91,8 @@ func copyNginxAnnotations(dst, src map[string]string) {
 	}
 }
 
-func createIngressBase(objectMeta metav1.ObjectMeta, rules []networkingv1beta1.IngressRule, livenessPath string) *networkingv1beta1.Ingress {
+func createIngressBase(source resource.Source, rules []networkingv1beta1.IngressRule, livenessPath string) *networkingv1beta1.Ingress {
+	objectMeta := source.CreateObjectMeta()
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = livenessPath
 
@@ -100,17 +101,17 @@ func createIngressBase(objectMeta metav1.ObjectMeta, rules []networkingv1beta1.I
 			Kind:       "Ingress",
 			APIVersion: "networking.k8s.io/v1beta1",
 		},
-		ObjectMeta: *objectMeta.DeepCopy(),
+		ObjectMeta: objectMeta,
 		Spec: networkingv1beta1.IngressSpec{
 			Rules: rules,
 		},
 	}
 }
 
-func createIngressBaseNginx(objectMeta metav1.ObjectMeta, ingressClass, livenessPath, serviceProtocol string, naisAnnotations map[string]string) (*networkingv1beta1.Ingress, error) {
+func createIngressBaseNginx(source resource.Source, ingressClass, livenessPath, serviceProtocol string, naisAnnotations map[string]string) (*networkingv1beta1.Ingress, error) {
 	var err error
-	ingress := createIngressBase(objectMeta, []networkingv1beta1.IngressRule{}, livenessPath)
-	baseName := fmt.Sprintf("%s-%s", objectMeta.Name, ingressClass)
+	ingress := createIngressBase(source, []networkingv1beta1.IngressRule{}, livenessPath)
+	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
 	ingress.Name, err = namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
 	if err != nil {
 		return nil, err
@@ -137,8 +138,8 @@ func backendProtocol(portName string) string {
 	}
 }
 
-func nginxIngresses(objectMeta metav1.ObjectMeta, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1beta1.Ingress, error) {
-	rules, err := ingressRulesNginx(objectMeta, naisIngresses)
+func nginxIngresses(source resource.Source, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1beta1.Ingress, error) {
+	rules, err := ingressRulesNginx(source, naisIngresses)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +158,7 @@ func nginxIngresses(objectMeta metav1.ObjectMeta, options resource.Options, nais
 		}
 		ingress := ingresses[*ingressClass]
 		if ingress == nil {
-			ingress, err = createIngressBaseNginx(objectMeta, *ingressClass, livenessPath, serviceProtocol, naisAnnotations)
+			ingress, err = createIngressBaseNginx(source, *ingressClass, livenessPath, serviceProtocol, naisAnnotations)
 			if err != nil {
 				return nil, err
 			}
@@ -173,22 +174,22 @@ func nginxIngresses(objectMeta metav1.ObjectMeta, options resource.Options, nais
 	return ingressList, nil
 }
 
-func linkerdIngresses(objectMeta metav1.ObjectMeta, options resource.Options, operations *resource.Operations, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
-	ingresses, err := nginxIngresses(objectMeta, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
+func linkerdIngresses(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
+	ingresses, err := nginxIngresses(source, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 	if err != nil {
 		return fmt.Errorf("while creating ingresses: %s", err)
 	}
 
 	if ingresses != nil {
 		for _, ing := range ingresses {
-			*operations = append(*operations, resource.Operation{Resource: ing, Operation: resource.OperationCreateOrUpdate})
+			ast.Operations = append(ast.Operations, resource.Operation{Resource: ing, Operation: resource.OperationCreateOrUpdate})
 		}
 	}
 	return nil
 }
 
-func onPremIngresses(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath string) error {
-	rules, err := ingressRules(objectMeta, naisIngresses)
+func onPremIngresses(source resource.Source, ast *resource.Ast, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath string) error {
+	rules, err := ingressRules(source, naisIngresses)
 	if err != nil {
 		return err
 	}
@@ -198,19 +199,19 @@ func onPremIngresses(objectMeta metav1.ObjectMeta, operations *resource.Operatio
 		return nil
 	}
 
-	ingress := createIngressBase(objectMeta, rules, livenessPath)
-	*operations = append(*operations, resource.Operation{Resource: ingress, Operation: resource.OperationCreateOrUpdate})
+	ingress := createIngressBase(source, rules, livenessPath)
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: ingress, Operation: resource.OperationCreateOrUpdate})
 	return nil
 }
 
-func Create(objectMeta metav1.ObjectMeta, options resource.Options, operations *resource.Operations, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
+func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
 	if options.Linkerd {
-		err := linkerdIngresses(objectMeta, options, operations, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
+		err := linkerdIngresses(source, ast, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 		if err != nil {
 			return err
 		}
 	} else {
-		err := onPremIngresses(objectMeta, operations, naisIngresses, livenessPath)
+		err := onPremIngresses(source, ast, naisIngresses, livenessPath)
 		if err != nil {
 			return err
 		}

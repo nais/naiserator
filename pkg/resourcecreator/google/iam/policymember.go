@@ -15,13 +15,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func policyMember(objectMeta metav1.ObjectMeta, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId, appNamespaceHash string) (*google_iam_crd.IAMPolicyMember, error) {
-	name, err := createName(objectMeta.Name, policy)
+func policyMember(source resource.Source, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
+	name, err := createName(source.GetName(), policy)
 	if err != nil {
 		return nil, err
 	}
 	externalName := formatExternalName(googleTeamProjectId, policy.Resource.Name)
-	objectMeta.Name = name
+	objectMeta := source.CreateObjectMetaWithName(name)
 	policyMember := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
 		TypeMeta: metav1.TypeMeta{
@@ -29,7 +29,7 @@ func policyMember(objectMeta metav1.ObjectMeta, policy nais.CloudIAMPermission, 
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(appNamespaceHash, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(source.CreateAppNamespaceHash(), googleProjectId)),
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: policy.Resource.APIVersion,
@@ -60,17 +60,17 @@ func formatExternalName(googleTeamProjectId, resourceName string) string {
 	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
 }
 
-func CreatePolicyMember(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, operations *resource.Operations, appNamespaceHash string, naisGcpPermission []nais.CloudIAMPermission) error {
+func CreatePolicyMember(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGcpPermission []nais.CloudIAMPermission) error {
 	if naisGcpPermission == nil {
 		return nil
 	}
 
 	for _, p := range naisGcpPermission {
-		policyMember, err := policyMember(*objectMeta.DeepCopy(), p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, appNamespaceHash)
+		policyMember, err := policyMember(source, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 		if err != nil {
 			return fmt.Errorf("unable to create iampolicymember: %w", err)
 		}
-		*operations = append(*operations, resource.Operation{Resource: policyMember, Operation: resource.OperationCreateIfNotExists})
+		ast.Operations = append(ast.Operations, resource.Operation{Resource: policyMember, Operation: resource.OperationCreateIfNotExists})
 	}
 
 	return nil

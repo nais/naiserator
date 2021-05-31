@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	appsv1 "k8s.io/api/apps/v1"
-
 	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
+	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -81,19 +79,17 @@ func azureSecretName(name string) (string, error) {
 	return fmt.Sprintf("%s-%s", shortName, suffix), nil
 }
 
-func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, operations *resource.Operations, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
 	if resourceOptions.AzureratorEnabled && naisAzure.Application.Enabled {
-		azureAdApplication, err := adApplication(objectMeta, naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
+		azureAdApplication, err := adApplication(source.CreateObjectMeta(), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
 		if err != nil {
 			return err
 		}
 
-		*operations = append(*operations, resource.Operation{Resource: azureAdApplication, Operation: resource.OperationCreateOrUpdate})
+		ast.Operations = append(ast.Operations, resource.Operation{Resource: azureAdApplication, Operation: resource.OperationCreateOrUpdate})
 
-		podSpec := &deployment.Spec.Template.Spec
-		podSpec = pod.WithAdditionalSecret(podSpec, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
-		podSpec = pod.WithAdditionalEnvFromSecret(podSpec, azureAdApplication.Spec.SecretName)
-		deployment.Spec.Template.Spec = *podSpec
+		pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
+		pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
 	}
 
 	return nil

@@ -9,8 +9,8 @@ import (
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -214,14 +214,13 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 	return vars
 }
 
-func AppendGoogleSQLUserSecretEnvs(naisSqlInstances *[]nais.CloudSqlInstance, podSpec *v1.PodSpec, appName string) *v1.PodSpec {
+func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstances *[]nais.CloudSqlInstance, appName string) {
 	for _, instance := range *naisSqlInstances {
 		for _, db := range instance.Databases {
 			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
 			for _, user := range googleSQLUsers {
-				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, pod.EnvFromSecret(GoogleSQLSecretName(appName, instance.Name, user.Name)))
+				ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(GoogleSQLSecretName(appName, instance.Name, user.Name)))
 			}
 		}
 	}
-	return podSpec
 }

@@ -8,18 +8,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisReplicas nais.Replicas) {
+func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replicas) {
 	hpa := &v2beta2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
 			APIVersion: v2beta2.SchemeGroupVersion.Identifier(),
 		},
-		ObjectMeta: objectMeta,
+		ObjectMeta: source.CreateObjectMeta(),
 		Spec: v2beta2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: v2beta2.CrossVersionObjectReference{
 				APIVersion: "apps/v1",
 				Kind:       "Deployment",
-				Name:       objectMeta.Name,
+				Name:       source.GetName(),
 			},
 			Metrics: []v2beta2.MetricSpec{
 				{
@@ -38,5 +38,5 @@ func Create(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisR
 		},
 	}
 
-	*operations = append(*operations, resource.Operation{Resource: hpa, Operation: resource.OperationCreateOrUpdate})
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: hpa, Operation: resource.OperationCreateOrUpdate})
 }

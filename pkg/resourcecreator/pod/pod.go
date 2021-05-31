@@ -9,7 +9,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"modernc.org/cc/v2"
 )
 
 const (
@@ -20,17 +19,23 @@ const (
 	naisClientId       = "NAIS_CLIENT_ID"
 )
 
-func CreateSpec(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, image, preStopHookPath string, appPort int, naisResources nais_io_v1alpha1.ResourceRequirements, livenessProbe, readinessProve, startupProbe *nais_io_v1alpha1.Probe, naisFilesFrom []nais_io_v1alpha1.FilesFrom, naisEnvFrom []nais_io_v1alpha1.EnvFrom, naisEnvVars []nais_io_v1alpha1.EnvVar) (*corev1.PodSpec, error) {
+func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string) (*corev1.PodSpec, error) {
 	var err error
 
-	podSpec := podSpecBase(objectMeta, resourceOptions, image, preStopHookPath, appPort, naisResources, livenessProbe, readinessProve, startupProbe, naisEnvVars)
+	podSpec := &corev1.PodSpec{
+		Containers:         ast.Containers,
+		ServiceAccountName: appName,
+		RestartPolicy:      corev1.RestartPolicyAlways,
+		DNSPolicy:          corev1.DNSClusterFirst,
+		ImagePullSecrets: []corev1.LocalObjectReference{
+			{Name: "gpr-credentials"},
+			{Name: "ghcr-credentials"},
+		},
+	}
 
 	if len(resourceOptions.HostAliases) > 0 {
 		podSpec.HostAliases = hostAliases(resourceOptions)
 	}
-
-	podSpec = filesFrom(podSpec, resourceOptions.NativeSecrets, naisFilesFrom)
-	podSpec = envFrom(podSpec, resourceOptions.NativeSecrets, naisEnvFrom)
 
 	return podSpec, err
 }
@@ -44,16 +49,14 @@ func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
 	return hostAliases
 }
 
-func envFrom(spec *corev1.PodSpec, nativeSecrets bool, naisEnvFrom []nais_io_v1alpha1.EnvFrom) *corev1.PodSpec {
+func envFrom(ast *resource.Ast, nativeSecrets bool, naisEnvFrom []nais_io_v1alpha1.EnvFrom) {
 	for _, env := range naisEnvFrom {
 		if len(env.ConfigMap) > 0 {
-			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvConfigmap(env.ConfigMap))
+			ast.EnvFrom = append(ast.EnvFrom, fromEnvConfigmap(env.ConfigMap))
 		} else if nativeSecrets && len(env.Secret) > 0 {
-			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, EnvFromSecret(env.Secret))
+			ast.EnvFrom = append(ast.EnvFrom, EnvFromSecret(env.Secret))
 		}
 	}
-
-	return spec
 }
 
 func fromEnvConfigmap(name string) corev1.EnvFromSource {
@@ -66,22 +69,19 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
-func filesFrom(spec *corev1.PodSpec, nativeSecrets bool, naisFilesFrom []nais_io_v1alpha1.FilesFrom) *corev1.PodSpec {
+func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1alpha1.FilesFrom) {
 	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
 			name := file.ConfigMap
-			spec.Volumes = append(spec.Volumes, fromFilesConfigmapVolume(name))
-			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
+			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name))
+			ast.VolumeMounts = append(ast.VolumeMounts,
 				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name)))
 		} else if nativeSecrets && len(file.Secret) > 0 {
 			name := file.Secret
-			spec.Volumes = append(spec.Volumes, FromFilesSecretVolume(name, name, nil))
-			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
-				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath))
+			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, name, nil))
+			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath))
 		}
 	}
-
-	return spec
 }
 
 func fromFilesConfigmapVolume(name string) corev1.Volume {
@@ -96,22 +96,13 @@ func fromFilesConfigmapVolume(name string) corev1.Volume {
 		},
 	}
 }
-func podSpecBase(objectMeta metav1.ObjectMeta, options resource.Options, image, preStopHookPath string, appPort int, naisResources nais_io_v1alpha1.ResourceRequirements, livenessProbe, readinessProve, startupProbe *nais_io_v1alpha1.Probe, envVars []nais_io_v1alpha1.EnvVar) *corev1.PodSpec {
-	return &corev1.PodSpec{
-		Containers:         []corev1.Container{appContainer(objectMeta, options, image, preStopHookPath, appPort, naisResources, livenessProbe, readinessProve, startupProbe, envVars)},
-		ServiceAccountName: objectMeta.Name,
-		RestartPolicy:      corev1.RestartPolicyAlways,
-		DNSPolicy:          corev1.DNSClusterFirst,
-		ImagePullSecrets: []corev1.LocalObjectReference{
-			{Name: "gpr-credentials"},
-			{Name: "ghcr-credentials"},
-		},
-	}
-}
 
-func CreateAppContainer(ast *resource.Ast, options resource.Options, app *nais_io_v1alpha1.Application) {
-	ast.Envs = append(ast.Envs, app.Spec.EnvVar.ToKubernetes())
-	defaultEnvVars(app, ast, options.ClusterName, app.Spec.Image)
+func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, options resource.Options) {
+	ast.Env = append(ast.Env, app.Spec.Env.ToKubernetes()...)
+	ast.Env = append(ast.Env, defaultEnvVars(app, options.ClusterName, app.Spec.Image)...)
+	filesFrom(ast, options.NativeSecrets, app.Spec.FilesFrom)
+	envFrom(ast, options.NativeSecrets, app.Spec.EnvFrom)
+
 	container := corev1.Container{
 		Name:  app.Name,
 		Image: app.Spec.Image,
@@ -121,7 +112,8 @@ func CreateAppContainer(ast *resource.Ast, options resource.Options, app *nais_i
 		Resources:       ResourceLimits(*app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
-		Env:             ast.Envs,
+		Env:             ast.Env,
+		EnvFrom:         ast.EnvFrom,
 		VolumeMounts:    ast.VolumeMounts,
 	}
 
@@ -141,64 +133,39 @@ func CreateAppContainer(ast *resource.Ast, options resource.Options, app *nais_i
 
 }
 
-func appContainer(objectMeta metav1.ObjectMeta, options resource.Options, appImage, preStopHookPath string, appPort int, naisResources nais_io_v1alpha1.ResourceRequirements, livenessProbe, readinessProbe, startupProbe *nais_io_v1alpha1.Probe, naisEnvVars []nais_io_v1alpha1.EnvVar) corev1.Container {
-	c := corev1.Container{
-		Name:  objectMeta.Name,
-		Image: appImage,
-		Ports: []corev1.ContainerPort{
-			{ContainerPort: int32(appPort), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
-		},
-		Resources:       ResourceLimits(naisResources),
-		ImagePullPolicy: corev1.PullIfNotPresent,
-		Lifecycle:       lifeCycle(preStopHookPath),
-		Env:             envVars(objectMeta, options, appImage, naisEnvVars),
-	}
-
-	if livenessProbe != nil && len(livenessProbe.Path) > 0 {
-		c.LivenessProbe = probe(appPort, *livenessProbe)
-	}
-
-	if readinessProbe != nil && len(readinessProbe.Path) > 0 {
-		c.ReadinessProbe = probe(appPort, *readinessProbe)
-	}
-
-	if startupProbe != nil && len(startupProbe.Path) > 0 {
-		c.StartupProbe = probe(appPort, *startupProbe)
-	}
-
-	return c
-}
-
-func defaultEnvVars(source resource.Source, ast *resource.Ast, clusterName, appImage string) {
-	ast.Envs = append(ast.Envs, []corev1.EnvVar{
+func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
+	return []corev1.EnvVar{
 		{Name: naisAppNameEnv, Value: source.GetName()},
 		{Name: naisNamespaceEnv, Value: source.GetNamespace()},
 		{Name: naisAppImageEnv, Value: appImage},
 		{Name: naisClusterNameEnv, Value: clusterName},
 		{Name: naisClientId, Value: AppClientID(source, clusterName)},
-	}...)
+	}
 }
 
-func ObjectMeta(objectMeta metav1.ObjectMeta, appPort int, prometheusConfig *nais_io_v1alpha1.PrometheusConfig, logFormat, logTransform string) metav1.ObjectMeta {
+func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) metav1.ObjectMeta {
+	objectMeta := app.CreateObjectMeta()
+	objectMeta.Annotations = ast.Annotations
+	objectMeta.Labels = ast.Labels
 
-	port := prometheusConfig.Port
+	port := app.Spec.Prometheus.Port
 	if len(port) == 0 {
-		port = strconv.Itoa(appPort)
+		port = strconv.Itoa(app.Spec.Port)
 	}
 
 	objectMeta.Annotations = map[string]string{}
-	if prometheusConfig.Enabled {
+	if app.Spec.Prometheus.Enabled {
 		objectMeta.Annotations["prometheus.io/scrape"] = "true"
 		objectMeta.Annotations["prometheus.io/port"] = port
-		objectMeta.Annotations["prometheus.io/path"] = prometheusConfig.Path
+		objectMeta.Annotations["prometheus.io/path"] = app.Spec.Prometheus.Path
 	}
 
-	if len(logFormat) > 0 {
-		objectMeta.Annotations["nais.io/logformat"] = logFormat
+	if len(app.Spec.Logformat) > 0 {
+		objectMeta.Annotations["nais.io/logformat"] = app.Spec.Logformat
 	}
 
-	if len(logTransform) > 0 {
-		objectMeta.Annotations["nais.io/logtransform"] = logTransform
+	if len(app.Spec.Logtransform) > 0 {
+		objectMeta.Annotations["nais.io/logtransform"] = app.Spec.Logtransform
 	}
 
 	return objectMeta

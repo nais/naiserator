@@ -18,7 +18,7 @@ func Create(source resource.Source, ast *resource.Ast, leaderElection bool) {
 	ast.Operations = append(ast.Operations, resource.Operation{Resource: role(source.CreateObjectMeta()), Operation: resource.OperationCreateOrUpdate})
 	ast.Operations = append(ast.Operations, resource.Operation{Resource: roleBinding(source.CreateObjectMeta()), Operation: resource.OperationCreateOrRecreate})
 	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace()))
-	ast.Envs = append(ast.Envs, electorPathEnv())
+	ast.Env = append(ast.Env, electorPathEnv())
 }
 
 func roleBinding(objectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {

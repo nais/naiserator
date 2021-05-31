@@ -10,7 +10,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -118,20 +117,18 @@ func idPortenSecretName(name string) string {
 	return namegen.PrefixedRandShortName("idporten", name, validation.DNS1035LabelMaxLength)
 }
 
-func Create(objectMeta metav1.ObjectMeta, resourceOptions resource.Options, deployment *appsv1.Deployment, operations *resource.Operations, naisIdPorten *nais_io_v1alpha1.IDPorten, naisIngresses []nais_io_v1alpha1.Ingress) error {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1alpha1.IDPorten, naisIngresses []nais_io_v1alpha1.Ingress) error {
 	if resourceOptions.DigdiratorEnabled && naisIdPorten != nil && naisIdPorten.Enabled {
 
-  		idportenClient, err := client(objectMeta, naisIdPorten, naisIngresses)
+  		idportenClient, err := client(source.CreateObjectMeta(), naisIdPorten, naisIngresses)
 		if err != nil {
 			return err
 		}
 
-		*operations = append(*operations, resource.Operation{Resource: idportenClient, Operation: resource.OperationCreateOrUpdate})
+		ast.Operations = append(ast.Operations, resource.Operation{Resource: idportenClient, Operation: resource.OperationCreateOrUpdate})
 
-		podSpec := &deployment.Spec.Template.Spec
-		podSpec = pod.WithAdditionalSecret(podSpec, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
-		podSpec = pod.WithAdditionalEnvFromSecret(podSpec, idportenClient.Spec.SecretName)
-		deployment.Spec.Template.Spec = *podSpec
+		pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
+		pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
 	}
 
 	return nil

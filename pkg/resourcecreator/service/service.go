@@ -8,16 +8,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func Create(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisService nais.Service) {
+func Create(source resource.Source, ast *resource.Ast, naisService nais.Service) {
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
-		ObjectMeta: objectMeta,
+		ObjectMeta: source.CreateObjectMeta(),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
-			Selector: map[string]string{"app": objectMeta.Name},
+			Selector: map[string]string{"app": source.GetName()},
 			Ports: []corev1.ServicePort{
 				{
 					Name:     naisService.Protocol,
@@ -32,5 +32,5 @@ func Create(objectMeta metav1.ObjectMeta, operations *resource.Operations, naisS
 		},
 	}
 
-	*operations = append(*operations, resource.Operation{Resource: service, Operation: resource.OperationCreateOrUpdate})
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: service, Operation: resource.OperationCreateOrUpdate})
 }

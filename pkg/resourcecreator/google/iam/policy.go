@@ -4,16 +4,18 @@ import (
 	"fmt"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreatePolicy(objectMeta metav1.ObjectMeta, sa *google_iam_crd.IAMServiceAccount, projectId, appNamespaceHash string) google_iam_crd.IAMPolicy {
-	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, objectMeta.Namespace, objectMeta.Name)
+func CreatePolicy(source resource.Source, sa *google_iam_crd.IAMServiceAccount, projectId string) google_iam_crd.IAMPolicy {
+	objectMeta := source.CreateObjectMeta()
+	objectMeta.Name = source.CreateAppNamespaceHash()
 	objectMeta.Namespace = google.IAMServiceAccountNamespace
-	objectMeta.Name = appNamespaceHash
+	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, objectMeta.Namespace, objectMeta.Name)
 	iamPolicy := google_iam_crd.IAMPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMPolicy",

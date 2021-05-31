@@ -18,7 +18,7 @@ const (
 	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"  // The default IP block CIDR for the default allow network policies per app
 )
 
-func Create(objectMeta metav1.ObjectMeta, options resource.Options, operations *resource.Operations, naisAccessPolicy nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1alpha1.Ingress, naisLeaderElection bool) {
+func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisAccessPolicy nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1alpha1.Ingress, naisLeaderElection bool) {
 	if !options.NetworkPolicy {
 		return
 	}
@@ -28,11 +28,11 @@ func Create(objectMeta metav1.ObjectMeta, options resource.Options, operations *
 			Kind:       "NetworkPolicy",
 			APIVersion: "networking.k8s.io/v1",
 		},
-		ObjectMeta: objectMeta,
-		Spec:       networkPolicySpec(objectMeta.Name, options, naisAccessPolicy, naisIngresses, naisLeaderElection),
+		ObjectMeta: source.CreateObjectMeta(),
+		Spec:       networkPolicySpec(source.GetName(), options, naisAccessPolicy, naisIngresses, naisLeaderElection),
 	}
 
-	*operations = append(*operations, resource.Operation{Resource: networkPolicy, Operation: resource.OperationCreateOrUpdate})
+	ast.Operations = append(ast.Operations, resource.Operation{Resource: networkPolicy, Operation: resource.OperationCreateOrUpdate})
 }
 
 func labelSelector(label string, value string) *metav1.LabelSelector {
