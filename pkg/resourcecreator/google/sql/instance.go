@@ -145,16 +145,16 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		}
 
 		instance := GoogleSqlInstance(source.CreateObjectMeta(), sqlInstance, resourceOptions.GoogleTeamProjectId)
-		ast.Operations = append(ast.Operations, resource.Operation{Resource: instance, Operation: resource.OperationCreateOrUpdate})
+		ast.AppenOperation(resource.OperationCreateOrUpdate,  instance)
 
 		iamPolicyMember := instanceIamPolicyMember(source, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-		ast.Operations = append(ast.Operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
+		ast.AppenOperation(resource.OperationCreateIfNotExists,  iamPolicyMember)
 
 		for _, db := range sqlInstance.Databases {
 			sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
 
 			googledb := GoogleSQLDatabase(source.CreateObjectMeta(), db, sqlInstance, resourceOptions.GoogleTeamProjectId)
-			ast.Operations = append(ast.Operations, resource.Operation{Resource: googledb, Operation: resource.OperationCreateIfNotExists})
+			ast.AppenOperation(resource.OperationCreateIfNotExists, googledb)
 
 			for _, user := range sqlUsers {
 				vars := make(map[string]string)
@@ -178,10 +178,10 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 				if err != nil {
 					return fmt.Errorf("unable to create sql user: %s", err)
 				}
-				ast.Operations = append(ast.Operations, resource.Operation{Resource: sqlUser, Operation: resource.OperationCreateIfNotExists})
+				ast.AppenOperation(resource.OperationCreateIfNotExists, sqlUser)
 
 				scrt := secret.OpaqueSecret(source.CreateObjectMeta(), GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
-				ast.Operations = append(ast.Operations, resource.Operation{Resource: scrt, Operation: resource.OperationCreateIfNotExists})
+				ast.AppenOperation(resource.OperationCreateIfNotExists, scrt)
 			}
 		}
 

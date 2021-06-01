@@ -37,7 +37,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 		Spec:       *spec,
 	}
 
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: deployment, Operation: resource.OperationCreateOrUpdate})
+	ast.AppenOperation(resource.OperationCreateOrUpdate, deployment)
 
 	return nil
 }

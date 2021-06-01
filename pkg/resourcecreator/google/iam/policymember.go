@@ -70,7 +70,7 @@ func CreatePolicyMember(source resource.Source, ast *resource.Ast, resourceOptio
 		if err != nil {
 			return fmt.Errorf("unable to create iampolicymember: %w", err)
 		}
-		ast.Operations = append(ast.Operations, resource.Operation{Resource: policyMember, Operation: resource.OperationCreateIfNotExists})
+		ast.AppenOperation(resource.OperationCreateIfNotExists, policyMember)
 	}
 
 	return nil

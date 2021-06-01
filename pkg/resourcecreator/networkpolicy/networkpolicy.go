@@ -32,7 +32,7 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options,
 		Spec:       networkPolicySpec(source.GetName(), options, naisAccessPolicy, naisIngresses, naisLeaderElection),
 	}
 
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: networkPolicy, Operation: resource.OperationCreateOrUpdate})
+	ast.AppenOperation(resource.OperationCreateOrUpdate, networkPolicy)
 }
 
 func labelSelector(label string, value string) *metav1.LabelSelector {

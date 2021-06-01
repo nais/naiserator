@@ -15,8 +15,8 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 
 	googleServiceAccount := google_iam.CreateServiceAccount(source, resourceOptions.GoogleProjectId)
 	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, resourceOptions.GoogleProjectId)
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: &googleServiceAccount, Operation: resource.OperationCreateOrUpdate})
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: &googleServiceAccountBinding, Operation: resource.OperationCreateOrUpdate})
+	ast.AppenOperation(resource.OperationCreateOrUpdate, &googleServiceAccount)
+	ast.AppenOperation(resource.OperationCreateOrUpdate, &googleServiceAccountBinding)
 
 	if naisGCP != nil {
 		google_storagebucket.Create(source, ast, resourceOptions, googleServiceAccount, naisGCP.Buckets)

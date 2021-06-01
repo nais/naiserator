@@ -89,7 +89,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		return err
 	}
 
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: azureAdApplication, Operation: resource.OperationCreateOrUpdate})
+	ast.AppenOperation(resource.OperationCreateOrUpdate, azureAdApplication)
 
 	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)

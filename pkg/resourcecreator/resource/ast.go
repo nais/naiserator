@@ -2,7 +2,12 @@ package resource
 
 import (
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
+
+func (ast *Ast) AppenOperation(operationType OperationType, resource runtime.Object) {
+	ast.Operations = append(ast.Operations, Operation{Operation: operationType, Resource: resource})
+}
 
 type Ast struct {
 	Operations Operations

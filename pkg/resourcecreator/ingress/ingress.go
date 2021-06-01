@@ -182,7 +182,7 @@ func linkerdIngresses(source resource.Source, ast *resource.Ast, options resourc
 
 	if ingresses != nil {
 		for _, ing := range ingresses {
-			ast.Operations = append(ast.Operations, resource.Operation{Resource: ing, Operation: resource.OperationCreateOrUpdate})
+			ast.AppenOperation(resource.OperationCreateOrUpdate, ing)
 		}
 	}
 	return nil
@@ -200,7 +200,7 @@ func onPremIngresses(source resource.Source, ast *resource.Ast, naisIngresses []
 	}
 
 	ingress := createIngressBase(source, rules, livenessPath)
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: ingress, Operation: resource.OperationCreateOrUpdate})
+	ast.AppenOperation(resource.OperationCreateOrUpdate, ingress)
 	return nil
 }
 

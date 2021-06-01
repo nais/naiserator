@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func maskinPortenSecretName(appName string) string {
+func secretName(appName string) string {
 	return namegen.PrefixedRandShortName("maskinporten", appName, validation.DNS1035LabelMaxLength)
 }
 
@@ -23,7 +23,7 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1alpha1.Mas
 		ObjectMeta: objectMeta,
 		Spec: nais_io_v1.MaskinportenClientSpec{
 			Scopes:     naisMaskinporten.Scopes,
-			SecretName: maskinPortenSecretName(objectMeta.Name),
+			SecretName: secretName(objectMeta.Name),
 		},
 	}
 }
@@ -35,7 +35,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 
 	maskinportenClient := client(source.CreateObjectMeta(), naisMaskinporten)
 
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: maskinportenClient, Operation: resource.OperationCreateOrUpdate})
+	ast.AppenOperation(resource.OperationCreateOrUpdate, maskinportenClient)
 	pod.WithAdditionalSecret(ast, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, maskinportenClient.Spec.SecretName)
 }

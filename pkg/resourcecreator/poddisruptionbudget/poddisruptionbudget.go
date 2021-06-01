@@ -31,5 +31,5 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais_io_v1al
 		},
 	}
 
-	ast.Operations = append(ast.Operations, resource.Operation{Resource: podDisruptionBudget, Operation: resource.OperationCreateOrUpdate})
+	ast.AppenOperation(resource.OperationCreateOrUpdate, podDisruptionBudget)
 }
