@@ -32,7 +32,7 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options,
 		},
 	}
 
-	ast.AppenOperation(resource.OperationCreateOrUpdate, jwker)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, jwker)
 
 	pod.WithAdditionalSecret(ast, jwker.Spec.SecretName, nais_io_v1alpha1.DefaultJwkerMountPath)
 	if !naisTokenX.MountSecretsAsFilesOnly {

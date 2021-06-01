@@ -125,7 +125,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 			return err
 		}
 
-		ast.AppenOperation(resource.OperationCreateOrUpdate, idportenClient)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
 
 		pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 		pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)

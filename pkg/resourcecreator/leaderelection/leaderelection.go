@@ -15,8 +15,8 @@ func Create(source resource.Source, ast *resource.Ast, leaderElection bool) {
 		return
 	}
 
-	ast.AppenOperation(resource.OperationCreateOrUpdate, role(source.CreateObjectMeta()))
-    ast.AppenOperation(resource.OperationCreateOrRecreate, roleBinding(source.CreateObjectMeta()))
+	ast.AppendOperation(resource.OperationCreateOrUpdate, role(source.CreateObjectMeta()))
+    ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(source.CreateObjectMeta()))
 	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace()))
 	ast.Env = append(ast.Env, electorPathEnv())
 }

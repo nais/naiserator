@@ -35,7 +35,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 
 	maskinportenClient := client(source.CreateObjectMeta(), naisMaskinporten)
 
-	ast.AppenOperation(resource.OperationCreateOrUpdate, maskinportenClient)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, maskinportenClient)
 	pod.WithAdditionalSecret(ast, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, maskinportenClient.Spec.SecretName)
 }

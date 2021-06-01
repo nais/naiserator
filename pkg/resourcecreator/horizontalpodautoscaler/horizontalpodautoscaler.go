@@ -38,5 +38,5 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replica
 		},
 	}
 
-	ast.AppenOperation(resource.OperationCreateOrUpdate, hpa)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
 }

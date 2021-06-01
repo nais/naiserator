@@ -32,5 +32,5 @@ func Create(source resource.Source, ast *resource.Ast, naisService nais.Service)
 		},
 	}
 
-	ast.AppenOperation(resource.OperationCreateOrUpdate, service)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, service)
 }

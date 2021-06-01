@@ -84,12 +84,12 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 
 	for _, b := range naisBucket {
 		bucket := CreateBucket(source.CreateObjectMeta(), b)
-		ast.AppenOperation(resource.OperationCreateIfNotExists, bucket)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, bucket)
 
 		bucketAccessControl := AccessControl(source.CreateObjectMeta(), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
-		ast.AppenOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
 
 		iamPolicyMember := iAMPolicyMember(source, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-		ast.AppenOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 	}
 }

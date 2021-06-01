@@ -5,8 +5,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func (ast *Ast) AppenOperation(operationType OperationType, resource runtime.Object) {
-	ast.Operations = append(ast.Operations, Operation{Operation: operationType, Resource: resource})
+func (ast *Ast) AppendOperation(operationType OperationType, resource runtime.Object) {
+	ast.Operations = append(ast.Operations, Operation{
+		Operation: operationType,
+		Resource: resource,
+	})
 }
 
 type Ast struct {
