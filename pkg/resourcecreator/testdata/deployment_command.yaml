@@ -1,0 +1,44 @@
+config:
+  description: vanilla application gets a custom container command
+
+resourceoptions:
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    command:
+      - thou
+      - shalt
+      - not
+      - make
+      - bugs
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "container command"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: "myapplication"
+                    command:
+                      - thou
+                      - shalt
+                      - not
+                      - make
+                      - bugs
