@@ -50,7 +50,6 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, err
 	}
-
 	leaderelection.Create(app, ast, app.Spec.LeaderElection)
 	err = azure.Create(app, ast, resourceOptions, *app.Spec.Azure, app.Spec.Ingresses, *app.Spec.AccessPolicy)
 	if err != nil {

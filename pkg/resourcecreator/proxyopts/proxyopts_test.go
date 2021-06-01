@@ -28,7 +28,7 @@ func TestProxyEnvironmentVariables(t *testing.T) {
 			Exclude: noProxy,
 		}
 		envVars := make([]corev1.EnvVar, 0)
-		envVars, err = proxyopts.EnvironmentVariables(options, envVars)
+		envVars, err = proxyopts.EnvironmentVariables(options)
 		nprox := strings.Join(noProxy, ",")
 		assert.NoError(t, err)
 		assert.Len(t, envVars, 7)
