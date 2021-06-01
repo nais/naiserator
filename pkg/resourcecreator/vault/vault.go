@@ -5,23 +5,49 @@ import (
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
-func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, deployment *appsv1.Deployment) error {
-	if resourceOptions.VaultEnabled && app.Spec.Vault.Enabled {
-		creator, err := NewVaultContainerCreator(*app, resourceOptions)
-		if err != nil {
-			return fmt.Errorf("while creating Vault creator: %s", err)
-		}
-		podSpec := &deployment.Spec.Template.Spec
-
-		podSpec, err = creator.AddVaultContainer(podSpec)
-		if err != nil {
-			return fmt.Errorf("while creating Vault container: %s", err)
-		}
-		deployment.Spec.Template.Spec = *podSpec
+func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisVault *nais_io_v1alpha1.Vault) error {
+	if !options.VaultEnabled || !naisVault.Enabled {
+		return nil
 	}
+
+	paths := naisVault.Paths
+	if paths == nil {
+		paths = make([]nais_io_v1alpha1.SecretPath, 0)
+	}
+
+	for i, p := range paths {
+		if len(p.MountPath) == 0 {
+			return fmt.Errorf("vault config #%d: mount path not specified", i)
+		}
+	}
+
+	if !defaultPathExists(paths, options.Vault.KeyValuePath) {
+		paths = append(paths, defaultSecretPath(source, options.Vault.KeyValuePath))
+	}
+
+	if err := validateSecretPaths(paths); err != nil {
+		return err
+	}
+
+	ast.InitContainers = append(ast.InitContainers, createInitContainer(source, options, paths))
+
+	if naisVault.Sidecar {
+		ast.Containers = append(ast.Containers, createSideCarContainer(options))
+	}
+
+	ast.Volumes = append(ast.Volumes, corev1.Volume{
+		Name: "vault-volume",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{
+				Medium: corev1.StorageMediumMemory,
+			},
+		},
+	})
+
+	ast.VolumeMounts = append(ast.VolumeMounts, createInitContainerMounts(paths)...)
 
 	return nil
 }

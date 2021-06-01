@@ -11,21 +11,21 @@ import (
 )
 
 func TestIngress(t *testing.T) {
-	var options resource.Options
-	options.Linkerd = false
+	var resourceOptions resource.Options
+	resourceOptions.Linkerd = false
 
 	t.Run("invalid ingress URLs are rejected", func(t *testing.T) {
 		for _, i := range []nais.Ingress{"crap", "htp:/foo", "http://valid.fqdn/foo", "ftp://test"} {
 			app := fixtures.MinimalApplication()
 			app.Spec.Ingresses = []nais.Ingress{i}
-			ops := resource.Operations{}
+			ast := resource.NewAst()
 			err := nais.ApplyDefaults(app)
 			assert.NoError(t, err)
 
-			err = ingress.Create(app, options, &ops)
+			err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 
 			assert.NotNil(t, err)
-			assert.Len(t, ops, 0)
+			assert.Len(t, ast.Operations, 0)
 		}
 	})
 }

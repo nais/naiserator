@@ -1,0 +1,87 @@
+config:
+  description: secure logging volume
+
+resourceoptions:
+  Securelogs:
+    fluentd-image: fluentd-image
+    configmap-reload-image: configmap-reload-image
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    securelogs:
+      enabled: true
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "securelogs configuration injected as sidecars and volume mount"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: "secure-logs-fluentd"
+                    env:
+                      - name: NAIS_APP
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.labels['app']
+                      - name: NAIS_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: NAIS_TEAM
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.labels['team']
+                      - name: NAIS_HOST
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: spec.nodeName
+                    imagePullPolicy: IfNotPresent
+                    image: fluentd-image
+                    resources:
+                      requests:
+                        cpu: 10m
+                        memory: 200m
+                    volumeMounts:
+                      - mountPath: /secure-logs
+                        name: secure-logs
+                      - mountPath: /fluentd/etc
+                        name: secure-logs-config
+                        readOnly: true
+                      - mountPath: /etc/pki/tls/certs/ca-bundle.crt
+                        name: ca-bundle-pem
+                        readOnly: true
+                        subPath: ca-bundle.pem
+                  - name: "secure-logs-configmap-reload"
+                    args:
+                      - --volume-dir=/config
+                      - --webhook-url=http://localhost:24444/api/config.reload
+                      - --webhook-method=GET
+                    imagePullPolicy: IfNotPresent
+                    image: configmap-reload-image
+                    resources:
+                      requests:
+                        cpu: 10m
+                        memory: 50m
+                    volumeMounts:
+                      - mountPath: /config
+                        name: secure-logs-config
+                        readOnly: true
+                  - name: "myapplication"
+                    volumeMounts:
+                      - mountPath: /secure-logs
+                        name: secure-logs

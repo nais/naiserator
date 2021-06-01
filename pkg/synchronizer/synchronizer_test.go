@@ -19,7 +19,6 @@ import (
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -105,7 +104,6 @@ func newTestRig(options resource.Options) (*testRig, error) {
 // The validity of resources generated are not tested here.
 func TestSynchronizer(t *testing.T) {
 	resourceOptions := resource.NewOptions()
-	ops := resource.Operations{}
 	rig, err := newTestRig(resourceOptions)
 	if err != nil {
 		t.Errorf("unable to run synchronizer integration tests: %s", err)
@@ -156,10 +154,11 @@ func TestSynchronizer(t *testing.T) {
 	}
 
 	// Create an Ingress object that should be deleted once processing has run.
+	ast := resource.NewAst()
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, resourceOptions, &ops)
+	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
-	ing := ops[0].Resource.(*networkingv1beta1.Ingress)
+	ing := ast.Operations[0].Resource.(*networkingv1beta1.Ingress)
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
 	err = rig.client.Create(ctx, ing)
 	if err != nil || len(ing.Spec.Rules) == 0 {
@@ -169,9 +168,9 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, resourceOptions, &ops)
+	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
-	ing = ops[1].Resource.(*networkingv1beta1.Ingress)
+	ing = ast.Operations[1].Resource.(*networkingv1beta1.Ingress)
 	ing.SetName("disowned-ingress")
 	ing.SetOwnerReferences(nil)
 	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
@@ -250,7 +249,7 @@ func TestSynchronizer(t *testing.T) {
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resource.NewOptions()
 	resourceOptions.GoogleProjectId = "something"
-	viper.Set(config.GoogleCloudSQLProxyContainerImage, "cloudsqlproxy")
+	resourceOptions.GoogleCloudSQLProxyContainerImage = "cloudsqlproxy"
 
 	rig, err := newTestRig(resourceOptions)
 	if err != nil {
@@ -321,7 +320,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	err = rig.client.Get(ctx, req.NamespacedName, deploy)
 	assert.NoError(t, err)
 	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, google.Region, app.Name)
-	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[2])
+	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[0].Command[2])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqlinstance)
 	assert.NoError(t, err)

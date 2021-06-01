@@ -1,14 +1,14 @@
 package aiven
 
 import (
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	appsv1 "k8s.io/api/apps/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
-func Elastic(app *nais_io_v1alpha1.Application, deployment *appsv1.Deployment) {
-	if app.Spec.Elastic == nil {
+func Elastic(ast *resource.Ast, elastic *nais_io_v1alpha1.Elastic) {
+	if elastic == nil {
 		return
 	}
 
-	deployment.Spec.Template.ObjectMeta.Labels["aiven"] = "enabled"
+	ast.Labels["aiven"] = "enabled"
 }

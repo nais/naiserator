@@ -56,6 +56,13 @@ func run() error {
 		"kafka.sasl.password",
 	})
 
+	if cfg.Features.Vault {
+		err = cfg.Vault.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
 	var kafkaClient kafka.Interface
 
 	if cfg.Kafka.Enabled {
@@ -114,12 +121,15 @@ func run() error {
 	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
 	resourceOptions.DigdiratorHosts = cfg.ServiceHosts.Digdirator
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
+	resourceOptions.GoogleCloudSQLProxyContainerImage = cfg.GoogleCloudSQLProxyContainerImage
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
+	resourceOptions.Proxy = cfg.Proxy
+	resourceOptions.Securelogs = cfg.Securelogs
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 

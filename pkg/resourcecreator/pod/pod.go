@@ -5,12 +5,7 @@ import (
 	"strings"
 
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
-	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
-	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -24,32 +19,24 @@ const (
 	naisClientId       = "NAIS_CLIENT_ID"
 )
 
-func Spec(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (*corev1.PodSpec, error) {
+func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string) (*corev1.PodSpec, error) {
 	var err error
 
-	podSpec := podSpecBase(app)
+	podSpec := &corev1.PodSpec{
+		InitContainers:     ast.InitContainers,
+		Containers:         ast.Containers,
+		ServiceAccountName: appName,
+		RestartPolicy:      corev1.RestartPolicyAlways,
+		DNSPolicy:          corev1.DNSClusterFirst,
+		Volumes:            ast.Volumes,
+		ImagePullSecrets: []corev1.LocalObjectReference{
+			{Name: "gpr-credentials"},
+			{Name: "ghcr-credentials"},
+		},
+	}
 
 	if len(resourceOptions.HostAliases) > 0 {
 		podSpec.HostAliases = hostAliases(resourceOptions)
-	}
-
-	if !app.Spec.SkipCaBundle {
-		podSpec = certificateauthority.CABundle(podSpec)
-	}
-
-	podSpec = filesFrom(app, podSpec, resourceOptions.NativeSecrets)
-
-	podSpec = envFrom(app, podSpec, resourceOptions.NativeSecrets)
-
-	if app.Spec.WebProxy && len(resourceOptions.GoogleProjectId) == 0 {
-		podSpec, err = proxyopts.ProxyOpts(podSpec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if app.Spec.SecureLogs.Enabled {
-		podSpec = secureLogs(podSpec)
 	}
 
 	return podSpec, err
@@ -64,16 +51,14 @@ func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
 	return hostAliases
 }
 
-func envFrom(app *nais_io_v1alpha1.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
-	for _, env := range app.Spec.EnvFrom {
+func envFrom(ast *resource.Ast, nativeSecrets bool, naisEnvFrom []nais_io_v1alpha1.EnvFrom) {
+	for _, env := range naisEnvFrom {
 		if len(env.ConfigMap) > 0 {
-			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, fromEnvConfigmap(env.ConfigMap))
+			ast.EnvFrom = append(ast.EnvFrom, fromEnvConfigmap(env.ConfigMap))
 		} else if nativeSecrets && len(env.Secret) > 0 {
-			spec.Containers[0].EnvFrom = append(spec.Containers[0].EnvFrom, EnvFromSecret(env.Secret))
+			ast.EnvFrom = append(ast.EnvFrom, EnvFromSecret(env.Secret))
 		}
 	}
-
-	return spec
 }
 
 func fromEnvConfigmap(name string) corev1.EnvFromSource {
@@ -86,22 +71,19 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
-func filesFrom(app *nais_io_v1alpha1.Application, spec *corev1.PodSpec, nativeSecrets bool) *corev1.PodSpec {
-	for _, file := range app.Spec.FilesFrom {
+func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1alpha1.FilesFrom) {
+	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
 			name := file.ConfigMap
-			spec.Volumes = append(spec.Volumes, fromFilesConfigmapVolume(name))
-			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
+			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name))
+			ast.VolumeMounts = append(ast.VolumeMounts,
 				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name)))
 		} else if nativeSecrets && len(file.Secret) > 0 {
 			name := file.Secret
-			spec.Volumes = append(spec.Volumes, FromFilesSecretVolume(name, name, nil))
-			spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts,
-				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath))
+			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, name, nil))
+			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath))
 		}
 	}
-
-	return spec
 }
 
 func fromFilesConfigmapVolume(name string) corev1.Volume {
@@ -116,21 +98,14 @@ func fromFilesConfigmapVolume(name string) corev1.Volume {
 		},
 	}
 }
-func podSpecBase(app *nais_io_v1alpha1.Application) *corev1.PodSpec {
-	return &corev1.PodSpec{
-		Containers:         []corev1.Container{appContainer(app)},
-		ServiceAccountName: app.Name,
-		RestartPolicy:      corev1.RestartPolicyAlways,
-		DNSPolicy:          corev1.DNSClusterFirst,
-		ImagePullSecrets: []corev1.LocalObjectReference{
-			{Name: "gpr-credentials"},
-			{Name: "ghcr-credentials"},
-		},
-	}
-}
 
-func appContainer(app *nais_io_v1alpha1.Application) corev1.Container {
-	c := corev1.Container{
+func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, options resource.Options) {
+	ast.Env = append(ast.Env, app.Spec.Env.ToKubernetes()...)
+	ast.Env = append(ast.Env, defaultEnvVars(app, options.ClusterName, app.Spec.Image)...)
+	filesFrom(ast, options.NativeSecrets, app.Spec.FilesFrom)
+	envFrom(ast, options.NativeSecrets, app.Spec.EnvFrom)
+
+	container := corev1.Container{
 		Name:  app.Name,
 		Image: app.Spec.Image,
 		Ports: []corev1.ContainerPort{
@@ -140,75 +115,46 @@ func appContainer(app *nais_io_v1alpha1.Application) corev1.Container {
 		Resources:       ResourceLimits(*app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
-		Env:             envVars(app),
+		Env:             ast.Env,
+		EnvFrom:         ast.EnvFrom,
+		VolumeMounts:    ast.VolumeMounts,
 	}
 
 	if app.Spec.Liveness != nil && len(app.Spec.Liveness.Path) > 0 {
-		c.LivenessProbe = probe(app, *app.Spec.Liveness)
+		container.LivenessProbe = probe(app.Spec.Port, *app.Spec.Liveness)
 	}
 
 	if app.Spec.Readiness != nil && len(app.Spec.Readiness.Path) > 0 {
-		c.ReadinessProbe = probe(app, *app.Spec.Readiness)
+		container.ReadinessProbe = probe(app.Spec.Port, *app.Spec.Readiness)
 	}
 
 	if app.Spec.Startup != nil && len(app.Spec.Startup.Path) > 0 {
-		c.StartupProbe = probe(app, *app.Spec.Startup)
+		container.StartupProbe = probe(app.Spec.Port, *app.Spec.Startup)
 	}
 
-	return c
+	ast.Containers = append(ast.Containers, container)
 }
 
-func secureLogs(podSpec *corev1.PodSpec) *corev1.PodSpec {
-	spec := podSpec.DeepCopy()
-	spec.Containers = append(spec.Containers, securelogs.FluentdSidecar())
-	spec.Containers = append(spec.Containers, securelogs.ConfigmapReloadSidecar())
-
-	spec.Volumes = append(spec.Volumes, securelogs.Volumes()...)
-
-	volumeMount := corev1.VolumeMount{
-		Name:      "secure-logs",
-		MountPath: "/secure-logs",
-	}
-	mainContainer := spec.Containers[0].DeepCopy()
-	mainContainer.VolumeMounts = append(mainContainer.VolumeMounts, volumeMount)
-	spec.Containers[0] = *mainContainer
-
-	return spec
-}
-
-func defaultEnvVars(app *nais_io_v1alpha1.Application) []corev1.EnvVar {
-	cluster := viper.GetString(config.ClusterName)
+func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
 	return []corev1.EnvVar{
-		{Name: naisAppNameEnv, Value: app.ObjectMeta.Name},
-		{Name: naisNamespaceEnv, Value: app.ObjectMeta.Namespace},
-		{Name: naisAppImageEnv, Value: app.Spec.Image},
-		{Name: naisClusterNameEnv, Value: cluster},
-		{Name: naisClientId, Value: app.ClientID(cluster)},
+		{Name: naisAppNameEnv, Value: source.GetName()},
+		{Name: naisNamespaceEnv, Value: source.GetNamespace()},
+		{Name: naisAppImageEnv, Value: appImage},
+		{Name: naisClusterNameEnv, Value: clusterName},
+		{Name: naisClientId, Value: AppClientID(source, clusterName)},
 	}
 }
 
-// Maps environment variables from ApplicationSpec to the ones we use in Spec
-func envVars(app *nais_io_v1alpha1.Application) []corev1.EnvVar {
-	newEnvVars := defaultEnvVars(app)
-
-	for _, envVar := range app.Spec.Env {
-		if envVar.ValueFrom != nil && envVar.ValueFrom.FieldRef.FieldPath != "" {
-			newEnvVars = append(newEnvVars, corev1.EnvVar{
-				Name: envVar.Name,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{FieldPath: envVar.ValueFrom.FieldRef.FieldPath},
-				},
-			})
-		} else {
-			newEnvVars = append(newEnvVars, corev1.EnvVar{Name: envVar.Name, Value: envVar.Value})
-		}
+func mapMerge(dst, src map[string]string) {
+	for k, v := range src {
+		dst[k] = v
 	}
-
-	return newEnvVars
 }
 
-func ObjectMeta(app *nais_io_v1alpha1.Application) metav1.ObjectMeta {
+func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) metav1.ObjectMeta {
 	objectMeta := app.CreateObjectMeta()
+	objectMeta.Annotations = ast.Annotations
+	mapMerge(objectMeta.Labels, ast.Labels)
 
 	port := app.Spec.Prometheus.Port
 	if len(port) == 0 {
@@ -228,14 +174,6 @@ func ObjectMeta(app *nais_io_v1alpha1.Application) metav1.ObjectMeta {
 
 	if len(app.Spec.Logtransform) > 0 {
 		objectMeta.Annotations["nais.io/logtransform"] = app.Spec.Logtransform
-	}
-
-	if app.Spec.Elastic != nil {
-		objectMeta.Labels["elastic"] = "enabled"
-	}
-
-	if app.Spec.Kafka != nil {
-		objectMeta.Labels["kafka"] = "enabled"
 	}
 
 	return objectMeta
@@ -262,10 +200,10 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	}
 }
 
-func probe(app *nais_io_v1alpha1.Application, probe nais_io_v1alpha1.Probe) *corev1.Probe {
+func probe(appPort int, probe nais_io_v1alpha1.Probe) *corev1.Probe {
 	port := probe.Port
 	if port == 0 {
-		port = app.Spec.Port
+		port = appPort
 	}
 
 	k8sprobe := &corev1.Probe{

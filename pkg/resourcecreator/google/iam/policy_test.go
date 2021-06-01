@@ -13,9 +13,9 @@ import (
 
 func TestCreateGoogleIAMPolicy(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	iamServiceAccount := google_iam.ServiceAccount(app, "")
+	iamServiceAccount := google_iam.CreateServiceAccount(app, "")
 	projectId := "nais-env-1234"
-	iamPolicy := google_iam.Policy(app, &iamServiceAccount, projectId)
+	iamPolicy := google_iam.CreatePolicy(app, &iamServiceAccount, projectId)
 	testMember := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, app.Namespace, app.Name)
 	assert.Equal(t, iamServiceAccount.Kind, iamPolicy.Spec.ResourceRef.Kind)
 	assert.Equal(t, &iamServiceAccount.Name, iamPolicy.Spec.ResourceRef.Name)

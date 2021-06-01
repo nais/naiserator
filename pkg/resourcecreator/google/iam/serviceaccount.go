@@ -2,30 +2,30 @@ package google_iam
 
 import (
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ServiceAccount(app *nais.Application, projectId string) google_iam_crd.IAMServiceAccount {
-	objectMeta := app.CreateObjectMeta()
-	objectMeta.Annotations["nais.io/team"] = app.Namespace
+func CreateServiceAccount(source resource.Source, projectId string) google_iam_crd.IAMServiceAccount {
+	objectMeta := source.CreateObjectMeta()
+	objectMeta.Name = source.CreateAppNamespaceHash()
 	objectMeta.Namespace = google.IAMServiceAccountNamespace
-	objectMeta.Name = app.CreateAppNamespaceHash()
+	objectMeta.Annotations["nais.io/team"] = objectMeta.Namespace
 
 	iamServiceAccount := google_iam_crd.IAMServiceAccount{
-		TypeMeta: k8s_meta.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMServiceAccount",
 			APIVersion: google.IAMAPIVersion,
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_iam_crd.IAMServiceAccountSpec{
-			DisplayName: app.Name,
+			DisplayName: source.GetName(),
 		},
 	}
 
-	util.SetAnnotation(&iamServiceAccount, "nais.io/team", app.Namespace)
+	util.SetAnnotation(&iamServiceAccount, "nais.io/team", source.GetNamespace())
 	util.SetAnnotation(&iamServiceAccount, google.ProjectIdAnnotation, projectId)
 
 	return iamServiceAccount

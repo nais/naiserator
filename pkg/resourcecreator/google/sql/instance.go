@@ -7,8 +7,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/util"
-	"k8s.io/api/apps/v1"
-
 	"k8s.io/utils/pointer"
 
 	"github.com/imdario/mergo"
@@ -16,7 +14,7 @@ import (
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
-	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -29,8 +27,7 @@ const (
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
 )
 
-func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
-	objectMeta := app.CreateObjectMeta()
+func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 
@@ -40,7 +37,7 @@ func GoogleSqlInstance(app *nais.Application, instance nais.CloudSqlInstance, pr
 	}
 
 	sqlInstance := &google_sql_crd.SQLInstance{
-		TypeMeta: k8s_meta.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLInstance",
 			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
@@ -108,15 +105,16 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func instanceIamPolicyMember(app *nais.Application, resourceName string, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+func instanceIamPolicyMember(source resource.Source, resourceName, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+	objectMeta := source.CreateObjectMetaWithName(resourceName)
 	policy := &google_iam_crd.IAMPolicyMember{
-		ObjectMeta: (*app).CreateObjectMetaWithName(resourceName),
-		TypeMeta: k8s_meta.TypeMeta{
+		ObjectMeta: objectMeta,
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMPolicyMember",
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(source.CreateAppNamespaceHash(), googleProjectId)),
 			Role:   "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
@@ -130,71 +128,71 @@ func instanceIamPolicyMember(app *nais.Application, resourceName string, googleP
 	return policy
 }
 
-func CreateSqlInstance(app *nais.Application, resourceOptions resource.Options, deployment *v1.Deployment, operations *resource.Operations) error {
-	if app.Spec.GCP.SqlInstances != nil {
-		for i, sqlInstance := range app.Spec.GCP.SqlInstances {
-			if i > 0 {
-				return fmt.Errorf("only one sql instance is supported")
-			}
+func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisSqlInstances *[]nais.CloudSqlInstance) error {
+	if naisSqlInstances == nil {
+		return nil
+	}
 
-			// TODO: name defaulting will break with more than one instance
-			sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, app.Name)
-			if err != nil {
-				return err
-			}
+	for i, sqlInstance := range *naisSqlInstances {
+		if i > 0 {
+			return fmt.Errorf("only one sql instance is supported")
+		}
 
-			instance := GoogleSqlInstance(app, sqlInstance, resourceOptions.GoogleTeamProjectId)
-			*operations = append(*operations, resource.Operation{Resource: instance, Operation: resource.OperationCreateOrUpdate})
+		// TODO: name defaulting will break with more than one instance
+		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, source.GetName())
+		if err != nil {
+			return err
+		}
 
-			iamPolicyMember := instanceIamPolicyMember(app, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-			*operations = append(*operations, resource.Operation{Resource: iamPolicyMember, Operation: resource.OperationCreateIfNotExists})
+		instance := GoogleSqlInstance(source.CreateObjectMeta(), sqlInstance, resourceOptions.GoogleTeamProjectId)
+		ast.AppendOperation(resource.OperationCreateOrUpdate,  instance)
 
-			for _, db := range sqlInstance.Databases {
-				sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+		iamPolicyMember := instanceIamPolicyMember(source, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+		ast.AppendOperation(resource.OperationCreateIfNotExists,  iamPolicyMember)
 
-				googledb := GoogleSQLDatabase(app, db, sqlInstance, resourceOptions.GoogleTeamProjectId)
-				*operations = append(*operations, resource.Operation{Resource: googledb, Operation: resource.OperationCreateIfNotExists})
+		for _, db := range sqlInstance.Databases {
+			sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
 
-				for _, user := range sqlUsers {
-					vars := make(map[string]string)
+			googledb := GoogleSQLDatabase(source.CreateObjectMeta(), db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
-					googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
+			for _, user := range sqlUsers {
+				vars := make(map[string]string)
 
-					password, err := util.GeneratePassword()
-					if err != nil {
-						return err
-					}
+				googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
 
-					env := googleSqlUser.CreateUserEnvVars(password)
-					vars = MapEnvToVars(env, vars)
-
-					secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
-					if err != nil {
-						return fmt.Errorf("unable to assign sql password: %s", err)
-					}
-
-					sqlUser, err := googleSqlUser.Create(app, secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
-					if err != nil {
-						return fmt.Errorf("unable to create sql user: %s", err)
-					}
-					*operations = append(*operations, resource.Operation{Resource: sqlUser, Operation: resource.OperationCreateIfNotExists})
-
-					scrt := secret.OpaqueSecret(app, GoogleSQLSecretName(app, googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
-					*operations = append(*operations, resource.Operation{Resource: scrt, Operation: resource.OperationCreateIfNotExists})
+				password, err := util.GeneratePassword()
+				if err != nil {
+					return err
 				}
-			}
 
-			// FIXME: take into account when refactoring default values
-			app.Spec.GCP.SqlInstances[i].Name = sqlInstance.Name
+				env := googleSqlUser.CreateUserEnvVars(password)
+				vars = MapEnvToVars(env, vars)
 
-			podSpec := &deployment.Spec.Template.Spec
-			podSpec = AppendGoogleSQLUserSecretEnvs(podSpec, app)
-			for _, instance := range app.Spec.GCP.SqlInstances {
-				podSpec.Containers = append(podSpec.Containers, google.CloudSqlProxyContainer(instance, 5432, resourceOptions.GoogleTeamProjectId))
+				secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
+				if err != nil {
+					return fmt.Errorf("unable to assign sql password: %s", err)
+				}
+
+				sqlUser, err := googleSqlUser.Create(source.CreateObjectMeta(), secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+				if err != nil {
+					return fmt.Errorf("unable to create sql user: %s", err)
+				}
+				ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
+
+				scrt := secret.OpaqueSecret(source.CreateObjectMeta(), GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
+				ast.AppendOperation(resource.OperationCreateIfNotExists, scrt)
 			}
-			deployment.Spec.Template.Spec = *podSpec
+		}
+
+		// FIXME: take into account when refactoring default values
+		(*naisSqlInstances)[i].Name = sqlInstance.Name
+
+		AppendGoogleSQLUserSecretEnvs(ast, naisSqlInstances, source.GetName())
+		for _, instance := range *naisSqlInstances {
+			ast.Containers = append(ast.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))
 		}
 	}
+
 	return nil
 }
-

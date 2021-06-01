@@ -10,7 +10,8 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
-	deployment "github.com/nais/naiserator/pkg/resourcecreator/deployment"
+	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
+	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/gcp"
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
 	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
@@ -21,8 +22,11 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
+	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
@@ -36,42 +40,56 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
-	ops := resource.Operations{}
-	service.Create(app, &ops)
-	serviceaccount.Create(app, resourceOptions, &ops)
-	horizontalpodautoscaler.Create(app, &ops)
-	dplt, err := deployment.Create(app, resourceOptions, &ops)
-	if err != nil {
-		return nil, fmt.Errorf("while creating deployment: %s", err)
-	}
-	err = azure.Create(app, resourceOptions, dplt, &ops)
-	if err != nil {
-		return nil, err
-	}
-	err = idporten.Create(app, resourceOptions, dplt, &ops)
-	if err != nil {
-		return nil, err
-	}
-	err = kafka.Create(app, resourceOptions, dplt)
-	if err != nil {
-		return nil, err
-	}
-	err = gcp.Create(app, resourceOptions, dplt, &ops)
-	if err != nil {
-		return nil, err
-	}
-	maskinporten.Create(app, resourceOptions, dplt, &ops)
-	poddisruptionbudget.Create(app, &ops)
-	jwker.Create(app, resourceOptions, dplt, &ops)
-	leaderelection.Create(app, dplt, &ops)
-	aiven.Elastic(app, dplt)
-	linkerd.Create(resourceOptions, dplt)
-	networkpolicy.Create(app, resourceOptions, &ops)
-	err = ingress.Create(app, resourceOptions, &ops)
-	if err != nil {
-		return nil, fmt.Errorf("while creating ingress: %s", err)
-	}
-	vault.Create(app, resourceOptions, dplt)
+	ast := resource.NewAst()
 
-	return ops, nil
+	service.Create(app, ast, *app.Spec.Service)
+	serviceaccount.Create(app, ast, resourceOptions)
+	horizontalpodautoscaler.Create(app, ast, *app.Spec.Replicas)
+	networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+	err := ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	if err != nil {
+		return nil, err
+	}
+	leaderelection.Create(app, ast, app.Spec.LeaderElection)
+	err = azure.Create(app, ast, resourceOptions, *app.Spec.Azure, app.Spec.Ingresses, *app.Spec.AccessPolicy)
+	if err != nil {
+		return nil, err
+	}
+	err = idporten.Create(app, ast, resourceOptions, app.Spec.IDPorten, app.Spec.Ingresses)
+	if err != nil {
+		return nil, err
+	}
+	err = kafka.Create(app, ast, resourceOptions, app.Spec.Kafka)
+	if err != nil {
+		return nil, err
+	}
+	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP)
+	if err != nil {
+		return nil, err
+	}
+	err = proxyopts.Create(ast, resourceOptions, app.Spec.WebProxy)
+	if err != nil {
+		return nil, err
+	}
+	certificateauthority.Create(ast, app.Spec.SkipCaBundle)
+	securelogs.Create(ast, resourceOptions, app.Spec.SecureLogs)
+	maskinporten.Create(app, ast, resourceOptions, app.Spec.Maskinporten)
+	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
+	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+	aiven.Elastic(ast, app.Spec.Elastic)
+	linkerd.Create(ast, resourceOptions)
+
+	err = vault.Create(app, ast, resourceOptions, app.Spec.Vault)
+	if err != nil {
+		return nil, err
+	}
+
+	pod.CreateAppContainer(app, ast, resourceOptions) // skulle denne vært i deployment-kallet?
+
+	err = deployment.Create(app, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.Operations, nil
 }

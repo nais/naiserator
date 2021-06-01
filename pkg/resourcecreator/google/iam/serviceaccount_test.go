@@ -13,7 +13,7 @@ import (
 func TestCreateGoogleIAMServiceaccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
 	projectId := "projectId"
-	iamServiceAccount := google_iam.ServiceAccount(app, projectId)
+	iamServiceAccount := google_iam.CreateServiceAccount(app, projectId)
 
 	assert.Equal(t, app.CreateAppNamespaceHash(), iamServiceAccount.Name)
 	assert.Equal(t, google.IAMServiceAccountNamespace, iamServiceAccount.Namespace)

@@ -14,10 +14,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/deepcomp"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -31,8 +29,8 @@ const (
 )
 
 type testCaseConfig struct {
-	Description  string
-	MatchType    string
+	Description string
+	MatchType   string
 }
 
 type meta struct {
@@ -209,10 +207,6 @@ func TestNewGoldenFile(t *testing.T) {
 		t.Error(err)
 		t.Fail()
 	}
-
-	viper.Set(config.ClusterName, "test-cluster")
-	viper.Set(config.ProxyAddress, "http://foo.bar:5224")
-	viper.Set(config.ProxyExclude, []string{"foo", "bar", "baz"})
 
 	for _, file := range files {
 		if file.IsDir() {

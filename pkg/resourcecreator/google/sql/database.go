@@ -5,12 +5,11 @@ import (
 	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/util"
-	k8s_meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleSQLDatabase(app *nais.Application, db nais.CloudSqlDatabase, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLDatabase {
-	objectMeta := app.CreateObjectMetaWithName(db.Name)
-
+func GoogleSQLDatabase(objectMeta metav1.ObjectMeta, db nais.CloudSqlDatabase, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLDatabase {
+	objectMeta.Name = db.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 
 	if !instance.CascadingDelete {
@@ -19,7 +18,7 @@ func GoogleSQLDatabase(app *nais.Application, db nais.CloudSqlDatabase, instance
 	}
 
 	return &google_sql_crd.SQLDatabase{
-		TypeMeta: k8s_meta.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "SqlDatabase",
 			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
