@@ -111,6 +111,7 @@ func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, op
 		Ports: []corev1.ContainerPort{
 			{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
 		},
+		Command:         app.Spec.Command,
 		Resources:       ResourceLimits(*app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),

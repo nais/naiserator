@@ -66,7 +66,8 @@ func oauthCallbackURLs(ingresses []nais_io_v1alpha1.Ingress) []string {
 
 func azureSecretName(name string) (string, error) {
 	prefixedName := fmt.Sprintf("%s-%s", "azure", name)
-	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
+	year, week := time.Now().ISOWeek()
+	suffix := fmt.Sprintf("%d-%d", year, week)
 
 	maxLen := validation.DNS1035LabelMaxLength
 	maxLen -= len(suffix) + 1 // length of suffix + 1 byte of separator
