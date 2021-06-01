@@ -206,7 +206,17 @@ tests:
           spec:
             template:
               spec:
+                dnsPolicy: ClusterFirst
+                imagePullSecrets:
+                  - name: gpr-credentials
+                restartPolicy: Always
+                serviceAccountName: myapplication
                 containers:
+                - name: myapplication
+                  image: navikt/myapplication:1.2.3
+                  envFrom:
+                    - secretRef:
+                        name: google-sql-myapplication
                 - name: cloudsql-proxy
                   command:
                   - /cloud_sql_proxy
@@ -220,12 +230,3 @@ tests:
                   securityContext:
                     allowPrivilegeEscalation: false
                     runAsUser: 2
-                - image: navikt/myapplication:1.2.3
-                  envFrom:
-                    - secretRef:
-                        name: google-sql-myapplication
-                dnsPolicy: ClusterFirst
-                imagePullSecrets:
-                - name: gpr-credentials
-                restartPolicy: Always
-                serviceAccountName: myapplication

@@ -32,6 +32,10 @@ tests:
             template:
               spec:
                 containers:
+                  - name: "myapplication"
+                    volumeMounts:
+                      - mountPath: /secure-logs
+                        name: secure-logs
                   - name: "secure-logs-fluentd"
                     env:
                       - name: NAIS_APP
@@ -81,7 +85,3 @@ tests:
                       - mountPath: /config
                         name: secure-logs-config
                         readOnly: true
-                  - name: "myapplication"
-                    volumeMounts:
-                      - mountPath: /secure-logs
-                        name: secure-logs

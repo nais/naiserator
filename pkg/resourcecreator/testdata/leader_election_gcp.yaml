@@ -36,6 +36,7 @@ tests:
             template:
               spec:
                 containers:
+                  - name: "myapplication"
                   - name: "elector"
                     image: "gcr.io/google_containers/leader-elector:0.5"
                     args:
@@ -49,7 +50,6 @@ tests:
                       requests:
                         cpu: "100m"
                     imagePullPolicy: "IfNotPresent"
-                  - name: "myapplication"
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     name: myapplication

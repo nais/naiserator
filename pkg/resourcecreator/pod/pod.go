@@ -19,12 +19,28 @@ const (
 	naisClientId       = "NAIS_CLIENT_ID"
 )
 
+func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
+	reordered := make([]corev1.Container, len(containers))
+	delta := 1
+	for i, container := range containers {
+		if container.Name == appName {
+			reordered[0] = container
+			delta = 0
+		} else {
+			reordered[i+delta] = container
+		}
+	}
+	return reordered
+}
+
 func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string) (*corev1.PodSpec, error) {
 	var err error
 
+	containers := reorderContainers(appName, ast.Containers)
+
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
-		Containers:         ast.Containers,
+		Containers:         containers,
 		ServiceAccountName: appName,
 		RestartPolicy:      corev1.RestartPolicyAlways,
 		DNSPolicy:          corev1.DNSClusterFirst,
