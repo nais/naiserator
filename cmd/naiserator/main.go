@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
+	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -147,16 +148,16 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
-	syncer := &synchronizer.Synchronizer{
+	applicationReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
 		Client:          mgrClient,
 		Config:          *cfg,
 		Kafka:           kafkaClient,
 		ResourceOptions: resourceOptions,
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
-	}
+	})
 
-	if err = syncer.SetupWithManager(mgr); err != nil {
+	if err = applicationReconciler.SetupWithManager(mgr); err != nil {
 		return err
 	}
 

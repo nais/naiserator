@@ -56,12 +56,6 @@ type Synchronizer struct {
 	Kafka           kafka.Interface
 }
 
-func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&nais_io_v1alpha1.Application{}).
-		Complete(n)
-}
-
 // Creates a Kubernetes event, or updates an existing one with an incremented counter
 func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Event) (*corev1.Event, error) {
 	selector, err := fields.ParseSelector(fmt.Sprintf("involvedObject.name=%s,involvedObject.uid=%s", reportedEvent.InvolvedObject.Name, reportedEvent.InvolvedObject.UID))
@@ -103,10 +97,19 @@ func (n *Synchronizer) reportError(ctx context.Context, source string, err error
 }
 
 // Process work queue
-func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (n *Synchronizer) Reconcile(req ctrl.Request, source resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
+	result, err := reconcileApplication(req, source, n, ctx)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	return result, nil
+}
+
+func reconcileApplication(req ctrl.Request, source resource.Source, n *Synchronizer, ctx context.Context) (ctrl.Result, error) {
 	app := &nais_io_v1alpha1.Application{}
 	err := n.Get(ctx, req.NamespacedName, app)
 	if err != nil {
@@ -190,12 +193,11 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// Create new deployment event
-	event := generator.NewDeploymentEvent(*app)
+	event := generator.NewDeploymentEvent(app, app.Spec.Image)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(*app, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout)
-
+	go n.MonitorRollout(source, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout, app.Spec.Image)
 	return ctrl.Result{}, nil
 }
 
@@ -386,12 +388,12 @@ var appsync sync.Mutex
 
 // Atomically update an Application resource.
 // Locks the resource to avoid race conditions.
-func (n *Synchronizer) UpdateApplication(ctx context.Context, app *nais_io_v1alpha1.Application, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
+func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.Source, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
 	appsync.Lock()
 	defer appsync.Unlock()
 
 	existing := &nais_io_v1alpha1.Application{}
-	err := n.Get(ctx, client.ObjectKey{Namespace: app.Namespace, Name: app.Name}, existing)
+	err := n.Get(ctx, client.ObjectKey{Namespace: source.GetNamespace(), Name: source.GetName()}, existing)
 	if err != nil {
 		return fmt.Errorf("get newest version of Application: %s", err)
 	}
@@ -411,7 +413,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 	return n.Kafka.Produce(payload)
 }
 
-func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
+func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, frequency, timeout time.Duration, appImage string) {
 	logger.Debugf("monitoring rollout status")
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -421,7 +423,7 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 		select {
 		case <-time.After(frequency):
 			deploy := &apps.Deployment{}
-			err := n.Get(ctx, client.ObjectKey{Name: app.Name, Namespace: app.Namespace}, deploy)
+			err := n.Get(ctx, client.ObjectKey{Name: source.GetName(), Namespace: source.GetNamespace()}, deploy)
 			if err != nil {
 				if !errors.IsNotFound(err) {
 					logger.Errorf("monitor rollout: failed to query Deployment: %s", err)
@@ -430,9 +432,9 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 			}
 
 			if deploymentComplete(deploy, &deploy.Status) {
-				event := generator.NewDeploymentEvent(app)
+				event := generator.NewDeploymentEvent(source, appImage)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				if n.Kafka != nil && !app.SkipDeploymentMessage() {
+				if n.Kafka != nil && !source.SkipDeploymentMessage() {
 					offset, err := n.produceDeploymentEvent(&event)
 					if err == nil {
 						logger.WithFields(log.Fields{
@@ -443,13 +445,13 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 					}
 				}
 
-				_, err = n.reportEvent(ctx, app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+				_, err = n.reportEvent(ctx, source.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 				if err != nil {
 					logger.Errorf("monitor rollout: unable to report rollout complete event: %s", err)
 				}
 
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
-				err = n.UpdateApplication(ctx, &app, func(app *nais_io_v1alpha1.Application) error {
+				err = n.UpdateApplication(ctx, source, func(app *nais_io_v1alpha1.Application) error {
 					app.Status.SynchronizationState = EventRolloutComplete
 					app.Status.RolloutCompleteTime = time.Now().UnixNano()
 					app.SetDeploymentRolloutStatus(event.RolloutStatus.String())

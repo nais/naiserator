@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	ingress "github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -81,19 +82,19 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		},
 	}
 
-	syncer := &synchronizer.Synchronizer{
+	applicationReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
 		Client:          rig.client,
 		SimpleClient:    rig.client,
 		Scheme:          rig.scheme,
 		ResourceOptions: options,
 		Config:          syncerConfig,
-	}
+	})
 
-	err = syncer.SetupWithManager(rig.manager)
+	err = applicationReconciler.SetupWithManager(rig.manager)
 	if err != nil {
 		return nil, fmt.Errorf("setup synchronizer with manager: %w", err)
 	}
-	rig.synchronizer = syncer
+	rig.synchronizer = applicationReconciler
 
 	return rig, nil
 }

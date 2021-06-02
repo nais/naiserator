@@ -3,6 +3,7 @@ package generator_test
 import (
 	"testing"
 
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -89,7 +90,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Image = "image:version"
 
-		event := generator.NewDeploymentEvent(*app)
+		event := generator.NewDeploymentEvent(app, app.Spec.Image)
 
 		assert.Equal(t, deployment.PlatformType_nais, event.GetPlatform().GetType())
 		assert.Empty(t, event.GetPlatform().GetVariant())
@@ -120,7 +121,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		event := generator.NewDeploymentEvent(*app)
+		event := generator.NewDeploymentEvent(app, app.Spec.Image)
 
 		assert.Equal(t, deployment.Environment_production, event.GetEnvironment())
 	})
@@ -130,22 +131,23 @@ func TestNewDeploymentEvent(t *testing.T) {
 		app.ObjectMeta = app.CreateObjectMeta()
 
 		correlationID := "correlation-id"
-		app.Status.CorrelationID = correlationID
+		app.Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation] = correlationID
 
-		event := generator.NewDeploymentEvent(*app)
 
-		assert.Equal(t, event.CorrelationID, correlationID)
+		event := generator.NewDeploymentEvent(app, app.Spec.Image)
+
+		assert.Equal(t, correlationID, event.CorrelationID)
 	})
 
-	t.Run("Get correlationID from app annotations", func(t *testing.T) {
+	t.Run("Get team-name from app labels", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 
 		team := "team"
 		app.Labels["team"] = team
 
-		event := generator.NewDeploymentEvent(*app)
+		event := generator.NewDeploymentEvent(app, app.Spec.Image)
 
-		assert.Equal(t, event.Team, team)
+		assert.Equal(t, team, event.Team)
 	})
 
 }
