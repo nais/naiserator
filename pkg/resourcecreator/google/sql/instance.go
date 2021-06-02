@@ -12,7 +12,7 @@ import (
 	"github.com/imdario/mergo"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -145,10 +145,10 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		}
 
 		instance := GoogleSqlInstance(source.CreateObjectMeta(), sqlInstance, resourceOptions.GoogleTeamProjectId)
-		ast.AppendOperation(resource.OperationCreateOrUpdate,  instance)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, instance)
 
 		iamPolicyMember := instanceIamPolicyMember(source, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-		ast.AppendOperation(resource.OperationCreateIfNotExists,  iamPolicyMember)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
 		for _, db := range sqlInstance.Databases {
 			sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)

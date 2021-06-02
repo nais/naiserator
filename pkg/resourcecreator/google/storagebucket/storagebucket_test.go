@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	storagebucket "github.com/nais/naiserator/pkg/resourcecreator/google/storagebucket"
 	"github.com/nais/naiserator/pkg/test/fixtures"

@@ -3,11 +3,11 @@ package google_sql_test
 import (
 	"testing"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
-	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
+	google_sql "github.com/nais/naiserator/pkg/resourcecreator/google/sql"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGoogleSQLUserEnvVars(t *testing.T) {

@@ -1,7 +1,7 @@
 package horizontalpodautoscaler
 
 import (
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/api/autoscaling/v2beta2"

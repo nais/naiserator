@@ -3,9 +3,9 @@ package google_sql_test
 import (
 	"testing"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
+	google_sql "github.com/nais/naiserator/pkg/resourcecreator/google/sql"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )

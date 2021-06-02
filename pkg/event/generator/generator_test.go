@@ -3,8 +3,8 @@ package generator_test
 import (
 	"testing"
 
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/event"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/spf13/viper"
@@ -131,8 +131,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		app.ObjectMeta = app.CreateObjectMeta()
 
 		correlationID := "correlation-id"
-		app.Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation] = correlationID
-
+		app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = correlationID
 
 		event := generator.NewDeploymentEvent(app, app.Spec.Image)
 

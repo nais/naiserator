@@ -1,8 +1,8 @@
 package jwker
 
 import (
-	"github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -15,7 +15,7 @@ func secretName(name string) string {
 	return namegen.PrefixedRandShortName("tokenx", name, validation.DNS1035LabelMaxLength)
 }
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisTokenX nais_io_v1alpha1.TokenX, naisAccessPolicy *nais_io_v1.AccessPolicy) {
+func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisTokenX nais_io_v1.TokenX, naisAccessPolicy *nais_io_v1.AccessPolicy) {
 	if !options.JwkerEnabled || !naisTokenX.Enabled {
 		return
 	}

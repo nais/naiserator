@@ -4,7 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -67,7 +68,7 @@ func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
 	return hostAliases
 }
 
-func envFrom(ast *resource.Ast, nativeSecrets bool, naisEnvFrom []nais_io_v1alpha1.EnvFrom) {
+func envFrom(ast *resource.Ast, nativeSecrets bool, naisEnvFrom []nais_io_v1.EnvFrom) {
 	for _, env := range naisEnvFrom {
 		if len(env.ConfigMap) > 0 {
 			ast.EnvFrom = append(ast.EnvFrom, fromEnvConfigmap(env.ConfigMap))
@@ -87,7 +88,7 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
-func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1alpha1.FilesFrom) {
+func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1.FilesFrom) {
 	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
 			name := file.ConfigMap
@@ -216,7 +217,7 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	}
 }
 
-func probe(appPort int, probe nais_io_v1alpha1.Probe) *corev1.Probe {
+func probe(appPort int, probe nais_io_v1.Probe) *corev1.Probe {
 	port := probe.Port
 	if port == 0 {
 		port = appPort

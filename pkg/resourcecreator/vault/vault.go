@@ -3,19 +3,19 @@ package vault
 import (
 	"fmt"
 
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisVault *nais_io_v1alpha1.Vault) error {
+func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisVault *nais_io_v1.Vault) error {
 	if !options.VaultEnabled || !naisVault.Enabled {
 		return nil
 	}
 
 	paths := naisVault.Paths
 	if paths == nil {
-		paths = make([]nais_io_v1alpha1.SecretPath, 0)
+		paths = make([]nais_io_v1.SecretPath, 0)
 	}
 
 	for i, p := range paths {

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -120,7 +121,7 @@ func podSpecWithKafka(ast *resource.Ast, kafkaratorSecretName string) {
 	}...)
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1alpha1.Kafka) error {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka) error {
 	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
 		kafkaratorSecretName, err := generateKafkaSecretName(source.GetName(), naisKafka.Pool)
 		if err != nil {
