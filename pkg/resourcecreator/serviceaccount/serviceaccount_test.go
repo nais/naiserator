@@ -33,5 +33,5 @@ func TestGetServiceAccountGoogleCluster(t *testing.T) {
 
 	assert.Equal(t, app.Name, svcAcc.Name)
 	assert.Equal(t, app.Namespace, svcAcc.Namespace)
-	assert.Equal(t, app.CreateAppNamespaceHash()+"@nais-project-1234.iam.gserviceaccount.com", svcAcc.Annotations["iam.gke.io/gcp-service-account"])
+	assert.Equal(t, resource.CreateAppNamespaceHash(app)+"@nais-project-1234.iam.gserviceaccount.com", svcAcc.Annotations["iam.gke.io/gcp-service-account"])
 }

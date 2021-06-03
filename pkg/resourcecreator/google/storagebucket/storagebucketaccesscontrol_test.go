@@ -6,6 +6,7 @@ import (
 
 	"github.com/magiconair/properties/assert"
 	storagebucket "github.com/nais/naiserator/pkg/resourcecreator/google/storagebucket"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 )
 
@@ -15,7 +16,7 @@ func TestGoogleStorageBucketAccessControl(t *testing.T) {
 		projectId := "project-1234"
 		serviceAccountName := "app-namespace-54203aa"
 		app := fixtures.MinimalApplication()
-		bac := storagebucket.AccessControl(app.CreateObjectMeta(), bucketname, projectId, serviceAccountName)
+		bac := storagebucket.AccessControl(resource.CreateObjectMeta(app), bucketname, projectId, serviceAccountName)
 
 		assert.Equal(t, bac.Spec.BucketRef.Name, bucketname)
 		assert.Equal(t, bac.Spec.Entity, fmt.Sprintf("user-%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId))

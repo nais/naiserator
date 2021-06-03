@@ -100,7 +100,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 	naisjob.Status.SynchronizationTime = time.Now().UnixNano()
 	metrics.NaisjobsDeployments.Inc()
 
-	_, err = n.reportEvent(ctx, naisjob.CreateEvent(naisjob.Status.SynchronizationState, "Successfully synchronized all naisjob resources", "Normal"))
+	_, err = n.reportEvent(ctx, resource.CreateEvent(naisjob, naisjob.Status.SynchronizationState, "Successfully synchronized all naisjob resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}

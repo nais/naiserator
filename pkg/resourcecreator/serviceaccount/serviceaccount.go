@@ -10,7 +10,7 @@ import (
 func Create(source resource.Source, ast *resource.Ast, options resource.Options) {
 	objectMeta := resource.CreateObjectMeta(source)
 	if len(options.GoogleProjectId) > 0 {
-		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(source.CreateAppNamespaceHash(), options.GoogleProjectId)
+		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), options.GoogleProjectId)
 	}
 
 	serviceAccount := &corev1.ServiceAccount{

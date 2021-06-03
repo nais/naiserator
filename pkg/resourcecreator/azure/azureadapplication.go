@@ -85,7 +85,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		return nil
 	}
 
-	azureAdApplication, err := adApplication(source.CreateObjectMeta(), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
+	azureAdApplication, err := adApplication(resource.CreateObjectMeta(source), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
 	if err != nil {
 		return err
 	}

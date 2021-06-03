@@ -90,7 +90,7 @@ func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Ev
 func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err error, source resource.Source) {
 	logger := log.WithFields(source.LogFields())
 	logger.Error(err)
-	_, err = n.reportEvent(ctx, source.CreateEvent(eventSource, err.Error(), "Warning"))
+	_, err = n.reportEvent(ctx, resource.CreateEvent(source, eventSource, err.Error(), "Warning"))
 	if err != nil {
 		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
@@ -178,7 +178,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request, source resource.So
 	app.Status.SynchronizationTime = time.Now().UnixNano()
 	metrics.Deployments.Inc()
 
-	_, err = n.reportEvent(ctx, app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
+	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
@@ -436,7 +436,7 @@ func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, 
 					}
 				}
 
-				_, err = n.reportEvent(ctx, source.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+				_, err = n.reportEvent(ctx, resource.CreateEvent(source, EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 				if err != nil {
 					logger.Errorf("monitor rollout: unable to report rollout complete event: %s", err)
 				}

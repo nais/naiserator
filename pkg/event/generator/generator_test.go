@@ -6,6 +6,7 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -128,7 +129,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 
 	t.Run("Get correlationID from app annotations", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		app.ObjectMeta = app.CreateObjectMeta()
+		app.ObjectMeta = resource.CreateObjectMeta(app)
 
 		correlationID := "correlation-id"
 		app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = correlationID
