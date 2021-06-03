@@ -300,10 +300,12 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/nais/liberator v0.0.0-20210503113505-5a8c9b9e1ca6 h1:2hEg44/y6+lA22Jm4Rn8urrvdTgejg4JoWF52yDo0Gk=
 github.com/nais/liberator v0.0.0-20210503113505-5a8c9b9e1ca6/go.mod h1:VI5modocylevQ0DGQd+7LibwVjA+ghz+y56ALpXoKcU=
-github.com/nais/liberator v0.0.0-20210531081139-6d429654ab64 h1:kxUiKe+MPQvEIQmydfEQaKeo8SxChaXaMzHSx4YjE0I=
-github.com/nais/liberator v0.0.0-20210531081139-6d429654ab64/go.mod h1:6aAgt0a3+BZ1QTWp+D9K0GlwCHf+YTgnh0BsqyXrMow=
 github.com/nais/liberator v0.0.0-20210526113105-c183ea6494f5 h1:B3E1nA4yoYmoFPdpVLoISwD1wBlyJLeEZKM5wLJIOIw=
 github.com/nais/liberator v0.0.0-20210526113105-c183ea6494f5/go.mod h1:6aAgt0a3+BZ1QTWp+D9K0GlwCHf+YTgnh0BsqyXrMow=
+github.com/nais/liberator v0.0.0-20210531081139-6d429654ab64 h1:kxUiKe+MPQvEIQmydfEQaKeo8SxChaXaMzHSx4YjE0I=
+github.com/nais/liberator v0.0.0-20210531081139-6d429654ab64/go.mod h1:6aAgt0a3+BZ1QTWp+D9K0GlwCHf+YTgnh0BsqyXrMow=
+github.com/nais/liberator v0.0.0-20210602081055-bfbf7947de12 h1:KUEjzC9CYCygY6CLQS0QGIbWjE1wobi2L4O2BZqlu5Q=
+github.com/nais/liberator v0.0.0-20210602081055-bfbf7947de12/go.mod h1:6aAgt0a3+BZ1QTWp+D9K0GlwCHf+YTgnh0BsqyXrMow=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
