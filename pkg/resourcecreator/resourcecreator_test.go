@@ -103,7 +103,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.Error(t, err)
 		assert.Nil(t, resources)
 	})
@@ -114,7 +114,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
@@ -131,7 +131,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
@@ -145,7 +145,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.Error(t, err)
 		assert.Nil(t, resources)
 	})
@@ -155,7 +155,7 @@ func TestCreate(t *testing.T) {
 		opts := resource.NewOptions()
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
@@ -171,7 +171,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
@@ -185,7 +185,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
@@ -210,7 +210,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
@@ -252,7 +252,7 @@ func TestCreate(t *testing.T) {
 		err := nais_io_v1alpha1.ApplyDefaults(app)
 		assert.NoError(t, err)
 
-		resources, err := resourcecreator.Create(app, opts)
+		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
 
 		objects := getRealObjects(resources)
@@ -284,38 +284,38 @@ func TestCreate(t *testing.T) {
 		opts := resource.NewOptions()
 		opts.DigdiratorEnabled = true
 
-		_, err := resourcecreator.Create(app, opts)
+		_, err := resourcecreator.CreateApplication(app, opts)
 		assert.Error(t, err, "return error if no ingresses are specified")
 
 		app.Spec.Ingresses = []nais_io_v1.Ingress{
 			"https://yolo-ingress.nais.io",
 			"https://very-cool-ingress.nais.io",
 		}
-		_, err = resourcecreator.Create(app, opts)
+		_, err = resourcecreator.CreateApplication(app, opts)
 		assert.Error(t, err, "return error if multiple ingresses are specified")
 
 		app.Spec.Ingresses = []nais_io_v1.Ingress{
 			"https://yolo-ingress.nais.io",
 		}
-		_, err = resourcecreator.Create(app, opts)
+		_, err = resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err, "should not return error if exactly one ingress specified")
 
 		app.Spec.IDPorten.RedirectURI = "https://not-yolo.nais.io/oauth2/callback"
-		_, err = resourcecreator.Create(app, opts)
+		_, err = resourcecreator.CreateApplication(app, opts)
 		assert.Error(t, err, "return error if redirect URI is not subpath of ingress")
 
 		app.Spec.Ingresses = []nais_io_v1.Ingress{
 			"http://localhost/oauth2/callback",
 		}
 		app.Spec.IDPorten.RedirectURI = "http://localhost/oauth2/callback"
-		_, err = resourcecreator.Create(app, opts)
+		_, err = resourcecreator.CreateApplication(app, opts)
 		assert.Error(t, err, "return error if redirect URI and ingress does not start with https://")
 
 		app.Spec.IDPorten.RedirectURI = "https://yolo-ingress.nais.io/oauth2/callback"
 		app.Spec.Ingresses = []nais_io_v1.Ingress{
 			"https://yolo-ingress.nais.io",
 		}
-		_, err = resourcecreator.Create(app, opts)
+		_, err = resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err, "should not return error if redirect URI is subpath of ingress")
 	})
 }

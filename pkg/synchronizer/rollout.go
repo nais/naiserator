@@ -1,19 +1,20 @@
 package synchronizer
 
 import (
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	appsv1 "k8s.io/api/apps/v1"
 )
 
 // Rollout represents the data neccessary to rollout an application to Kubernetes.
 type Rollout struct {
-	App                 *nais.Application
+	Source              resource.Source
 	ResourceOptions     resource.Options
 	ResourceOperations  resource.Operations
 	CorrelationID       string
 	SynchronizationHash string
 }
+
+func NewRollout(source *resource.Source) {}
 
 // SetCurrentDeployment makes sure newly created Deployment objects matches autoscaling properties of an
 // existing deployment.
@@ -24,11 +25,11 @@ type Rollout struct {
 //
 // The number of replicas is set to whichever is highest: the current number of replicas (which might be zero),
 // or the default number of replicas.
-func (r *Rollout) SetCurrentDeployment(deployment *appsv1.Deployment) {
+func (r *Rollout) SetCurrentDeployment(deployment *appsv1.Deployment, currentReplicasMin int) {
 	if deployment != nil && deployment.Spec.Replicas != nil {
 		r.ResourceOptions.NumReplicas = max(1, *deployment.Spec.Replicas)
 	} else {
-		r.ResourceOptions.NumReplicas = max(1, int32(r.App.Spec.Replicas.Min))
+		r.ResourceOptions.NumReplicas = max(1, int32(currentReplicasMin))
 	}
 }
 

@@ -87,29 +87,20 @@ func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Ev
 }
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
-func (n *Synchronizer) reportError(ctx context.Context, source string, err error, app *nais_io_v1alpha1.Application) {
-	logger := log.WithFields(app.LogFields())
+func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err error, source resource.Source) {
+	logger := log.WithFields(source.LogFields())
 	logger.Error(err)
-	_, err = n.reportEvent(ctx, app.CreateEvent(source, err.Error(), "Warning"))
+	_, err = n.reportEvent(ctx, source.CreateEvent(eventSource, err.Error(), "Warning"))
 	if err != nil {
 		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
 }
 
-// Process work queue
-func (n *Synchronizer) Reconcile(req ctrl.Request, source resource.Source) (ctrl.Result, error) {
+// Process Application work queue
+func (n *Synchronizer) ReconcileApplication(req ctrl.Request, source resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
-	result, err := reconcileApplication(req, source, n, ctx)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	return result, nil
-}
-
-func reconcileApplication(req ctrl.Request, source resource.Source, n *Synchronizer, ctx context.Context) (ctrl.Result, error) {
 	app := &nais_io_v1alpha1.Application{}
 	err := n.Get(ctx, req.NamespacedName, app)
 	if err != nil {
@@ -158,7 +149,7 @@ func reconcileApplication(req ctrl.Request, source resource.Source, n *Synchroni
 		return ctrl.Result{}, nil
 	}
 
-	logger = *log.WithFields(rollout.App.LogFields())
+	logger = *log.WithFields(app.LogFields())
 	logger.Debugf("Starting synchronization")
 	metrics.ApplicationsProcessed.Inc()
 
@@ -232,7 +223,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	if len(n.ResourceOptions.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
-	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.App)
+	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
@@ -276,7 +267,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	var err error
 
 	rollout := &Rollout{
-		App:             app,
+		Source:          app,
 		ResourceOptions: n.ResourceOptions,
 	}
 
@@ -331,8 +322,8 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		rollout.ResourceOptions.Linkerd = true
 	}
 
-	rollout.SetCurrentDeployment(previousDeployment)
-	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
+	rollout.SetCurrentDeployment(previousDeployment, app.Spec.Replicas.Min)
+	rollout.ResourceOperations, err = resourcecreator.CreateApplication(app, rollout.ResourceOptions)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)

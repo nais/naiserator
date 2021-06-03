@@ -188,7 +188,7 @@ func yamlSubTest(t *testing.T, path string) {
 		return
 	}
 
-	resources, err := resourcecreator.Create(&test.Input, test.ResourceOptions)
+	resources, err := resourcecreator.CreateApplication(&test.Input, test.ResourceOptions)
 	if test.Error != nil {
 		assert.EqualError(t, err, *test.Error)
 		return

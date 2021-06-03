@@ -161,6 +161,19 @@ func run() error {
 		return err
 	}
 
+	naisjobReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
+		Client:          mgrClient,
+		Config:          *cfg,
+		Kafka:           kafkaClient,
+		ResourceOptions: resourceOptions,
+		Scheme:          kscheme,
+		SimpleClient:    simpleClient,
+	})
+
+	if err = naisjobReconciler.SetupWithManager(mgr); err != nil {
+		return err
+	}
+
 	return mgr.Start(stopCh)
 }
 

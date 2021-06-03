@@ -7,6 +7,7 @@ package resourcecreator
 import (
 	"fmt"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
@@ -32,9 +33,9 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 )
 
-// Create takes an Application resource and returns a slice of Kubernetes resources
+// CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
+func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
@@ -90,6 +91,56 @@ func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options)
 	if err != nil {
 		return nil, err
 	}
+
+	return ast.Operations, nil
+}
+
+
+// CreateNaisjob takes an Naisjob resource and returns a slice of Kubernetes resources
+// along with information about what to do with these resources.
+func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options) (resource.Operations, error) {
+	team, ok := naisjob.Labels["team"]
+	if !ok || len(team) == 0 {
+		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
+	}
+
+	ast := resource.NewAst()
+
+	serviceaccount.Create(naisjob, ast, resourceOptions)
+	err := azure.Create(naisjob, ast, resourceOptions, *naisjob.Spec.Azure, []nais_io_v1.Ingress{}, *naisjob.Spec.AccessPolicy)
+	if err != nil {
+		return nil, err
+	}
+	err = kafka.Create(naisjob, ast, resourceOptions, naisjob.Spec.Kafka)
+	if err != nil {
+		return nil, err
+	}
+	err = gcp.Create(naisjob, ast, resourceOptions, naisjob.Spec.GCP)
+	if err != nil {
+		return nil, err
+	}
+	err = proxyopts.Create(ast, resourceOptions, naisjob.Spec.WebProxy)
+	if err != nil {
+		return nil, err
+	}
+	certificateauthority.Create(ast, naisjob.Spec.SkipCaBundle)
+	securelogs.Create(ast, resourceOptions, naisjob.Spec.SecureLogs)
+	maskinporten.Create(naisjob, ast, resourceOptions, naisjob.Spec.Maskinporten)
+	aiven.Elastic(ast, naisjob.Spec.Elastic)
+	linkerd.Create(ast, resourceOptions)
+
+	err = vault.Create(naisjob, ast, resourceOptions, naisjob.Spec.Vault)
+	if err != nil {
+		return nil, err
+	}
+
+	//pod.CreateNaisjobContainer(naisjob, ast, resourceOptions) // skulle denne vært i deployment-kallet?
+
+	// TODO: Create CronJob or Job
+	//err = deployment.Create(naisjob, ast, resourceOptions)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return ast.Operations, nil
 }
