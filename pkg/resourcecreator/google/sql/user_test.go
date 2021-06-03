@@ -7,7 +7,7 @@ import (
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	google_sql "github.com/nais/naiserator/pkg/resourcecreator/google/sql"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGoogleSQLUserEnvVars(t *testing.T) {
@@ -21,7 +21,7 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 	}
 
 	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 		},
 	}
@@ -38,7 +38,7 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 
 func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 		},
 	}
@@ -92,7 +92,7 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 
 func TestKeyWithSuffixMatchingUser(t *testing.T) {
 	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 		},
 	}
@@ -133,7 +133,7 @@ func TestKeyWithSuffixMatchingUser(t *testing.T) {
 
 func TestMergeDefaultSQLUser(t *testing.T) {
 	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 		},
 	}

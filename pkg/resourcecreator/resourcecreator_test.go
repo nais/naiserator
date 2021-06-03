@@ -16,7 +16,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
@@ -25,7 +25,7 @@ import (
 )
 
 type realObjects struct {
-	deployment              *v1.Deployment
+	deployment              *appsv1.Deployment
 	hpa                     *autoscaling.HorizontalPodAutoscaler
 	ingress                 *networkingv1beta1.Ingress
 	jwker                   *nais_io_v1.Jwker
@@ -48,7 +48,7 @@ type realObjects struct {
 func getRealObjects(resources resource.Operations) (o realObjects) {
 	for _, r := range resources {
 		switch v := r.Resource.(type) {
-		case *v1.Deployment:
+		case *appsv1.Deployment:
 			o.deployment = v
 		case *core.Secret:
 			o.secret = v

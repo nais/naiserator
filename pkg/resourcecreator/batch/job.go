@@ -5,7 +5,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	v1 "k8s.io/api/batch/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -17,7 +17,7 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 		return err
 	}
 
-	jobSpec := v1.JobSpec{
+	jobSpec := batchv1.JobSpec{
 		ActiveDeadlineSeconds: util.Int64p(naisjob.Spec.ActiveDeadlineSeconds),
 		BackoffLimit:          util.Int32p(naisjob.Spec.BackoffLimit),
 		Selector: &metav1.LabelSelector{
@@ -46,7 +46,7 @@ func CreateJob(source resource.Source, ast *resource.Ast) {
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
-	job := v1.Job{
+	job := batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Job",
 			APIVersion: "batch/v1",
