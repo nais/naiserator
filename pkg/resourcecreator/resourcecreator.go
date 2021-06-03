@@ -11,6 +11,7 @@ import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
+	"github.com/nais/naiserator/pkg/resourcecreator/batch"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/gcp"
@@ -85,7 +86,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 		return nil, err
 	}
 
-	pod.CreateAppContainer(app, ast, resourceOptions) // skulle denne vært i deployment-kallet?
+	pod.CreateAppContainer(app, ast, resourceOptions)
 
 	err = deployment.Create(app, ast, resourceOptions)
 	if err != nil {
@@ -94,7 +95,6 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 
 	return ast.Operations, nil
 }
-
 
 // CreateNaisjob takes an Naisjob resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
@@ -134,13 +134,18 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 		return nil, err
 	}
 
-	//pod.CreateNaisjobContainer(naisjob, ast, resourceOptions) // skulle denne vært i deployment-kallet?
+	pod.CreateNaisjobContainer(naisjob, ast, resourceOptions)
 
-	// TODO: Create CronJob or Job
-	//err = deployment.Create(naisjob, ast, resourceOptions)
-	//if err != nil {
-	//	return nil, err
-	//}
+	err = batch.CreateJobSpec(naisjob, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	if naisjob.Spec.Schedule != "" {
+		batch.CreateJob(naisjob, ast)
+	} else {
+		batch.CreateCronJob(naisjob, ast)
+	}
 
 	return ast.Operations, nil
 }

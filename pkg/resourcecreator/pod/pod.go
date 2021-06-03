@@ -152,6 +152,27 @@ func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, op
 	ast.Containers = append(ast.Containers, container)
 }
 
+func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, options resource.Options) {
+	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
+	ast.Env = append(ast.Env, defaultEnvVars(naisjob, options.ClusterName, naisjob.Spec.Image)...)
+	filesFrom(ast, options.NativeSecrets, naisjob.Spec.FilesFrom)
+	envFrom(ast, options.NativeSecrets, naisjob.Spec.EnvFrom)
+
+	container := corev1.Container{
+		Name:            naisjob.Name,
+		Image:           naisjob.Spec.Image,
+		Command:         naisjob.Spec.Command,
+		Resources:       ResourceLimits(*naisjob.Spec.Resources),
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Lifecycle:       lifeCycle(naisjob.Spec.PreStopHookPath),
+		Env:             ast.Env,
+		EnvFrom:         ast.EnvFrom,
+		VolumeMounts:    ast.VolumeMounts,
+	}
+
+	ast.Containers = append(ast.Containers, container)
+}
+
 func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{Name: naisAppNameEnv, Value: source.GetName()},
@@ -191,6 +212,24 @@ func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) m
 
 	if len(app.Spec.Logtransform) > 0 {
 		objectMeta.Annotations["nais.io/logtransform"] = app.Spec.Logtransform
+	}
+
+	return objectMeta
+}
+
+func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) metav1.ObjectMeta {
+	objectMeta := naisjob.CreateObjectMeta()
+	objectMeta.Annotations = ast.Annotations
+	mapMerge(objectMeta.Labels, ast.Labels)
+
+	objectMeta.Annotations = map[string]string{}
+
+	if len(naisjob.Spec.Logformat) > 0 {
+		objectMeta.Annotations["nais.io/logformat"] = naisjob.Spec.Logformat
+	}
+
+	if len(naisjob.Spec.Logtransform) > 0 {
+		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
 	}
 
 	return objectMeta

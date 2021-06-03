@@ -79,7 +79,7 @@ func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resour
 		ProgressDeadlineSeconds: util.Int32p(300),
 		RevisionHistoryLimit:    util.Int32p(10),
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: pod.CreateAppObjectMeta(app, ast), // pod.ObjectMeta(objectMeta, appPort, prometheusConfig, logFormat, logTransform),
+			ObjectMeta: pod.CreateAppObjectMeta(app, ast),
 			Spec:       *podSpec,
 		},
 	}, nil
