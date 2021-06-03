@@ -36,7 +36,7 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 
 func CreateJob(source resource.Source, ast *resource.Ast) {
 
-	objectMeta := source.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(source)
 
 	if val, ok := source.GetAnnotations()["kubernetes.io/change-cause"]; ok {
 		if objectMeta.Annotations == nil {

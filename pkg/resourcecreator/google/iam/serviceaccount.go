@@ -9,7 +9,7 @@ import (
 )
 
 func CreateServiceAccount(source resource.Source, projectId string) google_iam_crd.IAMServiceAccount {
-	objectMeta := source.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = source.CreateAppNamespaceHash()
 	objectMeta.Namespace = google.IAMServiceAccountNamespace
 	objectMeta.Annotations["nais.io/team"] = objectMeta.Namespace

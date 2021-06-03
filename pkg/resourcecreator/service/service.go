@@ -15,7 +15,7 @@ func Create(source resource.Source, ast *resource.Ast, naisService nais_io_v1.Se
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
-		ObjectMeta: source.CreateObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": source.GetName()},

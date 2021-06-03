@@ -21,7 +21,8 @@ func policyMember(source resource.Source, policy nais.CloudIAMPermission, google
 		return nil, err
 	}
 	externalName := formatExternalName(googleTeamProjectId, policy.Resource.Name)
-	objectMeta := source.CreateObjectMetaWithName(name)
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = name
 	policyMember := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
 		TypeMeta: metav1.TypeMeta{

@@ -14,7 +14,7 @@ import (
 )
 
 func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) error {
-	objectMeta := app.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(app)
 	spec, err := deploymentSpec(app, ast, resourceOptions)
 	if err != nil {
 		return fmt.Errorf("create deployment: %w", err)

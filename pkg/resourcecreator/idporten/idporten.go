@@ -120,7 +120,7 @@ func idPortenSecretName(name string) string {
 func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) error {
 	if resourceOptions.DigdiratorEnabled && naisIdPorten != nil && naisIdPorten.Enabled {
 
-		idportenClient, err := client(source.CreateObjectMeta(), naisIdPorten, naisIngresses)
+		idportenClient, err := client(resource.CreateObjectMeta(source), naisIdPorten, naisIngresses)
 		if err != nil {
 			return err
 		}

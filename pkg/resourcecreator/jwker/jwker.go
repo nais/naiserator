@@ -25,7 +25,7 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options,
 			Kind:       "Jwker",
 			APIVersion: "nais.io/v1",
 		},
-		ObjectMeta: source.CreateObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: nais_io_v1.JwkerSpec{
 			AccessPolicy: accesspolicy.WithDefaults(naisAccessPolicy, source.GetNamespace(), options.ClusterName),
 			SecretName:   secretName(source.GetName()),

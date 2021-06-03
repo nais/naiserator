@@ -190,7 +190,7 @@ func mapMerge(dst, src map[string]string) {
 }
 
 func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) metav1.ObjectMeta {
-	objectMeta := app.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(app)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
 
@@ -218,7 +218,7 @@ func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) m
 }
 
 func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) metav1.ObjectMeta {
-	objectMeta := naisjob.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(naisjob)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
 

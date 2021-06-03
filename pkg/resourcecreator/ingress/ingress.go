@@ -93,7 +93,7 @@ func copyNginxAnnotations(dst, src map[string]string) {
 }
 
 func createIngressBase(source resource.Source, rules []networkingv1beta1.IngressRule, livenessPath string) *networkingv1beta1.Ingress {
-	objectMeta := source.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = livenessPath
 

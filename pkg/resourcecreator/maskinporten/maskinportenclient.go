@@ -33,7 +33,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		return
 	}
 
-	maskinportenClient := client(source.CreateObjectMeta(), naisMaskinporten)
+	maskinportenClient := client(resource.CreateObjectMeta(source), naisMaskinporten)
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, maskinportenClient)
 	pod.WithAdditionalSecret(ast, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)

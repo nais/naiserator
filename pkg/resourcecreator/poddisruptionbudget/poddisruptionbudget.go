@@ -20,7 +20,7 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais_io_v1.R
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
 		},
-		ObjectMeta: source.CreateObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			MinAvailable: &min,
 			Selector: &metav1.LabelSelector{

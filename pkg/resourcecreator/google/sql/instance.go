@@ -106,7 +106,8 @@ func availabilityType(highAvailability bool) string {
 }
 
 func instanceIamPolicyMember(source resource.Source, resourceName, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
-	objectMeta := source.CreateObjectMetaWithName(resourceName)
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
 		TypeMeta: metav1.TypeMeta{
@@ -144,7 +145,7 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			return err
 		}
 
-		instance := GoogleSqlInstance(source.CreateObjectMeta(), sqlInstance, resourceOptions.GoogleTeamProjectId)
+		instance := GoogleSqlInstance(resource.CreateObjectMeta(source), sqlInstance, resourceOptions.GoogleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, instance)
 
 		iamPolicyMember := instanceIamPolicyMember(source, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
@@ -153,7 +154,7 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		for _, db := range sqlInstance.Databases {
 			sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
 
-			googledb := GoogleSQLDatabase(source.CreateObjectMeta(), db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+			googledb := GoogleSQLDatabase(resource.CreateObjectMeta(source), db, sqlInstance, resourceOptions.GoogleTeamProjectId)
 			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
 			for _, user := range sqlUsers {
@@ -174,13 +175,13 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 					return fmt.Errorf("unable to assign sql password: %s", err)
 				}
 
-				sqlUser, err := googleSqlUser.Create(source.CreateObjectMeta(), secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
+				sqlUser, err := googleSqlUser.Create(resource.CreateObjectMeta(source), secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
 				if err != nil {
 					return fmt.Errorf("unable to create sql user: %s", err)
 				}
 				ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
 
-				scrt := secret.OpaqueSecret(source.CreateObjectMeta(), GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
+				scrt := secret.OpaqueSecret(resource.CreateObjectMeta(source), GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
 				ast.AppendOperation(resource.OperationCreateIfNotExists, scrt)
 			}
 		}

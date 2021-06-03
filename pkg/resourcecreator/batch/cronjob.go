@@ -10,7 +10,7 @@ import (
 
 func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) {
 
-	objectMeta := naisjob.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(naisjob)
 
 	if val, ok := naisjob.GetAnnotations()["kubernetes.io/change-cause"]; ok {
 		if objectMeta.Annotations == nil {
@@ -29,7 +29,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) {
 		Spec: v1beta1.CronJobSpec{
 			Schedule: naisjob.Spec.Schedule,
 			JobTemplate: v1beta1.JobTemplateSpec{
-				ObjectMeta: naisjob.CreateObjectMeta(),
+				ObjectMeta: resource.CreateObjectMeta(naisjob),
 				Spec:       ast.JobSpec,
 			},
 			SuccessfulJobsHistoryLimit: util.Int32p(naisjob.Spec.SuccessfulJobsHistoryLimit),

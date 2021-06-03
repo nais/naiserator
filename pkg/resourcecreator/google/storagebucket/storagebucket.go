@@ -52,7 +52,7 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket) 
 }
 
 func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageBucket, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
-	objectMeta := source.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(source)
 	policyMemberName := fmt.Sprintf("%s-object-viewer", bucket.Name)
 	objectMeta.Name = policyMemberName
 	policy := &google_iam_crd.IAMPolicyMember{
@@ -83,10 +83,10 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	}
 
 	for _, b := range naisBucket {
-		bucket := CreateBucket(source.CreateObjectMeta(), b)
+		bucket := CreateBucket(resource.CreateObjectMeta(source), b)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, bucket)
 
-		bucketAccessControl := AccessControl(source.CreateObjectMeta(), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+		bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
 
 		iamPolicyMember := iAMPolicyMember(source, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)

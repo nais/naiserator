@@ -14,7 +14,7 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replica
 			Kind:       "HorizontalPodAutoscaler",
 			APIVersion: v2beta2.SchemeGroupVersion.Identifier(),
 		},
-		ObjectMeta: source.CreateObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: v2beta2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: v2beta2.CrossVersionObjectReference{
 				APIVersion: "apps/v1",
