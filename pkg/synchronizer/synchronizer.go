@@ -159,7 +159,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request, source resource.So
 	if err != nil {
 		if retry {
 			app.Status.SynchronizationState = EventRetrying
-			metrics.Retries.Inc()
+			metrics.ApplicationsRetries.Inc()
 			n.reportError(ctx, app.Status.SynchronizationState, err, app)
 		} else {
 			app.Status.SynchronizationState = EventFailedSynchronization

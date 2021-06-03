@@ -12,14 +12,13 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
-	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// Process Naisjob work queue
+// ReconcileNaisjob process Naisjob work queue
 func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
@@ -29,10 +28,10 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger := log.WithFields(log.Fields{
-				"namespace":   req.Namespace,
-				"application": req.Name,
+				"namespace": req.Namespace,
+				"naisjob":   req.Name,
 			})
-			logger.Infof("Application has been deleted from Kubernetes")
+			logger.Infof("Naisjob has been deleted from Kubernetes")
 
 			err = nil
 		}
@@ -43,7 +42,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 
 	logger := *log.WithFields(naisjob.LogFields())
 
-	// Update Application resource with deployment event
+	// Update Naisjob resource with cronjob/job event
 	defer func() {
 		if !changed {
 			return
@@ -55,7 +54,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 		if err != nil {
 			n.reportError(ctx, EventFailedStatusUpdate, err, naisjob)
 		} else {
-			logger.Debugf("Application status: %+v'", naisjob.Status)
+			logger.Debugf("Naisjob status: %+v'", naisjob.Status)
 		}
 	}()
 
@@ -74,7 +73,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 
 	logger = *log.WithFields(naisjob.LogFields())
 	logger.Debugf("Starting synchronization")
-	metrics.ApplicationsProcessed.Inc()
+	metrics.NaisjobsProcessed.Inc()
 
 	naisjob.Status.CorrelationID = rollout.CorrelationID
 
@@ -82,12 +81,12 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 	if err != nil {
 		if retry {
 			naisjob.Status.SynchronizationState = EventRetrying
-			metrics.Retries.Inc()
+			metrics.NaisjobsRetries.Inc()
 			n.reportError(ctx, naisjob.Status.SynchronizationState, err, naisjob)
 		} else {
 			naisjob.Status.SynchronizationState = EventFailedSynchronization
 			naisjob.Status.SynchronizationHash = rollout.SynchronizationHash // permanent failure
-			metrics.ApplicationsFailed.Inc()
+			metrics.NaisjobsFailed.Inc()
 			n.reportError(ctx, naisjob.Status.SynchronizationState, err, naisjob)
 			err = nil
 		}
@@ -99,14 +98,14 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 	naisjob.Status.SynchronizationState = EventSynchronized
 	naisjob.Status.SynchronizationHash = rollout.SynchronizationHash
 	naisjob.Status.SynchronizationTime = time.Now().UnixNano()
-	metrics.Deployments.Inc()
+	metrics.NaisjobsDeployments.Inc()
 
-	_, err = n.reportEvent(ctx, naisjob.CreateEvent(naisjob.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
+	_, err = n.reportEvent(ctx, naisjob.CreateEvent(naisjob.Status.SynchronizationState, "Successfully synchronized all naisjob resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
 
-	// Create new deployment event
+	// Create new NAIS deployment event
 	event := generator.NewDeploymentEvent(naisjob, naisjob.Spec.Image)
 	naisjob.SetDeploymentRolloutStatus(event.RolloutStatus.String())
 
@@ -115,7 +114,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 	return ctrl.Result{}, nil
 }
 
-// Prepare converts a NAIS application spec into a Rollout object.
+// PrepareNaisjob converts a NAIS Naisjob spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
 func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, error) {
@@ -129,15 +128,15 @@ func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, er
 
 	// TODO impl.
 	//	if err = nais_io_v1.ApplyDefaults(naisjob); err != nil {
-	//		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
+	//		return nil, fmt.Errorf("BUG: merge default values into naisjob: %s", err)
 	//	}
 
 	rollout.SynchronizationHash, err = naisjob.Hash()
 	if err != nil {
-		return nil, fmt.Errorf("BUG: create application hash: %s", err)
+		return nil, fmt.Errorf("BUG: create naisjob hash: %s", err)
 	}
 
-	// Skip processing if application didn't change since last synchronization.
+	// Skip processing if naisjob didn't change since last synchronization.
 	if naisjob.Status.SynchronizationHash == rollout.SynchronizationHash {
 		return nil, nil
 	}
@@ -148,15 +147,6 @@ func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, er
 	}
 
 	rollout.CorrelationID = naisjob.CorrelationID()
-
-	// Make a query to Kubernetes for this application's previous deployment.
-	// The number of replicas is significant, so we need to carry it over to match
-	// this next rollout.
-	previousDeployment := &apps.Deployment{}
-	err = n.Get(ctx, client.ObjectKey{Name: naisjob.GetName(), Namespace: naisjob.GetNamespace()}, previousDeployment)
-	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing deployment: %s", err)
-	}
 
 	// Retrieve current namespace to check for labels and annotations
 	namespace := &corev1.Namespace{}
@@ -190,7 +180,7 @@ func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, er
 
 var naisjobsync sync.Mutex
 
-// Atomically update an Naisjob resource.
+// UpdateNaisjob atomically update an Naisjob resource.
 // Locks the resource to avoid race conditions.
 func (n *Synchronizer) UpdateNaisjob(ctx context.Context, source resource.Source, updateFunc func(existing *nais_io_v1.Naisjob) error) error {
 	naisjobsync.Lock()
