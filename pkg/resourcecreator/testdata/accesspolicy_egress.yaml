@@ -9,7 +9,7 @@ resourceoptions:
   ClusterName: mycluster
   JwkerEnabled: true
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

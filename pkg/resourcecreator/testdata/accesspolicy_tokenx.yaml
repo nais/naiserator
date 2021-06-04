@@ -11,7 +11,7 @@ resourceoptions:
   JwkerHosts:
     - dev.tokendings.test
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

@@ -10,7 +10,7 @@ resourceoptions:
   ApiServerIp: "172.16.0.2/32"
 
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

@@ -10,10 +10,11 @@ import (
 	"strings"
 	"testing"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	"github.com/ghodss/yaml"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/test/deepcomp"
 	"github.com/stretchr/testify/assert"
@@ -68,11 +69,12 @@ type Match struct {
 }
 
 type yamlTestCase struct {
-	Config          testCaseConfig
-	ResourceOptions resource.Options
-	Error           *string
-	Input           nais.Application
-	Tests           []SubTest
+	Config           testCaseConfig
+	ResourceOptions  resource.Options
+	Error            *string
+	ApplicationInput nais_io_v1alpha1.Application
+	NaisjobInput     nais_io_v1.Naisjob
+	Tests            []SubTest
 }
 
 func (m meta) String() string {
@@ -181,20 +183,12 @@ func yamlSubTest(t *testing.T, path string) {
 		return
 	}
 
-	err = nais.ApplyApplicationDefaults(&test.Input)
-	if err != nil {
-		t.Errorf("apply default values to Application object: %s", err)
-		t.Fail()
-		return
+	var resources resource.Operations
+	if &test.ApplicationInput != nil {
+		resources = createApplicationOperations(t, test)
+	} else if &test.NaisjobInput != nil {
+		resources = createNaisjobOperations(t, test)
 	}
-
-	resources, err := resourcecreator.CreateApplication(&test.Input, test.ResourceOptions)
-	if test.Error != nil {
-		assert.EqualError(t, err, *test.Error)
-		return
-	}
-
-	assert.NoError(t, err)
 
 	for _, subtest := range test.Tests {
 		yamlRunner(t, filepath.Base(path), resources, subtest)
@@ -221,4 +215,40 @@ func TestNewGoldenFile(t *testing.T) {
 			yamlSubTest(t, path)
 		})
 	}
+}
+
+func createApplicationOperations(t *testing.T, test yamlTestCase) resource.Operations {
+	err := nais_io_v1alpha1.ApplyApplicationDefaults(&test.ApplicationInput)
+	if err != nil {
+		t.Errorf("apply default values to Application object: %s", err)
+		t.Fail()
+		return nil
+	}
+
+	resources, err := resourcecreator.CreateApplication(&test.ApplicationInput, test.ResourceOptions)
+	if test.Error != nil {
+		assert.EqualError(t, err, *test.Error)
+		return nil
+	}
+
+	assert.NoError(t, err)
+	return resources
+}
+
+func createNaisjobOperations(t *testing.T, test yamlTestCase) resource.Operations {
+	err := nais_io_v1.ApplyNaisjobDefaults(&test.NaisjobInput)
+	if err != nil {
+		t.Errorf("apply default values to Application object: %s", err)
+		t.Fail()
+		return nil
+	}
+
+	resources, err := resourcecreator.CreateNaisjob(&test.NaisjobInput, test.ResourceOptions)
+	if test.Error != nil {
+		assert.EqualError(t, err, *test.Error)
+		return nil
+	}
+
+	assert.NoError(t, err)
+	return resources
 }

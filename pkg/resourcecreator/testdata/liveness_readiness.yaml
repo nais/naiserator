@@ -1,7 +1,7 @@
 config:
   description: liveness and readiness checks are added
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

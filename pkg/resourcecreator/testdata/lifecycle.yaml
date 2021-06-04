@@ -1,7 +1,7 @@
 config:
   description: PreStopHookPath is properly added
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

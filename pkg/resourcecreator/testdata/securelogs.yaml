@@ -6,7 +6,7 @@ resourceoptions:
     fluentd-image: fluentd-image
     configmap-reload-image: configmap-reload-image
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

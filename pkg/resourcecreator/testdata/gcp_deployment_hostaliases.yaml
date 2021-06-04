@@ -12,7 +12,7 @@ resourceoptions:
       Address: 10.183.32.47
     - Host: b27apvl00047.preprod.local
       Address: 10.183.32.48
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

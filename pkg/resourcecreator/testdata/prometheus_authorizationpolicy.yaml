@@ -6,7 +6,7 @@ resourceoptions:
   NetworkPolicy: true
   GoogleProjectID: google-project-id
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:

@@ -5,7 +5,7 @@ resourceOptions:
   NumReplicas: 1
   ClusterName: test-cluster
 
-input:
+applicationInput:
   kind: Application
   apiVersion: v1alpha1
   metadata:
