@@ -11,7 +11,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais_io_v1_alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -24,7 +24,7 @@ func TestDeployment(t *testing.T) {
 		app.Spec.Liveness = &nais_io_v1.Probe{
 			Path: "/probe/path",
 		}
-		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
@@ -41,7 +41,7 @@ func TestDeployment(t *testing.T) {
 	t.Run("enabling webproxy in GCP is no-op", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.WebProxy = true
-		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
@@ -65,10 +65,10 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		app.Spec.Strategy.Type = nais_io_v1_alpha1.DeploymentStrategyRecreate
+		app.Spec.Strategy.Type = nais_io_v1alpha1.DeploymentStrategyRecreate
 		opts := resource.NewOptions()
 		ast := resource.NewAst()
 		err = deployment.Create(app, ast, opts)
@@ -80,7 +80,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("secret defaults are applied", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		customMountPath := "hello/world"
@@ -97,13 +97,13 @@ func TestDeployment(t *testing.T) {
 
 		appContainer := ast.Containers[0]
 		assert.NotNil(t, appContainer)
-		assert.Equal(t, nais_io_v1_alpha1.DefaultSecretMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
+		assert.Equal(t, nais_io_v1alpha1.DefaultSecretMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
 		assert.Equal(t, customMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
 	})
 
 	t.Run("secrets are not configured when feature flag for secrets is false", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		app.Spec.EnvFrom = []nais_io_v1.EnvFrom{
