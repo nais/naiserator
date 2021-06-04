@@ -38,10 +38,6 @@ func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions r
 	objectMeta := resource.CreateObjectMeta(naisjob)
 
 	if val, ok := naisjob.GetAnnotations()["kubernetes.io/change-cause"]; ok {
-		if objectMeta.Annotations == nil {
-			objectMeta.Annotations = make(map[string]string)
-		}
-
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 

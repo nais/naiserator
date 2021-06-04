@@ -21,10 +21,6 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	}
 
 	if val, ok := app.Annotations["kubernetes.io/change-cause"]; ok {
-		if objectMeta.Annotations == nil {
-			objectMeta.Annotations = make(map[string]string)
-		}
-
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
