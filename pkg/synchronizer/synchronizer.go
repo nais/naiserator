@@ -96,7 +96,7 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 	}
 }
 
-// Process Application work queue
+// ReconcileApplication process Application work queue
 func (n *Synchronizer) ReconcileApplication(req ctrl.Request, source resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
@@ -192,7 +192,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request, source resource.So
 	return ctrl.Result{}, nil
 }
 
-// Return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
+// Unreferenced return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
 func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]runtime.Object, error) {
 	// Return true if a cluster resource also is applied with the rollout.
 	intersects := func(existing runtime.Object) bool {
@@ -367,8 +367,8 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
 		})
 	} else {
-		for _, resource := range unreferenced {
-			deletes = append(deletes, updater.DeleteIfExists(ctx, n, resource))
+		for _, rsrc := range unreferenced {
+			deletes = append(deletes, updater.DeleteIfExists(ctx, n, rsrc))
 		}
 	}
 
@@ -377,7 +377,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 
 var appsync sync.Mutex
 
-// Atomically update an Application resource.
+// UpdateApplication atomically update an Application resource.
 // Locks the resource to avoid race conditions.
 func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.Source, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
 	appsync.Lock()
