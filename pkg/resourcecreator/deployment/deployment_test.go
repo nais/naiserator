@@ -24,7 +24,7 @@ func TestDeployment(t *testing.T) {
 		app.Spec.Liveness = &nais_io_v1.Probe{
 			Path: "/probe/path",
 		}
-		err := nais_io_v1_alpha1.ApplyDefaults(app)
+		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
@@ -41,7 +41,7 @@ func TestDeployment(t *testing.T) {
 	t.Run("enabling webproxy in GCP is no-op", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.WebProxy = true
-		err := nais_io_v1_alpha1.ApplyDefaults(app)
+		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
@@ -65,7 +65,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("when deploymentStrategy is set, it is used", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais_io_v1_alpha1.ApplyDefaults(app)
+		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		app.Spec.Strategy.Type = nais_io_v1_alpha1.DeploymentStrategyRecreate
@@ -80,7 +80,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("secret defaults are applied", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais_io_v1_alpha1.ApplyDefaults(app)
+		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		customMountPath := "hello/world"
@@ -103,7 +103,7 @@ func TestDeployment(t *testing.T) {
 
 	t.Run("secrets are not configured when feature flag for secrets is false", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais_io_v1_alpha1.ApplyDefaults(app)
+		err := nais_io_v1_alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		app.Spec.EnvFrom = []nais_io_v1.EnvFrom{

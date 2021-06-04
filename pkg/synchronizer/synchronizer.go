@@ -271,7 +271,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		ResourceOptions: n.ResourceOptions,
 	}
 
-	if err = nais_io_v1alpha1.ApplyDefaults(app); err != nil {
+	if err = nais_io_v1alpha1.ApplyApplicationDefaults(app); err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
 

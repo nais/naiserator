@@ -28,7 +28,7 @@ func TestNetworkPolicy(t *testing.T) {
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -108,7 +108,7 @@ func TestNetworkPolicy(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -125,7 +125,7 @@ func TestNetworkPolicy(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -138,7 +138,7 @@ func TestNetworkPolicy(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)

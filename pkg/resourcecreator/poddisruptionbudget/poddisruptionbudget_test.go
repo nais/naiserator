@@ -15,7 +15,7 @@ func TestPodDisruptionBudget(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.Replicas.Max = 1
-		err := nais.ApplyDefaults(app)
+		err := nais.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)

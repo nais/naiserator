@@ -15,7 +15,7 @@ func TestGetService(t *testing.T) {
 	t.Run("Check if default values is used", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
-		err := nais.ApplyDefaults(app)
+		err := nais.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		service.Create(app, ast, *app.Spec.Service)
@@ -30,7 +30,7 @@ func TestGetService(t *testing.T) {
 		ast := resource.NewAst()
 		app.Spec.Service.Protocol = "redis"
 		app.Spec.Service.Port = 1337
-		err := nais.ApplyDefaults(app)
+		err := nais.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		service.Create(app, ast, *app.Spec.Service)

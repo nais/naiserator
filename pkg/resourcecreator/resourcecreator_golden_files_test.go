@@ -181,7 +181,7 @@ func yamlSubTest(t *testing.T, path string) {
 		return
 	}
 
-	err = nais.ApplyDefaults(&test.Input)
+	err = nais.ApplyApplicationDefaults(&test.Input)
 	if err != nil {
 		t.Errorf("apply default values to Application object: %s", err)
 		t.Fail()

@@ -93,14 +93,14 @@ func getRealObjects(resources resource.Operations) (o realObjects) {
 func TestCreate(t *testing.T) {
 	t.Run("default application spec merges into empty struct", func(t *testing.T) {
 		app := &nais_io_v1alpha1.Application{}
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 	})
 
 	t.Run("application spec needs required parameters", func(t *testing.T) {
 		app := fixtures.MinimalFailingApplication()
 		opts := resource.NewOptions()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.CreateApplication(app, opts)
@@ -111,7 +111,7 @@ func TestCreate(t *testing.T) {
 	t.Run("team label and application name is propagated to created resources", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resource.NewOptions()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.CreateApplication(app, opts)
@@ -128,7 +128,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar/baz"}
 		opts := resource.NewOptions()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.CreateApplication(app, opts)
@@ -142,7 +142,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Ingresses = []nais_io_v1.Ingress{"gopher://lol"}
 		opts := resource.NewOptions()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.CreateApplication(app, opts)
@@ -153,7 +153,7 @@ func TestCreate(t *testing.T) {
 	t.Run("jwker resource is not created when access policy is empty", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resource.NewOptions()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 		resources, err := resourcecreator.CreateApplication(app, opts)
 		assert.NoError(t, err)
@@ -168,7 +168,7 @@ func TestCreate(t *testing.T) {
 		opts := resource.NewOptions()
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", IngressClass: "namespace/gateway"}}
 		opts.NetworkPolicy = true
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.CreateApplication(app, opts)
@@ -181,7 +181,7 @@ func TestCreate(t *testing.T) {
 	t.Run("leader election rbac is created when LE is requested", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.LeaderElection = true
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		opts := resource.NewOptions()
@@ -207,7 +207,7 @@ func TestCreate(t *testing.T) {
 			},
 		}
 
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.CreateApplication(app, opts)
@@ -249,7 +249,7 @@ func TestCreate(t *testing.T) {
 			},
 		}}
 
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		resources, err := resourcecreator.CreateApplication(app, opts)

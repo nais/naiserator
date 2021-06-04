@@ -26,7 +26,7 @@ func TestToAccessPolicyExternalRule(t *testing.T) {
 func TestMergeExternalRules(t *testing.T) {
 	t.Run("app external outbound rules correctly merged with additional hosts", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
+		err := nais.ApplyApplicationDefaults(app)
 		assert.NoError(t, err)
 
 		additionalRules := accesspolicy.ToAccessPolicyExternalRules([]string{

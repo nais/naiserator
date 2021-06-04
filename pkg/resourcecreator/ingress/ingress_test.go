@@ -20,7 +20,7 @@ func TestIngress(t *testing.T) {
 			app := fixtures.MinimalApplication()
 			app.Spec.Ingresses = []nais_io_v1.Ingress{i}
 			ast := resource.NewAst()
-			err := nais_io_v1alpha1.ApplyDefaults(app)
+			err := nais_io_v1alpha1.ApplyApplicationDefaults(app)
 			assert.NoError(t, err)
 
 			err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
