@@ -8,7 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) {
+func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) error {
 
 	objectMeta := resource.CreateObjectMeta(naisjob)
 
@@ -18,6 +18,11 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) {
 		}
 
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
+	}
+
+	jobSpec, err := CreateJobSpec(naisjob, ast, resourceOptions)
+	if err != nil {
+		return err
 	}
 
 	cronJob := v1beta1.CronJob{
@@ -30,7 +35,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) {
 			Schedule: naisjob.Spec.Schedule,
 			JobTemplate: v1beta1.JobTemplateSpec{
 				ObjectMeta: resource.CreateObjectMeta(naisjob),
-				Spec:       ast.JobSpec,
+				Spec:       jobSpec,
 			},
 			SuccessfulJobsHistoryLimit: util.Int32p(naisjob.Spec.SuccessfulJobsHistoryLimit),
 			FailedJobsHistoryLimit:     util.Int32p(naisjob.Spec.FailedJobsHistoryLimit),
@@ -38,4 +43,5 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) {
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cronJob)
+	return nil
 }

@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
@@ -136,15 +136,14 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 
 	pod.CreateNaisjobContainer(naisjob, ast, resourceOptions)
 
-	err = batch.CreateJobSpec(naisjob, ast, resourceOptions)
-	if err != nil {
-		return nil, err
-	}
-
 	if naisjob.Spec.Schedule != "" {
-		batch.CreateJob(naisjob, ast)
+		if err := batch.CreateJob(naisjob, ast, resourceOptions); err != nil {
+			return nil, err
+		}
 	} else {
-		batch.CreateCronJob(naisjob, ast)
+		if err := batch.CreateCronJob(naisjob, ast, resourceOptions); err != nil {
+			return nil, err
+		}
 	}
 
 	return ast.Operations, nil

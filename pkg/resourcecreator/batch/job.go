@@ -10,11 +10,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) error {
+func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) (batchv1.JobSpec, error) {
 
 	podSpec, err := pod.CreateSpec(ast, resourceOptions, naisjob.GetName())
 	if err != nil {
-		return err
+		return batchv1.JobSpec{}, err
 	}
 
 	jobSpec := batchv1.JobSpec{
@@ -30,20 +30,24 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 		TTLSecondsAfterFinished: util.Int32p(naisjob.Spec.TTLSecondsAfterFinished),
 	}
 
-	ast.JobSpec = jobSpec
-	return nil
+	return jobSpec, nil
 }
 
-func CreateJob(source resource.Source, ast *resource.Ast) {
+func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) error {
 
-	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta := resource.CreateObjectMeta(naisjob)
 
-	if val, ok := source.GetAnnotations()["kubernetes.io/change-cause"]; ok {
+	if val, ok := naisjob.GetAnnotations()["kubernetes.io/change-cause"]; ok {
 		if objectMeta.Annotations == nil {
 			objectMeta.Annotations = make(map[string]string)
 		}
 
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
+	}
+
+	jobSpec, err := CreateJobSpec(naisjob, ast, resourceOptions)
+	if err != nil {
+		return err
 	}
 
 	job := batchv1.Job{
@@ -52,8 +56,9 @@ func CreateJob(source resource.Source, ast *resource.Ast) {
 			APIVersion: "batch/v1",
 		},
 		ObjectMeta: objectMeta,
-		Spec:       ast.JobSpec,
+		Spec:       jobSpec,
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &job)
+	return nil
 }
