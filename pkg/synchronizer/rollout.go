@@ -14,8 +14,6 @@ type Rollout struct {
 	SynchronizationHash string
 }
 
-func NewRollout(source *resource.Source) {}
-
 // SetCurrentDeployment makes sure newly created Deployment objects matches autoscaling properties of an
 // existing deployment.
 //
