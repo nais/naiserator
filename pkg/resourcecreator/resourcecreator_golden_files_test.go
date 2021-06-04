@@ -218,7 +218,7 @@ func TestNewGoldenFile(t *testing.T) {
 }
 
 func createApplicationOperations(t *testing.T, test yamlTestCase) resource.Operations {
-	err := nais_io_v1alpha1.ApplyApplicationDefaults(&test.ApplicationInput)
+	err := test.ApplicationInput.ApplyDefaults()
 	if err != nil {
 		t.Errorf("apply default values to Application object: %s", err)
 		t.Fail()
@@ -236,7 +236,7 @@ func createApplicationOperations(t *testing.T, test yamlTestCase) resource.Opera
 }
 
 func createNaisjobOperations(t *testing.T, test yamlTestCase) resource.Operations {
-	err := nais_io_v1.ApplyNaisjobDefaults(&test.NaisjobInput)
+	err := test.NaisjobInput.ApplyDefaults()
 	if err != nil {
 		t.Errorf("apply default values to Application object: %s", err)
 		t.Fail()

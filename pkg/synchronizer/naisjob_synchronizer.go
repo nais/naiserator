@@ -126,10 +126,9 @@ func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, er
 		ResourceOptions: n.ResourceOptions,
 	}
 
-	// TODO impl.
-	//	if err = nais_io_v1.ApplyApplicationDefaults(naisjob); err != nil {
-	//		return nil, fmt.Errorf("BUG: merge default values into naisjob: %s", err)
-	//	}
+	if err = naisjob.ApplyDefaults(); err != nil {
+		return nil, fmt.Errorf("BUG: merge default values into naisjob: %s", err)
+	}
 
 	rollout.SynchronizationHash, err = naisjob.Hash()
 	if err != nil {
