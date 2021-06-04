@@ -136,7 +136,7 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 
 	pod.CreateNaisjobContainer(naisjob, ast, resourceOptions)
 
-	if naisjob.Spec.Schedule != "" {
+	if naisjob.Spec.Schedule == "" {
 		if err := batch.CreateJob(naisjob, ast, resourceOptions); err != nil {
 			return nil, err
 		}
