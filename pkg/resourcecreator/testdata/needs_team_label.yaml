@@ -1,5 +1,5 @@
 config:
   description: require team label
-applicationInput:
+input:
   kind: "Application"
 error: "the 'team' label needs to be set in the application metadata"

@@ -7,7 +7,7 @@ resourceoptions:
     - DomainSuffix: .bar
       IngressClass: very-nginx
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:

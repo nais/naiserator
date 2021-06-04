@@ -1,7 +1,7 @@
 config:
   description: prometheus is enabled with unique scrape port and custom scrape path
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:

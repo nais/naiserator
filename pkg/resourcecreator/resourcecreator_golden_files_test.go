@@ -17,7 +17,7 @@ const (
 )
 
 type applicationTestCase struct {
-	ApplicationInput nais_io_v1alpha1.Application
+	Input nais_io_v1alpha1.Application
 }
 
 func TestApplicationGoldenFile(t *testing.T) {
@@ -28,11 +28,11 @@ func TestApplicationGoldenFile(t *testing.T) {
 			return nil, err
 		}
 
-		err = test.ApplicationInput.ApplyDefaults()
+		err = test.Input.ApplyDefaults()
 		if err != nil {
 			return nil, fmt.Errorf("apply default values to Application object: %s", err)
 		}
 
-		return resourcecreator.CreateApplication(&test.ApplicationInput, resourceOptions)
+		return resourcecreator.CreateApplication(&test.Input, resourceOptions)
 	})
 }

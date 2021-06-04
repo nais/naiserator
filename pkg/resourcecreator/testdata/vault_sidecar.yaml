@@ -9,7 +9,7 @@ resourceoptions:
     auth-path: auth/kubernetes/preprod/fss/login
     init-container-image: navikt/vault-sidekick:v0.3.10-d122b16
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:

@@ -9,7 +9,7 @@ resourceoptions:
     - DomainSuffix: .baz
       IngressClass: something-else
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:

@@ -6,7 +6,7 @@ resourceoptions:
   GoogleTeamProjectID: google-team-project-id
   NumReplicas: 1
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:

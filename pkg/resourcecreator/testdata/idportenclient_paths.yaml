@@ -11,7 +11,7 @@ resourceoptions:
         - DomainSuffix: .adeo.no
           IngressClass: adeo-gateway
 
-applicationInput:
+input:
     kind: Application
     apiVersion: v1alpha1
     metadata:

@@ -13,7 +13,7 @@ resourceoptions:
     - DomainSuffix: .domain
       IngressClass: domain-gateway
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:

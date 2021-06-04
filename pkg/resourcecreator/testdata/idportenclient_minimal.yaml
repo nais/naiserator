@@ -13,7 +13,7 @@ resourceoptions:
     - DomainSuffix: .nav.no
       IngressClass: nav-no-gateway
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:

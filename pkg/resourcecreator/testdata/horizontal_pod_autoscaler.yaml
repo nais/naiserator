@@ -1,7 +1,7 @@
 config:
   description: horizontal pod autoscaler is set up
 
-applicationInput:
+input:
   kind: Application
   apiVersion: v1alpha1
   metadata:
