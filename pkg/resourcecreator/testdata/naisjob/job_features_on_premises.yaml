@@ -5,8 +5,8 @@ resourceOptions:
   ClusterName: test-cluster
 
 input:
-  kind: Application
-  apiVersion: v1alpha1
+  kind: Naisjob
+  apiVersion: v1
   metadata:
     name: mynaisjob
     namespace: mynamespace
