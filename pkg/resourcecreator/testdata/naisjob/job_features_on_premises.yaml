@@ -6,7 +6,7 @@ resourceOptions:
 
 input:
   kind: Naisjob
-  apiVersion: v1
+  apiVersion: nais.io/v1
   metadata:
     name: mynaisjob
     namespace: mynamespace
