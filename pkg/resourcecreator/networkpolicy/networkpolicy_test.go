@@ -6,8 +6,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
@@ -27,12 +26,12 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		ops := resource.Operations{}
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		ast := resource.NewAst()
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
-		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
+		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 1)
 
@@ -106,13 +105,13 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("allowed app in egress rule sets network policy pod selector to allowed app", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		ops := resource.Operations{}
+		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
-		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
+		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 
 		matchLabels := map[string]string{
 			"app": accessPolicyApp,
@@ -123,26 +122,26 @@ func TestNetworkPolicy(t *testing.T) {
 
 	t.Run("allowed app in egress rule sets egress app rules and default rules", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		ops := resource.Operations{}
+		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
-		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
+		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 2)
 	})
 
 	t.Run("all traffic inside namespace sets from rule to empty podspec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		ops := resource.Operations{}
+		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, resourceOptions, &ops)
-		networkPolicy := ops[0].Resource.(*networking.NetworkPolicy)
+		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 		assert.NotNil(t, networkPolicy)
 
 		yamlres, err := yaml.Marshal(networkPolicy)

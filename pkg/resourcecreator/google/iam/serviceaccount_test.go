@@ -5,6 +5,7 @@ import (
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/iam"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 
 	"github.com/stretchr/testify/assert"
@@ -13,9 +14,9 @@ import (
 func TestCreateGoogleIAMServiceaccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
 	projectId := "projectId"
-	iamServiceAccount := google_iam.ServiceAccount(app, projectId)
+	iamServiceAccount := google_iam.CreateServiceAccount(app, projectId)
 
-	assert.Equal(t, app.CreateAppNamespaceHash(), iamServiceAccount.Name)
+	assert.Equal(t, resource.CreateAppNamespaceHash(app), iamServiceAccount.Name)
 	assert.Equal(t, google.IAMServiceAccountNamespace, iamServiceAccount.Namespace)
 	assert.Equal(t, projectId, iamServiceAccount.Annotations[google.ProjectIdAnnotation])
 }

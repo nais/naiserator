@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -49,21 +49,15 @@ func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
 	}
 }
 
-func podSpecWithVolume(spec *corev1.PodSpec, volume corev1.Volume) *corev1.PodSpec {
-	spec.Volumes = append(spec.Volumes, volume)
-	spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts, pod.FromFilesVolumeMount(volume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
-	return spec
-}
-
-func generateKafkaSecretName(app *nais_io_v1alpha1.Application) (string, error) {
-	secretName, err := namegen.ShortName(fmt.Sprintf("kafka-%s-%s", app.Name, app.Spec.Kafka.Pool), validation.DNS1035LabelMaxLength)
+func generateKafkaSecretName(name, pool string) (string, error) {
+	secretName, err := namegen.ShortName(fmt.Sprintf("kafka-%s-%s", name, pool), validation.DNS1035LabelMaxLength)
 
 	if err != nil {
 		return "", fmt.Errorf("unable to generate kafka secret name: %s", err)
 	}
 	return secretName, err
 }
-func podSpecWithKafka(podSpec *corev1.PodSpec, kafkaratorSecretName string) *corev1.PodSpec {
+func podSpecWithKafka(ast *resource.Ast, kafkaratorSecretName string) {
 	// Mount specific secret keys as credential files
 	credentialFilesVolume := pod.FromFilesSecretVolume(kafkaCredentialFilesVolumeName, kafkaratorSecretName, []corev1.KeyToPath{
 		{
@@ -87,10 +81,11 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, kafkaratorSecretName string) *cor
 			Path: kafkaTruststoreFilename,
 		},
 	})
-	podSpec = podSpecWithVolume(podSpec, credentialFilesVolume)
+	ast.Volumes = append(ast.Volumes, credentialFilesVolume)
+	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
 
 	// Add environment variables for string data
-	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, []corev1.EnvVar{
+	ast.Env = append(ast.Env, []corev1.EnvVar{
 		makeKafkaSecretEnvVar(kafkaCertificateKey, kafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaPrivateKeyKey, kafkaratorSecretName),
 		makeKafkaSecretEnvVar(kafkaBrokersKey, kafkaratorSecretName),
@@ -102,7 +97,7 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, kafkaratorSecretName string) *cor
 	}...)
 
 	// Inject path environment variables to refer to mounted secrets
-	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, []corev1.EnvVar{
+	ast.Env = append(ast.Env, []corev1.EnvVar{
 		{
 			Name:  kafkaCertificatePathKey,
 			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaCertificateFilename),
@@ -124,20 +119,17 @@ func podSpecWithKafka(podSpec *corev1.PodSpec, kafkaratorSecretName string) *cor
 			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaTruststoreFilename),
 		},
 	}...)
-
-	return podSpec
 }
 
-func Create(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, deployment *appsv1.Deployment) error {
-	if resourceOptions.KafkaratorEnabled && app.Spec.Kafka != nil {
-		kafkaratorSecretName, err := generateKafkaSecretName(app)
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka) error {
+	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
+		kafkaratorSecretName, err := generateKafkaSecretName(source.GetName(), naisKafka.Pool)
 		if err != nil {
 			return err
 		}
 
-		podSpec := &deployment.Spec.Template.Spec
-		podSpec = podSpecWithKafka(podSpec, kafkaratorSecretName)
-		deployment.Spec.Template.Spec = *podSpec
+		podSpecWithKafka(ast, kafkaratorSecretName)
+		ast.Labels["kafka"] = "enabled"
 	}
 	return nil
 }

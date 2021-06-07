@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
+	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -55,6 +56,13 @@ func run() error {
 		"kafka.sasl.username",
 		"kafka.sasl.password",
 	})
+
+	if cfg.Features.Vault {
+		err = cfg.Vault.Validate()
+		if err != nil {
+			return err
+		}
+	}
 
 	var kafkaClient kafka.Interface
 
@@ -114,12 +122,15 @@ func run() error {
 	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
 	resourceOptions.DigdiratorHosts = cfg.ServiceHosts.Digdirator
 	resourceOptions.GatewayMappings = cfg.GatewayMappings
+	resourceOptions.GoogleCloudSQLProxyContainerImage = cfg.GoogleCloudSQLProxyContainerImage
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
+	resourceOptions.Proxy = cfg.Proxy
+	resourceOptions.Securelogs = cfg.Securelogs
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 
@@ -137,16 +148,29 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
-	syncer := &synchronizer.Synchronizer{
+	applicationReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
 		Client:          mgrClient,
 		Config:          *cfg,
 		Kafka:           kafkaClient,
 		ResourceOptions: resourceOptions,
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
+	})
+
+	if err = applicationReconciler.SetupWithManager(mgr); err != nil {
+		return err
 	}
 
-	if err = syncer.SetupWithManager(mgr); err != nil {
+	naisjobReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
+		Client:          mgrClient,
+		Config:          *cfg,
+		Kafka:           kafkaClient,
+		ResourceOptions: resourceOptions,
+		Scheme:          kscheme,
+		SimpleClient:    simpleClient,
+	})
+
+	if err = naisjobReconciler.SetupWithManager(mgr); err != nil {
 		return err
 	}
 

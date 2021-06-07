@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	"k8s.io/api/core/v1"
-	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -106,14 +106,15 @@ func (in GoogleSqlUser) isDefault() bool {
 	return in.Instance.Name == in.Name
 }
 
-func (in GoogleSqlUser) Create(app *nais.Application, secretKeyRefEnvName string, cascadingDelete bool, projectId string) (*googlesqlcrd.SQLUser, error) {
+func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName string, cascadingDelete bool, projectId string) (*googlesqlcrd.SQLUser, error) {
+	appName := objectMeta.Name
 	objectDataName, err := in.uniqueObjectName()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create meatadata: %s", err)
 	}
-	objectMetadata := app.CreateObjectMetaWithName(objectDataName)
-	setAnnotations(objectMetadata, cascadingDelete, projectId)
-	return in.create(app, objectMetadata, secretKeyRefEnvName), nil
+	objectMeta.Name = objectDataName
+	setAnnotations(objectMeta, cascadingDelete, projectId)
+	return in.create(objectMeta, secretKeyRefEnvName, appName), nil
 }
 
 func (in GoogleSqlUser) uniqueObjectName() (string, error) {
@@ -124,9 +125,9 @@ func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 	return namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
 }
 
-func (in GoogleSqlUser) create(app *nais.Application, objectMeta k8smeta.ObjectMeta, secretKeyRefEnvName string) *googlesqlcrd.SQLUser {
+func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName string) *googlesqlcrd.SQLUser {
 	return &googlesqlcrd.SQLUser{
-		TypeMeta: k8smeta.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLUser",
 			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
@@ -137,7 +138,7 @@ func (in GoogleSqlUser) create(app *nais.Application, objectMeta k8smeta.ObjectM
 				ValueFrom: googlesqlcrd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: googlesqlcrd.SecretRef{
 						Key:  secretKeyRefEnvName,
-						Name: GoogleSQLSecretName(app, in.Instance.Name, in.Name),
+						Name: GoogleSQLSecretName(appName, in.Instance.Name, in.Name),
 					},
 				},
 			},
@@ -145,7 +146,7 @@ func (in GoogleSqlUser) create(app *nais.Application, objectMeta k8smeta.ObjectM
 	}
 }
 
-func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, projectId string) {
+func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectId string) {
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	if !cascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
@@ -153,11 +154,11 @@ func setAnnotations(objectMeta k8smeta.ObjectMeta, cascadingDelete bool, project
 	}
 }
 
-func GoogleSQLSecretName(app *nais.Application, instanceName string, sqlUserName string) string {
+func GoogleSQLSecretName(appName, instanceName string, sqlUserName string) string {
 	if isDefault(instanceName, sqlUserName) {
-		return fmt.Sprintf("google-sql-%s", app.Name)
+		return fmt.Sprintf("google-sql-%s", appName)
 	}
-	return fmt.Sprintf("google-sql-%s-%s", app.Name, replaceToLowerWithNoPrefix(sqlUserName))
+	return fmt.Sprintf("google-sql-%s-%s", appName, replaceToLowerWithNoPrefix(sqlUserName))
 }
 
 // isDefault is a legacy compatibility function
@@ -213,15 +214,13 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 	return vars
 }
 
-func AppendGoogleSQLUserSecretEnvs(podSpec *v1.PodSpec, app *nais.Application) *v1.PodSpec {
-	for _, instance := range app.Spec.GCP.SqlInstances {
+func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstances *[]nais.CloudSqlInstance, appName string) {
+	for _, instance := range *naisSqlInstances {
 		for _, db := range instance.Databases {
 			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
 			for _, user := range googleSQLUsers {
-				podSpec.Containers[0].EnvFrom = append(podSpec.Containers[0].EnvFrom, pod.EnvFromSecret(GoogleSQLSecretName(app, instance.Name, user.Name)))
+				ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(GoogleSQLSecretName(appName, instance.Name, user.Name)))
 			}
 		}
 	}
-	return podSpec
 }
-

@@ -1,25 +1,25 @@
 package horizontalpodautoscaler
 
 import (
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/api/autoscaling/v2beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(app *nais.Application, operations *resource.Operations) {
+func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replicas) {
 	hpa := &v2beta2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
 			APIVersion: v2beta2.SchemeGroupVersion.Identifier(),
 		},
-		ObjectMeta: app.CreateObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: v2beta2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: v2beta2.CrossVersionObjectReference{
 				APIVersion: "apps/v1",
 				Kind:       "Deployment",
-				Name:       app.Name,
+				Name:       source.GetName(),
 			},
 			Metrics: []v2beta2.MetricSpec{
 				{
@@ -28,15 +28,15 @@ func Create(app *nais.Application, operations *resource.Operations) {
 						Name: "cpu",
 						Target: v2beta2.MetricTarget{
 							Type:               v2beta2.UtilizationMetricType,
-							AverageUtilization: util.Int32p(int32(app.Spec.Replicas.CpuThresholdPercentage)),
+							AverageUtilization: util.Int32p(int32(naisReplicas.CpuThresholdPercentage)),
 						},
 					},
 				},
 			},
-			MinReplicas: util.Int32p(int32(app.Spec.Replicas.Min)),
-			MaxReplicas: int32(app.Spec.Replicas.Max),
+			MinReplicas: util.Int32p(int32(naisReplicas.Min)),
+			MaxReplicas: int32(naisReplicas.Max),
 		},
 	}
 
-	*operations = append(*operations, resource.Operation{Resource: hpa, Operation: resource.OperationCreateOrUpdate})
+	ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
 }

@@ -1,0 +1,47 @@
+config:
+  description: file injection
+
+resourceoptions:
+  NativeSecrets: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    filesFrom:
+      - configmap: mycm
+      - secret: mysecret
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: files injected from secret and cm
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: mycm
+                    configMap:
+                      name: mycm
+                  - name: mysecret
+                    secret:
+                      secretName: mysecret
+                containers:
+                  - name: myapplication
+                    volumeMounts:
+                      - name: mycm
+                        readOnly: true
+                        mountPath: /var/run/configmaps/mycm
+                      - name: mysecret
+                        readOnly: true
+                        mountPath: /var/run/secrets

@@ -3,7 +3,7 @@ package service_test
 import (
 	"testing"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -14,27 +14,27 @@ import (
 func TestGetService(t *testing.T) {
 	t.Run("Check if default values is used", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		ops := resource.Operations{}
-		err := nais.ApplyDefaults(app)
+		ast := resource.NewAst()
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		service.Create(app, &ops)
-		svc := ops[0].Resource.(*core.Service)
+		service.Create(app, ast, *app.Spec.Service)
+		svc := ast.Operations[0].Resource.(*core.Service)
 		port := svc.Spec.Ports[0]
-		assert.Equal(t, nais.DefaultPortName, port.Name)
-		assert.Equal(t, nais.DefaultServicePort, int(port.Port))
+		assert.Equal(t, nais_io_v1alpha1.DefaultPortName, port.Name)
+		assert.Equal(t, nais_io_v1alpha1.DefaultServicePort, int(port.Port))
 	})
 
 	t.Run("check if correct value is used when set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		ops := resource.Operations{}
+		ast := resource.NewAst()
 		app.Spec.Service.Protocol = "redis"
 		app.Spec.Service.Port = 1337
-		err := nais.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		service.Create(app, &ops)
-		svc := ops[0].Resource.(*core.Service)
+		service.Create(app, ast, *app.Spec.Service)
+		svc := ast.Operations[0].Resource.(*core.Service)
 		port := svc.Spec.Ports[0]
 		assert.Equal(t, "redis", port.Name)
 		assert.Equal(t, 1337, int(port.Port))

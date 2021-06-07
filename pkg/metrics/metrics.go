@@ -10,6 +10,11 @@ var (
 		Namespace: "naiserator",
 		Help:      "number of application deployments performed",
 	})
+	NaisjobsDeployments = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:      "naisjob_deployments",
+		Namespace: "naiserator",
+		Help:      "number of naisjob deployments performed",
+	})
 	HttpRequests = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "http_requests",
 		Namespace: "naiserator",
@@ -25,8 +30,23 @@ var (
 		Namespace: "naiserator",
 		Help:      "number of nais.io.Application resources that failed processing",
 	})
-	Retries = prometheus.NewCounter(prometheus.CounterOpts{
+	ApplicationsRetries = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "applications_retried",
+		Namespace: "naiserator",
+		Help:      "number of nais.io.Application resources that failed synchronization and have been re-enqueued",
+	})
+	NaisjobsProcessed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:      "naisjobs_processed",
+		Namespace: "naiserator",
+		Help:      "number of nais.io.Application resources that have been processed",
+	})
+	NaisjobsFailed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:      "naisjobs_failed",
+		Namespace: "naiserator",
+		Help:      "number of nais.io.Application resources that failed processing",
+	})
+	NaisjobsRetries = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:      "naisjobs_retried",
 		Namespace: "naiserator",
 		Help:      "number of nais.io.Application resources that failed synchronization and have been re-enqueued",
 	})
@@ -46,10 +66,14 @@ var (
 func Register(registry prometheus.Registerer) {
 	registry.MustRegister(
 		Deployments,
+		NaisjobsDeployments,
 		HttpRequests,
 		ApplicationsProcessed,
 		ApplicationsFailed,
-		Retries,
+		ApplicationsRetries,
+		NaisjobsProcessed,
+		NaisjobsFailed,
+		NaisjobsRetries,
 		ResourcesGenerated,
 		KubernetesResourceWriteDuration,
 	)

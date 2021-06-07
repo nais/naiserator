@@ -6,12 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	ingress "github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
@@ -19,7 +21,6 @@ import (
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -82,19 +83,19 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		},
 	}
 
-	syncer := &synchronizer.Synchronizer{
+	applicationReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
 		Client:          rig.client,
 		SimpleClient:    rig.client,
 		Scheme:          rig.scheme,
 		ResourceOptions: options,
 		Config:          syncerConfig,
-	}
+	})
 
-	err = syncer.SetupWithManager(rig.manager)
+	err = applicationReconciler.SetupWithManager(rig.manager)
 	if err != nil {
 		return nil, fmt.Errorf("setup synchronizer with manager: %w", err)
 	}
-	rig.synchronizer = syncer
+	rig.synchronizer = applicationReconciler
 
 	return rig, nil
 }
@@ -105,7 +106,6 @@ func newTestRig(options resource.Options) (*testRig, error) {
 // The validity of resources generated are not tested here.
 func TestSynchronizer(t *testing.T) {
 	resourceOptions := resource.NewOptions()
-	ops := resource.Operations{}
 	rig, err := newTestRig(resourceOptions)
 	if err != nil {
 		t.Errorf("unable to run synchronizer integration tests: %s", err)
@@ -131,7 +131,7 @@ func TestSynchronizer(t *testing.T) {
 	app := fixtures.MinimalApplication()
 
 	app.SetAnnotations(map[string]string{
-		nais_io_v1alpha1.DeploymentCorrelationIDAnnotation: "deploy-id",
+		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id",
 	})
 
 	// Test that a resource has been created in the fake cluster
@@ -156,11 +156,12 @@ func TestSynchronizer(t *testing.T) {
 	}
 
 	// Create an Ingress object that should be deleted once processing has run.
-	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, resourceOptions, &ops)
+	ast := resource.NewAst()
+	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
+	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
-	ing := ops[0].Resource.(*networkingv1beta1.Ingress)
-	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
+	ing := ast.Operations[0].Resource.(*networkingv1beta1.Ingress)
+	app.Spec.Ingresses = []nais_io_v1.Ingress{}
 	err = rig.client.Create(ctx, ing)
 	if err != nil || len(ing.Spec.Rules) == 0 {
 		t.Fatalf("BUG: error creating ingress for testing: %s", err)
@@ -168,13 +169,13 @@ func TestSynchronizer(t *testing.T) {
 
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
-	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, resourceOptions, &ops)
+	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
+	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
-	ing = ops[1].Resource.(*networkingv1beta1.Ingress)
+	ing = ast.Operations[1].Resource.(*networkingv1beta1.Ingress)
 	ing.SetName("disowned-ingress")
 	ing.SetOwnerReferences(nil)
-	app.Spec.Ingresses = []nais_io_v1alpha1.Ingress{}
+	app.Spec.Ingresses = []nais_io_v1.Ingress{}
 	err = rig.client.Create(ctx, ing)
 	if err != nil || len(ing.Spec.Rules) == 0 {
 		t.Fatalf("BUG: error creating ingress 2 for testing: %s", err)
@@ -220,13 +221,13 @@ func TestSynchronizer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 1, eventList.Items[0].Count)
-	assert.Equal(t, "deploy-id", eventList.Items[0].Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, "deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
 
 	// Run synchronization processing again, and check that resources still exist.
 	persistedApp.DeepCopyInto(app)
 	app.Status.SynchronizationHash = ""
-	app.Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation] = "new-deploy-id"
+	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = "new-deploy-id"
 	err = rig.client.Update(ctx, app)
 	assert.NoError(t, err)
 	result, err = rig.synchronizer.Reconcile(req)
@@ -243,14 +244,14 @@ func TestSynchronizer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 2, eventList.Items[0].Count)
-	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1alpha1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resource.NewOptions()
 	resourceOptions.GoogleProjectId = "something"
-	viper.Set(config.GoogleCloudSQLProxyContainerImage, "cloudsqlproxy")
+	resourceOptions.GoogleCloudSQLProxyContainerImage = "cloudsqlproxy"
 
 	rig, err := newTestRig(resourceOptions)
 	if err != nil {
@@ -266,11 +267,11 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
-	app.Spec.GCP = &nais_io_v1alpha1.GCP{
-		SqlInstances: []nais_io_v1alpha1.CloudSqlInstance{
+	app.Spec.GCP = &nais_io_v1.GCP{
+		SqlInstances: []nais_io_v1.CloudSqlInstance{
 			{
-				Type: nais_io_v1alpha1.CloudSqlInstanceTypePostgres11,
-				Databases: []nais_io_v1alpha1.CloudSqlDatabase{
+				Type: nais_io_v1.CloudSqlInstanceTypePostgres11,
+				Databases: []nais_io_v1.CloudSqlDatabase{
 					{
 						Name: app.Name,
 					},

@@ -1,0 +1,163 @@
+config:
+  description: vanilla minimal naisjob with schedule running on-premises with default configuration
+
+resourceOptions:
+  ClusterName: test-cluster
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    annotations:
+      nais.io/deploymentCorrelationID: corr
+    labels:
+      team: myteam
+  spec:
+    image: navikt/mynaisjob:1.2.3
+
+tests:
+  - match:
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: corr
+            labels:
+              app: mynaisjob
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1
+                kind: Naisjob
+                name: mynaisjob
+                uid: "123456"
+
+  - operation: CreateIfNotExists
+    apiVersion: v1
+    kind: ServiceAccount
+    name: mynaisjob
+    match:
+      - type: subset
+        name: "service account created"
+        resource: { }
+
+
+  - operation: CreateOrUpdate
+    apiVersion: batch/v1
+    kind: Job
+    name: mynaisjob
+    match:
+      - name: "naisjob created"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+          - .metadata.creationTimestamp
+          - .spec.template.metadata.creationTimestamp
+        resource:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: corr
+            labels:
+              app: mynaisjob
+              team: myteam
+            name: mynaisjob
+            namespace: mynamespace
+            ownerReferences:
+              - apiVersion: v1
+                kind: Naisjob
+                name: mynaisjob
+                uid: "123456"
+          spec:
+            backoffLimit: 6
+            selector:
+              matchLabels:
+                app: mynaisjob
+            template:
+              metadata:
+                labels:
+                  app: mynaisjob
+                  team: myteam
+                name: mynaisjob
+                namespace: mynamespace
+                ownerReferences:
+                  - apiVersion: v1
+                    kind: Naisjob
+                    name: mynaisjob
+                    uid: "123456"
+              spec:
+                containers:
+                  - env:
+                      - name: NAV_TRUSTSTORE_PATH
+                        value: /etc/ssl/certs/java/cacerts
+                      - name: NAV_TRUSTSTORE_PASSWORD
+                        value: changeme
+                      - name: NAIS_APP_NAME
+                        value: mynaisjob
+                      - name: NAIS_NAMESPACE
+                        value: mynamespace
+                      - name: NAIS_APP_IMAGE
+                        value: navikt/mynaisjob:1.2.3
+                      - name: NAIS_CLUSTER_NAME
+                        value: test-cluster
+                      - name: NAIS_CLIENT_ID
+                        value: test-cluster:mynamespace:mynaisjob
+                    image: navikt/mynaisjob:1.2.3
+                    imagePullPolicy: IfNotPresent
+                    lifecycle:
+                      preStop:
+                        exec:
+                          command:
+                            - sleep
+                            - "5"
+                    name: mynaisjob
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 200m
+                        memory: 256Mi
+                    volumeMounts:
+                      - mountPath: /etc/ssl/certs/java/cacerts
+                        name: ca-bundle-jks
+                        readOnly: true
+                        subPath: ca-bundle.jks
+                      - mountPath: /etc/ssl/certs/ca-certificates.crt
+                        name: ca-bundle-pem
+                        readOnly: true
+                        subPath: ca-bundle.pem
+                      - mountPath: /etc/pki/tls/certs/ca-bundle.crt
+                        name: ca-bundle-pem
+                        readOnly: true
+                        subPath: ca-bundle.pem
+                      - mountPath: /etc/ssl/ca-bundle.pem
+                        name: ca-bundle-pem
+                        readOnly: true
+                        subPath: ca-bundle.pem
+                      - mountPath: /etc/pki/tls/cacert.pem
+                        name: ca-bundle-pem
+                        readOnly: true
+                        subPath: ca-bundle.pem
+                      - mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+                        name: ca-bundle-pem
+                        readOnly: true
+                        subPath: ca-bundle.pem
+                dnsPolicy: ClusterFirst
+                imagePullSecrets:
+                  - name: gpr-credentials
+                  - name: ghcr-credentials
+                restartPolicy: Always
+                serviceAccountName: mynaisjob
+                volumes:
+                  - configMap:
+                      name: ca-bundle-jks
+                    name: ca-bundle-jks
+                  - configMap:
+                      name: ca-bundle-pem
+                    name: ca-bundle-pem

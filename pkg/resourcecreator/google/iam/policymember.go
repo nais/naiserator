@@ -6,7 +6,7 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -15,20 +15,22 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func policyMember(app *nais.Application, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
-	name, err := createName(app, policy)
-	externalName := formatExternalName(googleTeamProjectId, policy.Resource.Name)
+func policyMember(source resource.Source, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
+	name, err := createName(source.GetName(), policy)
 	if err != nil {
 		return nil, err
 	}
+	externalName := formatExternalName(googleTeamProjectId, policy.Resource.Name)
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = name
 	policyMember := &google_iam_crd.IAMPolicyMember{
-		ObjectMeta: (*app).CreateObjectMetaWithName(name),
+		ObjectMeta: objectMeta,
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMPolicyMember",
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(app, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectId)),
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: policy.Resource.APIVersion,
@@ -43,12 +45,12 @@ func policyMember(app *nais.Application, policy nais.CloudIAMPermission, googleP
 	return policyMember, nil
 }
 
-func createName(app *nais.Application, policy nais.CloudIAMPermission) (string, error) {
+func createName(appName string, policy nais.CloudIAMPermission) (string, error) {
 	hash, err := hashstructure.Hash(policy, nil)
 	if err != nil {
 		return "", fmt.Errorf("while calculating hash from policy: %w", err)
 	}
-	basename := fmt.Sprintf("%s-%s-%x", app.Name, strings.ToLower(policy.Resource.Kind), hash)
+	basename := fmt.Sprintf("%s-%s-%x", appName, strings.ToLower(policy.Resource.Kind), hash)
 	return namegen.ShortName(basename, validation.DNS1035LabelMaxLength)
 }
 
@@ -59,16 +61,18 @@ func formatExternalName(googleTeamProjectId, resourceName string) string {
 	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
 }
 
-func Create(app *nais.Application, resourceOptions resource.Options, operations *resource.Operations) error {
-	if app.Spec.GCP.Permissions != nil {
-		for _, p := range app.Spec.GCP.Permissions {
-			policy, err := policyMember(app, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
-			if err != nil {
-				return fmt.Errorf("unable to create iampolicymember: %w", err)
-			}
-			*operations = append(*operations, resource.Operation{Resource: policy, Operation: resource.OperationCreateIfNotExists})
-		}
+func CreatePolicyMember(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGcpPermission []nais.CloudIAMPermission) error {
+	if naisGcpPermission == nil {
+		return nil
 	}
+
+	for _, p := range naisGcpPermission {
+		policyMember, err := policyMember(source, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+		if err != nil {
+			return fmt.Errorf("unable to create iampolicymember: %w", err)
+		}
+		ast.AppendOperation(resource.OperationCreateIfNotExists, policyMember)
+	}
+
 	return nil
 }
-

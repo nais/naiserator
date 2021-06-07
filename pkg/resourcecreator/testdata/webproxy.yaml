@@ -1,6 +1,14 @@
 config:
   description: webproxy configuration is injected into the container env
 
+resourceOptions:
+  Proxy:
+    Address: http://foo.bar:5224
+    Exclude:
+      - foo
+      - bar
+      - baz
+
 input:
   kind: Application
   apiVersion: v1alpha1

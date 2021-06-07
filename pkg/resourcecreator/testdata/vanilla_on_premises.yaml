@@ -3,6 +3,7 @@ config:
 
 resourceOptions:
   NumReplicas: 1
+  ClusterName: test-cluster
 
 input:
   kind: Application
@@ -133,6 +134,10 @@ tests:
                         name: http
                         containerPort: 8080
                     env:
+                      - name: NAV_TRUSTSTORE_PATH
+                        value: /etc/ssl/certs/java/cacerts
+                      - name: NAV_TRUSTSTORE_PASSWORD
+                        value: changeme
                       - name: NAIS_APP_NAME
                         value: myapplication
                       - name: NAIS_NAMESPACE
@@ -143,10 +148,6 @@ tests:
                         value: test-cluster
                       - name: NAIS_CLIENT_ID
                         value: test-cluster:mynamespace:myapplication
-                      - name: NAV_TRUSTSTORE_PATH
-                        value: /etc/ssl/certs/java/cacerts
-                      - name: NAV_TRUSTSTORE_PASSWORD
-                        value: changeme
                     resources:
                       limits:
                         cpu: 500m

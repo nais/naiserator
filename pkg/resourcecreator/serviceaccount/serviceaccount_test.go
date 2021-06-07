@@ -14,10 +14,10 @@ import (
 
 func TestGetServiceAccount(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	ops := resource.Operations{}
-	opts := resource.NewOptions()
-	serviceaccount.Create(app, opts, &ops)
-	svcAcc := ops[0].Resource.(*core.ServiceAccount)
+	ops := resource.NewOptions()
+	ast := resource.NewAst()
+	serviceaccount.Create(app, ast, ops)
+	svcAcc := ast.Operations[0].Resource.(*core.ServiceAccount)
 
 	assert.Equal(t, app.Name, svcAcc.Name)
 	assert.Equal(t, app.Namespace, svcAcc.Namespace)
@@ -25,13 +25,13 @@ func TestGetServiceAccount(t *testing.T) {
 
 func TestGetServiceAccountGoogleCluster(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	ops := resource.Operations{}
-	opts := resource.NewOptions()
-	opts.GoogleProjectId = "nais-project-1234"
-	serviceaccount.Create(app, opts, &ops)
-	svcAcc := ops[0].Resource.(*core.ServiceAccount)
+	ops := resource.NewOptions()
+	ast := resource.NewAst()
+	ops.GoogleProjectId = "nais-project-1234"
+	serviceaccount.Create(app, ast, ops)
+	svcAcc := ast.Operations[0].Resource.(*core.ServiceAccount)
 
 	assert.Equal(t, app.Name, svcAcc.Name)
 	assert.Equal(t, app.Namespace, svcAcc.Namespace)
-	assert.Equal(t, app.CreateAppNamespaceHash()+"@nais-project-1234.iam.gserviceaccount.com", svcAcc.Annotations["iam.gke.io/gcp-service-account"])
+	assert.Equal(t, resource.CreateAppNamespaceHash(app)+"@nais-project-1234.iam.gserviceaccount.com", svcAcc.Annotations["iam.gke.io/gcp-service-account"])
 }

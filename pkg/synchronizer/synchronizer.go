@@ -56,12 +56,6 @@ type Synchronizer struct {
 	Kafka           kafka.Interface
 }
 
-func (n *Synchronizer) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&nais_io_v1alpha1.Application{}).
-		Complete(n)
-}
-
 // Creates a Kubernetes event, or updates an existing one with an incremented counter
 func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Event) (*corev1.Event, error) {
 	selector, err := fields.ParseSelector(fmt.Sprintf("involvedObject.name=%s,involvedObject.uid=%s", reportedEvent.InvolvedObject.Name, reportedEvent.InvolvedObject.UID))
@@ -93,17 +87,17 @@ func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Ev
 }
 
 // Reports an error through the error log, a Kubernetes event, and possibly logs a failure in event creation.
-func (n *Synchronizer) reportError(ctx context.Context, source string, err error, app *nais_io_v1alpha1.Application) {
-	logger := log.WithFields(app.LogFields())
+func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err error, source resource.Source) {
+	logger := log.WithFields(source.LogFields())
 	logger.Error(err)
-	_, err = n.reportEvent(ctx, app.CreateEvent(source, err.Error(), "Warning"))
+	_, err = n.reportEvent(ctx, resource.CreateEvent(source, eventSource, err.Error(), "Warning"))
 	if err != nil {
 		logger.Errorf("While creating an event for this error, another error occurred: %s", err)
 	}
 }
 
-// Process work queue
-func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+// ReconcileApplication process Application work queue
+func (n *Synchronizer) ReconcileApplication(req ctrl.Request, source resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
@@ -155,7 +149,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	logger = *log.WithFields(rollout.App.LogFields())
+	logger = *log.WithFields(app.LogFields())
 	logger.Debugf("Starting synchronization")
 	metrics.ApplicationsProcessed.Inc()
 
@@ -165,7 +159,7 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		if retry {
 			app.Status.SynchronizationState = EventRetrying
-			metrics.Retries.Inc()
+			metrics.ApplicationsRetries.Inc()
 			n.reportError(ctx, app.Status.SynchronizationState, err, app)
 		} else {
 			app.Status.SynchronizationState = EventFailedSynchronization
@@ -184,22 +178,21 @@ func (n *Synchronizer) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	app.Status.SynchronizationTime = time.Now().UnixNano()
 	metrics.Deployments.Inc()
 
-	_, err = n.reportEvent(ctx, app.CreateEvent(app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
+	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
 
 	// Create new deployment event
-	event := generator.NewDeploymentEvent(*app)
+	event := generator.NewDeploymentEvent(app, app.Spec.Image)
 	app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(*app, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout)
-
+	go n.MonitorRollout(source, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout, app.Spec.Image)
 	return ctrl.Result{}, nil
 }
 
-// Return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
+// Unreferenced return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
 func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]runtime.Object, error) {
 	// Return true if a cluster resource also is applied with the rollout.
 	intersects := func(existing runtime.Object) bool {
@@ -230,7 +223,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	if len(n.ResourceOptions.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
-	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.App)
+	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
@@ -274,11 +267,11 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	var err error
 
 	rollout := &Rollout{
-		App:             app,
+		Source:          app,
 		ResourceOptions: n.ResourceOptions,
 	}
 
-	if err = nais_io_v1alpha1.ApplyDefaults(app); err != nil {
+	if err = app.ApplyDefaults(); err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
 
@@ -329,8 +322,8 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		rollout.ResourceOptions.Linkerd = true
 	}
 
-	rollout.SetCurrentDeployment(previousDeployment)
-	rollout.ResourceOperations, err = resourcecreator.Create(app, rollout.ResourceOptions)
+	rollout.SetCurrentDeployment(previousDeployment, app.Spec.Replicas.Min)
+	rollout.ResourceOperations, err = resourcecreator.CreateApplication(app, rollout.ResourceOptions)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
@@ -374,8 +367,8 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
 		})
 	} else {
-		for _, resource := range unreferenced {
-			deletes = append(deletes, updater.DeleteIfExists(ctx, n, resource))
+		for _, rsrc := range unreferenced {
+			deletes = append(deletes, updater.DeleteIfExists(ctx, n, rsrc))
 		}
 	}
 
@@ -384,14 +377,14 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 
 var appsync sync.Mutex
 
-// Atomically update an Application resource.
+// UpdateApplication atomically update an Application resource.
 // Locks the resource to avoid race conditions.
-func (n *Synchronizer) UpdateApplication(ctx context.Context, app *nais_io_v1alpha1.Application, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
+func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.Source, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
 	appsync.Lock()
 	defer appsync.Unlock()
 
 	existing := &nais_io_v1alpha1.Application{}
-	err := n.Get(ctx, client.ObjectKey{Namespace: app.Namespace, Name: app.Name}, existing)
+	err := n.Get(ctx, client.ObjectKey{Namespace: source.GetNamespace(), Name: source.GetName()}, existing)
 	if err != nil {
 		return fmt.Errorf("get newest version of Application: %s", err)
 	}
@@ -411,7 +404,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 	return n.Kafka.Produce(payload)
 }
 
-func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
+func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, frequency, timeout time.Duration, appImage string) {
 	logger.Debugf("monitoring rollout status")
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -421,7 +414,7 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 		select {
 		case <-time.After(frequency):
 			deploy := &apps.Deployment{}
-			err := n.Get(ctx, client.ObjectKey{Name: app.Name, Namespace: app.Namespace}, deploy)
+			err := n.Get(ctx, client.ObjectKey{Name: source.GetName(), Namespace: source.GetNamespace()}, deploy)
 			if err != nil {
 				if !errors.IsNotFound(err) {
 					logger.Errorf("monitor rollout: failed to query Deployment: %s", err)
@@ -430,9 +423,9 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 			}
 
 			if deploymentComplete(deploy, &deploy.Status) {
-				event := generator.NewDeploymentEvent(app)
+				event := generator.NewDeploymentEvent(source, appImage)
 				event.RolloutStatus = deployment.RolloutStatus_complete
-				if n.Kafka != nil && !app.SkipDeploymentMessage() {
+				if n.Kafka != nil && !source.SkipDeploymentMessage() {
 					offset, err := n.produceDeploymentEvent(&event)
 					if err == nil {
 						logger.WithFields(log.Fields{
@@ -443,13 +436,13 @@ func (n *Synchronizer) MonitorRollout(app nais_io_v1alpha1.Application, logger l
 					}
 				}
 
-				_, err = n.reportEvent(ctx, app.CreateEvent(EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+				_, err = n.reportEvent(ctx, resource.CreateEvent(source, EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 				if err != nil {
 					logger.Errorf("monitor rollout: unable to report rollout complete event: %s", err)
 				}
 
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
-				err = n.UpdateApplication(ctx, &app, func(app *nais_io_v1alpha1.Application) error {
+				err = n.UpdateApplication(ctx, source, func(app *nais_io_v1alpha1.Application) error {
 					app.Status.SynchronizationState = EventRolloutComplete
 					app.Status.RolloutCompleteTime = time.Now().UnixNano()
 					app.SetDeploymentRolloutStatus(event.RolloutStatus.String())

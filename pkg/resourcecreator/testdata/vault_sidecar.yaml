@@ -36,10 +36,11 @@ tests:
             template:
               spec:
                 containers:
-                  - volumeMounts:
-                    - name: "vault-volume"
-                      mountPath: "/var/run/secrets/nais.io/vault"
-                      subPath: "vault/var/run/secrets/nais.io/vault"
+                  - name: "myapplication"
+                    volumeMounts:
+                      - name: "vault-volume"
+                        mountPath: "/var/run/secrets/nais.io/vault"
+                        subPath: "vault/var/run/secrets/nais.io/vault"
                   - name: "vks-sidecar"
                     image: "navikt/vault-sidekick:v0.3.10-d122b16"
                     args:
