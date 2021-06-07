@@ -18,6 +18,8 @@ input:
   spec:
     image: navikt/mynaisjob:1.2.3
     schedule: "* 2 * * *"
+    successfulJobsHistoryLimit: 4
+    failedJobsHistoryLimit: 2
 
 tests:
   - match:
@@ -60,7 +62,7 @@ tests:
           - .spec.jobTemplate.spec.template.metadata.creationTimestamp
         resource:
           spec:
-            failedJobsHistoryLimit: 1
+            failedJobsHistoryLimit: 2
             jobTemplate:
               metadata:
                 annotations:
@@ -164,4 +166,4 @@ tests:
                           name: ca-bundle-pem
                         name: ca-bundle-pem
             schedule: '* 2 * * *'
-            successfulJobsHistoryLimit: 3
+            successfulJobsHistoryLimit: 4

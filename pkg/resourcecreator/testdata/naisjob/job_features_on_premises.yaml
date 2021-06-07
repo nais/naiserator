@@ -17,6 +17,9 @@ input:
       team: myteam
   spec:
     image: navikt/mynaisjob:1.2.3
+    activeDeadlineSeconds: 13
+    ttlSecondsAfterFinished: 3
+    backoffLimit: 7
 
 tests:
   - match:
@@ -74,7 +77,8 @@ tests:
                 name: mynaisjob
                 uid: "123456"
           spec:
-            backoffLimit: 6
+            activeDeadlineSeconds: 13
+            backoffLimit: 7
             selector:
               matchLabels:
                 app: mynaisjob
@@ -161,3 +165,4 @@ tests:
                   - configMap:
                       name: ca-bundle-pem
                     name: ca-bundle-pem
+            ttlSecondsAfterFinished: 3

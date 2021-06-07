@@ -11,14 +11,13 @@ import (
 )
 
 func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) (batchv1.JobSpec, error) {
-
 	podSpec, err := pod.CreateSpec(ast, resourceOptions, naisjob.GetName())
 	if err != nil {
 		return batchv1.JobSpec{}, err
 	}
 
 	jobSpec := batchv1.JobSpec{
-		ActiveDeadlineSeconds: util.Int64p(naisjob.Spec.ActiveDeadlineSeconds),
+		ActiveDeadlineSeconds: naisjob.Spec.ActiveDeadlineSeconds,
 		BackoffLimit:          util.Int32p(naisjob.Spec.BackoffLimit),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": naisjob.GetName()},
@@ -27,7 +26,7 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 			ObjectMeta: pod.CreateNaisjobObjectMeta(naisjob, ast),
 			Spec:       *podSpec,
 		},
-		TTLSecondsAfterFinished: util.Int32p(naisjob.Spec.TTLSecondsAfterFinished),
+		TTLSecondsAfterFinished: naisjob.Spec.TTLSecondsAfterFinished,
 	}
 
 	return jobSpec, nil
