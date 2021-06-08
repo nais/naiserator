@@ -19,9 +19,6 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 	jobSpec := batchv1.JobSpec{
 		ActiveDeadlineSeconds: naisjob.Spec.ActiveDeadlineSeconds,
 		BackoffLimit:          util.Int32p(naisjob.Spec.BackoffLimit),
-		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{"app": naisjob.GetName()},
-		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: pod.CreateNaisjobObjectMeta(naisjob, ast),
 			Spec:       *podSpec,
