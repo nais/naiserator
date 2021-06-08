@@ -148,7 +148,7 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
-	applicationReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
+	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
 		Client:          mgrClient,
 		Config:          *cfg,
 		Kafka:           kafkaClient,
@@ -161,7 +161,7 @@ func run() error {
 		return err
 	}
 
-	naisjobReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
+	naisjobReconciler := controllers.NewNaisjobReconciler(synchronizer.Synchronizer{
 		Client:          mgrClient,
 		Config:          *cfg,
 		Kafka:           kafkaClient,
