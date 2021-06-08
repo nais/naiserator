@@ -11,8 +11,9 @@ type NaisjobReconciler struct {
 	synchronizer.Synchronizer
 }
 
-// +kubebuilder:rbac:groups=nais.io.nais.io,resources=naisjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=nais_io_v1.io.nais_io_v1.io,resources=naisjobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=nais.io,resources=Naisjobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=nais.io,resources=Naisjobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=*,resources=events,verbs=get;list;watch;create;update
 
 func (r *NaisjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return r.Synchronizer.ReconcileNaisjob(req, &nais_io_v1.Naisjob{})
