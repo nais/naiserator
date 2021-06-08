@@ -10,7 +10,7 @@ type ApplicationReconciler struct {
 	synchronizer.Synchronizer
 }
 
-func NewReconciler(synchronizer synchronizer.Synchronizer) *ApplicationReconciler {
+func NewAppReconciler(synchronizer synchronizer.Synchronizer) *ApplicationReconciler {
 	return &ApplicationReconciler{Synchronizer: synchronizer}
 }
 

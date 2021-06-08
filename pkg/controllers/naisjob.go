@@ -11,6 +11,10 @@ type NaisjobReconciler struct {
 	synchronizer.Synchronizer
 }
 
+func NewNaisjobReconciler(synchronizer synchronizer.Synchronizer) *NaisjobReconciler {
+	return &NaisjobReconciler{Synchronizer: synchronizer}
+}
+
 // +kubebuilder:rbac:groups=nais.io,resources=Naisjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nais.io,resources=Naisjobs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=*,resources=events,verbs=get;list;watch;create;update

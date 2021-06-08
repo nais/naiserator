@@ -83,7 +83,7 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		},
 	}
 
-	applicationReconciler := controllers.NewReconciler(synchronizer.Synchronizer{
+	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
 		Client:          rig.client,
 		SimpleClient:    rig.client,
 		Scheme:          rig.scheme,
