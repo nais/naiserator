@@ -11,7 +11,7 @@ import (
 )
 
 func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) (batchv1.JobSpec, error) {
-	podSpec, err := pod.CreateSpec(ast, resourceOptions, naisjob.GetName())
+	podSpec, err := pod.CreateSpec(ast, resourceOptions, naisjob.GetName(), corev1.RestartPolicyNever)
 	if err != nil {
 		return batchv1.JobSpec{}, err
 	}
