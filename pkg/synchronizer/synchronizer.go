@@ -145,7 +145,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request, source resource.So
 
 	if rollout == nil {
 		changed = false
-		logger.Debugf("No changes")
+		logger.Debugf("Synchronization hash not changed; skipping synchronization")
 		return ctrl.Result{}, nil
 	}
 
@@ -405,7 +405,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 }
 
 func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, frequency, timeout time.Duration, appImage string) {
-	logger.Debugf("monitoring rollout status")
+	logger.Debugf("Monitoring rollout status")
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -417,12 +417,14 @@ func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, 
 			err := n.Get(ctx, client.ObjectKey{Name: source.GetName(), Namespace: source.GetNamespace()}, deploy)
 			if err != nil {
 				if !errors.IsNotFound(err) {
-					logger.Errorf("monitor rollout: failed to query Deployment: %s", err)
+					logger.Errorf("Monitor rollout: failed to query Deployment: %s", err)
 				}
 				continue
 			}
 
 			if deploymentComplete(deploy, &deploy.Status) {
+				logger.Debugf("Monitor rollout: deployment has rolled out completely")
+
 				event := generator.NewDeploymentEvent(source, appImage)
 				event.RolloutStatus = deployment.RolloutStatus_complete
 				if n.Kafka != nil && !source.SkipDeploymentMessage() {
@@ -438,7 +440,7 @@ func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, 
 
 				_, err = n.reportEvent(ctx, resource.CreateEvent(source, EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 				if err != nil {
-					logger.Errorf("monitor rollout: unable to report rollout complete event: %s", err)
+					logger.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
 				}
 
 				// During this time the app has been updated, so we need to acquire the newest version before proceeding
@@ -450,14 +452,14 @@ func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, 
 				})
 
 				if err != nil {
-					logger.Errorf("monitor rollout: store application sync status: %s", err)
+					logger.Errorf("Monitor rollout: store application sync status: %s", err)
 				}
 
 				return
 			}
 
 		case <-ctx.Done():
-			logger.Debugf("application has not rolled out completely in %s; giving up", timeout.String())
+			logger.Debugf("Monitor rollout: application has not rolled out completely in %s; giving up", timeout.String())
 			return
 		}
 	}
