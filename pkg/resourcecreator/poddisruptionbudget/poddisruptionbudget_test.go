@@ -3,7 +3,6 @@ package poddisruptionbudget_test
 import (
 	"testing"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -15,7 +14,7 @@ func TestPodDisruptionBudget(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.Replicas.Max = 1
-		err := nais.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)

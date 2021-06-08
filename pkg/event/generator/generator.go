@@ -5,35 +5,35 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	docker "github.com/novln/docker-parser"
 	"github.com/spf13/viper"
 )
 
-func NewDeploymentEvent(app nais.Application) deployment.Event {
-	image := ContainerImage(app.Spec.Image)
+func NewDeploymentEvent(source resource.Source, appImage string) deployment.Event {
+	image := ContainerImage(appImage)
 	ts := convertTimestamp(time.Now())
 
 	return deployment.Event{
-		CorrelationID: app.Status.CorrelationID,
+		CorrelationID: source.CorrelationID(),
 		Platform: &deployment.Platform{
 			Type: deployment.PlatformType_nais,
 		},
 		Source:          deployment.System_naiserator,
 		Deployer:        nil,
-		Team:            app.Labels["team"],
+		Team:            source.GetLabels()["team"],
 		RolloutStatus:   deployment.RolloutStatus_initialized,
 		Environment:     environment(),
 		SkyaEnvironment: "",
-		Namespace:       app.Namespace,
+		Namespace:       source.GetNamespace(),
 		Cluster:         viper.GetString(config.ClusterName),
-		Application:     app.Name,
+		Application:     source.GetName(),
 		Version:         image.GetTag(),
 		Image:           &image,
 		Timestamp:       &ts,
-		GitCommitSha:    app.Annotations["deploy.nais.io/github-sha"],
+		GitCommitSha:    source.GetAnnotations()["deploy.nais.io/github-sha"],
 	}
 }
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	nais_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -86,10 +86,10 @@ func DeleteIfExists(ctx context.Context, cli client.Client, resource runtime.Obj
 }
 
 // Find all Kubernetes resource matching label selector 'app=NAME' for all specified types
-func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, types []runtime.Object, app *nais_v1alpha1.Application) ([]runtime.Object, error) {
+func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, types []runtime.Object, source resource.Source) ([]runtime.Object, error) {
 	// Set up label selector 'app=NAME'
 	labelSelector := labels.NewSelector()
-	labelreq, err := labels.NewRequirement("app", selection.Equals, []string{app.Name})
+	labelreq, err := labels.NewRequirement("app", selection.Equals, []string{source.GetName()})
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 		})
 	}
 
-	return withOwnerReference(app, resources), nil
+	return withOwnerReference(source, resources), nil
 }
 
 // CopyMeta copies resource metadata from one resource to another.
@@ -176,7 +176,7 @@ func CopyImmutable(src, dst runtime.Object) error {
 	return nil
 }
 
-func withOwnerReference(app *nais_v1alpha1.Application, resources []runtime.Object) []runtime.Object {
+func withOwnerReference(source resource.Source, resources []runtime.Object) []runtime.Object {
 	owned := make([]runtime.Object, 0, len(resources))
 
 	hasOwnerReference := func(r runtime.Object) (bool, error) {
@@ -185,7 +185,7 @@ func withOwnerReference(app *nais_v1alpha1.Application, resources []runtime.Obje
 			return false, err
 		}
 		for _, ref := range m.GetOwnerReferences() {
-			if ref.UID == app.UID {
+			if ref.UID == source.GetUID() {
 				return true, nil
 			}
 		}

@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 )
 
@@ -28,7 +28,7 @@ func ValidateUrl(u *url.URL) error {
 	return nil
 }
 
-func AppendPathToIngress(ingress nais_io_v1alpha1.Ingress, joinPath string) string {
+func AppendPathToIngress(ingress nais_io_v1.Ingress, joinPath string) string {
 	u, _ := url.Parse(string(ingress))
 	u.Path = path.Join(u.Path, joinPath)
 	return u.String()
@@ -42,4 +42,3 @@ func ResolveIngressClass(host string, mappings []config.GatewayMapping) *string 
 	}
 	return nil
 }
-

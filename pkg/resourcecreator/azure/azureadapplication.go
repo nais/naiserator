@@ -20,7 +20,7 @@ const (
 	applicationDefaultCallbackPath = "/oauth2/callback"
 )
 
-func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy, clusterName string) (*azureapp.AzureAdApplication, error) {
+func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, naisIngress []nais_io_v1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy, clusterName string) (*azureapp.AzureAdApplication, error) {
 	replyURLs := naisAzure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
@@ -56,7 +56,7 @@ func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
 	return maps
 }
 
-func oauthCallbackURLs(ingresses []nais_io_v1alpha1.Ingress) []string {
+func oauthCallbackURLs(ingresses []nais_io_v1.Ingress) []string {
 	urls := make([]string, len(ingresses))
 	for i := range ingresses {
 		urls[i] = util.AppendPathToIngress(ingresses[i], applicationDefaultCallbackPath)
@@ -80,12 +80,12 @@ func azureSecretName(name string) (string, error) {
 	return fmt.Sprintf("%s-%s", shortName, suffix), nil
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisAzure nais_io_v1alpha1.Azure, naisIngress []nais_io_v1alpha1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisAzure nais_io_v1.Azure, naisIngress []nais_io_v1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
 	if !resourceOptions.AzureratorEnabled || !naisAzure.Application.Enabled {
 		return nil
 	}
 
-	azureAdApplication, err := adApplication(source.CreateObjectMeta(), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
+	azureAdApplication, err := adApplication(resource.CreateObjectMeta(source), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
 	if err != nil {
 		return err
 	}

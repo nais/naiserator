@@ -3,7 +3,7 @@ package pod
 import (
 	"fmt"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
@@ -52,7 +52,7 @@ func EnvFromSecret(name string) corev1.EnvFromSource {
 	}
 }
 
-func ResourceLimits(reqs nais_io_v1alpha1.ResourceRequirements) corev1.ResourceRequirements {
+func ResourceLimits(reqs nais_io_v1.ResourceRequirements) corev1.ResourceRequirements {
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    k8sResource.MustParse(reqs.Requests.Cpu),

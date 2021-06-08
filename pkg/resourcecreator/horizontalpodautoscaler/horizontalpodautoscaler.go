@@ -1,7 +1,7 @@
 package horizontalpodautoscaler
 
 import (
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/api/autoscaling/v2beta2"
@@ -14,7 +14,7 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replica
 			Kind:       "HorizontalPodAutoscaler",
 			APIVersion: v2beta2.SchemeGroupVersion.Identifier(),
 		},
-		ObjectMeta: source.CreateObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: v2beta2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: v2beta2.CrossVersionObjectReference{
 				APIVersion: "apps/v1",

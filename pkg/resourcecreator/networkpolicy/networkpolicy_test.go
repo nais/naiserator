@@ -6,8 +6,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
@@ -28,7 +27,7 @@ func TestNetworkPolicy(t *testing.T) {
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -108,7 +107,7 @@ func TestNetworkPolicy(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -125,7 +124,7 @@ func TestNetworkPolicy(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Outbound.Rules = append(app.Spec.AccessPolicy.Outbound.Rules, nais_io_v1.AccessPolicyRule{Application: accessPolicyApp})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -138,7 +137,7 @@ func TestNetworkPolicy(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
-		err := nais_io_v1alpha1.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)

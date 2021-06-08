@@ -6,7 +6,7 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -21,7 +21,8 @@ func policyMember(source resource.Source, policy nais.CloudIAMPermission, google
 		return nil, err
 	}
 	externalName := formatExternalName(googleTeamProjectId, policy.Resource.Name)
-	objectMeta := source.CreateObjectMetaWithName(name)
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = name
 	policyMember := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
 		TypeMeta: metav1.TypeMeta{
@@ -29,7 +30,7 @@ func policyMember(source resource.Source, policy nais.CloudIAMPermission, google
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(source.CreateAppNamespaceHash(), googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectId)),
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: policy.Resource.APIVersion,

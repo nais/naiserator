@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestToAccessPolicyExternalRule(t *testing.T) {
 func TestMergeExternalRules(t *testing.T) {
 	t.Run("app external outbound rules correctly merged with additional hosts", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		err := nais.ApplyDefaults(app)
+		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
 		additionalRules := accesspolicy.ToAccessPolicyExternalRules([]string{

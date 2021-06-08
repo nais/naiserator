@@ -19,7 +19,7 @@ const (
 	clientDefaultLogoutPath   = "/oauth2/logout"
 )
 
-func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1alpha1.IDPorten, naisIngresses []nais_io_v1alpha1.Ingress) (*nais_io_v1.IDPortenClient, error) {
+func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
 	if err := validateIngresses(naisIngresses); err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1alpha1.IDPorte
 	}, nil
 }
 
-func validateIngresses(ingresser []nais_io_v1alpha1.Ingress) error {
+func validateIngresses(ingresser []nais_io_v1.Ingress) error {
 	if len(ingresser) == 0 {
 		return fmt.Errorf("you must specify an ingress to be able to use the idporten integration")
 	}
@@ -57,7 +57,7 @@ func validateIngresses(ingresser []nais_io_v1alpha1.Ingress) error {
 	return nil
 }
 
-func validateRedirectURI(idPorten *nais_io_v1alpha1.IDPorten, ingresser []nais_io_v1alpha1.Ingress) error {
+func validateRedirectURI(idPorten *nais_io_v1.IDPorten, ingresser []nais_io_v1.Ingress) error {
 	ingress := ingresser[0]
 	redirectURI := idPorten.RedirectURI
 
@@ -75,7 +75,7 @@ func validateRedirectURI(idPorten *nais_io_v1alpha1.IDPorten, ingresser []nais_i
 	return nil
 }
 
-func redirectURI(idPorten *nais_io_v1alpha1.IDPorten, ingresser []nais_io_v1alpha1.Ingress) (redirectURI string) {
+func redirectURI(idPorten *nais_io_v1.IDPorten, ingresser []nais_io_v1.Ingress) (redirectURI string) {
 	redirectURI = idPorten.RedirectURI
 
 	if len(idPorten.RedirectURI) == 0 {
@@ -89,7 +89,7 @@ func redirectURI(idPorten *nais_io_v1alpha1.IDPorten, ingresser []nais_io_v1alph
 	return
 }
 
-func frontchannelLogoutURI(idPorten *nais_io_v1alpha1.IDPorten, ingresser []nais_io_v1alpha1.Ingress) (frontchannelLogoutURI string) {
+func frontchannelLogoutURI(idPorten *nais_io_v1.IDPorten, ingresser []nais_io_v1.Ingress) (frontchannelLogoutURI string) {
 	frontchannelLogoutURI = idPorten.FrontchannelLogoutURI
 
 	if len(idPorten.FrontchannelLogoutURI) == 0 {
@@ -103,7 +103,7 @@ func frontchannelLogoutURI(idPorten *nais_io_v1alpha1.IDPorten, ingresser []nais
 	return
 }
 
-func postLogoutRedirectURIs(idPorten *nais_io_v1alpha1.IDPorten) (postLogoutRedirectURIs []string) {
+func postLogoutRedirectURIs(idPorten *nais_io_v1.IDPorten) (postLogoutRedirectURIs []string) {
 	postLogoutRedirectURIs = idPorten.PostLogoutRedirectURIs
 
 	if len(idPorten.PostLogoutRedirectURIs) == 0 {
@@ -117,10 +117,10 @@ func idPortenSecretName(name string) string {
 	return namegen.PrefixedRandShortName("idporten", name, validation.DNS1035LabelMaxLength)
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1alpha1.IDPorten, naisIngresses []nais_io_v1alpha1.Ingress) error {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) error {
 	if resourceOptions.DigdiratorEnabled && naisIdPorten != nil && naisIdPorten.Enabled {
 
-  		idportenClient, err := client(source.CreateObjectMeta(), naisIdPorten, naisIngresses)
+		idportenClient, err := client(resource.CreateObjectMeta(source), naisIdPorten, naisIngresses)
 		if err != nil {
 			return err
 		}

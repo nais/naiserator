@@ -3,7 +3,7 @@ package google
 import (
 	"fmt"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -16,12 +16,12 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 	connectionName := fmt.Sprintf("%s:%s:%s", projectId, Region, instanceName)
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
-	cloudSqlProxyContainerResourceSpec := nais_io_v1alpha1.ResourceRequirements{
-		Limits: &nais_io_v1alpha1.ResourceSpec{
+	cloudSqlProxyContainerResourceSpec := nais_io_v1.ResourceRequirements{
+		Limits: &nais_io_v1.ResourceSpec{
 			Cpu:    "250m",
 			Memory: "256Mi",
 		},
-		Requests: &nais_io_v1alpha1.ResourceSpec{
+		Requests: &nais_io_v1.ResourceSpec{
 			Cpu:    "20m",
 			Memory: "32Mi",
 		},

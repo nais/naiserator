@@ -1,224 +1,61 @@
 package resourcecreator_test
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/test/goldenfile"
 
 	"github.com/ghodss/yaml"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator"
-	"github.com/nais/naiserator/pkg/test/deepcomp"
-	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/runtime"
-)
-
-var (
-	defaultExclude = []string{".apiVersion", ".kind", ".metadata.name"}
 )
 
 const (
-	testDataDirectory = "testdata"
+	applicationTestDataDirectory = "testdata"
+	naisjobTestDataDirectory     = "testdata/naisjob"
 )
 
-type testCaseConfig struct {
-	Description string
-	MatchType   string
+type applicationTestCase struct {
+	Input nais_io_v1alpha1.Application
 }
 
-type meta struct {
-	Operation string
-	Resource  struct {
-		ApiVersion string
-		Kind       string
-		Metadata   struct {
-			Name string
-		}
-	}
+type naisjobTestCase struct {
+	Input nais_io_v1.Naisjob
 }
 
-func fileReader(file string) io.Reader {
-	f, err := os.Open(file)
-	if err != nil {
-		panic(err)
-	}
-	return f
-}
-
-type SubTest struct {
-	ApiVersion string
-	Kind       string
-	Name       string
-	Operation  string
-	Match      []Match
-}
-
-type Match struct {
-	Type     deepcomp.MatchType
-	Name     string
-	Exclude  []string // list of keys
-	Resource interface{}
-}
-
-type yamlTestCase struct {
-	Config          testCaseConfig
-	ResourceOptions resource.Options
-	Error           *string
-	Input           nais.Application
-	Tests           []SubTest
-}
-
-func (m meta) String() string {
-	return fmt.Sprintf("%s %s/%s %s", m.Operation, m.Resource.ApiVersion, m.Resource.Kind, m.Resource.Metadata.Name)
-}
-
-func (m SubTest) String() string {
-	return fmt.Sprintf("operation=%s apiVersion=%s kind=%s name=%s", m.Operation, m.ApiVersion, m.Kind, m.Name)
-}
-
-func yamlSubtestMatchesResource(resource meta, test SubTest) bool {
-	switch {
-	case len(test.Name) > 0 && test.Name != resource.Resource.Metadata.Name:
-	case len(test.Kind) > 0 && test.Kind != resource.Resource.Kind:
-	case len(test.ApiVersion) > 0 && test.ApiVersion != resource.Resource.ApiVersion:
-	case len(test.Operation) > 0 && test.Operation != resource.Operation:
-	default:
-		return true
-	}
-	return false
-}
-
-func resourcemeta(resource interface{}) meta {
-	ym := meta{}
-	raw, _ := json.Marshal(resource)
-	_ = json.Unmarshal(raw, &ym)
-	return ym
-}
-
-func rawResource(resource runtime.Object) interface{} {
-	r := new(interface{})
-	raw, _ := yaml.Marshal(resource)
-	_ = yaml.Unmarshal(raw, r)
-	return r
-}
-
-func filter(diffset deepcomp.Diffset, deny func(diff deepcomp.Diff) bool) deepcomp.Diffset {
-	diffs := make(deepcomp.Diffset, 0, len(diffset))
-	for _, diff := range diffset {
-		if !deny(diff) {
-			diffs = append(diffs, diff)
-		}
-	}
-	return diffs
-}
-
-func yamlRunner(t *testing.T, filename string, resources resource.Operations, test SubTest) {
-	matched := false
-
-	for _, rsce := range resources {
-		rm := resourcemeta(rsce)
-
-		if !yamlSubtestMatchesResource(rm, test) {
-			continue
-		}
-		matched = true
-
-		raw := rawResource(rsce.Resource)
-		diffs := make(deepcomp.Diffset, 0)
-
-		// retrieve all failure cases
-		for _, match := range test.Match {
-
-			// filter out all cases in the exclusion list
-			callback := func(diff deepcomp.Diff) bool {
-				for _, path := range append(match.Exclude, defaultExclude...) {
-					if path == diff.Path {
-						return true
-					}
-				}
-				return false
-			}
-
-			t.Logf("%s: Assert '%s' against '%s'", filename, match.Name, rm)
-
-			diffs = append(diffs, filter(deepcomp.Compare(match.Type, &match.Resource, raw), callback)...)
+func TestApplicationGoldenFile(t *testing.T) {
+	goldenfile.Run(t, applicationTestDataDirectory, func(input []byte, resourceOptions resource.Options) (resource.Operations, error) {
+		test := applicationTestCase{}
+		err := yaml.Unmarshal(input, &test)
+		if err != nil {
+			return nil, err
 		}
 
-		// anything left is an error.
-		if len(diffs) > 0 {
-			t.Log(diffs.String())
-			t.Fail()
+		err = test.Input.ApplyDefaults()
+		if err != nil {
+			return nil, fmt.Errorf("apply default values to Application object: %s", err)
 		}
-	}
 
-	if !matched {
-		t.Logf("No resources matching criteria '%s'", test)
-		t.Fail()
-	}
+		return resourcecreator.CreateApplication(&test.Input, resourceOptions)
+	})
 }
 
-func yamlSubTest(t *testing.T, path string) {
-	fixture := fileReader(path)
-	data, err := ioutil.ReadAll(fixture)
-	if err != nil {
-		t.Errorf("unable to read test data: %s", err)
-		t.Fail()
-		return
-	}
-
-	test := yamlTestCase{}
-	err = yaml.Unmarshal(data, &test)
-	if err != nil {
-		t.Errorf("unable to parse unmarshal test data: %s", err)
-		t.Fail()
-		return
-	}
-
-	err = nais.ApplyDefaults(&test.Input)
-	if err != nil {
-		t.Errorf("apply default values to Application object: %s", err)
-		t.Fail()
-		return
-	}
-
-	resources, err := resourcecreator.Create(&test.Input, test.ResourceOptions)
-	if test.Error != nil {
-		assert.EqualError(t, err, *test.Error)
-		return
-	}
-
-	assert.NoError(t, err)
-
-	for _, subtest := range test.Tests {
-		yamlRunner(t, filepath.Base(path), resources, subtest)
-	}
-}
-
-func TestNewGoldenFile(t *testing.T) {
-	files, err := ioutil.ReadDir(testDataDirectory)
-	if err != nil {
-		t.Error(err)
-		t.Fail()
-	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
+func TestNaisjobGoldenFile(t *testing.T) {
+	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, resourceOptions resource.Options) (resource.Operations, error) {
+		test := naisjobTestCase{}
+		err := yaml.Unmarshal(input, &test)
+		if err != nil {
+			return nil, err
 		}
-		name := file.Name()
-		if !strings.HasSuffix(name, ".yaml") {
-			continue
+
+		err = test.Input.ApplyDefaults()
+		if err != nil {
+			return nil, fmt.Errorf("apply default values to Application object: %s", err)
 		}
-		path := filepath.Join(testDataDirectory, name)
-		t.Run(name, func(t *testing.T) {
-			yamlSubTest(t, path)
-		})
-	}
+
+		return resourcecreator.CreateNaisjob(&test.Input, resourceOptions)
+	})
 }

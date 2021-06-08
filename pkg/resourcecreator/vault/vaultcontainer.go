@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"path/filepath"
 
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 )
 
 func defaultVaultTokenFileName() string {
-	return filepath.Join(nais_io_v1alpha1.DefaultVaultMountPath, "vault_token")
+	return filepath.Join(nais_io_v1.DefaultVaultMountPath, "vault_token")
 }
 
-func validateSecretPaths(paths []nais_io_v1alpha1.SecretPath) error {
+func validateSecretPaths(paths []nais_io_v1.SecretPath) error {
 	m := make(map[string]string, len(paths))
 	for _, s := range paths {
 		if old, exists := m[s.MountPath]; exists {
@@ -25,10 +25,10 @@ func validateSecretPaths(paths []nais_io_v1alpha1.SecretPath) error {
 	return nil
 }
 
-func defaultPathExists(paths []nais_io_v1alpha1.SecretPath, kvPath string) bool {
+func defaultPathExists(paths []nais_io_v1.SecretPath, kvPath string) bool {
 	kvPath = filepath.Clean(kvPath)
 	for _, path := range paths {
-		defaultMountPathExists := filepath.Clean(nais_io_v1alpha1.DefaultVaultMountPath) == filepath.Clean(path.MountPath)
+		defaultMountPathExists := filepath.Clean(nais_io_v1.DefaultVaultMountPath) == filepath.Clean(path.MountPath)
 		defaultKvPathExists := kvPath == filepath.Clean(path.KvPath)
 		if defaultMountPathExists || defaultKvPathExists {
 			return true
@@ -37,7 +37,7 @@ func defaultPathExists(paths []nais_io_v1alpha1.SecretPath, kvPath string) bool 
 	return false
 }
 
-func createInitContainer(source resource.Source, options resource.Options, paths []nais_io_v1alpha1.SecretPath) corev1.Container {
+func createInitContainer(source resource.Source, options resource.Options, paths []nais_io_v1.SecretPath) corev1.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
@@ -118,7 +118,7 @@ func createSideCarContainer(options resource.Options) corev1.Container {
 
 }
 
-func createInitContainerMounts(paths []nais_io_v1alpha1.SecretPath) []corev1.VolumeMount {
+func createInitContainerMounts(paths []nais_io_v1.SecretPath) []corev1.VolumeMount {
 
 	volumeMounts := make([]corev1.VolumeMount, 0, len(paths))
 	for _, path := range paths {
@@ -132,7 +132,7 @@ func createInitContainerMounts(paths []nais_io_v1alpha1.SecretPath) []corev1.Vol
 	// Adding default vault mount if it does not exists
 	var defaultMountExist = false
 	for _, path := range paths {
-		if filepath.Clean(nais_io_v1alpha1.DefaultVaultMountPath) == filepath.Clean(path.MountPath) {
+		if filepath.Clean(nais_io_v1.DefaultVaultMountPath) == filepath.Clean(path.MountPath) {
 			defaultMountExist = true
 			break
 		}
@@ -147,14 +147,14 @@ func createInitContainerMounts(paths []nais_io_v1alpha1.SecretPath) []corev1.Vol
 func createDefaultMount() corev1.VolumeMount {
 	return corev1.VolumeMount{
 		Name:      "vault-volume",
-		MountPath: nais_io_v1alpha1.DefaultVaultMountPath,
-		SubPath:   filepath.Join("vault", nais_io_v1alpha1.DefaultVaultMountPath), // Just to make sure subpath does not start with "/"
+		MountPath: nais_io_v1.DefaultVaultMountPath,
+		SubPath:   filepath.Join("vault", nais_io_v1.DefaultVaultMountPath), // Just to make sure subpath does not start with "/"
 	}
 }
 
-func defaultSecretPath(source resource.Source, kvPath string) nais_io_v1alpha1.SecretPath {
-	return nais_io_v1alpha1.SecretPath{
-		MountPath: nais_io_v1alpha1.DefaultVaultMountPath,
+func defaultSecretPath(source resource.Source, kvPath string) nais_io_v1.SecretPath {
+	return nais_io_v1.SecretPath{
+		MountPath: nais_io_v1.DefaultVaultMountPath,
 		KvPath:    fmt.Sprintf("%s/%s/%s", kvPath, source.GetName(), source.GetNamespace()),
 	}
 }

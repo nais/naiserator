@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"

@@ -24,7 +24,7 @@ func MinimalFailingApplication() *nais.Application {
 			Namespace: ApplicationNamespace,
 		},
 	}
-	err := nais.ApplyDefaults(app)
+	err := app.ApplyDefaults()
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +49,7 @@ func MinimalApplication() *nais.Application {
 			Image: "example",
 		},
 	}
-	err := nais.ApplyDefaults(app)
+	err := app.ApplyDefaults()
 	if err != nil {
 		panic(err)
 	}

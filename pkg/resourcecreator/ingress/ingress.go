@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -36,7 +37,7 @@ func ingressRule(appName string, u *url.URL) networkingv1beta1.IngressRule {
 	}
 }
 
-func ingressRules(source resource.Source, naisIngresses []nais_io_v1alpha1.Ingress) ([]networkingv1beta1.IngressRule, error) {
+func ingressRules(source resource.Source, naisIngresses []nais_io_v1.Ingress) ([]networkingv1beta1.IngressRule, error) {
 	var rules []networkingv1beta1.IngressRule
 
 	for _, ingress := range naisIngresses {
@@ -58,7 +59,7 @@ func ingressRules(source resource.Source, naisIngresses []nais_io_v1alpha1.Ingre
 	return rules, nil
 }
 
-func ingressRulesNginx(source resource.Source, naisIngresses []nais_io_v1alpha1.Ingress) ([]networkingv1beta1.IngressRule, error) {
+func ingressRulesNginx(source resource.Source, naisIngresses []nais_io_v1.Ingress) ([]networkingv1beta1.IngressRule, error) {
 	var rules []networkingv1beta1.IngressRule
 
 	for _, ingress := range naisIngresses {
@@ -92,7 +93,7 @@ func copyNginxAnnotations(dst, src map[string]string) {
 }
 
 func createIngressBase(source resource.Source, rules []networkingv1beta1.IngressRule, livenessPath string) *networkingv1beta1.Ingress {
-	objectMeta := source.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = livenessPath
 
@@ -138,7 +139,7 @@ func backendProtocol(portName string) string {
 	}
 }
 
-func nginxIngresses(source resource.Source, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1beta1.Ingress, error) {
+func nginxIngresses(source resource.Source, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1beta1.Ingress, error) {
 	rules, err := ingressRulesNginx(source, naisIngresses)
 	if err != nil {
 		return nil, err
@@ -174,7 +175,7 @@ func nginxIngresses(source resource.Source, options resource.Options, naisIngres
 	return ingressList, nil
 }
 
-func linkerdIngresses(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
+func linkerdIngresses(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
 	ingresses, err := nginxIngresses(source, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 	if err != nil {
 		return nil
@@ -188,7 +189,7 @@ func linkerdIngresses(source resource.Source, ast *resource.Ast, options resourc
 	return nil
 }
 
-func onPremIngresses(source resource.Source, ast *resource.Ast, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath string) error {
+func onPremIngresses(source resource.Source, ast *resource.Ast, naisIngresses []nais_io_v1.Ingress, livenessPath string) error {
 	rules, err := ingressRules(source, naisIngresses)
 	if err != nil {
 		return err
@@ -204,7 +205,7 @@ func onPremIngresses(source resource.Source, ast *resource.Ast, naisIngresses []
 	return nil
 }
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1alpha1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
+func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
 	if options.Linkerd {
 		err := linkerdIngresses(source, ast, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 		if err != nil {

@@ -1,14 +1,14 @@
 package resource
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func (ast *Ast) AppendOperation(operationType OperationType, resource runtime.Object) {
 	ast.Operations = append(ast.Operations, Operation{
 		Operation: operationType,
-		Resource: resource,
+		Resource:  resource,
 	})
 }
 
@@ -17,13 +17,13 @@ type Ast struct {
 
 	// For podSpec
 	Annotations    map[string]string
-	Containers     []v1.Container
-	Env            []v1.EnvVar
-	EnvFrom        []v1.EnvFromSource
-	InitContainers []v1.Container
+	Containers     []corev1.Container
+	Env            []corev1.EnvVar
+	EnvFrom        []corev1.EnvFromSource
+	InitContainers []corev1.Container
 	Labels         map[string]string
-	Volumes        []v1.Volume
-	VolumeMounts   []v1.VolumeMount
+	Volumes        []corev1.Volume
+	VolumeMounts   []corev1.VolumeMount
 }
 
 func NewAst() *Ast {
@@ -31,10 +31,10 @@ func NewAst() *Ast {
 		Operations: []Operation{},
 
 		Annotations:  map[string]string{},
-		Containers:   []v1.Container{},
-		Env:          []v1.EnvVar{},
+		Containers:   []corev1.Container{},
+		Env:          []corev1.EnvVar{},
 		Labels:       map[string]string{},
-		Volumes:      []v1.Volume{},
-		VolumeMounts: []v1.VolumeMount{},
+		Volumes:      []corev1.Volume{},
+		VolumeMounts: []corev1.VolumeMount{},
 	}
 }

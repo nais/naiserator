@@ -1,14 +1,14 @@
 package gcp
 
 import (
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/google/iam"
-	"github.com/nais/naiserator/pkg/resourcecreator/google/sql"
-	"github.com/nais/naiserator/pkg/resourcecreator/google/storagebucket"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	google_iam "github.com/nais/naiserator/pkg/resourcecreator/google/iam"
+	google_sql "github.com/nais/naiserator/pkg/resourcecreator/google/sql"
+	google_storagebucket "github.com/nais/naiserator/pkg/resourcecreator/google/storagebucket"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGCP *nais_io_v1alpha1.GCP) error {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGCP *nais_io_v1.GCP) error {
 	if len(resourceOptions.GoogleProjectId) <= 0 {
 		return nil
 	}

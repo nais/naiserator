@@ -4,7 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -67,7 +68,7 @@ func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
 	return hostAliases
 }
 
-func envFrom(ast *resource.Ast, nativeSecrets bool, naisEnvFrom []nais_io_v1alpha1.EnvFrom) {
+func envFrom(ast *resource.Ast, nativeSecrets bool, naisEnvFrom []nais_io_v1.EnvFrom) {
 	for _, env := range naisEnvFrom {
 		if len(env.ConfigMap) > 0 {
 			ast.EnvFrom = append(ast.EnvFrom, fromEnvConfigmap(env.ConfigMap))
@@ -87,7 +88,7 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
-func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1alpha1.FilesFrom) {
+func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1.FilesFrom) {
 	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
 			name := file.ConfigMap
@@ -151,6 +152,27 @@ func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, op
 	ast.Containers = append(ast.Containers, container)
 }
 
+func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, options resource.Options) {
+	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
+	ast.Env = append(ast.Env, defaultEnvVars(naisjob, options.ClusterName, naisjob.Spec.Image)...)
+	filesFrom(ast, options.NativeSecrets, naisjob.Spec.FilesFrom)
+	envFrom(ast, options.NativeSecrets, naisjob.Spec.EnvFrom)
+
+	container := corev1.Container{
+		Name:            naisjob.Name,
+		Image:           naisjob.Spec.Image,
+		Command:         naisjob.Spec.Command,
+		Resources:       ResourceLimits(*naisjob.Spec.Resources),
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Lifecycle:       lifeCycle(naisjob.Spec.PreStopHookPath),
+		Env:             ast.Env,
+		EnvFrom:         ast.EnvFrom,
+		VolumeMounts:    ast.VolumeMounts,
+	}
+
+	ast.Containers = append(ast.Containers, container)
+}
+
 func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{Name: naisAppNameEnv, Value: source.GetName()},
@@ -168,7 +190,7 @@ func mapMerge(dst, src map[string]string) {
 }
 
 func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) metav1.ObjectMeta {
-	objectMeta := app.CreateObjectMeta()
+	objectMeta := resource.CreateObjectMeta(app)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
 
@@ -195,6 +217,24 @@ func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) m
 	return objectMeta
 }
 
+func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) metav1.ObjectMeta {
+	objectMeta := resource.CreateObjectMeta(naisjob)
+	objectMeta.Annotations = ast.Annotations
+	mapMerge(objectMeta.Labels, ast.Labels)
+
+	objectMeta.Annotations = map[string]string{}
+
+	if len(naisjob.Spec.Logformat) > 0 {
+		objectMeta.Annotations["nais.io/logformat"] = naisjob.Spec.Logformat
+	}
+
+	if len(naisjob.Spec.Logtransform) > 0 {
+		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
+	}
+
+	return objectMeta
+}
+
 func lifeCycle(path string) *corev1.Lifecycle {
 	if len(path) > 0 {
 		return &corev1.Lifecycle{
@@ -216,7 +256,7 @@ func lifeCycle(path string) *corev1.Lifecycle {
 	}
 }
 
-func probe(appPort int, probe nais_io_v1alpha1.Probe) *corev1.Probe {
+func probe(appPort int, probe nais_io_v1.Probe) *corev1.Probe {
 	port := probe.Port
 	if port == 0 {
 		port = appPort
