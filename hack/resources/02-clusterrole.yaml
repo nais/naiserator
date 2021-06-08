@@ -11,6 +11,7 @@ rules:
     resources:
       - 'applications'
       - 'azureadapplications'
+      - 'cronjobs'
       - 'deployments'
       - 'endpoints'
       - 'events'
@@ -21,7 +22,9 @@ rules:
       - 'idportenclients'
       - 'ingresses'
       - 'jwkers'
+      - 'jobs'
       - 'maskinportenclients'
+      - 'naisjobs'
       - 'namespaces'
       - 'networkpolicies'
       - 'rolebindings'

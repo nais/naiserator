@@ -19,7 +19,7 @@ func NewAppReconciler(synchronizer synchronizer.Synchronizer) *ApplicationReconc
 // +kubebuilder:rbac:groups=*,resources=events,verbs=get;list;watch;create;update
 
 func (r *ApplicationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	return r.Synchronizer.ReconcileApplication(req, &nais_io_v1alpha1.Application{})
+	return r.Synchronizer.ReconcileApplication(req)
 }
 
 func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {

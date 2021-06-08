@@ -34,7 +34,7 @@ func reorderContainers(appName string, containers []corev1.Container) []corev1.C
 	return reordered
 }
 
-func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string) (*corev1.PodSpec, error) {
+func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
 	var err error
 
 	containers := reorderContainers(appName, ast.Containers)
@@ -43,7 +43,7 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 		InitContainers:     ast.InitContainers,
 		Containers:         containers,
 		ServiceAccountName: appName,
-		RestartPolicy:      corev1.RestartPolicyAlways,
+		RestartPolicy:      restartPolicy,
 		DNSPolicy:          corev1.DNSClusterFirst,
 		Volumes:            ast.Volumes,
 		ImagePullSecrets: []corev1.LocalObjectReference{

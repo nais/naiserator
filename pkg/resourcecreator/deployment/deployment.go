@@ -39,7 +39,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 }
 
 func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {
-	podSpec, err := pod.CreateSpec(ast, resourceOptions, app.Name)
+	podSpec, err := pod.CreateSpec(ast, resourceOptions, app.Name, corev1.RestartPolicyAlways)
 	if err != nil {
 		return nil, err
 	}
