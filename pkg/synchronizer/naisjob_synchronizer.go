@@ -67,7 +67,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
 
 	if rollout == nil {
 		changed = false
-		logger.Debugf("No changes")
+		logger.Debugf("Naisjob synchronization hash not changed; skipping synchronization")
 		return ctrl.Result{}, nil
 	}
 
