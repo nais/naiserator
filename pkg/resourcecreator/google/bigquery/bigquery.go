@@ -39,9 +39,11 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 	}
 	objectMeta.Name = shortName
 
-	if bigQuerySpec.CascadingDelete {
-		util.SetAnnotation(&objectMeta, google.CascadingDeleteAnnotation, "true")
+	cascadingDeleteAnnotationValue := "false"
+	if bigQuerySpec.CascadingDelete == true {
+		cascadingDeleteAnnotationValue = "true"
 	}
+	util.SetAnnotation(&objectMeta, google.CascadingDeleteAnnotation, cascadingDeleteAnnotationValue)
 
 	return &google_bigquery_crd.BigQueryDataset{
 		TypeMeta: metav1.TypeMeta{
