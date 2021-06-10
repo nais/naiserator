@@ -300,6 +300,10 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/nais/liberator v0.0.0-20210610070227-99aad1fd5878 h1:WGLNs4Co/5/jjQHK3N0Rv3eCNjUqzjy+FoKIMwM4vh0=
 github.com/nais/liberator v0.0.0-20210610070227-99aad1fd5878/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
+github.com/nais/liberator v0.0.0-20210610081134-a44c6949e3c0 h1:BsttkfM49//fCJdQ1jzKv6vi/akx0Fkp8YyE4mIs2qQ=
+github.com/nais/liberator v0.0.0-20210610081134-a44c6949e3c0/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
+github.com/nais/liberator v0.0.0-20210610115318-a2d5408154c8 h1:JMo2NtpYezt+j4/CJbf50bHxJUVnh7rOIKNcBZZiZwg=
+github.com/nais/liberator v0.0.0-20210610115318-a2d5408154c8/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=

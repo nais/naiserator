@@ -1,5 +1,5 @@
 config:
-  description: if Kafkarator is enabled and pool name is specified, secret from Kafkarator should be injected in pod spec
+  description: if Kafkarator is enabled and pool name is specified, create AivenApplication resource and mount requested secret
 
 resourceoptions:
   NumReplicas: 1
@@ -20,12 +20,28 @@ input:
 
 tests:
   - operation: CreateOrUpdate
+    apiVersion: aiven.nais.io/v1
+    kind: AivenApplication
+    name: myapplication
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^kafka-myapplication-some-kafka-pool-.{8}$
+      - name: "pool is propagated"
+        type: subset
+        resource:
+          spec:
+            kafka:
+              pool: some-kafka-pool
+  - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment
     name: myapplication
     match:
       - name: "deployment contains kafkarator secrets"
-        type: subset
+        type: regex
         resource:
           spec:
             template:
@@ -33,7 +49,7 @@ tests:
                 volumes:
                   - name: kafka-credentials
                     secret:
-                      secretName: kafka-myapplication-some-kafka-pool-87289b08
+                      secretName: ^kafka-myapplication-some-kafka-pool-.{8}$
                       items:
                         - key: KAFKA_CERTIFICATE
                           path: kafka.crt
@@ -55,42 +71,42 @@ tests:
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_CERTIFICATE
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_PRIVATE_KEY
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_PRIVATE_KEY
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_BROKERS
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_BROKERS
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_SCHEMA_REGISTRY
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_SCHEMA_REGISTRY
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_SCHEMA_REGISTRY_USER
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_SCHEMA_REGISTRY_USER
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_SCHEMA_REGISTRY_PASSWORD
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_SCHEMA_REGISTRY_PASSWORD
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_CA
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_CA
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_CREDSTORE_PASSWORD
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_CREDSTORE_PASSWORD
-                            name: kafka-myapplication-some-kafka-pool-87289b08
+                            name: ^kafka-myapplication-some-kafka-pool-.{8}$
                       - name: KAFKA_CERTIFICATE_PATH
                         value: /var/run/secrets/nais.io/kafka/kafka.crt
                       - name: KAFKA_PRIVATE_KEY_PATH

@@ -61,10 +61,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	err = kafka.Create(app, ast, resourceOptions, app.Spec.Kafka)
-	if err != nil {
-		return nil, err
-	}
+	kafka.Create(app, ast, resourceOptions, app.Spec.Kafka)
 	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP)
 	if err != nil {
 		return nil, err
@@ -111,10 +108,7 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 	if err != nil {
 		return nil, err
 	}
-	err = kafka.Create(naisjob, ast, resourceOptions, naisjob.Spec.Kafka)
-	if err != nil {
-		return nil, err
-	}
+	kafka.Create(naisjob, ast, resourceOptions, naisjob.Spec.Kafka)
 	err = gcp.Create(naisjob, ast, resourceOptions, naisjob.Spec.GCP)
 	if err != nil {
 		return nil, err
