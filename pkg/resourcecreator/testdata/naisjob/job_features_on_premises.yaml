@@ -79,9 +79,6 @@ tests:
           spec:
             activeDeadlineSeconds: 13
             backoffLimit: 7
-            selector:
-              matchLabels:
-                app: mynaisjob
             template:
               metadata:
                 labels:

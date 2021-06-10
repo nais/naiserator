@@ -19,7 +19,7 @@ import (
 )
 
 // ReconcileNaisjob process Naisjob work queue
-func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source) (ctrl.Result, error) {
+func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
@@ -67,7 +67,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 
 	if rollout == nil {
 		changed = false
-		logger.Debugf("No changes")
+		logger.Debugf("Naisjob synchronization hash not changed; skipping synchronization")
 		return ctrl.Result{}, nil
 	}
 
@@ -110,7 +110,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request, source resource.Source
 	naisjob.SetDeploymentRolloutStatus(event.RolloutStatus.String())
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(source, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout, naisjob.Spec.Image)
+	go n.MonitorRollout(naisjob, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout, naisjob.Spec.Image)
 	return ctrl.Result{}, nil
 }
 

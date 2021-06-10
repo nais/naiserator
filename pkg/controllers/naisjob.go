@@ -20,7 +20,7 @@ func NewNaisjobReconciler(synchronizer synchronizer.Synchronizer) *NaisjobReconc
 // +kubebuilder:rbac:groups=*,resources=events,verbs=get;list;watch;create;update
 
 func (r *NaisjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	return r.Synchronizer.ReconcileNaisjob(req, &nais_io_v1.Naisjob{})
+	return r.Synchronizer.ReconcileNaisjob(req)
 }
 
 func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager) error {
