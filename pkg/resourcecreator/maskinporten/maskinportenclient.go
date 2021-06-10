@@ -22,7 +22,10 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinpor
 		},
 		ObjectMeta: objectMeta,
 		Spec: nais_io_v1.MaskinportenClientSpec{
-			Scopes:     naisMaskinporten.Scopes,
+			Scopes: nais_io_v1.MaskinportenScope{
+				ConsumedScopes: naisMaskinporten.Scopes.ConsumedScopes,
+				ExposedScopes:  naisMaskinporten.Scopes.ExposedScopes,
+			},
 			SecretName: secretName(objectMeta.Name),
 		},
 	}

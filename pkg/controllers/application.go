@@ -27,4 +27,3 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&nais_io_v1alpha1.Application{}).
 		Complete(r)
 }
-

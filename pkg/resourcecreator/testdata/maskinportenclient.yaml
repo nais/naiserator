@@ -23,7 +23,13 @@ input:
     maskinporten:
       enabled: true
       scopes:
-        - name: "org:some/scope"
+        consumes:
+          - name: "org:some/scope"
+        exposes:
+          - name: some.scope
+            enabled: true
+            product: "arbeid"
+            atMaxAge: 30
 
 tests:
   - apiVersion: nais.io/v1
@@ -40,7 +46,13 @@ tests:
         resource:
           spec:
             scopes:
-              - name: "org:some/scope"
+              consumes:
+                - name: "org:some/scope"
+              exposes:
+                - name: some.scope
+                  enabled: true
+                  product: "arbeid"
+                  atMaxAge: 30
 
   - apiVersion: nais.io/v1
     kind: MaskinportenClient

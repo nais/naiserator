@@ -9,7 +9,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-
 // All pods will have web proxy settings injected as environment variables. This is
 // useful for automatic proxy configuration so that apps don't need to be aware
 // of infrastructure quirks. The web proxy should be set up as an external service.

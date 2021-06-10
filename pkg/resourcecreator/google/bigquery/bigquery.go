@@ -52,7 +52,7 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_bigquery_crd.BigqueryDatasetSpec{
-			ResourceID: datasetName,
+			ResourceID:  datasetName,
 			Location:    google.Region,
 			Description: bigQuerySpec.Description,
 			Access: []*google_bigquery_crd.BigQueryDatasetAccess{

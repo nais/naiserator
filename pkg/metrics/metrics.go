@@ -11,9 +11,9 @@ var (
 		Help:      "number of application deployments performed",
 	})
 	NaisjobsDeployments = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "naisjob_deployments",
+		Name:      "naisjob_deployments",
 		Namespace: "naiserator",
-		Help: "number of naisjob deployments performed",
+		Help:      "number of naisjob deployments performed",
 	})
 	HttpRequests = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "http_requests",
