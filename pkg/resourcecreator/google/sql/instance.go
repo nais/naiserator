@@ -175,14 +175,14 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 					return fmt.Errorf("unable to assign sql password: %s", err)
 				}
 
+				scrt := secret.OpaqueSecret(resource.CreateObjectMeta(source), GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
+				ast.AppendOperation(resource.OperationCreateIfNotExists, scrt)
+
 				sqlUser, err := googleSqlUser.Create(resource.CreateObjectMeta(source), secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
 				if err != nil {
 					return fmt.Errorf("unable to create sql user: %s", err)
 				}
 				ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
-
-				scrt := secret.OpaqueSecret(resource.CreateObjectMeta(source), GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
-				ast.AppendOperation(resource.OperationCreateIfNotExists, scrt)
 			}
 		}
 
