@@ -5,7 +5,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
-// Rollout represents the data neccessary to rollout an application to Kubernetes.
+// Rollout represents the data necessary to rollout an application to Kubernetes.
 type Rollout struct {
 	Source              resource.Source
 	ResourceOptions     resource.Options

@@ -89,7 +89,7 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		return nais.CloudSqlInstance{}, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
 	}
 
-	// Have to do this check explicitly as mergo is not able to distingush between nil pointer and 0.
+	// Have to do this check explicitly as mergo is not able to distinguish between nil pointer and 0.
 	if instance.AutoBackupHour == nil {
 		instance.AutoBackupHour = util.Intp(DefaultSqlInstanceAutoBackupHour)
 	}

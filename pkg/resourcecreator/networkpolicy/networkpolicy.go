@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	prometheusPodSelectorLabelValue        = "prometheus" // Label value denoting the promethues pod-selector
+	prometheusPodSelectorLabelValue        = "prometheus" // Label value denoting the Prometheus pod-selector
 	prometheusNamespace                    = "nais"       // Which namespace Prometheus is installed in
 	nginxNamespac                          = "nginx"      // Which namespace Nginx ingress controller runs in
 	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"  // The default IP block CIDR for the default allow network policies per app
