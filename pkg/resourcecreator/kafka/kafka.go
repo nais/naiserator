@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -49,14 +50,12 @@ func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
 	}
 }
 
-func generateKafkaSecretName(name, pool string) (string, error) {
-	secretName, err := namegen.ShortName(fmt.Sprintf("kafka-%s-%s", name, pool), validation.DNS1035LabelMaxLength)
+func generateKafkaSecretName(name, pool string) string {
+	secretName := namegen.RandShortName(fmt.Sprintf("kafka-%s-%s", name, pool), validation.DNS1035LabelMaxLength)
 
-	if err != nil {
-		return "", fmt.Errorf("unable to generate kafka secret name: %s", err)
-	}
-	return secretName, err
+	return secretName
 }
+
 func podSpecWithKafka(ast *resource.Ast, kafkaratorSecretName string) {
 	// Mount specific secret keys as credential files
 	credentialFilesVolume := pod.FromFilesSecretVolume(kafkaCredentialFilesVolumeName, kafkaratorSecretName, []corev1.KeyToPath{
@@ -121,15 +120,20 @@ func podSpecWithKafka(ast *resource.Ast, kafkaratorSecretName string) {
 	}...)
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka) error {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka) {
 	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
-		kafkaratorSecretName, err := generateKafkaSecretName(source.GetName(), naisKafka.Pool)
-		if err != nil {
-			return err
-		}
+		secretName := generateKafkaSecretName(source.GetName(), naisKafka.Pool)
 
-		podSpecWithKafka(ast, kafkaratorSecretName)
+		podSpecWithKafka(ast, secretName)
 		ast.Labels["kafka"] = "enabled"
+		aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
+			WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
+				SecretName: secretName,
+				Kafka: aiven_nais_io_v1.KafkaSpec{
+					Pool: naisKafka.Pool,
+				},
+			}).
+			Build()
+		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 	}
-	return nil
 }
