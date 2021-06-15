@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewDeploymentEvent(source resource.Source, appImage string) deployment.Event {
+func NewDeploymentEvent(source resource.Source, appImage string) *deployment.Event {
 	image := ContainerImage(appImage)
 	ts := convertTimestamp(time.Now())
 
-	return deployment.Event{
+	return &deployment.Event{
 		CorrelationID: source.CorrelationID(),
 		Platform: &deployment.Platform{
 			Type: deployment.PlatformType_nais,

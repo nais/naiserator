@@ -7,7 +7,6 @@ import (
 	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -105,12 +104,6 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
 
-	// Create new NAIS deployment event
-	event := generator.NewDeploymentEvent(naisjob, naisjob.Spec.Image)
-	naisjob.SetDeploymentRolloutStatus(event.RolloutStatus.String())
-
-	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(naisjob, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout, naisjob.Spec.Image)
 	return ctrl.Result{}, nil
 }
 

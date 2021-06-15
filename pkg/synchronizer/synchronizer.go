@@ -7,17 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	deployment "github.com/nais/naiserator/pkg/event"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
@@ -146,6 +141,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 	if rollout == nil {
 		changed = false
 		logger.Debugf("Synchronization hash not changed; skipping synchronization")
+		// TODO: run monitoring
 		return ctrl.Result{}, nil
 	}
 
@@ -183,12 +179,9 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
 
-	// Create new deployment event
-	event := generator.NewDeploymentEvent(app, app.Spec.Image)
-	app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
-
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(app, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout, app.Spec.Image)
+	go n.MonitorRollout(app, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout)
+
 	return ctrl.Result{}, nil
 }
 
@@ -390,91 +383,6 @@ func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.So
 	}
 
 	return updateFunc(existing)
-}
-
-func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
-	an, err := anypb.New(event)
-	if err != nil {
-		return 0, fmt.Errorf("wrap Protobuf.Any: %w", err)
-	}
-	payload, err := proto.Marshal(an)
-	if err != nil {
-		return 0, fmt.Errorf("encode Protobuf: %w", err)
-	}
-	return n.Kafka.Produce(payload)
-}
-
-func (n *Synchronizer) MonitorRollout(source resource.Source, logger log.Entry, frequency, timeout time.Duration, appImage string) {
-	logger.Debugf("Monitoring rollout status")
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	for {
-		select {
-		case <-time.After(frequency):
-			deploy := &apps.Deployment{}
-			err := n.Get(ctx, client.ObjectKey{Name: source.GetName(), Namespace: source.GetNamespace()}, deploy)
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					logger.Errorf("Monitor rollout: failed to query Deployment: %s", err)
-				}
-				continue
-			}
-
-			if deploymentComplete(deploy, &deploy.Status) {
-				logger.Debugf("Monitor rollout: deployment has rolled out completely")
-
-				event := generator.NewDeploymentEvent(source, appImage)
-				event.RolloutStatus = deployment.RolloutStatus_complete
-				if n.Kafka != nil && !source.SkipDeploymentMessage() {
-					offset, err := n.produceDeploymentEvent(&event)
-					if err == nil {
-						logger.WithFields(log.Fields{
-							"kafka_offset": offset,
-						}).Infof("Deployment event sent successfully")
-					} else {
-						logger.Errorf("Produce deployment message: %s", err)
-					}
-				}
-
-				_, err = n.reportEvent(ctx, resource.CreateEvent(source, EventRolloutComplete, "Deployment rollout has completed", "Normal"))
-				if err != nil {
-					logger.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
-				}
-
-				// During this time the app has been updated, so we need to acquire the newest version before proceeding
-				err = n.UpdateApplication(ctx, source, func(app *nais_io_v1alpha1.Application) error {
-					app.Status.SynchronizationState = EventRolloutComplete
-					app.Status.RolloutCompleteTime = time.Now().UnixNano()
-					app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
-					return n.Update(ctx, app)
-				})
-
-				if err != nil {
-					logger.Errorf("Monitor rollout: store application sync status: %s", err)
-				}
-
-				return
-			}
-
-		case <-ctx.Done():
-			logger.Debugf("Monitor rollout: application has not rolled out completely in %s; giving up", timeout.String())
-			return
-		}
-	}
-}
-
-// deploymentComplete considers a deployment to be complete once all of its desired replicas
-// are updated and available, and no old pods are running.
-//
-// Copied verbatim from
-// https://github.com/kubernetes/kubernetes/blob/74bcefc8b2bf88a2f5816336999b524cc48cf6c0/pkg/controller/deployment/util/deployment_util.go#L745
-func deploymentComplete(deployment *apps.Deployment, newStatus *apps.DeploymentStatus) bool {
-	return newStatus.UpdatedReplicas == *(deployment.Spec.Replicas) &&
-		newStatus.Replicas == *(deployment.Spec.Replicas) &&
-		newStatus.AvailableReplicas == *(deployment.Spec.Replicas) &&
-		newStatus.ObservedGeneration >= deployment.Generation
 }
 
 func max(a, b int32) int32 {
