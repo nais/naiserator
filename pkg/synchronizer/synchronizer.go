@@ -142,7 +142,12 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 	if rollout == nil {
 		changed = false
 		logger.Debugf("Synchronization hash not changed; skipping synchronization")
-		// TODO: run monitoring
+
+		// Application is not rolled out completely; start monitoring
+		if app.Status.SynchronizationState == EventSynchronized {
+			n.MonitorRollout(app, logger)
+		}
+
 		return ctrl.Result{}, nil
 	}
 
