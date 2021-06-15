@@ -3,12 +3,14 @@ package synchronizer
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
+	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -16,6 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var rolloutMonitorLock sync.Mutex
 
 func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
 	an, err := anypb.New(event)
@@ -29,12 +33,49 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 	return n.Kafka.Produce(payload)
 }
 
-// Monitoring deployments to signal RolloutComplete.
-func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger log.Entry, frequency, timeout time.Duration) {
-	logger.Debugf("Monitoring rollout status")
+func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger log.Entry) {
+	objectKey := client.ObjectKey{
+		Name:      app.GetName(),
+		Namespace: app.GetNamespace(),
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+	// Cancel already running monitor routine if MonitorRollout called again for this particular application.
+	n.cancelMonitor(objectKey, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	rolloutMonitorLock.Lock()
+	n.RolloutMonitor[objectKey] = cancel
+	rolloutMonitorLock.Unlock()
+
+	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
+
+	go func() {
+		n.monitorRolloutRoutine(ctx, app, logger)
+		n.cancelMonitor(objectKey, cancel)
+	}()
+}
+
+func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected context.CancelFunc) {
+	rolloutMonitorLock.Lock()
+	defer rolloutMonitorLock.Unlock()
+
+	cancel, ok := n.RolloutMonitor[objectKey]
+	if !ok {
+		return
+	}
+
+	// Avoid race conditions
+	if expected != nil && &expected != &cancel {
+		return
+	}
+
+	cancel()
+	delete(n.RolloutMonitor, objectKey)
+}
+
+// Monitoring deployments to signal RolloutComplete.
+func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app *nais_io_v1alpha1.Application, logger log.Entry) {
+	logger.Debugf("Monitoring rollout status")
 
 	objectKey := client.ObjectKey{
 		Name:      app.GetName(),
@@ -51,7 +92,7 @@ func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger 
 
 	for {
 		select {
-		case <-time.After(frequency):
+		case <-time.After(n.Config.Synchronizer.RolloutCheckInterval):
 			deploy := &appsv1.Deployment{}
 			err := n.Get(ctx, objectKey, deploy)
 
@@ -121,7 +162,7 @@ func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger 
 			}
 
 		case <-ctx.Done():
-			logger.Debugf("Monitor rollout: application has not rolled out completely in %s; giving up", timeout.String())
+			logger.Debugf("Monitor rollout: application has been redeployed; cancelling monitoring")
 			return
 		}
 	}

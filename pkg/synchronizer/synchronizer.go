@@ -44,6 +44,7 @@ const (
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
+	RolloutMonitor  map[client.ObjectKey]context.CancelFunc
 	SimpleClient    client.Client
 	Scheme          *runtime.Scheme
 	ResourceOptions resource.Options
@@ -180,7 +181,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	go n.MonitorRollout(app, logger, n.Config.Synchronizer.RolloutCheckInterval, n.Config.Synchronizer.RolloutTimeout)
+	n.MonitorRollout(app, logger)
 
 	return ctrl.Result{}, nil
 }

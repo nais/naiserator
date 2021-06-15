@@ -85,10 +85,11 @@ func newTestRig(options resource.Options) (*testRig, error) {
 
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
 		Client:          rig.client,
-		SimpleClient:    rig.client,
-		Scheme:          rig.scheme,
-		ResourceOptions: options,
 		Config:          syncerConfig,
+		ResourceOptions: options,
+		RolloutMonitor:  make(map[client.ObjectKey]context.CancelFunc),
+		Scheme:          rig.scheme,
+		SimpleClient:    rig.client,
 	})
 
 	err = applicationReconciler.SetupWithManager(rig.manager)

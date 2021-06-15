@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"os"
@@ -153,6 +154,7 @@ func run() error {
 		Config:          *cfg,
 		Kafka:           kafkaClient,
 		ResourceOptions: resourceOptions,
+		RolloutMonitor:  make(map[client.ObjectKey]context.CancelFunc),
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
 	})
@@ -166,6 +168,7 @@ func run() error {
 		Config:          *cfg,
 		Kafka:           kafkaClient,
 		ResourceOptions: resourceOptions,
+		RolloutMonitor:  make(map[client.ObjectKey]context.CancelFunc),
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
 	})

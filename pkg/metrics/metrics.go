@@ -20,6 +20,11 @@ var (
 		Namespace: "naiserator",
 		Help:      "number of HTTP requests made to the health and liveness checks",
 	})
+	ApplicationsMonitored = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name:      "applications_monitored",
+		Namespace: "naiserator",
+		Help:      "number of nais.io.Application resources currently monitored for rollout completion",
+	})
 	ApplicationsProcessed = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "applications_processed",
 		Namespace: "naiserator",
@@ -65,16 +70,17 @@ var (
 
 func Register(registry prometheus.Registerer) {
 	registry.MustRegister(
-		Deployments,
-		NaisjobsDeployments,
-		HttpRequests,
-		ApplicationsProcessed,
 		ApplicationsFailed,
+		ApplicationsMonitored,
+		ApplicationsProcessed,
 		ApplicationsRetries,
-		NaisjobsProcessed,
+		Deployments,
+		HttpRequests,
+		KubernetesResourceWriteDuration,
+		NaisjobsDeployments,
 		NaisjobsFailed,
+		NaisjobsProcessed,
 		NaisjobsRetries,
 		ResourcesGenerated,
-		KubernetesResourceWriteDuration,
 	)
 }
