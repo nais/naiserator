@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	google_bigquery_crd "github.com/nais/liberator/pkg/apis/bigquery.cnrm.cloud.google.com/v1beta1"
+	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
@@ -24,8 +25,43 @@ func CreateDataset(source resource.Source, ast *resource.Ast, resourceOptions re
 			return err
 		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, bigQueryInstance)
+		
+		iamPolicyMember, err := iAMPolicyMember(source, bigQueryInstance, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, serviceAccountName)
+		if err != nil {
+			return err
+		}
+		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 	}
 	return nil
+}
+
+func iAMPolicyMember(source resource.Source, bigqueryDataset *google_bigquery_crd.BigQueryDataset, googleProjectId, teamProjectID, serviceAccountName string) (*google_iam_crd.IAMPolicyMember, error) {
+	shortName, err := namegen.ShortName(bigqueryDataset.Name + "-job-user" , validation.DNS1035LabelMaxLength)
+	if err != nil {
+		return nil, err
+	}
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = shortName
+	policy := &google_iam_crd.IAMPolicyMember{
+		TypeMeta:   metav1.TypeMeta{
+			Kind: "IAMPolicyMember",
+			APIVersion: google.IAMAPIVersion,
+		},
+		ObjectMeta: objectMeta,
+		Spec:       google_iam_crd.IAMPolicyMemberSpec{
+			Member:      fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(serviceAccountName, googleProjectId)),
+			Role:        "roles/bigquery.jobUser",
+			ResourceRef: google_iam_crd.ResourceRef{
+				ApiVersion: bigqueryDataset.APIVersion,
+				Kind:       bigqueryDataset.Kind,
+				Name:       &bigqueryDataset.Name,
+			},
+		},
+	}
+
+	util.SetAnnotation(policy, google.ProjectIdAnnotation, teamProjectID)
+
+	return policy, nil
 }
 
 func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQueryDataset, projectID, serviceAccountName string) (*google_bigquery_crd.BigQueryDataset, error) {
