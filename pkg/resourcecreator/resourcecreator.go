@@ -104,6 +104,7 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 	ast := resource.NewAst()
 
 	serviceaccount.Create(naisjob, ast, resourceOptions)
+	networkpolicy.Create(naisjob, ast, resourceOptions, *naisjob.Spec.AccessPolicy, []nais_io_v1.Ingress{}, false)
 	err := azure.Create(naisjob, ast, resourceOptions, *naisjob.Spec.Azure, []nais_io_v1.Ingress{}, *naisjob.Spec.AccessPolicy)
 	if err != nil {
 		return nil, err
