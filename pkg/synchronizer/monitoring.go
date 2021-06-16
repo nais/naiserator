@@ -45,9 +45,8 @@ func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger 
 	ctx, cancel := context.WithCancel(context.Background())
 	rolloutMonitorLock.Lock()
 	n.RolloutMonitor[objectKey] = cancel
-	rolloutMonitorLock.Unlock()
-
 	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
+	rolloutMonitorLock.Unlock()
 
 	go func() {
 		n.monitorRolloutRoutine(ctx, app, logger)
@@ -71,6 +70,7 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected contex
 
 	cancel()
 	delete(n.RolloutMonitor, objectKey)
+	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
 }
 
 // Monitoring deployments to signal RolloutComplete.
