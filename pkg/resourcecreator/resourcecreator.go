@@ -9,6 +9,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
@@ -72,7 +73,10 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	}
 	certificateauthority.Create(ast, app.Spec.SkipCaBundle)
 	securelogs.Create(ast, resourceOptions, app.Spec.SecureLogs)
-	maskinporten.Create(app, ast, resourceOptions, app.Spec.Maskinporten)
+	err = maskinporten.Create(app, ast, resourceOptions, app.Spec.Maskinporten)
+	if err != nil {
+		return nil, err
+	}
 	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
 	aiven.Elastic(ast, app.Spec.Elastic)
@@ -120,7 +124,10 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 	}
 	certificateauthority.Create(ast, naisjob.Spec.SkipCaBundle)
 	securelogs.Create(ast, resourceOptions, naisjob.Spec.SecureLogs)
-	maskinporten.Create(naisjob, ast, resourceOptions, naisjob.Spec.Maskinporten)
+	err = maskinporten.Create(naisjob, ast, resourceOptions, naisjob.Spec.Maskinporten)
+	if err != nil {
+		return nil, err
+	}
 	aiven.Elastic(ast, naisjob.Spec.Elastic)
 	linkerd.Create(ast, resourceOptions)
 

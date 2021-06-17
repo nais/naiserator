@@ -3,15 +3,17 @@ package idporten
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
+
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -28,6 +30,11 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		return nil, err
 	}
 
+	secretName, err := idPortenSecretName(objectMeta.Name)
+	if err != nil {
+		return nil, err
+	}
+
 	return &nais_io_v1.IDPortenClient{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IDPortenClient",
@@ -37,7 +44,7 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		Spec: nais_io_v1.IDPortenClientSpec{
 			ClientURI:              naisIdPorten.ClientURI,
 			RedirectURI:            redirectURI(naisIdPorten, naisIngresses),
-			SecretName:             idPortenSecretName(objectMeta.Name),
+			SecretName:             secretName,
 			FrontchannelLogoutURI:  frontchannelLogoutURI(naisIdPorten, naisIngresses),
 			PostLogoutRedirectURIs: postLogoutRedirectURIs(naisIdPorten),
 			SessionLifetime:        naisIdPorten.SessionLifetime,
@@ -113,8 +120,12 @@ func postLogoutRedirectURIs(idPorten *nais_io_v1.IDPorten) (postLogoutRedirectUR
 	return
 }
 
-func idPortenSecretName(name string) string {
-	return namegen.PrefixedRandShortName("idporten", name, validation.DNS1035LabelMaxLength)
+func idPortenSecretName(name string) (string, error) {
+	basename := fmt.Sprintf("%s-%s", "idporten", name)
+	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
+	maxLen := validation.DNS1035LabelMaxLength
+
+	return namegen.SuffixedShortName(basename, suffix, maxLen)
 }
 
 func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) error {

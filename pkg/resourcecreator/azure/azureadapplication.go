@@ -8,12 +8,13 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
+
 	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -68,16 +69,9 @@ func azureSecretName(name string) (string, error) {
 	prefixedName := fmt.Sprintf("%s-%s", "azure", name)
 	year, week := time.Now().ISOWeek()
 	suffix := fmt.Sprintf("%d-%d", year, week)
-
 	maxLen := validation.DNS1035LabelMaxLength
-	maxLen -= len(suffix) + 1 // length of suffix + 1 byte of separator
 
-	shortName, err := namegen.ShortName(prefixedName, maxLen)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s-%s", shortName, suffix), nil
+	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
 }
 
 func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisAzure nais_io_v1.Azure, naisIngress []nais_io_v1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy) error {
