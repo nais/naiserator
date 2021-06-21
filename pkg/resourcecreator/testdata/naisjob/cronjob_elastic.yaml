@@ -1,0 +1,42 @@
+config:
+  description: Elastic Search labling and access policy
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: dev-localtest
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    elastic:
+      instance: naistest
+
+tests:
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "cronjob network policy selector label"
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  metadata:
+                    labels:
+                      aiven: "enabled"
+                  spec:
+                    containers:
+                      - name: "mynaisjob"

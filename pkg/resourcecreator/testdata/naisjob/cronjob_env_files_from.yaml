@@ -1,0 +1,72 @@
+config:
+  description: file injection
+
+resourceoptions:
+  NativeSecrets: true
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    env:
+      - name: foo
+        value: bar
+      - name: valuefrom
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+    envFrom:
+      - configmap: mycm
+      - secret: mysecret
+    filesFrom:
+      - configmap: mycm
+      - secret: mysecret
+
+tests:
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: files injected from secret and cm
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    volumes:
+                      - name: mycm
+                        configMap:
+                          name: mycm
+                      - name: mysecret
+                        secret:
+                          secretName: mysecret
+                    containers:
+                      - name: mynaisjob
+                        env:
+                          - name: foo
+                            value: bar
+                          - name: valuefrom
+                            valueFrom:
+                              fieldRef:
+                                fieldPath: status.podIP
+                        envFrom:
+                          - configMapRef:
+                              name: mycm
+                          - secretRef:
+                              name: mysecret
+                        volumeMounts:
+                          - name: mycm
+                            readOnly: true
+                            mountPath: /var/run/configmaps/mycm
+                          - name: mysecret
+                            readOnly: true
+                            mountPath: /var/run/secrets

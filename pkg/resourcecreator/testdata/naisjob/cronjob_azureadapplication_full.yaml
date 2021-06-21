@@ -1,0 +1,74 @@
+config:
+  description: azure application with access policies
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  AzureratorEnabled: true
+  GatewayMappings:
+    - DomainSuffix: .adeo.no
+      IngressClass: adeo-gateway
+    - DomainSuffix: .domain
+      IngressClass: domain-gateway
+
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    image: foo/bar
+    azure:
+      application:
+        enabled: true
+        tenant: nav.no
+        claims:
+          extra:
+            - "NAVident"
+    accessPolicy:
+      inbound:
+        rules:
+          - application: app1
+          - application: app2
+            namespace: q1
+          - application: app3
+            namespace: t1
+            cluster: other-cluster
+
+tests:
+  - apiVersion: nais.io/v1
+    kind: AzureAdApplication
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "spec is populated with correct values"
+        exclude:
+          - .status
+          - .metadata
+          - .spec.secretName
+        resource:
+          apiVersion: nais.io/v1
+          kind: AzureAdApplication
+          spec:
+            preAuthorizedApplications:
+              - application: app1
+                cluster: mycluster
+                namespace: mynamespace
+              - application: app2
+                cluster: mycluster
+                namespace: q1
+              - application: app3
+                cluster: other-cluster
+                namespace: t1
+            tenant: nav.no
+            claims:
+              extra:
+                - "NAVident"

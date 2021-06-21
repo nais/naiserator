@@ -1,0 +1,92 @@
+config:
+  description: minimal maskinporten config in naisjob spec should result in MaskinportenClient
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  DigdiratorEnabled: true
+  DigdiratorHosts:
+    - dev.maskinporten.test
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    image: foo/bar
+    maskinporten:
+      enabled: true
+      scopes:
+        consumes:
+          - name: "org:some/scope"
+        exposes:
+          - name: some.scope
+            enabled: true
+            product: "arbeid"
+            atMaxAge: 30
+
+tests:
+  - apiVersion: nais.io/v1
+    kind: MaskinportenClient
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "spec contains expected fields with defaults and nothing else"
+        exclude:
+          - .status
+          - .metadata
+          - .spec.secretName
+        resource:
+          spec:
+            scopes:
+              consumes:
+                - name: "org:some/scope"
+              exposes:
+                - name: some.scope
+                  enabled: true
+                  product: "arbeid"
+                  atMaxAge: 30
+
+  - apiVersion: nais.io/v1
+    kind: MaskinportenClient
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^maskinporten-mynaisjob-37970c24-.{10}$
+
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    name: mynaisjob
+    match:
+      - name: "cronjob contains maskinporten secrets"
+        type: regex
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    volumes:
+                      - name: ^maskinporten-mynaisjob-37970c24-.{10}$
+                        secret:
+                          secretName: ^maskinporten-mynaisjob-37970c24-.{10}$
+                    containers:
+                      - envFrom:
+                          - secretRef:
+                              name: ^maskinporten-mynaisjob-37970c24-.{10}$
+                        volumeMounts:
+                          - name: ^maskinporten-mynaisjob-37970c24-.{10}$
+                            readOnly: true
+                            mountPath: /var/run/secrets/nais.io/maskinporten

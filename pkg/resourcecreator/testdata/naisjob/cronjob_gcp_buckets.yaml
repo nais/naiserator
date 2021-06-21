@@ -1,0 +1,143 @@
+config:
+  description: google storage bucket with retention period
+
+resourceoptions:
+  AccessPolicy: false
+  GoogleProjectID: google-project-id
+  GoogleTeamProjectID: team-project-id
+  NumReplicas: 1
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    image: navikt/mynaisjob:1.2.3
+    gcp:
+      buckets:
+        - name: mynaisjob
+
+tests:
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMServiceAccount
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "IAMServiceAccount created in namespace serviceaccounts"
+        exclude:
+          - .metadata.creationTimestamp
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+              nais.io/team: mynamespace
+            name: mynaisjob-mynamespac-uih2v7i
+            namespace: serviceaccounts
+          spec:
+            displayName: mynaisjob
+
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicy
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "IAMPolicy created in namespace serviceaccounts"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+            name: mynaisjob-mynamespac-uih2v7i
+            namespace: serviceaccounts
+          spec:
+            bindings:
+              - members:
+                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/mynaisjob]
+                role: roles/iam.workloadIdentityUser
+            resourceRef:
+              apiVersion: iam.cnrm.cloud.google.com/v1beta1
+              kind: IAMServiceAccount
+              name: mynaisjob-mynamespac-uih2v7i
+
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicyMember
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "IAMPolicyMember created in namespace mynamespace"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: mynaisjob-mynamespac-uih2v7i
+            namespace: mynamespace
+          spec:
+            member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
+            role: roles/storage.objectViewer
+            resourceRef:
+              apiVersion: storage.cnrm.cloud.google.com/v1beta1
+              kind: StorageBucket
+              name: mynaisjob
+
+  - apiVersion: storage.cnrm.cloud.google.com/v1beta1
+    kind: StorageBucket
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "Storage bucket created in team namespace"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+            name: mynaisjob
+            namespace: mynamespace
+          spec:
+            location: europe-north1
+
+  - apiVersion: storage.cnrm.cloud.google.com/v1beta1
+    kind: StorageBucketAccessControl
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "Storage bucket ACL created in team namespace"
+        resource:
+          metadata:
+            name: mynaisjob
+            namespace: mynamespace
+          spec:
+            bucketRef:
+              name: mynaisjob
+            entity: user-mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
+            role: OWNER
+
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created"
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - image: navikt/mynaisjob:1.2.3
+                        env:
+                          - name: GCP_TEAM_PROJECT_ID
+                            value: team-project-id
+                    dnsPolicy: ClusterFirst
+                    imagePullSecrets:
+                      - name: gpr-credentials
+                    serviceAccountName: mynaisjob

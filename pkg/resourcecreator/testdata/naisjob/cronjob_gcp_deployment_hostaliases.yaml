@@ -1,0 +1,51 @@
+config:
+  description: specifying custom port and protocol for mesh-external services in gcp
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  HostAliases:
+    - Host: b27apvl00045.preprod.local
+      Address: 10.183.160.26
+    - Host: b27apvl00046.preprod.local
+      Address: 10.183.32.47
+    - Host: b27apvl00047.preprod.local
+      Address: 10.183.32.48
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    image: navikt/mynaisjob:1.2.3
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: batch/v1beta1
+    kind: CronJob
+    name: mynaisjob
+    match:
+      - name: "hostAliases created"
+        type: subset
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    hostAliases:
+                      - hostnames:
+                          - b27apvl00045.preprod.local
+                        ip: 10.183.160.26
+                      - hostnames:
+                          - b27apvl00046.preprod.local
+                        ip: 10.183.32.47
+                      - hostnames:
+                          - b27apvl00047.preprod.local
+                        ip: 10.183.32.48

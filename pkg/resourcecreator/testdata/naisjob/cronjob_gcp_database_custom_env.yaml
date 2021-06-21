@@ -1,0 +1,80 @@
+config:
+  description: custom environment variable name on cloud sql databases
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  GoogleTeamProjectID: team-project-id
+  NumReplicas: 1
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/mynaisjob:1.2.3
+    gcp:
+      sqlInstances:
+        - databases:
+            - name: mydb
+              envVarPrefix: "PWNED"
+          type: POSTGRES_11
+
+tests:
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    match:
+      - type: regex
+        name: "secret"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-mynaisjob
+            namespace: mynamespace
+            labels:
+              app: mynaisjob
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1
+                kind: Naisjob
+                name: mynaisjob
+                uid: "123456"
+          stringData:
+            PWNED_DATABASE: mydb
+            PWNED_HOST: 127.0.0.1
+            PWNED_PASSWORD: ".{43}"
+            PWNED_PORT: "5432"
+            PWNED_URL: postgres://mynaisjob:.{43}@127.0.0.1:5432/mydb
+            PWNED_USERNAME: mynaisjob
+          type: Opaque
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: mynaisjob
+    match:
+      - type: subset
+        name: "sql user"
+        resource:
+          metadata:
+            name: mynaisjob
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: mynaisjob
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-mynaisjob
+                  key: PWNED_PASSWORD
