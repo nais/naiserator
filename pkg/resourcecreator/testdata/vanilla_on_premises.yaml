@@ -64,7 +64,7 @@ tests:
     match:
       - type: subset
         name: "service account created"
-        resource: {}
+        resource: { }
 
   - operation: CreateOrUpdate
     apiVersion: autoscaling/v2beta2

@@ -25,7 +25,7 @@ func CreateDataset(source resource.Source, ast *resource.Ast, resourceOptions re
 			return err
 		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, bigQueryInstance)
-		
+
 		iamPolicyMember, err := iAMPolicyMember(source, bigQueryInstance, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, serviceAccountName)
 		if err != nil {
 			return err
@@ -36,21 +36,21 @@ func CreateDataset(source resource.Source, ast *resource.Ast, resourceOptions re
 }
 
 func iAMPolicyMember(source resource.Source, bigqueryDataset *google_bigquery_crd.BigQueryDataset, googleProjectId, teamProjectID, serviceAccountName string) (*google_iam_crd.IAMPolicyMember, error) {
-	shortName, err := namegen.ShortName(bigqueryDataset.Name + "-job-user" , validation.DNS1035LabelMaxLength)
+	shortName, err := namegen.ShortName(bigqueryDataset.Name+"-job-user", validation.DNS1035LabelMaxLength)
 	if err != nil {
 		return nil, err
 	}
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = shortName
 	policy := &google_iam_crd.IAMPolicyMember{
-		TypeMeta:   metav1.TypeMeta{
-			Kind: "IAMPolicyMember",
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "IAMPolicyMember",
 			APIVersion: google.IAMAPIVersion,
 		},
 		ObjectMeta: objectMeta,
-		Spec:       google_iam_crd.IAMPolicyMemberSpec{
-			Member:      fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(serviceAccountName, googleProjectId)),
-			Role:        "roles/bigquery.jobUser",
+		Spec: google_iam_crd.IAMPolicyMemberSpec{
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(serviceAccountName, googleProjectId)),
+			Role:   "roles/bigquery.jobUser",
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: bigqueryDataset.APIVersion,
 				Kind:       bigqueryDataset.Kind,

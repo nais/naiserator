@@ -30,9 +30,9 @@ tests:
         resource:
           spec:
             template:
-               spec:
-                 containers:
-                   - name: "myapplication"
-                     env:
-                       - name: "START_WITHOUT_ENVOY"
-                         value: "true"
+              spec:
+                containers:
+                  - name: "myapplication"
+                    env:
+                      - name: "START_WITHOUT_ENVOY"
+                        value: "true"

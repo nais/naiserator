@@ -60,21 +60,21 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-    - name: "deployment contains idporten secrets"
-      type: regex
-      resource:
-        spec:
-          template:
-            spec:
-              volumes:
-              - name: ^idporten-myapplication-a0b907e7-.{10}$
-                secret:
-                  secretName: ^idporten-myapplication-a0b907e7-.{10}$
-              containers:
-              - envFrom:
-                - secretRef:
-                    name: ^idporten-myapplication-a0b907e7-.{10}$
-                volumeMounts:
-                - name: ^idporten-myapplication-a0b907e7-.{10}$
-                  readOnly: true
-                  mountPath: /var/run/secrets/nais.io/idporten
+      - name: "deployment contains idporten secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^idporten-myapplication-a0b907e7-.{10}$
+                    secret:
+                      secretName: ^idporten-myapplication-a0b907e7-.{10}$
+                containers:
+                  - envFrom:
+                      - secretRef:
+                          name: ^idporten-myapplication-a0b907e7-.{10}$
+                    volumeMounts:
+                      - name: ^idporten-myapplication-a0b907e7-.{10}$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/idporten

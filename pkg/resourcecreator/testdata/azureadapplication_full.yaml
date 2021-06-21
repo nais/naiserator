@@ -76,4 +76,4 @@ tests:
             tenant: nav.no
             claims:
               extra:
-              - "NAVident"
+                - "NAVident"

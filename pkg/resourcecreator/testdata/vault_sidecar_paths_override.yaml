@@ -23,8 +23,8 @@ input:
       enabled: true
       sidecar: true
       paths:
-      - kvPath: /kv/preprod/fss/myapplication/mynamespace
-        mountPath: /var/run/secrets/nais.io/vault
+        - kvPath: /kv/preprod/fss/myapplication/mynamespace
+          mountPath: /var/run/secrets/nais.io/vault
 
 tests:
   - apiVersion: apps/v1

@@ -20,25 +20,25 @@ input:
     image: navikt/myapplication:1.2.3
     gcp:
       sqlInstances:
-      - databases:
-        - name: mydb
-          envVarPrefix: "PWNED"
-        type: POSTGRES_11
+        - databases:
+            - name: mydb
+              envVarPrefix: "PWNED"
+          type: POSTGRES_11
 
 tests:
   - match:
-    - type: subset
-      name: "common metadata"
-      resource:
-        metadata:
-          labels:
-            app: myapplication
-            team: myteam
-          ownerReferences:
-            - apiVersion: v1alpha1
-              kind: Application
-              name: myapplication
-              uid: "123456"
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
 
   - apiVersion: v1
     kind: Secret
@@ -56,10 +56,10 @@ tests:
               app: myapplication
               team: myteam
             ownerReferences:
-            - kind: Application
-              name: myapplication
-              uid: "123456"
-              apiVersion: v1alpha1
+              - kind: Application
+                name: myapplication
+                uid: "123456"
+                apiVersion: v1alpha1
           stringData:
             PWNED_DATABASE: mydb
             PWNED_HOST: 127.0.0.1

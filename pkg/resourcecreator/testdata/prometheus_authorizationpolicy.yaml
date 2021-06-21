@@ -32,9 +32,9 @@ tests:
           spec:
             ingress:
               - from:
-                - namespaceSelector:
-                    matchLabels:
-                      name: nais
-                  podSelector:
-                    matchLabels:
-                      app: prometheus
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nais
+                    podSelector:
+                      matchLabels:
+                        app: prometheus

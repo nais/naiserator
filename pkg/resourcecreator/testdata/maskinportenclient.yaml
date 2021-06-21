@@ -70,21 +70,21 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-    - name: "deployment contains maskinporten secrets"
-      type: regex
-      resource:
-        spec:
-          template:
-            spec:
-              volumes:
-              - name: ^maskinporten-myapplication-9561321b-.{10}$
-                secret:
-                  secretName: ^maskinporten-myapplication-9561321b-.{10}$
-              containers:
-              - envFrom:
-                - secretRef:
-                    name: ^maskinporten-myapplication-9561321b-.{10}$
-                volumeMounts:
-                - name: ^maskinporten-myapplication-9561321b-.{10}$
-                  readOnly: true
-                  mountPath: /var/run/secrets/nais.io/maskinporten
+      - name: "deployment contains maskinporten secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^maskinporten-myapplication-9561321b-.{10}$
+                    secret:
+                      secretName: ^maskinporten-myapplication-9561321b-.{10}$
+                containers:
+                  - envFrom:
+                      - secretRef:
+                          name: ^maskinporten-myapplication-9561321b-.{10}$
+                    volumeMounts:
+                      - name: ^maskinporten-myapplication-9561321b-.{10}$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/maskinporten

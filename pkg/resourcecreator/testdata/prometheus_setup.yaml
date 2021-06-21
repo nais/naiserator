@@ -36,7 +36,7 @@ tests:
               spec:
                 containers:
                   - ports:
-                    - containerPort: 11335
+                      - containerPort: 11335
 
 
 

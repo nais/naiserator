@@ -23,8 +23,8 @@ input:
       enabled: true
       sidecar: true
       paths:
-      - kvPath: /serviceuser/data/test/srvuser
-        mountPath: /secrets/credential/srvuser
+        - kvPath: /serviceuser/data/test/srvuser
+          mountPath: /secrets/credential/srvuser
 
 tests:
   - apiVersion: apps/v1

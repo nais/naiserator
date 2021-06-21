@@ -10,6 +10,6 @@ roleRef:
   kind: ClusterRole
   name: naiserator
 subjects:
-- kind: ServiceAccount
-  name: naiserator
-  namespace: nais
+  - kind: ServiceAccount
+    name: naiserator
+    namespace: nais

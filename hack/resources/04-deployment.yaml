@@ -18,5 +18,5 @@ spec:
     spec:
       serviceAccountName: naiserator
       containers:
-      - name: naiserator
-        image: navikt/naiserator:latest
+        - name: naiserator
+          image: navikt/naiserator:latest

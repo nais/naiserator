@@ -20,28 +20,28 @@ input:
     image: navikt/myapplication:1.2.3
     gcp:
       buckets:
-      - name: myapplication
-        retentionPeriodDays: 7
-        lifecycleCondition:
-          age: 7
-          createdBefore: 2019-01-01
-          numNewerVersions: 2
-          withState: ANY
+        - name: myapplication
+          retentionPeriodDays: 7
+          lifecycleCondition:
+            age: 7
+            createdBefore: 2019-01-01
+            numNewerVersions: 2
+            withState: ANY
 
 tests:
   - match:
-    - type: subset
-      name: "common metadata"
-      resource:
-        metadata:
-          labels:
-            app: myapplication
-            team: myteam
-          ownerReferences:
-            - apiVersion: v1alpha1
-              kind: Application
-              name: myapplication
-              uid: "123456"
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
@@ -117,13 +117,13 @@ tests:
             retentionPolicy:
               retentionPeriod: 604800
             lifecycleRule:
-            - action:
-                type: Delete
-              condition:
-                age: 7
-                createdBefore: 2019-01-01
-                numNewerVersions: 2
-                withState: ANY
+              - action:
+                  type: Delete
+                condition:
+                  age: 7
+                  createdBefore: 2019-01-01
+                  numNewerVersions: 2
+                  withState: ANY
   - apiVersion: storage.cnrm.cloud.google.com/v1beta1
     kind: StorageBucketAccessControl
     operation: CreateOrUpdate
@@ -155,12 +155,12 @@ tests:
             template:
               spec:
                 containers:
-                - image: navikt/myapplication:1.2.3
-                  env:
-                    - name: GCP_TEAM_PROJECT_ID
-                      value: team-project-id
+                  - image: navikt/myapplication:1.2.3
+                    env:
+                      - name: GCP_TEAM_PROJECT_ID
+                        value: team-project-id
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
-                - name: gpr-credentials
+                  - name: gpr-credentials
                 restartPolicy: Always
                 serviceAccountName: myapplication

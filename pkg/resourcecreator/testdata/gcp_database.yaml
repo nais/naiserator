@@ -20,24 +20,24 @@ input:
     image: navikt/myapplication:1.2.3
     gcp:
       sqlInstances:
-      - databases:
-        - name: mydb
-        type: POSTGRES_11
+        - databases:
+            - name: mydb
+          type: POSTGRES_11
 
 tests:
   - match:
-    - type: subset
-      name: "common metadata"
-      resource:
-        metadata:
-          labels:
-            app: myapplication
-            team: myteam
-          ownerReferences:
-            - apiVersion: v1alpha1
-              kind: Application
-              name: myapplication
-              uid: "123456"
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
@@ -70,9 +70,9 @@ tests:
             namespace: serviceaccounts
           spec:
             bindings:
-            - members:
-              - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
-              role: roles/iam.workloadIdentityUser
+              - members:
+                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
+                role: roles/iam.workloadIdentityUser
             resourceRef:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
@@ -157,10 +157,10 @@ tests:
               app: myapplication
               team: myteam
             ownerReferences:
-            - kind: Application
-              name: myapplication
-              uid: "123456"
-              apiVersion: v1alpha1
+              - kind: Application
+                name: myapplication
+                uid: "123456"
+                apiVersion: v1alpha1
           stringData:
             NAIS_DATABASE_MYAPPLICATION_MYDB_DATABASE: mydb
             NAIS_DATABASE_MYAPPLICATION_MYDB_HOST: 127.0.0.1
@@ -212,24 +212,24 @@ tests:
                 restartPolicy: Always
                 serviceAccountName: myapplication
                 containers:
-                - name: myapplication
-                  image: navikt/myapplication:1.2.3
-                  envFrom:
-                    - secretRef:
-                        name: google-sql-myapplication
-                  env:
-                    - name: GCP_TEAM_PROJECT_ID
-                      value: team-project-id
-                - name: cloudsql-proxy
-                  command:
-                  - /cloud_sql_proxy
-                  - -term_timeout=30s
-                  - -instances=team-project-id:europe-north1:myapplication=tcp:5432
-                  ports:
-                  - containerPort: 5432
-                    protocol: TCP
-                  resources: {}
-                  imagePullPolicy: IfNotPresent
-                  securityContext:
-                    allowPrivilegeEscalation: false
-                    runAsUser: 2
+                  - name: myapplication
+                    image: navikt/myapplication:1.2.3
+                    envFrom:
+                      - secretRef:
+                          name: google-sql-myapplication
+                    env:
+                      - name: GCP_TEAM_PROJECT_ID
+                        value: team-project-id
+                  - name: cloudsql-proxy
+                    command:
+                      - /cloud_sql_proxy
+                      - -term_timeout=30s
+                      - -instances=team-project-id:europe-north1:myapplication=tcp:5432
+                    ports:
+                      - containerPort: 5432
+                        protocol: TCP
+                    resources: { }
+                    imagePullPolicy: IfNotPresent
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      runAsUser: 2

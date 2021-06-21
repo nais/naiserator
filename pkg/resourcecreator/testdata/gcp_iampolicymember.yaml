@@ -27,18 +27,18 @@ input:
 
 tests:
   - match:
-    - type: subset
-      name: "common metadata"
-      resource:
-        metadata:
-          labels:
-            app: myapplication
-            team: myteam
-          ownerReferences:
-            - apiVersion: v1alpha1
-              kind: Application
-              name: myapplication
-              uid: "123456"
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
     operation: CreateOrUpdate

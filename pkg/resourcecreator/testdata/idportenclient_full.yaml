@@ -31,7 +31,7 @@ input:
       sessionLifetime: 7200
       accessTokenLifetime: 3600
     ingresses:
-     - https://my-client.adeo.no
+      - https://my-client.adeo.no
 
 tests:
   - apiVersion: nais.io/v1

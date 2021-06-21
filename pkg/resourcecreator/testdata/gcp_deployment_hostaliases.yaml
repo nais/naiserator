@@ -26,18 +26,18 @@ input:
 
 tests:
   - match:
-    - type: subset
-      name: "common metadata"
-      resource:
-        metadata:
-          labels:
-            app: myapplication
-            team: myteam
-          ownerReferences:
-            - apiVersion: v1alpha1
-              kind: Application
-              name: myapplication
-              uid: "123456"
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment
@@ -49,12 +49,12 @@ tests:
             template:
               spec:
                 hostAliases:
-                - hostnames:
-                  - b27apvl00045.preprod.local
-                  ip: 10.183.160.26
-                - hostnames:
-                  - b27apvl00046.preprod.local
-                  ip: 10.183.32.47
-                - hostnames:
-                  - b27apvl00047.preprod.local
-                  ip: 10.183.32.48
+                  - hostnames:
+                      - b27apvl00045.preprod.local
+                    ip: 10.183.160.26
+                  - hostnames:
+                      - b27apvl00046.preprod.local
+                    ip: 10.183.32.47
+                  - hostnames:
+                      - b27apvl00047.preprod.local
+                    ip: 10.183.32.48

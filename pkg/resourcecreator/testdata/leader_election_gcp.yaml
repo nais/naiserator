@@ -4,7 +4,7 @@ config:
 resourceoptions:
   Linkerd: true
   NetworkPolicy: true
-  AccessPolicyNotAllowedCIDRs: ["10.6.0.0/15", "192.168.0.0/16", "172.16.0.0/12"]
+  AccessPolicyNotAllowedCIDRs: [ "10.6.0.0/15", "192.168.0.0/16", "172.16.0.0/12" ]
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ApiServerIp: "172.16.0.2/32"
@@ -62,15 +62,15 @@ tests:
           - .status
         resource:
           rules:
-          - apiGroups:
-            - ""
-            resourceNames:
-            - myapplication
-            resources:
-            - endpoints
-            verbs:
-            - get
-            - update
+            - apiGroups:
+                - ""
+              resourceNames:
+                - myapplication
+              resources:
+                - endpoints
+              verbs:
+                - get
+                - update
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     name: myapplication
@@ -87,9 +87,9 @@ tests:
             kind: Role
             name: myapplication
           subjects:
-          - kind: ServiceAccount
-            name: myapplication
-            namespace: mynamespace
+            - kind: ServiceAccount
+              name: myapplication
+              namespace: mynamespace
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     name: myapplication
@@ -103,34 +103,34 @@ tests:
         resource:
           spec:
             egress:
-            - to:
-              - namespaceSelector:
-                  matchLabels:
-                    linkerd.io/is-control-plane: "true"
-              - namespaceSelector: { }
-                podSelector:
-                  matchLabels:
-                    k8s-app: kube-dns
-              - ipBlock:
-                  cidr: 0.0.0.0/0
-                  except:
-                  - 10.6.0.0/15
-                  - 192.168.0.0/16
-                  - 172.16.0.0/12
-            - to:
-              - ipBlock:
-                  cidr: 172.16.0.2/32
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/is-control-plane: "true"
+                  - namespaceSelector: { }
+                    podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+                  - ipBlock:
+                      cidr: 0.0.0.0/0
+                      except:
+                        - 10.6.0.0/15
+                        - 192.168.0.0/16
+                        - 172.16.0.0/12
+              - to:
+                  - ipBlock:
+                      cidr: 172.16.0.2/32
             ingress:
-            - from:
-              - namespaceSelector:
-                  matchLabels:
-                    name: nais
-                podSelector:
-                  matchLabels:
-                    app: prometheus
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nais
+                    podSelector:
+                      matchLabels:
+                        app: prometheus
             podSelector:
               matchLabels:
                 app: myapplication
             policyTypes:
-            - Ingress
-            - Egress
+              - Ingress
+              - Egress

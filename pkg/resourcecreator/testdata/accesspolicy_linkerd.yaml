@@ -79,12 +79,12 @@ tests:
                       matchLabels:
                         component: tap
               - from:
-                    - namespaceSelector:
-                          matchLabels:
-                              linkerd.io/extension: viz
-                      podSelector:
-                          matchLabels:
-                              component: prometheus
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/extension: viz
+                    podSelector:
+                      matchLabels:
+                        component: prometheus
               - from:
                   - podSelector:
                       matchLabels:
@@ -95,7 +95,7 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         name: q1
-                  - podSelector: {}
+                  - podSelector: { }
                     namespaceSelector:
                       matchLabels:
                         name: t1
@@ -121,7 +121,7 @@ tests:
                   - podSelector:
                       matchLabels:
                         k8s-app: kube-dns
-                    namespaceSelector: {}
+                    namespaceSelector: { }
                   - ipBlock:
                       cidr: 0.0.0.0/0
               - to:
@@ -134,7 +134,7 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         name: q2
-                  - podSelector: {}
+                  - podSelector: { }
                     namespaceSelector:
                       matchLabels:
                         name: t2

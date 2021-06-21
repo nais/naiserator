@@ -20,10 +20,10 @@ input:
     image: navikt/myapplication:1.2.3
     gcp:
       bigQueryDatasets:
-      - name: my_Big_Query_Instance
-        description: tralalalala
-        cascadingDelete: true
-        permission: READ
+        - name: my_Big_Query_Instance
+          description: tralalalala
+          cascadingDelete: true
+          permission: READ
 
 tests:
   - match:

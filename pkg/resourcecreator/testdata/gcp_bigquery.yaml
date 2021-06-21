@@ -20,9 +20,9 @@ input:
     image: navikt/myapplication:1.2.3
     gcp:
       bigQueryDatasets:
-      - name: my_Big_Query_Instance
-        description: tralalalala
-        permission: READWRITE
+        - name: my_Big_Query_Instance
+          description: tralalalala
+          permission: READWRITE
 
 tests:
   - match:

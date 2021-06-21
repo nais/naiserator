@@ -104,48 +104,48 @@ tests:
         resource:
           spec:
             egress:
-            - to:
-              - namespaceSelector:
-                  matchLabels:
-                    linkerd.io/is-control-plane: "true"
-              - namespaceSelector: {}
-                podSelector:
-                  matchLabels:
-                    k8s-app: kube-dns
-              - ipBlock:
-                  cidr: 0.0.0.0/0
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/is-control-plane: "true"
+                  - namespaceSelector: { }
+                    podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+                  - ipBlock:
+                      cidr: 0.0.0.0/0
             ingress:
-            - from:
-              - namespaceSelector:
-                  matchLabels:
-                    name: nais
-                podSelector:
-                  matchLabels:
-                    app: prometheus
-            - from:
-              - namespaceSelector:
-                  matchLabels:
-                    linkerd.io/is-control-plane: "true"
-            - from:
-              - namespaceSelector:
-                  matchLabels:
-                    linkerd.io/extension: viz
-                podSelector:
-                  matchLabels:
-                    component: tap
-            - from:
-              - namespaceSelector:
-                  matchLabels:
-                    linkerd.io/extension: viz
-                podSelector:
-                  matchLabels:
-                    component: prometheus
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nais
+                    podSelector:
+                      matchLabels:
+                        app: prometheus
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/is-control-plane: "true"
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/extension: viz
+                    podSelector:
+                      matchLabels:
+                        component: tap
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/extension: viz
+                    podSelector:
+                      matchLabels:
+                        component: prometheus
             podSelector:
               matchLabels:
                 app: myapplication
             policyTypes:
-            - Ingress
-            - Egress
+              - Ingress
+              - Egress
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
