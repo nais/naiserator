@@ -44,7 +44,7 @@ const (
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
-	RolloutMonitor  map[client.ObjectKey]context.CancelFunc
+	RolloutMonitor  map[client.ObjectKey]RolloutMonitor
 	SimpleClient    client.Client
 	Scheme          *runtime.Scheme
 	ResourceOptions resource.Options

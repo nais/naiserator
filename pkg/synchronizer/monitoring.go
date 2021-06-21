@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/google/uuid"
 	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
@@ -20,6 +21,11 @@ import (
 )
 
 var rolloutMonitorLock sync.Mutex
+
+type RolloutMonitor struct {
+	id     uuid.UUID
+	cancel context.CancelFunc
+}
 
 func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
 	an, err := anypb.New(event)
@@ -42,33 +48,38 @@ func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger 
 	// Cancel already running monitor routine if MonitorRollout called again for this particular application.
 	n.cancelMonitor(objectKey, nil)
 
+	id := uuid.New()
 	ctx, cancel := context.WithCancel(context.Background())
 	rolloutMonitorLock.Lock()
-	n.RolloutMonitor[objectKey] = cancel
+	n.RolloutMonitor[objectKey] = RolloutMonitor{
+		id:     id,
+		cancel: cancel,
+	}
 	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
 	rolloutMonitorLock.Unlock()
 
 	go func() {
 		n.monitorRolloutRoutine(ctx, app, logger)
-		n.cancelMonitor(objectKey, cancel)
+		cancel()
+		n.cancelMonitor(objectKey, &id)
 	}()
 }
 
-func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected context.CancelFunc) {
+func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.UUID) {
 	rolloutMonitorLock.Lock()
 	defer rolloutMonitorLock.Unlock()
 
-	cancel, ok := n.RolloutMonitor[objectKey]
+	rollout, ok := n.RolloutMonitor[objectKey]
 	if !ok {
 		return
 	}
 
 	// Avoid race conditions
-	if expected != nil && &expected != &cancel {
+	if expected != nil && rollout.id.ID() != expected.ID() {
 		return
 	}
 
-	cancel()
+	rollout.cancel()
 	delete(n.RolloutMonitor, objectKey)
 	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
 }

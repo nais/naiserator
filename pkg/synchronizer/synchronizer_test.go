@@ -87,7 +87,7 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		Client:          rig.client,
 		Config:          syncerConfig,
 		ResourceOptions: options,
-		RolloutMonitor:  make(map[client.ObjectKey]context.CancelFunc),
+		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          rig.scheme,
 		SimpleClient:    rig.client,
 	})
