@@ -1,5 +1,5 @@
 config:
-  description: Elastic Search labling and access policy
+  description: Influxdb labling and access policy
 
 resourceoptions:
   Linkerd: true
