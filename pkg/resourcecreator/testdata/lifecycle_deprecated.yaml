@@ -29,4 +29,5 @@ tests:
                       preStop:
                         httpGet:
                           path: stop
+                          port: http
 
