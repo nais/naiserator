@@ -29,7 +29,8 @@ func TestDeployment(t *testing.T) {
 
 		opts := resource.NewOptions()
 		ast := resource.NewAst()
-		pod.CreateAppContainer(app, ast, opts)
+		err = pod.CreateAppContainer(app, ast, opts)
+		assert.NoError(t, err)
 
 		appContainer := ast.Containers[0]
 		assert.NotNil(t, appContainer)
@@ -51,7 +52,8 @@ func TestDeployment(t *testing.T) {
 			Exclude: []string{"foo", "bar", "baz"},
 		}
 		ast := resource.NewAst()
-		pod.CreateAppContainer(app, ast, opts)
+		err = pod.CreateAppContainer(app, ast, opts)
+		assert.NoError(t, err)
 
 		appContainer := ast.Containers[0]
 
@@ -93,7 +95,8 @@ func TestDeployment(t *testing.T) {
 		opts := resource.NewOptions()
 		opts.NativeSecrets = true
 
-		pod.CreateAppContainer(app, ast, opts)
+		err = pod.CreateAppContainer(app, ast, opts)
+		assert.NoError(t, err)
 
 		appContainer := ast.Containers[0]
 		assert.NotNil(t, appContainer)
@@ -116,7 +119,8 @@ func TestDeployment(t *testing.T) {
 		ast := resource.NewAst()
 		opts := resource.NewOptions()
 
-		pod.CreateAppContainer(app, ast, opts)
+		err = pod.CreateAppContainer(app, ast, opts)
+		assert.NoError(t, err)
 		appContainer := ast.Containers[0]
 
 		assert.NotNil(t, appContainer)

@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -116,11 +117,15 @@ func fromFilesConfigmapVolume(name string) corev1.Volume {
 	}
 }
 
-func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, options resource.Options) {
+func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, options resource.Options) error {
 	ast.Env = append(ast.Env, app.Spec.Env.ToKubernetes()...)
 	ast.Env = append(ast.Env, defaultEnvVars(app, options.ClusterName, app.Spec.Image)...)
 	filesFrom(ast, options.NativeSecrets, app.Spec.FilesFrom)
 	envFrom(ast, options.NativeSecrets, app.Spec.EnvFrom)
+	lifecycle, err := lifecycle(app.Spec.PreStopHookPath, app.Spec.PreStopHook)
+	if err != nil {
+		return err
+	}
 
 	container := corev1.Container{
 		Name:  app.Name,
@@ -131,7 +136,7 @@ func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, op
 		Command:         app.Spec.Command,
 		Resources:       ResourceLimits(*app.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Lifecycle:       lifeCycle(app.Spec.PreStopHookPath),
+		Lifecycle:       lifecycle,
 		Env:             ast.Env,
 		EnvFrom:         ast.EnvFrom,
 		VolumeMounts:    ast.VolumeMounts,
@@ -150,13 +155,19 @@ func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, op
 	}
 
 	ast.Containers = append(ast.Containers, container)
+
+	return nil
 }
 
-func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, options resource.Options) {
+func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, options resource.Options) error {
 	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
 	ast.Env = append(ast.Env, defaultEnvVars(naisjob, options.ClusterName, naisjob.Spec.Image)...)
 	filesFrom(ast, options.NativeSecrets, naisjob.Spec.FilesFrom)
 	envFrom(ast, options.NativeSecrets, naisjob.Spec.EnvFrom)
+	lifecycle, err := lifecycle(naisjob.Spec.PreStopHookPath, naisjob.Spec.PreStopHook)
+	if err != nil {
+		return err
+	}
 
 	container := corev1.Container{
 		Name:            naisjob.Name,
@@ -164,13 +175,15 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opti
 		Command:         naisjob.Spec.Command,
 		Resources:       ResourceLimits(*naisjob.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Lifecycle:       lifeCycle(naisjob.Spec.PreStopHookPath),
+		Lifecycle:       lifecycle,
 		Env:             ast.Env,
 		EnvFrom:         ast.EnvFrom,
 		VolumeMounts:    ast.VolumeMounts,
 	}
 
 	ast.Containers = append(ast.Containers, container)
+
+	return err
 }
 
 func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
@@ -235,15 +248,51 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) met
 	return objectMeta
 }
 
-func lifeCycle(path string) *corev1.Lifecycle {
-	if len(path) > 0 {
+func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*corev1.Lifecycle, error) {
+	if len(preStopHookPath) > 0 && preStopHook != nil {
+		return nil, fmt.Errorf("can only use one of spec.preStopHookPath or spec.preStopHook")
+	}
+
+	if len(preStopHookPath) > 0 {
 		return &corev1.Lifecycle{
 			PreStop: &corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Path: strings.TrimLeft(path, "/"),
+					Path: strings.TrimLeft(preStopHookPath, "/"),
 					Port: intstr.FromString(nais_io_v1alpha1.DefaultPortName),
 				},
 			},
+		}, nil
+	}
+
+	if preStopHook != nil {
+		if preStopHook.Exec != nil && preStopHook.Http != nil {
+			return nil, fmt.Errorf("can only use one type of preStopHook, either exec or http")
+		}
+
+		if preStopHook.Exec != nil {
+			return &corev1.Lifecycle{
+				PreStop: &corev1.Handler{
+					Exec: &corev1.ExecAction{
+						Command: preStopHook.Exec.Command,
+					},
+				},
+			}, nil
+		} else {
+			var port intstr.IntOrString
+			if preStopHook.Http.Port == 0 {
+				port = intstr.FromString(nais_io_v1alpha1.DefaultPortName)
+			} else {
+				port = intstr.FromInt(preStopHook.Http.Port)
+			}
+
+			return &corev1.Lifecycle{
+				PreStop: &corev1.Handler{
+					HTTPGet: &corev1.HTTPGetAction{
+						Path: preStopHook.Http.Path,
+						Port: port,
+					},
+				},
+			}, nil
 		}
 	}
 
@@ -253,7 +302,7 @@ func lifeCycle(path string) *corev1.Lifecycle {
 				Command: []string{"sleep", "5"},
 			},
 		},
-	}
+	}, nil
 }
 
 func probe(appPort int, probe nais_io_v1.Probe) *corev1.Probe {

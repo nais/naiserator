@@ -87,7 +87,10 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 		return nil, err
 	}
 
-	pod.CreateAppContainer(app, ast, resourceOptions)
+	err = pod.CreateAppContainer(app, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
 
 	err = deployment.Create(app, ast, resourceOptions)
 	if err != nil {
@@ -136,7 +139,10 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 		return nil, err
 	}
 
-	pod.CreateNaisjobContainer(naisjob, ast, resourceOptions)
+	err = pod.CreateNaisjobContainer(naisjob, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
 
 	if naisjob.Spec.Schedule == "" {
 		if err := batch.CreateJob(naisjob, ast, resourceOptions); err != nil {
