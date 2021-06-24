@@ -248,11 +248,16 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) met
 	return objectMeta
 }
 
+// lifecycle creates lifecycle definitions, right now adding only PreStop handlers.
+//
+// preStopHookPath is the old, deprecated way of adding preStopHook definitions.
+// This function handles both of them.
 func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*corev1.Lifecycle, error) {
 	if len(preStopHookPath) > 0 && preStopHook != nil {
 		return nil, fmt.Errorf("can only use one of spec.preStopHookPath or spec.preStopHook")
 	}
 
+	// Legacy behavior.
 	if len(preStopHookPath) > 0 {
 		return &corev1.Lifecycle{
 			PreStop: &corev1.Handler{
@@ -264,42 +269,42 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 		}, nil
 	}
 
-	if preStopHook != nil {
-		if preStopHook.Exec != nil && preStopHook.Http != nil {
-			return nil, fmt.Errorf("can only use one type of preStopHook, either exec or http")
-		}
-
-		if preStopHook.Exec != nil {
-			return &corev1.Lifecycle{
-				PreStop: &corev1.Handler{
-					Exec: &corev1.ExecAction{
-						Command: preStopHook.Exec.Command,
-					},
+	if preStopHook == nil {
+		return &corev1.Lifecycle{
+			PreStop: &corev1.Handler{
+				Exec: &corev1.ExecAction{
+					Command: []string{"sleep", "5"},
 				},
-			}, nil
-		} else {
-			var port intstr.IntOrString
-			if preStopHook.Http.Port == 0 {
-				port = intstr.FromString(nais_io_v1alpha1.DefaultPortName)
-			} else {
-				port = intstr.FromInt(preStopHook.Http.Port)
-			}
+			},
+		}, nil
+	}
 
-			return &corev1.Lifecycle{
-				PreStop: &corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Path: preStopHook.Http.Path,
-						Port: port,
-					},
+	if preStopHook.Exec != nil && preStopHook.Http != nil {
+		return nil, fmt.Errorf("can only use one type of preStopHook, either exec or http")
+	}
+
+	if preStopHook.Exec != nil {
+		return &corev1.Lifecycle{
+			PreStop: &corev1.Handler{
+				Exec: &corev1.ExecAction{
+					Command: preStopHook.Exec.Command,
 				},
-			}, nil
-		}
+			},
+		}, nil
+	}
+
+	var port intstr.IntOrString
+	if preStopHook.Http.Port == 0 {
+		port = intstr.FromString(nais_io_v1alpha1.DefaultPortName)
+	} else {
+		port = intstr.FromInt(preStopHook.Http.Port)
 	}
 
 	return &corev1.Lifecycle{
 		PreStop: &corev1.Handler{
-			Exec: &corev1.ExecAction{
-				Command: []string{"sleep", "5"},
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: preStopHook.Http.Path,
+				Port: port,
 			},
 		},
 	}, nil
