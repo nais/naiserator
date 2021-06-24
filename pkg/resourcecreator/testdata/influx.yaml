@@ -34,6 +34,3 @@ tests:
               metadata:
                 labels:
                   aiven: "enabled"
-              spec:
-                containers:
-                  - name: "myapplication"
