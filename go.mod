@@ -15,7 +15,7 @@ require (
 	github.com/magiconair/properties v1.8.0
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/nais/liberator v0.0.0-20210622131400-310ed5256c93
+	github.com/nais/liberator v0.0.0-20210624074723-940fe078296f
 	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e
 	github.com/prometheus/client_golang v1.0.0
 	github.com/sirupsen/logrus v1.4.2
