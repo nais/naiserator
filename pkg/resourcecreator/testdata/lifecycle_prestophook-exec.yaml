@@ -1,0 +1,37 @@
+config:
+  description: PreStopHook.exec is properly added
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    preStopHook:
+      exec:
+        command:
+          - ./hello
+          - world
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: preStop httpGet without leading slash to /stop added
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - lifecycle:
+                      preStop:
+                        exec:
+                          command:
+                            - ./hello
+                            - world

@@ -1,0 +1,18 @@
+config:
+  description: chech that not both preStopHookPath and preStopHook is used
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    preStopHookPath: /stop
+    preStopHook:
+      exec:
+        command:
+          - ./hello
+          - world
+error: "can only use one of spec.preStopHookPath or spec.preStopHook"
