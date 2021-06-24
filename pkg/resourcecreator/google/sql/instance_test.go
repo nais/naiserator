@@ -18,7 +18,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		Name: app.Name,
 		Type: "POSTGRES_11",
 	}
-	spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
+	spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 0)
 	assert.NoError(t, err)
 
 	projectId := "projectid"
@@ -47,7 +47,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 				Hour: &maintenanceHour,
 			},
 		}
-		spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
+		spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 0)
 		assert.NoError(t, err)
 		sqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, projectId)
 		assert.Equal(t, "00:00", sqlInstance.Spec.Settings.BackupConfiguration.StartTime, "setting backup hour to 0 yields 00:00 as start time")
@@ -55,4 +55,18 @@ func TestGoogleSqlInstance(t *testing.T) {
 		assert.Equal(t, maintenanceDay, sqlInstance.Spec.Settings.MaintenanceWindow.Day)
 	})
 
+	t.Run("several of instances produces unique names", func(t *testing.T) {
+		appa := fixtures.MinimalApplication()
+
+		speca := nais.CloudSqlInstance{
+			Name: appa.Name,
+			Type: nais.CloudSqlInstanceTypePostgres12,
+		}
+
+		speca, err = google_sql.CloudSqlInstanceWithDefaults(speca, appa.Name, 1)
+		assert.NoError(t, err)
+		assert.Equal(t, "myapplication-instance-1-36663990", speca.Name)
+		// Not really necessary to test, this will be overridden any day buy required Name in database field.
+		assert.Equal(t, "myapplication-db-1-419be8f9", speca.Databases[0].Name)
+	})
 }

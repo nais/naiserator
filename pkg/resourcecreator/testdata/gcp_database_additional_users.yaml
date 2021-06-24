@@ -75,7 +75,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-myapplication-user-two
+    name: google-sql-myapplication-mydb-user-two
     match:
       - type: regex
         name: "secret two"
@@ -83,7 +83,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-myapplication-user-two
+            name: google-sql-myapplication-mydb-user-two
             namespace: mynamespace
             labels:
               app: myapplication
@@ -105,7 +105,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-myapplication-user-three3
+    name: google-sql-myapplication-mydb-user-three3
     match:
       - type: regex
         name: "secret three"
@@ -113,7 +113,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-myapplication-user-three3
+            name: google-sql-myapplication-mydb-user-three3
             namespace: mynamespace
             labels:
               app: myapplication
@@ -176,7 +176,7 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication-user-two
+                  name: google-sql-myapplication-mydb-user-two
                   key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
@@ -199,5 +199,5 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication-user-three3
+                  name: google-sql-myapplication-mydb-user-three3
                   key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD

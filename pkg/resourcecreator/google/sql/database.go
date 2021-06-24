@@ -9,6 +9,7 @@ import (
 )
 
 func GoogleSQLDatabase(objectMeta metav1.ObjectMeta, db nais.CloudSqlDatabase, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLDatabase {
+	// Spec for CloudSqlDatabase states that Name is required
 	objectMeta.Name = db.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 
