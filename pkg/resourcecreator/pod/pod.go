@@ -294,10 +294,10 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 	}
 
 	var port intstr.IntOrString
-	if preStopHook.Http.Port == 0 {
+	if preStopHook.Http.Port == nil {
 		port = intstr.FromString(nais_io_v1alpha1.DefaultPortName)
 	} else {
-		port = intstr.FromInt(preStopHook.Http.Port)
+		port = intstr.FromInt(*preStopHook.Http.Port)
 	}
 
 	return &corev1.Lifecycle{
