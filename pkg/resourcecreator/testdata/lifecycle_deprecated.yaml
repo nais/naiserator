@@ -30,4 +30,3 @@ tests:
                         httpGet:
                           path: stop
                           port: http
-

@@ -33,4 +33,3 @@ tests:
                         httpGet:
                           path: /leet
                           port: 1337
-
