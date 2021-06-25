@@ -193,7 +193,11 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 					return fmt.Errorf("unable to assign sql password: %s", err)
 				}
 
-				secretName := GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, db.Name, googleSqlUser.Name)
+				secretName, err := GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, db.Name, googleSqlUser.Name)
+				if err != nil {
+					return fmt.Errorf("unable to create sql secret name: %s", err)
+				}
+
 				scrt := secret.OpaqueSecret(objectMeta, secretName, vars)
 				ast.AppendOperation(resource.OperationCreateIfNotExists, scrt)
 
@@ -205,7 +209,10 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			}
 		}
 
-		AppendGoogleSQLUserSecretEnvs(ast, naisSqlInstances, source.GetName())
+		if err = AppendGoogleSQLUserSecretEnvs(ast, naisSqlInstances, source.GetName()); err != nil {
+			return fmt.Errorf("unable to append sql user secret envs: %s", err)
+		}
+
 		(*naisSqlInstances)[i].Name = sqlInstance.Name
 		for _, instance := range *naisSqlInstances {
 			ast.Containers = append(ast.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))

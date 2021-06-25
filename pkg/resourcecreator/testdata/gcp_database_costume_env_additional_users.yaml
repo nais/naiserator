@@ -75,7 +75,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-myapplication-mydb-user-two
+    name: google-sql-myapplication-mydb-user-two-8bc847b6
     match:
       - type: regex
         name: "secret two"
@@ -83,7 +83,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-myapplication-mydb-user-two
+            name: google-sql-myapplication-mydb-user-two-8bc847b6
             namespace: mynamespace
             labels:
               app: myapplication
@@ -128,7 +128,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication-user-two-df860d3e
+    name: myapplication-mydb-user-two-8dedc4e8
     match:
       - type: subset
         name: "custom env - sql user: user-two"
@@ -146,5 +146,5 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication-mydb-user-two
+                  name: google-sql-myapplication-mydb-user-two-8bc847b6
                   key: PWNED_USER_TWO_PASSWORD

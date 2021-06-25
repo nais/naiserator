@@ -112,20 +112,31 @@ func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 	if err != nil {
 		return nil, fmt.Errorf("unable to create meatadata: %s", err)
 	}
+
 	objectMeta.Name = objectDataName
 	setAnnotations(objectMeta, cascadingDelete, projectId)
-	return in.create(objectMeta, secretKeyRefEnvName, appName, dbName), nil
+
+	sqlUser, err := in.create(objectMeta, secretKeyRefEnvName, appName, dbName)
+	if err != nil {
+		return nil, err
+	}
+
+	return sqlUser, nil
 }
 
 func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 	if in.isDefault() {
 		return in.Instance.Name, nil
 	}
-	baseName := fmt.Sprintf("%s-%s", in.Instance.Name, replaceToLowerWithNoPrefix(in.Name))
+	baseName := fmt.Sprintf("%s-%s-%s", in.Instance.Name, in.DB.Name, replaceToLowerWithNoPrefix(in.Name))
 	return namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
 }
 
-func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName, dbName string) *googlesqlcrd.SQLUser {
+func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName, dbName string) (*googlesqlcrd.SQLUser, error) {
+	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, dbName, in.Name)
+	if err != nil {
+		return nil, err
+	}
 	return &googlesqlcrd.SQLUser{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLUser",
@@ -138,12 +149,12 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 				ValueFrom: googlesqlcrd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: googlesqlcrd.SecretRef{
 						Key:  secretKeyRefEnvName,
-						Name: GoogleSQLSecretName(appName, in.Instance.Name, dbName, in.Name),
+						Name: secretName,
 					},
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectId string) {
@@ -154,11 +165,11 @@ func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectI
 	}
 }
 
-func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) string {
+func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) (string, error) {
 	if isDefault(instanceName, sqlUserName) {
-		return fmt.Sprintf("google-sql-%s", appName)
+		return fmt.Sprintf("google-sql-%s", appName), nil
 	}
-	return fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, replaceToLowerWithNoPrefix(sqlUserName))
+	return namegen.ShortName(fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, replaceToLowerWithNoPrefix(sqlUserName)), validation.DNS1035LabelMaxLength)
 }
 
 // isDefault is a legacy compatibility function
@@ -214,13 +225,18 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 	return vars
 }
 
-func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstances *[]nais.CloudSqlInstance, appName string) {
+func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstances *[]nais.CloudSqlInstance, appName string) error {
 	for _, instance := range *naisSqlInstances {
 		for _, db := range instance.Databases {
 			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
 			for _, user := range googleSQLUsers {
-				ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(GoogleSQLSecretName(appName, instance.Name, db.Name, user.Name)))
+				secretName, err := GoogleSQLSecretName(appName, instance.Name, db.Name, user.Name)
+				if err != nil {
+					return err
+				}
+				ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
 			}
 		}
 	}
+	return nil
 }

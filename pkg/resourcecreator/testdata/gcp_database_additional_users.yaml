@@ -75,7 +75,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-myapplication-mydb-user-two
+    name: google-sql-myapplication-mydb-user-two-8bc847b6
     match:
       - type: regex
         name: "secret two"
@@ -83,7 +83,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-myapplication-mydb-user-two
+            name: google-sql-myapplication-mydb-user-two-8bc847b6
             namespace: mynamespace
             labels:
               app: myapplication
@@ -105,7 +105,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-myapplication-mydb-user-three3
+    name: google-sql-myapplication-mydb-user-three3-bd90b055
     match:
       - type: regex
         name: "secret three"
@@ -113,7 +113,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-myapplication-mydb-user-three3
+            name: google-sql-myapplication-mydb-user-three3-bd90b055
             namespace: mynamespace
             labels:
               app: myapplication
@@ -158,7 +158,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication-user-two-df860d3e
+    name: myapplication-mydb-user-two-8dedc4e8
     match:
       - type: subset
         name: "sql user: user-two"
@@ -176,12 +176,12 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication-mydb-user-two
+                  name: google-sql-myapplication-mydb-user-two-8bc847b6
                   key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication-user-three3-c9443121
+    name: myapplication-mydb-user-three3-8018ac26
     match:
       - type: subset
         name: "sql user: user-three"
@@ -199,5 +199,5 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication-mydb-user-three3
+                  name: google-sql-myapplication-mydb-user-three3-bd90b055
                   key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD
