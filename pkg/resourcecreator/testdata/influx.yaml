@@ -1,0 +1,36 @@
+config:
+  description: Influxdb labling and access policy
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: dev-localtest
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    influx:
+      instance: influx-naisteam
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment network policy selector label"
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  aiven: "enabled"

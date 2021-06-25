@@ -80,6 +80,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
 	aiven.Elastic(ast, app.Spec.Elastic)
+	aiven.Influx(ast, app.Spec.Influx)
 	linkerd.Create(ast, resourceOptions)
 
 	err = vault.Create(app, ast, resourceOptions, app.Spec.Vault)
@@ -87,7 +88,10 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 		return nil, err
 	}
 
-	pod.CreateAppContainer(app, ast, resourceOptions)
+	err = pod.CreateAppContainer(app, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
 
 	err = deployment.Create(app, ast, resourceOptions)
 	if err != nil {
@@ -129,6 +133,7 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 		return nil, err
 	}
 	aiven.Elastic(ast, naisjob.Spec.Elastic)
+	aiven.Influx(ast, naisjob.Spec.Influx)
 	linkerd.Create(ast, resourceOptions)
 
 	err = vault.Create(naisjob, ast, resourceOptions, naisjob.Spec.Vault)
@@ -136,7 +141,10 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 		return nil, err
 	}
 
-	pod.CreateNaisjobContainer(naisjob, ast, resourceOptions)
+	err = pod.CreateNaisjobContainer(naisjob, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
 
 	if naisjob.Spec.Schedule == "" {
 		if err := batch.CreateJob(naisjob, ast, resourceOptions); err != nil {

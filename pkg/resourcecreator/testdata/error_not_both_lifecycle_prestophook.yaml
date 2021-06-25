@@ -1,0 +1,19 @@
+config:
+  description: chech that not both preStopHook.exec and preStopHook.http is used
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    preStopHook:
+      exec:
+        command:
+          - ./hello
+          - world
+      http:
+        path: /stop
+error: "can only use one type of preStopHook, either exec or http"
