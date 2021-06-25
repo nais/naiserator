@@ -50,14 +50,11 @@ func trimPrefix(x string) string {
 func MergeAndFilterDatabaseSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string, dbNum int) ([]nais.CloudSqlDatabaseUser, error) {
 	defaultUser := nais.CloudSqlDatabaseUser{Name: instanceName}
 
-	println("yo")
-	println(dbNum != 0)
-
 	if dbNum != 0 {
 		if dbUsers != nil {
 			return removeDuplicates(dbUsers), nil
 		} else {
-			return nil, fmt.Errorf("need to specify users for extra databases, can not have several databases with default user")
+			return nil, fmt.Errorf("must to specify users for extra databases, can not have several databases with default user")
 		}
 	}
 

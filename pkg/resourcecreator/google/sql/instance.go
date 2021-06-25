@@ -92,14 +92,15 @@ func UniqueName(resourceNumber int, defaultReturn, resourceType string) (string,
 func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string, instanceNumber int) (nais.CloudSqlInstance, error) {
 	var err error
 
+	// Due to the fact that instance.Name is not required, unique name for instances need to be generated
 	instanceName, err := UniqueName(instanceNumber, appName, "instance")
+	// This default will always be overridden by GoogleSQLDatabase(), but need to be set her as database.Name can not be nil.
 	dbName, err := UniqueName(instanceNumber, appName, "db")
 
 	defaultInstance := nais.CloudSqlInstance{
 		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
 		DiskSize: DefaultSqlInstanceDiskSize,
-		// This default will always be overridden by GoogleSQLDatabase()
 		Databases: []nais.CloudSqlDatabase{{Name: dbName}},
 		Collation: DefaultSqlInstanceCollation,
 	}
