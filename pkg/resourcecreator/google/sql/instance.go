@@ -98,9 +98,9 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 	dbName, err := UniqueName(instanceNumber, appName, "db")
 
 	defaultInstance := nais.CloudSqlInstance{
-		Tier:     DefaultSqlInstanceTier,
-		DiskType: DefaultSqlInstanceDiskType,
-		DiskSize: DefaultSqlInstanceDiskSize,
+		Tier:      DefaultSqlInstanceTier,
+		DiskType:  DefaultSqlInstanceDiskType,
+		DiskSize:  DefaultSqlInstanceDiskSize,
 		Databases: []nais.CloudSqlDatabase{{Name: dbName}},
 		Collation: DefaultSqlInstanceCollation,
 	}
@@ -207,6 +207,10 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
 			sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, instance.Name, dbNum)
+			if err != nil {
+				return err
+			}
+
 			for _, user := range sqlUsers {
 				googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
 				if err = createSqlUserDBResources(objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId); err != nil {
