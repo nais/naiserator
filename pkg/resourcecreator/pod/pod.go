@@ -164,7 +164,7 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opti
 	ast.Env = append(ast.Env, defaultEnvVars(naisjob, options.ClusterName, naisjob.Spec.Image)...)
 	filesFrom(ast, options.NativeSecrets, naisjob.Spec.FilesFrom)
 	envFrom(ast, options.NativeSecrets, naisjob.Spec.EnvFrom)
-	lifecycle, err := lifecycle(naisjob.Spec.PreStopHookPath, naisjob.Spec.PreStopHook)
+	lifecycle, err := lifecycle("", naisjob.Spec.PreStopHook)
 	if err != nil {
 		return err
 	}
