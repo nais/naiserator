@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/util"
-	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/utils/pointer"
 
 	"github.com/imdario/mergo"
@@ -76,11 +74,18 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 	return sqlInstance
 }
 
+func UniqueName(resourceNumber int, defaultReturn, resourceType string) (string, error) {
+	number := strconv.Itoa(resourceNumber)
+	suffix := fmt.Sprintf("%s-%s", resourceType, number)
+	basename := fmt.Sprintf("%s-%s", defaultReturn, suffix)
+	return BuildUniquesNameWithPredicate(number == "0", defaultReturn, basename)
+}
+
 func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string, instanceNumber int) (nais.CloudSqlInstance, error) {
 	var err error
 
-	instanceName, err := UniqueName(appName, "instance", instanceNumber)
-	dbName, err := UniqueName(appName, "db", instanceNumber)
+	instanceName, err := UniqueName(instanceNumber, appName, "instance")
+	dbName, err := UniqueName(instanceNumber, appName, "db")
 
 	defaultInstance := nais.CloudSqlInstance{
 		Tier:     DefaultSqlInstanceTier,
@@ -103,15 +108,6 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 	instance.Name = instanceName
 
 	return instance, err
-}
-
-func UniqueName(basename, resourceType string, resourceNumber int) (string, error) {
-	number := strconv.Itoa(resourceNumber)
-	if number != "0" {
-		addedSuffix := fmt.Sprintf("%s-%s", resourceType, number)
-		return namegen.ShortName(fmt.Sprintf("%s-%s", basename, addedSuffix), validation.DNS1035LabelMaxLength)
-	}
-	return basename, nil
 }
 
 func availabilityType(highAvailability bool) string {
