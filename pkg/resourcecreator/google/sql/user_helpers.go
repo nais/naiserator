@@ -97,3 +97,10 @@ func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstances *[]nais.C
 	}
 	return nil
 }
+
+func BuildUniquesNameWithPredicate(predicate bool, defaultReturn, basename string) (string, error) {
+	if predicate {
+		return defaultReturn, nil
+	}
+	return namegen.ShortName(basename, validation.DNS1035LabelMaxLength)
+}

@@ -6,9 +6,7 @@ import (
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
-	"github.com/nais/liberator/pkg/namegen"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -125,13 +123,6 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 			},
 		},
 	}, nil
-}
-
-func BuildUniquesNameWithPredicate(predicate bool, defaultReturn, basename string) (string, error) {
-	if predicate {
-		return defaultReturn, nil
-	}
-	return namegen.ShortName(basename, validation.DNS1035LabelMaxLength)
 }
 
 func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, dbName string, cascadingDelete bool, projectId string) (*googlesqlcrd.SQLUser, error) {
