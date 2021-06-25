@@ -47,14 +47,25 @@ func trimPrefix(x string) string {
 	return strings.TrimPrefix(x, "_")
 }
 
-func MergeAndFilterSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) []nais.CloudSqlDatabaseUser {
+func MergeAndFilterDatabaseSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string, dbNum int) ([]nais.CloudSqlDatabaseUser, error) {
 	defaultUser := nais.CloudSqlDatabaseUser{Name: instanceName}
 
-	if dbUsers == nil {
-		return []nais.CloudSqlDatabaseUser{defaultUser}
+	println("yo")
+	println(dbNum != 0)
+
+	if dbNum != 0 {
+		if dbUsers != nil {
+			return removeDuplicates(dbUsers), nil
+		} else {
+			return nil, fmt.Errorf("need to specify users for extra databases, can not have several databases with default user")
+		}
 	}
 
-	return removeDuplicates(append(dbUsers, defaultUser))
+	if dbUsers == nil {
+		return []nais.CloudSqlDatabaseUser{defaultUser}, nil
+	}
+
+	return removeDuplicates(append(dbUsers, defaultUser)), nil
 }
 
 func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDatabaseUser {
@@ -84,8 +95,13 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 
 func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstances *[]nais.CloudSqlInstance, appName string) error {
 	for _, instance := range *naisSqlInstances {
-		for _, db := range instance.Databases {
-			googleSQLUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+		for dbNum, db := range instance.Databases {
+
+			googleSQLUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, instance.Name, dbNum)
+			if err != nil {
+				return err
+			}
+
 			for _, user := range googleSQLUsers {
 				secretName, err := GoogleSQLSecretName(appName, instance.Name, db.Name, user.Name)
 				if err != nil {

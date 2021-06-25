@@ -99,7 +99,7 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
 		DiskSize: DefaultSqlInstanceDiskSize,
-		// This default name will be overridden by CreateDatabase
+		// This default will always be overridden by GoogleSQLDatabase()
 		Databases: []nais.CloudSqlDatabase{{Name: dbName}},
 		Collation: DefaultSqlInstanceCollation,
 	}
@@ -180,7 +180,7 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 	}
 
 	for i, sqlInstance := range *naisSqlInstances {
-		// This could potentially be removed to add possibility for several instances,
+		// This could potentially be removed to add possibility for several instances.
 		if i > 0 {
 			return fmt.Errorf("only one sql instance is supported")
 		}
@@ -200,12 +200,12 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, resourceOptions)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
-		for _, db := range sqlInstance.Databases {
+		for dbNum, db := range sqlInstance.Databases {
 
 			googledb := GoogleSQLDatabase(objectMeta, instance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete)
 			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
-			sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+			sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, instance.Name, dbNum)
 			for _, user := range sqlUsers {
 				googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
 				if err = createSqlUserDBResources(objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId); err != nil {

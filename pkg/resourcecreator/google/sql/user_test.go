@@ -189,9 +189,9 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 		},
 	}
 
-	mergedUsers := google_sql.MergeAndFilterSQLUsers(nil, instance.Name)
+	mergedUsers, _ := google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 0)
 	assert.Equal(t, []nais.CloudSqlDatabaseUser{{Name: instance.Name}}, mergedUsers)
 
-	mergedUsers = google_sql.MergeAndFilterSQLUsers(dbUsers, instance.Name)
+	mergedUsers, _ = google_sql.MergeAndFilterDatabaseSQLUsers(dbUsers, instance.Name, 0)
 	assert.Equal(t, expected, mergedUsers)
 }

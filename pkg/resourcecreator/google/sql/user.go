@@ -129,6 +129,7 @@ func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 	appName := objectMeta.Name
 	baseName := fmt.Sprintf("%s-%s-%s", in.Instance.Name, in.DB.Name, replaceToLowerWithNoPrefix(in.Name))
 	objectDataName, err := BuildUniquesNameWithPredicate(in.isDefault(), in.Instance.Name, baseName)
+
 	if err != nil {
 		return nil, fmt.Errorf("unable to create meatadata: %s", err)
 	}
