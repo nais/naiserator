@@ -190,12 +190,14 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 		},
 	}
 
-	mergedUsers, _ := google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 0)
+	mergedUsers, err := google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 0)
+	assert.NoError(t, err)
 	assert.Equal(t, []nais.CloudSqlDatabaseUser{{Name: instance.Name}}, mergedUsers)
 
-	mergedUsers, _ = google_sql.MergeAndFilterDatabaseSQLUsers(dbUsers, instance.Name, 0)
+	mergedUsers, err = google_sql.MergeAndFilterDatabaseSQLUsers(dbUsers, instance.Name, 0)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, mergedUsers)
 
-	mergedUsers, err := google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 1)
+	mergedUsers, err = google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 1)
 	assert.Error(t, err, fmt.Errorf("must to specify users for extra databases, can not have several databases with default user"))
 }
