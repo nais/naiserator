@@ -40,6 +40,18 @@ func (in GoogleSqlUser) isDefault() bool {
 	return in.Instance.Name == in.Name
 }
 
+func (in GoogleSqlUser) prefixIsSet() bool {
+	return len(in.DB.EnvVarPrefix) > 0
+}
+
+func (in GoogleSqlUser) googleSqlUserPrefix() string {
+	prefix := in.sqlUserEnvPrefix()
+	if in.prefixIsSet() && !in.isDefault() {
+		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trimPrefix(in.Name)))
+	}
+	return prefix
+}
+
 func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
 	if in.prefixIsSet() && in.isDefault() {
 		prefix := in.googleSqlUserPrefix()
@@ -66,23 +78,11 @@ func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix
 	return "", fmt.Errorf("no variable found matching suffix %s", suffix)
 }
 
-func (in GoogleSqlUser) prefixIsSet() bool {
-	return len(in.DB.EnvVarPrefix) > 0
-}
-
 func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
 	}
 	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trimPrefix(in.Name)), googleSQLDatabaseCase(in.DB.Name))
-}
-
-func (in GoogleSqlUser) googleSqlUserPrefix() string {
-	prefix := in.sqlUserEnvPrefix()
-	if in.prefixIsSet() && !in.isDefault() {
-		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trimPrefix(in.Name)))
-	}
-	return prefix
 }
 
 func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
