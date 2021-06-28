@@ -66,7 +66,5 @@ func TestGoogleSqlInstance(t *testing.T) {
 		speca, err = google_sql.CloudSqlInstanceWithDefaults(speca, appa.Name, 1)
 		assert.NoError(t, err)
 		assert.Equal(t, "myapplication-instance-1-36663990", speca.Name)
-		// Not really necessary to test, this will be overridden any day buy required Name in database field.
-		assert.Equal(t, "myapplication-db-1-419be8f9", speca.Databases[0].Name)
 	})
 }
