@@ -199,5 +199,5 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 	assert.Equal(t, expected, mergedUsers)
 
 	mergedUsers, err = google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 1)
-	assert.Error(t, err, fmt.Errorf("must to specify users for extra databases, can not have several databases with default user"))
+	assert.Error(t, err, fmt.Errorf("must specify users for each extra databases, can not have several databases with the default user"))
 }
