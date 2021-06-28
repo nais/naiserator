@@ -90,22 +90,20 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 	return vars
 }
 
-func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstances *[]nais.CloudSqlInstance, appName string) error {
-	for _, instance := range *naisSqlInstances {
-		for dbNum, db := range instance.Databases {
+func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstance nais.CloudSqlInstance, sourceName string) error {
+	for dbNum, db := range naisSqlInstance.Databases {
 
-			googleSQLUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, instance.Name, dbNum)
+		googleSQLUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, naisSqlInstance.Name, dbNum)
+		if err != nil {
+			return err
+		}
+
+		for _, user := range googleSQLUsers {
+			secretName, err := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
 			if err != nil {
 				return err
 			}
-
-			for _, user := range googleSQLUsers {
-				secretName, err := GoogleSQLSecretName(appName, instance.Name, db.Name, user.Name)
-				if err != nil {
-					return err
-				}
-				ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
-			}
+			ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
 		}
 	}
 	return nil

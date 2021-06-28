@@ -182,13 +182,14 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		return nil
 	}
 
+	sourceName := source.GetName()
+
 	for i, sqlInstance := range *naisSqlInstances {
 		// This could potentially be removed to add possibility for several instances.
 		if i > 0 {
 			return fmt.Errorf("only one sql instance is supported")
 		}
 
-		sourceName := source.GetName()
 		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, sourceName, i)
 		if err != nil {
 			return err
@@ -221,14 +222,12 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			}
 		}
 
-		if err = AppendGoogleSQLUserSecretEnvs(ast, naisSqlInstances, sourceName); err != nil {
+		if err := AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName); err != nil {
 			return fmt.Errorf("unable to append sql user secret envs: %s", err)
 		}
 
 		(*naisSqlInstances)[i].Name = sqlInstance.Name
-		for _, instance := range *naisSqlInstances {
-			ast.Containers = append(ast.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))
-		}
+		ast.Containers = append(ast.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))
 	}
 	return nil
 }
