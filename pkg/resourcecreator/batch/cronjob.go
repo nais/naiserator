@@ -16,7 +16,9 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
-	jobSpec, err := CreateJobSpec(naisjob, ast, resourceOptions)
+	restartPolicy := RestartPolicy(naisjob.Spec.RestartPolicy)
+
+	jobSpec, err := CreateJobSpec(naisjob, ast, resourceOptions, restartPolicy)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,39 @@
+config:
+  description: Cronjob restart policy
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: dev-localtest
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    restartPolicy: OnFailure
+
+tests:
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "cronjob with restart policy"
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: "mynaisjob"
+                    restartPolicy: OnFailure
