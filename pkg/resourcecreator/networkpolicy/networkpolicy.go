@@ -4,6 +4,7 @@ import (
 	"net/url"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -116,7 +117,7 @@ func ingressPolicy(options resource.Options, naisAccessPolicyInbound *nais_io_v1
 	}))
 
 	if len(naisAccessPolicyInbound.Rules) > 0 {
-		rules = append(rules, networkPolicyIngressRule(networkPolicyApplicationRules(naisAccessPolicyInbound.Rules, options)...))
+		rules = append(rules, networkPolicyIngressRule(networkPolicyApplicationRules(accesspolicy.ExtractAccessPolicyRules(naisAccessPolicyInbound.Rules), options)...))
 	}
 
 	if len(naisIngresses) > 0 {
