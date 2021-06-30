@@ -82,7 +82,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 	return sqlInstance
 }
 
-func UniqueName(resourceNumber int, defaultReturn, resourceType string) (string, error) {
+func SetInstanceName(resourceNumber int, defaultReturn, resourceType string) (string, error) {
 	number := strconv.Itoa(resourceNumber)
 	suffix := fmt.Sprintf("%s-%s", resourceType, number)
 	basename := fmt.Sprintf("%s-%s", defaultReturn, suffix)
@@ -91,12 +91,6 @@ func UniqueName(resourceNumber int, defaultReturn, resourceType string) (string,
 
 func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string, instanceNumber int) (nais.CloudSqlInstance, error) {
 	var err error
-
-	// Due to the fact that instance.Name is not required, unique name for instances must be generated.
-	instanceName, err := UniqueName(instanceNumber, appName, "instance")
-	if err != nil {
-		return nais.CloudSqlInstance{}, fmt.Errorf("unable to set unique name for instance: %s", err)
-	}
 
 	defaultInstance := nais.CloudSqlInstance{
 		Tier:     DefaultSqlInstanceTier,
@@ -116,7 +110,15 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		instance.AutoBackupHour = util.Intp(DefaultSqlInstanceAutoBackupHour)
 	}
 
-	instance.Name = instanceName
+	// if no instance.Name is specified in spec, we set an unique one, for first instance the name is app.Name
+	if instance.Name == "" ||  instanceNumber > 0 {
+		// Due to the fact that instance.Name is not required, unique name for several instances must be generated.
+		instanceName, err := SetInstanceName(instanceNumber, appName, "instance")
+		if err != nil {
+			return nais.CloudSqlInstance{}, fmt.Errorf("unable to set unique name for instance: %s", err)
+		}
+		instance.Name = instanceName
+	}
 
 	return instance, err
 }
