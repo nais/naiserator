@@ -55,20 +55,21 @@ func TestGoogleSqlInstance(t *testing.T) {
 		assert.Equal(t, maintenanceDay, sqlInstance.Spec.Settings.MaintenanceWindow.Day)
 	})
 
-	t.Run("several of instances produces unique names", func(t *testing.T) {
+	t.Run("several of instances produces unique names considering defaults from spec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
+		naisSpecConfiguredInstanceName := "my-instance"
 
 		spec := nais.CloudSqlInstance{
-			Name: app.Name,
+			Name: naisSpecConfiguredInstanceName,
 			Type: nais.CloudSqlInstanceTypePostgres12,
 		}
 
 		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, "myapplication-instance-1-36663990", spec.Name)
+		assert.Equal(t, "my-instance-instance-1-d313e2e3", spec.Name)
 	})
 
-	t.Run("instance name is set, defaults should be not override", func(t *testing.T) {
+	t.Run("instance name is setInstanceName, defaults should not override", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		naisSpecConfiguredInstanceName := "my-instance"
 
@@ -82,7 +83,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		assert.Equal(t, naisSpecConfiguredInstanceName, spec.Name)
 	})
 
-	t.Run("instance name is not set, defaults should be used for instance name", func(t *testing.T) {
+	t.Run("instance name is not setInstanceName, defaults should be used for instance name", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 
 		spec := nais.CloudSqlInstance{

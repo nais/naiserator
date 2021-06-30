@@ -82,11 +82,30 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 	return sqlInstance
 }
 
-func SetInstanceName(resourceNumber int, defaultReturn, resourceType string) (string, error) {
+func generateInstanceName(resourceNumber int, defaultReturn, resourceType string) (string, error) {
 	number := strconv.Itoa(resourceNumber)
 	suffix := fmt.Sprintf("%s-%s", resourceType, number)
 	basename := fmt.Sprintf("%s-%s", defaultReturn, suffix)
 	return BuildUniquesNameWithPredicate(number == "0", defaultReturn, basename)
+}
+
+func setInstanceName(naisSqlInstance *nais.CloudSqlInstance, instanceNumber int, appName string) (nais.CloudSqlInstance, error) {
+	instanceName, err := generateInstanceName(instanceNumber, appName, "instance")
+	if err != nil {
+		return nais.CloudSqlInstance{}, err
+	}
+
+	if naisSqlInstance.Name == "" {
+		naisSqlInstance.Name = instanceName
+	} else {
+		if instanceNumber > 0 {
+			naisSqlInstance.Name, err = generateInstanceName(instanceNumber, naisSqlInstance.Name, "instance")
+			if err != nil {
+				return nais.CloudSqlInstance{}, err
+			}
+		}
+	}
+	return *naisSqlInstance, nil
 }
 
 func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string, instanceNumber int) (nais.CloudSqlInstance, error) {
@@ -96,7 +115,7 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
 		DiskSize: DefaultSqlInstanceDiskSize,
-		// This default will always be overridden by GoogleSQLDatabase(), need to be set, as databases.Name can not be nil.
+		// This default will always be overridden by GoogleSQLDatabase(), need to be setInstanceName, as databases.Name can not be nil.
 		Databases: []nais.CloudSqlDatabase{{Name: "dummy-name"}},
 		Collation: DefaultSqlInstanceCollation,
 	}
@@ -110,14 +129,9 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		instance.AutoBackupHour = util.Intp(DefaultSqlInstanceAutoBackupHour)
 	}
 
-	// if no instance.Name is specified in spec, we set an unique one, for first instance the name is app.Name
-	if instance.Name == "" ||  instanceNumber > 0 {
-		// Due to the fact that instance.Name is not required, unique name for several instances must be generated.
-		instanceName, err := SetInstanceName(instanceNumber, appName, "instance")
-		if err != nil {
-			return nais.CloudSqlInstance{}, fmt.Errorf("unable to set unique name for instance: %s", err)
-		}
-		instance.Name = instanceName
+	instance, err = setInstanceName(&instance, instanceNumber, appName)
+	if err != nil {
+		return nais.CloudSqlInstance{}, fmt.Errorf("unable to setInstanceName name for instance: %s", err)
 	}
 
 	return instance, err
