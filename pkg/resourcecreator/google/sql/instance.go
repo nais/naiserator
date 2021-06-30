@@ -90,19 +90,19 @@ func generateInstanceName(resourceNumber int, defaultReturn, resourceType string
 }
 
 func setInstanceName(naisSqlInstance *nais.CloudSqlInstance, instanceNumber int, appName string) (nais.CloudSqlInstance, error) {
-	instanceName, err := generateInstanceName(instanceNumber, appName, "instance")
-	if err != nil {
-		return nais.CloudSqlInstance{}, err
-	}
-
 	if naisSqlInstance.Name == "" {
+		instanceName, err := generateInstanceName(instanceNumber, appName, "instance")
+		if err != nil {
+			return nais.CloudSqlInstance{}, err
+		}
 		naisSqlInstance.Name = instanceName
 	} else {
 		if instanceNumber > 0 {
-			naisSqlInstance.Name, err = generateInstanceName(instanceNumber, naisSqlInstance.Name, "instance")
+			instanceName, err := generateInstanceName(instanceNumber, naisSqlInstance.Name, "instance")
 			if err != nil {
 				return nais.CloudSqlInstance{}, err
 			}
+			naisSqlInstance.Name = instanceName
 		}
 	}
 	return *naisSqlInstance, nil
@@ -115,7 +115,7 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
 		DiskSize: DefaultSqlInstanceDiskSize,
-		// This default will always be overridden by GoogleSQLDatabase(), need to be setInstanceName, as databases.Name can not be nil.
+		// This default will always be overridden by GoogleSQLDatabase(), need to be set, as databases.Name can not be nil.
 		Databases: []nais.CloudSqlDatabase{{Name: "dummy-name"}},
 		Collation: DefaultSqlInstanceCollation,
 	}
