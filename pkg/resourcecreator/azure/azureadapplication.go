@@ -41,7 +41,7 @@ func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, nai
 		ObjectMeta: objectMeta,
 		Spec: azureapp.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
-			PreAuthorizedApplications: accesspolicy.RulesWithDefaults(naisAccessPolicy.Inbound.Rules, objectMeta.Namespace, clusterName),
+			PreAuthorizedApplications: accesspolicy.InboundRulesWithDefaults(naisAccessPolicy.Inbound.Rules, objectMeta.Namespace, clusterName),
 			Tenant:                    naisAzure.Application.Tenant,
 			SecretName:                secretName,
 			Claims:                    naisAzure.Application.Claims,
