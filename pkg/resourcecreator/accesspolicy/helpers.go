@@ -13,19 +13,10 @@ func RulesWithDefaults(rules []nais_io_v1.AccessPolicyRule, namespace, clusterNa
 func InboundRulesWithDefaults(rules []nais_io_v1.AccessPolicyInboundRule, namespace, clusterName string) []nais_io_v1.AccessPolicyInboundRule {
 	mangled := make([]nais_io_v1.AccessPolicyInboundRule, len(rules))
 	for i := range rules {
-		rule := rules[i]
-		rule.AccessPolicyRule = ruleWithDefaults(rules[i].AccessPolicyRule, namespace, clusterName)
-		mangled[i] = rule
+		mangled[i] = rules[i]
+		mangled[i].AccessPolicyRule = ruleWithDefaults(rules[i].AccessPolicyRule, namespace, clusterName)
 	}
 	return mangled
-}
-
-func ExtractAccessPolicyRules(rules []nais_io_v1.AccessPolicyInboundRule) []nais_io_v1.AccessPolicyRule {
-	extracted := make([]nais_io_v1.AccessPolicyRule, len(rules))
-	for i := range rules {
-		extracted[i] = rules[i].AccessPolicyRule
-	}
-	return extracted
 }
 
 func ruleWithDefaults(rule nais_io_v1.AccessPolicyRule, namespaceName, clusterName string) nais_io_v1.AccessPolicyRule {
