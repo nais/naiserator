@@ -307,13 +307,13 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
-	// Assert that CNRM annotations are set on namespaces when CNRM support is enabled
-	if app.Spec.GCP != nil && (app.Spec.GCP.SqlInstances != nil || app.Spec.GCP.Permissions != nil) {
-		if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
-			rollout.SetGoogleTeamProjectId(val)
-		} else {
-			return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
-		}
+	// App requests gcp resources, but we're not running in gcp. Can't fulfill request.
+	if app.Spec.GCP != nil && !n.Config.Features.GCP {
+		return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
+	}
+
+	if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
+		rollout.ResourceOptions.GoogleTeamProjectId = val
 	}
 
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
