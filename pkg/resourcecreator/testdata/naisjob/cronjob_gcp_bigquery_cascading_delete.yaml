@@ -63,9 +63,7 @@ tests:
             member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
             role: roles/bigquery.jobUser
             resourceRef:
-              apiVersion: bigquery.cnrm.cloud.google.com/v1beta1
-              kind: BigQueryDataset
-              name: mynaisjob-my-big-query-instance-e391689d
+              kind: Project
 
   - apiVersion: batch/v1beta1
     kind: CronJob
