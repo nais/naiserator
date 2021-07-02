@@ -147,13 +147,14 @@ func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, er
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
-	// App requests gcp resources, but we're not running in gcp. Can't fulfill request.
-	if naisjob.Spec.GCP != nil && !n.Config.Features.GCP {
-		return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", naisjob.GetNamespace())
-	}
-
-	if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
-		rollout.ResourceOptions.GoogleTeamProjectId = val
+	if naisjob.Spec.GCP != nil {
+		// App requests gcp resources, verify we've got a GCP team project ID
+		projectID, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]
+		if !ok {
+			// We're not currently in a team namespace with corresponding GCP team project
+			return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", naisjob.GetNamespace())
+		}
+		rollout.ResourceOptions.GoogleTeamProjectId = projectID
 	}
 
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
