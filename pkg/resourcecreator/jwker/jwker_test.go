@@ -3,13 +3,12 @@ package jwker_test
 import (
 	"testing"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/jwker"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test"
-
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,7 +46,11 @@ func TestJwker(t *testing.T) {
 
 	t.Run("one inbound without cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, "", ""}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
+			{
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: "", Cluster: ""},
+			},
+		}
 		ast := resource.NewAst()
 		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
@@ -61,7 +64,11 @@ func TestJwker(t *testing.T) {
 
 	t.Run("one inbound with cluster/namespace and no outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
+			{
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster},
+			},
+		}
 		ast := resource.NewAst()
 		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
@@ -89,15 +96,15 @@ func TestJwker(t *testing.T) {
 
 	t.Run("multiple inbound and no outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
 			{
-				otherApplication, otherNamespace, otherCluster,
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster},
 			},
 			{
-				otherApplication2, otherNamespace2, "",
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication2, Namespace: otherNamespace2},
 			},
 			{
-				otherApplication3, "", "",
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication3, Namespace: "", Cluster: ""},
 			},
 		}
 		ast := resource.NewAst()
@@ -149,15 +156,15 @@ func TestJwker(t *testing.T) {
 	//
 	t.Run("multiple inbound and multiple outbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyRule{
+		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
 			{
-				otherApplication, otherNamespace, otherCluster,
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster},
 			},
 			{
-				otherApplication2, otherNamespace2, "",
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication2, Namespace: otherNamespace2, Cluster: ""},
 			},
 			{
-				otherApplication3, "", "",
+				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication3, Namespace: "", Cluster: ""},
 			},
 		}
 

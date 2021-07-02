@@ -73,8 +73,8 @@ func networkPolicyEgressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv
 	}
 }
 
-func networkPolicyApplicationRules(rules []nais_io_v1.AccessPolicyRule, options resource.Options) (networkPolicy []networkingv1.NetworkPolicyPeer) {
-	for _, rule := range rules {
+func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, options resource.Options) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+	for _, rule := range rules.GetRules() {
 
 		// non-local access policy rules do not result in network policies
 		if !rule.MatchesCluster(options.ClusterName) {

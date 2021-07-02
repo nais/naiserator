@@ -136,7 +136,8 @@ func TestNetworkPolicy(t *testing.T) {
 	t.Run("all traffic inside namespace sets from rule to empty podspec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
-		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
+		rule := nais_io_v1.AccessPolicyInboundRule{AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: "*"}}
+		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, rule)
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
