@@ -10,8 +10,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options, restartPolicy corev1.RestartPolicy) (batchv1.JobSpec, error) {
-	podSpec, err := pod.CreateSpec(ast, resourceOptions, naisjob.GetName(), restartPolicy)
+func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) (batchv1.JobSpec, error) {
+
+	podSpec, err := pod.CreateSpec(ast, resourceOptions, naisjob.GetName(), RestartPolicy(naisjob.Spec.RestartPolicy))
 	if err != nil {
 		return batchv1.JobSpec{}, err
 	}
@@ -37,9 +38,7 @@ func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions r
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
-	restartPolicy := RestartPolicy(naisjob.Spec.RestartPolicy)
-
-	jobSpec, err := CreateJobSpec(naisjob, ast, resourceOptions, restartPolicy)
+	jobSpec, err := CreateJobSpec(naisjob, ast, resourceOptions)
 	if err != nil {
 		return err
 	}
