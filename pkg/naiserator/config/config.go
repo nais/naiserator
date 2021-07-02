@@ -53,6 +53,7 @@ type Features struct {
 	Azurerator                  bool     `json:"azurerator"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Digdirator                  bool     `json:"digdirator"`
+	GCP                         bool     `json:"gcp"`
 }
 
 type Securelogs struct {
@@ -123,6 +124,7 @@ const (
 	FeaturesAccessPolicyNotAllowedCIDRs = "features.access-policy-not-allowed-cidrs"
 	FeaturesAzurerator                  = "features.azurerator"
 	FeaturesDigdirator                  = "features.digdirator"
+	FeaturesGCP                         = "features.gcp"
 	FeaturesJwker                       = "features.jwker"
 	FeaturesKafkarator                  = "features.kafkarator"
 	FeaturesLinkerd                     = "features.linkerd"
@@ -196,6 +198,7 @@ func init() {
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
+	flag.Bool(FeaturesGCP, false, "running in gcp and enable use of CNRM resources")
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
