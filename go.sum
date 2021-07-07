@@ -300,6 +300,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/nais/liberator v0.0.0-20210701124313-8a7f8608d6fc h1:I+3JN0vzbaBT5ZSCoLrg8/QXX1ikg89W4rCI8ZDuv0M=
 github.com/nais/liberator v0.0.0-20210701124313-8a7f8608d6fc/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
+github.com/nais/liberator v0.0.0-20210707122023-08c73cb7061a h1:J145WJcZvY0KnrPif0lB5lvPN4MJR0kNS0jYMbqfWsA=
+github.com/nais/liberator v0.0.0-20210707122023-08c73cb7061a/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
