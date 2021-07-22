@@ -1,0 +1,38 @@
+config:
+  description: Test default cleanup labels
+
+resourceoptions:
+  Linkerd: true
+  NetworkPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "cleanup has correct defaults"
+        exclude:
+          - .status
+          - .spec
+        resource:
+          metadata:
+            labels:
+              babylon.nais.io/enabled: "true"
+              babylon.nais.io/rollback: "true"
+              babylon.nais.io/grace-period: "24h"
