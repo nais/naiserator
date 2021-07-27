@@ -298,14 +298,6 @@ github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8m
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
-github.com/nais/liberator v0.0.0-20210701124313-8a7f8608d6fc h1:I+3JN0vzbaBT5ZSCoLrg8/QXX1ikg89W4rCI8ZDuv0M=
-github.com/nais/liberator v0.0.0-20210701124313-8a7f8608d6fc/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
-github.com/nais/liberator v0.0.0-20210707122023-08c73cb7061a h1:J145WJcZvY0KnrPif0lB5lvPN4MJR0kNS0jYMbqfWsA=
-github.com/nais/liberator v0.0.0-20210707122023-08c73cb7061a/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
-github.com/nais/liberator v0.0.0-20210722112715-307354f7335e h1:I7PEg1rff36nr0X1oQB7nCXOzS9CK5qaAnLl/K5QpHw=
-github.com/nais/liberator v0.0.0-20210722112715-307354f7335e/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
-github.com/nais/liberator v0.0.0-20210722133831-9b8319dfd09e h1:E5o2+II7QstY3g5aADbjDDvzbw3BxXH8mmvmbmpad/0=
-github.com/nais/liberator v0.0.0-20210722133831-9b8319dfd09e/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
 github.com/nais/liberator v0.0.0-20210727091739-33110929ef66 h1:awNjI61nlMmZ56GcyLaptpkLb4/+JMMn2Yj2FB80f6w=
 github.com/nais/liberator v0.0.0-20210727091739-33110929ef66/go.mod h1:Dw7TPRYZkyLJwwFarV86XIFR5u4ZhEgz2YBuBZkZIhs=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
