@@ -1,0 +1,41 @@
+config:
+  description: Test with cleanup disabled
+
+resourceoptions:
+  Linkerd: true
+  NetworkPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    cleanup:
+      enabled: false
+      gracePeriod: "0h"
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "cleanup is disabled"
+        exclude:
+          - .status
+          - .spec
+        resource:
+          metadata:
+            labels:
+              babylon.nais.io/enabled: "false"
+              babylon.nais.io/rollback: "false"
+              babylon.nais.io/grace-period: "0h"
