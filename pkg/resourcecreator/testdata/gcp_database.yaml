@@ -41,7 +41,7 @@ tests:
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
-    operation: CreateOrUpdate
+    operation: CreateIfNotExists
     match:
       - type: subset
         name: "IAMServiceAccount created in namespace serviceaccounts"
@@ -58,7 +58,7 @@ tests:
             displayName: myapplication
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
-    operation: CreateOrUpdate
+    operation: CreateIfNotExists
     match:
       - type: subset
         name: "IAMPolicy created in namespace serviceaccounts"
