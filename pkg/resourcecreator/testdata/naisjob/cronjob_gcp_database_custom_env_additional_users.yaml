@@ -53,7 +53,6 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -83,7 +82,6 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob-user-two
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -111,7 +109,6 @@ tests:
         name: "custom env - sql user: myapplication"
         resource:
           metadata:
-            name: mynaisjob
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
@@ -135,7 +132,6 @@ tests:
         name: "custom env - sql user: user-two"
         resource:
           metadata:
-            name: user-two
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
