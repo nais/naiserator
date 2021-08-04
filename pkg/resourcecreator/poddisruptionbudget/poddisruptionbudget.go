@@ -13,7 +13,7 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais_io_v1.R
 		return
 	}
 
-	min := intstr.FromInt(naisReplicas.Min)
+	maxUnavailable := intstr.FromInt(1)
 
 	podDisruptionBudget := &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
@@ -22,7 +22,7 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais_io_v1.R
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
-			MinAvailable: &min,
+			MaxUnavailable: &maxUnavailable,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": source.GetName(),
