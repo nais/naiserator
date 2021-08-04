@@ -8,16 +8,16 @@ resourceoptions:
   NumReplicas: 1
 
 input:
-  kind: Naisjob
-  apiVersion: nais.io/v1
+  kind: Application
+  apiVersion: v1alpha1
   metadata:
-    name: mynaisjob
+    name: myapplication
     namespace: mynamespace
     uid: "123456"
     labels:
       team: myteam
   spec:
-    image: navikt/mynaisjob:1.2.3
+    image: navikt/myapplication:1.2.3
     gcp:
       sqlInstances:
         - databases:
@@ -34,18 +34,18 @@ tests:
         resource:
           metadata:
             labels:
-              app: mynaisjob
+              app: myapplication
               team: myteam
             ownerReferences:
-              - apiVersion: v1
-                kind: Naisjob
-                name: mynaisjob
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
                 uid: "123456"
 
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob
+    name: google-sql-myapplication
     match:
       - type: regex
         name: "secret default"
@@ -53,29 +53,29 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob
+            name: google-sql-myapplication
             namespace: mynamespace
             labels:
-              app: mynaisjob
+              app: myapplication
               team: myteam
             ownerReferences:
-              - apiVersion: v1
-                kind: Naisjob
-                name: mynaisjob
+              - kind: Application
+                name: myapplication
                 uid: "123456"
+                apiVersion: v1alpha1
           stringData:
             PWNED_DATABASE: mydb
             PWNED_HOST: 127.0.0.1
             PWNED_PASSWORD: ".{43}"
             PWNED_PORT: "5432"
-            PWNED_URL: postgres://mynaisjob:.{43}@127.0.0.1:5432/mydb
-            PWNED_USERNAME: mynaisjob
+            PWNED_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
+            PWNED_USERNAME: myapplication
           type: Opaque
 
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob-user-two
+    name: google-sql-myapplication-user-two
     match:
       - type: regex
         name: "secret two"
@@ -83,16 +83,16 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob-user-two
+            name: google-sql-myapplication-user-two
             namespace: mynamespace
             labels:
-              app: mynaisjob
+              app: myapplication
               team: myteam
             ownerReferences:
-              - apiVersion: v1
-                kind: Naisjob
-                name: mynaisjob
+              - kind: Application
+                name: myapplication
                 uid: "123456"
+                apiVersion: v1alpha1
           stringData:
             PWNED_USER_TWO_DATABASE: mydb
             PWNED_USER_TWO_HOST: 127.0.0.1
@@ -105,31 +105,31 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob
+    name: myapplication
     match:
       - type: subset
         name: "custom env - sql user: myapplication"
         resource:
           metadata:
-            name: mynaisjob
+            name: myapplication
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
           spec:
             instanceRef:
-              name: mynaisjob
+              name: myapplication
             host: ""
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob
+                  name: google-sql-myapplication
                   key: PWNED_PASSWORD
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob-user-two-48e70ce1
+    name: myapplication-user-two-df860d3e
     match:
       - type: subset
         name: "custom env - sql user: user-two"
@@ -142,10 +142,11 @@ tests:
               cnrm.cloud.google.com/project-id: team-project-id
           spec:
             instanceRef:
-              name: mynaisjob
+              name: myapplication
             host: ""
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob-user-two
+                  name: google-sql-myapplication-user-two
                   key: PWNED_USER_TWO_PASSWORD
+            resourceID: user_two

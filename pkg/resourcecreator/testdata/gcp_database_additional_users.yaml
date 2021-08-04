@@ -155,6 +155,7 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication
                   key: NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD
+
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -178,6 +179,8 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication-user-two
                   key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
+            resourceID: User_two
+
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -201,3 +204,4 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication-user-three3
                   key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD
+            resourceID: _user_three3
