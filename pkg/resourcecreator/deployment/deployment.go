@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"fmt"
+	"strings"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -43,14 +44,18 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 func addCleanupLabels(app *nais_io_v1alpha1.Application, meta metav1.ObjectMeta) metav1.ObjectMeta {
 	if app.Spec.Cleanup == nil {
 		meta.Labels["babylon.nais.io/enabled"] = "true"
-		meta.Labels["babylon.nais.io/rollback"] = "true"
+		meta.Labels["babylon.nais.io/strategy"] = "abort-rollout,downscale"
 		meta.Labels["babylon.nais.io/grace-period"] = "24h"
 
 		return meta
 	}
 
 	meta.Labels["babylon.nais.io/enabled"] = fmt.Sprintf("%t", app.Spec.Cleanup.Enabled)
-	meta.Labels["babylon.nais.io/rollback"] = fmt.Sprintf("%t", app.Spec.Cleanup.Rollback)
+	var strategies []string
+	for _, s := range app.Spec.Cleanup.Strategy {
+		strategies = append(strategies, string(s))
+	}
+	meta.Labels["babylon.nais.io/strategy"] = strings.Join(strategies, ",")
 	meta.Labels["babylon.nais.io/grace-period"] = app.Spec.Cleanup.GracePeriod
 
 	return meta

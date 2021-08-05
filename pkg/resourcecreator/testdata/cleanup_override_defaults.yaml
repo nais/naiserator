@@ -20,7 +20,7 @@ input:
     image: navikt/myapplication:1.2.3
     cleanup:
       enabled: false
-      rollback: false
+      strategy: ["downscale", "abort-rollout"]
       gracePeriod: 12h
 
 tests:
@@ -38,5 +38,5 @@ tests:
           metadata:
             labels:
               babylon.nais.io/enabled: "false"
-              babylon.nais.io/rollback: "false"
+              babylon.nais.io/strategy: "downscale,abort-rollout"
               babylon.nais.io/grace-period: "12h"

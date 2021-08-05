@@ -37,5 +37,5 @@ tests:
           metadata:
             labels:
               babylon.nais.io/enabled: "false"
-              babylon.nais.io/rollback: "false"
+              babylon.nais.io/strategy: ""
               babylon.nais.io/grace-period: "0h"
