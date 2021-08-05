@@ -32,7 +32,7 @@ tests:
           - .spec
         resource:
           metadata:
-            labels:
+            annotations:
               babylon.nais.io/enabled: "true"
               babylon.nais.io/strategy: "abort-rollout,downscale"
               babylon.nais.io/grace-period: "24h"
