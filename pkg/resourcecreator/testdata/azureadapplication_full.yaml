@@ -31,6 +31,7 @@ input:
         claims:
           extra:
             - "NAVident"
+        singlePageApplication: true
     accessPolicy:
       inbound:
         rules:
@@ -117,3 +118,4 @@ tests:
             claims:
               extra:
                 - "NAVident"
+            singlePageApplication: true
