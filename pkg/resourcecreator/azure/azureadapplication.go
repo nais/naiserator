@@ -45,6 +45,7 @@ func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, nai
 			SecretName:                secretName,
 			Claims:                    naisAzure.Application.Claims,
 			SinglePageApplication:     naisAzure.Application.SinglePageApplication,
+			AllowAllUsers:             naisAzure.Application.AllowAllUsers,
 		},
 	}, nil
 }

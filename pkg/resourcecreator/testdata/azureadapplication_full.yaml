@@ -32,6 +32,7 @@ input:
           extra:
             - "NAVident"
         singlePageApplication: true
+        allowAllUsers: true
     accessPolicy:
       inbound:
         rules:
@@ -119,3 +120,4 @@ tests:
               extra:
                 - "NAVident"
             singlePageApplication: true
+            allowAllUsers: true
