@@ -27,7 +27,6 @@ import (
 
 func main() {
 	err := run()
-
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
@@ -142,6 +141,9 @@ func run() error {
 	simpleClient, err := client.New(kconfig, client.Options{
 		Scheme: kscheme,
 	})
+	if err != nil {
+		return err
+	}
 
 	if cfg.DryRun {
 		mgrClient = readonly.NewClient(mgrClient)

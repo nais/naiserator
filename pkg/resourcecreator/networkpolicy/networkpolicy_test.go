@@ -19,7 +19,6 @@ const accessPolicyApp = "allowedAccessApp"
 var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 
 func TestNetworkPolicy(t *testing.T) {
-
 	resourceOptions := resource.NewOptions()
 	resourceOptions.NetworkPolicy = true
 	resourceOptions.AccessPolicyNotAllowedCIDRs = defaultIps
@@ -146,8 +145,8 @@ func TestNetworkPolicy(t *testing.T) {
 		assert.NotNil(t, networkPolicy)
 
 		yamlres, err := yaml.Marshal(networkPolicy)
+		assert.NoError(t, err)
 		assert.NotNil(t, yamlres)
 		assert.Empty(t, networkPolicy.Spec.Ingress[1].From[0].PodSelector)
 	})
-
 }
