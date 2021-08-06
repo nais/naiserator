@@ -108,12 +108,14 @@ func (in GoogleSqlUser) isDefault() bool {
 
 func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName string, cascadingDelete bool, projectId string) (*googlesqlcrd.SQLUser, error) {
 	appName := objectMeta.Name
+
 	objectDataName, err := in.uniqueObjectName()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create meatadata: %s", err)
 	}
 	objectMeta.Name = objectDataName
 	setAnnotations(objectMeta, cascadingDelete, projectId)
+
 	return in.create(objectMeta, secretKeyRefEnvName, appName), nil
 }
 
@@ -126,7 +128,7 @@ func (in GoogleSqlUser) uniqueObjectName() (string, error) {
 }
 
 func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName string) *googlesqlcrd.SQLUser {
-	return &googlesqlcrd.SQLUser{
+	sqluser := &googlesqlcrd.SQLUser{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLUser",
 			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
@@ -144,6 +146,12 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 			},
 		},
 	}
+
+	if !in.isDefault() {
+		sqluser.Spec.ResourceID = in.Name
+	}
+
+	return sqluser
 }
 
 func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectId string) {
