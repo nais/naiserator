@@ -3,7 +3,6 @@ package util
 import (
 	"encoding/base64"
 	"fmt"
-	"math"
 
 	"github.com/nais/liberator/pkg/keygen"
 )
@@ -27,7 +26,7 @@ func StrTrimMiddle(s string, maxlen int) string {
 	if newlen < len(strTrimMiddleTruncate) {
 		return StrTrimRight(s, maxlen)
 	}
-	partlen := int(math.Floor(float64(newlen)) / 2)
+	partlen := newlen / 2
 	return s[:partlen] + strTrimMiddleTruncate + s[len(s)-partlen:]
 }
 
