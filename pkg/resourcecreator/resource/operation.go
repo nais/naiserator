@@ -9,9 +9,9 @@ type OperationType string
 
 const (
 	OperationCreateOrUpdate    OperationType = `CreateOrUpdate`
-	OperationCreateOrRecreate                = `CreateOrRecreate`
-	OperationCreateIfNotExists               = `CreateIfNotExists`
-	OperationDeleteIfExists                  = `CreateDeleteIfExists`
+	OperationCreateOrRecreate  OperationType = `CreateOrRecreate`
+	OperationCreateIfNotExists OperationType = `CreateIfNotExists`
+	OperationDeleteIfExists    OperationType = `CreateDeleteIfExists`
 )
 
 // Operation is the combination of a Kubernetes resource and what operation to perform on it.
