@@ -181,10 +181,8 @@ func linkerdIngresses(source resource.Source, ast *resource.Ast, options resourc
 		return nil
 	}
 
-	if ingresses != nil {
-		for _, ing := range ingresses {
-			ast.AppendOperation(resource.OperationCreateOrUpdate, ing)
-		}
+	for _, ing := range ingresses {
+		ast.AppendOperation(resource.OperationCreateOrUpdate, ing)
 	}
 	return nil
 }

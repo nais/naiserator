@@ -157,7 +157,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 
 	app.Status.CorrelationID = rollout.CorrelationID
 
-	err, retry := n.Sync(ctx, *rollout)
+	retry, err := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
 			app.Status.SynchronizationState = EventRetrying
@@ -237,7 +237,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	return unreferenced, nil
 }
 
-func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (error, bool) {
+func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (bool, error) {
 	for _, fn := range commits {
 		if err := observeDuration(fn); err != nil {
 			retry := false
@@ -246,14 +246,14 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (error
 				retry = true
 			}
 			reason := errors.ReasonForError(err)
-			return fmt.Errorf("persisting resource to Kubernetes: %s: %s", reason, err), retry
+			return retry, fmt.Errorf("persisting resource to Kubernetes: %s: %s", reason, err)
 		}
 		metrics.ResourcesGenerated.Inc()
 	}
-	return nil, false
+	return false, nil
 }
 
-func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (error, bool) {
+func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) {
 	commits := n.ClusterOperations(ctx, rollout)
 	return n.rolloutWithRetryAndMetrics(commits)
 }

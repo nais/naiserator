@@ -20,14 +20,14 @@ const (
 func TestProxyEnvironmentVariables(t *testing.T) {
 	t.Run("Test generation of correct proxy environment variables", func(t *testing.T) {
 		var err error
-		var noProxy = []string{"foo", "bar", "baz"}
+		noProxy := []string{"foo", "bar", "baz"}
 
 		options := resource.Options{}
 		options.Proxy = config.Proxy{
 			Address: httpProxy,
 			Exclude: noProxy,
 		}
-		envVars := make([]corev1.EnvVar, 0)
+		var envVars []corev1.EnvVar
 		envVars, err = proxyopts.EnvironmentVariables(options)
 		nprox := strings.Join(noProxy, ",")
 		assert.NoError(t, err)
