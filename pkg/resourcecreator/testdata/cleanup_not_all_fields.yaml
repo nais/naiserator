@@ -35,7 +35,7 @@ tests:
           - .spec
         resource:
           metadata:
-            labels:
+            annotations:
               babylon.nais.io/enabled: "false"
               babylon.nais.io/strategy: ""
               babylon.nais.io/grace-period: "0h"

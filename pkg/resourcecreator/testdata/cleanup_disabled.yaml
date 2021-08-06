@@ -34,5 +34,5 @@ tests:
           - .spec
         resource:
           metadata:
-            labels:
+            annotations:
               babylon.nais.io/enabled: "false"
