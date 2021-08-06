@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	azureapp "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -21,7 +20,7 @@ const (
 	applicationDefaultCallbackPath = "/oauth2/callback"
 )
 
-func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, naisIngress []nais_io_v1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy, clusterName string) (*azureapp.AzureAdApplication, error) {
+func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, naisIngress []nais_io_v1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy, clusterName string) (*nais_io_v1.AzureAdApplication, error) {
 	replyURLs := naisAzure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
@@ -30,16 +29,16 @@ func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, nai
 
 	secretName, err := azureSecretName(objectMeta.Name)
 	if err != nil {
-		return &azureapp.AzureAdApplication{}, err
+		return &nais_io_v1.AzureAdApplication{}, err
 	}
 
-	return &azureapp.AzureAdApplication{
+	return &nais_io_v1.AzureAdApplication{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "AzureAdApplication",
 			APIVersion: "nais.io/v1",
 		},
 		ObjectMeta: objectMeta,
-		Spec: azureapp.AzureAdApplicationSpec{
+		Spec: nais_io_v1.AzureAdApplicationSpec{
 			ReplyUrls:                 mapReplyURLs(replyURLs),
 			PreAuthorizedApplications: accesspolicy.InboundRulesWithDefaults(naisAccessPolicy.Inbound.Rules, objectMeta.Namespace, clusterName),
 			Tenant:                    naisAzure.Application.Tenant,
@@ -49,8 +48,8 @@ func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, nai
 	}, nil
 }
 
-func mapReplyURLs(urls []string) []azureapp.AzureAdReplyUrl {
-	maps := make([]azureapp.AzureAdReplyUrl, len(urls))
+func mapReplyURLs(urls []string) []nais_io_v1.AzureAdReplyUrl {
+	maps := make([]nais_io_v1.AzureAdReplyUrl, len(urls))
 	for i := range urls {
 		maps[i].Url = urls[i]
 	}
