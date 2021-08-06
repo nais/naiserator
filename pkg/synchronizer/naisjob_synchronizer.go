@@ -76,7 +76,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
 
 	naisjob.Status.CorrelationID = rollout.CorrelationID
 
-	err, retry := n.Sync(ctx, *rollout)
+	retry, err := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
 			naisjob.Status.SynchronizationState = EventRetrying
