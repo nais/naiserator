@@ -54,7 +54,7 @@ func MergeAndFilterDatabaseSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanc
 		if dbUsers != nil {
 			return removeDuplicates(dbUsers), nil
 		} else {
-			return nil, fmt.Errorf("must to specify users for extra databases, can not have several databases with default user")
+			return nil, fmt.Errorf("must to specify users for extra databases, can not have multiple databases with default user")
 		}
 	}
 
