@@ -13,6 +13,7 @@ import (
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/utils/pointer"
 )
 
 func CreateDataset(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, bigQueryDatasets []nais_io_v1.CloudBigQueryDataset, serviceAccountName string) error {
@@ -52,9 +53,8 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_bigquery_cr
 			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(serviceAccountName, googleProjectId)),
 			Role:   "roles/bigquery.jobUser",
 			ResourceRef: google_iam_crd.ResourceRef{
-				ApiVersion: bigqueryDataset.APIVersion,
-				Kind:       bigqueryDataset.Kind,
-				Name:       &bigqueryDataset.Name,
+				Kind: "Project",
+				Name: pointer.StringPtr(""),
 			},
 		},
 	}
@@ -76,7 +76,7 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 	objectMeta.Name = shortName
 
 	cascadingDeleteAnnotationValue := "false"
-	if bigQuerySpec.CascadingDelete == true {
+	if bigQuerySpec.CascadingDelete {
 		cascadingDeleteAnnotationValue = "true"
 	}
 	util.SetAnnotation(&objectMeta, google.CascadingDeleteAnnotation, cascadingDeleteAnnotationValue)

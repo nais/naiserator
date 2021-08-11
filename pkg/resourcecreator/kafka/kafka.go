@@ -134,6 +134,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 				},
 			}).
 			Build()
+		aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 	}
 }

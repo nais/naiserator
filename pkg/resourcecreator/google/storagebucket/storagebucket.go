@@ -15,7 +15,7 @@ import (
 )
 
 func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
-	objectMeta.Name = fmt.Sprintf("%s", bucket.Name)
+	objectMeta.Name = bucket.Name
 	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
 
 	if !bucket.CascadingDelete {

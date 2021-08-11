@@ -27,7 +27,6 @@ import (
 
 func main() {
 	err := run()
-
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
@@ -134,7 +133,7 @@ func run() error {
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 
-	if len(resourceOptions.GoogleProjectId) > 0 && len(resourceOptions.GatewayMappings) == 0 {
+	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
 	}
 
@@ -142,6 +141,9 @@ func run() error {
 	simpleClient, err := client.New(kconfig, client.Options{
 		Scheme: kscheme,
 	})
+	if err != nil {
+		return err
+	}
 
 	if cfg.DryRun {
 		mgrClient = readonly.NewClient(mgrClient)

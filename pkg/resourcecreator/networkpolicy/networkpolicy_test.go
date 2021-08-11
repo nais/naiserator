@@ -19,7 +19,6 @@ const accessPolicyApp = "allowedAccessApp"
 var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 
 func TestNetworkPolicy(t *testing.T) {
-
 	resourceOptions := resource.NewOptions()
 	resourceOptions.NetworkPolicy = true
 	resourceOptions.AccessPolicyNotAllowedCIDRs = defaultIps
@@ -136,7 +135,8 @@ func TestNetworkPolicy(t *testing.T) {
 	t.Run("all traffic inside namespace sets from rule to empty podspec", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
-		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, nais_io_v1.AccessPolicyRule{Application: "*"})
+		rule := nais_io_v1.AccessPolicyInboundRule{AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: "*"}}
+		app.Spec.AccessPolicy.Inbound.Rules = append(app.Spec.AccessPolicy.Inbound.Rules, rule)
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
@@ -145,8 +145,8 @@ func TestNetworkPolicy(t *testing.T) {
 		assert.NotNil(t, networkPolicy)
 
 		yamlres, err := yaml.Marshal(networkPolicy)
+		assert.NoError(t, err)
 		assert.NotNil(t, yamlres)
 		assert.Empty(t, networkPolicy.Spec.Ingress[1].From[0].PodSelector)
 	})
-
 }

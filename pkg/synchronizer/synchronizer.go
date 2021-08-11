@@ -157,7 +157,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 
 	app.Status.CorrelationID = rollout.CorrelationID
 
-	err, retry := n.Sync(ctx, *rollout)
+	retry, err := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
 			app.Status.SynchronizationState = EventRetrying
@@ -237,7 +237,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	return unreferenced, nil
 }
 
-func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (error, bool) {
+func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (bool, error) {
 	for _, fn := range commits {
 		if err := observeDuration(fn); err != nil {
 			retry := false
@@ -246,14 +246,14 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (error
 				retry = true
 			}
 			reason := errors.ReasonForError(err)
-			return fmt.Errorf("persisting resource to Kubernetes: %s: %s", reason, err), retry
+			return retry, fmt.Errorf("persisting resource to Kubernetes: %s: %s", reason, err)
 		}
 		metrics.ResourcesGenerated.Inc()
 	}
-	return nil, false
+	return false, nil
 }
 
-func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (error, bool) {
+func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) {
 	commits := n.ClusterOperations(ctx, rollout)
 	return n.rolloutWithRetryAndMetrics(commits)
 }
@@ -307,13 +307,14 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
-	// Assert that CNRM annotations are set on namespaces when CNRM support is enabled
-	if app.Spec.GCP != nil && (app.Spec.GCP.SqlInstances != nil || app.Spec.GCP.Permissions != nil) {
-		if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
-			rollout.SetGoogleTeamProjectId(val)
-		} else {
+	if app.Spec.GCP != nil {
+		// App requests gcp resources, verify we've got a GCP team project ID
+		projectID, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]
+		if !ok {
+			// We're not currently in a team namespace with corresponding GCP team project
 			return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
 		}
+		rollout.ResourceOptions.GoogleTeamProjectId = projectID
 	}
 
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled

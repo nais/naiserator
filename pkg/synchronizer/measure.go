@@ -10,7 +10,7 @@ import (
 func observeDuration(fun func() error) error {
 	timer := time.Now()
 	defer func() {
-		used := time.Now().Sub(timer)
+		used := time.Since(timer)
 		metrics.KubernetesResourceWriteDuration.Observe(used.Seconds())
 	}()
 	return fun()

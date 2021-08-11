@@ -86,9 +86,7 @@ func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 }
 
 func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
-	var prefix string
-
-	prefix = in.googleSqlUserPrefix()
+	prefix := in.googleSqlUserPrefix()
 
 	return map[string]string{
 		prefix + googleSQLHostSuffix:     googleSQLPostgresHost,

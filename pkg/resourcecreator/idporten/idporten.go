@@ -53,71 +53,75 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 	}, nil
 }
 
-func validateIngresses(ingresser []nais_io_v1.Ingress) error {
-	if len(ingresser) == 0 {
+func validateIngresses(ingresses []nais_io_v1.Ingress) error {
+	if len(ingresses) == 0 {
 		return fmt.Errorf("you must specify an ingress to be able to use the idporten integration")
 	}
 
-	if len(ingresser) > 1 {
+	if len(ingresses) > 1 {
 		return fmt.Errorf("cannot have more than one ingress when using the idporten integration")
 	}
 	return nil
 }
 
-func validateRedirectURI(idPorten *nais_io_v1.IDPorten, ingresser []nais_io_v1.Ingress) error {
-	ingress := ingresser[0]
+func validateRedirectURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) error {
+	ingress := ingresses[0]
 	redirectURI := idPorten.RedirectURI
 
 	if len(redirectURI) == 0 {
 		return nil
 	}
 
-	if !strings.HasPrefix(redirectURI, string(ingress)) {
+	if !strings.HasPrefix(string(redirectURI), string(ingress)) {
 		return fmt.Errorf("redirect URI ('%s') must be a subpath of the ingress ('%s')", redirectURI, ingress)
 	}
 
-	if !strings.HasPrefix(redirectURI, "https://") {
+	if !strings.HasPrefix(string(redirectURI), "https://") {
 		return fmt.Errorf("redirect URI must start with https://")
 	}
 	return nil
 }
 
-func redirectURI(idPorten *nais_io_v1.IDPorten, ingresser []nais_io_v1.Ingress) (redirectURI string) {
+func redirectURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) (redirectURI nais_io_v1.IDPortenURI) {
 	redirectURI = idPorten.RedirectURI
 
 	if len(idPorten.RedirectURI) == 0 {
-		redirectURI = util.AppendPathToIngress(ingresser[0], clientDefaultCallbackPath)
+		redirectURI = idportenURI(ingresses, clientDefaultCallbackPath)
 	}
 
 	if len(idPorten.RedirectPath) > 0 {
-		redirectURI = util.AppendPathToIngress(ingresser[0], idPorten.RedirectPath)
+		redirectURI = idportenURI(ingresses, idPorten.RedirectPath)
 	}
 
 	return
 }
 
-func frontchannelLogoutURI(idPorten *nais_io_v1.IDPorten, ingresser []nais_io_v1.Ingress) (frontchannelLogoutURI string) {
+func frontchannelLogoutURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) (frontchannelLogoutURI nais_io_v1.IDPortenURI) {
 	frontchannelLogoutURI = idPorten.FrontchannelLogoutURI
 
 	if len(idPorten.FrontchannelLogoutURI) == 0 {
-		frontchannelLogoutURI = util.AppendPathToIngress(ingresser[0], clientDefaultLogoutPath)
+		frontchannelLogoutURI = idportenURI(ingresses, clientDefaultLogoutPath)
 	}
 
 	if len(idPorten.FrontchannelLogoutPath) > 0 {
-		frontchannelLogoutURI = util.AppendPathToIngress(ingresser[0], idPorten.FrontchannelLogoutPath)
+		frontchannelLogoutURI = idportenURI(ingresses, idPorten.FrontchannelLogoutPath)
 	}
 
 	return
 }
 
-func postLogoutRedirectURIs(idPorten *nais_io_v1.IDPorten) (postLogoutRedirectURIs []string) {
+func postLogoutRedirectURIs(idPorten *nais_io_v1.IDPorten) (postLogoutRedirectURIs []nais_io_v1.IDPortenURI) {
 	postLogoutRedirectURIs = idPorten.PostLogoutRedirectURIs
 
 	if len(idPorten.PostLogoutRedirectURIs) == 0 {
-		postLogoutRedirectURIs = []string{}
+		postLogoutRedirectURIs = make([]nais_io_v1.IDPortenURI, 0)
 	}
 
 	return
+}
+
+func idportenURI(ingresses []nais_io_v1.Ingress, path string) nais_io_v1.IDPortenURI {
+	return nais_io_v1.IDPortenURI(util.AppendPathToIngress(ingresses[0], path))
 }
 
 func idPortenSecretName(name string) (string, error) {

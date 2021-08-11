@@ -2,15 +2,17 @@ package deployment
 
 import (
 	"fmt"
+	"strings"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 )
 
 func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) error {
@@ -24,6 +26,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
+	objectMeta = addCleanupLabels(app, objectMeta)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -36,6 +39,26 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	ast.AppendOperation(resource.OperationCreateOrUpdate, deployment)
 
 	return nil
+}
+
+func addCleanupLabels(app *nais_io_v1alpha1.Application, meta metav1.ObjectMeta) metav1.ObjectMeta {
+	if app.Spec.Cleanup == nil {
+		meta.Annotations["babylon.nais.io/enabled"] = "true"
+		meta.Annotations["babylon.nais.io/strategy"] = "abort-rollout,downscale"
+		meta.Annotations["babylon.nais.io/grace-period"] = "24h"
+
+		return meta
+	}
+
+	meta.Annotations["babylon.nais.io/enabled"] = fmt.Sprintf("%t", app.Spec.Cleanup.Enabled)
+	var strategies []string
+	for _, s := range app.Spec.Cleanup.Strategy {
+		strategies = append(strategies, string(s))
+	}
+	meta.Annotations["babylon.nais.io/strategy"] = strings.Join(strategies, ",")
+	meta.Annotations["babylon.nais.io/grace-period"] = app.Spec.Cleanup.GracePeriod
+
+	return meta
 }
 
 func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {

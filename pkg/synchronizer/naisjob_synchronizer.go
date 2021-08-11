@@ -76,7 +76,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
 
 	naisjob.Status.CorrelationID = rollout.CorrelationID
 
-	err, retry := n.Sync(ctx, *rollout)
+	retry, err := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
 			naisjob.Status.SynchronizationState = EventRetrying
@@ -147,13 +147,14 @@ func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, er
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
-	// Assert that CNRM annotations are set on namespaces when CNRM support is enabled
-	if naisjob.Spec.GCP != nil && (naisjob.Spec.GCP.SqlInstances != nil || naisjob.Spec.GCP.Permissions != nil) {
-		if val, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]; ok {
-			rollout.SetGoogleTeamProjectId(val)
-		} else {
+	if naisjob.Spec.GCP != nil {
+		// App requests gcp resources, verify we've got a GCP team project ID
+		projectID, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]
+		if !ok {
+			// We're not currently in a team namespace with corresponding GCP team project
 			return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", naisjob.GetNamespace())
 		}
+		rollout.ResourceOptions.GoogleTeamProjectId = projectID
 	}
 
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled

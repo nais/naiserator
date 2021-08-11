@@ -22,8 +22,8 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		Value: resourceOptions.GoogleTeamProjectId,
 	})
 
-	ast.AppendOperation(resource.OperationCreateOrUpdate, &googleServiceAccount)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, &googleServiceAccountBinding)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, &googleServiceAccount)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, &googleServiceAccountBinding)
 
 	if naisGCP != nil {
 		google_storagebucket.Create(source, ast, resourceOptions, googleServiceAccount, naisGCP.Buckets)
