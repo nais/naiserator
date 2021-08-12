@@ -2,7 +2,6 @@ package google_sql
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -82,33 +81,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 	return sqlInstance
 }
 
-func generateInstanceName(resourceNumber int, defaultReturn, resourceType string) (string, error) {
-	number := strconv.Itoa(resourceNumber)
-	suffix := fmt.Sprintf("%s-%s", resourceType, number)
-	basename := fmt.Sprintf("%s-%s", defaultReturn, suffix)
-	return BuildUniquesNameWithPredicate(number == "0", defaultReturn, basename)
-}
-
-func setInstanceName(naisSqlInstance *nais.CloudSqlInstance, instanceNumber int, appName string) (nais.CloudSqlInstance, error) {
-	if naisSqlInstance.Name == "" {
-		instanceName, err := generateInstanceName(instanceNumber, appName, "instance")
-		if err != nil {
-			return nais.CloudSqlInstance{}, err
-		}
-		naisSqlInstance.Name = instanceName
-	} else {
-		if instanceNumber > 0 {
-			instanceName, err := generateInstanceName(instanceNumber, naisSqlInstance.Name, "instance")
-			if err != nil {
-				return nais.CloudSqlInstance{}, err
-			}
-			naisSqlInstance.Name = instanceName
-		}
-	}
-	return *naisSqlInstance, nil
-}
-
-func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string, instanceNumber int) (nais.CloudSqlInstance, error) {
+func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string) (nais.CloudSqlInstance, error) {
 	var err error
 
 	defaultInstance := nais.CloudSqlInstance{
@@ -129,7 +102,10 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		instance.AutoBackupHour = util.Intp(DefaultSqlInstanceAutoBackupHour)
 	}
 
-	instance, err = setInstanceName(&instance, instanceNumber, appName)
+	if instance.Name == "" {
+		instance.Name = appName
+	}
+
 	if err != nil {
 		return nais.CloudSqlInstance{}, fmt.Errorf("unable to setInstanceName name for instance: %s", err)
 	}
@@ -179,7 +155,7 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 
 	secretName, err := GoogleSQLSecretName(appName, googleSqlUser.Instance.Name, googleSqlUser.DB.Name, googleSqlUser.Name)
 	if err != nil {
-		return fmt.Errorf("unable to createResources sql secret name: %s", err)
+		return fmt.Errorf("unable to create sql secret name: %s", err)
 	}
 
 	scrt := secret.OpaqueSecret(objectMeta, secretName, vars)
@@ -187,7 +163,7 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 
 	sqlUser, err := googleSqlUser.Create(objectMeta, secretKeyRefEnvName, googleSqlUser.DB.Name, cascadingDelete, googleTeamProjectId)
 	if err != nil {
-		return fmt.Errorf("unable to createResources sql user: %s", err)
+		return fmt.Errorf("unable to create sql user: %s", err)
 	}
 	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
 	return nil
@@ -206,7 +182,7 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			return fmt.Errorf("only one sql instance is supported")
 		}
 
-		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, sourceName, i)
+		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, sourceName)
 		if err != nil {
 			return err
 		}
@@ -231,7 +207,7 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			}
 
 			for _, user := range sqlUsers {
-				googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
+				googleSqlUser := SetupGoogleSqlUser(user.Name, &db, instance)
 				if err = createSqlUserDBResources(objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId); err != nil {
 					return err
 				}

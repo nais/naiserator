@@ -18,7 +18,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		Name: app.Name,
 		Type: "POSTGRES_11",
 	}
-	spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 0)
+	spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 	assert.NoError(t, err)
 
 	projectId := "projectid"
@@ -47,38 +47,12 @@ func TestGoogleSqlInstance(t *testing.T) {
 				Hour: &maintenanceHour,
 			},
 		}
-		spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 0)
+		spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
 		sqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, projectId)
 		assert.Equal(t, "00:00", sqlInstance.Spec.Settings.BackupConfiguration.StartTime, "setting backup hour to 0 yields 00:00 as start time")
 		assert.Equal(t, maintenanceHour, sqlInstance.Spec.Settings.MaintenanceWindow.Hour)
 		assert.Equal(t, maintenanceDay, sqlInstance.Spec.Settings.MaintenanceWindow.Day)
-	})
-
-	t.Run("several of instances produces unique names considering defaults from spec", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		naisSpecConfiguredInstanceName := "my-instance"
-
-		spec := nais.CloudSqlInstance{
-			Name: naisSpecConfiguredInstanceName,
-			Type: nais.CloudSqlInstanceTypePostgres12,
-		}
-
-		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 1)
-		assert.NoError(t, err)
-		assert.Equal(t, "my-instance-instance-1-d313e2e3", spec.Name)
-	})
-
-	t.Run("several of instances produces unique names use defaults", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-
-		spec := nais.CloudSqlInstance{
-			Type: nais.CloudSqlInstanceTypePostgres12,
-		}
-
-		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 1)
-		assert.NoError(t, err)
-		assert.Equal(t, "myapplication-instance-1-36663990", spec.Name)
 	})
 
 	t.Run("instance name is setInstanceName, defaults should not override", func(t *testing.T) {
@@ -90,7 +64,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 			Type: nais.CloudSqlInstanceTypePostgres12,
 		}
 
-		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 0)
+		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
 		assert.Equal(t, naisSpecConfiguredInstanceName, spec.Name)
 	})
@@ -102,7 +76,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 			Type: nais.CloudSqlInstanceTypePostgres12,
 		}
 
-		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name, 0)
+		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
 		assert.Equal(t, app.Name, spec.Name)
 	})
