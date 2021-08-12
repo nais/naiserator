@@ -27,6 +27,14 @@ const (
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
 )
 
+func availabilityType(highAvailability bool) string {
+	if highAvailability {
+		return AvailabilityTypeRegional
+	} else {
+		return AvailabilityTypeZonal
+	}
+}
+
 func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
@@ -77,11 +85,11 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 	var err error
 
 	defaultInstance := nais.CloudSqlInstance{
-		Name:      appName,
-		Tier:      DefaultSqlInstanceTier,
-		DiskType:  DefaultSqlInstanceDiskType,
-		DiskSize:  DefaultSqlInstanceDiskSize,
-		Databases: []nais.CloudSqlDatabase{{Name: appName}},
+		Tier:     DefaultSqlInstanceTier,
+		DiskType: DefaultSqlInstanceDiskType,
+		DiskSize: DefaultSqlInstanceDiskSize,
+		// This default will always be overridden by GoogleSQLDatabase(), need to be set, as databases.Name can not be nil.
+		Databases: []nais.CloudSqlDatabase{{Name: "dummy-name"}},
 		Collation: DefaultSqlInstanceCollation,
 	}
 
@@ -94,18 +102,18 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		instance.AutoBackupHour = util.Intp(DefaultSqlInstanceAutoBackupHour)
 	}
 
+	if instance.Name == "" {
+		instance.Name = appName
+	}
+
+	if err != nil {
+		return nais.CloudSqlInstance{}, fmt.Errorf("unable to setInstanceName name for instance: %s", err)
+	}
+
 	return instance, err
 }
 
-func availabilityType(highAvailability bool) string {
-	if highAvailability {
-		return AvailabilityTypeRegional
-	} else {
-		return AvailabilityTypeZonal
-	}
-}
-
-func instanceIamPolicyMember(source resource.Source, resourceName, googleProjectId, googleTeamProjectId string) *google_iam_crd.IAMPolicyMember {
+func instanceIamPolicyMember(source resource.Source, resourceName string, options resource.Options) *google_iam_crd.IAMPolicyMember {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
@@ -115,7 +123,7 @@ func instanceIamPolicyMember(source resource.Source, resourceName, googleProject
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), options.GoogleProjectId)),
 			Role:   "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
@@ -124,9 +132,41 @@ func instanceIamPolicyMember(source resource.Source, resourceName, googleProject
 		},
 	}
 
-	util.SetAnnotation(policy, google.ProjectIdAnnotation, googleTeamProjectId)
+	util.SetAnnotation(policy, google.ProjectIdAnnotation, options.GoogleTeamProjectId)
 
 	return policy
+}
+
+func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, googleSqlUser GoogleSqlUser, cascadingDelete bool, appName, googleTeamProjectId string) error {
+	vars := make(map[string]string)
+
+	password, err := util.GeneratePassword()
+	if err != nil {
+		return err
+	}
+
+	env := googleSqlUser.CreateUserEnvVars(password)
+	vars = MapEnvToVars(env, vars)
+
+	secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
+	if err != nil {
+		return fmt.Errorf("unable to assign sql password: %s", err)
+	}
+
+	secretName, err := GoogleSQLSecretName(appName, googleSqlUser.Instance.Name, googleSqlUser.DB.Name, googleSqlUser.Name)
+	if err != nil {
+		return fmt.Errorf("unable to create sql secret name: %s", err)
+	}
+
+	scrt := secret.OpaqueSecret(objectMeta, secretName, vars)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, scrt)
+
+	sqlUser, err := googleSqlUser.Create(objectMeta, secretKeyRefEnvName, googleSqlUser.DB.Name, cascadingDelete, googleTeamProjectId)
+	if err != nil {
+		return fmt.Errorf("unable to create sql user: %s", err)
+	}
+	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
+	return nil
 }
 
 func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisSqlInstances *[]nais.CloudSqlInstance) error {
@@ -134,66 +174,51 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		return nil
 	}
 
+	sourceName := source.GetName()
+
 	for i, sqlInstance := range *naisSqlInstances {
+		// This could potentially be removed to add possibility for several instances.
 		if i > 0 {
 			return fmt.Errorf("only one sql instance is supported")
 		}
 
-		// TODO: name defaulting will break with more than one instance
-		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, source.GetName())
+		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, sourceName)
 		if err != nil {
 			return err
 		}
 
-		instance := GoogleSqlInstance(resource.CreateObjectMeta(source), sqlInstance, resourceOptions.GoogleTeamProjectId)
+		objectMeta := resource.CreateObjectMeta(source)
+		googleTeamProjectId := resourceOptions.GoogleTeamProjectId
+
+		instance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, instance)
 
-		iamPolicyMember := instanceIamPolicyMember(source, sqlInstance.Name, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, resourceOptions)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
-		for _, db := range sqlInstance.Databases {
-			sqlUsers := MergeAndFilterSQLUsers(db.Users, instance.Name)
+		for dbNum, db := range sqlInstance.Databases {
 
-			googledb := GoogleSQLDatabase(resource.CreateObjectMeta(source), db, sqlInstance, resourceOptions.GoogleTeamProjectId)
+			googledb := GoogleSQLDatabase(objectMeta, instance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete)
 			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
+			sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, instance.Name, dbNum)
+			if err != nil {
+				return err
+			}
+
 			for _, user := range sqlUsers {
-				vars := make(map[string]string)
-
-				googleSqlUser := SetupNewGoogleSqlUser(user.Name, &db, instance)
-
-				password, err := util.GeneratePassword()
-				if err != nil {
+				googleSqlUser := SetupGoogleSqlUser(user.Name, &db, instance)
+				if err = createSqlUserDBResources(objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId); err != nil {
 					return err
 				}
-
-				env := googleSqlUser.CreateUserEnvVars(password)
-				vars = MapEnvToVars(env, vars)
-
-				secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
-				if err != nil {
-					return fmt.Errorf("unable to assign sql password: %s", err)
-				}
-
-				scrt := secret.OpaqueSecret(resource.CreateObjectMeta(source), GoogleSQLSecretName(source.GetName(), googleSqlUser.Instance.Name, googleSqlUser.Name), vars)
-				ast.AppendOperation(resource.OperationCreateIfNotExists, scrt)
-
-				sqlUser, err := googleSqlUser.Create(resource.CreateObjectMeta(source), secretKeyRefEnvName, sqlInstance.CascadingDelete, resourceOptions.GoogleTeamProjectId)
-				if err != nil {
-					return fmt.Errorf("unable to create sql user: %s", err)
-				}
-				ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
 			}
 		}
 
-		// FIXME: take into account when refactoring default values
 		(*naisSqlInstances)[i].Name = sqlInstance.Name
-
-		AppendGoogleSQLUserSecretEnvs(ast, naisSqlInstances, source.GetName())
-		for _, instance := range *naisSqlInstances {
-			ast.Containers = append(ast.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))
+		if err := AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName); err != nil {
+			return fmt.Errorf("unable to append sql user secret envs: %s", err)
 		}
+		ast.Containers = append(ast.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))
 	}
-
 	return nil
 }

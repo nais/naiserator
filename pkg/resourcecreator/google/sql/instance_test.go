@@ -55,4 +55,29 @@ func TestGoogleSqlInstance(t *testing.T) {
 		assert.Equal(t, maintenanceDay, sqlInstance.Spec.Settings.MaintenanceWindow.Day)
 	})
 
+	t.Run("instance name is setInstanceName, defaults should not override", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		naisSpecConfiguredInstanceName := "my-instance"
+
+		spec := nais.CloudSqlInstance{
+			Name: naisSpecConfiguredInstanceName,
+			Type: nais.CloudSqlInstanceTypePostgres12,
+		}
+
+		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
+		assert.NoError(t, err)
+		assert.Equal(t, naisSpecConfiguredInstanceName, spec.Name)
+	})
+
+	t.Run("instance name is not setInstanceName, defaults should be used for instance name", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+
+		spec := nais.CloudSqlInstance{
+			Type: nais.CloudSqlInstanceTypePostgres12,
+		}
+
+		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
+		assert.NoError(t, err)
+		assert.Equal(t, app.Name, spec.Name)
+	})
 }

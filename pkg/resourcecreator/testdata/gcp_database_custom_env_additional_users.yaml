@@ -53,6 +53,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
+            name: google-sql-myapplication
             namespace: mynamespace
             labels:
               app: myapplication
@@ -74,7 +75,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-myapplication-user-two
+    name: google-sql-myapplication-mydb-user-two-8bc847b6
     match:
       - type: regex
         name: "secret two"
@@ -82,6 +83,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
+            name: google-sql-myapplication-mydb-user-two-8bc847b6
             namespace: mynamespace
             labels:
               app: myapplication
@@ -109,6 +111,7 @@ tests:
         name: "custom env - sql user: myapplication"
         resource:
           metadata:
+            name: myapplication
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
@@ -122,16 +125,16 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication
                   key: PWNED_PASSWORD
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication-user-two-df860d3e
+    name: myapplication-mydb-user-two-8dedc4e8
     match:
       - type: subset
         name: "custom env - sql user: user-two"
         resource:
           metadata:
+            name: user-two
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
@@ -143,6 +146,5 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-myapplication-user-two
+                  name: google-sql-myapplication-mydb-user-two-8bc847b6
                   key: PWNED_USER_TWO_PASSWORD
-            resourceID: user_two

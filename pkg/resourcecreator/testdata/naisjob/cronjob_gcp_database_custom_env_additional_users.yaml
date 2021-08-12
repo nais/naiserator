@@ -53,6 +53,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
+            name: google-sql-mynaisjob
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -74,7 +75,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob-user-two
+    name: google-sql-mynaisjob-mydb-user-two-4c6e7100
     match:
       - type: regex
         name: "secret two"
@@ -82,6 +83,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
+            name: google-sql-mynaisjob-mydb-user-two-4c6e7100
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -109,6 +111,7 @@ tests:
         name: "custom env - sql user: myapplication"
         resource:
           metadata:
+            name: mynaisjob
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
@@ -126,12 +129,13 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob-user-two-48e70ce1
+    name: mynaisjob-mydb-user-two-49e1f6cf
     match:
       - type: subset
         name: "custom env - sql user: user-two"
         resource:
           metadata:
+            name: user-two
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
@@ -143,6 +147,5 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob-user-two
+                  name: google-sql-mynaisjob-mydb-user-two-4c6e7100
                   key: PWNED_USER_TWO_PASSWORD
-            resourceID: user_two

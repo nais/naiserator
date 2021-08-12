@@ -1,0 +1,380 @@
+config:
+  description: additional cloudsql databases and users
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  GoogleTeamProjectID: team-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    gcp:
+      sqlInstances:
+        - databases:
+            - name: mydb
+              users:
+                - name: User_two
+                - name: _user_three3
+            - name: mydb2
+              users:
+                - name: User_four
+                - name: _user_five
+          type: POSTGRES_12
+          name: myinstance
+
+tests:
+  - match:
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLInstance
+    operation: CreateOrUpdate
+    name: myinstance
+    match:
+      - type: subset
+        name: "SQLInstance created in team namespace"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: myInstance
+            namespace: mynamespace
+          spec:
+            databaseVersion: POSTGRES_12
+            region: europe-north1
+            settings:
+              availabilityType: ZONAL
+              backupConfiguration:
+                enabled: true
+                startTime: "02:00"
+              ipConfiguration:
+                requireSsl: true
+              diskAutoresize: false
+              diskSize: 10
+              diskType: PD_SSD
+              tier: db-f1-micro
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SqlDatabase
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "sql database created"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: mydb
+            namespace: mynamespace
+          spec:
+            instanceRef:
+              name: myinstance
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication
+    match:
+      - type: regex
+        name: "secret default"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                uid: "123456"
+                apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_MYINSTANCE_MYDB_DATABASE: mydb
+            NAIS_DATABASE_MYINSTANCE_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_MYINSTANCE_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_MYINSTANCE_MYDB_PORT: "5432"
+            NAIS_DATABASE_MYINSTANCE_MYDB_URL: postgres://myinstance:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_MYINSTANCE_MYDB_USERNAME: myinstance
+          type: Opaque
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication-mydb-user-two-8bc847b6
+    match:
+      - type: regex
+        name: "secret two"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication-mydb-user-two-8bc847b6
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                uid: "123456"
+                apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_USER_TWO_MYDB_DATABASE: mydb
+            NAIS_DATABASE_USER_TWO_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_USER_TWO_MYDB_PORT: "5432"
+            NAIS_DATABASE_USER_TWO_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: User_two
+            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://User_two:.{43}@127.0.0.1:5432/mydb
+          type: Opaque
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication-mydb-user-three3-bd90b055
+    match:
+      - type: regex
+        name: "secret three"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication-mydb-user-three3-bd90b055
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                uid: "123456"
+                apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_USER_THREE3_MYDB_DATABASE: mydb
+            NAIS_DATABASE_USER_THREE3_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_USER_THREE3_MYDB_PORT: "5432"
+            NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_USER_THREE3_MYDB_USERNAME: _user_three3
+            NAIS_DATABASE_USER_THREE3_MYDB_URL: postgres://_user_three3:.{43}@127.0.0.1:5432/mydb
+          type: Opaque
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: myinstance
+    match:
+      - type: subset
+        name: "additional - sql user: myapplication"
+        resource:
+          metadata:
+            name: myinstance
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myinstance
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication
+                  key: NAIS_DATABASE_MYINSTANCE_MYDB_PASSWORD
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: myinstance-mydb-user-two-b8400c26
+    match:
+      - type: subset
+        name: "sql user: user-two"
+        resource:
+          metadata:
+            name: additional
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myinstance
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication-mydb-user-two-8bc847b6
+                  key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: myinstance-mydb-user-three3-b06d954a
+    match:
+      - type: subset
+        name: "sql user: user-three"
+        resource:
+          metadata:
+            name: extra
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myinstance
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication-mydb-user-three3-bd90b055
+                  key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD
+
+
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SqlDatabase
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "sql database created"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: mydb2
+            namespace: mynamespace
+          spec:
+            instanceRef:
+              name: myinstance
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication-mydb2-user-four-2bb9eb2c
+    match:
+      - type: regex
+        name: "secret four"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication-mydb2-user-four-2bb9eb2c
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                uid: "123456"
+                apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_USER_FOUR_MYDB2_DATABASE: mydb2
+            NAIS_DATABASE_USER_FOUR_MYDB2_HOST: 127.0.0.1
+            NAIS_DATABASE_USER_FOUR_MYDB2_PASSWORD: ".{43}"
+            NAIS_DATABASE_USER_FOUR_MYDB2_PORT: "5432"
+            NAIS_DATABASE_USER_FOUR_MYDB2_URL: postgres://User_four:.{43}@127.0.0.1:5432/mydb2
+            NAIS_DATABASE_USER_FOUR_MYDB2_USERNAME: User_four
+          type: Opaque
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    name: google-sql-myapplication-mydb2-user-five-87ca419a
+    match:
+      - type: regex
+        name: "secret five"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-myapplication-mydb2-user-five-87ca419a
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                uid: "123456"
+                apiVersion: v1alpha1
+          stringData:
+            NAIS_DATABASE_USER_FIVE_MYDB2_DATABASE: mydb2
+            NAIS_DATABASE_USER_FIVE_MYDB2_HOST: 127.0.0.1
+            NAIS_DATABASE_USER_FIVE_MYDB2_PORT: "5432"
+            NAIS_DATABASE_USER_FIVE_MYDB2_PASSWORD: ".{43}"
+            NAIS_DATABASE_USER_FIVE_MYDB2_USERNAME: _user_five
+            NAIS_DATABASE_USER_FIVE_MYDB2_URL: postgres://_user_five:.{43}@127.0.0.1:5432/mydb2
+          type: Opaque
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: myinstance-mydb2-user-four-bbf6caa6
+    match:
+      - type: subset
+        name: "sql user: user-four"
+        resource:
+          metadata:
+            name: additional
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myinstance
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication-mydb2-user-four-2bb9eb2c
+                  key: NAIS_DATABASE_USER_FOUR_MYDB2_PASSWORD
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    name: myinstance-mydb2-user-five-17856010
+    match:
+      - type: subset
+        name: "sql user: user-five"
+        resource:
+          metadata:
+            name: extra
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: myinstance
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-myapplication-mydb2-user-five-87ca419a
+                  key: NAIS_DATABASE_USER_FIVE_MYDB2_PASSWORD
