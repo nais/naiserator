@@ -202,7 +202,7 @@ func mapMerge(dst, src map[string]string) {
 	}
 }
 
-func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) metav1.ObjectMeta {
+func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(app)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
@@ -213,6 +213,10 @@ func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast) m
 	}
 
 	objectMeta.Annotations = map[string]string{}
+	if len(opt.GoogleProjectId) > 0 {
+		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
+	}
+
 	if app.Spec.Prometheus.Enabled {
 		objectMeta.Annotations["prometheus.io/scrape"] = "true"
 		objectMeta.Annotations["prometheus.io/port"] = port

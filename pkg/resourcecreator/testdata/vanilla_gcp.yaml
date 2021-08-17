@@ -203,3 +203,19 @@ tests:
             selector:
               matchLabels:
                 app: myapplication
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - type: subset
+        name: "pod created with safe-to-evict annotation"
+        exlude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
