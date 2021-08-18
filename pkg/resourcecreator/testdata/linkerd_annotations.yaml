@@ -1,0 +1,38 @@
+config:
+  description: gcp application with overriden linkerd annotations
+
+resourceoptions:
+  Linkerd: true
+  NetworkPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    annotations:
+      config.linkerd.io/some-config: some-value
+      linkerd.io/inject: false
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "podspec contains overriden linkerd annotation"
+        type: subset
+        resource:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  config.linkerd.io/some-config: some-value
