@@ -24,10 +24,14 @@ type Rollout struct {
 // The number of replicas is set to whichever is highest: the current number of replicas (which might be zero),
 // or the default number of replicas.
 func (r *Rollout) SetCurrentDeployment(deployment *appsv1.Deployment, currentReplicasMin int) {
-	if deployment != nil && deployment.Spec.Replicas != nil {
-		r.ResourceOptions.NumReplicas = max(1, *deployment.Spec.Replicas)
+	if currentReplicasMin == 0 {
+		r.ResourceOptions.NumReplicas = 0
 	} else {
-		r.ResourceOptions.NumReplicas = max(1, int32(currentReplicasMin))
+		if deployment != nil && deployment.Spec.Replicas != nil {
+			r.ResourceOptions.NumReplicas = max(1, *deployment.Spec.Replicas)
+		} else {
+			r.ResourceOptions.NumReplicas = max(1, int32(currentReplicasMin))
+		}
 	}
 }
 

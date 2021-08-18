@@ -1,0 +1,34 @@
+config:
+  description: vanilla application with zero replicas
+
+resourceoptions:
+  Linkerd: true
+  NetworkPolicy: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    replicas:
+      min: 0
+      max: 0
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "zero replicas"
+        resource:
+          spec:
+            replicas: 0
