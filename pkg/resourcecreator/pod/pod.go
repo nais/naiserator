@@ -239,15 +239,7 @@ func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast, o
 	return objectMeta
 }
 
-func copyLinkerdAnnotations(src, dst map[string]string) {
-	for k, v := range src {
-		if strings.HasPrefix(k, "config.linkerd.io/") {
-			dst[k] = v
-		}
-	}
-}
-
-func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) metav1.ObjectMeta {
+func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(naisjob)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
@@ -262,7 +254,19 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) met
 		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
 	}
 
+	if opt.Linkerd {
+		copyLinkerdAnnotations(naisjob.Annotations, objectMeta.Annotations)
+	}
+
 	return objectMeta
+}
+
+func copyLinkerdAnnotations(src, dst map[string]string) {
+	for k, v := range src {
+		if strings.HasPrefix(k, "config.linkerd.io/") {
+			dst[k] = v
+		}
+	}
 }
 
 // lifecycle creates lifecycle definitions, right now adding only PreStop handlers.

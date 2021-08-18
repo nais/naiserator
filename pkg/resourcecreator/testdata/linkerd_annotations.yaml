@@ -28,7 +28,7 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: "podspec contains overriden linkerd annotation"
+      - name: "podspec contains overridden linkerd annotation"
         type: subset
         resource:
           spec:

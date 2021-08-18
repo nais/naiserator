@@ -2,12 +2,13 @@ package batch
 
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 )
 
 func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) (batchv1.JobSpec, error) {
@@ -21,7 +22,7 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 		ActiveDeadlineSeconds: naisjob.Spec.ActiveDeadlineSeconds,
 		BackoffLimit:          util.Int32p(naisjob.Spec.BackoffLimit),
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: pod.CreateNaisjobObjectMeta(naisjob, ast),
+			ObjectMeta: pod.CreateNaisjobObjectMeta(naisjob, ast, &resourceOptions),
 			Spec:       *podSpec,
 		},
 		TTLSecondsAfterFinished: naisjob.Spec.TTLSecondsAfterFinished,
