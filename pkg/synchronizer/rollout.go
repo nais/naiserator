@@ -1,5 +1,6 @@
 package synchronizer
 
+
 import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	appsv1 "k8s.io/api/apps/v1"

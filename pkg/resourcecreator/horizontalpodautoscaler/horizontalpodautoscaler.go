@@ -2,7 +2,6 @@ package horizontalpodautoscaler
 
 import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/intutil"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/api/autoscaling/v2beta2"
@@ -10,7 +9,7 @@ import (
 )
 
 func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replicas) {
-	if *naisReplicas.Max > 0 {
+	if naisReplicas.Max > 0 {
 		hpa := &v2beta2.HorizontalPodAutoscaler{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "HorizontalPodAutoscaler",
@@ -35,8 +34,8 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replica
 						},
 					},
 				},
-				MinReplicas: intutil.Int32p(int32(*naisReplicas.Min)),
-				MaxReplicas: int32(*naisReplicas.Max),
+				MinReplicas: util.Int32p(int32(naisReplicas.Min)),
+				MaxReplicas: int32(naisReplicas.Max),
 			},
 		}
 		ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)

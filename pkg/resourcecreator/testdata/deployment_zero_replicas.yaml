@@ -5,7 +5,6 @@ resourceoptions:
   Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id
-  NumReplicas: 1
 
 input:
   kind: Application
