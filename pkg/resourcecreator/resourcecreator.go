@@ -47,7 +47,11 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 
 	service.Create(app, ast, *app.Spec.Service)
 	serviceaccount.Create(app, ast, resourceOptions)
-	horizontalpodautoscaler.Create(app, ast, *app.Spec.Replicas)
+
+	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
+		horizontalpodautoscaler.Create(app, ast, *app.Spec.Replicas)
+	}
+
 	networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
 	err := ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	if err != nil {
