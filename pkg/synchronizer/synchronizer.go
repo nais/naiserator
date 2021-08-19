@@ -14,7 +14,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
-	"github.com/nais/naiserator/pkg/util"
 	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
@@ -270,13 +269,9 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		Source:          app,
 		ResourceOptions: n.ResourceOptions,
 	}
-	setReplicasToZero := *app.Spec.Replicas.Min == 0 && *app.Spec.Replicas.Max == 0
+
 	if err = app.ApplyDefaults(); err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
-	}
-	if  setReplicasToZero {
-		app.Spec.Replicas.Min = util.Intp(0)
-		app.Spec.Replicas.Max = util.Intp(0)
 	}
 
 	rollout.SynchronizationHash, err = app.Hash()
