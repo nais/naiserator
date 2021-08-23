@@ -54,6 +54,7 @@ type Features struct {
 	Kafkarator                  bool     `json:"kafkarator"`
 	Digdirator                  bool     `json:"digdirator"`
 	GCP                         bool     `json:"gcp"`
+	Webhook                     bool     `json:"webhook"`
 }
 
 type Securelogs struct {
@@ -131,6 +132,7 @@ const (
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesNetworkPolicy               = "features.network-policy"
 	FeaturesVault                       = "features.vault"
+	FeaturesWebhook                     = "features.webhook"
 	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
 	GoogleProjectId                     = "google-project-id"
 	InformerFullSynchronizationInterval = "informer.full-sync-interval"
@@ -203,6 +205,7 @@ func init() {
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
+	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 
 	flag.StringSlice(ServiceHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator")
 	flag.StringSlice(ServiceHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator")
@@ -260,7 +263,6 @@ func Print(redacted []string) {
 			log.Printf("%s: ***REDACTED***", key)
 		}
 	}
-
 }
 
 func decoderHook(dc *mapstructure.DecoderConfig) {
