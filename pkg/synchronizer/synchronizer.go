@@ -322,7 +322,7 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 		rollout.ResourceOptions.Linkerd = true
 	}
 
-	rollout.SetCurrentDeployment(previousDeployment, app.Spec.Replicas.Min)
+	rollout.SetCurrentDeployment(previousDeployment, *app.Spec.Replicas.Min)
 	rollout.ResourceOperations, err = resourcecreator.CreateApplication(app, rollout.ResourceOptions)
 
 	if err != nil {

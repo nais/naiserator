@@ -6,18 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nais/naiserator/pkg/controllers"
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	ingress "github.com/nais/naiserator/pkg/resourcecreator/ingress"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
+	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -130,7 +129,6 @@ func TestSynchronizer(t *testing.T) {
 
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
-
 	app.SetAnnotations(map[string]string{
 		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id",
 	})

@@ -9,6 +9,10 @@ import (
 )
 
 func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replicas) {
+	if !(*naisReplicas.Max > 0) {
+		return
+	}
+
 	hpa := &v2beta2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
@@ -33,10 +37,9 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replica
 					},
 				},
 			},
-			MinReplicas: util.Int32p(int32(naisReplicas.Min)),
-			MaxReplicas: int32(naisReplicas.Max),
+			MinReplicas: util.Int32p(int32(*naisReplicas.Min)),
+			MaxReplicas: int32(*naisReplicas.Max),
 		},
 	}
-
 	ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
 }

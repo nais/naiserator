@@ -9,7 +9,7 @@ import (
 )
 
 func Create(source resource.Source, ast *resource.Ast, naisReplicas nais_io_v1.Replicas) {
-	if naisReplicas.Max == 1 {
+	if *naisReplicas.Max == 1 {
 		return
 	}
 
