@@ -111,6 +111,11 @@ func run() error {
 		return err
 	}
 
+	// Register create/update validation webhooks for liberator_scheme's CRDs
+	if err := liberator_scheme.Webhooks(mgr); err != nil {
+		return err
+	}
+
 	stopCh := StopCh()
 
 	resourceOptions := resource.NewOptions()
