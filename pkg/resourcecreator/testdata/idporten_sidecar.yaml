@@ -91,6 +91,32 @@ tests:
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{10}$
+
+  - operation: CreateIfNotExists
+    apiVersion: nais.io/v1alpha1
+    kind: Application
+    name: nais-io-wonderwall-redis
+    match:
+      - name: "extra deployment with redis"
+        type: exact
+        exclude:
+          - .metadata.creationTimestamp
+          - .status
+        resource:
+          metadata:
+            labels:
+              team: myteam
+            name: nais-io-wonderwall-redis
+            namespace: mynamespace
+          spec:
+            image: redis:6
+            port: 6379
+            accessPolicy:
+              inbound:
+                rules:
+                  - application: myapplication
+                    namespace: mynamespace
+
   - apiVersion: v1
     kind: Service
     name: myapplication

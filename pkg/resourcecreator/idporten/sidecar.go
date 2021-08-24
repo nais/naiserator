@@ -32,6 +32,10 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string) corev1.Conta
 				Name:  "WONDERWALL_UPSTREAM_HOST",
 				Value: fmt.Sprintf("127.0.0.1:%d", targetPort),
 			},
+			{
+				Name:  "WONDERWALL_REDIS",
+				Value: fmt.Sprintf("nais-io-wonderwall-redis:%d", redisPort),
+			},
 		},
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
