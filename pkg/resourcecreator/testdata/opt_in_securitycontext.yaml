@@ -1,0 +1,44 @@
+config:
+  description: opt-in restricted securitycontext
+
+resourceoptions:
+  NumReplicas: 1
+  Linkerd: true
+  NetworkPolicy: true
+  GoogleProjectID: google-project-id
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+    annotations:
+      nais.io/restricted: true
+  spec:
+    image: navikt/myapplication:1.2.3
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "restricted securitycontext"
+        resource:
+          spec:
+            replicas: 2
+            template:
+              spec:
+                containers:
+                  - securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      allowPrivilegeEscalation: false
+                      runAsNonRoot: true
+                      privileged: false
+                      capabilities:
+                        drop: ["all"]

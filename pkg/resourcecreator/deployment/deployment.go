@@ -62,7 +62,7 @@ func addCleanupLabels(app *nais_io_v1alpha1.Application, meta metav1.ObjectMeta)
 }
 
 func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {
-	podSpec, err := pod.CreateSpec(ast, resourceOptions, app.Name, corev1.RestartPolicyAlways)
+	podSpec, err := pod.CreateSpec(ast, resourceOptions, app.Name, app.Annotations, corev1.RestartPolicyAlways)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resour
 	}
 
 	return &appsv1.DeploymentSpec{
-		Replicas: util.Int32p(resourceOptions.NumReplicas),
+		Replicas: util.Int32p(int32(*app.Spec.Replicas.Min)),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.Name},
 		},
