@@ -95,6 +95,10 @@ type ServiceHosts struct {
 	Jwker      []string `json:"jwker"`
 }
 
+type Wonderwall struct {
+	Image string `json:"image"`
+}
+
 type Config struct {
 	DryRun                            bool             `json:"dry-run"`
 	Bind                              string           `json:"bind"`
@@ -115,6 +119,7 @@ type Config struct {
 	HostAliases                       []HostAlias      `json:"host-aliases"`
 	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
 	ServiceHosts                      ServiceHosts     `json:"service-hosts"`
+	Wonderwall                        Wonderwall       `json:"wonderwall"`
 }
 
 const (
@@ -162,6 +167,7 @@ const (
 	VaultAuthPath                       = "vault.auth-path"
 	VaultInitContainerImage             = "vault.init-container-image"
 	VaultKvPath                         = "vault.kv-path"
+	WonderwallImage                     = "wonderwall.image"
 )
 
 func bindNAIS() {

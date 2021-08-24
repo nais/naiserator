@@ -1,0 +1,113 @@
+config:
+  description: idporten config with sidecar should result in wonderwall sidecar injected to pod
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  DigdiratorEnabled: true
+  DigdiratorHosts:
+    - dev.difi.test
+  GatewayMappings:
+    - DomainSuffix: .nav.no
+      IngressClass: nav-no-gateway
+  Wonderwall:
+    Image: nais/wonderwall
+  WonderwallEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    idporten:
+      enabled: true
+      sidecar:
+        enabled: true
+    ingresses:
+      - "https://my-client.nav.no/"
+    port: 1234
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains idporten secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^idporten-myapplication-a0b907e7-.{10}$
+                    secret:
+                      secretName: ^idporten-myapplication-a0b907e7-.{10}$
+                containers:
+                  - envFrom:
+                      - secretRef:
+                          name: ^idporten-myapplication-a0b907e7-.{10}$
+                    volumeMounts:
+                      - name: ^idporten-myapplication-a0b907e7-.{10}$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/idporten
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains sidecar with idporten secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: ^idporten-myapplication-a0b907e7-.{10}$
+                    secret:
+                      secretName: ^idporten-myapplication-a0b907e7-.{10}$
+                containers:
+                  - name: myapplication
+                    envFrom:
+                      - secretRef:
+                          name: ^idporten-myapplication-a0b907e7-.{10}$
+                    volumeMounts:
+                      - name: ^idporten-myapplication-a0b907e7-.{10}$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/idporten
+                  - name: wonderwall
+                    image: nais/wonderwall
+                    env:
+                      - name: WONDERWALL_UPSTREAM_HOST
+                        value: 127.0.0.1:1234
+                    envFrom:
+                      - secretRef:
+                          name: ^idporten-myapplication-a0b907e7-.{10}$
+  - apiVersion: v1
+    kind: Service
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "service created with port 8090"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            ports:
+              - port: 80
+                targetPort: 8090
+                name: http
+                protocol: TCP
+            selector:
+              app: myapplication
+            type: ClusterIP

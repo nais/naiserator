@@ -45,7 +45,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 
 	ast := resource.NewAst()
 
-	service.Create(app, ast, *app.Spec.Service)
+	service.Create(app, ast, resourceOptions, *app.Spec.Service)
 	serviceaccount.Create(app, ast, resourceOptions)
 
 	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
@@ -62,7 +62,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	err = idporten.Create(app, ast, resourceOptions, app.Spec.IDPorten, app.Spec.Ingresses)
+	err = idporten.Create(app, ast, resourceOptions, app.Spec.IDPorten, app.Spec.Ingresses, app.Spec.Port)
 	if err != nil {
 		return nil, err
 	}

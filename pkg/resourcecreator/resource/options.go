@@ -28,6 +28,8 @@ type Options struct {
 	Securelogs                        config.Securelogs
 	VaultEnabled                      bool
 	Vault                             config.Vault
+	Wonderwall                        config.Wonderwall
+	WonderwallEnabled                 bool
 }
 
 // NewOptions creates a struct with the default resource options.

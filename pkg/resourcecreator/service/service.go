@@ -3,13 +3,14 @@ package service
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1_alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
-func Create(source resource.Source, ast *resource.Ast, naisService nais_io_v1.Service) {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisService nais_io_v1.Service) {
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -31,6 +32,13 @@ func Create(source resource.Source, ast *resource.Ast, naisService nais_io_v1.Se
 				},
 			},
 		},
+	}
+
+	if resourceOptions.WonderwallEnabled {
+		service.Spec.Ports[0].TargetPort = intstr.IntOrString{
+			Type:   intstr.Int,
+			IntVal: 8090,
+		}
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, service)

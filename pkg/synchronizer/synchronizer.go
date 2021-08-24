@@ -8,13 +8,6 @@ import (
 	"time"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/kafka"
-	"github.com/nais/naiserator/pkg/metrics"
-	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/nais/naiserator/pkg/resourcecreator"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
-	"github.com/nais/naiserator/updater"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -24,6 +17,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/nais/naiserator/pkg/kafka"
+	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
+	"github.com/nais/naiserator/updater"
 )
 
 // Machine readable event "Reason" fields, used for determining deployment state.
@@ -320,6 +321,10 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
 	if n.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
 		rollout.ResourceOptions.Linkerd = true
+	}
+
+	if rollout.ResourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar != nil && app.Spec.IDPorten.Sidecar.Enabled {
+		rollout.ResourceOptions.WonderwallEnabled = true
 	}
 
 	rollout.SetCurrentDeployment(previousDeployment, *app.Spec.Replicas.Min)

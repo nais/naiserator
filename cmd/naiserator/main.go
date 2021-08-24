@@ -9,15 +9,17 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
-	"github.com/nais/naiserator/pkg/controllers"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
+	"github.com/nais/naiserator/pkg/controllers"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
+
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -139,6 +141,7 @@ func run() error {
 	resourceOptions.Securelogs = cfg.Securelogs
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
+	resourceOptions.Wonderwall = cfg.Wonderwall
 
 	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")

@@ -8,6 +8,7 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
@@ -19,6 +20,7 @@ import (
 const (
 	clientDefaultCallbackPath = "/oauth2/callback"
 	clientDefaultLogoutPath   = "/oauth2/logout"
+	wonderwallDefaultPort     = 8090
 )
 
 func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
@@ -132,18 +134,27 @@ func idPortenSecretName(name string) (string, error) {
 	return namegen.SuffixedShortName(basename, suffix, maxLen)
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) error {
-	if resourceOptions.DigdiratorEnabled && naisIdPorten != nil && naisIdPorten.Enabled {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress, appPort int) error {
+	if !resourceOptions.DigdiratorEnabled || naisIdPorten == nil || !naisIdPorten.Enabled {
+		return nil
+	}
 
-		idportenClient, err := client(resource.CreateObjectMeta(source), naisIdPorten, naisIngresses)
-		if err != nil {
-			return err
-		}
+	idportenClient, err := client(resource.CreateObjectMeta(source), naisIdPorten, naisIngresses)
+	if err != nil {
+		return err
+	}
 
-		ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
 
-		pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
-		pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
+	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
+	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
+
+	if naisIdPorten.Sidecar != nil && naisIdPorten.Sidecar.Enabled {
+		wonderwallContainer := Wonderwall(wonderwallDefaultPort, appPort, resourceOptions.Wonderwall.Image)
+		idportenSecret := pod.EnvFromSecret(idportenClient.Spec.SecretName)
+		wonderwallContainer.EnvFrom = []v1.EnvFromSource{idportenSecret}
+
+		ast.Containers = append(ast.Containers, wonderwallContainer)
 	}
 
 	return nil
