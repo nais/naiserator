@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	"k8s.io/utils/pointer"
 	"strconv"
 	"strings"
 
@@ -36,7 +37,7 @@ func reorderContainers(appName string, containers []corev1.Container) []corev1.C
 	return reordered
 }
 
-func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
+func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
 	var err error
 
 	containers := reorderContainers(appName, ast.Containers)
@@ -52,6 +53,17 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 			{Name: "gpr-credentials"},
 			{Name: "ghcr-credentials"},
 		},
+	}
+
+	if restricted(annotations) {
+		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
+			RunAsUser:                pointer.Int64Ptr(int64(1069)),
+			RunAsGroup:               pointer.Int64Ptr(int64(1069)),
+			RunAsNonRoot:             pointer.BoolPtr(true),
+			Privileged:               pointer.BoolPtr(false),
+			AllowPrivilegeEscalation: pointer.BoolPtr(false),
+			Capabilities:             &corev1.Capabilities{Drop: []corev1.Capability{"all"}},
+		}
 	}
 
 	if len(resourceOptions.HostAliases) > 0 {
@@ -362,4 +374,13 @@ func leadingSlash(s string) string {
 		return s
 	}
 	return "/" + s
+}
+
+func restricted(annotations map[string]string) bool {
+	val, found := annotations["nais.io/restricted"]
+	if !found {
+		return false
+	}
+
+	return strings.ToLower(val) == "true"
 }

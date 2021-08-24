@@ -104,7 +104,7 @@ tests:
           - .spec.template.metadata.creationTimestamp
         resource:
           spec:
-            replicas: 1
+            replicas: 2
             selector:
               matchLabels:
                 app: myapplication
