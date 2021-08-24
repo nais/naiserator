@@ -111,6 +111,9 @@ tests:
           spec:
             image: redis:6
             port: 6379
+            service:
+              port: 6379
+              protocol: redis
             accessPolicy:
               inbound:
                 rules:

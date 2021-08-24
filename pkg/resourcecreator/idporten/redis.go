@@ -29,6 +29,10 @@ func Redis(source resource.Source) *nais_io_v1alpha1.Application {
 		Spec: nais_io_v1alpha1.ApplicationSpec{
 			Image: redisImage,
 			Port:  redisPort,
+			Service: &nais_io_v1.Service{
+				Port:     redisPort,
+				Protocol: "redis",
+			},
 			AccessPolicy: &nais_io_v1.AccessPolicy{
 				Inbound: &nais_io_v1.AccessPolicyInbound{
 					Rules: []nais_io_v1.AccessPolicyInboundRule{
