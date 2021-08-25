@@ -9,8 +9,11 @@ import (
 	"github.com/nais/naiserator/pkg/util"
 )
 
-const redisImage = "redis:6"
-const redisPort = 6379
+const (
+	RedisName  = "nais-io-wonderwall-redis"
+	redisImage = "redis:6"
+	redisPort  = 6379
+)
 
 func Redis(source resource.Source) *nais_io_v1alpha1.Application {
 	objectMeta := source.GetObjectMeta()
@@ -22,7 +25,7 @@ func Redis(source resource.Source) *nais_io_v1alpha1.Application {
 			APIVersion: "nais.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "nais-io-wonderwall-redis",
+			Name:      RedisName,
 			Namespace: source.GetNamespace(),
 			Labels: map[string]string{
 				"team": source.GetLabels()["team"],
