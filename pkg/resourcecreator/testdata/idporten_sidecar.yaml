@@ -90,7 +90,7 @@ tests:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{10}$
                       - secretRef:
-                          name: ^wonderwall-myapplication-.{8}$
+                          name: ^idporten-wonderwall-myapplication-.{8}$
 
   - operation: CreateIfNotExists
     apiVersion: nais.io/v1alpha1

@@ -156,7 +156,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	}
 
 	// create sidecar container and redis application
-	prefixedName := fmt.Sprintf("%s-%s", "wonderwall", source.GetName())
+	prefixedName := fmt.Sprintf("idporten-wonderwall-%s", source.GetName())
 	wonderwallSecretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
 	if err != nil {
 		return err
