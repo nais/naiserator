@@ -20,7 +20,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/resourcecreator/jwker"
-	"github.com/nais/naiserator/pkg/resourcecreator/kafka"
 	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
 	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
@@ -66,7 +65,6 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	kafka.Create(app, ast, resourceOptions, app.Spec.Kafka)
 	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP)
 	if err != nil {
 		return nil, err
@@ -83,8 +81,12 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	}
 	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
-	aiven.Elastic(ast, app.Spec.Elastic)
-	aiven.Influx(ast, app.Spec.Influx)
+	aivenSpecs := aiven.AivenSpecs{
+		Kafka:   app.Spec.Kafka,
+		Elastic: app.Spec.Elastic,
+		Influx:  app.Spec.Influx,
+	}
+	aiven.Create(app, ast, resourceOptions, aivenSpecs)
 	linkerd.Create(ast, resourceOptions)
 
 	err = vault.Create(app, ast, resourceOptions, app.Spec.Vault)
@@ -121,7 +123,6 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 	if err != nil {
 		return nil, err
 	}
-	kafka.Create(naisjob, ast, resourceOptions, naisjob.Spec.Kafka)
 	err = gcp.Create(naisjob, ast, resourceOptions, naisjob.Spec.GCP)
 	if err != nil {
 		return nil, err
@@ -136,8 +137,12 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 	if err != nil {
 		return nil, err
 	}
-	aiven.Elastic(ast, naisjob.Spec.Elastic)
-	aiven.Influx(ast, naisjob.Spec.Influx)
+	aivenSpecs := aiven.AivenSpecs{
+		Kafka:   naisjob.Spec.Kafka,
+		Elastic: naisjob.Spec.Elastic,
+		Influx:  naisjob.Spec.Influx,
+	}
+	aiven.Create(naisjob, ast, resourceOptions, aivenSpecs)
 	linkerd.Create(ast, resourceOptions)
 
 	err = vault.Create(naisjob, ast, resourceOptions, naisjob.Spec.Vault)

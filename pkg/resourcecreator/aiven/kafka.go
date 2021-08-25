@@ -1,21 +1,16 @@
-package kafka
+package aiven
 
 import (
-	"fmt"
 	"path/filepath"
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/liberator/pkg/namegen"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
-	kafkaCredentialFilesVolumeName = "kafka-credentials"
 	kafkaCertificatePathKey        = "KAFKA_CERTIFICATE_PATH"
 	kafkaPrivateKeyPathKey         = "KAFKA_PRIVATE_KEY_PATH"
 	kafkaCAPathKey                 = "KAFKA_CA_PATH"
@@ -50,38 +45,7 @@ func makeKafkaSecretEnvVar(key, secretName string) corev1.EnvVar {
 	}
 }
 
-func generateKafkaSecretName(name, pool string) string {
-	secretName := namegen.RandShortName(fmt.Sprintf("kafka-%s-%s", name, pool), validation.DNS1035LabelMaxLength)
-
-	return secretName
-}
-
-func podSpecWithKafka(ast *resource.Ast, kafkaratorSecretName string) {
-	// Mount specific secret keys as credential files
-	credentialFilesVolume := pod.FromFilesSecretVolume(kafkaCredentialFilesVolumeName, kafkaratorSecretName, []corev1.KeyToPath{
-		{
-			Key:  kafkaCertificateKey,
-			Path: kafkaCertificateFilename,
-		},
-		{
-			Key:  kafkaPrivateKeyKey,
-			Path: kafkaPrivateKeyFilename,
-		},
-		{
-			Key:  kafkaCAKey,
-			Path: kafkaCAFilename,
-		},
-		{
-			Key:  kafkaKeystoreFilename,
-			Path: kafkaKeystoreFilename,
-		},
-		{
-			Key:  kafkaTruststoreFilename,
-			Path: kafkaTruststoreFilename,
-		},
-	})
-	ast.Volumes = append(ast.Volumes, credentialFilesVolume)
-	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
+func podSpecWithKafka(ast *resource.Ast, kafkaratorSecretName string) []corev1.KeyToPath {
 
 	// Add environment variables for string data
 	ast.Env = append(ast.Env, []corev1.EnvVar{
@@ -118,23 +82,42 @@ func podSpecWithKafka(ast *resource.Ast, kafkaratorSecretName string) {
 			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaTruststoreFilename),
 		},
 	}...)
+
+	// Mount specific secret keys as credential files
+	return []corev1.KeyToPath{
+
+		{
+			Key:  kafkaCertificateKey,
+			Path: kafkaCertificateFilename,
+		},
+		{
+			Key:  kafkaPrivateKeyKey,
+			Path: kafkaPrivateKeyFilename,
+		},
+		{
+			Key:  kafkaCAKey,
+			Path: kafkaCAFilename,
+		},
+		{
+			Key:  kafkaKeystoreFilename,
+			Path: kafkaKeystoreFilename,
+		},
+		{
+			Key:  kafkaTruststoreFilename,
+			Path: kafkaTruststoreFilename,
+		},
+	}
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka) {
+func Kafka(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) []corev1.KeyToPath {
 	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
-		secretName := generateKafkaSecretName(source.GetName(), naisKafka.Pool)
 
-		podSpecWithKafka(ast, secretName)
+		kafkaKeyPaths := podSpecWithKafka(ast, aivenApp.Spec.SecretName)
 		ast.Labels["kafka"] = "enabled"
-		aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
-			WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
-				SecretName: secretName,
-				Kafka: aiven_nais_io_v1.KafkaSpec{
-					Pool: naisKafka.Pool,
-				},
-			}).
-			Build()
-		aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
+		aivenApp.Spec.Kafka = aiven_nais_io_v1.KafkaSpec{
+			Pool: naisKafka.Pool,
+		}
+		return kafkaKeyPaths
 	}
+	return []corev1.KeyToPath{}
 }
