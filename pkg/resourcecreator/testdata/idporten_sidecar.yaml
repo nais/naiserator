@@ -75,14 +75,6 @@ tests:
                     secret:
                       secretName: ^idporten-myapplication-a0b907e7-.{10}$
                 containers:
-                  - name: myapplication
-                    envFrom:
-                      - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{10}$
-                    volumeMounts:
-                      - name: ^idporten-myapplication-a0b907e7-.{10}$
-                        readOnly: true
-                        mountPath: /var/run/secrets/nais.io/idporten
                   - name: wonderwall
                     image: nais/wonderwall
                     env:
@@ -91,6 +83,8 @@ tests:
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{10}$
+                      - secretRef:
+                          name: ^wonderwall-myapplication-.{8}$
 
   - operation: CreateIfNotExists
     apiVersion: nais.io/v1alpha1

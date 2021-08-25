@@ -151,14 +151,28 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 
 	// create sidecar container and redis application
 	if naisIdPorten.Sidecar != nil && naisIdPorten.Sidecar.Enabled {
+		prefixedName := fmt.Sprintf("%s-%s", "wonderwall", source.GetName())
+		wonderwallSecretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
+		if err != nil {
+			return err
+		}
+
+		wonderwallSecret, err := WonderwallSecret(source, wonderwallSecretName)
+		if err != nil {
+			return err
+		}
+
 		wonderwallContainer := Wonderwall(wonderwallDefaultPort, appPort, resourceOptions.Wonderwall.Image)
-		idportenSecret := pod.EnvFromSecret(idportenClient.Spec.SecretName)
-		wonderwallContainer.EnvFrom = []v1.EnvFromSource{idportenSecret}
+		wonderwallContainer.EnvFrom = []v1.EnvFromSource{
+			pod.EnvFromSecret(idportenClient.Spec.SecretName),
+			pod.EnvFromSecret(wonderwallSecretName),
+		}
 
 		ast.Containers = append(ast.Containers, wonderwallContainer)
 
 		redisApplication := Redis(source)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, redisApplication)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
 	}
 
 	return nil

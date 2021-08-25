@@ -5,9 +5,12 @@ import (
 	"fmt"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/keygen"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 )
 
 func Wonderwall(port int32, targetPort int, wonderwallImage string) corev1.Container {
@@ -37,12 +40,6 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string) corev1.Conta
 				Name:  "WONDERWALL_REDIS",
 				Value: fmt.Sprintf("nais-io-wonderwall-redis:%d", redisPort),
 			},
-			{
-				// FIXME: the encryption key must be securely generated,
-				// then persisted in a secret, and finally referred to.
-				Name:  "WONDERWALL_ENCRYPTION_KEY",
-				Value: base64.StdEncoding.EncodeToString([]byte("0123456789abcdef")),
-			},
 		},
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
@@ -55,4 +52,20 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string) corev1.Conta
 			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		},
 	}
+}
+
+func WonderwallSecret(source resource.Source, secretName string) (*corev1.Secret, error) {
+	key, err := keygen.Keygen(32)
+	if err != nil {
+		return nil, fmt.Errorf("generating secret key: %w", err)
+	}
+
+	secrets := map[string]string{
+		"WONDERWALL_ENCRYPTION_KEY": base64.StdEncoding.EncodeToString(key),
+	}
+
+	objectMeta := resource.CreateObjectMeta(source)
+	sec := secret.OpaqueSecret(objectMeta, secretName, secrets)
+
+	return sec, nil
 }
