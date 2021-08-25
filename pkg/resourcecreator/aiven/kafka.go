@@ -99,7 +99,7 @@ func Kafka(ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_
 	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
 		addKafkaEnvVariables(ast, aivenApp.Spec.SecretName)
 		ast.Labels["kafka"] = "enabled"
-		aivenApp.Spec.Kafka = aiven_nais_io_v1.KafkaSpec{
+		aivenApp.Spec.Kafka = &aiven_nais_io_v1.KafkaSpec{
 			Pool: naisKafka.Pool,
 		}
 		return createKafkaKeyToPaths()
