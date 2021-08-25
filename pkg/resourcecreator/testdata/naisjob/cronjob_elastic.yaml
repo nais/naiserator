@@ -20,14 +20,32 @@ input:
     schedule: "* 2 * * *"
     elastic:
       instance: naistest
+      access: read
 
 tests:
+  - operation: CreateOrUpdate
+    apiVersion: aiven.nais.io/v1
+    kind: AivenApplication
+    name: mynaisjob
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^aiven-mynaisjob-.{8}$
+      - name: "instance and access is propagated"
+        type: subset
+        resource:
+          spec:
+            elastic:
+              instance: naistest
+              access: read
   - apiVersion: batch/v1beta1
     kind: CronJob
     name: mynaisjob
     operation: CreateOrUpdate
     match:
-      - type: subset
+      - type: regex
         name: "cronjob network policy selector label"
         resource:
           spec:
@@ -40,3 +58,19 @@ tests:
                   spec:
                     containers:
                       - name: "mynaisjob"
+                        env:
+                          - name: ELASTIC_USERNAME
+                            valueFrom:
+                              secretKeyRef:
+                                key: ELASTIC_USERNAME
+                                name: ^aiven-mynaisjob-.{8}$
+                          - name: ELASTIC_PASSWORD
+                            valueFrom:
+                              secretKeyRef:
+                                key: ELASTIC_PASSWORD
+                                name: ^aiven-mynaisjob-.{8}$
+                          - name: ELASTIC_URI
+                            valueFrom:
+                              secretKeyRef:
+                                key: ELASTIC_URI
+                                name: ^aiven-mynaisjob-.{8}$

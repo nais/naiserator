@@ -19,14 +19,32 @@ input:
   spec:
     elastic:
       instance: naistest
+      access: read
 
 tests:
+  - operation: CreateOrUpdate
+    apiVersion: aiven.nais.io/v1
+    kind: AivenApplication
+    name: myapplication
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^aiven-myapplication-.{8}$
+      - name: "instance and access is propagated"
+        type: subset
+        resource:
+          spec:
+            elastic:
+              instance: naistest
+              access: read
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication
     operation: CreateOrUpdate
     match:
-      - type: subset
+      - type: regex
         name: "deployment network policy selector label"
         resource:
           spec:
@@ -37,3 +55,19 @@ tests:
               spec:
                 containers:
                   - name: "myapplication"
+                    env:
+                      - name: ELASTIC_USERNAME
+                        valueFrom:
+                          secretKeyRef:
+                            key: ELASTIC_USERNAME
+                            name: ^aiven-myapplication-.{8}$
+                      - name: ELASTIC_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            key: ELASTIC_PASSWORD
+                            name: ^aiven-myapplication-.{8}$
+                      - name: ELASTIC_URI
+                        valueFrom:
+                          secretKeyRef:
+                            key: ELASTIC_URI
+                            name: ^aiven-myapplication-.{8}$

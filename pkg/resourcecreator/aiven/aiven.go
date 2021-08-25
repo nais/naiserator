@@ -9,6 +9,7 @@ import (
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -27,7 +28,8 @@ func generateAivenSecretName(name string) string {
 
 	return secretName
 }
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, specs AivenSpecs) {
+
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, specs AivenSpecs) error {
 	secretName := generateAivenSecretName(source.GetName())
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
 		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
@@ -36,16 +38,37 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 
-	kafkaKeyPaths := Kafka(source, ast, resourceOptions, specs.Kafka, &aivenApp)
-	Elastic(source, ast, specs.Elastic, &aivenApp)
 	Influx(ast, specs.Influx, &aivenApp)
+	kafkaKeyPaths := Kafka(ast, resourceOptions, specs.Kafka, &aivenApp)
+
+	elasticEnabled, err := Elastic(ast, specs.Elastic, &aivenApp)
+	if err != nil {
+		return err
+	}
 
 	if len(kafkaKeyPaths) > 0 {
 		credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
 
 		ast.Volumes = append(ast.Volumes, credentialFilesVolume)
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
+	}
 
+	if len(kafkaKeyPaths) > 0 || elasticEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
+	}
+	return nil
+}
+
+func makeSecretEnvVar(key, secretName string) v1.EnvVar {
+	return v1.EnvVar{
+		Name: key,
+		ValueFrom: &v1.EnvVarSource{
+			SecretKeyRef: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: key,
+			},
+		},
 	}
 }

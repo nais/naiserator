@@ -81,13 +81,17 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	}
 	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+	linkerd.Create(ast, resourceOptions)
+
 	aivenSpecs := aiven.AivenSpecs{
 		Kafka:   app.Spec.Kafka,
 		Elastic: app.Spec.Elastic,
 		Influx:  app.Spec.Influx,
 	}
-	aiven.Create(app, ast, resourceOptions, aivenSpecs)
-	linkerd.Create(ast, resourceOptions)
+	err = aiven.Create(app, ast, resourceOptions, aivenSpecs)
+	if err != nil {
+		return nil, err
+	}
 
 	err = vault.Create(app, ast, resourceOptions, app.Spec.Vault)
 	if err != nil {
@@ -137,13 +141,18 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 	if err != nil {
 		return nil, err
 	}
+
+	linkerd.Create(ast, resourceOptions)
+
 	aivenSpecs := aiven.AivenSpecs{
 		Kafka:   naisjob.Spec.Kafka,
 		Elastic: naisjob.Spec.Elastic,
 		Influx:  naisjob.Spec.Influx,
 	}
-	aiven.Create(naisjob, ast, resourceOptions, aivenSpecs)
-	linkerd.Create(ast, resourceOptions)
+	err = aiven.Create(naisjob, ast, resourceOptions, aivenSpecs)
+	if err != nil {
+		return nil, err
+	}
 
 	err = vault.Create(naisjob, ast, resourceOptions, naisjob.Spec.Vault)
 	if err != nil {
