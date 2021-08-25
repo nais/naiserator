@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	clientDefaultCallbackPath = "/oauth2/callback"
-	clientDefaultLogoutPath   = "/oauth2/logout"
-	wonderwallDefaultPort     = 8090
+	clientDefaultCallbackPath        = "/oauth2/callback"
+	clientDefaultLogoutPath          = "/oauth2/logout"
+	wonderwallFrontChannelLogoutPath = "/oauth2/logout/frontchannel"
+	wonderwallDefaultPort            = 8090
 )
 
 func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
@@ -139,6 +140,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		return nil
 	}
 
+	// create idporten client and attach secrets
 	idportenClient, err := client(resource.CreateObjectMeta(source), naisIdPorten, naisIngresses)
 	if err != nil {
 		return err
@@ -149,31 +151,37 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
 
-	// create sidecar container and redis application
-	if naisIdPorten.Sidecar != nil && naisIdPorten.Sidecar.Enabled {
-		prefixedName := fmt.Sprintf("%s-%s", "wonderwall", source.GetName())
-		wonderwallSecretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
-		if err != nil {
-			return err
-		}
-
-		wonderwallSecret, err := WonderwallSecret(source, wonderwallSecretName)
-		if err != nil {
-			return err
-		}
-
-		wonderwallContainer := Wonderwall(wonderwallDefaultPort, appPort, resourceOptions.Wonderwall.Image)
-		wonderwallContainer.EnvFrom = []v1.EnvFromSource{
-			pod.EnvFromSecret(idportenClient.Spec.SecretName),
-			pod.EnvFromSecret(wonderwallSecretName),
-		}
-
-		ast.Containers = append(ast.Containers, wonderwallContainer)
-
-		redisApplication := Redis(source)
-		ast.AppendOperation(resource.OperationCreateIfNotExists, redisApplication)
-		ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
+	if naisIdPorten.Sidecar == nil || !naisIdPorten.Sidecar.Enabled {
+		return nil
 	}
+
+	// create sidecar container and redis application
+	prefixedName := fmt.Sprintf("%s-%s", "wonderwall", source.GetName())
+	wonderwallSecretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
+	if err != nil {
+		return err
+	}
+
+	wonderwallSecret, err := WonderwallSecret(source, wonderwallSecretName)
+	if err != nil {
+		return err
+	}
+
+	wonderwallContainer := Wonderwall(wonderwallDefaultPort, appPort, resourceOptions.Wonderwall.Image)
+	wonderwallContainer.EnvFrom = []v1.EnvFromSource{
+		pod.EnvFromSecret(idportenClient.Spec.SecretName),
+		pod.EnvFromSecret(wonderwallSecretName),
+	}
+
+	ast.Containers = append(ast.Containers, wonderwallContainer)
+
+	redisApplication := Redis(source)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, redisApplication)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
+
+	// override uris when sidecar is enabled
+	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(naisIngresses, wonderwallFrontChannelLogoutPath)
+	idportenClient.Spec.RedirectURI = idportenURI(naisIngresses, clientDefaultCallbackPath)
 
 	return nil
 }
