@@ -6,6 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 )
 
 const redisImage = "redis:6"
@@ -33,6 +34,10 @@ func Redis(source resource.Source) *nais_io_v1alpha1.Application {
 			Service: &nais_io_v1.Service{
 				Port:     redisPort,
 				Protocol: "redis",
+			},
+			Replicas: &nais_io_v1.Replicas{
+				Min: util.Intp(1),
+				Max: util.Intp(1),
 			},
 			AccessPolicy: &nais_io_v1.AccessPolicy{
 				Inbound: &nais_io_v1.AccessPolicyInbound{
