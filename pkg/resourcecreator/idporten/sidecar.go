@@ -3,6 +3,7 @@ package idporten
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/keygen"
@@ -13,9 +14,14 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 )
 
-func Wonderwall(port int32, targetPort int, wonderwallImage string) corev1.Container {
+func Wonderwall(port int32, targetPort int, wonderwallImage string, naisIngresses []nais_io_v1.Ingress) corev1.Container {
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
+
+	ingresses := make([]string, 0)
+	for _, ingress := range naisIngresses {
+		ingresses = append(ingresses, string(ingress))
+	}
 
 	resourcesSpec := nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
@@ -39,6 +45,10 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string) corev1.Conta
 			{
 				Name:  "WONDERWALL_REDIS",
 				Value: fmt.Sprintf("nais-io-wonderwall-redis:%d", redisPort),
+			},
+			{
+				Name:  "WONDERWALL_INGRESSES",
+				Value: strings.Join(ingresses, ","),
 			},
 		},
 		Ports: []corev1.ContainerPort{{

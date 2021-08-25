@@ -82,6 +82,10 @@ tests:
                     env:
                       - name: WONDERWALL_UPSTREAM_HOST
                         value: 127.0.0.1:1234
+                      - name: WONDERWALL_REDIS
+                        value: "nais-io-wonderwall-redis:6379"
+                      - name: WONDERWALL_INGRESSES
+                        value: "https://my-client.nav.no/"
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{10}$
