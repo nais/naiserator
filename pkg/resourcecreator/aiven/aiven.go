@@ -40,10 +40,12 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	Elastic(source, ast, specs.Elastic, &aivenApp)
 	Influx(ast, specs.Influx, &aivenApp)
 
-	credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
+	if len(kafkaKeyPaths) > 0 {
+		credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
 
-	ast.Volumes = append(ast.Volumes, credentialFilesVolume)
-	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
+		ast.Volumes = append(ast.Volumes, credentialFilesVolume)
+		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
 
-	ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
+	}
 }
