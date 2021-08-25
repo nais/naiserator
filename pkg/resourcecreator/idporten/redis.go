@@ -3,8 +3,9 @@ package idporten
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 const redisImage = "redis:6"
@@ -38,7 +39,7 @@ func Redis(source resource.Source) *nais_io_v1alpha1.Application {
 					Rules: []nais_io_v1.AccessPolicyInboundRule{
 						{
 							AccessPolicyRule: nais_io_v1.AccessPolicyRule{
-								Application: source.GetName(),
+								Application: "*",
 								Namespace:   source.GetNamespace(),
 								Cluster:     source.GetClusterName(),
 							},

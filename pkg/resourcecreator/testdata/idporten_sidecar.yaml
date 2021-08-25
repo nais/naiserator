@@ -117,7 +117,7 @@ tests:
             accessPolicy:
               inbound:
                 rules:
-                  - application: myapplication
+                  - application: "*"
                     namespace: mynamespace
 
   - apiVersion: v1
