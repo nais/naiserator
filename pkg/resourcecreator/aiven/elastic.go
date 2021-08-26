@@ -20,7 +20,7 @@ func Elastic(ast *resource.Ast, elastic *nais_io_v1.Elastic, aivenApp *aiven_nai
 
 	addElasticEnvVariables(ast, aivenApp.Spec.SecretName)
 	aivenApp.Spec.Elastic = &aiven_nais_io_v1.ElasticSpec{
-		Instance: elastic.Instance,
+		Instance: fmt.Sprintf("elastic-%s-%s", aivenApp.GetNamespace(), elastic.Instance),
 		Access:   elastic.Access,
 	}
 	ast.Labels["aiven"] = "enabled"

@@ -38,7 +38,7 @@ tests:
         resource:
           spec:
             elastic:
-              instance: naistest
+              instance: elastic-mynamespace-naistest
               access: read
   - apiVersion: batch/v1beta1
     kind: CronJob
