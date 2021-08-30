@@ -27,6 +27,8 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	}
 
 	objectMeta = addCleanupLabels(app, objectMeta)
+	objectMeta.Annotations["reloader.stakater.com/search"] = "true"
+
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
