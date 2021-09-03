@@ -27,8 +27,8 @@ input:
                 - name: user-three3
             - name: mydb2
               users:
-                - name: user-four
-                - name: user-five
+                - name: User_four
+                - name: _user_five
           type: POSTGRES_11
 
 tests:
@@ -159,7 +159,7 @@ tests:
     name: mynaisjob
     match:
       - type: subset
-        name: "additional - sql user: mynaisjob"
+        name: "default - sql user: mynaisjob"
         resource:
           metadata:
             name: mynaisjob
@@ -179,7 +179,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: user-two
+    name: mynaisjob-mydb-user-two
     match:
       - type: subset
         name: "sql user: user-two"
@@ -199,10 +199,11 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb-user-two
                   key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
+            resourceID: user-two
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: user-three3
+    name: mynaisjob-mydb-user-three3
     match:
       - type: subset
         name: "sql user: user-three"
@@ -222,6 +223,7 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb-user-three3
                   key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD
+            resourceID: user-three3
 
 
 
@@ -268,8 +270,8 @@ tests:
             NAIS_DATABASE_USER_FOUR_MYDB2_HOST: 127.0.0.1
             NAIS_DATABASE_USER_FOUR_MYDB2_PASSWORD: ".{43}"
             NAIS_DATABASE_USER_FOUR_MYDB2_PORT: "5432"
-            NAIS_DATABASE_USER_FOUR_MYDB2_URL: postgres://user-four:.{43}@127.0.0.1:5432/mydb2
-            NAIS_DATABASE_USER_FOUR_MYDB2_USERNAME: user-four
+            NAIS_DATABASE_USER_FOUR_MYDB2_URL: postgres://User_four:.{43}@127.0.0.1:5432/mydb2
+            NAIS_DATABASE_USER_FOUR_MYDB2_USERNAME: User_four
           type: Opaque
 
   - apiVersion: v1
@@ -298,14 +300,14 @@ tests:
             NAIS_DATABASE_USER_FIVE_MYDB2_HOST: 127.0.0.1
             NAIS_DATABASE_USER_FIVE_MYDB2_PORT: "5432"
             NAIS_DATABASE_USER_FIVE_MYDB2_PASSWORD: ".{43}"
-            NAIS_DATABASE_USER_FIVE_MYDB2_USERNAME: user-five
-            NAIS_DATABASE_USER_FIVE_MYDB2_URL: postgres://user-five:.{43}@127.0.0.1:5432/mydb2
+            NAIS_DATABASE_USER_FIVE_MYDB2_USERNAME: _user_five
+            NAIS_DATABASE_USER_FIVE_MYDB2_URL: postgres://_user_five:.{43}@127.0.0.1:5432/mydb2
           type: Opaque
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: user-four
+    name: mynaisjob-mydb2-user-four
     match:
       - type: subset
         name: "sql user: user-four"
@@ -325,10 +327,11 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb2-user-four
                   key: NAIS_DATABASE_USER_FOUR_MYDB2_PASSWORD
+            resourceID: User_four
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: user-five
+    name: mynaisjob-mydb2-user-five
     match:
       - type: subset
         name: "sql user: user-five"
@@ -348,3 +351,4 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb2-user-five
                   key: NAIS_DATABASE_USER_FIVE_MYDB2_PASSWORD
+            resourceID: _user_five

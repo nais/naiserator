@@ -24,7 +24,7 @@ func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) stri
 	if isDefault(instanceName, sqlUserName) {
 		return fmt.Sprintf("google-sql-%s", appName)
 	}
-	return fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, sqlUserName)
+	return fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, replaceToLowerWithNoPrefix(sqlUserName))
 }
 
 // isDefault is a legacy compatibility function
@@ -34,6 +34,11 @@ func isDefault(instanceName string, sqlUserName string) bool {
 
 func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
+}
+
+func replaceToLowerWithNoPrefix(x string) string {
+	noPrefixX := trimPrefix(x)
+	return strings.ToLower(strings.ReplaceAll(noPrefixX, "_", "-"))
 }
 
 func trimPrefix(x string) string {

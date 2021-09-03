@@ -144,10 +144,10 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 			Name: "user-two",
 		},
 		{
-			Name: "user-three",
+			Name: "user_three",
 		},
 		{
-			Name: "user-three",
+			Name: "user_three",
 		},
 		{
 			Name: instance.Name,

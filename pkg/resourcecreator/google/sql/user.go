@@ -115,12 +115,17 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 					},
 				},
 			},
+			ResourceID: in.Name,
 		},
 	}, nil
 }
 
 func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, secretKeyRefEnvName, appName, projectId string) (*googlesqlcrd.SQLUser, error) {
-	objectMeta.Name = in.Name
+	if in.isDefault() {
+		objectMeta.Name = in.Instance.Name
+	} else {
+		objectMeta.Name = fmt.Sprintf("%s-%s-%s", appName, in.DB.Name, replaceToLowerWithNoPrefix(in.Name))
+	}
 	setAnnotations(objectMeta, cascadingDelete, projectId)
 
 	sqlUser, err := in.create(objectMeta, secretKeyRefEnvName, appName)

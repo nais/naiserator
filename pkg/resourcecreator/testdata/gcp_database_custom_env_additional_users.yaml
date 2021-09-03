@@ -128,7 +128,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: user-two
+    name: myapplication-mydb-user-two
     match:
       - type: subset
         name: "custom env - sql user: user-two"
