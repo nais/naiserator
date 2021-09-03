@@ -54,3 +54,5 @@ func GCPListers() []runtime.Object {
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
 	}
 }
+
+//TODO: Add skatteetaten listers

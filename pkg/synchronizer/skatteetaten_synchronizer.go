@@ -252,6 +252,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	ast.AppendOperation(resource.OperationCreateOrUpdate, poddisruptionbudget)
 
 	// ImagePolicy
+	// SKATT: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
 	imagePolicy, err := generator.GenerateImagePolicy(*app)
 	if err != nil {
 		return nil, err
@@ -265,6 +266,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	}
 
 	//TODO handle updating
+	//SKATT: Operatøren for disse setter controller reference men vi vil gjerne ha blocking owner reference for sletting
 	for _, db := range app.Spec.Azure.PostgreDatabases {
 		//TODO: handle fetching resource group from azure, or how do we do this?
 		postgreDatabase := generator.GeneratePostgresDatabase(*app, RESOURCE_GROUP, *db)
