@@ -188,6 +188,19 @@ func run() error {
 		return err
 	}
 
+	skatteetatenApplicationReconciler := controllers.NewSkatteetatenAppReconciler(synchronizer.Synchronizer{
+		Client:          mgrClient,
+		Config:          *cfg,
+		Kafka:           kafkaClient,
+		ResourceOptions: resourceOptions,
+		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
+		Scheme:          kscheme,
+		SimpleClient:    simpleClient,
+	})
+
+	if err = skatteetatenApplicationReconciler.SetupWithManager(mgr); err != nil {
+		return err
+	}
 	return mgr.Start(stopCh)
 }
 
