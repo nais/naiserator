@@ -5,13 +5,11 @@ import (
 	"strings"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectId string) {
@@ -22,11 +20,11 @@ func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectI
 	}
 }
 
-func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) (string, error) {
+func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) string {
 	if isDefault(instanceName, sqlUserName) {
-		return fmt.Sprintf("google-sql-%s", appName), nil
+		return fmt.Sprintf("google-sql-%s", appName)
 	}
-	return namegen.ShortName(fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, replaceToLowerWithNoPrefix(sqlUserName)), validation.DNS1035LabelMaxLength)
+	return fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, sqlUserName)
 }
 
 // isDefault is a legacy compatibility function
@@ -36,11 +34,6 @@ func isDefault(instanceName string, sqlUserName string) bool {
 
 func googleSQLDatabaseCase(x string) string {
 	return strings.ReplaceAll(strings.ToUpper(x), "-", "_")
-}
-
-func replaceToLowerWithNoPrefix(x string) string {
-	noPrefixX := trimPrefix(x)
-	return strings.ToLower(strings.ReplaceAll(noPrefixX, "_", "-"))
 }
 
 func trimPrefix(x string) string {
@@ -99,19 +92,9 @@ func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstance nais.Cloud
 		}
 
 		for _, user := range googleSQLUsers {
-			secretName, err := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
-			if err != nil {
-				return err
-			}
+			secretName := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
 			ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
 		}
 	}
 	return nil
-}
-
-func BuildUniquesNameWithPredicate(predicate bool, defaultReturn, basename string) (string, error) {
-	if predicate {
-		return defaultReturn, nil
-	}
-	return namegen.ShortName(basename, validation.DNS1035LabelMaxLength)
 }
