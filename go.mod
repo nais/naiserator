@@ -33,6 +33,11 @@ require (
 	k8s.io/client-go v0.17.16
 	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f
 	sigs.k8s.io/controller-runtime v0.5.0
+	github.com/Azure/azure-service-operator v0.0.0-20210817082542-e19067453179
+    github.com/fluxcd/image-reflector-controller/api v0.11.1
+   	github.com/fluxcd/pkg/apis/meta v0.10.0
+    istio.io/api v0.0.0-20210810205915-f8889a346400
+    istio.io/client-go v1.11.0
 )
 
 go 1.15
