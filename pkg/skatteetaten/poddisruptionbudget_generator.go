@@ -1,13 +1,13 @@
 package generator
 
 import (
-	"github.com/skatteetaten-trial/nebula-application-operator/pkg/api/v1alpha1"
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func GeneratePodDisruptionBudget(application v1alpha1.Application) *v1beta1.PodDisruptionBudget {
+func GeneratePodDisruptionBudget(application skatteetaten_no_v1alpha1.Application) *v1beta1.PodDisruptionBudget {
 
 	minAvailable := application.Spec.Replicas.MinAvailable
 

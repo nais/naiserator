@@ -6,20 +6,21 @@ import (
 	"time"
 
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
+	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	generator "github.com/nais/naiserator/pkg/skatteetaten"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/nais/naiserator/pkg/metrics"
-	"github.com/nais/naiserator/pkg/resourcecreator"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
+const (
 
-
+	RESOURCE_GROUP ="rg-nap"
+)
 
 // ReconcileSkatteetatenApplication process Application work queue
 func (n *Synchronizer) ReconcileSkatteetatenApplication(req ctrl.Request) (ctrl.Result, error) {
@@ -172,27 +173,8 @@ func (n *Synchronizer) PrepareSkatteetatenApplikasjon(app *skatteetaten_no_v1alp
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
-	if app.Spec.GCP != nil {
-		// App requests gcp resources, verify we've got a GCP team project ID
-		projectID, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]
-		if !ok {
-			// We're not currently in a team namespace with corresponding GCP team project
-			return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
-		}
-		rollout.ResourceOptions.GoogleTeamProjectId = projectID
-	}
-
-	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
-	if n.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
-		rollout.ResourceOptions.Linkerd = true
-	}
-
-	if rollout.ResourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar != nil && app.Spec.IDPorten.Sidecar.Enabled {
-		rollout.ResourceOptions.WonderwallEnabled = true
-	}
-
-	rollout.SetCurrentDeployment(previousDeployment, *app.Spec.Replicas.Min)
-	rollout.ResourceOperations, err = resourcecreator.CreateApplication(app, rollout.ResourceOptions)
+	rollout.SetCurrentDeployment(previousDeployment, app.Spec.Replicas.Min)
+	rollout.ResourceOperations, err = CreateSkatteetatenApplication(app, rollout.ResourceOptions)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
@@ -216,4 +198,88 @@ func (n *Synchronizer) UpdateSkatteetatenApplication(ctx context.Context, source
 	}
 
 	return updateFunc(existing)
+}
+
+func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
+
+	ast := resource.NewAst()
+
+	// Service
+	svc := generator.GenerateService(*app)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, svc)
+
+	// ServiceAccount
+	sa := generator.GenerateServiceAccount(*app)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, sa)
+
+	// HorizontalPodAutoscaler
+	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
+		hpa := generator.GenerateHpa(*app)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
+	}
+
+	if ! app.Spec.UnsecureDebugDisableAllAccessPolicies {
+		// NetworkPolicy
+		np := generator.GenerateNetworkPolicy(*app, app.Spec)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
+
+		// AuthorizationPolicy
+		ap := generator.GenerateAuthorizationPolicy(*app, app.Spec)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, ap)
+	}
+
+	// ServiceEntry
+	if app.Spec.Egress != nil && app.Spec.Egress.External != nil {
+		for _, egress := range app.Spec.Egress.External {
+			se := generator.GenerateServiceEntry(*app, egress)
+			ast.AppendOperation(resource.OperationCreateOrUpdate, se)
+		}
+	}
+
+	// VirtualService
+	if app.Spec.Ingress != nil && app.Spec.Ingress.Public != nil {
+		for _, ingress := range app.Spec.Ingress.Public {
+			if !ingress.Enabled {
+				continue
+			}
+			vs := generator.GenerateVirtualService(*app, ingress)
+			ast.AppendOperation(resource.OperationCreateOrUpdate, vs)
+		}
+	}
+
+	// PodDisruptionBudget
+	poddisruptionbudget := generator.GeneratePodDisruptionBudget(*app)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, poddisruptionbudget)
+
+	// ImagePolicy
+	imagePolicy, err := generator.GenerateImagePolicy(*app)
+	if err != nil {
+		return nil, err
+	}
+	ast.AppendOperation(resource.OperationCreateOrUpdate, imagePolicy)
+
+	// Azure
+	var dbVars []corev1.EnvVar
+	if app.Spec.Azure != nil && app.Spec.Azure.PostgreDatabases != nil && len(app.Spec.Azure.PostgreDatabases) == 1 {
+		dbVars = generator.GenerateDbEnv("SPRING_DATASOURCE", app.Spec.Azure.PostgreDatabases[0].Users[0].SecretName(*app))
+	}
+
+	//TODO handle updating
+	for _, db := range app.Spec.Azure.PostgreDatabases {
+		//TODO: handle fetching resource group from azure, or how do we do this?
+		postgreDatabase := generator.GeneratePostgresDatabase(*app, RESOURCE_GROUP, *db)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, postgreDatabase)
+
+		for _, user := range db.Users {
+			postgreUser := generator.GeneratePostgresUser(*app, RESOURCE_GROUP, *db, *user)
+			ast.AppendOperation(resource.OperationCreateIfNotExists, postgreUser)
+		}
+	}
+
+	// Deployment
+	deployment := generator.GenerateDeployment(*app, dbVars)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, deployment)
+
+
+	return ast.Operations, nil
 }

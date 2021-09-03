@@ -2,7 +2,7 @@ package generator
 
 import (
 	"fmt"
-	"github.com/skatteetaten-trial/nebula-application-operator/pkg/api/v1alpha1"
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"istio.io/api/security/v1beta1"
 	beta1 "istio.io/api/type/v1beta1"
 	v1beta12 "istio.io/client-go/pkg/apis/security/v1beta1"
@@ -19,7 +19,7 @@ const (
 
 var appNamespace string
 
-func GenerateAuthorizationPolicy(application v1alpha1.Application, config v1alpha1.ApplicationSpec) *v1beta12.AuthorizationPolicy {
+func GenerateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, config skatteetaten_no_v1alpha1.ApplicationSpec) *v1beta12.AuthorizationPolicy {
 
 	appNamespace = application.Namespace
 	authPolicy := generateAuthorizationPolicy(application, v1beta1.AuthorizationPolicy_ALLOW)
@@ -40,11 +40,11 @@ func GenerateAuthorizationPolicy(application v1alpha1.Application, config v1alph
 			authPolicy.Spec.Rules = append(
 				authPolicy.Spec.Rules,
 
-				generateAuthorizationPolicyRule(v1alpha1.InternalIngressConfig{
+				generateAuthorizationPolicyRule(skatteetaten_no_v1alpha1.InternalIngressConfig{
 					Enabled:     true,
 					Application: fmt.Sprintf("%s%s", gateway, ServiceAccountSuffix),
 					Namespace:   IstioNamespace,
-					Ports:       []v1alpha1.PortConfig{{Port: uint16(ingress.Port)}},
+					Ports:       []skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port)}},
 				}),
 			)
 		}
@@ -70,7 +70,7 @@ func GenerateAuthorizationPolicy(application v1alpha1.Application, config v1alph
 	return authPolicy
 }
 
-func generateAuthorizationPolicyRule(rule v1alpha1.InternalIngressConfig) *v1beta1.Rule {
+func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngressConfig) *v1beta1.Rule {
 	PolicyRule := &v1beta1.Rule{}
 
 	// Namespace not set, app not set -> Allow all apps in same namespace   -> source namespace
@@ -120,7 +120,7 @@ func generateAuthorizationPolicyRule(rule v1alpha1.InternalIngressConfig) *v1bet
 	return PolicyRule
 }
 
-func generateAuthorizationPolicy(application v1alpha1.Application, action v1beta1.AuthorizationPolicy_Action) *v1beta12.AuthorizationPolicy {
+func generateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, action v1beta1.AuthorizationPolicy_Action) *v1beta12.AuthorizationPolicy {
 	return &v1beta12.AuthorizationPolicy{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "security.istio.io/v1beta1",

@@ -1,14 +1,14 @@
 package generator
 
 import (
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"fmt"
-	"github.com/skatteetaten-trial/nebula-application-operator/pkg/api/v1alpha1"
 	v1beta12 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GenerateVirtualService(application v1alpha1.Application, ingress v1alpha1.PublicIngressConfig) *v1beta1.VirtualService {
+func GenerateVirtualService(application skatteetaten_no_v1alpha1.Application, ingress skatteetaten_no_v1alpha1.PublicIngressConfig) *v1beta1.VirtualService {
 	domain := "istio.nebula.dev.skatteetaten.io"
 
 	// comet-comet-utv.<domain>
