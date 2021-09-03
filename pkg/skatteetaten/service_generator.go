@@ -1,12 +1,12 @@
 package generator
 
 import (
-	"github.com/skatteetaten-trial/nebula-application-operator/pkg/api/v1alpha1"
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GenerateService(application v1alpha1.Application) *corev1.Service {
+func GenerateService(application skatteetaten_no_v1alpha1.Application) *corev1.Service {
 
 	//finn service i clusteret
 	//hvis den har satt nap-skip-reconcyle, ikke gjør noe.

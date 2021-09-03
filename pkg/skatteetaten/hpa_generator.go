@@ -1,13 +1,13 @@
 package generator
 
 import (
-	"github.com/skatteetaten-trial/nebula-application-operator/pkg/api/v1alpha1"
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
+	"github.com/nais/naiserator/pkg/util"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 )
 
-func GenerateHpa(application v1alpha1.Application) *autoscalingv1.HorizontalPodAutoscaler {
+func GenerateHpa(application skatteetaten_no_v1alpha1.Application) *autoscalingv1.HorizontalPodAutoscaler {
 	return &autoscalingv1.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
@@ -20,9 +20,10 @@ func GenerateHpa(application v1alpha1.Application) *autoscalingv1.HorizontalPodA
 				Name:       application.Name,
 				APIVersion: "apps/v1",
 			},
-			MinReplicas:                    pointer.Int32(int32(application.Spec.Replicas.Min)),
+			MinReplicas:                    util.Int32p(int32(application.Spec.Replicas.Min)),
 			MaxReplicas:                    int32(application.Spec.Replicas.Max),
-			TargetCPUUtilizationPercentage: pointer.Int32(int32(application.Spec.Replicas.HpaTargetCPUUtilizationPercentage)),
+			TargetCPUUtilizationPercentage: util.Int32p(int32(application.Spec.Replicas.HpaTargetCPUUtilizationPercentage)),
 		},
 	}
 }
+
