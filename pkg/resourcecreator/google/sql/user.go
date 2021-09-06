@@ -99,6 +99,11 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 }
 
 func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName string) (*googlesqlcrd.SQLUser, error) {
+	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, in.DB.Name, in.Name)
+	if err != nil {
+		return nil, err
+	}
+
 	return &googlesqlcrd.SQLUser{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLUser",
@@ -111,7 +116,7 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 				ValueFrom: googlesqlcrd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: googlesqlcrd.SecretRef{
 						Key:  secretKeyRefEnvName,
-						Name: GoogleSQLSecretName(appName, in.Instance.Name, in.DB.Name, in.Name),
+						Name: secretName,
 					},
 				},
 			},

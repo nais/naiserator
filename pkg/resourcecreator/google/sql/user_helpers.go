@@ -5,11 +5,13 @@ import (
 	"strings"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectId string) {
@@ -20,11 +22,11 @@ func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectI
 	}
 }
 
-func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) string {
+func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) (string, error) {
 	if isDefault(instanceName, sqlUserName) {
-		return fmt.Sprintf("google-sql-%s", appName)
+		return fmt.Sprintf("google-sql-%s", appName), nil
 	}
-	return fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, replaceToLowerWithNoPrefix(sqlUserName))
+	return namegen.ShortName(fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, replaceToLowerWithNoPrefix(sqlUserName)), validation.DNS1035LabelMaxLength)
 }
 
 // isDefault is a legacy compatibility function
@@ -97,7 +99,10 @@ func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstance nais.Cloud
 		}
 
 		for _, user := range googleSQLUsers {
-			secretName := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
+			secretName, err := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
+			if err != nil {
+				return err
+			}
 			ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
 		}
 	}
