@@ -98,11 +98,12 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 	}
 }
 
-func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName, dbName string) (*googlesqlcrd.SQLUser, error) {
-	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, dbName, in.Name)
+func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName string) (*googlesqlcrd.SQLUser, error) {
+	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, in.DB.Name, in.Name)
 	if err != nil {
 		return nil, err
 	}
+
 	return &googlesqlcrd.SQLUser{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLUser",
@@ -119,23 +120,20 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 					},
 				},
 			},
+			ResourceID: in.Name,
 		},
 	}, nil
 }
 
-func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, dbName string, cascadingDelete bool, projectId string) (*googlesqlcrd.SQLUser, error) {
-	appName := objectMeta.Name
-	baseName := fmt.Sprintf("%s-%s-%s", in.Instance.Name, in.DB.Name, replaceToLowerWithNoPrefix(in.Name))
-	objectDataName, err := BuildUniquesNameWithPredicate(in.isDefault(), in.Instance.Name, baseName)
-
-	if err != nil {
-		return nil, fmt.Errorf("unable to create meatadata: %s", err)
+func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, secretKeyRefEnvName, appName, projectId string) (*googlesqlcrd.SQLUser, error) {
+	if in.isDefault() {
+		objectMeta.Name = in.Instance.Name
+	} else {
+		objectMeta.Name = fmt.Sprintf("%s-%s-%s", appName, in.DB.Name, replaceToLowerWithNoPrefix(in.Name))
 	}
-
-	objectMeta.Name = objectDataName
 	setAnnotations(objectMeta, cascadingDelete, projectId)
 
-	sqlUser, err := in.create(objectMeta, secretKeyRefEnvName, appName, dbName)
+	sqlUser, err := in.create(objectMeta, secretKeyRefEnvName, appName)
 	if err != nil {
 		return nil, err
 	}

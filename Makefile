@@ -7,7 +7,7 @@ os         := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 PROTOC = $(shell which protoc)
 
-.PHONY: build docker docker-push local install test crd codegen-crd codegen-updater proto
+.PHONY: build docker docker-push local install test proto
 
 build:
 	cd cmd/naiserator && go build
