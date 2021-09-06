@@ -2,9 +2,10 @@ package pod
 
 import (
 	"fmt"
-	"k8s.io/utils/pointer"
 	"strconv"
 	"strings"
+
+	"k8s.io/utils/pointer"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -264,6 +265,10 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opt
 
 	if len(naisjob.Spec.Logtransform) > 0 {
 		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
+	}
+
+	if naisjob.Spec.SidecarCleanup == nil || *naisjob.Spec.SidecarCleanup == true {
+		objectMeta.Annotations["ginuudan.nais.io/dwindle"] = "true"
 	}
 
 	if opt.Linkerd {

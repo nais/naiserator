@@ -79,6 +79,8 @@ tests:
                 backoffLimit: 6
                 template:
                   metadata:
+                    annotations:
+                      ginuudan.nais.io/dwindle: "true"
                     labels:
                       app: mynaisjob
                       team: myteam
