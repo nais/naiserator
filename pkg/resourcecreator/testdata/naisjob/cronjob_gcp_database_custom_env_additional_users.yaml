@@ -75,7 +75,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob-mydb-user-two
+    name: google-sql-mynaisjob-mydb-user-two-4c6e7100
     match:
       - type: regex
         name: "secret two"
@@ -83,7 +83,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob-mydb-user-two
+            name: google-sql-mynaisjob-mydb-user-two-4c6e7100
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -148,6 +148,6 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob-mydb-user-two
+                  name: google-sql-mynaisjob-mydb-user-two-4c6e7100
                   key: PWNED_USER_TWO_PASSWORD
             resourceID: user-two

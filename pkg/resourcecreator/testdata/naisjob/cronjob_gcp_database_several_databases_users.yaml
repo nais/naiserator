@@ -96,7 +96,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob-mydb-user-two
+    name: google-sql-mynaisjob-mydb-user-two-4c6e7100
     match:
       - type: regex
         name: "secret two"
@@ -104,7 +104,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob-mydb-user-two
+            name: google-sql-mynaisjob-mydb-user-two-4c6e7100
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -126,7 +126,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob-mydb-user-three3
+    name: google-sql-mynaisjob-mydb-user-three3-caeaa598
     match:
       - type: regex
         name: "secret three"
@@ -134,7 +134,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob-mydb-user-three3
+            name: google-sql-mynaisjob-mydb-user-three3-caeaa598
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -197,7 +197,7 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob-mydb-user-two
+                  name: google-sql-mynaisjob-mydb-user-two-4c6e7100
                   key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
             resourceID: user-two
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -221,7 +221,7 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob-mydb-user-three3
+                  name: google-sql-mynaisjob-mydb-user-three3-caeaa598
                   key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD
             resourceID: user-three3
 
@@ -247,7 +247,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob-mydb2-user-four
+    name: google-sql-mynaisjob-mydb2-user-four-569cb02d
     match:
       - type: regex
         name: "secret four"
@@ -255,7 +255,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob-mydb2-user-four
+            name: google-sql-mynaisjob-mydb2-user-four-569cb02d
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -277,7 +277,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
-    name: google-sql-mynaisjob-mydb2-user-five
+    name: google-sql-mynaisjob-mydb2-user-five-faef1a9b
     match:
       - type: regex
         name: "secret five"
@@ -285,7 +285,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: google-sql-mynaisjob-mydb2-user-five
+            name: google-sql-mynaisjob-mydb2-user-five-faef1a9b
             namespace: mynamespace
             labels:
               app: mynaisjob
@@ -325,7 +325,7 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob-mydb2-user-four
+                  name: google-sql-mynaisjob-mydb2-user-four-569cb02d
                   key: NAIS_DATABASE_USER_FOUR_MYDB2_PASSWORD
             resourceID: User_four
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -349,6 +349,6 @@ tests:
             password:
               valueFrom:
                 secretKeyRef:
-                  name: google-sql-mynaisjob-mydb2-user-five
+                  name: google-sql-mynaisjob-mydb2-user-five-faef1a9b
                   key: NAIS_DATABASE_USER_FIVE_MYDB2_PASSWORD
             resourceID: _user_five
