@@ -11,7 +11,7 @@ import (
 )
 
 func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGCP *nais_io_v1.GCP) error {
-	if len(resourceOptions.GoogleProjectId) <= 0 {
+	if !resourceOptions.CNRMEnabled && len(resourceOptions.GoogleProjectId) <= 0 {
 		return nil
 	}
 
