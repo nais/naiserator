@@ -2,6 +2,7 @@ config:
   description: Google BigQuery dataset instance
 
 resourceoptions:
+  CNRMEnabled: true
   AccessPolicy: false
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id

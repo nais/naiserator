@@ -3,6 +3,7 @@ config:
 
 resourceoptions:
   Linkerd: true
+  CNRMEnabled: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
   NumReplicas: 1

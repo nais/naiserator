@@ -50,6 +50,7 @@ type Features struct {
 	NetworkPolicy               bool     `json:"network-policy"`
 	Vault                       bool     `json:"vault"`
 	Jwker                       bool     `json:"jwker"`
+	CNRM                        bool     `json:"cnrm"`
 	Azurerator                  bool     `json:"azurerator"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Digdirator                  bool     `json:"digdirator"`
@@ -132,6 +133,7 @@ const (
 	FeaturesDigdirator                  = "features.digdirator"
 	FeaturesGCP                         = "features.gcp"
 	FeaturesJwker                       = "features.jwker"
+	FeaturesCNRM                        = "features.cnrm"
 	FeaturesKafkarator                  = "features.kafkarator"
 	FeaturesLinkerd                     = "features.linkerd"
 	FeaturesNativeSecrets               = "features.native-secrets"
@@ -208,6 +210,7 @@ func init() {
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 	flag.Bool(FeaturesGCP, false, "running in gcp and enable use of CNRM resources")
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
+	flag.Bool(FeaturesCNRM, false, "enable creation of CNRM resources")
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")

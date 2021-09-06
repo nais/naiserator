@@ -249,6 +249,7 @@ func TestSynchronizer(t *testing.T) {
 
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resource.NewOptions()
+	resourceOptions.CNRMEnabled = true
 	resourceOptions.GoogleProjectId = "something"
 	resourceOptions.GoogleCloudSQLProxyContainerImage = "cloudsqlproxy"
 

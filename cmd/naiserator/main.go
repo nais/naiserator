@@ -134,6 +134,7 @@ func run() error {
 	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
 	resourceOptions.HostAliases = cfg.HostAliases
 	resourceOptions.JwkerEnabled = cfg.Features.Jwker
+	resourceOptions.CNRMEnabled = cfg.Features.CNRM
 	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
 	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy

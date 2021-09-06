@@ -2,6 +2,7 @@ config:
   description: additional cloudsql users
 
 resourceoptions:
+  CNRMEnabled: true
   Linkerd: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
