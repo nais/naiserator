@@ -259,16 +259,14 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opt
 
 	objectMeta.Annotations = map[string]string{}
 
+	objectMeta.Annotations["ginuudan.nais.io/dwindle"] = "true"
+
 	if len(naisjob.Spec.Logformat) > 0 {
 		objectMeta.Annotations["nais.io/logformat"] = naisjob.Spec.Logformat
 	}
 
 	if len(naisjob.Spec.Logtransform) > 0 {
 		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
-	}
-
-	if naisjob.Spec.SidecarCleanup == nil || *naisjob.Spec.SidecarCleanup == true {
-		objectMeta.Annotations["ginuudan.nais.io/dwindle"] = "true"
 	}
 
 	if opt.Linkerd {
