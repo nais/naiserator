@@ -18,18 +18,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource runtime.Object) func() error {
+func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource client.Object) func() error {
 	return func() error {
 		log.Infof("CreateOrUpdate %s", liberator_scheme.TypeName(resource))
 		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
 		if err != nil {
 			return fmt.Errorf("internal error: %w", err)
 		}
-		objectKey, err := client.ObjectKeyFromObject(resource)
+
+		objectKey := client.ObjectKeyFromObject(resource)
 		if err != nil {
 			return fmt.Errorf("unable to derive object key: %w", err)
 		}
-		err = cli.Get(ctx, objectKey, existing)
+		err = cli.Get(ctx, objectKey, resource)
 
 		if errors.IsNotFound(err) {
 			err = cli.Create(ctx, resource)
@@ -52,7 +53,7 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 	}
 }
 
-func CreateOrRecreate(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
+func CreateOrRecreate(ctx context.Context, cli client.Client, resource client.Object) func() error {
 	return func() error {
 		log.Infof("CreateOrRecreate %s", liberator_scheme.TypeName(resource))
 		err := cli.Delete(ctx, resource)
@@ -63,7 +64,7 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, resource runtime.O
 	}
 }
 
-func CreateIfNotExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
+func CreateIfNotExists(ctx context.Context, cli client.Client, resource client.Object) func() error {
 	return func() error {
 		log.Infof("CreateIfNotExists %s", liberator_scheme.TypeName(resource))
 		err := cli.Create(ctx, resource)
@@ -74,7 +75,7 @@ func CreateIfNotExists(ctx context.Context, cli client.Client, resource runtime.
 	}
 }
 
-func DeleteIfExists(ctx context.Context, cli client.Client, resource runtime.Object) func() error {
+func DeleteIfExists(ctx context.Context, cli client.Client, resource client.Object) func() error {
 	return func() error {
 		log.Infof("DeleteIfExists %s", liberator_scheme.TypeName(resource))
 		err := cli.Delete(ctx, resource)
@@ -86,7 +87,7 @@ func DeleteIfExists(ctx context.Context, cli client.Client, resource runtime.Obj
 }
 
 // Find all Kubernetes resource matching label selector 'app=NAME' for all specified types
-func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, types []runtime.Object, source resource.Source) ([]runtime.Object, error) {
+func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, types []client.ObjectList, source resource.Source) ([]runtime.Object, error) {
 	// Set up label selector 'app=NAME'
 	labelSelector := labels.NewSelector()
 	labelreq, err := labels.NewRequirement("app", selection.Equals, []string{source.GetName()})
