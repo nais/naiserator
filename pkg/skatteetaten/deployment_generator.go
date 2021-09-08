@@ -64,7 +64,7 @@ func GenerateDeployment(application skatteetaten_no_v1alpha1.Application, dbVars
 			Strategy: v1.DeploymentStrategy{
 				Type: "Recreate",
 			},
-			Replicas: pointer.Int32(int32(replicas)),
+			Replicas: pointer.Int32Ptr(int32(replicas)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: application.StandardLabelSelector(),
 			},
@@ -102,9 +102,9 @@ func GenerateDeployment(application skatteetaten_no_v1alpha1.Application, dbVars
 					}},
 					ServiceAccountName: application.Name,
 					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser:  pointer.Int64(10000),
-						RunAsGroup: pointer.Int64(30000),
-						FSGroup:    pointer.Int64(20000),
+						RunAsUser:  pointer.Int64Ptr(10000),
+						RunAsGroup: pointer.Int64Ptr(30000),
+						FSGroup:    pointer.Int64Ptr(20000),
 					},
 				},
 			},

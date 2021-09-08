@@ -142,6 +142,8 @@ func run() error {
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
+	//TODO: SKATT
+	resourceOptions.SkattUsePullSecret=true
 
 	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")

@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/service"
+	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	generator "github.com/nais/naiserator/pkg/skatteetaten"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
@@ -205,12 +208,12 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	ast := resource.NewAst()
 
 	// Service
-	svc := generator.GenerateService(*app)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, svc)
-
-	// ServiceAccount
-	sa := generator.GenerateServiceAccount(*app)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, sa)
+	naisSvc := nais_io_v1.Service{
+		Protocol: "TCP",
+		Port: 8080,
+	}
+	service.Create(app, ast, resourceOptions, naisSvc)
+	serviceaccount.Create(app, ast, resourceOptions)
 
 	// HorizontalPodAutoscaler
 	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
