@@ -2,9 +2,10 @@ package pod
 
 import (
 	"fmt"
-	"k8s.io/utils/pointer"
 	"strconv"
 	"strings"
+
+	"k8s.io/utils/pointer"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -257,6 +258,8 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opt
 	mapMerge(objectMeta.Labels, ast.Labels)
 
 	objectMeta.Annotations = map[string]string{}
+
+	objectMeta.Annotations["ginuudan.nais.io/dwindle"] = "true"
 
 	if len(naisjob.Spec.Logformat) > 0 {
 		objectMeta.Annotations["nais.io/logformat"] = naisjob.Spec.Logformat
