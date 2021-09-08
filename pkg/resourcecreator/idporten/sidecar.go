@@ -47,12 +47,27 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string, naisIdporten
 			Name:  "WONDERWALL_INGRESSES",
 			Value: strings.Join(ingresses, ","),
 		},
+		{
+			Name: "WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED",
+			Value: "true",
+		},
+		{
+			Name: "WONDERWALL_IDPORTEN_LOCALE_ENABLED",
+			Value: "true",
+		},
 	}
 
 	if len(naisIdporten.Sidecar.Level) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name: "WONDERWALL_IDPORTEN_SECURITY_LEVEL_VALUE",
 			Value: naisIdporten.Sidecar.Level,
+		})
+	}
+
+	if len(naisIdporten.Sidecar.Locale) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name: "WONDERWALL_IDPORTEN_LOCALE_VALUE",
+			Value: naisIdporten.Sidecar.Locale,
 		})
 	}
 

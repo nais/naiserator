@@ -29,6 +29,7 @@ input:
       sidecar:
         enabled: true
         level: Level3
+        locale: es
     ingresses:
       - "https://my-client.nav.no/"
     port: 1234
@@ -83,8 +84,14 @@ tests:
                         value: ^nais-io-wonderwall-redis:6379$
                       - name: WONDERWALL_INGRESSES
                         value: ^https://my-client.nav.no/$
+                      - name: WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED
+                        value: ^true$
+                      - name: WONDERWALL_IDPORTEN_LOCALE_ENABLED
+                        value: ^true$
                       - name: WONDERWALL_IDPORTEN_SECURITY_LEVEL_VALUE
                         value: ^Level3$
+                      - name: WONDERWALL_IDPORTEN_LOCALE_VALUE
+                        value: ^es$
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{10}$
