@@ -29,7 +29,7 @@ input:
       sidecar:
         enabled: true
         level: Level3
-        locale: es
+        locale: se
     ingresses:
       - "https://my-client.nav.no/"
     port: 1234
@@ -91,7 +91,7 @@ tests:
                       - name: WONDERWALL_IDPORTEN_SECURITY_LEVEL_VALUE
                         value: ^Level3$
                       - name: WONDERWALL_IDPORTEN_LOCALE_VALUE
-                        value: ^es$
+                        value: ^se$
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{10}$
