@@ -199,7 +199,7 @@ tests:
               type: RollingUpdate
               rollingUpdate:
                 maxUnavailable: 0
-                maxSurge: 1
+                maxSurge: "25%"
             revisionHistoryLimit: 10
             progressDeadlineSeconds: 300
 
