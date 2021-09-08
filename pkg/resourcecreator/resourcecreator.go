@@ -33,7 +33,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 )
 
-
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
 func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
