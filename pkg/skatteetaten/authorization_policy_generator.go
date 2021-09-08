@@ -2,27 +2,29 @@ package generator
 
 import (
 	"fmt"
-	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
-	"istio.io/api/security/v1beta1"
-	beta1 "istio.io/api/type/v1beta1"
-	v1beta12 "istio.io/client-go/pkg/apis/security/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sort"
 	"strconv"
+
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
+	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
 
 const (
 	IstioNamespace        = "istio-system"
 	DefaultIngressGateway = "istio-ingressgateway"
 	ServiceAccountSuffix  = "-service-account"
+
 )
 
 var appNamespace string
 
-func GenerateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, config skatteetaten_no_v1alpha1.ApplicationSpec) *v1beta12.AuthorizationPolicy {
+func GenerateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, config skatteetaten_no_v1alpha1.ApplicationSpec) *security_istio_io_v1beta1.AuthorizationPolicy {
 
 	appNamespace = application.Namespace
-	authPolicy := generateAuthorizationPolicy(application, v1beta1.AuthorizationPolicy_ALLOW)
+	//TODO: magisk "0"
+	authPolicy := generateAuthorizationPolicy(application, "0")
 
 	if config.Ingress == nil {
 		return authPolicy
@@ -70,8 +72,8 @@ func GenerateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Applicatio
 	return authPolicy
 }
 
-func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngressConfig) *v1beta1.Rule {
-	PolicyRule := &v1beta1.Rule{}
+func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngressConfig) *security_istio_io_v1beta1.Rule {
+	PolicyRule := &security_istio_io_v1beta1.Rule{}
 
 	// Namespace not set, app not set -> Allow all apps in same namespace   -> source namespace
 	// Namespace set,     app not set -> Allow all apps in given namespace  -> source namespace
@@ -83,17 +85,17 @@ func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngre
 	}
 
 	if rule.Application == "*" || rule.Application == "" {
-		PolicyRule.From = []*v1beta1.Rule_From{
+		PolicyRule.From = []*security_istio_io_v1beta1.Rule_From{
 			{
-				Source: &v1beta1.Source{
+				Source: &security_istio_io_v1beta1.Source{
 					Namespaces: []string{namespace},
 				},
 			},
 		}
 	} else {
-		PolicyRule.From = []*v1beta1.Rule_From{
+		PolicyRule.From = []*security_istio_io_v1beta1.Rule_From{
 			{
-				Source: &v1beta1.Source{
+				Source: &security_istio_io_v1beta1.Source{
 					Principals: []string{
 						fmt.Sprintf("cluster.local/ns/%s/sa/%s", namespace, rule.Application),
 					},
@@ -102,7 +104,7 @@ func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngre
 		}
 	}
 
-	Operation := v1beta1.Operation{}
+	Operation := security_istio_io_v1beta1.Operation{}
 
 	var ports []string
 	for _, port := range rule.Ports {
@@ -113,22 +115,24 @@ func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngre
 	Operation.Paths = rule.Paths
 	Operation.Methods = rule.Methods
 
-	if Operation.Size() > 0 {
-		PolicyRule.To = []*v1beta1.Rule_To{{Operation: &Operation}}
-	}
+	//TODO: need to find something to simulatte this
+	//if Operation.Size() > 0 {
+
+		PolicyRule.To = []*security_istio_io_v1beta1.Rule_To{{Operation: &Operation}}
+	//}
 
 	return PolicyRule
 }
 
-func generateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, action v1beta1.AuthorizationPolicy_Action) *v1beta12.AuthorizationPolicy {
-	return &v1beta12.AuthorizationPolicy{
+func generateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, action string) *security_istio_io_v1beta1.AuthorizationPolicy {
+	return &security_istio_io_v1beta1.AuthorizationPolicy{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "security.istio.io/v1beta1",
 			Kind:       "AuthorizationPolicy",
 		},
 		ObjectMeta: application.StandardObjectMeta(),
-		Spec: v1beta1.AuthorizationPolicy{
-			Selector: &beta1.WorkloadSelector{
+		Spec: security_istio_io_v1beta1.AuthorizationPolicySpec{
+			Selector: &security_istio_io_v1beta1.WorkloadSelector{
 				MatchLabels: map[string]string{"app": application.Name},
 			},
 			// Requests are denied by default when no rules are defined in the policy (rules == nil) .
