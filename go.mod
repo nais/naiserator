@@ -1,10 +1,7 @@
 module github.com/nais/naiserator
 
 require (
-	github.com/Azure/azure-service-operator v0.0.0-20210902231944-316f0f7baf00
 	github.com/Shopify/sarama v1.28.0
-	github.com/fluxcd/image-reflector-controller/api v0.11.1
-	github.com/fluxcd/pkg/apis/meta v0.10.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.1.2
@@ -24,7 +21,7 @@ require (
 	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420 // indirect
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
-	istio.io/api v0.0.0-20210810205915-f8889a346400
+	istio.io/api v0.0.0-20210809175348-eff556fb5d8a
 	istio.io/client-go v1.11.2
 	k8s.io/api v0.21.3
 	k8s.io/apimachinery v0.21.3
