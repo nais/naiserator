@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -51,6 +52,12 @@ type Synchronizer struct {
 	ResourceOptions resource.Options
 	Config          config.Config
 	Kafka           kafka.Interface
+}
+
+// Commit wraps a cluster operation function with extra fields
+type commit struct {
+	groupVersionKind schema.GroupVersionKind
+	fn               func() error
 }
 
 // Creates a Kubernetes event, or updates an existing one with an incremented counter
@@ -238,9 +245,9 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	return unreferenced, nil
 }
 
-func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (bool, error) {
-	for _, fn := range commits {
-		if err := observeDuration(fn); err != nil {
+func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []commit) (bool, error) {
+	for _, commit := range commits {
+		if err := observeDuration(commit.fn); err != nil {
 			retry := false
 			// In case of race condition errors
 			if errors.IsConflict(err) {
@@ -249,7 +256,7 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []func() error) (bool,
 			reason := errors.ReasonForError(err)
 			return retry, fmt.Errorf("persisting resource to Kubernetes: %s: %s", reason, err)
 		}
-		metrics.ResourcesGenerated.Inc()
+		metrics.ResourcesGenerated.WithLabelValues(commit.groupVersionKind.Kind).Inc()
 	}
 	return false, nil
 }
@@ -338,42 +345,48 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 }
 
 // ClusterOperations generates a set of functions that will perform the rollout in the cluster.
-func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) []func() error {
-	var fn func() error
-
-	funcs := make([]func() error, 0)
-	deletes := make([]func() error, 0)
+func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) []commit {
+	funcs := make([]commit, 0)
+	deletes := make([]commit, 0)
 
 	for _, rop := range rollout.ResourceOperations {
+		c := commit{
+			groupVersionKind: rop.Resource.GetObjectKind().GroupVersionKind(),
+		}
 		switch rop.Operation {
 		case resource.OperationCreateOrUpdate:
-			fn = updater.CreateOrUpdate(ctx, n, n.Scheme, rop.Resource)
+			c.fn = updater.CreateOrUpdate(ctx, n, n.Scheme, rop.Resource)
 		case resource.OperationCreateOrRecreate:
-			fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
+			c.fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
 		case resource.OperationCreateIfNotExists:
-			fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
+			c.fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
 		case resource.OperationDeleteIfExists:
-			fn = updater.DeleteIfExists(ctx, n, rop.Resource)
+			c.fn = updater.DeleteIfExists(ctx, n, rop.Resource)
 		default:
-			return []func() error{
-				func() error {
-					return fmt.Errorf("BUG: no such operation %s", rop.Operation)
+			return []commit{
+				{
+					fn: func() error {
+						return fmt.Errorf("BUG: no such operation %s", rop.Operation)
+					},
 				},
 			}
 		}
 
-		funcs = append(funcs, fn)
+		funcs = append(funcs, c)
 	}
 
 	// Delete extraneous resources
 	unreferenced, err := n.Unreferenced(ctx, rollout)
 	if err != nil {
-		deletes = append(deletes, func() error {
+		deletes = append(deletes, commit{fn: func() error {
 			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
-		})
+		}})
 	} else {
 		for _, rsrc := range unreferenced {
-			deletes = append(deletes, updater.DeleteIfExists(ctx, n, rsrc))
+			deletes = append(deletes, commit{
+				groupVersionKind: rsrc.GetObjectKind().GroupVersionKind(),
+				fn:               updater.DeleteIfExists(ctx, n, rsrc),
+			})
 		}
 	}
 

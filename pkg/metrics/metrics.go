@@ -55,11 +55,11 @@ var (
 		Namespace: "naiserator",
 		Help:      "number of nais.io.Application resources that failed synchronization and have been re-enqueued",
 	})
-	ResourcesGenerated = prometheus.NewCounter(prometheus.CounterOpts{
+	ResourcesGenerated = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name:      "resources_generated",
 		Namespace: "naiserator",
 		Help:      "number of Kubernetes resources that have been generated as a result of application deployments",
-	})
+	}, []string{"kind"})
 	KubernetesResourceWriteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name:      "kubernetes_resource_write_duration",
 		Namespace: "naiserator",
