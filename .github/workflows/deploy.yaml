@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: navikt/nais-yaml
-          token: ${{ secrets.NAIS_YAML_TOKEN }}
+          token: ${{ secrets.SRVNAIS_REPO_PUSH_PAT }}
           path: nais-yaml
       - name: Generate image environment variable
         run: |
