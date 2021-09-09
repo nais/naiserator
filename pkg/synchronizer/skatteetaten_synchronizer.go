@@ -209,7 +209,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 
 	// Service
 	naisSvc := nais_io_v1.Service{
-		Protocol: "TCP",
+		Protocol: "tcp",
 		Port: 8080,
 	}
 	service.Create(app, ast, resourceOptions, naisSvc)
