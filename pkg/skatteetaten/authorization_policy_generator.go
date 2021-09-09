@@ -24,7 +24,7 @@ func GenerateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Applicatio
 
 	appNamespace = application.Namespace
 	//TODO: magisk "0"
-	authPolicy := generateAuthorizationPolicy(application, "0")
+	authPolicy := generateAuthorizationPolicy(application, "ALLOW")
 
 	if config.Ingress == nil {
 		return authPolicy
