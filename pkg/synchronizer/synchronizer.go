@@ -349,9 +349,17 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 	funcs := make([]commit, 0)
 	deletes := make([]commit, 0)
 
+	// A wrapper to get GroupVersionKind but ensure there's no nils.
+	getGroupVersionKind := func(o runtime.Object) schema.GroupVersionKind {
+		if o == nil || o.GetObjectKind() == nil {
+			return schema.GroupVersionKind{}
+		}
+		return o.GetObjectKind().GroupVersionKind()
+	}
+
 	for _, rop := range rollout.ResourceOperations {
 		c := commit{
-			groupVersionKind: rop.Resource.GetObjectKind().GroupVersionKind(),
+			groupVersionKind: getGroupVersionKind(rop.Resource),
 		}
 		switch rop.Operation {
 		case resource.OperationCreateOrUpdate:
@@ -384,7 +392,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 	} else {
 		for _, rsrc := range unreferenced {
 			deletes = append(deletes, commit{
-				groupVersionKind: rsrc.GetObjectKind().GroupVersionKind(),
+				groupVersionKind: getGroupVersionKind(rsrc),
 				fn:               updater.DeleteIfExists(ctx, n, rsrc),
 			})
 		}
