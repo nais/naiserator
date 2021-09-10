@@ -1,4 +1,4 @@
-package generator
+package skatteetaten_generator
 
 import (
 	azure_microsoft_com_v1alpha1 "github.com/nais/liberator/pkg/apis/azure.microsoft.com/v1alpha1"

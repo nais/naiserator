@@ -1,4 +1,4 @@
-package generator
+package skatteetaten_generator
 
 import (
 	"fmt"
