@@ -14,6 +14,7 @@ import (
 	generator "github.com/nais/naiserator/pkg/skatteetaten_generator"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/network_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/poddisruptionbudget"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres_env"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -267,7 +268,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	// Azure
 	var dbVars []corev1.EnvVar
 	if app.Spec.Azure != nil && app.Spec.Azure.PostgreDatabases != nil && len(app.Spec.Azure.PostgreDatabases) == 1 {
-		dbVars = generator.GenerateDbEnv("SPRING_DATASOURCE", app.Spec.Azure.PostgreDatabases[0].Users[0].SecretName(*app))
+		dbVars = postgres_env.GenerateDbEnv("SPRING_DATASOURCE", app.Spec.Azure.PostgreDatabases[0].Users[0].SecretName(*app))
 	}
 
 	//TODO handle updating

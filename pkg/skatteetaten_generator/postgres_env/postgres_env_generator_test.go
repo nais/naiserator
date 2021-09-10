@@ -1,4 +1,4 @@
-package skatteetaten_generator
+package postgres_env
 
 import (
 	"testing"
