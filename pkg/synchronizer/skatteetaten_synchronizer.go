@@ -11,7 +11,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
-	generator "github.com/nais/naiserator/pkg/skatteetaten"
+	generator "github.com/nais/naiserator/pkg/skatteetaten_generator"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
