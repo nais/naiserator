@@ -26,6 +26,10 @@ input:
       enabled: true
       redirectPath: "/some/path"
       frontchannelLogoutPath: "/some/other/path"
+      postLogoutRedirectURIs:
+        - "https://my-client.nav.no/logged_out"
+        - "https://nav.no/"
+        - "https://some-other-client.nav.no/"
       sidecar:
         enabled: true
         level: Level3
@@ -64,7 +68,7 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: "deployment contains sidecar with idporten secrets"
+      - name: "deployment contains sidecar with idporten secrets and desired configuration"
         type: regex
         resource:
           spec:
@@ -92,6 +96,8 @@ tests:
                         value: ^Level3$
                       - name: WONDERWALL_IDPORTEN_LOCALE_VALUE
                         value: ^se$
+                      - name: WONDERWALL_IDPORTEN_POST_LOGOUT_REDIRECT_URI
+                        value: ^https://my-client.nav.no/logged_out$
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{10}$

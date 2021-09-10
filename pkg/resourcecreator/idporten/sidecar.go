@@ -48,26 +48,33 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string, naisIdporten
 			Value: strings.Join(ingresses, ","),
 		},
 		{
-			Name: "WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED",
+			Name:  "WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED",
 			Value: "true",
 		},
 		{
-			Name: "WONDERWALL_IDPORTEN_LOCALE_ENABLED",
+			Name:  "WONDERWALL_IDPORTEN_LOCALE_ENABLED",
 			Value: "true",
 		},
 	}
 
 	if len(naisIdporten.Sidecar.Level) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
-			Name: "WONDERWALL_IDPORTEN_SECURITY_LEVEL_VALUE",
+			Name:  "WONDERWALL_IDPORTEN_SECURITY_LEVEL_VALUE",
 			Value: naisIdporten.Sidecar.Level,
 		})
 	}
 
 	if len(naisIdporten.Sidecar.Locale) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
-			Name: "WONDERWALL_IDPORTEN_LOCALE_VALUE",
+			Name:  "WONDERWALL_IDPORTEN_LOCALE_VALUE",
 			Value: naisIdporten.Sidecar.Locale,
+		})
+	}
+
+	if len(naisIdporten.PostLogoutRedirectURIs) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "WONDERWALL_IDPORTEN_POST_LOGOUT_REDIRECT_URI",
+			Value: string(naisIdporten.PostLogoutRedirectURIs[0]),
 		})
 	}
 
@@ -75,7 +82,7 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string, naisIdporten
 		Name:            "wonderwall",
 		Image:           wonderwallImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env: envVars,
+		Env:             envVars,
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
 			Protocol:      corev1.ProtocolTCP,
