@@ -1,4 +1,4 @@
-package skatteetaten_generator
+package network_policy
 
 import (
 	"testing"

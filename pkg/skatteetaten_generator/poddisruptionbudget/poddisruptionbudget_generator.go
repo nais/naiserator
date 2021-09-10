@@ -1,4 +1,4 @@
-package skatteetaten_generator
+package poddisruptionbudget
 
 import (
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"

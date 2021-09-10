@@ -12,6 +12,8 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	generator "github.com/nais/naiserator/pkg/skatteetaten_generator"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/network_policy"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/poddisruptionbudget"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -223,7 +225,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 
 	if ! app.Spec.UnsecureDebugDisableAllAccessPolicies {
 		// NetworkPolicy
-		np := generator.GenerateNetworkPolicy(*app, app.Spec)
+		np := network_policy.GenerateNetworkPolicy(*app, app.Spec)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 
 		// AuthorizationPolicy
@@ -251,7 +253,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	}
 
 	// PodDisruptionBudget
-	poddisruptionbudget := generator.GeneratePodDisruptionBudget(*app)
+	poddisruptionbudget := poddisruptionbudget.GeneratePodDisruptionBudget(*app)
 	ast.AppendOperation(resource.OperationCreateOrUpdate, poddisruptionbudget)
 
 	// ImagePolicy
