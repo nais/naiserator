@@ -2,6 +2,7 @@ config:
   description: google storage bucket with retention period
 
 resourceoptions:
+  CNRMEnabled: true
   AccessPolicy: false
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id

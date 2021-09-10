@@ -3,6 +3,7 @@ config:
 
 resourceoptions:
   AccessPolicy: false
+  CNRMEnabled: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
   NumReplicas: 1
