@@ -56,8 +56,8 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 			Settings: google_sql_crd.SQLInstanceSettings{
 				AvailabilityType: availabilityType(instance.HighAvailability),
 				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{
-					Enabled:             true,
-					StartTime:           fmt.Sprintf("%02d:00", *instance.AutoBackupHour),
+					Enabled:                    true,
+					StartTime:                  fmt.Sprintf("%02d:00", *instance.AutoBackupHour),
 					PointInTimeRecoveryEnabled: instance.PointInTimeRecovery,
 				},
 				IpConfiguration: google_sql_crd.SQLInstanceIpConfiguration{
@@ -69,13 +69,16 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 				Tier:           instance.Tier,
 				DatabaseFlags:  []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}},
 				InsightsConfig: google_sql_crd.SQLInstanceInsightsConfiguration{
-					QueryInsightsEnabled:  instance.Insights.IsEnabled(),
-					QueryStringLength:     instance.Insights.QueryStringLength,
-					RecordApplicationTags: instance.Insights.RecordApplicationTags,
-					RecordClientAddress:   instance.Insights.RecordClientAddress,
+					QueryInsightsEnabled: instance.Insights.IsEnabled(),
 				},
 			},
 		},
+	}
+
+	if instance.Insights != nil {
+		sqlInstance.Spec.Settings.InsightsConfig.QueryStringLength = instance.Insights.QueryStringLength
+		sqlInstance.Spec.Settings.InsightsConfig.RecordApplicationTags = instance.Insights.RecordApplicationTags
+		sqlInstance.Spec.Settings.InsightsConfig.RecordClientAddress = instance.Insights.RecordClientAddress
 	}
 
 	if instance.Maintenance != nil && instance.Maintenance.Hour != nil && instance.Maintenance.Day != 0 {
