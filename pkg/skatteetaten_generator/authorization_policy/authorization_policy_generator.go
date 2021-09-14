@@ -7,6 +7,7 @@ import (
 
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -20,11 +21,11 @@ const (
 
 var appNamespace string
 
-func GenerateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, config skatteetaten_no_v1alpha1.ApplicationSpec) *security_istio_io_v1beta1.AuthorizationPolicy {
+func GenerateAuthorizationPolicy(source resource.Source, application skatteetaten_no_v1alpha1.Application, config skatteetaten_no_v1alpha1.ApplicationSpec) *security_istio_io_v1beta1.AuthorizationPolicy {
 
 	appNamespace = application.Namespace
 	//TODO: magisk "0"
-	authPolicy := generateAuthorizationPolicy(application, "ALLOW")
+	authPolicy := generateAuthorizationPolicy(source, application, "ALLOW")
 
 	if config.Ingress == nil {
 		return authPolicy
@@ -124,13 +125,13 @@ func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngre
 	return PolicyRule
 }
 
-func generateAuthorizationPolicy(application skatteetaten_no_v1alpha1.Application, action string) *security_istio_io_v1beta1.AuthorizationPolicy {
+func generateAuthorizationPolicy(source resource.Source, application skatteetaten_no_v1alpha1.Application, action string) *security_istio_io_v1beta1.AuthorizationPolicy {
 	return &security_istio_io_v1beta1.AuthorizationPolicy{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "security.istio.io/v1beta1",
 			Kind:       "AuthorizationPolicy",
 		},
-		ObjectMeta: application.StandardObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: security_istio_io_v1beta1.AuthorizationPolicySpec{
 			Selector: &security_istio_io_v1beta1.WorkloadSelector{
 				MatchLabels: map[string]string{"app": application.Name},

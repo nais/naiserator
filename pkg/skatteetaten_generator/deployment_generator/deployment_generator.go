@@ -64,7 +64,7 @@ func GenerateDeployment(application skatteetaten_no_v1alpha1.Application, dbVars
 			Strategy: v1.DeploymentStrategy{
 				Type: "Recreate",
 			},
-			Replicas: pointer.Int32Ptr(int32(replicas)),
+			Replicas: pointer.Int32Ptr(int32(*replicas)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: application.StandardLabelSelector(),
 			},
