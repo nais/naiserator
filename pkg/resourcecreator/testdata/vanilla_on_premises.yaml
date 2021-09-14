@@ -4,6 +4,7 @@ config:
 resourceOptions:
   NumReplicas: 1
   ClusterName: test-cluster
+  SecurePodSecurityContext: true
 
 input:
   kind: Application
@@ -133,6 +134,15 @@ tests:
                       - protocol: TCP
                         name: http
                         containerPort: 8080
+                    securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      runAsNonRoot: true
+                      privileged: false
+                      capabilities:
+                        drop: ["all"]
                     env:
                       - name: NAV_TRUSTSTORE_PATH
                         value: /etc/ssl/certs/java/cacerts

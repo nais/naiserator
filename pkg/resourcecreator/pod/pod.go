@@ -56,15 +56,26 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 		},
 	}
 
-	if restricted(annotations) {
+	if resourceOptions.SecurePodSecurityContext && !exploitable(annotations) { //TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
 		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
 			RunAsUser:                pointer.Int64Ptr(int64(1069)),
 			RunAsGroup:               pointer.Int64Ptr(int64(1069)),
 			RunAsNonRoot:             pointer.BoolPtr(true),
 			Privileged:               pointer.BoolPtr(false),
 			AllowPrivilegeEscalation: pointer.BoolPtr(false),
-			Capabilities:             &corev1.Capabilities{Drop: []corev1.Capability{"all"}},
+			ReadOnlyRootFilesystem:   pointer.BoolPtr(true),
 		}
+
+		capabilities := &corev1.Capabilities{
+			Drop: []corev1.Capability{"all"},
+		}
+
+		additionalCapabilities := sanitizeCapabilities(annotations, resourceOptions.AllowedKernelCapabilities)
+		if additionalCapabilities != nil && len(additionalCapabilities) > 0 {
+			capabilities.Add = additionalCapabilities
+		}
+
+		podSpec.Containers[0].SecurityContext.Capabilities = capabilities
 	}
 
 	if len(resourceOptions.HostAliases) > 0 {
@@ -379,11 +390,37 @@ func leadingSlash(s string) string {
 	return "/" + s
 }
 
-func restricted(annotations map[string]string) bool {
-	val, found := annotations["nais.io/restricted"]
+func exploitable(annotations map[string]string) bool {
+	val, found := annotations["nais.io/exploitable"]
 	if !found {
 		return false
 	}
 
 	return strings.ToLower(val) == "true"
+}
+
+func sanitizeCapabilities(annotations map[string]string, allowedCapabilites []string) []corev1.Capability {
+	val, found := annotations["nais.io/add-kernel-capability"]
+	if !found {
+		return nil
+	}
+
+	capabilities := make([]corev1.Capability, 0)
+	desiredCapabilites := strings.Split(val, ",")
+	for _, desiredCapability := range desiredCapabilites {
+		if allowed(desiredCapability, allowedCapabilites) {
+			capabilities = append(capabilities, corev1.Capability(strings.ToUpper(desiredCapability)))
+		}
+	}
+
+	return capabilities
+}
+
+func allowed(capability string, allowedCapabilites []string) bool {
+	for _, allowedCapability := range allowedCapabilites {
+		if strings.ToLower(capability) == strings.ToLower(allowedCapability) {
+			return true
+		}
+	}
+	return false
 }
