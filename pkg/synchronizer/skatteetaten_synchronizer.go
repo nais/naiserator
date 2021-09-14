@@ -9,14 +9,16 @@ import (
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
+	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	generator "github.com/nais/naiserator/pkg/skatteetaten_generator"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/image_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/network_policy"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres_env"
-	"github.com/nais/naiserator/pkg/util"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/service_entry"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/virtual_service"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -181,7 +183,7 @@ func (n *Synchronizer) PrepareSkatteetatenApplikasjon(app *skatteetaten_no_v1alp
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
-	rollout.SetCurrentDeployment(previousDeployment, app.Spec.Replicas.Min)
+	rollout.SetCurrentDeployment(previousDeployment, *app.Spec.Replicas.Min)
 	rollout.ResourceOperations, err = CreateSkatteetatenApplication(app, rollout.ResourceOptions)
 
 	if err != nil {
@@ -219,12 +221,9 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	}
 	service.Create(app, ast, resourceOptions, naisSvc)
 	serviceaccount.Create(app, ast, resourceOptions)
-	naisHpa := nais_io_v1.Replicas{
-		Min:                    util.Intp(app.Spec.Replicas.Min),
-		Max:                    util.Intp(app.Spec.Replicas.Max),
-		CpuThresholdPercentage: app.Spec.Replicas.HpaTargetCPUUtilizationPercentage,
-	}
-	horizontalpodautoscaler.CreateV1(app, ast, naisHpa)
+
+	horizontalpodautoscaler.CreateV1(app, ast, app.Spec.Replicas)
+
 
 	if ! app.Spec.UnsecureDebugDisableAllAccessPolicies {
 		// NetworkPolicy
@@ -236,36 +235,19 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 		ast.AppendOperation(resource.OperationCreateOrUpdate, ap)
 	}
 
-	// ServiceEntry
-	if app.Spec.Egress != nil && app.Spec.Egress.External != nil {
-		for _, egress := range app.Spec.Egress.External {
-			se := generator.GenerateServiceEntry(*app, egress)
-			ast.AppendOperation(resource.OperationCreateOrUpdate, se)
-		}
-	}
+	service_entry.Create(app, ast, app.Spec.Egress)
 
-	// VirtualService
-	if app.Spec.Ingress != nil && app.Spec.Ingress.Public != nil {
-		for _, ingress := range app.Spec.Ingress.Public {
-			if !ingress.Enabled {
-				continue
-			}
-			vs := generator.GenerateVirtualService(*app, ingress)
-			ast.AppendOperation(resource.OperationCreateOrUpdate, vs)
-		}
-	}
+	virtual_service.Create(app, ast, app.Spec.Ingress)
 
 	// PodDisruptionBudget
-	poddisruptionbudget := poddisruptionbudget.GeneratePodDisruptionBudget(*app)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, poddisruptionbudget)
+	poddisruptionbudget.Create(app, ast, app.Spec.Replicas)
 
 	// ImagePolicy
 	// SKATT: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
-	imagePolicy, err := generator.GenerateImagePolicy(*app)
+	err := image_policy.Create(app, ast, app.Spec.ImagePolicy)
 	if err != nil {
 		return nil, err
 	}
-	ast.AppendOperation(resource.OperationCreateOrUpdate, imagePolicy)
 
 	// Azure
 	var dbVars []corev1.EnvVar
