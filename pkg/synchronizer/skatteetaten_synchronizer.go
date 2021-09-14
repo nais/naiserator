@@ -8,6 +8,7 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
@@ -15,6 +16,7 @@ import (
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/network_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres_env"
+	"github.com/nais/naiserator/pkg/util"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -217,12 +219,12 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	}
 	service.Create(app, ast, resourceOptions, naisSvc)
 	serviceaccount.Create(app, ast, resourceOptions)
-
-	// HorizontalPodAutoscaler
-	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
-		hpa := generator.GenerateHpa(*app)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
+	naisHpa := nais_io_v1.Replicas{
+		Min:                    util.Intp(app.Spec.Replicas.Min),
+		Max:                    util.Intp(app.Spec.Replicas.Max),
+		CpuThresholdPercentage: app.Spec.Replicas.HpaTargetCPUUtilizationPercentage,
 	}
+	horizontalpodautoscaler.CreateV1(app, ast, naisHpa)
 
 	if ! app.Spec.UnsecureDebugDisableAllAccessPolicies {
 		// NetworkPolicy
