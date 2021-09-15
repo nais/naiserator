@@ -2,6 +2,7 @@ config:
   description: custom environment variable name on cloud sql databases
 
 resourceoptions:
+  CNRMEnabled: true
   Linkerd: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id

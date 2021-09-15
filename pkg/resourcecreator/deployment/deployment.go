@@ -84,8 +84,8 @@ func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resour
 					IntVal: int32(0),
 				},
 				MaxSurge: &intstr.IntOrString{
-					Type:   intstr.Int,
-					IntVal: int32(1),
+					Type:   intstr.String,
+					StrVal: "25%",
 				},
 			},
 		}

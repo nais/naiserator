@@ -199,6 +199,7 @@ func TestCreate(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resource.NewOptions()
 		opts.GoogleProjectId = "nais-foo-1234"
+		opts.CNRMEnabled = true
 		app.Spec.GCP = &nais_io_v1.GCP{
 			Buckets: []nais_io_v1.CloudStorageBucket{
 				{
@@ -235,6 +236,7 @@ func TestCreate(t *testing.T) {
 	t.Run("using gcp sqlinstance yields expected resources", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		opts := resource.NewOptions()
+		opts.CNRMEnabled = true
 		opts.GoogleProjectId = "nais-foo-1234"
 		instanceName := app.Name
 		dbName := "mydb"

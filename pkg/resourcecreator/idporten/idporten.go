@@ -167,7 +167,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		return err
 	}
 
-	wonderwallContainer := Wonderwall(wonderwallDefaultPort, appPort, resourceOptions.Wonderwall.Image, naisIngresses)
+	wonderwallContainer := Wonderwall(wonderwallDefaultPort, appPort, resourceOptions.Wonderwall.Image, naisIdPorten, naisIngresses)
 	wonderwallContainer.EnvFrom = []v1.EnvFromSource{
 		pod.EnvFromSecret(idportenClient.Spec.SecretName),
 		pod.EnvFromSecret(wonderwallSecretName),

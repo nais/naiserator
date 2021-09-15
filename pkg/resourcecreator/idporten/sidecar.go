@@ -14,7 +14,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 )
 
-func Wonderwall(port int32, targetPort int, wonderwallImage string, naisIngresses []nais_io_v1.Ingress) corev1.Container {
+func Wonderwall(port int32, targetPort int, wonderwallImage string, naisIdporten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) corev1.Container {
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
 
@@ -33,24 +33,56 @@ func Wonderwall(port int32, targetPort int, wonderwallImage string, naisIngresse
 			Memory: "32Mi",
 		},
 	}
+
+	envVars := []corev1.EnvVar{
+		{
+			Name:  "WONDERWALL_UPSTREAM_HOST",
+			Value: fmt.Sprintf("127.0.0.1:%d", targetPort),
+		},
+		{
+			Name:  "WONDERWALL_REDIS",
+			Value: fmt.Sprintf("%s:%d", RedisName, redisPort),
+		},
+		{
+			Name:  "WONDERWALL_INGRESSES",
+			Value: strings.Join(ingresses, ","),
+		},
+		{
+			Name:  "WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED",
+			Value: "true",
+		},
+		{
+			Name:  "WONDERWALL_IDPORTEN_LOCALE_ENABLED",
+			Value: "true",
+		},
+	}
+
+	if len(naisIdporten.Sidecar.Level) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "WONDERWALL_IDPORTEN_SECURITY_LEVEL_VALUE",
+			Value: naisIdporten.Sidecar.Level,
+		})
+	}
+
+	if len(naisIdporten.Sidecar.Locale) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "WONDERWALL_IDPORTEN_LOCALE_VALUE",
+			Value: naisIdporten.Sidecar.Locale,
+		})
+	}
+
+	if len(naisIdporten.PostLogoutRedirectURIs) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "WONDERWALL_IDPORTEN_POST_LOGOUT_REDIRECT_URI",
+			Value: string(naisIdporten.PostLogoutRedirectURIs[0]),
+		})
+	}
+
 	return corev1.Container{
 		Name:            "wonderwall",
 		Image:           wonderwallImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env: []corev1.EnvVar{
-			{
-				Name:  "WONDERWALL_UPSTREAM_HOST",
-				Value: fmt.Sprintf("127.0.0.1:%d", targetPort),
-			},
-			{
-				Name:  "WONDERWALL_REDIS",
-				Value: fmt.Sprintf("%s:%d", RedisName, redisPort),
-			},
-			{
-				Name:  "WONDERWALL_INGRESSES",
-				Value: strings.Join(ingresses, ","),
-			},
-		},
+		Env:             envVars,
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
 			Protocol:      corev1.ProtocolTCP,

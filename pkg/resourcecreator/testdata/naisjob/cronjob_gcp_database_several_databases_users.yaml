@@ -2,6 +2,7 @@ config:
   description: additional cloudsql databases and users
 
 resourceoptions:
+  CNRMEnabled: true
   Linkerd: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
@@ -23,8 +24,8 @@ input:
         - databases:
             - name: mydb
               users:
-                - name: User_two
-                - name: _user_three3
+                - name: user-two
+                - name: user-three3
             - name: mydb2
               users:
                 - name: User_four
@@ -119,8 +120,8 @@ tests:
             NAIS_DATABASE_USER_TWO_MYDB_HOST: 127.0.0.1
             NAIS_DATABASE_USER_TWO_MYDB_PORT: "5432"
             NAIS_DATABASE_USER_TWO_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: User_two
-            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://User_two:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_USER_TWO_MYDB_USERNAME: user-two
+            NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://user-two:.{43}@127.0.0.1:5432/mydb
           type: Opaque
 
   - apiVersion: v1
@@ -149,8 +150,8 @@ tests:
             NAIS_DATABASE_USER_THREE3_MYDB_HOST: 127.0.0.1
             NAIS_DATABASE_USER_THREE3_MYDB_PORT: "5432"
             NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_USER_THREE3_MYDB_USERNAME: _user_three3
-            NAIS_DATABASE_USER_THREE3_MYDB_URL: postgres://_user_three3:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_USER_THREE3_MYDB_USERNAME: user-three3
+            NAIS_DATABASE_USER_THREE3_MYDB_URL: postgres://user-three3:.{43}@127.0.0.1:5432/mydb
           type: Opaque
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -159,7 +160,7 @@ tests:
     name: mynaisjob
     match:
       - type: subset
-        name: "additional - sql user: mynaisjob"
+        name: "default - sql user: mynaisjob"
         resource:
           metadata:
             name: mynaisjob
@@ -179,7 +180,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob-mydb-user-two-49e1f6cf
+    name: mynaisjob-mydb-user-two
     match:
       - type: subset
         name: "sql user: user-two"
@@ -199,10 +200,11 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb-user-two-4c6e7100
                   key: NAIS_DATABASE_USER_TWO_MYDB_PASSWORD
+            resourceID: user-two
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob-mydb-user-three3-59dce4dd
+    name: mynaisjob-mydb-user-three3
     match:
       - type: subset
         name: "sql user: user-three"
@@ -222,6 +224,7 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb-user-three3-caeaa598
                   key: NAIS_DATABASE_USER_THREE3_MYDB_PASSWORD
+            resourceID: user-three3
 
 
 
@@ -305,7 +308,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob-mydb2-user-four-692268a0
+    name: mynaisjob-mydb2-user-four
     match:
       - type: subset
         name: "sql user: user-four"
@@ -325,10 +328,11 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb2-user-four-569cb02d
                   key: NAIS_DATABASE_USER_FOUR_MYDB2_PASSWORD
+            resourceID: User_four
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob-mydb2-user-five-c551c216
+    name: mynaisjob-mydb2-user-five
     match:
       - type: subset
         name: "sql user: user-five"
@@ -348,3 +352,4 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb2-user-five-faef1a9b
                   key: NAIS_DATABASE_USER_FIVE_MYDB2_PASSWORD
+            resourceID: _user_five

@@ -2,6 +2,7 @@ config:
   description: additional cloudsql users with custom env for each user
 
 resourceoptions:
+  CNRMEnabled: true
   Linkerd: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
@@ -23,7 +24,7 @@ input:
         - databases:
             - name: mydb
               users:
-                - name: user_two
+                - name: user-two
               envVarPrefix: "PWNED"
           type: POSTGRES_11
 
@@ -98,8 +99,8 @@ tests:
             PWNED_USER_TWO_HOST: 127.0.0.1
             PWNED_USER_TWO_PORT: "5432"
             PWNED_USER_TWO_PASSWORD: ".{43}"
-            PWNED_USER_TWO_USERNAME: user_two
-            PWNED_USER_TWO_URL: postgres://user_two:.{43}@127.0.0.1:5432/mydb
+            PWNED_USER_TWO_USERNAME: user-two
+            PWNED_USER_TWO_URL: postgres://user-two:.{43}@127.0.0.1:5432/mydb
           type: Opaque
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -125,11 +126,12 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob
                   key: PWNED_PASSWORD
+            resourceID: mynaisjob
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: mynaisjob-mydb-user-two-49e1f6cf
+    name: mynaisjob-mydb-user-two
     match:
       - type: subset
         name: "custom env - sql user: user-two"
@@ -149,3 +151,4 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob-mydb-user-two-4c6e7100
                   key: PWNED_USER_TWO_PASSWORD
+            resourceID: user-two

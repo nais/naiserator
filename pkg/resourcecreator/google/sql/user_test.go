@@ -54,7 +54,7 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 			Name: instance.Name,
 		},
 		{
-			Name: "user_two",
+			Name: "user-two",
 		},
 	}
 
@@ -75,9 +75,9 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 	assert.Equal(t, expectedDefault, result)
 
 	expectedUserTwo := map[string]string{
-		"YOLO_USER_TWO_USERNAME": "user_two",
+		"YOLO_USER_TWO_USERNAME": "user-two",
 		"YOLO_USER_TWO_PASSWORD": "password",
-		"YOLO_USER_TWO_URL":      "postgres://user_two:password@127.0.0.1:5432/bar",
+		"YOLO_USER_TWO_URL":      "postgres://user-two:password@127.0.0.1:5432/bar",
 		"YOLO_USER_TWO_HOST":     "127.0.0.1",
 		"YOLO_USER_TWO_PORT":     "5432",
 		"YOLO_USER_TWO_DATABASE": "bar",
@@ -141,28 +141,13 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 
 	dbUsers := []nais.CloudSqlDatabaseUser{
 		{
-			Name: "user_two",
+			Name: "user-two",
 		},
 		{
 			Name: "user_three",
 		},
 		{
 			Name: "user_three",
-		},
-		{
-			Name: "USER_THREE",
-		},
-		{
-			Name: "USER_THREE",
-		},
-		{
-			Name: "_user_four4",
-		},
-		{
-			Name: "_user_four4",
-		},
-		{
-			Name: "User_fivE",
 		},
 		{
 			Name: instance.Name,
@@ -174,16 +159,10 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 
 	expected := []nais.CloudSqlDatabaseUser{
 		{
-			Name: "user_two",
+			Name: "user-two",
 		},
 		{
 			Name: "user_three",
-		},
-		{
-			Name: "_user_four4",
-		},
-		{
-			Name: "User_fivE",
 		},
 		{
 			Name: instance.Name,

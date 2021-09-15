@@ -2,6 +2,7 @@ config:
   description: specifying custom port and protocol for mesh-external services in gcp
 
 resourceoptions:
+  CNRMEnabled: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: google-team-project-id
   NumReplicas: 1
