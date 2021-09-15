@@ -56,6 +56,7 @@ type Features struct {
 	Digdirator                  bool     `json:"digdirator"`
 	GCP                         bool     `json:"gcp"`
 	Webhook                     bool     `json:"webhook"`
+	SecurePodSecurityContext    bool     `json:"secure-pod-security-context"`
 }
 
 type Securelogs struct {
@@ -138,6 +139,7 @@ const (
 	FeaturesLinkerd                     = "features.linkerd"
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesNetworkPolicy               = "features.network-policy"
+	FeaturesSecurePodSecurityContext    = "features.secure-pod-security-context"
 	FeaturesVault                       = "features.vault"
 	FeaturesWebhook                     = "features.webhook"
 	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
@@ -204,7 +206,10 @@ func init() {
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
 	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
-	flag.StringSlice(FeaturesAccessPolicyNotAllowedCIDRs, []string{""}, "CIDRs that should not be included within the allowed IP Block rule for network policy")
+	flag.StringSlice(
+		FeaturesAccessPolicyNotAllowedCIDRs, []string{""},
+		"CIDRs that should not be included within the allowed IP Block rule for network policy",
+	)
 	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
@@ -215,25 +220,46 @@ func init() {
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
+	flag.Bool(FeaturesSecurePodSecurityContext, false, "enforce restrictive pod security context")
 
-	flag.StringSlice(ServiceHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator")
-	flag.StringSlice(ServiceHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator")
-	flag.StringSlice(ServiceHostsJwker, []string{}, "list of hosts to output to ServiceEntry for Applications using Jwker")
+	flag.StringSlice(
+		ServiceHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator",
+	)
+	flag.StringSlice(
+		ServiceHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator",
+	)
+	flag.StringSlice(
+		ServiceHostsJwker, []string{}, "list of hosts to output to ServiceEntry for Applications using Jwker",
+	)
 
-	flag.Duration(InformerFullSynchronizationInterval, time.Duration(30*time.Minute), "how often to run a full synchronization of all applications")
+	flag.Duration(
+		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),
+		"how often to run a full synchronization of all applications",
+	)
 
 	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
 	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 
-	flag.Duration(SynchronizerSynchronizationTimeout, time.Duration(5*time.Second), "how long to allow for resource creation on a single application")
-	flag.Duration(SynchronizerRolloutCheckInterval, time.Duration(5*time.Second), "how often to check if a deployment has rolled out successfully")
-	flag.Duration(SynchronizerRolloutTimeout, time.Duration(5*time.Minute), "how long to keep checking for a successful deployment rollout")
+	flag.Duration(
+		SynchronizerSynchronizationTimeout, time.Duration(5*time.Second),
+		"how long to allow for resource creation on a single application",
+	)
+	flag.Duration(
+		SynchronizerRolloutCheckInterval, time.Duration(5*time.Second),
+		"how often to check if a deployment has rolled out successfully",
+	)
+	flag.Duration(
+		SynchronizerRolloutTimeout, time.Duration(5*time.Minute),
+		"how long to keep checking for a successful deployment rollout",
+	)
 
 	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
 	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")
 
 	flag.String(ProxyAddress, "", "HTTPS?_PROXY environment variable injected into containers")
-	flag.StringSlice(ProxyExclude, []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable")
+	flag.StringSlice(
+		ProxyExclude, []string{"localhost"}, "list of hosts or domains injected into NO_PROXY environment variable",
+	)
 
 	flag.String(VaultAddress, "", "address of the Vault server")
 	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
