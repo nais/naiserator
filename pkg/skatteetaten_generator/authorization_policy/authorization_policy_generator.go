@@ -1,4 +1,4 @@
-package skatteetaten_generator
+package authorization_policy
 
 import (
 	"fmt"
@@ -21,11 +21,11 @@ const (
 
 var appNamespace string
 
-func GenerateAuthorizationPolicy(source resource.Source, application skatteetaten_no_v1alpha1.Application, config skatteetaten_no_v1alpha1.ApplicationSpec) *security_istio_io_v1beta1.AuthorizationPolicy {
+func GenerateAuthorizationPolicy(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) *security_istio_io_v1beta1.AuthorizationPolicy {
 
-	appNamespace = application.Namespace
+	appNamespace = source.GetNamespace()
 	//TODO: magisk "0"
-	authPolicy := generateAuthorizationPolicy(source, application, "ALLOW")
+	authPolicy := generateAuthorizationPolicy(source, "ALLOW")
 
 	if config.Ingress == nil {
 		return authPolicy
@@ -125,7 +125,7 @@ func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngre
 	return PolicyRule
 }
 
-func generateAuthorizationPolicy(source resource.Source, application skatteetaten_no_v1alpha1.Application, action string) *security_istio_io_v1beta1.AuthorizationPolicy {
+func generateAuthorizationPolicy(source resource.Source, action string) *security_istio_io_v1beta1.AuthorizationPolicy {
 	return &security_istio_io_v1beta1.AuthorizationPolicy{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "security.istio.io/v1beta1",
@@ -134,7 +134,7 @@ func generateAuthorizationPolicy(source resource.Source, application skatteetate
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: security_istio_io_v1beta1.AuthorizationPolicySpec{
 			Selector: &security_istio_io_v1beta1.WorkloadSelector{
-				MatchLabels: map[string]string{"app": application.Name},
+				MatchLabels: map[string]string{"app": source.GetName()},
 			},
 			// Requests are denied by default when no rules are defined in the policy (rules == nil) .
 			// https://istio.io/latest/docs/reference/config/security/authorization-policy/#AuthorizationPolicy

@@ -4,7 +4,7 @@ import (
 	"sort"
 
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/authorization_policy"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +46,7 @@ func GenerateNetworkPolicy(application skatteetaten_no_v1alpha1.Application, con
 			if ingress.Enabled {
 				gateway := ingress.Gateway
 				if len(gateway) == 0 {
-					gateway = skatteetaten_generator.DefaultIngressGateway
+					gateway = authorization_policy.DefaultIngressGateway
 				}
 
 				rule := networkingv1.NetworkPolicyIngressRule{}
@@ -55,7 +55,7 @@ func GenerateNetworkPolicy(application skatteetaten_no_v1alpha1.Application, con
 					"istio": "ingressgateway",
 				}
 
-				rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(application, skatteetaten_generator.IstioNamespace, appLabel)}
+				rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(application, authorization_policy.IstioNamespace, appLabel)}
 				rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port), Protocol: "TCP"}})
 				np.Spec.Ingress = append(np.Spec.Ingress, rule)
 			}
@@ -112,7 +112,7 @@ func generateDefaultIngressRules(application skatteetaten_no_v1alpha1.Applicatio
 	rule := networkingv1.NetworkPolicyIngressRule{}
 	rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(
 		application,
-		skatteetaten_generator.IstioNamespace,
+		authorization_policy.IstioNamespace,
 		map[string]string{"app": "prometheus", "component": "server"})}
 	rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Protocol: "TCP", Port: MetricsPort}})
 	ruleList = append(ruleList, rule)
@@ -143,7 +143,7 @@ func generateDefaultEgressRules(application skatteetaten_no_v1alpha1.Application
 	rule = networkingv1.NetworkPolicyEgressRule{}
 	rule.To = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(
 		application,
-		skatteetaten_generator.IstioNamespace,
+		authorization_policy.IstioNamespace,
 		map[string]string{"app": "istiod", "istio": "pilot"})}
 	ruleList = append(ruleList, rule)
 
