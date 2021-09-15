@@ -96,4 +96,5 @@ require (
 )
 
 replace github.com/nais/liberator => ../liberator
+
 go 1.17
