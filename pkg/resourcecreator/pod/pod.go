@@ -391,7 +391,7 @@ func leadingSlash(s string) string {
 }
 
 func exploitable(annotations map[string]string) bool {
-	val, found := annotations["nais.io/exploitable"]
+	val, found := annotations["nais.io/security-does-not-matter"]
 	if !found {
 		return false
 	}
