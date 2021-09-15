@@ -157,6 +157,8 @@ tests:
                         name: ca-bundle-pem
                         readOnly: true
                         subPath: ca-bundle.pem
+                      - mountPath: /tmp
+                        name: writable-tmp
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
                   - name: gpr-credentials
@@ -170,3 +172,5 @@ tests:
                   - configMap:
                       name: ca-bundle-pem
                     name: ca-bundle-pem
+                  - emptyDir: {}
+                    name: writable-tmp

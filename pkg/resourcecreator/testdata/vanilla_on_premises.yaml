@@ -129,6 +129,8 @@ tests:
                   - configMap:
                       name: ca-bundle-pem
                     name: ca-bundle-pem
+                  - emptyDir: {}
+                    name: writable-tmp
                 containers:
                   - ports:
                       - protocol: TCP
@@ -190,6 +192,8 @@ tests:
                         readOnly: true
                         mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
                         subPath: ca-bundle.pem
+                      - mountPath: /tmp
+                        name: writable-tmp
                     lifecycle:
                       preStop:
                         exec:

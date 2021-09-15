@@ -43,20 +43,36 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 
 	containers := reorderContainers(appName, ast.Containers)
 
+	// Pod security context will by default make the filesystem read-only. Mount an emptyDir on /tmp
+	// to allow temporary files to be created.
+	volumes := append(ast.Volumes, corev1.Volume{
+		Name: "writable-tmp",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+
+	if len(containers) > 0 {
+		containers[0].VolumeMounts = append(containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      "writable-tmp",
+			MountPath: "/tmp",
+		})
+	}
+
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
 		Containers:         containers,
 		ServiceAccountName: appName,
 		RestartPolicy:      restartPolicy,
 		DNSPolicy:          corev1.DNSClusterFirst,
-		Volumes:            ast.Volumes,
+		Volumes:            volumes,
 		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gpr-credentials"},
 			{Name: "ghcr-credentials"},
 		},
 	}
 
-	if resourceOptions.SecurePodSecurityContext && !exploitable(annotations) { //TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
+	if resourceOptions.SecurePodSecurityContext && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
 		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
 			RunAsUser:                pointer.Int64Ptr(int64(1069)),
 			RunAsGroup:               pointer.Int64Ptr(int64(1069)),
