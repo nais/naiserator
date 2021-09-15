@@ -95,7 +95,7 @@ func (n *Synchronizer) ReconcileSkatteetatenApplication(req ctrl.Request) (ctrl.
 	}
 
 	logger = *log.WithFields(app.LogFields())
-	logger.Debugf("Starting synchronization")
+	logger.Debugf("Starting Skatteetaten synchronization")
 	metrics.ApplicationsProcessed.Inc()
 
 	app.Status.CorrelationID = rollout.CorrelationID
