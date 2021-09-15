@@ -56,8 +56,9 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 			Settings: google_sql_crd.SQLInstanceSettings{
 				AvailabilityType: availabilityType(instance.HighAvailability),
 				BackupConfiguration: google_sql_crd.SQLInstanceBackupConfiguration{
-					Enabled:   true,
-					StartTime: fmt.Sprintf("%02d:00", *instance.AutoBackupHour),
+					Enabled:                    true,
+					StartTime:                  fmt.Sprintf("%02d:00", *instance.AutoBackupHour),
+					PointInTimeRecoveryEnabled: instance.PointInTimeRecovery,
 				},
 				IpConfiguration: google_sql_crd.SQLInstanceIpConfiguration{
 					RequireSsl: true,
@@ -67,8 +68,17 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 				DiskType:       instance.DiskType.GoogleType(),
 				Tier:           instance.Tier,
 				DatabaseFlags:  []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}},
+				InsightsConfig: google_sql_crd.SQLInstanceInsightsConfiguration{
+					QueryInsightsEnabled: instance.Insights.IsEnabled(),
+				},
 			},
 		},
+	}
+
+	if instance.Insights != nil {
+		sqlInstance.Spec.Settings.InsightsConfig.QueryStringLength = instance.Insights.QueryStringLength
+		sqlInstance.Spec.Settings.InsightsConfig.RecordApplicationTags = instance.Insights.RecordApplicationTags
+		sqlInstance.Spec.Settings.InsightsConfig.RecordClientAddress = instance.Insights.RecordClientAddress
 	}
 
 	if instance.Maintenance != nil && instance.Maintenance.Hour != nil && instance.Maintenance.Day != 0 {
@@ -123,8 +133,11 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, option
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), options.GoogleProjectId)),
-			Role:   "roles/cloudsql.client",
+			Member: fmt.Sprintf(
+				"serviceAccount:%s",
+				google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), options.GoogleProjectId),
+			),
+			Role: "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
 				Name: pointer.StringPtr(""),
@@ -153,7 +166,9 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 		return fmt.Errorf("unable to assign sql password: %s", err)
 	}
 
-	secretName, err := GoogleSQLSecretName(appName, googleSqlUser.Instance.Name, googleSqlUser.DB.Name, googleSqlUser.Name)
+	secretName, err := GoogleSQLSecretName(
+		appName, googleSqlUser.Instance.Name, googleSqlUser.DB.Name, googleSqlUser.Name,
+	)
 	if err != nil {
 		return fmt.Errorf("unable to create sql secret name: %s", err)
 	}
@@ -198,7 +213,9 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 
 		for dbNum, db := range sqlInstance.Databases {
 
-			googledb := GoogleSQLDatabase(objectMeta, instance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete)
+			googledb := GoogleSQLDatabase(
+				objectMeta, instance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
+			)
 			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
 			sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, instance.Name, dbNum)
@@ -208,7 +225,9 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 
 			for _, user := range sqlUsers {
 				googleSqlUser := SetupGoogleSqlUser(user.Name, &db, instance)
-				if err = createSqlUserDBResources(objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId); err != nil {
+				if err = createSqlUserDBResources(
+					objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId,
+				); err != nil {
 					return err
 				}
 			}
@@ -218,7 +237,12 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		if err := AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName); err != nil {
 			return fmt.Errorf("unable to append sql user secret envs: %s", err)
 		}
-		ast.Containers = append(ast.Containers, google.CloudSqlProxyContainer(5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId, instance.Name))
+		ast.Containers = append(
+			ast.Containers, google.CloudSqlProxyContainer(
+				5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId,
+				instance.Name,
+			),
+		)
 	}
 	return nil
 }
