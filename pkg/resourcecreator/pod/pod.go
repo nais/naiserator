@@ -79,7 +79,7 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 			RunAsNonRoot:             pointer.BoolPtr(true),
 			Privileged:               pointer.BoolPtr(false),
 			AllowPrivilegeEscalation: pointer.BoolPtr(false),
-			ReadOnlyRootFilesystem:   pointer.BoolPtr(true),
+			ReadOnlyRootFilesystem:   pointer.BoolPtr(readOnlyFileSystem(annotations)),
 		}
 
 		capabilities := &corev1.Capabilities{
@@ -413,6 +413,15 @@ func exploitable(annotations map[string]string) bool {
 	}
 
 	return strings.ToLower(val) == "true"
+}
+
+func readOnlyFileSystem(annotations map[string]string) bool {
+	val, found := annotations["nais.io/read-only-file-system"]
+	if !found {
+		return true
+	}
+
+	return strings.ToLower(val) != "false"
 }
 
 func sanitizeCapabilities(annotations map[string]string, allowedCapabilites []string) []corev1.Capability {
