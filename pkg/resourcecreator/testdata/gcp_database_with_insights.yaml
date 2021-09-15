@@ -2,6 +2,7 @@ config:
   description: google cloud sql instances provisioned with databases and automatic configuration
 
 resourceoptions:
+  CNRMEnabled: true
   Linkerd: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
@@ -238,7 +239,7 @@ tests:
                     ports:
                       - containerPort: 5432
                         protocol: TCP
-                    resources: { }
+                    resources: {}
                     imagePullPolicy: IfNotPresent
                     securityContext:
                       allowPrivilegeEscalation: false
