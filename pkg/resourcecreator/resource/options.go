@@ -38,6 +38,7 @@ type Options struct {
 // NewOptions creates a struct with the default resource options.
 func NewOptions() Options {
 	return Options{
+		AllowedKernelCapabilities: []string{"NET_RAW", "NET_BIND_SERVICE"},
 		NumReplicas: 1,
 	}
 }
