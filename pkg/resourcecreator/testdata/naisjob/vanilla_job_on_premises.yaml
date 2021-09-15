@@ -3,6 +3,7 @@ config:
 
 resourceOptions:
   ClusterName: test-cluster
+  SecurePodSecurityContext: true
 
 input:
   kind: Naisjob
@@ -107,6 +108,15 @@ tests:
                       - name: NAIS_CLIENT_ID
                         value: test-cluster:mynamespace:mynaisjob
                     image: navikt/mynaisjob:1.2.3
+                    securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      allowPrivilegeEscalation: false
+                      runAsNonRoot: true
+                      readOnlyRootFilesystem: true
+                      privileged: false
+                      capabilities:
+                        drop: ["all"]
                     imagePullPolicy: IfNotPresent
                     lifecycle:
                       preStop:
