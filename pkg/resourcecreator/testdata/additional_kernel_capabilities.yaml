@@ -20,6 +20,7 @@ input:
     uid: "123456"
     annotations:
       nais.io/add-kernel-capability: "NET_RAW,net_bInd_sErvIcE,NET_ADMIN"
+      nais.io/run-as-user: "6969"
     labels:
       team: myteam
   spec:
@@ -40,8 +41,8 @@ tests:
               spec:
                 containers:
                   - securityContext:
-                      runAsUser: 1069
-                      runAsGroup: 1069
+                      runAsUser: 6969
+                      runAsGroup: 6969
                       allowPrivilegeEscalation: false
                       runAsNonRoot: true
                       privileged: false

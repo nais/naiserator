@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 
@@ -74,8 +75,8 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 
 	if resourceOptions.SecurePodSecurityContext && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
 		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
-			RunAsUser:                pointer.Int64Ptr(int64(1069)),
-			RunAsGroup:               pointer.Int64Ptr(int64(1069)),
+			RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
+			RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
 			RunAsNonRoot:             pointer.BoolPtr(true),
 			Privileged:               pointer.BoolPtr(false),
 			AllowPrivilegeEscalation: pointer.BoolPtr(false),
@@ -99,6 +100,36 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 	}
 
 	return podSpec, err
+}
+
+func runAsUser(annotations map[string]string) int64 {
+	val, found := annotations["nais.io/run-as-user"]
+	if !found {
+		return 1069
+	}
+
+	uid, err := strconv.Atoi(val)
+	if err != nil {
+		log.Warnf("Converting string to int: %v", err)
+		return 1069
+	}
+
+	return int64(uid)
+}
+
+func runAsGroup(annotations map[string]string) int64 {
+	val, found := annotations["nais.io/run-as-group"]
+	if !found {
+		return runAsUser(annotations)
+	}
+
+	uid, err := strconv.Atoi(val)
+	if err != nil {
+		log.Warnf("Converting string to int: %v", err)
+		return runAsUser(annotations)
+	}
+
+	return int64(uid)
 }
 
 func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
