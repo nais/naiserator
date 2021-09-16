@@ -137,6 +137,8 @@ tests:
                         name: http
                         containerPort: 8080
                     securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
                       allowPrivilegeEscalation: false
                       readOnlyRootFilesystem: true
                       runAsNonRoot: true

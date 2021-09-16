@@ -113,6 +113,8 @@ tests:
                         value: test-cluster:mynamespace:mynaisjob
                     image: navikt/mynaisjob:1.2.3
                     securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
                       allowPrivilegeEscalation: false
                       readOnlyRootFilesystem: true
                       runAsNonRoot: true
