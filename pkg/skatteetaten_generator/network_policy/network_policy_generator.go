@@ -18,7 +18,7 @@ const (
 	DNSPort       = 53
 )
 
-func GenerateNetworkPolicy(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) *networkingv1.NetworkPolicy {
+func GenerateNetworkPolicy(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) {
 	np := generateNetworkPolicy(source)
 
 	// Minimum required policies needed for a pod to start
@@ -88,7 +88,6 @@ func GenerateNetworkPolicy(source resource.Source, ast *resource.Ast, config ska
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, np)
-	return np
 }
 
 func generateNetworkPolicy(source resource.Source) *networkingv1.NetworkPolicy {

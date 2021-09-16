@@ -227,8 +227,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 
 	if ! app.Spec.UnsecureDebugDisableAllAccessPolicies {
 		// NetworkPolicy
-		np := network_policy.GenerateNetworkPolicy(app, ast, app.Spec)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
+		network_policy.GenerateNetworkPolicy(app, ast, app.Spec)
 
 		// AuthorizationPolicy
 		ap := authorization_policy.GenerateAuthorizationPolicy(app, ast, app.Spec)
