@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/authorization_policy"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -17,12 +18,12 @@ const (
 	DNSPort       = 53
 )
 
-func GenerateNetworkPolicy(application skatteetaten_no_v1alpha1.Application, config skatteetaten_no_v1alpha1.ApplicationSpec) *networkingv1.NetworkPolicy {
-	np := generateNetworkPolicy(application)
+func GenerateNetworkPolicy(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) *networkingv1.NetworkPolicy {
+	np := generateNetworkPolicy(source)
 
 	// Minimum required policies needed for a pod to start
-	np.Spec.Ingress = *generateDefaultIngressRules(application)
-	np.Spec.Egress = *generateDefaultEgressRules(application)
+	np.Spec.Ingress = *generateDefaultIngressRules(source)
+	np.Spec.Egress = *generateDefaultEgressRules(source)
 
 	if config.Ingress != nil {
 		// Internal ingress
@@ -36,7 +37,7 @@ func GenerateNetworkPolicy(application skatteetaten_no_v1alpha1.Application, con
 		for _, rule := range keys {
 			if config.Ingress.Internal[rule].Enabled {
 				np.Spec.Ingress = append(np.Spec.Ingress, *generateNetworkPolicyIngressRule(
-					application,
+					source,
 					config.Ingress.Internal[rule]))
 			}
 		}
@@ -55,7 +56,7 @@ func GenerateNetworkPolicy(application skatteetaten_no_v1alpha1.Application, con
 					"istio": "ingressgateway",
 				}
 
-				rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(application, authorization_policy.IstioNamespace, appLabel)}
+				rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(source, authorization_policy.IstioNamespace, appLabel)}
 				rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port), Protocol: "TCP"}})
 				np.Spec.Ingress = append(np.Spec.Ingress, rule)
 			}
@@ -75,7 +76,7 @@ func GenerateNetworkPolicy(application skatteetaten_no_v1alpha1.Application, con
 			if config.Egress.Internal[rule].Enabled {
 				np.Spec.Egress = append(
 					np.Spec.Egress, *generateNetworkPolicyEgressRule(
-						application,
+						source,
 						config.Egress.Internal[rule]))
 			}
 		}
@@ -86,32 +87,33 @@ func GenerateNetworkPolicy(application skatteetaten_no_v1alpha1.Application, con
 		}
 	}
 
+	ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 	return np
 }
 
-func generateNetworkPolicy(application skatteetaten_no_v1alpha1.Application) *networkingv1.NetworkPolicy {
+func generateNetworkPolicy(source resource.Source) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "networking.k8s.io/v1",
 			Kind:       "NetworkPolicy",
 		},
-		ObjectMeta: application.StandardObjectMeta(),
+		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": application.Name},
+				MatchLabels: map[string]string{"app": source.GetName()},
 			},
 		},
 	}
 }
 
-func generateDefaultIngressRules(application skatteetaten_no_v1alpha1.Application) *[]networkingv1.NetworkPolicyIngressRule {
+func generateDefaultIngressRules(source resource.Source) *[]networkingv1.NetworkPolicyIngressRule {
 	var ruleList []networkingv1.NetworkPolicyIngressRule
 
 	// Allow prometheus scraping on the "merged metrics" port on the istio proxy.
 	// Istio proxy collects metrics from the app on the configured metrics port and merges with own metrics.
 	rule := networkingv1.NetworkPolicyIngressRule{}
 	rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(
-		application,
+		source,
 		authorization_policy.IstioNamespace,
 		map[string]string{"app": "prometheus", "component": "server"})}
 	rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Protocol: "TCP", Port: MetricsPort}})
@@ -120,13 +122,13 @@ func generateDefaultIngressRules(application skatteetaten_no_v1alpha1.Applicatio
 	return &ruleList
 }
 
-func generateDefaultEgressRules(application skatteetaten_no_v1alpha1.Application) *[]networkingv1.NetworkPolicyEgressRule {
+func generateDefaultEgressRules(source resource.Source) *[]networkingv1.NetworkPolicyEgressRule {
 	var ruleList []networkingv1.NetworkPolicyEgressRule
 	rule := networkingv1.NetworkPolicyEgressRule{}
 
 	// Allow access to kube-dns
 	rule.To = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(
-		application,
+		source,
 		KubeNamespace,
 		map[string]string{"k8s-app": "kube-dns"})}
 	rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Protocol: "UDP", Port: DNSPort}})
@@ -142,7 +144,7 @@ func generateDefaultEgressRules(application skatteetaten_no_v1alpha1.Application
 	// TODO: Limit on specific ports.
 	rule = networkingv1.NetworkPolicyEgressRule{}
 	rule.To = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(
-		application,
+		source,
 		authorization_policy.IstioNamespace,
 		map[string]string{"app": "istiod", "istio": "pilot"})}
 	ruleList = append(ruleList, rule)
@@ -158,7 +160,7 @@ func generateDefaultEgressRules(application skatteetaten_no_v1alpha1.Application
 	return &ruleList
 }
 
-func generateNetworkPolicyIngressRule(application skatteetaten_no_v1alpha1.Application, inbound skatteetaten_no_v1alpha1.InternalIngressConfig) *networkingv1.NetworkPolicyIngressRule {
+func generateNetworkPolicyIngressRule(source resource.Source, inbound skatteetaten_no_v1alpha1.InternalIngressConfig) *networkingv1.NetworkPolicyIngressRule {
 	rule := networkingv1.NetworkPolicyIngressRule{}
 	appLabel := map[string]string{}
 
@@ -166,13 +168,13 @@ func generateNetworkPolicyIngressRule(application skatteetaten_no_v1alpha1.Appli
 		appLabel["app"] = inbound.Application
 	}
 
-	rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(application, inbound.Namespace, appLabel)}
+	rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(source, inbound.Namespace, appLabel)}
 	rule.Ports = *generateNetworkPolicyPorts(inbound.Ports)
 
 	return &rule
 }
 
-func generateNetworkPolicyEgressRule(application skatteetaten_no_v1alpha1.Application, outbound skatteetaten_no_v1alpha1.InternalEgressConfig) *networkingv1.NetworkPolicyEgressRule {
+func generateNetworkPolicyEgressRule(source resource.Source, outbound skatteetaten_no_v1alpha1.InternalEgressConfig) *networkingv1.NetworkPolicyEgressRule {
 	rule := networkingv1.NetworkPolicyEgressRule{}
 	appLabel := map[string]string{}
 
@@ -181,7 +183,7 @@ func generateNetworkPolicyEgressRule(application skatteetaten_no_v1alpha1.Applic
 	}
 
 	rule.To = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(
-		application,
+		source,
 		outbound.Namespace,
 		appLabel)}
 	rule.Ports = *generateNetworkPolicyPorts(outbound.Ports)
@@ -209,11 +211,11 @@ func generateNetworkPolicyExternalEgressRule() *networkingv1.NetworkPolicyEgress
 	}
 }
 
-func generateNetworkPolicyPeer(application skatteetaten_no_v1alpha1.Application, namespace string, appLabel map[string]string) *networkingv1.NetworkPolicyPeer {
+func generateNetworkPolicyPeer(source resource.Source, namespace string, appLabel map[string]string) *networkingv1.NetworkPolicyPeer {
 	peer := networkingv1.NetworkPolicyPeer{}
 
 	if len(namespace) == 0 {
-		namespace = application.Namespace
+		namespace = source.GetNamespace()
 	}
 
 	peer.NamespaceSelector = &metav1.LabelSelector{
