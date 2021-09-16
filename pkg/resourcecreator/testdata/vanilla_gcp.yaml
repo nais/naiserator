@@ -229,8 +229,6 @@ tests:
               spec:
                 containers:
                   - securityContext:
-                      runAsUser: 1069
-                      runAsGroup: 1069
                       allowPrivilegeEscalation: false
                       runAsNonRoot: true
                       privileged: false
