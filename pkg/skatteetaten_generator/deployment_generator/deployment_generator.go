@@ -90,7 +90,7 @@ func getDeploymentSpec(source resource.Source, appSpec skatteetaten_no_v1alpha1.
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": source.GetName()},
+			Labels: map[string]string{"app": source.GetName()},
 				},
 				Spec: corev1.PodSpec{
 					Affinity: &corev1.Affinity{
