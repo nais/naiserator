@@ -311,7 +311,6 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	// The number of replicas is significant, so we need to carry it over to match
 	// this next rollout.
 
-	//TODO: Skatt we do not need this.
 	previousDeployment := &apps.Deployment{}
 	err = n.Get(ctx, client.ObjectKey{Name: app.GetName(), Namespace: app.GetNamespace()}, previousDeployment)
 	if err != nil && !errors.IsNotFound(err) {
@@ -415,8 +414,6 @@ var appsync sync.Mutex
 
 // UpdateApplication atomically update an Application resource.
 // Locks the resource to avoid race conditions.
-
-//TODO: kunne denne tatt en source og så legger man påkrevede metoder i source for å sette status? Tror ikke det er mye jobb?
 func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.Source, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
 	appsync.Lock()
 	defer appsync.Unlock()
