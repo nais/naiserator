@@ -32,6 +32,8 @@ type Options struct {
 	Wonderwall                        config.Wonderwall
 	WonderwallEnabled                 bool
 	SkattUsePullSecret                bool
+	AzureServiceOperatorEnabled       bool
+	Istio							  bool
 }
 
 // NewOptions creates a struct with the default resource options.

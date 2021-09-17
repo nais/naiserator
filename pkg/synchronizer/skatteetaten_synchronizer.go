@@ -13,11 +13,11 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
-	generator "github.com/nais/naiserator/pkg/skatteetaten_generator"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/authorization_policy"
 	skatteetaten_generator "github.com/nais/naiserator/pkg/skatteetaten_generator/deployment_generator"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/image_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/network_policy"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres_env"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/service_entry"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/virtual_service"
@@ -223,9 +223,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	}
 	service.Create(app, ast, resourceOptions, naisSvc)
 	serviceaccount.Create(app, ast, resourceOptions)
-
 	horizontalpodautoscaler.CreateV1(app, ast, app.Spec.Replicas)
-
 
 	if ! app.Spec.UnsecureDebugDisableAllAccessPolicies {
 		// NetworkPolicy
@@ -238,10 +236,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	}
 
 	service_entry.Create(app, ast, app.Spec.Egress)
-
 	virtual_service.Create(app, ast, app.Spec.Ingress)
-
-	// PodDisruptionBudget
 	poddisruptionbudget.Create(app, ast, app.Spec.Replicas)
 
 	// ImagePolicy
@@ -257,18 +252,8 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 		dbVars = postgres_env.GenerateDbEnv("SPRING_DATASOURCE", app.Spec.Azure.PostgreDatabases[0].Users[0].SecretName(*app))
 	}
 
-	//TODO handle updating
-	//SKATT: Operatøren for disse setter controller reference men vi vil gjerne ha blocking owner reference for sletting
-	for _, db := range app.Spec.Azure.PostgreDatabases {
-		//TODO: handle fetching resource group from azure, or how do we do this?
-		postgreDatabase := generator.GeneratePostgresDatabase(*app, RESOURCE_GROUP, *db)
-		ast.AppendOperation(resource.OperationCreateIfNotExists, postgreDatabase)
+	postgres.CreateDatabaseAndUsers(app, ast, app.Spec.Azure.PostgreDatabases, RESOURCE_GROUP)
 
-		for _, user := range db.Users {
-			postgreUser := generator.GeneratePostgresUser(*app, RESOURCE_GROUP, *db, *user)
-			ast.AppendOperation(resource.OperationCreateIfNotExists, postgreUser)
-		}
-	}
 
 	// Deployment
 	deployment := skatteetaten_generator.GenerateDeployment(*app, dbVars)

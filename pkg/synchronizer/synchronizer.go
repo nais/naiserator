@@ -230,6 +230,14 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	if len(n.ResourceOptions.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
+
+	if n.ResourceOptions.Istio {
+		listers = append(listers, naiserator_scheme.IstioListers()...)
+	}
+
+	if n.ResourceOptions.AzureServiceOperatorEnabled {
+		listers = append(listers, naiserator_scheme.ASOListers()...)
+	}
 	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
@@ -302,6 +310,8 @@ func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, err
 	// Make a query to Kubernetes for this application's previous deployment.
 	// The number of replicas is significant, so we need to carry it over to match
 	// this next rollout.
+
+	//TODO: Skatt we do not need this.
 	previousDeployment := &apps.Deployment{}
 	err = n.Get(ctx, client.ObjectKey{Name: app.GetName(), Namespace: app.GetNamespace()}, previousDeployment)
 	if err != nil && !errors.IsNotFound(err) {
