@@ -10,7 +10,8 @@ PROTOC = $(shell which protoc)
 .PHONY: build docker docker-push local install test proto
 
 build:
-	cd cmd/naiserator && go build
+	go build -o cmd/naiserator/naiserator ./cmd/naiserator
+	go build -o cmd/naiserator_webhook/naiserator_webhook ./cmd/naiserator_webhook
 
 docker:
 	docker image build -t ${TAG}:$(shell ./version.sh) -t ${TAG} -t ${NAME} -t ${LATEST} -f Dockerfile .
