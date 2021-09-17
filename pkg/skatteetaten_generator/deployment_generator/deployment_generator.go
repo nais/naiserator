@@ -86,11 +86,11 @@ func getDeploymentSpec(source resource.Source, appSpec skatteetaten_no_v1alpha1.
 			},
 			Replicas: pointer.Int32Ptr(int32(*replicas)),
 			Selector: &metav1.LabelSelector{
-				MatchLabels: source.GetLabels(),
+				MatchLabels: map[string]string{"app": source.GetName()},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: source.GetLabels(),
+					Labels: map[string]string{"app": source.GetName()},
 				},
 				Spec: corev1.PodSpec{
 					Affinity: &corev1.Affinity{
