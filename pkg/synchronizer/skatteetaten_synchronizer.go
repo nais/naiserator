@@ -362,7 +362,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	poddisruptionbudget.Create(app, ast, app.Spec.Replicas)
 
 	// ImagePolicy
-	// SKATT: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
+	// TODO: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
 	err := image_policy.Create(app, ast, app.Spec.ImagePolicy)
 	if err != nil {
 		return nil, err
@@ -371,7 +371,10 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	// Azure
 	var dbVars []corev1.EnvVar
 	if app.Spec.Azure != nil && app.Spec.Azure.PostgreDatabases != nil && len(app.Spec.Azure.PostgreDatabases) == 1 {
-		dbVars = postgres_env.GenerateDbEnv("SPRING_DATASOURCE", app.Spec.Azure.PostgreDatabases[0].Users[0].SecretName(*app))
+		//TODO name
+		secretName := fmt.Sprintf("postgresqluser-pgu-%s-%s", app.GetName(), app.Spec.Azure.PostgreDatabases[0].Users[0].Name)
+		dbVars = postgres_env.GenerateDbEnv("SPRING_DATASOURCE", secretName)
+
 	}
 
 	postgres.CreateDatabaseAndUsers(app, ast, app.Spec.Azure.PostgreDatabases, RESOURCE_GROUP)
