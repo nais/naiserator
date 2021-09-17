@@ -18,6 +18,7 @@ type Source interface {
 	metav1.Object
 	metav1.ObjectMetaAccessor
 	metav1.Common
+
 	GetObjectReference() corev1.ObjectReference
 	GetOwnerReference() metav1.OwnerReference
 	CorrelationID() string

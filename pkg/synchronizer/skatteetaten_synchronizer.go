@@ -197,7 +197,7 @@ func (n *Synchronizer) PrepareSkatteetatenApplikasjon(app *skatteetaten_no_v1alp
 
 
 
-// UpdateApplication atomically update an Application resource.
+// UpdateSkatteetatenApplication atomically update an Application resource.
 // Locks the resource to avoid race conditions.
 func (n *Synchronizer) UpdateSkatteetatenApplication(ctx context.Context, source resource.Source, updateFunc func(existing *skatteetaten_no_v1alpha1.Application) error) error {
 	appsync.Lock()

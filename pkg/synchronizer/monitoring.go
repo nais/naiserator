@@ -39,6 +39,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 	return n.Kafka.Produce(payload)
 }
 
+// TODO: Kunne denne tatt inn en source? Tror ikke det er mye tilpassninger som skal til her før det kan funke
 func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger log.Entry) {
 	objectKey := client.ObjectKey{
 		Name:      app.GetName(),
