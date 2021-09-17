@@ -21,14 +21,14 @@ const (
 
 var appNamespace string
 
-func GenerateAuthorizationPolicy(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) *security_istio_io_v1beta1.AuthorizationPolicy {
+func Create(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) {
 
 	appNamespace = source.GetNamespace()
 	//TODO: magisk "0"
 	authPolicy := generateAuthorizationPolicy(source, "ALLOW")
 
 	if config.Ingress == nil {
-		return authPolicy
+		return
 	}
 
 	// Authorization Policies to allow ingress from configured istio gateways
@@ -69,8 +69,8 @@ func GenerateAuthorizationPolicy(source resource.Source, ast *resource.Ast, conf
 			)
 		}
 	}
+	ast.AppendOperation(resource.OperationCreateOrUpdate, authPolicy)
 
-	return authPolicy
 }
 
 func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngressConfig) *security_istio_io_v1beta1.Rule {

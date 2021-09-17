@@ -5,23 +5,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
-	deployment "github.com/nais/naiserator/pkg/event"
-	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/authorization_policy"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator/deployment_generator"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/image_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/network_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres_env"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/service_entry"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/virtual_service"
 	log "github.com/sirupsen/logrus"
@@ -30,12 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-
-	//TODO: add field in spec for global rg for application
-	RESOURCE_GROUP ="rg-nap"
 )
 
 // ReconcileSkatteetatenApplication process Application work queue
@@ -137,129 +128,6 @@ func (n *Synchronizer) ReconcileSkatteetatenApplication(req ctrl.Request) (ctrl.
 	return ctrl.Result{}, nil
 }
 
-
-func (n *Synchronizer) MonitorRolloutSkatteetaten(app *skatteetaten_no_v1alpha1.Application, logger log.Entry) {
-	objectKey := client.ObjectKey{
-		Name:      app.GetName(),
-		Namespace: app.GetNamespace(),
-	}
-
-	// Cancel already running monitor routine if MonitorRollout called again for this particular application.
-	n.cancelMonitor(objectKey, nil)
-
-	id := uuid.New()
-	ctx, cancel := context.WithCancel(context.Background())
-	rolloutMonitorLock.Lock()
-	n.RolloutMonitor[objectKey] = RolloutMonitor{
-		id:     id,
-		cancel: cancel,
-	}
-	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
-	rolloutMonitorLock.Unlock()
-
-	go func() {
-		n.monitorRolloutRoutineSkatteetaten(ctx, app, logger)
-		cancel()
-		n.cancelMonitor(objectKey, &id)
-	}()
-}
-
-
-// Monitoring deployments to signal RolloutComplete.
-func (n *Synchronizer) monitorRolloutRoutineSkatteetaten(ctx context.Context, app *skatteetaten_no_v1alpha1.Application, logger log.Entry) {
-	logger.Debugf("Monitoring rollout status")
-
-	objectKey := client.ObjectKey{
-		Name:      app.GetName(),
-		Namespace: app.GetNamespace(),
-	}
-
-	var event *deployment.Event
-	var eventReported bool
-	var kafkaProduced bool
-	var applicationUpdated bool
-
-	// Don't produce Kafka message on certain conditions
-	kafkaProduced = n.Kafka == nil || app.SkipDeploymentMessage()
-
-	for {
-		select {
-		case <-time.After(n.Config.Synchronizer.RolloutCheckInterval):
-			deploy := &apps.Deployment{}
-			err := n.Get(ctx, objectKey, deploy)
-
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					logger.Errorf("Monitor rollout: failed to query Deployment: %s", err)
-				}
-				continue
-			}
-
-			if !deploymentComplete(deploy, &deploy.Status) {
-				continue
-			}
-
-			// Deployment event for dev-rapid topic.
-			if event == nil {
-				logger.Debugf("Monitor rollout: deployment has rolled out completely")
-				event = generator.NewDeploymentEvent(app, app.Spec.Pod.Image)
-				event.RolloutStatus = deployment.RolloutStatus_complete
-			}
-
-			// Save a Kubernetes event for this completed deployment.
-			// The deployment will be reported as complete when this event is picked up by NAIS deploy.
-			if !eventReported {
-				_, err = n.reportEvent(ctx, resource.CreateEvent(app, EventRolloutComplete, "Deployment rollout has completed", "Normal"))
-				eventReported = err == nil
-				if err != nil {
-					logger.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
-				}
-			}
-
-			// Send a deployment event to the dev-rapid topic.
-			// This is picked up by deployment-event-relays and used as official deployment data.
-			if !kafkaProduced {
-				offset, err := n.produceDeploymentEvent(event)
-				kafkaProduced = err == nil
-				if err == nil {
-					logger.WithFields(log.Fields{
-						"kafka_offset": offset,
-					}).Infof("Deployment event sent successfully")
-				} else {
-					logger.Errorf("Produce deployment message: %s", err)
-				}
-			}
-
-			// Set the SynchronizationState field of the application to RolloutComplete.
-			// This will prevent the application from being picked up by this function if Naiserator restarts.
-			// Only update this field if an event has been persisted to the cluster.
-			if !applicationUpdated && eventReported {
-				err = n.UpdateSkatteetatenApplication(ctx, app, func(app *skatteetaten_no_v1alpha1.Application) error {
-					app.Status.SynchronizationState = EventRolloutComplete
-					app.Status.RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
-					app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
-					return n.Update(ctx, app)
-				})
-
-				applicationUpdated = err == nil
-
-				if err != nil {
-					logger.Errorf("Monitor rollout: store application sync status: %s", err)
-				}
-			}
-
-			if applicationUpdated && kafkaProduced && eventReported {
-				log.Infof("All systems updated after successful application rollout; terminating monitoring")
-				return
-			}
-
-		case <-ctx.Done():
-			logger.Debugf("Monitor rollout: application has been redeployed; cancelling monitoring")
-			return
-		}
-	}
-}
-
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
@@ -272,10 +140,10 @@ func (n *Synchronizer) PrepareSkatteetatenApplikasjon(app *skatteetaten_no_v1alp
 		ResourceOptions: n.ResourceOptions,
 	}
 
-	//TODO: apply default values for skatt
-	//if err = app.ApplyDefaults(); err != nil {
+	// TODO: apply default values for skatt
+	// if err = app.ApplyDefaults(); err != nil {
 	//	return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
-	//}
+	// }
 
 	rollout.SynchronizationHash, err = app.Hash()
 	if err != nil {
@@ -335,26 +203,43 @@ func (n *Synchronizer) UpdateSkatteetatenApplication(ctx context.Context, source
 	return updateFunc(existing)
 }
 
+func createNaisApp(app *skatteetaten_no_v1alpha1.Application) *nais_io_v1alpha1.Application {
+
+	naisApp :=&nais_io_v1alpha1.Application{
+		Spec: nais_io_v1alpha1.ApplicationSpec{
+			Replicas: &app.Spec.Replicas,
+			Image:    app.Spec.Pod.Image,
+			Resources: &nais_io_v1.ResourceRequirements{
+				Limits: &nais_io_v1.ResourceSpec{
+					Cpu:    app.Spec.Pod.Resource.Limits.Cpu().String(),
+					Memory: app.Spec.Pod.Resource.Limits.Memory().String(),
+				},
+				Requests: &nais_io_v1.ResourceSpec{
+					Cpu:    app.Spec.Pod.Resource.Requests.Cpu().String(),
+					Memory: app.Spec.Pod.Resource.Requests.Memory().String(),
+				},
+			},
+		},
+	}
+
+	naisApp.ApplyDefaults()
+	return naisApp
+}
+
 func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
 
 	ast := resource.NewAst()
 
-	// Service
-	naisSvc := nais_io_v1.Service{
-		Protocol: "tcp",
-		Port: 8080,
-	}
-	service.Create(app, ast, resourceOptions, naisSvc)
+	naisApp := createNaisApp(app)
+
+	service.Create(app, ast, resourceOptions, *naisApp.Spec.Service)
 	serviceaccount.Create(app, ast, resourceOptions)
 	horizontalpodautoscaler.CreateV1(app, ast, app.Spec.Replicas)
 
-	if ! app.Spec.UnsecureDebugDisableAllAccessPolicies {
+	if !app.Spec.UnsecureDebugDisableAllAccessPolicies {
 		// NetworkPolicy
-		network_policy.GenerateNetworkPolicy(app, ast, app.Spec)
-
-		// AuthorizationPolicy
-		ap := authorization_policy.GenerateAuthorizationPolicy(app, ast, app.Spec)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, ap)
+		network_policy.Create(app, ast, app.Spec)
+		authorization_policy.Create(app, ast, app.Spec)
 	}
 
 	service_entry.Create(app, ast, app.Spec.Egress)
@@ -368,21 +253,9 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 		return nil, err
 	}
 
-	// Azure
-	var dbVars []corev1.EnvVar
-	if app.Spec.Azure != nil && app.Spec.Azure.PostgreDatabases != nil && len(app.Spec.Azure.PostgreDatabases) == 1 {
-		//TODO name
-		secretName := fmt.Sprintf("postgresqluser-pgu-%s-%s", app.GetName(), app.Spec.Azure.PostgreDatabases[0].Users[0].Name)
-		dbVars = postgres_env.GenerateDbEnv("SPRING_DATASOURCE", secretName)
+	postgres.Create(app, ast, app.Spec.Azure.PostgreDatabases, app.Spec.Azure.ResourceGroup)
 
-	}
-
-	postgres.CreateDatabaseAndUsers(app, ast, app.Spec.Azure.PostgreDatabases, RESOURCE_GROUP)
-
-
-	// Deployment
-	deployment_generator.Create(app, ast, app.Spec, dbVars)
-
+	deployment.Create(naisApp, ast, resourceOptions)
 
 	return ast.Operations, nil
 }
