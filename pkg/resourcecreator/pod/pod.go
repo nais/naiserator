@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 
@@ -43,28 +44,55 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 
 	containers := reorderContainers(appName, ast.Containers)
 
+	// Pod security context will by default make the filesystem read-only. Mount an emptyDir on /tmp
+	// to allow temporary files to be created.
+	volumes := append(ast.Volumes, corev1.Volume{
+		Name: "writable-tmp",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+
+	if len(containers) > 0 {
+		containers[0].VolumeMounts = append(containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      "writable-tmp",
+			MountPath: "/tmp",
+		})
+	}
+
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
 		Containers:         containers,
 		ServiceAccountName: appName,
 		RestartPolicy:      restartPolicy,
 		DNSPolicy:          corev1.DNSClusterFirst,
-		Volumes:            ast.Volumes,
+		Volumes:            volumes,
 		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gpr-credentials"},
 			{Name: "ghcr-credentials"},
 		},
 	}
 
-	if restricted(annotations) {
+	if resourceOptions.SecurePodSecurityContext && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
 		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
-			RunAsUser:                pointer.Int64Ptr(int64(1069)),
-			RunAsGroup:               pointer.Int64Ptr(int64(1069)),
+			RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
+			RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
 			RunAsNonRoot:             pointer.BoolPtr(true),
 			Privileged:               pointer.BoolPtr(false),
 			AllowPrivilegeEscalation: pointer.BoolPtr(false),
-			Capabilities:             &corev1.Capabilities{Drop: []corev1.Capability{"all"}},
+			ReadOnlyRootFilesystem:   pointer.BoolPtr(readOnlyFileSystem(annotations)),
 		}
+
+		capabilities := &corev1.Capabilities{
+			Drop: []corev1.Capability{"all"},
+		}
+
+		additionalCapabilities := sanitizeCapabilities(annotations, resourceOptions.AllowedKernelCapabilities)
+		if additionalCapabilities != nil && len(additionalCapabilities) > 0 {
+			capabilities.Add = additionalCapabilities
+		}
+
+		podSpec.Containers[0].SecurityContext.Capabilities = capabilities
 	}
 
 	if len(resourceOptions.HostAliases) > 0 {
@@ -72,6 +100,36 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 	}
 
 	return podSpec, err
+}
+
+func runAsUser(annotations map[string]string) int64 {
+	val, found := annotations["nais.io/run-as-user"]
+	if !found {
+		return 1069
+	}
+
+	uid, err := strconv.Atoi(val)
+	if err != nil {
+		log.Warnf("Converting string to int: %v", err)
+		return 1069
+	}
+
+	return int64(uid)
+}
+
+func runAsGroup(annotations map[string]string) int64 {
+	val, found := annotations["nais.io/run-as-group"]
+	if !found {
+		return runAsUser(annotations)
+	}
+
+	uid, err := strconv.Atoi(val)
+	if err != nil {
+		log.Warnf("Converting string to int: %v", err)
+		return runAsUser(annotations)
+	}
+
+	return int64(uid)
 }
 
 func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
@@ -379,11 +437,46 @@ func leadingSlash(s string) string {
 	return "/" + s
 }
 
-func restricted(annotations map[string]string) bool {
-	val, found := annotations["nais.io/restricted"]
+func exploitable(annotations map[string]string) bool {
+	val, found := annotations["nais.io/security-does-not-matter"]
 	if !found {
 		return false
 	}
 
 	return strings.ToLower(val) == "true"
+}
+
+func readOnlyFileSystem(annotations map[string]string) bool {
+	val, found := annotations["nais.io/read-only-file-system"]
+	if !found {
+		return true
+	}
+
+	return strings.ToLower(val) != "false"
+}
+
+func sanitizeCapabilities(annotations map[string]string, allowedCapabilites []string) []corev1.Capability {
+	val, found := annotations["nais.io/add-kernel-capability"]
+	if !found {
+		return nil
+	}
+
+	capabilities := make([]corev1.Capability, 0)
+	desiredCapabilites := strings.Split(val, ",")
+	for _, desiredCapability := range desiredCapabilites {
+		if allowed(desiredCapability, allowedCapabilites) {
+			capabilities = append(capabilities, corev1.Capability(strings.ToUpper(desiredCapability)))
+		}
+	}
+
+	return capabilities
+}
+
+func allowed(capability string, allowedCapabilites []string) bool {
+	for _, allowedCapability := range allowedCapabilites {
+		if strings.ToLower(capability) == strings.ToLower(allowedCapability) {
+			return true
+		}
+	}
+	return false
 }

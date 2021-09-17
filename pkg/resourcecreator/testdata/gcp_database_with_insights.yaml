@@ -24,7 +24,11 @@ input:
         - databases:
             - name: mydb
           type: POSTGRES_11
-
+          pointInTimeRecovery: true
+          insights:
+            queryStringLength: 4500
+            recordApplicationTags: true
+            recordClientAddress: true
 tests:
   - match:
       - type: subset
@@ -100,6 +104,7 @@ tests:
               backupConfiguration:
                 enabled: true
                 startTime: "02:00"
+                pointInTimeRecoveryEnabled: true
               ipConfiguration:
                 requireSsl: true
               diskAutoresize: false
@@ -108,8 +113,9 @@ tests:
               tier: db-f1-micro
               insightsConfig:
                 queryInsightsEnabled: true
-                recordApplicationTags: false
-                recordClientAddress: false
+                queryStringLength: 4500
+                recordApplicationTags: true
+                recordClientAddress: true
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
@@ -233,7 +239,7 @@ tests:
                     ports:
                       - containerPort: 5432
                         protocol: TCP
-                    resources: { }
+                    resources: {}
                     imagePullPolicy: IfNotPresent
                     securityContext:
                       allowPrivilegeEscalation: false

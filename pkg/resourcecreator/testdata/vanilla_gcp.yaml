@@ -6,6 +6,7 @@ resourceoptions:
   NetworkPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
+  SecurePodSecurityContext: true
 
 input:
   kind: Application
@@ -219,3 +220,20 @@ tests:
               metadata:
                 annotations:
                   cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      - type: subset
+        name: "restricted securitycontext"
+        resource:
+          spec:
+            replicas: 2
+            template:
+              spec:
+                containers:
+                  - securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      allowPrivilegeEscalation: false
+                      runAsNonRoot: true
+                      privileged: false
+                      capabilities:
+                        drop: ["all"]
+

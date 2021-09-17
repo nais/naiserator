@@ -4,6 +4,7 @@ config:
 resourceOptions:
   NumReplicas: 1
   ClusterName: test-cluster
+  SecurePodSecurityContext: true
 
 input:
   kind: Application
@@ -128,11 +129,22 @@ tests:
                   - configMap:
                       name: ca-bundle-pem
                     name: ca-bundle-pem
+                  - emptyDir: {}
+                    name: writable-tmp
                 containers:
                   - ports:
                       - protocol: TCP
                         name: http
                         containerPort: 8080
+                    securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      runAsNonRoot: true
+                      privileged: false
+                      capabilities:
+                        drop: ["all"]
                     env:
                       - name: NAV_TRUSTSTORE_PATH
                         value: /etc/ssl/certs/java/cacerts
@@ -180,6 +192,8 @@ tests:
                         readOnly: true
                         mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
                         subPath: ca-bundle.pem
+                      - mountPath: /tmp
+                        name: writable-tmp
                     lifecycle:
                       preStop:
                         exec:

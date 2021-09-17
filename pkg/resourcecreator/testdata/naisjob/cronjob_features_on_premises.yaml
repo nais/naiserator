@@ -3,6 +3,7 @@ config:
 
 resourceOptions:
   ClusterName: test-cluster
+  SecurePodSecurityContext: true
 
 input:
   kind: Naisjob
@@ -111,6 +112,15 @@ tests:
                           - name: NAIS_CLIENT_ID
                             value: test-cluster:mynamespace:mynaisjob
                         image: navikt/mynaisjob:1.2.3
+                        securityContext:
+                          runAsUser: 1069
+                          runAsGroup: 1069
+                          allowPrivilegeEscalation: false
+                          runAsNonRoot: true
+                          readOnlyRootFilesystem: true
+                          privileged: false
+                          capabilities:
+                            drop: ["all"]
                         imagePullPolicy: IfNotPresent
                         lifecycle:
                           preStop:
@@ -151,6 +161,8 @@ tests:
                             name: ca-bundle-pem
                             readOnly: true
                             subPath: ca-bundle.pem
+                          - mountPath: /tmp
+                            name: writable-tmp
                     dnsPolicy: ClusterFirst
                     imagePullSecrets:
                       - name: gpr-credentials
@@ -164,5 +176,7 @@ tests:
                       - configMap:
                           name: ca-bundle-pem
                         name: ca-bundle-pem
+                      - emptyDir: {}
+                        name: writable-tmp
             schedule: '* 2 * * *'
             successfulJobsHistoryLimit: 4

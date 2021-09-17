@@ -168,6 +168,9 @@ tests:
               team: myteam
             name: nais-io-wonderwall-redis
             namespace: mynamespace
+            annotations:
+              nais.io/read-only-file-system: "false"
+              nais.io/run-as-user: "999"
           spec:
             image: redis:6
             replicas:
