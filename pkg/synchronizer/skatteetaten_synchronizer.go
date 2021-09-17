@@ -237,7 +237,6 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	horizontalpodautoscaler.CreateV1(app, ast, app.Spec.Replicas)
 
 	if !app.Spec.UnsecureDebugDisableAllAccessPolicies {
-		// NetworkPolicy
 		network_policy.Create(app, ast, app.Spec)
 		authorization_policy.Create(app, ast, app.Spec)
 	}
@@ -246,7 +245,6 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	virtual_service.Create(app, ast, app.Spec.Ingress)
 	poddisruptionbudget.Create(app, ast, app.Spec.Replicas)
 
-	// ImagePolicy
 	// TODO: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
 	err := image_policy.Create(app, ast, app.Spec.ImagePolicy)
 	if err != nil {
