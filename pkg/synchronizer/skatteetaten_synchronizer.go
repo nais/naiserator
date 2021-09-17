@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
@@ -140,10 +139,9 @@ func (n *Synchronizer) PrepareSkatteetatenApplikasjon(app *skatteetaten_no_v1alp
 		ResourceOptions: n.ResourceOptions,
 	}
 
-	// TODO: apply default values for skatt
-	// if err = app.ApplyDefaults(); err != nil {
-	//	return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
-	// }
+	  if err = app.ApplyDefaults(); err != nil {
+		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
+	  }
 
 	rollout.SynchronizationHash, err = app.Hash()
 	if err != nil {
@@ -203,38 +201,16 @@ func (n *Synchronizer) UpdateSkatteetatenApplication(ctx context.Context, source
 	return updateFunc(existing)
 }
 
-func createNaisApp(app *skatteetaten_no_v1alpha1.Application) *nais_io_v1alpha1.Application {
-
-	naisApp :=&nais_io_v1alpha1.Application{
-		Spec: nais_io_v1alpha1.ApplicationSpec{
-			Replicas: &app.Spec.Replicas,
-			Image:    app.Spec.Pod.Image,
-			Resources: &nais_io_v1.ResourceRequirements{
-				Limits: &nais_io_v1.ResourceSpec{
-					Cpu:    app.Spec.Pod.Resource.Limits.Cpu().String(),
-					Memory: app.Spec.Pod.Resource.Limits.Memory().String(),
-				},
-				Requests: &nais_io_v1.ResourceSpec{
-					Cpu:    app.Spec.Pod.Resource.Requests.Cpu().String(),
-					Memory: app.Spec.Pod.Resource.Requests.Memory().String(),
-				},
-			},
-		},
-	}
-
-	naisApp.ApplyDefaults()
-	return naisApp
-}
 
 func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
 
 	ast := resource.NewAst()
 
-	naisApp := createNaisApp(app)
+	naisApp := app.ToNaisApplication()
 
 	service.Create(app, ast, resourceOptions, *naisApp.Spec.Service)
 	serviceaccount.Create(app, ast, resourceOptions)
-	horizontalpodautoscaler.CreateV1(app, ast, app.Spec.Replicas)
+	horizontalpodautoscaler.CreateV1(app, ast, *app.Spec.Replicas)
 
 	if !app.Spec.UnsecureDebugDisableAllAccessPolicies {
 		network_policy.Create(app, ast, app.Spec)
@@ -243,7 +219,7 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 
 	service_entry.Create(app, ast, app.Spec.Egress)
 	virtual_service.Create(app, ast, app.Spec.Ingress)
-	poddisruptionbudget.Create(app, ast, app.Spec.Replicas)
+	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
 
 	// TODO: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
 	err := image_policy.Create(app, ast, app.Spec.ImagePolicy)
@@ -252,8 +228,15 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	}
 
 	postgres.Create(app, ast, app.Spec.Azure.PostgreDatabases, app.Spec.Azure.ResourceGroup)
+	err = pod.CreateAppContainer(naisApp, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
 
-	deployment.Create(naisApp, ast, resourceOptions)
+	err = deployment.Create(naisApp, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
 
 	return ast.Operations, nil
 }

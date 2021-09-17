@@ -18,7 +18,7 @@ func Create(source resource.Source, ast *resource.Ast, pgd []*skatteetaten_no_v1
 		generatePostgresDatabase(source, ast, resourceGroup, *db)
 		for userIndex, user := range db.Users {
 			if dbIndex == 0 && userIndex == 0 {
-				secretName := fmt.Sprintf("postgresqluser-pgu-%s-%s", source.GetName(), user)
+				secretName := fmt.Sprintf("postgresqluser-pgu-%s-%s", source.GetName(), user.Name)
 				dbVars := postgres_env.GenerateDbEnv("SPRING_DATASOURCE", secretName)
 				ast.Env = append(ast.Env, dbVars...)
 			}
