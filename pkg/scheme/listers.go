@@ -11,7 +11,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Maintain a list of resources that should be cleaned up during Application synchronization.
@@ -20,8 +20,8 @@ import (
 // These are usually the types we persist to the cluster with names different than the application name.
 
 // Resources that can be queried in all clusters
-func GenericListers() []runtime.Object {
-	return []runtime.Object{
+func GenericListers() []client.ObjectList{
+	return []client.ObjectList{
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
 		&v2beta2.HorizontalPodAutoscalerList{},
@@ -42,8 +42,8 @@ func GenericListers() []runtime.Object {
 }
 
 // Resources that exist only in GCP clusters
-func GCPListers() []runtime.Object {
-	return []runtime.Object{
+func GCPListers() []client.ObjectList {
+	return []client.ObjectList{
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{},

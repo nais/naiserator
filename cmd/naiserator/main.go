@@ -1,11 +1,10 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
@@ -120,8 +119,6 @@ func run() error {
 		}
 	}
 
-	stopCh := StopCh()
-
 	resourceOptions := resource.NewOptions()
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
@@ -144,6 +141,7 @@ func run() error {
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
+
 
 	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
@@ -190,19 +188,7 @@ func run() error {
 		return err
 	}
 
-	return mgr.Start(stopCh)
-}
+	//TODO: Not sure what the correct context to use here is?
+	return mgr.Start(context.Background())
 
-func StopCh() (stopCh <-chan struct{}) {
-	stop := make(chan struct{})
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, []os.Signal{os.Interrupt, syscall.SIGTERM, syscall.SIGINT}...)
-	go func() {
-		<-c
-		close(stop)
-		<-c
-		os.Exit(1) // second signal. Exit directly.
-	}()
-
-	return stop
 }

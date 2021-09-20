@@ -134,14 +134,14 @@ func TestSynchronizer(t *testing.T) {
 	})
 
 	// Test that a resource has been created in the fake cluster
-	testResource := func(resource runtime.Object, objectKey client.ObjectKey) {
+	testResource := func(resource client.Object, objectKey client.ObjectKey) {
 		err := rig.client.Get(ctx, objectKey, resource)
 		assert.NoError(t, err)
 		assert.NotNil(t, resource)
 	}
 
 	// Test that a resource does not exist in the fake cluster
-	testResourceNotExist := func(resource runtime.Object, objectKey client.ObjectKey) {
+	testResourceNotExist := func(resource client.Object, objectKey client.ObjectKey) {
 		err := rig.client.Get(ctx, objectKey, resource)
 		assert.True(t, errors.IsNotFound(err), "the resource found in the cluster should not be there")
 	}
@@ -188,7 +188,7 @@ func TestSynchronizer(t *testing.T) {
 			Name:      app.Name,
 		},
 	}
-	result, err := rig.synchronizer.Reconcile(req)
+	result, err := rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
@@ -229,7 +229,7 @@ func TestSynchronizer(t *testing.T) {
 	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = "new-deploy-id"
 	err = rig.client.Update(ctx, app)
 	assert.NoError(t, err)
-	result, err = rig.synchronizer.Reconcile(req)
+	result, err = rig.synchronizer.Reconcile(ctx, req)
 
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
@@ -246,6 +246,7 @@ func TestSynchronizer(t *testing.T) {
 	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
 }
+
 
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resource.NewOptions()
@@ -309,7 +310,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		},
 	}
 
-	result, err := rig.synchronizer.Reconcile(req)
+	result, err := rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
