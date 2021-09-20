@@ -1,7 +1,7 @@
 package resource
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // OperationType defines what should be done with a resource.
@@ -16,7 +16,7 @@ const (
 
 // Operation is the combination of a Kubernetes resource and what operation to perform on it.
 type Operation struct {
-	Resource  runtime.Object `json:"resource"`
+	Resource  client.Object `json:"resource"`
 	Operation OperationType  `json:"operation"`
 }
 

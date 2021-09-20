@@ -238,7 +238,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	if n.ResourceOptions.AzureServiceOperatorEnabled {
 		listers = append(listers, naiserator_scheme.ASOListers()...)
 	}
-	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.Source)
+	resources, err := updater.FindAll(ctx, n.Client, n.Scheme, listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
@@ -372,13 +372,13 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		}
 		switch rop.Operation {
 		case resource.OperationCreateOrUpdate:
-			c.fn = updater.CreateOrUpdate(ctx, n, n.Scheme, rop.Resource)
+			c.fn = updater.CreateOrUpdate(ctx, n.Client, n.Scheme, rop.Resource)
 		case resource.OperationCreateOrRecreate:
-			c.fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
+			c.fn = updater.CreateOrRecreate(ctx, n.Client, rop.Resource)
 		case resource.OperationCreateIfNotExists:
-			c.fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
+			c.fn = updater.CreateIfNotExists(ctx, n.Client, rop.Resource)
 		case resource.OperationDeleteIfExists:
-			c.fn = updater.DeleteIfExists(ctx, n, rop.Resource)
+			c.fn = updater.DeleteIfExists(ctx, n.Client, rop.Resource)
 		default:
 			return []commit{
 				{
@@ -402,7 +402,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		for _, rsrc := range unreferenced {
 			deletes = append(deletes, commit{
 				groupVersionKind: getGroupVersionKind(rsrc),
-				fn:               updater.DeleteIfExists(ctx, n, rsrc),
+				fn:               updater.DeleteIfExists(ctx, n.Client, rsrc.(client.Object)),
 			})
 		}
 	}

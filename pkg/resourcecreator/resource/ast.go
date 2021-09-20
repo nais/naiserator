@@ -2,10 +2,10 @@ package resource
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (ast *Ast) AppendOperation(operationType OperationType, resource runtime.Object) {
+func (ast *Ast) AppendOperation(operationType OperationType, resource client.Object) {
 	ast.Operations = append(ast.Operations, Operation{
 		Operation: operationType,
 		Resource:  resource,
