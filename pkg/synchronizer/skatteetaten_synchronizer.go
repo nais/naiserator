@@ -226,8 +226,10 @@ func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, re
 	if err != nil {
 		return nil, err
 	}
+	if app.Spec.Azure != nil {
+		postgres.Create(app, ast, app.Spec.Azure.PostgreDatabases, app.Spec.Azure.ResourceGroup)
+	}
 
-	postgres.Create(app, ast, app.Spec.Azure.PostgreDatabases, app.Spec.Azure.ResourceGroup)
 	err = pod.CreateAppContainer(naisApp, ast, resourceOptions)
 	if err != nil {
 		return nil, err
