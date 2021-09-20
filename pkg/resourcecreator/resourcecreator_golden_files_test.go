@@ -6,6 +6,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/goldenfile"
 
@@ -15,11 +16,15 @@ import (
 
 const (
 	applicationTestDataDirectory = "testdata"
+	skatteeteatenApplicationTestDataDirectory = "testdata/skatteetatenApplication"
 	naisjobTestDataDirectory     = "testdata/naisjob"
 )
 
 type applicationTestCase struct {
 	Input nais_io_v1alpha1.Application
+}
+type skatteetatenApplicationTestCase struct {
+	Input skatteetaten_no_v1alpha1.Application
 }
 
 type naisjobTestCase struct {
@@ -43,6 +48,22 @@ func TestApplicationGoldenFile(t *testing.T) {
 	})
 }
 
+func TestSkatteetatenApplicationGoldenFile(t *testing.T) {
+	goldenfile.Run(t, skatteeteatenApplicationTestDataDirectory, func(input []byte, resourceOptions resource.Options) (resource.Operations, error) {
+		test := skatteetatenApplicationTestCase{}
+		err := yaml.Unmarshal(input, &test)
+		if err != nil {
+			return nil, err
+		}
+
+		err = test.Input.ApplyDefaults()
+		if err != nil {
+			return nil, fmt.Errorf("apply default values to Application object: %s", err)
+		}
+
+		return resourcecreator.CreateSkatteetatenApplication(&test.Input, resourceOptions)
+	})
+}
 func TestNaisjobGoldenFile(t *testing.T) {
 	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, resourceOptions resource.Options) (resource.Operations, error) {
 		test := naisjobTestCase{}

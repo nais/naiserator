@@ -1,0 +1,110 @@
+config:
+  description: vanilla application running in Azure with default configuration and access policies
+
+resourceoptions:
+  NumReplicas: 1
+  SecurePodSecurityContext: true
+
+input:
+  kind: Application
+  apiVersion: application.nebula.skatteetaten.no/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    pod:
+      image: navikt/myapplication:1.2.3
+
+tests:
+  - match:
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+            ownerReferences:
+              - apiVersion: application.nebula.skatteetaten.no/v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
+
+  - apiVersion: v1
+    kind: Service
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "service created with tcp port 80"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            ports:
+              - port: 80
+                targetPort: http
+                name: http
+                protocol: TCP
+            selector:
+              app: myapplication
+            type: ClusterIP
+
+  - operation: CreateOrUpdate
+    apiVersion: autoscaling/v1
+    kind: HorizontalPodAutoscaler
+    match:
+      - type: exact
+        name: "hpa created with 2-4 replicas and 50% cpu threshold"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            scaleTargetRef:
+              kind: Deployment
+              name: myapplication
+              apiVersion: apps/v1
+            minReplicas: 2
+            maxReplicas: 4
+            targetCPUUtilizationPercentage: 50
+
+  - operation: CreateOrUpdate
+    apiVersion: policy/v1beta1
+    kind: PodDisruptionBudget
+    name: myapplication
+    match:
+      - type: exact
+        name: "pdb created with 1 max unavailable"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            maxUnavailable: 1
+            selector:
+              matchLabels:
+                app: myapplication
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - type: subset
+        name: "restricted securitycontext"
+        resource:
+          spec:
+            replicas: 2
+            template:
+              spec:
+                containers:
+                  - securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      allowPrivilegeEscalation: false
+                      runAsNonRoot: true
+                      privileged: false
+                      capabilities:
+                        drop: ["all"]
+
