@@ -3,6 +3,7 @@ config:
 
 resourceoptions:
   NumReplicas: 1
+  SkattUsePullSecret: true
   SecurePodSecurityContext: true
 
 input:
@@ -29,6 +30,117 @@ tests:
                 kind: Application
                 name: myapplication
                 uid: "123456"
+
+  - operation: CreateOrUpdate
+    apiVersion: security.istio.io/v1beta1
+    kind: AuthorizationPolicy
+    name: myapplication
+    match:
+      - name: "network policy created with only system services"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            action: ALLOW
+            rules:
+              - from:
+                - source:
+                    principals:
+                    - cluster.local/ns/istio-system/sa/istio-gateway-service-account
+                to:
+                  - operation:
+                      ports:
+                        - "8080"
+            selector:
+              matchLabels:
+                app: myapplication
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: VirtualService
+    name: myapplication
+    match:
+      - name: "network policy created with only system services"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            gateways:
+             - istio-system/istio-ingress-gateway
+            hosts:
+             - myapplication-mynamespace.istio.nebula.dev.skatteetaten.io
+            http:
+              - route:
+                  - destination:
+                      host: myapplication.mynamespace.svc.cluster.local
+                      port:
+                        number: 8080
+                    weight: 0
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created with only system services"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            egress:
+              - ports:
+                  - port: 53
+                    protocol: UDP
+                to:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: kube-system
+                    podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+              - ports:
+                  - port: 53
+                    protocol: UDP
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: istio-system
+                    podSelector:
+                      matchLabels:
+                        app: istiod
+                        istio: pilot
+              - to:
+                  - ipBlock:
+                      cidr: 127.0.0.1/32
+            ingress:
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          name: istio-system
+                      podSelector:
+                        matchLabels:
+                          app: prometheus
+                          component: server
+                  ports:
+                    - port: 15020
+                      protocol: TCP
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          name: istio-system
+                      podSelector:
+                        matchLabels:
+                          app: istio-gateway
+                          istio: ingressgateway
+                  ports:
+                    - port: 8080
+                      protocol: TCP
+            podSelector:
+                matchLabels:
+                  app: myapplication
 
   - apiVersion: v1
     kind: Service
@@ -86,6 +198,7 @@ tests:
             selector:
               matchLabels:
                 app: myapplication
+
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment

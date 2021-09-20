@@ -16,7 +16,6 @@ import (
 )
 
 func Create(app *nais_io_v1alpha1.Application, objectMeta metav1.ObjectMeta, ast *resource.Ast, resourceOptions resource.Options) error {
-	//TODO: We need ownerreference here to be skatteeaten application not nais application
 	spec, err := deploymentSpec(app, ast, resourceOptions)
 	if err != nil {
 		return fmt.Errorf("create deployment: %w", err)
