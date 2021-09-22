@@ -43,7 +43,7 @@ func run() error {
 		TimestampFormat: time.RFC3339Nano,
 	}
 	log.SetFormatter(&formatter)
-	log.SetLevel(log.TraceLevel)
+	log.SetLevel(log.DebugLevel)
 
 	log.Info("Naiserator starting up")
 
