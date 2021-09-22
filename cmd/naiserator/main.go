@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"os"
@@ -188,7 +187,5 @@ func run() error {
 		return err
 	}
 
-	//TODO: Not sure what the correct context to use here is?
 	return mgr.Start(ctrl.SetupSignalHandler())
-
 }
