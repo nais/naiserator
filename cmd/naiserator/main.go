@@ -189,6 +189,6 @@ func run() error {
 	}
 
 	//TODO: Not sure what the correct context to use here is?
-	return mgr.Start(context.Background())
+	return mgr.Start(ctrl.SetupSignalHandler())
 
 }
