@@ -6,9 +6,8 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/test"
-
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/test"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -73,7 +72,8 @@ func TestDeployment(t *testing.T) {
 		app.Spec.Strategy.Type = nais_io_v1alpha1.DeploymentStrategyRecreate
 		opts := resource.NewOptions()
 		ast := resource.NewAst()
-		err = deployment.Create(app, ast, opts)
+		objectMeta := resource.CreateObjectMeta(app)
+		err = deployment.Create(app, objectMeta, ast, opts)
 		assert.Nil(t, err)
 
 		deploy := ast.Operations[0].Resource.(*appsv1.Deployment)

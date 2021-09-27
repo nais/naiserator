@@ -15,8 +15,7 @@ import (
 	"github.com/nais/naiserator/pkg/util"
 )
 
-func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) error {
-	objectMeta := resource.CreateObjectMeta(app)
+func Create(app *nais_io_v1alpha1.Application, objectMeta metav1.ObjectMeta, ast *resource.Ast, resourceOptions resource.Options) error {
 	spec, err := deploymentSpec(app, ast, resourceOptions)
 	if err != nil {
 		return fmt.Errorf("create deployment: %w", err)

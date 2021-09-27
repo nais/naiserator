@@ -9,6 +9,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
@@ -31,6 +32,12 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/authorization_policy"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/image_policy"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/network_policy"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/service_entry"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator/virtual_service"
 )
 
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
@@ -102,7 +109,9 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 		return nil, err
 	}
 
-	err = deployment.Create(app, ast, resourceOptions)
+	objectMeta := resource.CreateObjectMeta(app)
+
+	err = deployment.Create(app, objectMeta, ast, resourceOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +180,49 @@ func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options
 		if err := batch.CreateCronJob(naisjob, ast, resourceOptions); err != nil {
 			return nil, err
 		}
+	}
+
+	return ast.Operations, nil
+}
+
+//Hvor bør denne ligge? Vi bør vel ikke legge opp til en abstraksjon hvor vi må endre i de samme filene?
+func CreateSkatteetatenApplication(app *skatteetaten_no_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
+
+	ast := resource.NewAst()
+
+	naisApp := app.ToNaisApplication()
+
+	service.Create(app, ast, resourceOptions, *naisApp.Spec.Service)
+	serviceaccount.Create(app, ast, resourceOptions)
+	horizontalpodautoscaler.CreateV1(app, ast, *app.Spec.Replicas)
+
+	if !app.Spec.UnsecureDebugDisableAllAccessPolicies {
+		network_policy.Create(app, ast, app.Spec)
+		authorization_policy.Create(app, ast, app.Spec)
+	}
+
+	service_entry.Create(app, ast, app.Spec.Egress)
+	virtual_service.Create(app, ast, app.Spec.Ingress)
+	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
+
+	// TODO: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
+	err := image_policy.Create(app, ast, app.Spec.ImagePolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	if app.Spec.Azure != nil {
+		postgres.Create(app, ast, app.Spec.Azure.PostgreDatabases, app.Spec.Azure.ResourceGroup)
+	}
+	err = pod.CreateAppContainer(naisApp, ast, resourceOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	objectMeta := resource.CreateObjectMeta(app)
+	err = deployment.Create(naisApp, objectMeta, ast, resourceOptions)
+	if err != nil {
+		return nil, err
 	}
 
 	return ast.Operations, nil

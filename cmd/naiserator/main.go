@@ -140,8 +140,8 @@ func run() error {
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
+
 	//TODO: SKATT
-	resourceOptions.SkattUsePullSecret=true
 	resourceOptions.Istio=true
 	resourceOptions.AzureServiceOperatorEnabled=true
 
