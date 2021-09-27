@@ -21,5 +21,11 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options)
 		ObjectMeta: objectMeta,
 	}
 
+	if options.SkattUsePullSecret {
+		serviceAccount.ImagePullSecrets=[]corev1.LocalObjectReference{{
+			Name: "ghcr-secret",
+		}}
+	}
+
 	ast.AppendOperation(resource.OperationCreateIfNotExists, serviceAccount)
 }

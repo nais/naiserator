@@ -140,6 +140,10 @@ func run() error {
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
+	//TODO: SKATT
+	resourceOptions.SkattUsePullSecret=true
+	resourceOptions.Istio=true
+	resourceOptions.AzureServiceOperatorEnabled=true
 
 
 	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
@@ -187,5 +191,20 @@ func run() error {
 		return err
 	}
 
+	skatteetatenApplicationReconciler := controllers.NewSkatteetatenAppReconciler(synchronizer.Synchronizer{
+		Client:          mgrClient,
+		Config:          *cfg,
+		Kafka:           kafkaClient,
+		ResourceOptions: resourceOptions,
+		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
+		Scheme:          kscheme,
+		SimpleClient:    simpleClient,
+	})
+
+	if err = skatteetatenApplicationReconciler.SetupWithManager(mgr); err != nil {
+		return err
+	}
+
 	return mgr.Start(ctrl.SetupSignalHandler())
 }
+

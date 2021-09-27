@@ -26,6 +26,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
+	//TODO: Dette trenger ikke skatt, men det gjør jo ikke noe om labelen er der?
 	objectMeta = addCleanupLabels(app, objectMeta)
 	objectMeta.Annotations["reloader.stakater.com/search"] = "true"
 
