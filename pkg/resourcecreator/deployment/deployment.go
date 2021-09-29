@@ -17,13 +17,24 @@ import (
 
 type Source interface {
 	resource.Source
-	GetStrategy() *nais_io_v1.Strategy
-	GetReplicas() *nais_io_v1.Replicas
 	GetCleanup() *nais_io_v1.Cleanup
-	GetPrometheus() *nais_io_v1.PrometheusConfig
-	GetLogtransform() string
+	GetCommand() []string
+	GetEnv() nais_io_v1.EnvVars
+	GetEnvFrom() []nais_io_v1.EnvFrom
+	GetFilesFrom() []nais_io_v1.FilesFrom
+	GetImage() string
+	GetLiveness() *nais_io_v1.Probe
 	GetLogformat() string
+	GetLogtransform() string
 	GetPort() int
+	GetPreStopHook() *nais_io_v1.PreStopHook
+	GetPreStopHookPath() string
+	GetPrometheus() *nais_io_v1.PrometheusConfig
+	GetReadiness() *nais_io_v1.Probe
+	GetReplicas() *nais_io_v1.Replicas
+	GetResources() *nais_io_v1.ResourceRequirements
+	GetStartup() *nais_io_v1.Probe
+	GetStrategy() *nais_io_v1.Strategy
 }
 
 func Create(app Source, ast *resource.Ast, resourceOptions resource.Options) error {

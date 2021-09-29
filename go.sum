@@ -113,6 +113,7 @@ github.com/creack/pty v1.1.11/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
@@ -394,6 +395,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRW
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/nais/liberator v0.0.0-20210929083751-670640bd0a87 h1:fJNvTlxNAPUCV/fj3diGjxl66cmb1P8l8Ayv9h7ozes=
 github.com/nais/liberator v0.0.0-20210929083751-670640bd0a87/go.mod h1:PYfco/QZ1s8ZdGzg1B5SgvUAhrGuA/vjf/8cTCmgCzk=
+github.com/nais/liberator v0.0.0-20210929115205-60a0e72a8b04 h1:/C6VXZOsvCqyARo9VTCDoPo4gOyx46jr/khI2dcN2tI=
+github.com/nais/liberator v0.0.0-20210929115205-60a0e72a8b04/go.mod h1:PYfco/QZ1s8ZdGzg1B5SgvUAhrGuA/vjf/8cTCmgCzk=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=

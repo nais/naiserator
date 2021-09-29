@@ -9,8 +9,6 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
@@ -35,7 +33,8 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 )
 
-type CreateFunc func(app client.Object, resourceOptions resource.Options) (resource.Operations, error)
+// TODO: pass CreateApplication to Reconciler matching this signature?
+// type CreateFunc func(app client.Object, resourceOptions resource.Options) (resource.Operations, error)
 
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
@@ -82,7 +81,6 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	// FIXME: skatt
 	poddisruptionbudget.Create(app, ast)
 
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
@@ -103,7 +101,6 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 		return nil, err
 	}
 
-	// FIXME: skatt
 	err = pod.CreateAppContainer(app, ast, resourceOptions)
 	if err != nil {
 		return nil, err

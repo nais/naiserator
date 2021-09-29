@@ -19,7 +19,7 @@ func TestPodDisruptionBudget(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
+		poddisruptionbudget.Create(app, ast)
 		assert.Len(t, ast.Operations, 0)
 	})
 
@@ -30,7 +30,7 @@ func TestPodDisruptionBudget(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
+		poddisruptionbudget.Create(app, ast)
 		assert.Len(t, ast.Operations, 0)
 	})
 }
