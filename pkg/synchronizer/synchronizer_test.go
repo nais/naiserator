@@ -12,14 +12,6 @@ import (
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
-	"github.com/nais/naiserator/pkg/controllers"
-	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
-	"github.com/nais/naiserator/pkg/synchronizer"
-	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -32,6 +24,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/nais/naiserator/pkg/controllers"
+	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
+	"github.com/nais/naiserator/pkg/synchronizer"
+	"github.com/nais/naiserator/pkg/test/fixtures"
 )
 
 type testRig struct {
@@ -134,17 +135,25 @@ func TestSynchronizer(t *testing.T) {
 	})
 
 	// Test that a resource has been created in the fake cluster
-	testResource := func(resource runtime.Object, objectKey client.ObjectKey) {
+	testResource := func(resource client.Object, objectKey client.ObjectKey) {
 		err := rig.client.Get(ctx, objectKey, resource)
 		assert.NoError(t, err)
 		assert.NotNil(t, resource)
 	}
 
 	// Test that a resource does not exist in the fake cluster
-	testResourceNotExist := func(resource runtime.Object, objectKey client.ObjectKey) {
+	testResourceNotExist := func(resource client.Object, objectKey client.ObjectKey) {
 		err := rig.client.Get(ctx, objectKey, resource)
 		assert.True(t, errors.IsNotFound(err), "the resource found in the cluster should not be there")
 	}
+
+	// Ensure that the application's namespace exists
+	err = rig.client.Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: app.GetNamespace(),
+		},
+	})
+	assert.NoError(t, err)
 
 	// Store the Application resource in the cluster before testing commences.
 	// This simulates a deployment into the cluster which is then picked up by the
@@ -188,7 +197,7 @@ func TestSynchronizer(t *testing.T) {
 			Name:      app.Name,
 		},
 	}
-	result, err := rig.synchronizer.Reconcile(req)
+	result, err := rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
@@ -229,7 +238,7 @@ func TestSynchronizer(t *testing.T) {
 	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = "new-deploy-id"
 	err = rig.client.Update(ctx, app)
 	assert.NoError(t, err)
-	result, err = rig.synchronizer.Reconcile(req)
+	result, err = rig.synchronizer.Reconcile(ctx, req)
 
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
@@ -246,6 +255,7 @@ func TestSynchronizer(t *testing.T) {
 	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
 }
+
 
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resource.NewOptions()
@@ -294,6 +304,14 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	err = rig.client.Create(ctx, testNamespace)
 	assert.NoError(t, err)
 
+	// Ensure that namespace for Google IAM service accounts exists
+	err = rig.client.Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: google.IAMServiceAccountNamespace,
+		},
+	})
+	assert.NoError(t, err)
+
 	// Store the Application resource in the cluster before testing commences.
 	// This simulates a deployment into the cluster which is then picked up by the
 	// informer queue.
@@ -309,7 +327,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		},
 	}
 
-	result, err := rig.synchronizer.Reconcile(req)
+	result, err := rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 

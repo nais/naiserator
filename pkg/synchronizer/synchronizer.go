@@ -101,8 +101,8 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 }
 
 // ReconcileApplication process Application work queue
-func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
+func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
 	app := &nais_io_v1alpha1.Application{}
@@ -140,7 +140,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 		}
 	}()
 
-	rollout, err := n.Prepare(app)
+	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
 		app.Status.SynchronizationState = EventFailedPrepare
 		n.reportError(ctx, app.Status.SynchronizationState, err, app)
@@ -230,7 +230,8 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 	if len(n.ResourceOptions.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
-	resources, err := updater.FindAll(ctx, n, n.Scheme, listers, rollout.Source)
+
+	resources, err := updater.FindAll(ctx, n.Client, n.Scheme, listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
@@ -269,8 +270,7 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) 
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
-func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, error) {
-	ctx := context.Background()
+func (n *Synchronizer) Prepare(ctx context.Context, app *nais_io_v1alpha1.Application) (*Rollout, error) {
 	var err error
 
 	rollout := &Rollout{
@@ -363,13 +363,13 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		}
 		switch rop.Operation {
 		case resource.OperationCreateOrUpdate:
-			c.fn = updater.CreateOrUpdate(ctx, n, n.Scheme, rop.Resource)
+			c.fn = updater.CreateOrUpdate(ctx, n.Client, n.Scheme, rop.Resource)
 		case resource.OperationCreateOrRecreate:
-			c.fn = updater.CreateOrRecreate(ctx, n, rop.Resource)
+			c.fn = updater.CreateOrRecreate(ctx, n.Client, rop.Resource)
 		case resource.OperationCreateIfNotExists:
-			c.fn = updater.CreateIfNotExists(ctx, n, rop.Resource)
+			c.fn = updater.CreateIfNotExists(ctx, n.Client, rop.Resource)
 		case resource.OperationDeleteIfExists:
-			c.fn = updater.DeleteIfExists(ctx, n, rop.Resource)
+			c.fn = updater.DeleteIfExists(ctx, n.Client, rop.Resource)
 		default:
 			return []commit{
 				{
@@ -393,7 +393,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		for _, rsrc := range unreferenced {
 			deletes = append(deletes, commit{
 				groupVersionKind: getGroupVersionKind(rsrc),
-				fn:               updater.DeleteIfExists(ctx, n, rsrc),
+				fn:               updater.DeleteIfExists(ctx, n.Client, rsrc.(client.Object)),
 			})
 		}
 	}
