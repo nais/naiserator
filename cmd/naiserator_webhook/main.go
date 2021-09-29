@@ -2,8 +2,6 @@ package main
 
 import (
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -74,20 +72,5 @@ func run() error {
 		return err
 	}
 
-	stopCh := StopCh()
-	return mgr.Start(stopCh)
-}
-
-func StopCh() (stopCh <-chan struct{}) {
-	stop := make(chan struct{})
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, []os.Signal{os.Interrupt, syscall.SIGTERM, syscall.SIGINT}...)
-	go func() {
-		<-c
-		close(stop)
-		<-c
-		os.Exit(1) // second signal. Exit directly.
-	}()
-
-	return stop
+	return mgr.Start(ctrl.SetupSignalHandler())
 }
