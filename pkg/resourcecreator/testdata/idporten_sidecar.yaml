@@ -103,6 +103,13 @@ tests:
                           name: ^idporten-myapplication-a0b907e7-.{10}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
+                    ports:
+                      - containerPort: 8090
+                        name: wonderwall
+                        protocol: TCP
+                      - containerPort: 8091
+                        name: ww-metrics
+                        protocol: TCP
 
   - apiVersion: v1
     kind: Service

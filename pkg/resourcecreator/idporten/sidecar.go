@@ -18,7 +18,7 @@ import (
 
 const (
 	WonderwallPortName        = "wonderwall"
-	WonderwallMetricsPortName = "wonderwall-metrics"
+	WonderwallMetricsPortName = "ww-metrics"
 	WonderwallStartingPort    = 8090
 )
 
