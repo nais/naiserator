@@ -110,7 +110,7 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: exact
-        name: "service created with port 8090"
+        name: "service created with wonderwall port"
         exclude:
           - .metadata
           - .status
@@ -118,7 +118,7 @@ tests:
           spec:
             ports:
               - port: 80
-                targetPort: 8090
+                targetPort: wonderwall
                 name: http
                 protocol: TCP
             selector:
