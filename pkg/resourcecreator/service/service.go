@@ -10,7 +10,13 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisService nais_io_v1.Service) {
+type Source interface {
+	resource.Source
+	GetService() *nais_io_v1.Service
+}
+
+func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) {
+	svc := source.GetService()
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -22,9 +28,9 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 			Selector: map[string]string{"app": source.GetName()},
 			Ports: []corev1.ServicePort{
 				{
-					Name:     naisService.Protocol,
+					Name:     svc.Protocol,
 					Protocol: corev1.ProtocolTCP,
-					Port:     naisService.Port,
+					Port:     svc.Port,
 					TargetPort: intstr.IntOrString{
 						Type:   intstr.String,
 						StrVal: nais_io_v1_alpha1.DefaultPortName,

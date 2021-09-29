@@ -9,6 +9,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
@@ -34,6 +35,8 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 )
 
+type CreateFunc func(app client.Object, resourceOptions resource.Options) (resource.Operations, error)
+
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
 func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
@@ -44,11 +47,11 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 
 	ast := resource.NewAst()
 
-	service.Create(app, ast, resourceOptions, *app.Spec.Service)
+	service.Create(app, ast, resourceOptions)
 	serviceaccount.Create(app, ast, resourceOptions)
 
 	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
-		horizontalpodautoscaler.Create(app, ast, *app.Spec.Replicas)
+		horizontalpodautoscaler.Create(app, ast)
 	}
 
 	networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -79,7 +82,9 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
+	// FIXME: skatt
+	poddisruptionbudget.Create(app, ast)
+
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
 	linkerd.Create(ast, resourceOptions)
 
@@ -98,6 +103,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 		return nil, err
 	}
 
+	// FIXME: skatt
 	err = pod.CreateAppContainer(app, ast, resourceOptions)
 	if err != nil {
 		return nil, err

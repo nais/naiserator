@@ -9,8 +9,15 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
-func Create(source resource.Source, ast *resource.Ast, naisReplicas nais_io_v1.Replicas) {
-	if *naisReplicas.Max == 1 || *naisReplicas.Min == 1 {
+type Source interface {
+	resource.Source
+	GetReplicas() *nais_io_v1.Replicas
+}
+
+func Create(source Source, ast *resource.Ast) {
+	replicas := source.GetReplicas()
+
+	if *replicas.Max == 1 || *replicas.Min == 1 {
 		return
 	}
 
