@@ -4,25 +4,36 @@ import (
 	"fmt"
 	"strings"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 )
 
-func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) error {
+type Source interface {
+	resource.Source
+	GetStrategy() *nais_io_v1.Strategy
+	GetReplicas() *nais_io_v1.Replicas
+	GetCleanup() *nais_io_v1.Cleanup
+	GetPrometheus() *nais_io_v1.PrometheusConfig
+	GetLogtransform() string
+	GetLogformat() string
+	GetPort() int
+}
+
+func Create(app Source, ast *resource.Ast, resourceOptions resource.Options) error {
 	objectMeta := resource.CreateObjectMeta(app)
 	spec, err := deploymentSpec(app, ast, resourceOptions)
 	if err != nil {
 		return fmt.Errorf("create deployment: %w", err)
 	}
 
-	if val, ok := app.Annotations["kubernetes.io/change-cause"]; ok {
+	if val, ok := app.GetAnnotations()["kubernetes.io/change-cause"]; ok {
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
@@ -43,8 +54,10 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	return nil
 }
 
-func addCleanupLabels(app *nais_io_v1alpha1.Application, meta metav1.ObjectMeta) metav1.ObjectMeta {
-	if app.Spec.Cleanup == nil {
+func addCleanupLabels(app Source, meta metav1.ObjectMeta) metav1.ObjectMeta {
+	cleanup := app.GetCleanup()
+
+	if cleanup == nil {
 		meta.Annotations["babylon.nais.io/enabled"] = "true"
 		meta.Annotations["babylon.nais.io/strategy"] = "abort-rollout,downscale"
 		meta.Annotations["babylon.nais.io/grace-period"] = "24h"
@@ -52,30 +65,30 @@ func addCleanupLabels(app *nais_io_v1alpha1.Application, meta metav1.ObjectMeta)
 		return meta
 	}
 
-	meta.Annotations["babylon.nais.io/enabled"] = fmt.Sprintf("%t", app.Spec.Cleanup.Enabled)
+	meta.Annotations["babylon.nais.io/enabled"] = fmt.Sprintf("%t", cleanup.Enabled)
 	var strategies []string
-	for _, s := range app.Spec.Cleanup.Strategy {
+	for _, s := range cleanup.Strategy {
 		strategies = append(strategies, string(s))
 	}
 	meta.Annotations["babylon.nais.io/strategy"] = strings.Join(strategies, ",")
-	meta.Annotations["babylon.nais.io/grace-period"] = app.Spec.Cleanup.GracePeriod
+	meta.Annotations["babylon.nais.io/grace-period"] = cleanup.GracePeriod
 
 	return meta
 }
 
-func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {
-	podSpec, err := pod.CreateSpec(ast, resourceOptions, app.Name, app.Annotations, corev1.RestartPolicyAlways)
+func deploymentSpec(app Source, ast *resource.Ast, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {
+	podSpec, err := pod.CreateSpec(ast, resourceOptions, app.GetName(), app.GetAnnotations(), corev1.RestartPolicyAlways)
 	if err != nil {
 		return nil, err
 	}
 
 	var strategy appsv1.DeploymentStrategy
 
-	if app.Spec.Strategy.Type == nais_io_v1alpha1.DeploymentStrategyRecreate {
+	if app.GetStrategy().Type == nais_io_v1alpha1.DeploymentStrategyRecreate {
 		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RecreateDeploymentStrategyType,
 		}
-	} else if app.Spec.Strategy.Type == nais_io_v1alpha1.DeploymentStrategyRollingUpdate {
+	} else if app.GetStrategy().Type == nais_io_v1alpha1.DeploymentStrategyRollingUpdate {
 		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RollingUpdateDeploymentStrategyType,
 			RollingUpdate: &appsv1.RollingUpdateDeployment{
@@ -92,9 +105,9 @@ func deploymentSpec(app *nais_io_v1alpha1.Application, ast *resource.Ast, resour
 	}
 
 	return &appsv1.DeploymentSpec{
-		Replicas: util.Int32p(int32(*app.Spec.Replicas.Min)),
+		Replicas: util.Int32p(int32(*app.GetReplicas().Min)),
 		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{"app": app.Name},
+			MatchLabels: map[string]string{"app": app.GetName()},
 		},
 		Strategy:                strategy,
 		ProgressDeadlineSeconds: util.Int32p(300),

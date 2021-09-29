@@ -2,9 +2,10 @@ package pod
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"k8s.io/utils/pointer"
 
@@ -24,6 +25,14 @@ const (
 	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
 	naisClientId       = "NAIS_CLIENT_ID"
 )
+
+type Source interface {
+	resource.Source
+	GetPrometheus() *nais_io_v1.PrometheusConfig
+	GetLogtransform() string
+	GetLogformat() string
+	GetPort() int
+}
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
 	reordered := make([]corev1.Container, len(containers))
@@ -274,14 +283,14 @@ func mapMerge(dst, src map[string]string) {
 	}
 }
 
-func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
+func CreateAppObjectMeta(app Source, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(app)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
 
-	port := app.Spec.Prometheus.Port
+	port := app.GetPrometheus().Port
 	if len(port) == 0 {
-		port = strconv.Itoa(app.Spec.Port)
+		port = strconv.Itoa(app.GetPort())
 	}
 
 	objectMeta.Annotations = map[string]string{}
@@ -289,22 +298,22 @@ func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast, o
 		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
 	}
 
-	if app.Spec.Prometheus.Enabled {
+	if app.GetPrometheus().Enabled {
 		objectMeta.Annotations["prometheus.io/scrape"] = "true"
 		objectMeta.Annotations["prometheus.io/port"] = port
-		objectMeta.Annotations["prometheus.io/path"] = app.Spec.Prometheus.Path
+		objectMeta.Annotations["prometheus.io/path"] = app.GetPrometheus().Path
 	}
 
-	if len(app.Spec.Logformat) > 0 {
-		objectMeta.Annotations["nais.io/logformat"] = app.Spec.Logformat
+	if len(app.GetLogformat()) > 0 {
+		objectMeta.Annotations["nais.io/logformat"] = app.GetLogformat()
 	}
 
-	if len(app.Spec.Logtransform) > 0 {
-		objectMeta.Annotations["nais.io/logtransform"] = app.Spec.Logtransform
+	if len(app.GetLogtransform()) > 0 {
+		objectMeta.Annotations["nais.io/logtransform"] = app.GetLogtransform()
 	}
 
 	if opt.Linkerd {
-		copyLinkerdAnnotations(app.Annotations, objectMeta.Annotations)
+		copyLinkerdAnnotations(app.GetAnnotations(), objectMeta.Annotations)
 	}
 
 	return objectMeta
