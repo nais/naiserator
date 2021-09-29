@@ -21,8 +21,7 @@ func NewAppReconciler(synchronizer synchronizer.Synchronizer) *ApplicationReconc
 // +kubebuilder:rbac:groups=*,resources=events,verbs=get;list;watch;create;update
 
 func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	//TODO: sende inn context her?
-	return r.Synchronizer.ReconcileApplication(req)
+	return r.Synchronizer.ReconcileApplication(ctx, req)
 }
 
 func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {

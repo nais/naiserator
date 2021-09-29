@@ -18,8 +18,8 @@ import (
 )
 
 // ReconcileNaisjob process Naisjob work queue
-func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
+func (n *Synchronizer) ReconcileNaisjob(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
 	naisjob := &nais_io_v1.Naisjob{}
@@ -57,7 +57,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
 		}
 	}()
 
-	rollout, err := n.PrepareNaisjob(naisjob)
+	rollout, err := n.PrepareNaisjob(ctx, naisjob)
 	if err != nil {
 		naisjob.Status.SynchronizationState = EventFailedPrepare
 		n.reportError(ctx, naisjob.Status.SynchronizationState, err, naisjob)
@@ -110,8 +110,7 @@ func (n *Synchronizer) ReconcileNaisjob(req ctrl.Request) (ctrl.Result, error) {
 // PrepareNaisjob converts a NAIS Naisjob spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
-func (n *Synchronizer) PrepareNaisjob(naisjob *nais_io_v1.Naisjob) (*Rollout, error) {
-	ctx := context.Background()
+func (n *Synchronizer) PrepareNaisjob(ctx context.Context, naisjob *nais_io_v1.Naisjob) (*Rollout, error) {
 	var err error
 
 	rollout := &Rollout{

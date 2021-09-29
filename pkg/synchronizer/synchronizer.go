@@ -101,8 +101,8 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 }
 
 // ReconcileApplication process Application work queue
-func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), n.Config.Synchronizer.SynchronizationTimeout)
+func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
 	app := &nais_io_v1alpha1.Application{}
@@ -140,7 +140,7 @@ func (n *Synchronizer) ReconcileApplication(req ctrl.Request) (ctrl.Result, erro
 		}
 	}()
 
-	rollout, err := n.Prepare(app)
+	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
 		app.Status.SynchronizationState = EventFailedPrepare
 		n.reportError(ctx, app.Status.SynchronizationState, err, app)
@@ -270,8 +270,7 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) 
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
-func (n *Synchronizer) Prepare(app *nais_io_v1alpha1.Application) (*Rollout, error) {
-	ctx := context.Background()
+func (n *Synchronizer) Prepare(ctx context.Context, app *nais_io_v1alpha1.Application) (*Rollout, error) {
 	var err error
 
 	rollout := &Rollout{
