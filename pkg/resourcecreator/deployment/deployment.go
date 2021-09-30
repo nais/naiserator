@@ -37,7 +37,8 @@ type Source interface {
 	GetStrategy() *nais_io_v1.Strategy
 }
 
-func Create(app Source, objectMeta metav1.ObjectMeta, ast *resource.Ast, resourceOptions resource.Options) error {
+func Create(app Source, ast *resource.Ast, resourceOptions resource.Options) error {
+	objectMeta := resource.CreateObjectMeta(app)
 	spec, err := deploymentSpec(app, ast, resourceOptions)
 	if err != nil {
 		return fmt.Errorf("create deployment: %w", err)
