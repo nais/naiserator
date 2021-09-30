@@ -72,8 +72,7 @@ func TestDeployment(t *testing.T) {
 		app.Spec.Strategy.Type = nais_io_v1alpha1.DeploymentStrategyRecreate
 		opts := resource.NewOptions()
 		ast := resource.NewAst()
-		objectMeta := resource.CreateObjectMeta(app)
-		err = deployment.Create(app, objectMeta, ast, opts)
+		err = deployment.Create(app, ast, opts)
 		assert.Nil(t, err)
 
 		deploy := ast.Operations[0].Resource.(*appsv1.Deployment)
