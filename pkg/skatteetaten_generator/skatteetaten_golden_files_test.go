@@ -1,4 +1,4 @@
-package resourcecreator_test
+package skatteetaten_generator_test
 
 import (
 	"fmt"

@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	fluxcd_io_image_reflector_v1beta1 "github.com/nais/liberator/pkg/apis/fluxcd.io/image-reflector/v1beta1"
-	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, imagePolicy *skatteetaten_no_v1alpha1.ImagePolicyConfig) error {
-
+func Create(app skatteetaten_generator.Source, ast *resource.Ast) error {
+	imagePolicy := app.GetImagePolicy()
 
 	if imagePolicy == nil || imagePolicy.Enabled == false {
 		return nil
@@ -50,7 +50,7 @@ func Create(source resource.Source, ast *resource.Ast, imagePolicy *skatteetaten
 		}
 	}
 
-	imagePolicyName := fmt.Sprintf("%s-%s", source.GetName(), source.GetNamespace())
+	imagePolicyName := fmt.Sprintf("%s-%s", app.GetName(), app.GetNamespace())
 
 	policy := &fluxcd_io_image_reflector_v1beta1.ImagePolicy{
 		TypeMeta: metav1.TypeMeta{
@@ -62,7 +62,7 @@ func Create(source resource.Source, ast *resource.Ast, imagePolicy *skatteetaten
 			Namespace: "flux-system",
 		},
 		Spec: fluxcd_io_image_reflector_v1beta1.ImagePolicySpec{
-			ImageRepositoryRef: fluxcd_io_image_reflector_v1beta1.LocalObjectReference{Name: source.GetName()},
+			ImageRepositoryRef: fluxcd_io_image_reflector_v1beta1.LocalObjectReference{Name: app.GetName()},
 			Policy:             choice,
 			FilterTags:         tags,
 		},

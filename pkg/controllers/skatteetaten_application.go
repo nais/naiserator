@@ -65,19 +65,19 @@ func CreateSkatteetatenApplication(source resource.Source,  resourceOptions reso
 		authorization_policy.Create(app, ast)
 	}
 
-	service_entry.Create(app, ast, app.Spec.Egress)
-	virtual_service.Create(app, ast, app.Spec.Ingress)
+	service_entry.Create(app, ast)
+	virtual_service.Create(app, ast)
 	poddisruptionbudget.Create(app, ast)
 
 
 	// TODO: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
-	err := image_policy.Create(app, ast, app.Spec.ImagePolicy)
+	err := image_policy.Create(app, ast)
 	if err != nil {
 		return nil, err
 	}
 
 	if app.Spec.Azure != nil {
-		postgres.Create(app, ast, app.Spec.Azure.PostgreDatabases, app.Spec.Azure.ResourceGroup)
+		postgres.Create(app, ast)
 	}
 	err = pod.CreateAppContainer(app, ast, resourceOptions)
 	if err != nil {

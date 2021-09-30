@@ -4,14 +4,19 @@ import (
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/skatteetaten_generator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, egress *skatteetaten_no_v1alpha1.EgressConfig) {
+
+
+func Create(app skatteetaten_generator.Source, ast *resource.Ast) {
+	egress := app.GetEgress()
+
 	// ServiceEntry
 	if egress != nil && egress.External != nil {
 		for _, egress := range egress.External {
-			generateServiceEntry(source, ast, egress)
+			generateServiceEntry(app, ast, egress)
 		}
 	}
 }
@@ -27,7 +32,6 @@ func generateServiceEntry(source resource.Source, ast *resource.Ast, config skat
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec:       networking_istio_io_v1alpha3.ServiceEntrySpec{},
 	}
-
 	serviceentry.Spec.Resolution = "2" //v1beta12.ServiceEntry_DNS
 	serviceentry.Spec.Location = "0" //v1beta12.ServiceEntry_MESH_EXTERNAL
 	serviceentry.Spec.Hosts = append(serviceentry.Spec.Hosts, config.Host)
