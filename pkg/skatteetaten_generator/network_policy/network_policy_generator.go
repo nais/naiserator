@@ -18,32 +18,40 @@ const (
 	DNSPort       = 53
 )
 
-func Create(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) {
-	np := generateNetworkPolicy(source)
+type Source interface {
+	resource.Source
+	GetIngress() *skatteetaten_no_v1alpha1.IngressConfig
+	GetEgress() *skatteetaten_no_v1alpha1.EgressConfig
+}
+
+func Create(app Source, ast *resource.Ast) {
+	ingressConfig := app.GetIngress()
+	egressConfig := app.GetEgress()
+	np := generateNetworkPolicy(app)
 
 	// Minimum required policies needed for a pod to start
-	np.Spec.Ingress = *generateDefaultIngressRules(source)
-	np.Spec.Egress = *generateDefaultEgressRules(source)
+	np.Spec.Ingress = *generateDefaultIngressRules(app)
+	np.Spec.Egress = *generateDefaultEgressRules(app)
 
-	if config.Ingress != nil {
+	if ingressConfig != nil {
 		// Internal ingress
 		// Sort to allow fixture testing
-		keys := make([]string, 0, len(config.Ingress.Internal))
-		for k := range config.Ingress.Internal {
+		keys := make([]string, 0, len(ingressConfig.Internal))
+		for k := range ingressConfig.Internal {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 
 		for _, rule := range keys {
-			if config.Ingress.Internal[rule].Enabled {
+			if ingressConfig.Internal[rule].Enabled {
 				np.Spec.Ingress = append(np.Spec.Ingress, *generateNetworkPolicyIngressRule(
-					source,
-					config.Ingress.Internal[rule]))
+					app,
+					ingressConfig.Internal[rule]))
 			}
 		}
 
 		// Public ingress
-		for _, ingress := range config.Ingress.Public {
+		for _, ingress := range ingressConfig.Public {
 			if ingress.Enabled {
 				gateway := ingress.Gateway
 				if len(gateway) == 0 {
@@ -56,33 +64,33 @@ func Create(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1
 					"istio": "ingressgateway",
 				}
 
-				rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(source, authorization_policy.IstioNamespace, appLabel)}
+				rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(app, authorization_policy.IstioNamespace, appLabel)}
 				rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port), Protocol: "TCP"}})
 				np.Spec.Ingress = append(np.Spec.Ingress, rule)
 			}
 		}
 	}
 
-	if config.Egress != nil {
+	if egressConfig != nil {
 		// Internal egress
 		// Sort to allow fixture testing
-		keys := make([]string, 0, len(config.Egress.Internal))
-		for k := range config.Egress.Internal {
+		keys := make([]string, 0, len(egressConfig.Internal))
+		for k := range egressConfig.Internal {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 
 		for _, rule := range keys {
-			if config.Egress.Internal[rule].Enabled {
+			if egressConfig.Internal[rule].Enabled {
 				np.Spec.Egress = append(
 					np.Spec.Egress, *generateNetworkPolicyEgressRule(
-						source,
-						config.Egress.Internal[rule]))
+						app,
+						egressConfig.Internal[rule]))
 			}
 		}
 
 		// External egress
-		if len(config.Egress.External) > 0 {
+		if len(egressConfig.External) > 0 {
 			np.Spec.Egress = append(np.Spec.Egress, *generateNetworkPolicyExternalEgressRule())
 		}
 	}

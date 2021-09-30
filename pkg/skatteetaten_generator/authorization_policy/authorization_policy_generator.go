@@ -21,18 +21,23 @@ const (
 
 var appNamespace string
 
-func Create(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ApplicationSpec) {
+type Source interface {
+	resource.Source
+	GetIngress() *skatteetaten_no_v1alpha1.IngressConfig
+}
 
-	appNamespace = source.GetNamespace()
+func Create(app Source, ast *resource.Ast) {
+	ingressConfig := app.GetIngress()
+	appNamespace = app.GetNamespace()
 	//TODO: magisk "0"
-	authPolicy := generateAuthorizationPolicy(source, "ALLOW")
+	authPolicy := generateAuthorizationPolicy(app, "ALLOW")
 
-	if config.Ingress == nil {
+	if ingressConfig == nil {
 		return
 	}
 
 	// Authorization Policies to allow ingress from configured istio gateways
-	for _, ingress := range config.Ingress.Public {
+	for _, ingress := range ingressConfig.Public {
 		if ingress.Enabled {
 			// TODO: can be removed as default is defined in application_types
 			gateway := ingress.Gateway
@@ -54,18 +59,18 @@ func Create(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1
 	}
 
 	// Sort to allow fixture testing
-	keys := make([]string, 0, len(config.Ingress.Internal))
-	for k := range config.Ingress.Internal {
+	keys := make([]string, 0, len(ingressConfig.Internal))
+	for k := range ingressConfig.Internal {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
 	// Authorization Policies for internal ingress
 	for _, rule := range keys {
-		if config.Ingress.Internal[rule].Enabled {
+		if ingressConfig.Internal[rule].Enabled {
 			authPolicy.Spec.Rules = append(
 				authPolicy.Spec.Rules,
-				generateAuthorizationPolicyRule(config.Ingress.Internal[rule]),
+				generateAuthorizationPolicyRule(ingressConfig.Internal[rule]),
 			)
 		}
 	}
