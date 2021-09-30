@@ -122,7 +122,7 @@ func deploymentSpec(app Source, ast *resource.Ast, resourceOptions resource.Opti
 		},
 		Strategy:                strategy,
 		ProgressDeadlineSeconds: util.Int32p(300),
-		RevisionHistoryLimit:    util.Int32p(10),
+		RevisionHistoryLimit:    util.Int32p(3),
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: pod.CreateAppObjectMeta(app, ast, &resourceOptions),
 			Spec:       *podSpec,
