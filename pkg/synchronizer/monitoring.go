@@ -156,6 +156,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 					app.GetStatus().SynchronizationState = EventRolloutComplete
 					app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
 					app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
+					metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
 					return n.Update(ctx, app)
 				})
 
