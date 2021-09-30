@@ -3,7 +3,6 @@ package idporten
 import (
 	"encoding/base64"
 	"fmt"
-	"strconv"
 	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -19,7 +18,8 @@ import (
 const (
 	WonderwallPortName        = "wonderwall"
 	WonderwallMetricsPortName = "ww-metrics"
-	WonderwallStartingPort    = 8090
+	WonderwallPort            = 7564
+	WonderwallMetricsPort     = 7565
 )
 
 func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*corev1.Container, error) {
@@ -27,20 +27,6 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 	allowPrivilegeEscalation := false
 
 	targetPort := app.Spec.Port
-	var targetMetricsPort int
-
-	if app.Spec.Prometheus == nil || app.Spec.Prometheus.Port == nais_io_v1alpha1.DefaultPortName || app.Spec.Prometheus.Port == "" {
-		targetMetricsPort = targetPort
-	} else {
-		var err error
-		targetMetricsPort, err = strconv.Atoi(app.Spec.Prometheus.Port)
-		if err != nil {
-			return nil, fmt.Errorf("prometheus port invalid: %w", err)
-		}
-	}
-
-	port := getUnusedPort(WonderwallStartingPort, targetPort, targetMetricsPort)
-	metricsPort := getUnusedPort(WonderwallStartingPort, targetPort, targetMetricsPort, port)
 
 	naisIdPorten := app.Spec.IDPorten
 	naisIngresses := app.Spec.Ingresses
@@ -84,11 +70,11 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 		},
 		{
 			Name:  "WONDERWALL_BIND_ADDRESS",
-			Value: fmt.Sprintf("0.0.0.0:%d", port),
+			Value: fmt.Sprintf("0.0.0.0:%d", WonderwallPort),
 		},
 		{
 			Name:  "WONDERWALL_METRICS_BIND_ADDRESS",
-			Value: fmt.Sprintf("0.0.0.0:%d", metricsPort),
+			Value: fmt.Sprintf("0.0.0.0:%d", WonderwallMetricsPort),
 		},
 	}
 
@@ -119,11 +105,11 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Env:             envVars,
 		Ports: []corev1.ContainerPort{{
-			ContainerPort: int32(port),
+			ContainerPort: int32(WonderwallPort),
 			Protocol:      corev1.ProtocolTCP,
 			Name:          WonderwallPortName,
 		}, {
-			ContainerPort: int32(metricsPort),
+			ContainerPort: int32(WonderwallMetricsPort),
 			Protocol:      corev1.ProtocolTCP,
 			Name:          WonderwallMetricsPortName,
 		}},
@@ -133,22 +119,6 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		},
 	}, nil
-}
-
-func getUnusedPort(startingPort int, usedPorts ...int) int {
-	result := startingPort
-	for {
-		unchanged := true
-		for _, port := range usedPorts {
-			if result == port {
-				result += 1
-				unchanged = false
-			}
-		}
-		if unchanged {
-			return result
-		}
-	}
 }
 
 func WonderwallSecret(source resource.Source, secretName string) (*corev1.Secret, error) {

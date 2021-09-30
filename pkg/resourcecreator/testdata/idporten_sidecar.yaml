@@ -104,10 +104,10 @@ tests:
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                     ports:
-                      - containerPort: 8090
+                      - containerPort: 7564
                         name: wonderwall
                         protocol: TCP
-                      - containerPort: 8091
+                      - containerPort: 7565
                         name: ww-metrics
                         protocol: TCP
 
