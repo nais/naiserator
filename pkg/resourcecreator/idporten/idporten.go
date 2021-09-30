@@ -21,7 +21,6 @@ const (
 	clientDefaultCallbackPath        = "/oauth2/callback"
 	clientDefaultLogoutPath          = "/oauth2/logout"
 	wonderwallFrontChannelLogoutPath = "/oauth2/logout/frontchannel"
-	wonderwallDefaultPort            = 8090
 )
 
 func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
@@ -135,13 +134,15 @@ func idPortenSecretName(name string) (string, error) {
 	return namegen.SuffixedShortName(basename, suffix, maxLen)
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress, appPort int) error {
+func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) error {
+	naisIdPorten := app.Spec.IDPorten
+	naisIngresses := app.Spec.Ingresses
 	if !resourceOptions.DigdiratorEnabled || naisIdPorten == nil || !naisIdPorten.Enabled {
 		return nil
 	}
 
 	// create idporten client and attach secrets
-	idportenClient, err := client(resource.CreateObjectMeta(source), naisIdPorten, naisIngresses)
+	idportenClient, err := client(resource.CreateObjectMeta(app), naisIdPorten, naisIngresses)
 	if err != nil {
 		return err
 	}
@@ -156,26 +157,29 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	}
 
 	// create sidecar container and redis application
-	prefixedName := fmt.Sprintf("idporten-wonderwall-%s", source.GetName())
+	prefixedName := fmt.Sprintf("idporten-wonderwall-%s", app.GetName())
 	wonderwallSecretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
 	if err != nil {
 		return err
 	}
 
-	wonderwallSecret, err := WonderwallSecret(source, wonderwallSecretName)
+	wonderwallSecret, err := WonderwallSecret(app, wonderwallSecretName)
 	if err != nil {
 		return err
 	}
 
-	wonderwallContainer := Wonderwall(wonderwallDefaultPort, appPort, resourceOptions.Wonderwall.Image, naisIdPorten, naisIngresses)
+	wonderwallContainer, err := Wonderwall(app, resourceOptions.Wonderwall.Image)
+	if err != nil {
+		return err
+	}
 	wonderwallContainer.EnvFrom = []v1.EnvFromSource{
 		pod.EnvFromSecret(idportenClient.Spec.SecretName),
 		pod.EnvFromSecret(wonderwallSecretName),
 	}
 
-	ast.Containers = append(ast.Containers, wonderwallContainer)
+	ast.Containers = append(ast.Containers, *wonderwallContainer)
 
-	redisApplication := Redis(source)
+	redisApplication := Redis(app)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, redisApplication)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
 

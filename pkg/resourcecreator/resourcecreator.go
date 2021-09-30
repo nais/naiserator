@@ -63,7 +63,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	err = idporten.Create(app, ast, resourceOptions, app.Spec.IDPorten, app.Spec.Ingresses, app.Spec.Port)
+	err = idporten.Create(app, ast, resourceOptions)
 	if err != nil {
 		return nil, err
 	}

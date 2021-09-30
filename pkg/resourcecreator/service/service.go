@@ -3,6 +3,7 @@ package service
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1_alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -42,8 +43,8 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) 
 
 	if resourceOptions.WonderwallEnabled {
 		service.Spec.Ports[0].TargetPort = intstr.IntOrString{
-			Type:   intstr.Int,
-			IntVal: 8090,
+			Type:   intstr.String,
+			StrVal: idporten.WonderwallPortName,
 		}
 	}
 
