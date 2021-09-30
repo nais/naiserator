@@ -91,7 +91,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Image = "image:version"
 
-		event := generator.NewDeploymentEvent(app, app.Spec.Image)
+		event := generator.NewDeploymentEvent(app)
 
 		assert.Equal(t, deployment.PlatformType_nais, event.GetPlatform().GetType())
 		assert.Empty(t, event.GetPlatform().GetVariant())
@@ -122,7 +122,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		event := generator.NewDeploymentEvent(app, app.Spec.Image)
+		event := generator.NewDeploymentEvent(app)
 
 		assert.Equal(t, deployment.Environment_production, event.GetEnvironment())
 	})
@@ -134,7 +134,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		correlationID := "correlation-id"
 		app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = correlationID
 
-		event := generator.NewDeploymentEvent(app, app.Spec.Image)
+		event := generator.NewDeploymentEvent(app)
 
 		assert.Equal(t, correlationID, event.CorrelationID)
 	})
@@ -145,7 +145,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		team := "team"
 		app.Labels["team"] = team
 
-		event := generator.NewDeploymentEvent(app, app.Spec.Image)
+		event := generator.NewDeploymentEvent(app)
 
 		assert.Equal(t, team, event.Team)
 	})

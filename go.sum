@@ -395,6 +395,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRW
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/nais/liberator v0.0.0-20210929115205-60a0e72a8b04 h1:/C6VXZOsvCqyARo9VTCDoPo4gOyx46jr/khI2dcN2tI=
 github.com/nais/liberator v0.0.0-20210929115205-60a0e72a8b04/go.mod h1:PYfco/QZ1s8ZdGzg1B5SgvUAhrGuA/vjf/8cTCmgCzk=
+github.com/nais/liberator v0.0.0-20210930095759-8e86539f1534 h1:pCRG3j1Nhdc03/va8lqSi5/9JU7FqrCYQ9jJPr7YOKA=
+github.com/nais/liberator v0.0.0-20210930095759-8e86539f1534/go.mod h1:PYfco/QZ1s8ZdGzg1B5SgvUAhrGuA/vjf/8cTCmgCzk=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=
