@@ -4,6 +4,7 @@ import (
 	"context"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -21,7 +22,7 @@ func NewAppReconciler(synchronizer synchronizer.Synchronizer) *ApplicationReconc
 // +kubebuilder:rbac:groups=*,resources=events,verbs=get;list;watch;create;update
 
 func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.Synchronizer.ReconcileApplication(ctx, req, &nais_io_v1alpha1.Application{})
+	return r.Synchronizer.ReconcileApplication(ctx, req, &nais_io_v1alpha1.Application{}, resourcecreator.CreateApplication)
 }
 
 func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {

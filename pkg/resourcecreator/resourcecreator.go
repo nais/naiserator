@@ -33,15 +33,28 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 )
 
-// TODO: pass CreateApplication to Reconciler matching this signature?
-// type CreateFunc func(app client.Object, resourceOptions resource.Options) (resource.Operations, error)
+type Generator func(app resource.Source, resourceOptions resource.Options) (resource.Operations, error)
 
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
+func CreateApplication(source resource.Source, resourceOptions resource.Options) (resource.Operations, error) {
+	app, ok := source.(*nais_io_v1alpha1.Application)
+	if !ok {
+		return nil, fmt.Errorf("BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects, fix your caller")
+	}
+
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
+	}
+
+	if app.Spec.GCP != nil && len(resourceOptions.GoogleTeamProjectId) == 0 {
+		// We're not currently in a team namespace with corresponding GCP team project
+		return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
+	}
+
+	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar != nil && app.Spec.IDPorten.Sidecar.Enabled {
+		resourceOptions.WonderwallEnabled = true
 	}
 
 	ast := resource.NewAst()

@@ -26,6 +26,8 @@ type Source interface {
 	CorrelationID() string
 	SkipDeploymentMessage() bool
 	LogFields() log.Fields
+	ApplyDefaults() error
+	Hash() (string, error)
 }
 
 func CreateObjectMeta(source Source) metav1.ObjectMeta {

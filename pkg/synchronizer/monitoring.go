@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/metrics"
@@ -39,7 +38,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 	return n.Kafka.Produce(payload)
 }
 
-func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger log.Entry) {
+func (n *Synchronizer) MonitorRollout(app generator.ImageSource, logger log.Entry) {
 	objectKey := client.ObjectKey{
 		Name:      app.GetName(),
 		Namespace: app.GetNamespace(),
@@ -85,7 +84,7 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.
 }
 
 // Monitoring deployments to signal RolloutComplete.
-func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app *nais_io_v1alpha1.Application, logger log.Entry) {
+func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.ImageSource, logger log.Entry) {
 	logger.Debugf("Monitoring rollout status")
 
 	objectKey := client.ObjectKey{
@@ -121,7 +120,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app *nais_io_v
 			// Deployment event for dev-rapid topic.
 			if event == nil {
 				logger.Debugf("Monitor rollout: deployment has rolled out completely")
-				event = generator.NewDeploymentEvent(app, app.Spec.Image)
+				event = generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
 			}
 

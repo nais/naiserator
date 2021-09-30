@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	generator2 "github.com/nais/naiserator/pkg/event/generator"
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -101,7 +102,7 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 }
 
 // ReconcileApplication process Application work queue
-func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Request, app resource.Source) (ctrl.Result, error) {
+func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Request, app resource.Source, generator resourcecreator.Generator) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
@@ -139,7 +140,7 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 		}
 	}()
 
-	rollout, err := n.Prepare(ctx, app.(*nais_io_v1alpha1.Application))
+	rollout, err := n.Prepare(ctx, app, generator)
 	if err != nil {
 		app.GetStatus().SynchronizationState = EventFailedPrepare
 		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
@@ -152,7 +153,10 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 
 		// Application is not rolled out completely; start monitoring
 		if app.GetStatus().SynchronizationState == EventSynchronized {
-			n.MonitorRollout(app.(*nais_io_v1alpha1.Application), logger)
+			src, ok := app.(generator2.ImageSource)
+			if ok {
+				n.MonitorRollout(src, logger)
+			}
 		}
 
 		return ctrl.Result{}, nil
@@ -193,7 +197,10 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	n.MonitorRollout(app.(*nais_io_v1alpha1.Application), logger)
+	src, ok := app.(generator2.ImageSource)
+	if ok {
+		n.MonitorRollout(src, logger)
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -266,10 +273,14 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) 
 	return n.rolloutWithRetryAndMetrics(commits)
 }
 
+type ReplicaResource interface {
+	GetReplicas() *nais_io_v1.Replicas
+}
+
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
-func (n *Synchronizer) Prepare(ctx context.Context, app *nais_io_v1alpha1.Application) (*Rollout, error) {
+func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source, generator resourcecreator.Generator) (*Rollout, error) {
 	var err error
 
 	rollout := &Rollout{
@@ -277,7 +288,8 @@ func (n *Synchronizer) Prepare(ctx context.Context, app *nais_io_v1alpha1.Applic
 		ResourceOptions: n.ResourceOptions,
 	}
 
-	if err = app.ApplyDefaults(); err != nil {
+	err = app.ApplyDefaults()
+	if err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
 
@@ -287,24 +299,28 @@ func (n *Synchronizer) Prepare(ctx context.Context, app *nais_io_v1alpha1.Applic
 	}
 
 	// Skip processing if application didn't change since last synchronization.
-	if app.Status.SynchronizationHash == rollout.SynchronizationHash {
+	if app.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
 		return nil, nil
 	}
 
-	err = app.EnsureCorrelationID()
+	err = ensureCorrelationID(app)
 	if err != nil {
 		return nil, err
 	}
 
 	rollout.CorrelationID = app.CorrelationID()
 
-	// Make a query to Kubernetes for this application's previous deployment.
-	// The number of replicas is significant, so we need to carry it over to match
-	// this next rollout.
-	previousDeployment := &apps.Deployment{}
-	err = n.Get(ctx, client.ObjectKey{Name: app.GetName(), Namespace: app.GetNamespace()}, previousDeployment)
-	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing deployment: %s", err)
+	rr, ok := app.(ReplicaResource)
+	if ok {
+		// Make a query to Kubernetes for this application's previous deployment.
+		// The number of replicas is significant, so we need to carry it over to match
+		// this next rollout.
+		previousDeployment := &apps.Deployment{}
+		err = n.Get(ctx, client.ObjectKey{Name: app.GetName(), Namespace: app.GetNamespace()}, previousDeployment)
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("query existing deployment: %s", err)
+		}
+		rollout.SetCurrentDeployment(previousDeployment, *rr.GetReplicas().Min)
 	}
 
 	// Retrieve current namespace to check for labels and annotations
@@ -314,27 +330,15 @@ func (n *Synchronizer) Prepare(ctx context.Context, app *nais_io_v1alpha1.Applic
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
-	if app.Spec.GCP != nil {
-		// App requests gcp resources, verify we've got a GCP team project ID
-		projectID, ok := namespace.Annotations["cnrm.cloud.google.com/project-id"]
-		if !ok {
-			// We're not currently in a team namespace with corresponding GCP team project
-			return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
-		}
-		rollout.ResourceOptions.GoogleTeamProjectId = projectID
-	}
+	// Auto-detect Google Team Project ID
+	rollout.ResourceOptions.GoogleTeamProjectId = namespace.Annotations["cnrm.cloud.google.com/project-id"]
 
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
 	if n.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
 		rollout.ResourceOptions.Linkerd = true
 	}
 
-	if rollout.ResourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar != nil && app.Spec.IDPorten.Sidecar.Enabled {
-		rollout.ResourceOptions.WonderwallEnabled = true
-	}
-
-	rollout.SetCurrentDeployment(previousDeployment, *app.Spec.Replicas.Min)
-	rollout.ResourceOperations, err = resourcecreator.CreateApplication(app, rollout.ResourceOptions)
+	rollout.ResourceOperations, err = generator(app, rollout.ResourceOptions)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
@@ -402,7 +406,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 
 var appsync sync.Mutex
 
-// UpdateResource atomically update an Application resource.
+// UpdateResource atomically updates a resource.
 // Locks the resource to avoid race conditions.
 func (n *Synchronizer) UpdateResource(ctx context.Context, source resource.Source, updateFunc func(resource.Source) error) error {
 	appsync.Lock()
