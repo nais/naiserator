@@ -40,21 +40,37 @@ import (
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/virtual_service"
 )
 
+type Generator func(app resource.Source, resourceOptions resource.Options) (resource.Operations, error)
+
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (resource.Operations, error) {
+func CreateApplication(source resource.Source, resourceOptions resource.Options) (resource.Operations, error) {
+	app, ok := source.(*nais_io_v1alpha1.Application)
+	if !ok {
+		return nil, fmt.Errorf("BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects, fix your caller")
+	}
+
 	team, ok := app.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
+	if app.Spec.GCP != nil && len(resourceOptions.GoogleTeamProjectId) == 0 {
+		// We're not currently in a team namespace with corresponding GCP team project
+		return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
+	}
+
+	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar != nil && app.Spec.IDPorten.Sidecar.Enabled {
+		resourceOptions.WonderwallEnabled = true
+	}
+
 	ast := resource.NewAst()
 
-	service.Create(app, ast, resourceOptions, *app.Spec.Service)
+	service.Create(app, ast, resourceOptions)
 	serviceaccount.Create(app, ast, resourceOptions)
 
 	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
-		horizontalpodautoscaler.Create(app, ast, *app.Spec.Replicas)
+		horizontalpodautoscaler.Create(app, ast)
 	}
 
 	networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
@@ -67,7 +83,7 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	err = idporten.Create(app, ast, resourceOptions, app.Spec.IDPorten, app.Spec.Ingresses, app.Spec.Port)
+	err = idporten.Create(app, ast, resourceOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +101,8 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 	if err != nil {
 		return nil, err
 	}
-	poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
+	poddisruptionbudget.Create(app, ast)
+
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
 	linkerd.Create(ast, resourceOptions)
 
@@ -121,7 +138,12 @@ func CreateApplication(app *nais_io_v1alpha1.Application, resourceOptions resour
 
 // CreateNaisjob takes an Naisjob resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options) (resource.Operations, error) {
+func CreateNaisjob(source resource.Source, resourceOptions resource.Options) (resource.Operations, error) {
+	naisjob, ok := source.(*nais_io_v1.Naisjob)
+	if !ok {
+		return nil, fmt.Errorf("BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects, fix your caller")
+	}
+
 	team, ok := naisjob.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")

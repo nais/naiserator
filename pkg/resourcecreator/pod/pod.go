@@ -2,9 +2,10 @@ package pod
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"k8s.io/utils/pointer"
 
@@ -24,6 +25,25 @@ const (
 	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
 	naisClientId       = "NAIS_CLIENT_ID"
 )
+
+type Source interface {
+	resource.Source
+	GetCommand() []string
+	GetEnv() nais_io_v1.EnvVars
+	GetEnvFrom() []nais_io_v1.EnvFrom
+	GetFilesFrom() []nais_io_v1.FilesFrom
+	GetImage() string
+	GetLiveness() *nais_io_v1.Probe
+	GetLogformat() string
+	GetLogtransform() string
+	GetPort() int
+	GetPreStopHook() *nais_io_v1.PreStopHook
+	GetPreStopHookPath() string
+	GetPrometheus() *nais_io_v1.PrometheusConfig
+	GetReadiness() *nais_io_v1.Probe
+	GetResources() *nais_io_v1.ResourceRequirements
+	GetStartup() *nais_io_v1.Probe
+}
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
 	reordered := make([]corev1.Container, len(containers))
@@ -189,24 +209,24 @@ func fromFilesConfigmapVolume(name string) corev1.Volume {
 	}
 }
 
-func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, options resource.Options) error {
-	ast.Env = append(ast.Env, app.Spec.Env.ToKubernetes()...)
-	ast.Env = append(ast.Env, defaultEnvVars(app, options.ClusterName, app.Spec.Image)...)
-	filesFrom(ast, options.NativeSecrets, app.Spec.FilesFrom)
-	envFrom(ast, options.NativeSecrets, app.Spec.EnvFrom)
-	lifecycle, err := lifecycle(app.Spec.PreStopHookPath, app.Spec.PreStopHook)
+func CreateAppContainer(app Source, ast *resource.Ast, options resource.Options) error {
+	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
+	ast.Env = append(ast.Env, defaultEnvVars(app, options.ClusterName, app.GetImage())...)
+	filesFrom(ast, options.NativeSecrets, app.GetFilesFrom())
+	envFrom(ast, options.NativeSecrets, app.GetEnvFrom())
+	lifecycle, err := lifecycle(app.GetPreStopHookPath(), app.GetPreStopHook())
 	if err != nil {
 		return err
 	}
 
 	container := corev1.Container{
-		Name:  app.Name,
-		Image: app.Spec.Image,
+		Name:  app.GetName(),
+		Image: app.GetImage(),
 		Ports: []corev1.ContainerPort{
-			{ContainerPort: int32(app.Spec.Port), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
+			{ContainerPort: int32(app.GetPort()), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
 		},
-		Command:         app.Spec.Command,
-		Resources:       ResourceLimits(*app.Spec.Resources),
+		Command:         app.GetCommand(),
+		Resources:       ResourceLimits(*app.GetResources()),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Lifecycle:       lifecycle,
 		Env:             ast.Env,
@@ -214,16 +234,16 @@ func CreateAppContainer(app *nais_io_v1alpha1.Application, ast *resource.Ast, op
 		VolumeMounts:    ast.VolumeMounts,
 	}
 
-	if app.Spec.Liveness != nil && len(app.Spec.Liveness.Path) > 0 {
-		container.LivenessProbe = probe(app.Spec.Port, *app.Spec.Liveness)
+	if app.GetLiveness() != nil && len(app.GetLiveness().Path) > 0 {
+		container.LivenessProbe = probe(app.GetPort(), *app.GetLiveness())
 	}
 
-	if app.Spec.Readiness != nil && len(app.Spec.Readiness.Path) > 0 {
-		container.ReadinessProbe = probe(app.Spec.Port, *app.Spec.Readiness)
+	if app.GetReadiness() != nil && len(app.GetReadiness().Path) > 0 {
+		container.ReadinessProbe = probe(app.GetPort(), *app.GetReadiness())
 	}
 
-	if app.Spec.Startup != nil && len(app.Spec.Startup.Path) > 0 {
-		container.StartupProbe = probe(app.Spec.Port, *app.Spec.Startup)
+	if app.GetStartup() != nil && len(app.GetStartup().Path) > 0 {
+		container.StartupProbe = probe(app.GetPort(), *app.GetStartup())
 	}
 
 	ast.Containers = append(ast.Containers, container)
@@ -274,14 +294,14 @@ func mapMerge(dst, src map[string]string) {
 	}
 }
 
-func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
+func CreateAppObjectMeta(app Source, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(app)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
 
-	port := app.Spec.Prometheus.Port
+	port := app.GetPrometheus().Port
 	if len(port) == 0 {
-		port = strconv.Itoa(app.Spec.Port)
+		port = strconv.Itoa(app.GetPort())
 	}
 
 	objectMeta.Annotations = map[string]string{}
@@ -289,22 +309,22 @@ func CreateAppObjectMeta(app *nais_io_v1alpha1.Application, ast *resource.Ast, o
 		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
 	}
 
-	if app.Spec.Prometheus.Enabled {
+	if app.GetPrometheus().Enabled {
 		objectMeta.Annotations["prometheus.io/scrape"] = "true"
 		objectMeta.Annotations["prometheus.io/port"] = port
-		objectMeta.Annotations["prometheus.io/path"] = app.Spec.Prometheus.Path
+		objectMeta.Annotations["prometheus.io/path"] = app.GetPrometheus().Path
 	}
 
-	if len(app.Spec.Logformat) > 0 {
-		objectMeta.Annotations["nais.io/logformat"] = app.Spec.Logformat
+	if len(app.GetLogformat()) > 0 {
+		objectMeta.Annotations["nais.io/logformat"] = app.GetLogformat()
 	}
 
-	if len(app.Spec.Logtransform) > 0 {
-		objectMeta.Annotations["nais.io/logtransform"] = app.Spec.Logtransform
+	if len(app.GetLogtransform()) > 0 {
+		objectMeta.Annotations["nais.io/logtransform"] = app.GetLogtransform()
 	}
 
 	if opt.Linkerd {
-		copyLinkerdAnnotations(app.Annotations, objectMeta.Annotations)
+		copyLinkerdAnnotations(app.GetAnnotations(), objectMeta.Annotations)
 	}
 
 	return objectMeta

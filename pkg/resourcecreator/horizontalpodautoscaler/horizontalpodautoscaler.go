@@ -1,7 +1,7 @@
 package horizontalpodautoscaler
 
 import (
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -9,8 +9,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replicas) {
-	if !(*naisReplicas.Max > 0) {
+type Source interface {
+	resource.Source
+	GetReplicas() *nais_io_v1.Replicas
+}
+
+func Create(source Source, ast *resource.Ast) {
+	replicas := source.GetReplicas()
+
+	if (*replicas.Max) <= 0 {
 		return
 	}
 
@@ -33,13 +40,13 @@ func Create(source resource.Source, ast *resource.Ast, naisReplicas nais.Replica
 						Name: "cpu",
 						Target: v2beta2.MetricTarget{
 							Type:               v2beta2.UtilizationMetricType,
-							AverageUtilization: util.Int32p(int32(naisReplicas.CpuThresholdPercentage)),
+							AverageUtilization: util.Int32p(int32(replicas.CpuThresholdPercentage)),
 						},
 					},
 				},
 			},
-			MinReplicas: util.Int32p(int32(*naisReplicas.Min)),
-			MaxReplicas: int32(*naisReplicas.Max),
+			MinReplicas: util.Int32p(int32(*replicas.Min)),
+			MaxReplicas: int32(*replicas.Max),
 		},
 	}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)

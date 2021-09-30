@@ -1,6 +1,7 @@
 .idea/
 naiserator.iml
 cmd/naiserator/naiserator
+cmd/naiserator_webhook/naiserator_webhook
 vendor/
 cover.out
 ./naiserator

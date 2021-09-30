@@ -41,7 +41,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 }
 
 // TODO: Kunne denne tatt inn en source? Tror ikke det er mye tilpassninger som skal til her før det kan funke
-func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger log.Entry) {
+func (n *Synchronizer) MonitorRollout(app generator.ImageSource, logger log.Entry) {
 	objectKey := client.ObjectKey{
 		Name:      app.GetName(),
 		Namespace: app.GetNamespace(),
@@ -57,7 +57,7 @@ func (n *Synchronizer) MonitorRollout(app *nais_io_v1alpha1.Application, logger 
 		id:     id,
 		cancel: cancel,
 	}
-	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
+	metrics.ResourcesMonitored.Set(float64(len(n.RolloutMonitor)))
 	rolloutMonitorLock.Unlock()
 
 	go func() {
@@ -83,11 +83,11 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.
 
 	rollout.cancel()
 	delete(n.RolloutMonitor, objectKey)
-	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
+	metrics.ResourcesMonitored.Set(float64(len(n.RolloutMonitor)))
 }
 
 // Monitoring deployments to signal RolloutComplete.
-func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app *nais_io_v1alpha1.Application, logger log.Entry) {
+func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.ImageSource, logger log.Entry) {
 	logger.Debugf("Monitoring rollout status")
 
 	objectKey := client.ObjectKey{
@@ -123,7 +123,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app *nais_io_v
 			// Deployment event for dev-rapid topic.
 			if event == nil {
 				logger.Debugf("Monitor rollout: deployment has rolled out completely")
-				event = generator.NewDeploymentEvent(app, app.Spec.Image)
+				event = generator.NewDeploymentEvent(app)
 				event.RolloutStatus = deployment.RolloutStatus_complete
 			}
 
@@ -155,10 +155,11 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app *nais_io_v
 			// This will prevent the application from being picked up by this function if Naiserator restarts.
 			// Only update this field if an event has been persisted to the cluster.
 			if !applicationUpdated && eventReported {
-				err = n.UpdateApplication(ctx, app, func(app *nais_io_v1alpha1.Application) error {
-					app.Status.SynchronizationState = EventRolloutComplete
-					app.Status.RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
-					app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
+				err = n.UpdateResource(ctx, app, func(app resource.Source) error {
+					app.GetStatus().SynchronizationState = EventRolloutComplete
+					app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
+					app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
+					metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
 					return n.Update(ctx, app)
 				})
 

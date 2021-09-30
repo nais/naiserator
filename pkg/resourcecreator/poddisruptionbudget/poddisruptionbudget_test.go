@@ -3,11 +3,12 @@ package poddisruptionbudget_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/nais/naiserator/pkg/util"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPodDisruptionBudget(t *testing.T) {
@@ -18,7 +19,18 @@ func TestPodDisruptionBudget(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		poddisruptionbudget.Create(app, ast, *app.Spec.Replicas)
+		poddisruptionbudget.Create(app, ast)
+		assert.Len(t, ast.Operations, 0)
+	})
+
+	t.Run("min replicas = 1 should not have pdb", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		ast := resource.NewAst()
+		app.Spec.Replicas.Min = util.Intp(1)
+		err := app.ApplyDefaults()
+		assert.NoError(t, err)
+
+		poddisruptionbudget.Create(app, ast)
 		assert.Len(t, ast.Operations, 0)
 	})
 }

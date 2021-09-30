@@ -12,8 +12,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewDeploymentEvent(source resource.Source, appImage string) *deployment.Event {
-	image := ContainerImage(appImage)
+type ImageSource interface{
+	resource.Source
+	GetImage() string
+}
+
+func NewDeploymentEvent(source ImageSource) *deployment.Event {
+	image := ContainerImage(source.GetImage())
 	ts := convertTimestamp(time.Now())
 
 	return &deployment.Event{
