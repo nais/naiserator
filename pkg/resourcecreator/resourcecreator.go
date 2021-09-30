@@ -129,7 +129,12 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options)
 
 // CreateNaisjob takes an Naisjob resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateNaisjob(naisjob *nais_io_v1.Naisjob, resourceOptions resource.Options) (resource.Operations, error) {
+func CreateNaisjob(source resource.Source, resourceOptions resource.Options) (resource.Operations, error) {
+	naisjob, ok := source.(*nais_io_v1.Naisjob)
+	if !ok {
+		return nil, fmt.Errorf("BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects, fix your caller")
+	}
+
 	team, ok := naisjob.Labels["team"]
 	if !ok || len(team) == 0 {
 		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")

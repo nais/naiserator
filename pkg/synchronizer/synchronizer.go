@@ -101,8 +101,8 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 	}
 }
 
-// ReconcileApplication process Application work queue
-func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Request, app resource.Source, generator resourcecreator.Generator) (ctrl.Result, error) {
+// Reconcile process Application work queue
+func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app resource.Source, generator resourcecreator.Generator) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
@@ -110,8 +110,9 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger := log.WithFields(log.Fields{
-				"namespace":   req.Namespace,
-				"application": req.Name,
+				"namespace": req.Namespace,
+				"name":      req.Name,
+				"gvk":       app.GetObjectKind().GroupVersionKind().String(),
 			})
 			logger.Infof("Application has been deleted from Kubernetes")
 
@@ -164,6 +165,7 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 
 	logger = *log.WithFields(app.LogFields())
 	logger.Debugf("Starting synchronization")
+	// FIXME
 	metrics.ApplicationsProcessed.Inc()
 
 	app.GetStatus().CorrelationID = rollout.CorrelationID
@@ -172,11 +174,13 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 	if err != nil {
 		if retry {
 			app.GetStatus().SynchronizationState = EventRetrying
+			// FIXME
 			metrics.ApplicationsRetries.Inc()
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		} else {
 			app.GetStatus().SynchronizationState = EventFailedSynchronization
 			app.GetStatus().SynchronizationHash = rollout.SynchronizationHash // permanent failure
+			// FIXME
 			metrics.ApplicationsFailed.Inc()
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 			err = nil
@@ -189,6 +193,7 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 	app.GetStatus().SynchronizationState = EventSynchronized
 	app.GetStatus().SynchronizationHash = rollout.SynchronizationHash
 	app.GetStatus().SynchronizationTime = time.Now().UnixNano()
+	// FIXME
 	metrics.Deployments.Inc()
 
 	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.GetStatus().SynchronizationState, "Successfully synchronized all application resources", "Normal"))
