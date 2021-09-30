@@ -30,8 +30,8 @@ var (
 		Help:      "number of resources currently monitored for rollout completion",
 	})
 
-	Resources = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name:      "resources",
+	Synchronizations = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name:      "synchronizations",
 		Namespace: "naiserator",
 		Help:      "resources processed, with kind and status",
 	}, []string{"kind", "status"})
@@ -39,7 +39,7 @@ var (
 
 func Register(registry prometheus.Registerer) {
 	registry.MustRegister(
-		Resources,
+		Synchronizations,
 		ResourcesMonitored,
 		ResourcesGenerated,
 		HttpRequests,

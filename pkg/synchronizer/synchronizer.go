@@ -131,7 +131,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		if !changed {
 			return
 		}
-		metrics.Resources.WithLabelValues(kind, app.GetStatus().SynchronizationState).Inc()
+		metrics.Synchronizations.WithLabelValues(kind, app.GetStatus().SynchronizationState).Inc()
 		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
 			existing.SetStatus(app.GetStatus())
 			return n.Update(ctx, existing) // was app
