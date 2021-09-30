@@ -128,7 +128,7 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 		if !changed {
 			return
 		}
-		err := n.UpdateApplication(ctx, app, func(existing resource.Source) error {
+		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
 			existing.SetStatus(app.GetStatus())
 			return n.Update(ctx, existing) // was app
 		})
@@ -402,9 +402,9 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 
 var appsync sync.Mutex
 
-// UpdateApplication atomically update an Application resource.
+// UpdateResource atomically update an Application resource.
 // Locks the resource to avoid race conditions.
-func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.Source, updateFunc func(resource.Source) error) error {
+func (n *Synchronizer) UpdateResource(ctx context.Context, source resource.Source, updateFunc func(resource.Source) error) error {
 	appsync.Lock()
 	defer appsync.Unlock()
 

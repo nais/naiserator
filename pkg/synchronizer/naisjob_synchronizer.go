@@ -3,7 +3,6 @@ package synchronizer
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -46,9 +45,9 @@ func (n *Synchronizer) ReconcileNaisjob(ctx context.Context, req ctrl.Request) (
 		if !changed {
 			return
 		}
-		err := n.UpdateNaisjob(ctx, naisjob, func(existing *nais_io_v1.Naisjob) error {
-			existing.Status = naisjob.Status
-			return n.Update(ctx, naisjob)
+		err := n.UpdateResource(ctx, naisjob, func(existing resource.Source) error {
+			existing.SetStatus(naisjob.GetStatus())
+			return n.Update(ctx, existing) // was naisjob
 		})
 		if err != nil {
 			n.reportError(ctx, EventFailedStatusUpdate, err, naisjob)
@@ -168,21 +167,4 @@ func (n *Synchronizer) PrepareNaisjob(ctx context.Context, naisjob *nais_io_v1.N
 	}
 
 	return rollout, nil
-}
-
-var naisjobsync sync.Mutex
-
-// UpdateNaisjob atomically update an Naisjob resource.
-// Locks the resource to avoid race conditions.
-func (n *Synchronizer) UpdateNaisjob(ctx context.Context, source resource.Source, updateFunc func(existing *nais_io_v1.Naisjob) error) error {
-	naisjobsync.Lock()
-	defer naisjobsync.Unlock()
-
-	existing := &nais_io_v1.Naisjob{}
-	err := n.Get(ctx, client.ObjectKey{Namespace: source.GetNamespace(), Name: source.GetName()}, existing)
-	if err != nil {
-		return fmt.Errorf("get newest version of Naisjob: %s", err)
-	}
-
-	return updateFunc(existing)
 }
