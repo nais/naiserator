@@ -121,6 +121,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		return ctrl.Result{}, err
 	}
 
+	kind := app.GetObjectKind().GroupVersionKind().Kind
 	changed := true
 
 	logger := *log.WithFields(app.LogFields())
@@ -130,6 +131,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		if !changed {
 			return
 		}
+		metrics.Resources.WithLabelValues(kind, app.GetStatus().SynchronizationState).Inc()
 		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
 			existing.SetStatus(app.GetStatus())
 			return n.Update(ctx, existing) // was app
@@ -165,8 +167,6 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 	logger = *log.WithFields(app.LogFields())
 	logger.Debugf("Starting synchronization")
-	// FIXME
-	metrics.ApplicationsProcessed.Inc()
 
 	app.GetStatus().CorrelationID = rollout.CorrelationID
 
@@ -174,14 +174,10 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	if err != nil {
 		if retry {
 			app.GetStatus().SynchronizationState = EventRetrying
-			// FIXME
-			metrics.ApplicationsRetries.Inc()
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		} else {
 			app.GetStatus().SynchronizationState = EventFailedSynchronization
 			app.GetStatus().SynchronizationHash = rollout.SynchronizationHash // permanent failure
-			// FIXME
-			metrics.ApplicationsFailed.Inc()
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 			err = nil
 		}
@@ -193,8 +189,6 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	app.GetStatus().SynchronizationState = EventSynchronized
 	app.GetStatus().SynchronizationHash = rollout.SynchronizationHash
 	app.GetStatus().SynchronizationTime = time.Now().UnixNano()
-	// FIXME
-	metrics.Deployments.Inc()
 
 	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.GetStatus().SynchronizationState, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {

@@ -54,7 +54,7 @@ func (n *Synchronizer) MonitorRollout(app generator.ImageSource, logger log.Entr
 		id:     id,
 		cancel: cancel,
 	}
-	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
+	metrics.ResourcesMonitored.Set(float64(len(n.RolloutMonitor)))
 	rolloutMonitorLock.Unlock()
 
 	go func() {
@@ -80,7 +80,7 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.
 
 	rollout.cancel()
 	delete(n.RolloutMonitor, objectKey)
-	metrics.ApplicationsMonitored.Set(float64(len(n.RolloutMonitor)))
+	metrics.ResourcesMonitored.Set(float64(len(n.RolloutMonitor)))
 }
 
 // Monitoring deployments to signal RolloutComplete.

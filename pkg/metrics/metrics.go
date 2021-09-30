@@ -5,82 +5,44 @@ import (
 )
 
 var (
-	Deployments = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "deployments",
-		Namespace: "naiserator",
-		Help:      "number of application deployments performed",
-	})
-	NaisjobsDeployments = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "naisjob_deployments",
-		Namespace: "naiserator",
-		Help:      "number of naisjob deployments performed",
-	})
 	HttpRequests = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "http_requests",
 		Namespace: "naiserator",
 		Help:      "number of HTTP requests made to the health and liveness checks",
 	})
-	ApplicationsMonitored = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name:      "applications_monitored",
-		Namespace: "naiserator",
-		Help:      "number of nais.io.Application resources currently monitored for rollout completion",
-	})
-	ApplicationsProcessed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "applications_processed",
-		Namespace: "naiserator",
-		Help:      "number of nais.io.Application resources that have been processed",
-	})
-	ApplicationsFailed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "applications_failed",
-		Namespace: "naiserator",
-		Help:      "number of nais.io.Application resources that failed processing",
-	})
-	ApplicationsRetries = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "applications_retried",
-		Namespace: "naiserator",
-		Help:      "number of nais.io.Application resources that failed synchronization and have been re-enqueued",
-	})
-	NaisjobsProcessed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "naisjobs_processed",
-		Namespace: "naiserator",
-		Help:      "number of nais.io.Application resources that have been processed",
-	})
-	NaisjobsFailed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "naisjobs_failed",
-		Namespace: "naiserator",
-		Help:      "number of nais.io.Application resources that failed processing",
-	})
-	NaisjobsRetries = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:      "naisjobs_retried",
-		Namespace: "naiserator",
-		Help:      "number of nais.io.Application resources that failed synchronization and have been re-enqueued",
-	})
-	ResourcesGenerated = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name:      "resources_generated",
-		Namespace: "naiserator",
-		Help:      "number of Kubernetes resources that have been generated as a result of application deployments",
-	}, []string{"kind"})
+
 	KubernetesResourceWriteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name:      "kubernetes_resource_write_duration",
 		Namespace: "naiserator",
 		Help:      "request duration when talking to Kubernetes",
 		Buckets:   prometheus.LinearBuckets(0.01, 0.01, 100),
 	})
+
+	ResourcesGenerated = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name:      "resources_generated",
+		Namespace: "naiserator",
+		Help:      "number of Kubernetes resources that have been generated",
+	}, []string{"kind"})
+
+	ResourcesMonitored = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name:      "resources_monitored",
+		Namespace: "naiserator",
+		Help:      "number of resources currently monitored for rollout completion",
+	})
+
+	Resources = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name:      "resources",
+		Namespace: "naiserator",
+		Help:      "resources processed, with kind and status",
+	}, []string{"kind", "status"})
 )
 
 func Register(registry prometheus.Registerer) {
 	registry.MustRegister(
-		ApplicationsFailed,
-		ApplicationsMonitored,
-		ApplicationsProcessed,
-		ApplicationsRetries,
-		Deployments,
+		Resources,
+		ResourcesMonitored,
+		ResourcesGenerated,
 		HttpRequests,
 		KubernetesResourceWriteDuration,
-		NaisjobsDeployments,
-		NaisjobsFailed,
-		NaisjobsProcessed,
-		NaisjobsRetries,
-		ResourcesGenerated,
 	)
 }
