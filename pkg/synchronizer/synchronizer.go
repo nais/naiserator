@@ -101,11 +101,10 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 }
 
 // ReconcileApplication process Application work queue
-func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Request, app resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
-	app := &nais_io_v1alpha1.Application{}
 	err := n.Get(ctx, req.NamespacedName, app)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -129,21 +128,21 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 		if !changed {
 			return
 		}
-		err := n.UpdateApplication(ctx, app, func(existing *nais_io_v1alpha1.Application) error {
-			existing.Status = app.Status
-			return n.Update(ctx, app)
+		err := n.UpdateApplication(ctx, app, func(existing resource.Source) error {
+			existing.SetStatus(app.GetStatus())
+			return n.Update(ctx, existing) // was app
 		})
 		if err != nil {
 			n.reportError(ctx, EventFailedStatusUpdate, err, app)
 		} else {
-			logger.Debugf("Application status: %+v'", app.Status)
+			logger.Debugf("Application status: %+v'", app.GetStatus())
 		}
 	}()
 
-	rollout, err := n.Prepare(ctx, app)
+	rollout, err := n.Prepare(ctx, app.(*nais_io_v1alpha1.Application))
 	if err != nil {
-		app.Status.SynchronizationState = EventFailedPrepare
-		n.reportError(ctx, app.Status.SynchronizationState, err, app)
+		app.GetStatus().SynchronizationState = EventFailedPrepare
+		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		return ctrl.Result{RequeueAfter: prepareRetryInterval}, nil
 	}
 
@@ -152,8 +151,8 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 		logger.Debugf("Synchronization hash not changed; skipping synchronization")
 
 		// Application is not rolled out completely; start monitoring
-		if app.Status.SynchronizationState == EventSynchronized {
-			n.MonitorRollout(app, logger)
+		if app.GetStatus().SynchronizationState == EventSynchronized {
+			n.MonitorRollout(app.(*nais_io_v1alpha1.Application), logger)
 		}
 
 		return ctrl.Result{}, nil
@@ -163,19 +162,19 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 	logger.Debugf("Starting synchronization")
 	metrics.ApplicationsProcessed.Inc()
 
-	app.Status.CorrelationID = rollout.CorrelationID
+	app.GetStatus().CorrelationID = rollout.CorrelationID
 
 	retry, err := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
-			app.Status.SynchronizationState = EventRetrying
+			app.GetStatus().SynchronizationState = EventRetrying
 			metrics.ApplicationsRetries.Inc()
-			n.reportError(ctx, app.Status.SynchronizationState, err, app)
+			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		} else {
-			app.Status.SynchronizationState = EventFailedSynchronization
-			app.Status.SynchronizationHash = rollout.SynchronizationHash // permanent failure
+			app.GetStatus().SynchronizationState = EventFailedSynchronization
+			app.GetStatus().SynchronizationHash = rollout.SynchronizationHash // permanent failure
 			metrics.ApplicationsFailed.Inc()
-			n.reportError(ctx, app.Status.SynchronizationState, err, app)
+			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 			err = nil
 		}
 		return ctrl.Result{}, err
@@ -183,18 +182,18 @@ func (n *Synchronizer) ReconcileApplication(ctx context.Context, req ctrl.Reques
 
 	// Synchronization OK
 	logger.Debugf("Successful synchronization")
-	app.Status.SynchronizationState = EventSynchronized
-	app.Status.SynchronizationHash = rollout.SynchronizationHash
-	app.Status.SynchronizationTime = time.Now().UnixNano()
+	app.GetStatus().SynchronizationState = EventSynchronized
+	app.GetStatus().SynchronizationHash = rollout.SynchronizationHash
+	app.GetStatus().SynchronizationTime = time.Now().UnixNano()
 	metrics.Deployments.Inc()
 
-	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.Status.SynchronizationState, "Successfully synchronized all application resources", "Normal"))
+	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.GetStatus().SynchronizationState, "Successfully synchronized all application resources", "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	n.MonitorRollout(app, logger)
+	n.MonitorRollout(app.(*nais_io_v1alpha1.Application), logger)
 
 	return ctrl.Result{}, nil
 }
@@ -405,14 +404,14 @@ var appsync sync.Mutex
 
 // UpdateApplication atomically update an Application resource.
 // Locks the resource to avoid race conditions.
-func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.Source, updateFunc func(existing *nais_io_v1alpha1.Application) error) error {
+func (n *Synchronizer) UpdateApplication(ctx context.Context, source resource.Source, updateFunc func(resource.Source) error) error {
 	appsync.Lock()
 	defer appsync.Unlock()
 
-	existing := &nais_io_v1alpha1.Application{}
+	existing := source.DeepCopyObject().(resource.Source)
 	err := n.Get(ctx, client.ObjectKey{Namespace: source.GetNamespace(), Name: source.GetName()}, existing)
 	if err != nil {
-		return fmt.Errorf("get newest version of Application: %s", err)
+		return fmt.Errorf("get newest version of %T: %s", existing, err)
 	}
 
 	return updateFunc(existing)

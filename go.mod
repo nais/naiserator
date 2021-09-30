@@ -97,3 +97,5 @@ require (
 )
 
 go 1.17
+
+replace github.com/nais/liberator => /Users/kimt/src/nais/liberator

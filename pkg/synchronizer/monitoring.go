@@ -153,10 +153,10 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app *nais_io_v
 			// This will prevent the application from being picked up by this function if Naiserator restarts.
 			// Only update this field if an event has been persisted to the cluster.
 			if !applicationUpdated && eventReported {
-				err = n.UpdateApplication(ctx, app, func(app *nais_io_v1alpha1.Application) error {
-					app.Status.SynchronizationState = EventRolloutComplete
-					app.Status.RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
-					app.SetDeploymentRolloutStatus(event.RolloutStatus.String())
+				err = n.UpdateApplication(ctx, app, func(app resource.Source) error {
+					app.GetStatus().SynchronizationState = EventRolloutComplete
+					app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
+					app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
 					return n.Update(ctx, app)
 				})
 

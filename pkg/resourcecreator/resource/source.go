@@ -19,6 +19,8 @@ type Source interface {
 	client.Object
 	metav1.ObjectMetaAccessor
 	metav1.Common
+	SetStatus(*nais_io_v1.Status)
+	GetStatus() *nais_io_v1.Status
 	GetObjectReference() corev1.ObjectReference
 	GetOwnerReference() metav1.OwnerReference
 	CorrelationID() string
