@@ -62,6 +62,8 @@ func run() error {
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
 		Scheme:             kscheme,
 		MetricsBindAddress: cfg.Bind,
+		Host:               "0.0.0.0",
+		Port:               8443,
 	})
 	if err != nil {
 		return err
