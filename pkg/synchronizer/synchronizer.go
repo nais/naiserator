@@ -305,14 +305,15 @@ func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source, generat
 	rollout.CorrelationID = app.CorrelationID()
 
 	rr, ok := app.(ReplicaResource)
-	if ok {// Make a query to Kubernetes for this application's previous deployment.
-	// The number of replicas is significant, so we need to carry it over to match
-	// this next rollout.
-
-	previousDeployment := &apps.Deployment{}
-	err = n.Get(ctx, client.ObjectKey{Name: app.GetName(), Namespace: app.GetNamespace()}, previousDeployment)
-	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing deployment: %s", err)}
+	if ok {
+		// Make a query to Kubernetes for this application's previous deployment.
+		// The number of replicas is significant, so we need to carry it over to match
+		// this next rollout.
+		previousDeployment := &apps.Deployment{}
+		err = n.Get(ctx, client.ObjectKey{Name: app.GetName(), Namespace: app.GetNamespace()}, previousDeployment)
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, fmt.Errorf("query existing deployment: %s", err)
+		}
 		rollout.SetCurrentDeployment(previousDeployment, *rr.GetReplicas().Min)
 	}
 
