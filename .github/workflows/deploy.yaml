@@ -2,7 +2,7 @@ name: Build and deploy
 on: push
 
 env:
-  image: docker.pkg.github.com/${{ github.repository }}/naiserator
+  image: ghcr.io/skatteetaten-trial/${{ github.repository }}/nebula-operator
 
 jobs:
   build-push:
