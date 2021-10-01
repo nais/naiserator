@@ -22,6 +22,7 @@ func NewClient(c client.Client) client.Client {
 type Client struct {
 	client client.Client
 }
+
 // Scheme returns the scheme this client is using.
 func (n *Client) Scheme() *runtime.Scheme {
 	return n.client.Scheme()

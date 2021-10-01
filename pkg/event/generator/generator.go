@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ImageSource interface{
+type ImageSource interface {
 	resource.Source
 	GetImage() string
 }

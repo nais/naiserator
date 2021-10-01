@@ -32,7 +32,7 @@ func Redis(source resource.Source) *nais_io_v1alpha1.Application {
 			},
 			Annotations: map[string]string{
 				"nais.io/read-only-file-system": "false",
-				"nais.io/run-as-user": "999",
+				"nais.io/run-as-user":           "999",
 			},
 		},
 		Spec: nais_io_v1alpha1.ApplicationSpec{

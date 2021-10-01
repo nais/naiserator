@@ -20,7 +20,7 @@ import (
 // These are usually the types we persist to the cluster with names different than the application name.
 
 // Resources that can be queried in all clusters
-func GenericListers() []client.ObjectList{
+func GenericListers() []client.ObjectList {
 	return []client.ObjectList{
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
