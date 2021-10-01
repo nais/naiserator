@@ -2,7 +2,7 @@ name: Build and deploy
 on: push
 
 env:
-  image: ghcr.io/skatteetaten-trial/${{ github.repository }}/nebula-operator
+  image: ghcr.io/${{ github.repository }}
 
 jobs:
   build-push:
