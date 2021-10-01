@@ -4,6 +4,9 @@ import (
 	"os"
 	"time"
 
+	azure_microsoft_com_v1alpha1 "github.com/nais/liberator/pkg/apis/azure.microsoft.com/v1alpha1"
+	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
+	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -109,8 +112,8 @@ func run() error {
 	}
 
 	listers := naiserator_scheme.GenericListers()
-	listers = append(listers, naiserator_scheme.IstioListers()...)
-	listers = append(listers, naiserator_scheme.ASOListers()...)
+	listers = append(listers, IstioListers()...)
+	listers = append(listers, ASOListers()...)
 
 	skatteetatenApplicationReconciler := controllers.NewSkatteetatenAppReconciler(synchronizer.Synchronizer{
 		Client:          mgrClient,
@@ -128,4 +131,20 @@ func run() error {
 	}
 
 	return mgr.Start(ctrl.SetupSignalHandler())
+}
+
+
+func ASOListers() []client.ObjectList {
+	return []client.ObjectList{
+		&azure_microsoft_com_v1alpha1.PostgreSQLDatabaseList{},
+		&azure_microsoft_com_v1alpha1.PostgreSQLUserList{},
+	}
+}
+
+func IstioListers() [] client.ObjectList {
+	return []client.ObjectList{
+		&security_istio_io_v1beta1.AuthorizationPolicyList{},
+		&networking_istio_io_v1alpha3.ServiceEntryList{},
+		&networking_istio_io_v1alpha3.VirtualServiceList{},
+	}
 }

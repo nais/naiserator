@@ -1,11 +1,8 @@
 package naiserator_scheme
 
 import (
-	azure_microsoft_com_v1alpha1 "github.com/nais/liberator/pkg/apis/azure.microsoft.com/v1alpha1"
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
-	security_istio_io_v1beta1 "github.com/nais/liberator/pkg/apis/security.istio.io/v1beta1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -55,20 +52,5 @@ func GCPListers() []client.ObjectList {
 		&sql_cnrm_cloud_google_com_v1beta1.SQLUserList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControlList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
-	}
-}
-
-func ASOListers() []client.ObjectList {
-	return []client.ObjectList{
-		&azure_microsoft_com_v1alpha1.PostgreSQLDatabaseList{},
-		&azure_microsoft_com_v1alpha1.PostgreSQLUserList{},
-	}
-}
-
-func IstioListers() [] client.ObjectList {
-	return []client.ObjectList{
-		&security_istio_io_v1beta1.AuthorizationPolicyList{},
-		&networking_istio_io_v1alpha3.ServiceEntryList{},
-		&networking_istio_io_v1alpha3.VirtualServiceList{},
 	}
 }
