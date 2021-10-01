@@ -4,12 +4,17 @@ import (
 	"fmt"
 
 	fluxcd_io_image_reflector_v1beta1 "github.com/nais/liberator/pkg/apis/fluxcd.io/image-reflector/v1beta1"
+	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(app skatteetaten_generator.Source, ast *resource.Ast) error {
+type Source interface {
+	resource.Source
+	GetImagePolicy() *skatteetaten_no_v1alpha1.ImagePolicyConfig
+}
+
+func Create(app Source, ast *resource.Ast) error {
 	imagePolicy := app.GetImagePolicy()
 
 	if imagePolicy == nil || imagePolicy.Enabled == false {

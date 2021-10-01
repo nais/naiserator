@@ -6,13 +6,19 @@ import (
 	azure_microsoft_com_v1alpha1 "github.com/nais/liberator/pkg/apis/azure.microsoft.com/v1alpha1"
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres_env"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+
+type Source interface {
+	resource.Source
+	GetAzureResourceGroup() string
+	GetPostgresDatabases() []*skatteetaten_no_v1alpha1.PostgreDatabaseConfig
+}
+
 // TODO: where do we want name generation?
-func Create(app skatteetaten_generator.Source, ast *resource.Ast) {
+func Create(app Source, ast *resource.Ast) {
 
 	pgd := app.GetPostgresDatabases()
 	resourceGroup := app.GetAzureResourceGroup()

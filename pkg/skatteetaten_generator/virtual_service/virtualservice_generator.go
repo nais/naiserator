@@ -6,11 +6,15 @@ import (
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	networking_istio_io_v1alpha3 "github.com/nais/liberator/pkg/apis/networking.istio.io/v1alpha3"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(app skatteetaten_generator.Source, ast *resource.Ast) {
+type Source interface {
+	resource.Source
+	GetIngress() *skatteetaten_no_v1alpha1.IngressConfig
+}
+
+func Create(app Source, ast *resource.Ast) {
 	ingressConfig := app.GetIngress()
 	if ingressConfig != nil && ingressConfig.Public != nil {
 		for _, ingress := range ingressConfig.Public {

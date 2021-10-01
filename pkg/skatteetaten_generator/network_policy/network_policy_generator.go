@@ -5,7 +5,6 @@ import (
 
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator"
 	"github.com/nais/naiserator/pkg/skatteetaten_generator/authorization_policy"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -18,8 +17,13 @@ const (
 	MetricsPort   = 15020
 	DNSPort       = 53
 )
+type Source interface {
+	resource.Source
+	GetIngress() *skatteetaten_no_v1alpha1.IngressConfig
+	GetEgress() *skatteetaten_no_v1alpha1.EgressConfig
+}
 
-func Create(app skatteetaten_generator.Source, ast *resource.Ast) {
+func Create(app Source, ast *resource.Ast) {
 	ingressConfig := app.GetIngress()
 	egressConfig := app.GetEgress()
 	np := generateNetworkPolicy(app)
