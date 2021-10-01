@@ -83,6 +83,11 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		},
 	}
 
+	listers := naiserator_scheme.GenericListers()
+	if len(options.GoogleProjectId) > 0 {
+		listers = append(listers, naiserator_scheme.GCPListers()...)
+	}
+
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
 		Client:          rig.client,
 		Config:          syncerConfig,
@@ -90,6 +95,8 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          rig.scheme,
 		SimpleClient:    rig.client,
+		Listers: listers,
+
 	})
 
 	err = applicationReconciler.SetupWithManager(rig.manager)

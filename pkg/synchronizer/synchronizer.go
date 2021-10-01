@@ -25,7 +25,6 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/updater"
 )
 
@@ -53,7 +52,9 @@ type Synchronizer struct {
 	ResourceOptions resource.Options
 	Config          config.Config
 	Kafka           kafka.Interface
+	Listers			[]client.ObjectList
 }
+
 
 // Commit wraps a cluster operation function with extra fields
 type commit struct {
@@ -231,12 +232,9 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 		return false
 	}
 
-	listers := naiserator_scheme.GenericListers()
-	if len(n.ResourceOptions.GoogleProjectId) > 0 {
-		listers = append(listers, naiserator_scheme.GCPListers()...)
-	}
 
-	resources, err := updater.FindAll(ctx, n.Client, n.Scheme, listers, rollout.Source)
+
+	resources, err := updater.FindAll(ctx, n.Client, n.Scheme, n.Listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
