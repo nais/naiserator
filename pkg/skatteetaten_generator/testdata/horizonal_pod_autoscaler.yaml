@@ -17,13 +17,12 @@ input:
       cpuThresholdPercentage: 37
 
 tests:
-  - apiVersion: autoscaling/v1
+  - operation: CreateOrUpdate
+    apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
-    name: myapplication
-    operation: CreateOrUpdate
     match:
       - type: exact
-        name: "horizontal pod autoscaler configured correctly"
+        name: "hpa created with 2-4 replicas and 50% cpu threshold"
         exclude:
           - .metadata
           - .status
@@ -35,4 +34,12 @@ tests:
               apiVersion: apps/v1
             minReplicas: 3
             maxReplicas: 6
-            targetCPUUtilizationPercentage: 37
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 37
+
+
