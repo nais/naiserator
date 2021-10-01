@@ -6,7 +6,6 @@ import (
 	azure_microsoft_com_v1alpha1 "github.com/nais/liberator/pkg/apis/azure.microsoft.com/v1alpha1"
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/skatteetaten_generator/postgres_env"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,7 +27,7 @@ func Create(app Source, ast *resource.Ast) {
 		for userIndex, user := range db.Users {
 			if dbIndex == 0 && userIndex == 0 {
 				secretName := fmt.Sprintf("postgresqluser-pgu-%s-%s", app.GetName(), user.Name)
-				dbVars := postgres_env.GenerateDbEnv("SPRING_DATASOURCE", secretName)
+				dbVars := GenerateDbEnv("SPRING_DATASOURCE", secretName)
 				ast.Env = append(ast.Env, dbVars...)
 			}
 			generatePostgresUser(app, ast, resourceGroup, *db, *user)

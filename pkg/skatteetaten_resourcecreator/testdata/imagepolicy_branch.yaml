@@ -1,5 +1,5 @@
 config:
-  description: image_policy_semver
+  description: image_policy_branch
 
 resourceoptions:
   NumReplicas: 1
@@ -8,7 +8,7 @@ resourceoptions:
 
 input:
   kind: Application
-  apiVersion: application.nebula.skatteetaten.no/v1alpha1
+  apiVersion: nebula.skatteetaten.no/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
@@ -18,7 +18,7 @@ input:
       image: navikt/myapplication:1.2.3
     imagePolicy:
       enabled: true
-      semver: ">=0.0.0 <1.0.0"
+      branch: mybranch
 
 tests:
   - operation: CreateOrUpdate
@@ -36,9 +36,12 @@ tests:
             name: myapplication-mynamespace
             namespace: flux-system
           spec:
+            filterTags:
+              extract: $date$time$number
+              pattern: ^SNAPSHOT-mybranch-(?P<date>[0-9]+)\.(?P<time>[0-9]+)-(?P<number>[0-9]+)
             imageRepositoryRef:
               name: myapplication
             policy:
-              semver:
-                range: '>=0.0.0 <1.0.0'
+              numerical:
+                order: asc
 

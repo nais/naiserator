@@ -1,4 +1,4 @@
-package postgres_env
+package postgres
 
 import (
 	"fmt"

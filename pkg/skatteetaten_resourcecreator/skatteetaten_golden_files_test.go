@@ -1,12 +1,12 @@
-package skatteetaten_generator_test
+package skatteetaten_resourcecreator_test
 
 import (
 	"fmt"
 	"testing"
 
 	skatteetaten_no_v1alpha1 "github.com/nais/liberator/pkg/apis/nebula.skatteetaten.no/v1alpha1"
-	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/skatteetaten_resourcecreator"
 	"github.com/nais/naiserator/pkg/test/goldenfile"
 
 	"github.com/ghodss/yaml"
@@ -34,6 +34,6 @@ func TestSkatteetatenApplicationGoldenFile(t *testing.T) {
 			return nil, fmt.Errorf("apply default values to Application object: %s", err)
 		}
 
-		return controllers.CreateSkatteetatenApplication(&test.Input, resourceOptions)
+		return skatteetaten_resourcecreator.CreateSkatteetatenApplication(&test.Input, resourceOptions)
 	})
 }

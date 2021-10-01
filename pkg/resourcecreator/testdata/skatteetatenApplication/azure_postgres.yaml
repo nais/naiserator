@@ -8,7 +8,7 @@ resourceoptions:
 
 input:
   kind: Application
-  apiVersion: application.nebula.skatteetaten.no/v1alpha1
+  apiVersion: nebula.skatteetaten.no/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
@@ -34,7 +34,7 @@ tests:
             labels:
               app: myapplication
             ownerReferences:
-              - apiVersion: application.nebula.skatteetaten.no/v1alpha1
+              - apiVersion: nebula.skatteetaten.no/v1alpha1
                 kind: Application
                 name: myapplication
                 uid: "123456"

@@ -3,7 +3,7 @@ config:
 
 input:
   kind: Application
-  apiVersion: application.nebula.skatteetaten.no/v1alpha1
+  apiVersion: nebula.skatteetaten.no/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace

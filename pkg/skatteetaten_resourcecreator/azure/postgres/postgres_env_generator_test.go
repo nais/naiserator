@@ -1,8 +1,9 @@
-package postgres_env
+package postgres_test
 
 import (
 	"testing"
 
+	"github.com/nais/naiserator/pkg/skatteetaten_resourcecreator/azure/postgres"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +21,7 @@ func TestPostgresEnv(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
-		envVars := GenerateDbEnv(prefix, secretName)
+		envVars := postgres.GenerateDbEnv(prefix, secretName)
 		assert.Equal(t, expectedURL, envVars[0].Name)
 	})
 
@@ -29,7 +30,7 @@ func TestPostgresEnv(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		envVars := GenerateDbEnv(prefix, secretName)
+		envVars := postgres.GenerateDbEnv(prefix, secretName)
 		assert.Equal(t, expectedDatasource, envVars[0].Value)
 	})
 
