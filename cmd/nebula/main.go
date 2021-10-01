@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,7 +48,6 @@ func run() error {
 		return err
 	}
 
-
 	// Register CRDs with controller-tools
 	kscheme, err := liberator_scheme.All()
 	if err != nil {
@@ -72,7 +72,6 @@ func run() error {
 		return err
 	}
 
-
 	resourceOptions := resource.NewOptions()
 	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
 	resourceOptions.ApiServerIp = cfg.ApiServerIp
@@ -96,7 +95,6 @@ func run() error {
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
 
-
 	mgrClient := mgr.GetClient()
 	simpleClient, err := client.New(kconfig, client.Options{
 		Scheme: kscheme,
@@ -110,6 +108,9 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
+	listers := naiserator_scheme.GenericListers()
+	listers = append(listers, naiserator_scheme.IstioListers()...)
+	listers = append(listers, naiserator_scheme.ASOListers()...)
 
 	skatteetatenApplicationReconciler := controllers.NewSkatteetatenAppReconciler(synchronizer.Synchronizer{
 		Client:          mgrClient,
@@ -118,6 +119,7 @@ func run() error {
 		ResourceOptions: resourceOptions,
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          kscheme,
+		Listers:         listers,
 		SimpleClient:    simpleClient,
 	})
 
@@ -127,4 +129,3 @@ func run() error {
 
 	return mgr.Start(ctrl.SetupSignalHandler())
 }
-
