@@ -236,13 +236,6 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
 
-	if n.ResourceOptions.Istio {
-		listers = append(listers, naiserator_scheme.IstioListers()...)
-	}
-
-	if n.ResourceOptions.AzureServiceOperatorEnabled {
-		listers = append(listers, naiserator_scheme.ASOListers()...)
-	}
 	resources, err := updater.FindAll(ctx, n.Client, n.Scheme, listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
