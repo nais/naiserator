@@ -1,0 +1,22 @@
+name: Lint
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+      - name: Run linters
+        uses: wearerequired/lint-action@v1
+        with:
+          gofmt: true
+          auto_fix: true
+          git_name: "github-actions[bot]"
+          git_email: "41898282+github-actions[bot]@users.noreply.github.com"
+          commit_message: "style: format files with gofmt"
