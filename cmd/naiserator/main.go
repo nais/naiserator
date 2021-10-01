@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
+	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -141,13 +142,13 @@ func run() error {
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
 
-	//TODO: SKATT
-	resourceOptions.Istio=true
-	resourceOptions.AzureServiceOperatorEnabled=true
-
-
 	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
+	}
+
+	listers := naiserator_scheme.GenericListers()
+	if len(resourceOptions.GoogleProjectId) > 0 {
+		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
 
 	mgrClient := mgr.GetClient()
@@ -171,6 +172,7 @@ func run() error {
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
+		Listers:         listers,
 	})
 
 	if err = applicationReconciler.SetupWithManager(mgr); err != nil {
@@ -185,6 +187,7 @@ func run() error {
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
+		Listers:         listers,
 	})
 
 	if err = naisjobReconciler.SetupWithManager(mgr); err != nil {
