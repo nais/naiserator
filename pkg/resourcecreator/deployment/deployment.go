@@ -48,7 +48,6 @@ func Create(app Source, ast *resource.Ast, resourceOptions resource.Options) err
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
-	//TODO: Dette trenger ikke skatt, men det gjør jo ikke noe om labelen er der?
 	objectMeta = addCleanupLabels(app, objectMeta)
 	objectMeta.Annotations["reloader.stakater.com/search"] = "true"
 
@@ -123,7 +122,7 @@ func deploymentSpec(app Source, ast *resource.Ast, resourceOptions resource.Opti
 		},
 		Strategy:                strategy,
 		ProgressDeadlineSeconds: util.Int32p(300),
-		RevisionHistoryLimit:    util.Int32p(10),
+		RevisionHistoryLimit:    util.Int32p(3),
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: pod.CreateAppObjectMeta(app, ast, &resourceOptions),
 			Spec:       *podSpec,

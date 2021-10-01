@@ -20,5 +20,6 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options)
 		},
 		ObjectMeta: objectMeta,
 	}
+
 	ast.AppendOperation(resource.OperationCreateIfNotExists, serviceAccount)
 }
