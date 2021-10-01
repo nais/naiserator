@@ -43,7 +43,6 @@ func TestApplicationGoldenFile(t *testing.T) {
 	})
 }
 
-
 func TestNaisjobGoldenFile(t *testing.T) {
 	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, resourceOptions resource.Options) (resource.Operations, error) {
 		test := naisjobTestCase{}
