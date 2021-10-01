@@ -142,7 +142,6 @@ func run() error {
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
 
-
 	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
 	}
@@ -173,7 +172,7 @@ func run() error {
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
-		Listers: listers,
+		Listers:         listers,
 	})
 
 	if err = applicationReconciler.SetupWithManager(mgr); err != nil {
@@ -188,7 +187,7 @@ func run() error {
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          kscheme,
 		SimpleClient:    simpleClient,
-		Listers: listers,
+		Listers:         listers,
 	})
 
 	if err = naisjobReconciler.SetupWithManager(mgr); err != nil {

@@ -52,9 +52,8 @@ type Synchronizer struct {
 	ResourceOptions resource.Options
 	Config          config.Config
 	Kafka           kafka.Interface
-	Listers			[]client.ObjectList
+	Listers         []client.ObjectList
 }
-
 
 // Commit wraps a cluster operation function with extra fields
 type commit struct {
@@ -231,8 +230,6 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 		}
 		return false
 	}
-
-
 
 	resources, err := updater.FindAll(ctx, n.Client, n.Scheme, n.Listers, rollout.Source)
 	if err != nil {

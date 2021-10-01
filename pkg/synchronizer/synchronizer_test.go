@@ -95,8 +95,7 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          rig.scheme,
 		SimpleClient:    rig.client,
-		Listers: listers,
-
+		Listers:         listers,
 	})
 
 	err = applicationReconciler.SetupWithManager(rig.manager)
@@ -262,7 +261,6 @@ func TestSynchronizer(t *testing.T) {
 	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
 }
-
 
 func TestSynchronizerResourceOptions(t *testing.T) {
 	resourceOptions := resource.NewOptions()
