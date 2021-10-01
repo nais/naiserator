@@ -214,7 +214,7 @@ tests:
               rollingUpdate:
                 maxUnavailable: 0
                 maxSurge: "25%"
-            revisionHistoryLimit: 10
+            revisionHistoryLimit: 3
             progressDeadlineSeconds: 300
 
   - operation: CreateOrUpdate
