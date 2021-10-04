@@ -47,7 +47,7 @@ tests:
               - from:
                 - source:
                     principals:
-                    - cluster.local/ns/istio-system/sa/istio-gateway-service-account
+                    - cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account
                 to:
                   - operation:
                       ports:
@@ -133,7 +133,7 @@ tests:
                           name: istio-system
                       podSelector:
                         matchLabels:
-                          app: istio-gateway
+                          app: istio-ingressgateway
                           istio: ingressgateway
                   ports:
                     - port: 8080
