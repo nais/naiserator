@@ -14,9 +14,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
+func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket, projectId string) *google_storage_crd.StorageBucket {
 	objectMeta.Name = bucket.Name
 	util.SetAnnotation(&objectMeta, "cnrm.cloud.google.com/state-into-spec", "merge")
+	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
 
 	if !bucket.CascadingDelete {
@@ -84,7 +85,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	}
 
 	for _, b := range naisBucket {
-		bucket := CreateBucket(resource.CreateObjectMeta(source), b)
+		bucket := CreateBucket(resource.CreateObjectMeta(source), b, resourceOptions.GoogleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
 		bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
