@@ -13,11 +13,11 @@ type Source interface {
 }
 
 func Create(app Source, ast *resource.Ast) {
-	egress := app.GetEgress()
+	egressConfig := app.GetEgress()
 
 	// ServiceEntry
-	if egress != nil && egress.External != nil {
-		for _, egress := range egress.External {
+	if egressConfig != nil && egressConfig.External != nil {
+		for _, egress := range egressConfig.External {
 			generateServiceEntry(app, ast, egress)
 		}
 	}
