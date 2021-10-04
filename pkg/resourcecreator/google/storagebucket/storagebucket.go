@@ -16,6 +16,7 @@ import (
 
 func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
 	objectMeta.Name = bucket.Name
+	util.SetAnnotation(&objectMeta, "cnrm.cloud.google.com/state-into-spec", "merge")
 	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
 
 	if !bucket.CascadingDelete {
