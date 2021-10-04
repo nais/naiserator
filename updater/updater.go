@@ -27,7 +27,6 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 		}
 		objectKey := client.ObjectKeyFromObject(resource)
 
-		//TODO: will this work?
 		err = cli.Get(ctx, objectKey, existing.(client.Object))
 
 		if errors.IsNotFound(err) {
