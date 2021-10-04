@@ -34,8 +34,8 @@ func generateServiceEntry(source resource.Source, ast *resource.Ast, config skat
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec:       networking_istio_io_v1alpha3.ServiceEntrySpec{},
 	}
-	serviceentry.Spec.Resolution = "2" //v1beta12.ServiceEntry_DNS
-	serviceentry.Spec.Location = "0" //v1beta12.ServiceEntry_MESH_EXTERNAL
+	serviceentry.Spec.Resolution = "DNS" //v1beta12.ServiceEntry_DNS
+	serviceentry.Spec.Location = "MESH_EXTERNAL" //v1beta12.ServiceEntry_MESH_EXTERNAL
 	serviceentry.Spec.Hosts = append(serviceentry.Spec.Hosts, config.Host)
 
 	for _, port := range config.Ports {
