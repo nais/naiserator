@@ -25,7 +25,6 @@ func Create(app Source, ast *resource.Ast) {
 
 func generateServiceEntry(source resource.Source, ast *resource.Ast, config skatteetaten_no_v1alpha1.ExternalEgressConfig){
 
-	//TODO; vi hadde beta1
 	serviceentry := networking_istio_io_v1alpha3.ServiceEntry{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceEntry",
@@ -34,8 +33,8 @@ func generateServiceEntry(source resource.Source, ast *resource.Ast, config skat
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec:       networking_istio_io_v1alpha3.ServiceEntrySpec{},
 	}
-	serviceentry.Spec.Resolution = "DNS" //v1beta12.ServiceEntry_DNS
-	serviceentry.Spec.Location = "MESH_EXTERNAL" //v1beta12.ServiceEntry_MESH_EXTERNAL
+	serviceentry.Spec.Resolution = "DNS"
+	serviceentry.Spec.Location = "MESH_EXTERNAL"
 	serviceentry.Spec.Hosts = append(serviceentry.Spec.Hosts, config.Host)
 
 	for _, port := range config.Ports {

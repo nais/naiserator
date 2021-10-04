@@ -28,6 +28,7 @@ type Source interface {
 	LogFields() log.Fields
 	ApplyDefaults() error
 	Hash() (string, error)
+	SetReadyCondition(condition metav1.ConditionStatus, reason string, message string)
 }
 
 func CreateObjectMeta(source Source) metav1.ObjectMeta {

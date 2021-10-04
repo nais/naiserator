@@ -29,7 +29,6 @@ type Source interface {
 func Create(app Source, ast *resource.Ast) {
 	ingressConfig := app.GetIngress()
 	appNamespace = app.GetNamespace()
-	//TODO: magisk "0"
 	authPolicy := generateAuthorizationPolicy(app, "ALLOW")
 
 	if ingressConfig == nil {
