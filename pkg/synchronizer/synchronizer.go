@@ -140,7 +140,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 			if synstate == EventFailedSynchronization{
 				condition = metav1.ConditionFalse
 			}
-			app.SetReadyCondition(condition, synstate, "TODO Set ready condition again")
+			existing.SetReadyCondition(condition, synstate, "TODO Set ready condition again")
 			return n.Update(ctx, existing) // was app
 		})
 		if err != nil {
