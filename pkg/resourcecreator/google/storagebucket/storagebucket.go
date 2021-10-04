@@ -85,7 +85,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 
 	for _, b := range naisBucket {
 		bucket := CreateBucket(resource.CreateObjectMeta(source), b)
-		ast.AppendOperation(resource.OperationCreateIfNotExists, bucket)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
 		bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
