@@ -10,5 +10,7 @@ const (
 	DeletionPolicyAbandon      = "abandon"
 	CascadingDeleteAnnotation  = "cnrm.cloud.google.com/delete-contents-on-destroy"
 	ProjectIdAnnotation        = "cnrm.cloud.google.com/project-id"
+	StateIntoSpec              = "cnrm.cloud.google.com/state-into-spec"
+	StateIntoSpecValue         = "merge"
 	CloudSQLProxyTermTimeout   = "30s"
 )
