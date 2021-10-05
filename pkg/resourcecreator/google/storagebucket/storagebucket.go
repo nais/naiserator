@@ -18,7 +18,10 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket, 
 	objectMeta.Name = bucket.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
-	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
+	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{
+		Location:                 google.Region,
+		UniformBucketLevelAccess: bucket.UniformBucketLevelAccess,
+	}
 
 	if !bucket.CascadingDelete {
 		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
@@ -88,8 +91,10 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		bucket := CreateBucket(resource.CreateObjectMeta(source), b, resourceOptions.GoogleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
-		bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
+		if !b.UniformBucketLevelAccess {
+			bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+			ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
+		}
 
 		iamPolicyMember := iAMPolicyMember(source, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
