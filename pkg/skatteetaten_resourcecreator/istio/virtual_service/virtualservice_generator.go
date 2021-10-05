@@ -54,7 +54,7 @@ func generateVirtualService(source resource.Source, ast *resource.Ast, ingress *
 					Destination: networking_istio_io_v1alpha3.Destination{
 						Host: fmt.Sprintf("%s.%s.svc.cluster.local", source.GetName(), source.GetNamespace()),
 						Port: networking_istio_io_v1alpha3.PortSelector{
-							Number: uint32(ingress.Port),
+							Number: uint32(ingress.ServicePort),
 						},
 					},
 				}},

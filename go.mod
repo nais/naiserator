@@ -98,4 +98,4 @@ require (
 
 go 1.17
 
-replace github.com/nais/liberator => github.com/skatteetaten-trial/liberator v0.0.0-20211004143958-cd80e770b52e
+replace github.com/nais/liberator => github.com/skatteetaten-trial/liberator v0.0.0-20211005075633-b0d1f777ba43
