@@ -64,7 +64,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^maskinporten-mynaisjob-37970c24-.{10}$
+            secretName: ^maskinporten-mynaisjob-37970c24-.{7}$
 
   - apiVersion: batch/v1beta1
     kind: CronJob
@@ -79,14 +79,14 @@ tests:
                 template:
                   spec:
                     volumes:
-                      - name: ^maskinporten-mynaisjob-37970c24-.{10}$
+                      - name: ^maskinporten-mynaisjob-37970c24-.{7}$
                         secret:
-                          secretName: ^maskinporten-mynaisjob-37970c24-.{10}$
+                          secretName: ^maskinporten-mynaisjob-37970c24-.{7}$
                     containers:
                       - envFrom:
                           - secretRef:
-                              name: ^maskinporten-mynaisjob-37970c24-.{10}$
+                              name: ^maskinporten-mynaisjob-37970c24-.{7}$
                         volumeMounts:
-                          - name: ^maskinporten-mynaisjob-37970c24-.{10}$
+                          - name: ^maskinporten-mynaisjob-37970c24-.{7}$
                             readOnly: true
                             mountPath: /var/run/secrets/nais.io/maskinporten

@@ -128,7 +128,8 @@ func idportenURI(ingresses []nais_io_v1.Ingress, path string) nais_io_v1.IDPorte
 
 func idPortenSecretName(name string) (string, error) {
 	basename := fmt.Sprintf("%s-%s", "idporten", name)
-	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
+	year, week := time.Now().ISOWeek()
+	suffix := fmt.Sprintf("%d-%d", year, week)
 	maxLen := validation.DNS1035LabelMaxLength
 
 	return namegen.SuffixedShortName(basename, suffix, maxLen)

@@ -51,15 +51,15 @@ tests:
             template:
               spec:
                 volumes:
-                  - name: ^idporten-myapplication-a0b907e7-.{10}$
+                  - name: ^idporten-myapplication-a0b907e7-.{7}$
                     secret:
-                      secretName: ^idporten-myapplication-a0b907e7-.{10}$
+                      secretName: ^idporten-myapplication-a0b907e7-.{7}$
                 containers:
                   - envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{10}$
+                          name: ^idporten-myapplication-a0b907e7-.{7}$
                     volumeMounts:
-                      - name: ^idporten-myapplication-a0b907e7-.{10}$
+                      - name: ^idporten-myapplication-a0b907e7-.{7}$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/idporten
 
@@ -75,9 +75,9 @@ tests:
             template:
               spec:
                 volumes:
-                  - name: ^idporten-myapplication-a0b907e7-.{10}$
+                  - name: ^idporten-myapplication-a0b907e7-.{7}$
                     secret:
-                      secretName: ^idporten-myapplication-a0b907e7-.{10}$
+                      secretName: ^idporten-myapplication-a0b907e7-.{7}$
                 containers:
                   - name: wonderwall
                     image: nais/wonderwall
@@ -100,7 +100,7 @@ tests:
                         value: ^https://my-client.nav.no/logged_out$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{10}$
+                          name: ^idporten-myapplication-a0b907e7-.{7}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                     ports:
