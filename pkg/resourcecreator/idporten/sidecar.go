@@ -3,7 +3,6 @@ package idporten
 import (
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -31,11 +30,6 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 	naisIdPorten := app.Spec.IDPorten
 	naisIngresses := app.Spec.Ingresses
 
-	ingresses := make([]string, 0)
-	for _, ingress := range naisIngresses {
-		ingresses = append(ingresses, string(ingress))
-	}
-
 	resourcesSpec := nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
 			Cpu:    "250m",
@@ -57,8 +51,8 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 			Value: fmt.Sprintf("%s:%d", RedisName, redisPort),
 		},
 		{
-			Name:  "WONDERWALL_INGRESSES",
-			Value: strings.Join(ingresses, ","),
+			Name:  "WONDERWALL_INGRESS",
+			Value: string(naisIngresses[0]),
 		},
 		{
 			Name:  "WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED",

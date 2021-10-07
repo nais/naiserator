@@ -86,7 +86,7 @@ tests:
                         value: ^127.0.0.1:1234$
                       - name: WONDERWALL_REDIS
                         value: ^nais-io-wonderwall-redis:6379$
-                      - name: WONDERWALL_INGRESSES
+                      - name: WONDERWALL_INGRESS
                         value: ^https://my-client.nav.no/$
                       - name: WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED
                         value: ^true$
