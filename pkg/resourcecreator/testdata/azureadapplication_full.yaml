@@ -22,6 +22,9 @@ input:
     namespace: mynamespace
     labels:
       team: myteam
+    annotations:
+      azure.nais.io/preserve: true
+      not-azure.nais.io/something: true
   spec:
     image: foo/bar
     azure:
@@ -76,11 +79,19 @@ tests:
         name: "spec is populated with correct values"
         exclude:
           - .status
-          - .metadata
+          - .metadata.creationTimestamp
+          - .metadata.labels
+          - .metadata.ownerReferences
           - .spec.secretName
         resource:
           apiVersion: nais.io/v1
           kind: AzureAdApplication
+          metadata:
+            annotations:
+              azure.nais.io/preserve: "true"
+              nais.io/deploymentCorrelationID: ""
+            name: myapplication
+            namespace: mynamespace
           spec:
             preAuthorizedApplications:
               - application: app1

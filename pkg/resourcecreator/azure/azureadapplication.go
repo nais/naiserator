@@ -2,6 +2,7 @@ package azure
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -20,7 +21,7 @@ const (
 	applicationDefaultCallbackPath = "/oauth2/callback"
 )
 
-func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, naisIngress []nais_io_v1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy, clusterName string) (*nais_io_v1.AzureAdApplication, error) {
+func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, naisIngress []nais_io_v1.Ingress, naisAccessPolicy nais_io_v1.AccessPolicy, clusterName string, annotations map[string]string) (*nais_io_v1.AzureAdApplication, error) {
 	replyURLs := naisAzure.Application.ReplyURLs
 
 	if len(replyURLs) == 0 {
@@ -31,6 +32,8 @@ func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, nai
 	if err != nil {
 		return &nais_io_v1.AzureAdApplication{}, err
 	}
+
+	copyAzureAnnotations(annotations, objectMeta.Annotations)
 
 	return &nais_io_v1.AzureAdApplication{
 		TypeMeta: metav1.TypeMeta{
@@ -48,6 +51,14 @@ func adApplication(objectMeta metav1.ObjectMeta, naisAzure nais_io_v1.Azure, nai
 			AllowAllUsers:             naisAzure.Application.AllowAllUsers,
 		},
 	}, nil
+}
+
+func copyAzureAnnotations(src, dst map[string]string) {
+	for k, v := range src {
+		if strings.HasPrefix(k, "azure.nais.io/") {
+			dst[k] = v
+		}
+	}
 }
 
 func mapReplyURLs(urls []string) []nais_io_v1.AzureAdReplyUrl {
@@ -80,7 +91,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		return nil
 	}
 
-	azureAdApplication, err := adApplication(resource.CreateObjectMeta(source), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName)
+	azureAdApplication, err := adApplication(resource.CreateObjectMeta(source), naisAzure, naisIngress, naisAccessPolicy, resourceOptions.ClusterName, source.GetAnnotations())
 	if err != nil {
 		return err
 	}
