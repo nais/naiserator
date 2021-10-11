@@ -1,9 +1,10 @@
-NAME       := naiserator
-TAG        := navikt/${NAME}
-LATEST     := ${TAG}:latest
-ROOT_DIR   := $(shell git rev-parse --show-toplevel)
-arch       := amd64
-os         := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+NAME        := naiserator
+TAG         := navikt/${NAME}
+LATEST      := ${TAG}:latest
+ROOT_DIR    := $(shell git rev-parse --show-toplevel)
+K8S_VERSION := 1.19.0
+arch        := amd64
+os          := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 PROTOC = $(shell which protoc)
 
@@ -33,8 +34,11 @@ golden_file_test:
 	go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1
 
 kubebuilder:
-	curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.1/kubebuilder_2.3.1_${os}_${arch}.tar.gz | tar -xz -C /tmp/
-	mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
+	curl -L "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-$(os)-$(arch).tar.gz" | tar -xz -C /tmp/
+	mv /tmp/kubebuilder /usr/local/kubebuilder/
+	curl -L -o kubebuilder https://go.kubebuilder.io/dl/latest/$(os)/$(arch)
+	mv kubebuilder /usr/local/kubebuilder/bin/
+	chmod +x /usr/local/kubebuilder/bin/*
 
 proto:
 	wget -O pkg/event/event.proto https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
