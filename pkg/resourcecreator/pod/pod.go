@@ -88,8 +88,7 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 		DNSPolicy:          corev1.DNSClusterFirst,
 		Volumes:            volumes,
 		ImagePullSecrets: []corev1.LocalObjectReference{
-			{Name: "gpr-credentials"},
-			{Name: "ghcr-credentials"},
+			{Name: "gh-docker-credentials"},
 		},
 	}
 
