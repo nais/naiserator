@@ -20,14 +20,13 @@ import (
 	autoscaling "k8s.io/api/autoscaling/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	rbac "k8s.io/api/rbac/v1"
 )
 
 type realObjects struct {
 	deployment              *appsv1.Deployment
 	hpa                     *autoscaling.HorizontalPodAutoscaler
-	ingress                 *networkingv1beta1.Ingress
+	ingress                 *networking.Ingress
 	jwker                   *nais_io_v1.Jwker
 	networkPolicy           *networking.NetworkPolicy
 	role                    *rbac.Role
@@ -58,7 +57,7 @@ func getRealObjects(resources resource.Operations) (o realObjects) {
 			o.serviceAccount = v
 		case *autoscaling.HorizontalPodAutoscaler:
 			o.hpa = v
-		case *networkingv1beta1.Ingress:
+		case *networking.Ingress:
 			o.ingress = v
 		case *networking.NetworkPolicy:
 			o.networkPolicy = v
