@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/selection"
@@ -32,11 +33,11 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 		if errors.IsNotFound(err) {
 			err = cli.Create(ctx, resource)
 		} else if err == nil {
-			err = CopyMeta(existing, resource)
+			err = CopyMeta(resource, existing)
 			if err != nil {
 				return err
 			}
-			err = CopyImmutable(existing, resource)
+			err = CopyImmutable(resource, existing)
 			if err != nil {
 				return err
 			}
@@ -115,7 +116,7 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 
 // CopyMeta copies resource metadata from one resource to another.
 // used when updating existing resources in the cluster.
-func CopyMeta(src, dst runtime.Object) error {
+func CopyMeta(dst, src runtime.Object) error {
 	srcacc, err := meta.Accessor(src)
 	if err != nil {
 		return err
@@ -126,6 +127,7 @@ func CopyMeta(src, dst runtime.Object) error {
 		return err
 	}
 
+	// Must always be present when updating a resource
 	dstacc.SetResourceVersion(srcacc.GetResourceVersion())
 	dstacc.SetUID(srcacc.GetUID())
 	dstacc.SetSelfLink(srcacc.GetSelfLink())
@@ -133,7 +135,23 @@ func CopyMeta(src, dst runtime.Object) error {
 	return err
 }
 
-func CopyImmutable(src, dst runtime.Object) error {
+func CopyCNRM(dst, src metav1.Object) {
+	CopyAnnotation(dst, src, "cnrm.cloud.google.com/state-into-spec")
+}
+
+func CopyAnnotation(dst, src metav1.Object, key string) {
+	anno := dst.GetAnnotations()
+	if anno == nil {
+		anno = make(map[string]string)
+	}
+	v := src.GetAnnotations()[key]
+	if len(v) > 0 {
+		anno[key] = v
+	}
+	dst.SetAnnotations(anno)
+}
+
+func CopyImmutable(dst, src runtime.Object) error {
 	switch srcTyped := src.(type) {
 	case *corev1.Service:
 		// ClusterIP must be retained as the field is immutable.
@@ -148,6 +166,7 @@ func CopyImmutable(src, dst runtime.Object) error {
 		if !ok {
 			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
 		}
+		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
 
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase:
@@ -155,6 +174,7 @@ func CopyImmutable(src, dst runtime.Object) error {
 		if !ok {
 			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
 		}
+		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
 
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLUser:
@@ -162,6 +182,7 @@ func CopyImmutable(src, dst runtime.Object) error {
 		if !ok {
 			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
 		}
+		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
 
 	case *storage_cnrm_cloud_google_com_v1beta1.StorageBucket:
@@ -169,6 +190,7 @@ func CopyImmutable(src, dst runtime.Object) error {
 		if !ok {
 			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
 		}
+		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
 	}
 	return nil
