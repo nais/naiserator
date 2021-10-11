@@ -207,8 +207,7 @@ tests:
                 dnsPolicy: ClusterFirst
                 serviceAccountName: myapplication
                 imagePullSecrets:
-                  - name: gpr-credentials
-                  - name: ghcr-credentials
+                  - name: gh-docker-credentials
             strategy:
               type: RollingUpdate
               rollingUpdate:

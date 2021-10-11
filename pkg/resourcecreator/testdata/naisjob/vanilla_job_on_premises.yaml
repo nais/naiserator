@@ -161,8 +161,7 @@ tests:
                         name: writable-tmp
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
-                  - name: gpr-credentials
-                  - name: ghcr-credentials
+                  - name: gh-docker-credentials
                 restartPolicy: Never
                 serviceAccountName: mynaisjob
                 volumes:
