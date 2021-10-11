@@ -18,6 +18,8 @@ import (
 const regexSuffix = "(/.*)?"
 
 func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
+	pathType := networkingv1.PathTypeImplementationSpecific
+
 	return networkingv1.IngressRule{
 		Host: u.Host,
 		IngressRuleValue: networkingv1.IngressRuleValue{
@@ -25,6 +27,7 @@ func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 				Paths: []networkingv1.HTTPIngressPath{
 					{
 						Path: u.Path,
+						PathType: &pathType,
 						Backend: networkingv1.IngressBackend{
 							Service:  &networkingv1.IngressServiceBackend{
 								Name: appName,
@@ -103,7 +106,7 @@ func createIngressBase(source resource.Source, rules []networkingv1.IngressRule,
 	return &networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "networking.k8s.io/v1beta1",
+			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: objectMeta,
 		Spec: networkingv1.IngressSpec{
