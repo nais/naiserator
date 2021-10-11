@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -174,7 +174,7 @@ func TestSynchronizer(t *testing.T) {
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
 	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
-	ing := ast.Operations[0].Resource.(*networkingv1beta1.Ingress)
+	ing := ast.Operations[0].Resource.(*networkingv1.Ingress)
 	app.Spec.Ingresses = []nais_io_v1.Ingress{}
 	err = rig.client.Create(ctx, ing)
 	if err != nil || len(ing.Spec.Rules) == 0 {
@@ -186,7 +186,7 @@ func TestSynchronizer(t *testing.T) {
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
 	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
-	ing = ast.Operations[1].Resource.(*networkingv1beta1.Ingress)
+	ing = ast.Operations[1].Resource.(*networkingv1.Ingress)
 	ing.SetName("disowned-ingress")
 	ing.SetOwnerReferences(nil)
 	app.Spec.Ingresses = []nais_io_v1.Ingress{}
@@ -227,7 +227,7 @@ func TestSynchronizer(t *testing.T) {
 	testResource(&corev1.ServiceAccount{}, objectKey)
 
 	// Test that the Ingress resource was removed
-	testResourceNotExist(&networkingv1beta1.Ingress{}, objectKey)
+	testResourceNotExist(&networkingv1.Ingress{}, objectKey)
 
 	// Test that a Synchronized event was generated and has the correct deployment correlation id
 	eventList := &corev1.EventList{}
@@ -251,7 +251,7 @@ func TestSynchronizer(t *testing.T) {
 	testResource(&appsv1.Deployment{}, objectKey)
 	testResource(&corev1.Service{}, objectKey)
 	testResource(&corev1.ServiceAccount{}, objectKey)
-	testResource(&networkingv1beta1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
+	testResource(&networkingv1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
 
 	// Test that the naiserator event was updated with increased count and new correlation id
 	err = rig.client.List(ctx, eventList)

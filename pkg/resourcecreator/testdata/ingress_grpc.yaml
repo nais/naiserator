@@ -23,7 +23,7 @@ input:
       protocol: grpc
 
 tests:
-  - apiVersion: networking.k8s.io/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     name: myapplication-very-nginx-e55d5da0
     operation: CreateOrUpdate
@@ -42,8 +42,10 @@ tests:
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /
 
   - apiVersion: v1
