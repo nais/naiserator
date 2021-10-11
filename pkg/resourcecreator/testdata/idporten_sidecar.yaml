@@ -34,6 +34,8 @@ input:
         enabled: true
         level: Level3
         locale: se
+        autoLogin: true
+        errorPath: /some/error
     ingresses:
       - "https://my-client.nav.no/"
     port: 1234
@@ -98,6 +100,10 @@ tests:
                         value: ^se$
                       - name: WONDERWALL_IDPORTEN_POST_LOGOUT_REDIRECT_URI
                         value: ^https://my-client.nav.no/logged_out$
+                      - name: WONDERWALL_ERROR_PATH
+                        value: ^/some/error$
+                      - name: WONDERWALL_AUTO_LOGIN
+                        value: ^true$
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{7}$

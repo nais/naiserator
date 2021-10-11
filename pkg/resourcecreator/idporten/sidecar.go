@@ -3,6 +3,7 @@ package idporten
 import (
 	"encoding/base64"
 	"fmt"
+	"strconv"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -90,6 +91,20 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "WONDERWALL_IDPORTEN_POST_LOGOUT_REDIRECT_URI",
 			Value: string(naisIdPorten.PostLogoutRedirectURIs[0]),
+		})
+	}
+
+	if len(naisIdPorten.Sidecar.ErrorPath) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "WONDERWALL_ERROR_PATH",
+			Value: app.Spec.IDPorten.Sidecar.ErrorPath,
+		})
+	}
+
+	if naisIdPorten.Sidecar.AutoLogin {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "WONDERWALL_AUTO_LOGIN",
+			Value: strconv.FormatBool(app.Spec.IDPorten.Sidecar.AutoLogin),
 		})
 	}
 
