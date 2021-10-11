@@ -29,7 +29,6 @@ func GenericListers() []client.ObjectList{
 		&corev1.ServiceAccountList{},
 		&corev1.ServiceList{},
 		&networkingv1.NetworkPolicyList{},
-		&networkingv1beta1.IngressList{}, //TODO: Remove when all v1beta1 ingresses are gone from clusters
 		&networkingv1.IngressList{},
 		&rbacv1.RoleBindingList{},
 		&rbacv1.RoleList{},
