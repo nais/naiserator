@@ -8,7 +8,7 @@ os          := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 PROTOC = $(shell which protoc)
 
-.PHONY: build docker docker-push local install test proto
+.PHONY: build docker docker-push local install test proto kubebuilder
 
 build:
 	go build -o cmd/naiserator/naiserator ./cmd/naiserator
@@ -34,10 +34,9 @@ golden_file_test:
 	go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1
 
 kubebuilder:
-	curl -L "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-$(os)-$(arch).tar.gz" | tar -xz -C /tmp/
-	mv /tmp/kubebuilder /usr/local/kubebuilder/
-	curl -L -o kubebuilder https://go.kubebuilder.io/dl/latest/$(os)/$(arch)
-	mv kubebuilder /usr/local/kubebuilder/bin/
+	test -d /usr/local/kubebuilder || (sudo mkdir -p /usr/local/kubebuilder && sudo chown "${USER}" /usr/local/kubebuilder)
+	curl -L "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-$(os)-$(arch).tar.gz" | tar -xz -C /usr/local
+	curl -L -o /usr/local/kubebuilder/bin/kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/v3.1.0/kubebuilder_$(os)_$(arch)
 	chmod +x /usr/local/kubebuilder/bin/*
 
 proto:
