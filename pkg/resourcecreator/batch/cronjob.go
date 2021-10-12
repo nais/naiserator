@@ -28,7 +28,6 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 		},
 		ObjectMeta: objectMeta,
 		Spec: v1beta1.CronJobSpec{
-			ConcurrencyPolicy: naisjob.ConcurrencyPolicy(),
 			Schedule: naisjob.Spec.Schedule,
 			JobTemplate: v1beta1.JobTemplateSpec{
 				ObjectMeta: resource.CreateObjectMeta(naisjob),
@@ -36,6 +35,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 			},
 			SuccessfulJobsHistoryLimit: util.Int32p(naisjob.Spec.SuccessfulJobsHistoryLimit),
 			FailedJobsHistoryLimit:     util.Int32p(naisjob.Spec.FailedJobsHistoryLimit),
+			ConcurrencyPolicy: naisjob.ConcurrencyPolicy(),
 		},
 	}
 
