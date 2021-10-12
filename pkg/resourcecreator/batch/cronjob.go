@@ -28,6 +28,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 		},
 		ObjectMeta: objectMeta,
 		Spec: v1beta1.CronJobSpec{
+			ConcurrencyPolicy: naisjob.ConcurrencyPolicy(),
 			Schedule: naisjob.Spec.Schedule,
 			JobTemplate: v1beta1.JobTemplateSpec{
 				ObjectMeta: resource.CreateObjectMeta(naisjob),
