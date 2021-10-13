@@ -75,6 +75,10 @@ tests:
         resource:
           spec:
             template:
+              metadata:
+                labels:
+                  aiven: enabled
+                  team: myteam
               spec:
                 volumes:
                   - name: ^idporten-myapplication-a0b907e7-.{7}$

@@ -26,6 +26,8 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 	var runAsUser int64 = 2
 	allowPrivilegeEscalation := false
 
+	app.Labels["aiven"] = "enabled"
+
 	targetPort := app.Spec.Port
 
 	naisIdPorten := app.Spec.IDPorten
