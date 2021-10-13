@@ -75,6 +75,10 @@ tests:
         resource:
           spec:
             template:
+              metadata:
+                labels:
+                  aiven: enabled
+                  team: myteam
               spec:
                 volumes:
                   - name: ^idporten-myapplication-a0b907e7-.{7}$
@@ -86,8 +90,6 @@ tests:
                     env:
                       - name: WONDERWALL_UPSTREAM_HOST
                         value: ^127.0.0.1:1234$
-                      - name: WONDERWALL_REDIS
-                        value: ^nais-io-wonderwall-redis:6379$
                       - name: WONDERWALL_INGRESS
                         value: ^https://my-client.nav.no/$
                       - name: WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED
@@ -109,6 +111,8 @@ tests:
                           name: ^idporten-myapplication-a0b907e7-.{7}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
+                      - secretRef:
+                          name: ^redis-wonderwall$
                     ports:
                       - containerPort: 7564
                         name: wonderwall
@@ -149,52 +153,3 @@ tests:
           spec:
             frontchannelLogoutURI: https://my-client.nav.no/oauth2/logout/frontchannel
             redirectURI: https://my-client.nav.no/oauth2/callback
-
-  - apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    name: myapplication
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "network policy that allows app to egress to redis"
-        resource:
-          spec:
-            egress:
-              - to:
-                  - podSelector:
-                      matchLabels:
-                        app: nais-io-wonderwall-redis
-
-  - operation: CreateIfNotExists
-    apiVersion: nais.io/v1alpha1
-    kind: Application
-    name: nais-io-wonderwall-redis
-    match:
-      - name: "extra deployment with redis"
-        type: exact
-        exclude:
-          - .metadata.creationTimestamp
-          - .status
-        resource:
-          metadata:
-            labels:
-              team: myteam
-            name: nais-io-wonderwall-redis
-            namespace: mynamespace
-            annotations:
-              nais.io/read-only-file-system: "false"
-              nais.io/run-as-user: "999"
-          spec:
-            image: redis:6
-            replicas:
-              max: 1
-              min: 1
-            port: 6379
-            service:
-              port: 6379
-              protocol: redis
-            accessPolicy:
-              inbound:
-                rules:
-                  - application: "*"
-                    namespace: mynamespace

@@ -53,7 +53,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options)
 		return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
 	}
 
-	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar != nil && app.Spec.IDPorten.Sidecar.Enabled {
+	if idporten.ShouldCreateWonderwallSidecar(app, resourceOptions) {
 		resourceOptions.WonderwallEnabled = true
 	}
 

@@ -7,7 +7,6 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 )
@@ -156,13 +155,6 @@ func egressPolicy(options resource.Options, naisAccessPolicyOutbound *nais_io_v1
 			},
 		})
 		defaultRules = append(defaultRules, apiServerAccessRule)
-	}
-
-	if options.WonderwallEnabled {
-		wonderwallRedisAccessRule := networkPolicyEgressRule(networkingv1.NetworkPolicyPeer{
-			PodSelector: labelSelector("app", idporten.RedisName),
-		})
-		defaultRules = append(defaultRules, wonderwallRedisAccessRule)
 	}
 
 	return defaultRules
