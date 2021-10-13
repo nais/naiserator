@@ -48,10 +48,6 @@ func Wonderwall(app *nais_io_v1alpha1.Application, wonderwallImage string) (*cor
 			Value: fmt.Sprintf("127.0.0.1:%d", targetPort),
 		},
 		{
-			Name:  "WONDERWALL_REDIS",
-			Value: fmt.Sprintf("%s:%d", RedisName, redisPort),
-		},
-		{
 			Name:  "WONDERWALL_INGRESS",
 			Value: string(naisIngresses[0]),
 		},

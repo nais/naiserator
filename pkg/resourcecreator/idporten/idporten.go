@@ -21,6 +21,7 @@ const (
 	clientDefaultCallbackPath        = "/oauth2/callback"
 	clientDefaultLogoutPath          = "/oauth2/logout"
 	wonderwallFrontChannelLogoutPath = "/oauth2/logout/frontchannel"
+	wonderwallRedisSecretName        = "redis-wonderwall"
 )
 
 func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
@@ -153,7 +154,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
 
-	if naisIdPorten.Sidecar == nil || !naisIdPorten.Sidecar.Enabled {
+	if naisIdPorten.Sidecar == nil || !naisIdPorten.Sidecar.Enabled || !resourceOptions.WonderwallEnabled {
 		return nil
 	}
 
@@ -168,6 +169,7 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	if err != nil {
 		return err
 	}
+	ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
 
 	wonderwallContainer, err := Wonderwall(app, resourceOptions.Wonderwall.Image)
 	if err != nil {
@@ -176,17 +178,22 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	wonderwallContainer.EnvFrom = []v1.EnvFromSource{
 		pod.EnvFromSecret(idportenClient.Spec.SecretName),
 		pod.EnvFromSecret(wonderwallSecretName),
+		pod.EnvFromSecret(wonderwallRedisSecretName),
 	}
-
 	ast.Containers = append(ast.Containers, *wonderwallContainer)
-
-	redisApplication := Redis(app)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, redisApplication)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
 
 	// override uris when sidecar is enabled
 	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(naisIngresses, wonderwallFrontChannelLogoutPath)
 	idportenClient.Spec.RedirectURI = idportenURI(naisIngresses, clientDefaultCallbackPath)
 
 	return nil
+}
+
+func ShouldCreateWonderwallSidecar(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) bool {
+	if app.Spec.IDPorten == nil || app.Spec.IDPorten.Sidecar == nil {
+		return false
+	}
+
+	isGCP := len(resourceOptions.GoogleTeamProjectId) > 0
+	return resourceOptions.DigdiratorEnabled && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar.Enabled && isGCP
 }
