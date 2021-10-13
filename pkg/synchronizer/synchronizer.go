@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -134,13 +133,8 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		}
 		metrics.Synchronizations.WithLabelValues(kind, app.GetStatus().SynchronizationState).Inc()
 		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
+			app.SetStatusConditions()
 			existing.SetStatus(app.GetStatus())
-			synstate := app.GetStatus().SynchronizationState
-			condition := metav1.ConditionUnknown
-			if synstate == EventFailedSynchronization{
-				condition = metav1.ConditionFalse
-			}
-			existing.SetReadyCondition(condition, synstate, "TODO Set ready condition again")
 			return n.Update(ctx, existing) // was app
 		})
 		if err != nil {

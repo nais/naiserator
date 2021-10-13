@@ -16,7 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -158,7 +157,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 					app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
 					app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
 					metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
-					app.SetReadyCondition(metav1.ConditionTrue, EventRolloutComplete, "TODO Set ready condition")
+					app.SetStatusConditions()
 					return n.Update(ctx, app)
 				})
 
