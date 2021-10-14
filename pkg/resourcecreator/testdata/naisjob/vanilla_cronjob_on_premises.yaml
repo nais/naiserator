@@ -61,6 +61,7 @@ tests:
           - .spec.jobTemplate.spec.template.metadata.creationTimestamp
         resource:
           spec:
+            concurrencyPolicy: Allow
             failedJobsHistoryLimit: 1
             jobTemplate:
               metadata:
