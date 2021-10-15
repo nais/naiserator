@@ -97,3 +97,5 @@ require (
 )
 
 go 1.17
+
+replace github.com/nais/liberator => github.com/bjartek/liberator 4d8d568
