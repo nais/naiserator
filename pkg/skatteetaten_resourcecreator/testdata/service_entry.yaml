@@ -1,0 +1,67 @@
+config:
+  description: horizontal pod autoscaler is set up
+
+input:
+  kind: Application
+  apiVersion: nebula.skatteetaten.no/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    egress:
+      external:
+        ghcr:
+          host: ghcr.io
+        postgres:
+          host: test.postgres.database.azure.com
+          ports:
+          - name: postgres
+            port: 5432
+            protocol: TCP
+    pod:
+      image: navikt/myapplication:1.2.3
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: mynamespace-myapplication-ghcr
+    match:
+      - type: exact
+        name: "ServiceEntry for ghcr"
+        exclude:
+          - .status
+          - .metadata
+        resource:
+          spec:
+            hosts:
+            - ghcr.io
+            location: MESH_EXTERNAL
+            ports: []
+            resolution: DNS
+  - operation: CreateOrUpdate
+    apiVersion: networking.istio.io/v1alpha3
+    kind: ServiceEntry
+    name: mynamespace-myapplication-postgres
+    match:
+      - type: exact
+        name: "ServiceEntry for ghcr"
+        exclude:
+          - .status
+          - .metadata
+        resource:
+          spec:
+            hosts:
+              - test.postgres.database.azure.com
+            location: MESH_EXTERNAL
+            ports:
+            - name: postgres
+              number: 5432
+              protocol: TCP
+            resolution: DNS
+
+
+
