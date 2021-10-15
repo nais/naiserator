@@ -17,7 +17,7 @@ const (
 // Operation is the combination of a Kubernetes resource and what operation to perform on it.
 type Operation struct {
 	Resource  client.Object `json:"resource"`
-	Operation OperationType  `json:"operation"`
+	Operation OperationType `json:"operation"`
 }
 
 type Operations []Operation

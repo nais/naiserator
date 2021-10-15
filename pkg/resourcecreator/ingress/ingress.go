@@ -26,10 +26,10 @@ func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 			HTTP: &networkingv1.HTTPIngressRuleValue{
 				Paths: []networkingv1.HTTPIngressPath{
 					{
-						Path: u.Path,
+						Path:     u.Path,
 						PathType: &pathType,
 						Backend: networkingv1.IngressBackend{
-							Service:  &networkingv1.IngressServiceBackend{
+							Service: &networkingv1.IngressServiceBackend{
 								Name: appName,
 								Port: networkingv1.ServiceBackendPort{
 									Number: int32(nais_io_v1alpha1.DefaultServicePort),
