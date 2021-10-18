@@ -122,30 +122,40 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) 
 		return nil
 	}
 
-	config := wonderwallConfig(source, azureAdApplication.Spec.SecretName)
+	// configure sidecar
+	ingresses := source.GetIngress()
+	if len(ingresses) == 0 {
+		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
+	}
+
+	// wonderwall only supports a single ingress, so we use the first
+	ingress := ingresses[0]
+
+	config := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingress)
 	err = wonderwall.Create(source, ast, resourceOptions, config)
 	if err != nil {
 		return err
 	}
 
-	ingress := source.GetIngress()[0]
+	// ensure that the ingress is added to the configured Azure AD reply URLs
 	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, nais_io_v1.AzureAdReplyUrl{
-		Url: string(ingress),
+		Url: util.AppendPathToIngress(ingress, applicationDefaultCallbackPath),
 	})
 	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingress, wonderwall.FrontChannelLogoutPath)
 
 	return nil
 }
 
-func wonderwallConfig(source Source, providerSecretName string) wonderwall.Configuration {
-	ingress := string(source.GetIngress()[0])
+func wonderwallConfig(source Source, providerSecretName string, ingress nais_io_v1.Ingress) wonderwall.Configuration {
+	sidecar := source.GetAzure().GetSidecar()
+	ing := string(ingress)
 
 	return wonderwall.Configuration{
-		AutoLogin:             source.GetAzure().GetSidecar().AutoLogin,
-		ErrorPath:             source.GetAzure().GetSidecar().ErrorPath,
-		Ingress:               ingress,
+		AutoLogin:             sidecar.AutoLogin,
+		ErrorPath:             sidecar.ErrorPath,
+		Ingress:               ing,
 		Provider:              "azure",
 		ProviderSecretName:    providerSecretName,
-		PostLogoutRedirectURI: ingress,
+		PostLogoutRedirectURI: ing,
 	}
 }
