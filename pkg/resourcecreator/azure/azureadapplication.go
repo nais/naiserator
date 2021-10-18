@@ -128,6 +128,12 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) 
 		return err
 	}
 
+	ingress := source.GetIngress()[0]
+	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, nais_io_v1.AzureAdReplyUrl{
+		Url: string(ingress),
+	})
+	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingress, wonderwall.FrontChannelLogoutPath)
+
 	return nil
 }
 
