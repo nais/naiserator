@@ -15,7 +15,7 @@ require (
 	github.com/magiconair/properties v1.8.5
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.4.2
-	github.com/nais/liberator v0.0.0-20211018084057-c780c6d0d2bf
+	github.com/nais/liberator v0.0.0-20211018120205-1fe381b2a2e6
 	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
@@ -97,5 +97,3 @@ require (
 )
 
 go 1.17
-
-replace github.com/nais/liberator => /Users/kimt/src/nais/liberator
