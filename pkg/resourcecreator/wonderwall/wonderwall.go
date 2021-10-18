@@ -83,19 +83,28 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options, 
 }
 
 func ShouldEnable(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (bool, error) {
-	isGCP := len(resourceOptions.GoogleTeamProjectId) > 0
-
-	idportenDisabled := app.Spec.IDPorten == nil || app.Spec.IDPorten.Sidecar == nil
-	azureDisabled := app.Spec.Azure == nil || app.Spec.Azure.Sidecar == nil
-
-	if idportenDisabled || azureDisabled || !isGCP {
+	if len(resourceOptions.GoogleTeamProjectId) == 0 {
 		return false, nil
 	}
 
-	idPortenEnabled := app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar.Enabled
-	azureEnabled := app.Spec.Azure.Application.Enabled && app.Spec.Azure.Sidecar.Enabled
+	idPortenEnabled := resourceOptions.DigdiratorEnabled &&
+		app.Spec.IDPorten != nil &&
+		app.Spec.IDPorten.Enabled &&
+		app.Spec.IDPorten.Sidecar != nil &&
+		app.Spec.IDPorten.Sidecar.Enabled
 
-	return (resourceOptions.DigdiratorEnabled && idPortenEnabled) || (resourceOptions.AzureratorEnabled && azureEnabled), nil
+	azureEnabled := resourceOptions.AzureratorEnabled &&
+		app.Spec.Azure != nil &&
+		app.Spec.Azure.Application != nil &&
+		app.Spec.Azure.Application.Enabled &&
+		app.Spec.Azure.Sidecar != nil &&
+		app.Spec.Azure.Sidecar.Enabled
+
+	if idPortenEnabled && azureEnabled {
+		return false, fmt.Errorf("only one of Azure AD or ID-Porten sidecars can be enabled, but not both")
+	}
+
+	return idPortenEnabled || azureEnabled, nil
 }
 
 func sidecarContainer(source Source, resourceOptions resource.Options, cfg Configuration) (*corev1.Container, error) {
