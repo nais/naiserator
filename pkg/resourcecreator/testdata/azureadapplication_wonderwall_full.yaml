@@ -1,0 +1,101 @@
+config:
+  description: azure config with sidecar should result in wonderwall sidecar injected to pod
+
+resourceoptions:
+  Linkerd: true
+  GoogleProjectID: google-project-id
+  NumReplicas: 1
+  ClusterName: mycluster
+  AzureratorEnabled: true
+  NetworkPolicy: true
+  Wonderwall:
+    Image: nais/wonderwall
+  WonderwallEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    azure:
+      application:
+        allowAllUsers: true
+        claims:
+          extra:
+            - NAVident
+            - azp_name
+          groups:
+            - id: 00000000-0000-0000-0000-000000000000
+        enabled: true
+        replyURLs:
+          - https://myapplication.nav.no/oauth2/callback
+        singlePageApplication: true
+        tenant: nav.no
+      sidecar:
+        enabled: true
+        autoLogin: true
+        errorPath: /some/error
+    ingresses:
+      - "https://my-client.nav.no/"
+    port: 1234
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains sidecar with desired configuration"
+        type: regex
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  aiven: enabled
+                  team: myteam
+              spec:
+                containers:
+                  - name: myapplication
+                    ports:
+                      - containerPort: 1234
+                        name: http
+                        protocol: TCP
+                  - name: wonderwall
+                    image: nais/wonderwall
+                    env:
+                      - name: WONDERWALL_OPENID_PROVIDER
+                        value: ^azure$
+                      - name: WONDERWALL_INGRESS
+                        value: ^https://my-client.nav.no/$
+                      - name: WONDERWALL_UPSTREAM_HOST
+                        value: ^127.0.0.1:1234$
+                      - name: WONDERWALL_BIND_ADDRESS
+                        value: ^0.0.0.0:7564$
+                      - name: WONDERWALL_METRICS_BIND_ADDRESS
+                        value: ^0.0.0.0:7565$
+                      - name: WONDERWALL_AUTO_LOGIN
+                        value: ^true$
+                      - name: WONDERWALL_ERROR_PATH
+                        value: ^/some/error$
+                      - name: WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI
+                        value: ^https://my-client.nav.no/$
+                    envFrom:
+                      - secretRef:
+                          name: ^azure-myapplication-4190a8ca-.{7}$
+                      - secretRef:
+                          name: ^azure-wonderwall-myapplication-.{8}$
+                      - secretRef:
+                          name: ^redis-wonderwall$
+                    ports:
+                      - containerPort: 7564
+                        name: wonderwall
+                        protocol: TCP
+                      - containerPort: 7565
+                        name: ww-metrics
+                        protocol: TCP
