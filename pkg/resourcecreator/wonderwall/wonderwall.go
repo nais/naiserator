@@ -83,7 +83,7 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options, 
 }
 
 func ShouldEnable(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (bool, error) {
-	if len(resourceOptions.GoogleTeamProjectId) == 0 {
+	if len(resourceOptions.GoogleProjectId) == 0 {
 		return false, nil
 	}
 
