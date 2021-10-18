@@ -218,7 +218,7 @@ func TestSynchronizer(t *testing.T) {
 	assert.Equalf(t, hash, persistedApp.Status.SynchronizationHash, "Application resource hash in Kubernetes matches local version")
 
 	// Test that the status field is set with RolloutComplete
-	assert.Equalf(t, synchronizer.EventSynchronized, persistedApp.Status.SynchronizationState, "Synchronization state is set")
+	assert.Equalf(t, nais_io_v1.EventSynchronized, persistedApp.Status.SynchronizationState, "Synchronization state is set")
 	assert.Equalf(t, "deploy-id", persistedApp.Status.CorrelationID, "Correlation ID is set")
 
 	// Test that a base resource set was created successfully
@@ -236,7 +236,7 @@ func TestSynchronizer(t *testing.T) {
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 1, eventList.Items[0].Count)
 	assert.Equal(t, "deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
-	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
+	assert.Equal(t, nais_io_v1.EventSynchronized, eventList.Items[0].Reason)
 
 	// Run synchronization processing again, and check that resources still exist.
 	persistedApp.DeepCopyInto(app)
@@ -259,7 +259,7 @@ func TestSynchronizer(t *testing.T) {
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 2, eventList.Items[0].Count)
 	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
-	assert.Equal(t, synchronizer.EventSynchronized, eventList.Items[0].Reason)
+	assert.Equal(t, nais_io_v1.EventSynchronized, eventList.Items[0].Reason)
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {

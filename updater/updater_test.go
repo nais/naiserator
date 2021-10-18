@@ -49,6 +49,8 @@ func TestCopyMeta(t *testing.T) {
 		"bar":                                   "baz",
 		"cnrm.cloud.google.com/state-into-spec": "baz",
 	}, updating.GetAnnotations())
+
+	assert.Equal(t, "resourceid", updating.Spec.ResourceID)
 }
 
 func TestCopyAnnotation(t *testing.T) {
