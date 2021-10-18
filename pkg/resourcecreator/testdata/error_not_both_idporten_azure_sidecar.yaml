@@ -1,0 +1,22 @@
+config:
+  description: both idporten sidecar and azure sidecar enabled is not allowed
+resourceoptions:
+  GoogleProjectID: google-project-id
+  AzureratorEnabled: true
+  DigdiratorEnabled: true
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    azure:
+      sidecar:
+        enabled: true
+    idporten:
+      sidecar:
+        enabled: true
+error: "only one of Azure AD or ID-Porten sidecars can be enabled, but not both"

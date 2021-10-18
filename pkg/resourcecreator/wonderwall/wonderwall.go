@@ -40,8 +40,13 @@ type Configuration struct {
 	PostLogoutRedirectURI string
 }
 
-func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options, cfg Configuration) error {
-	app.Labels["aiven"] = "enabled"
+type Source interface {
+	resource.Source
+	GetPort() int
+}
+
+func Create(source Source, ast *resource.Ast, resourceOptions resource.Options, cfg Configuration) error {
+	source.GetLabels()["aiven"] = "enabled"
 
 	if len(cfg.Provider) == 0 {
 		return fmt.Errorf("configuration has empty provider")
@@ -55,12 +60,12 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 		return fmt.Errorf("configuration has empty ingress")
 	}
 
-	wonderwallSecret, err := sidecarSecret(app, cfg)
+	wonderwallSecret, err := sidecarSecret(source, cfg)
 	if err != nil {
 		return err
 	}
 
-	container, err := sidecarContainer(app, resourceOptions, cfg)
+	container, err := sidecarContainer(source, resourceOptions, cfg)
 	if err != nil {
 		return err
 	}
@@ -77,20 +82,33 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	return nil
 }
 
-func ShouldEnable(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) bool {
-	isGCP := len(resourceOptions.GoogleTeamProjectId) > 0
-
-	if app.Spec.IDPorten == nil || app.Spec.IDPorten.Sidecar == nil || !isGCP {
-		return false
+func ShouldEnable(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (bool, error) {
+	if len(resourceOptions.GoogleProjectId) == 0 {
+		return false, nil
 	}
 
-	idPortenEnabled := app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar.Enabled
+	idPortenEnabled := resourceOptions.DigdiratorEnabled &&
+		app.Spec.IDPorten != nil &&
+		app.Spec.IDPorten.Enabled &&
+		app.Spec.IDPorten.Sidecar != nil &&
+		app.Spec.IDPorten.Sidecar.Enabled
 
-	return resourceOptions.DigdiratorEnabled && idPortenEnabled
+	azureEnabled := resourceOptions.AzureratorEnabled &&
+		app.Spec.Azure != nil &&
+		app.Spec.Azure.Application != nil &&
+		app.Spec.Azure.Application.Enabled &&
+		app.Spec.Azure.Sidecar != nil &&
+		app.Spec.Azure.Sidecar.Enabled
+
+	if idPortenEnabled && azureEnabled {
+		return false, fmt.Errorf("only one of Azure AD or ID-Porten sidecars can be enabled, but not both")
+	}
+
+	return idPortenEnabled || azureEnabled, nil
 }
 
-func sidecarContainer(app *nais_io_v1alpha1.Application, resourceOptions resource.Options, cfg Configuration) (*corev1.Container, error) {
-	targetPort := app.Spec.Port
+func sidecarContainer(source Source, resourceOptions resource.Options, cfg Configuration) (*corev1.Container, error) {
+	targetPort := source.GetPort()
 	resourcesSpec := nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
 			Cpu:    "250m",
@@ -166,7 +184,7 @@ func envVars(cfg Configuration, targetPort int) []corev1.EnvVar {
 	return result
 }
 
-func sidecarSecret(source resource.Source, cfg Configuration) (*corev1.Secret, error) {
+func sidecarSecret(source Source, cfg Configuration) (*corev1.Secret, error) {
 	prefixedName := fmt.Sprintf("%s-wonderwall-%s", cfg.Provider, source.GetName())
 	secretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
 	if err != nil {
