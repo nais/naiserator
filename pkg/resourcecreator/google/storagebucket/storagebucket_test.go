@@ -17,7 +17,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		csb := nais.CloudStorageBucket{Name: "mystoragebucket"}
 
-		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb)
+		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb, "projectId")
 		assert.Equal(t, csb.Name, bucket.Name)
 		assert.Equal(t, google.Region, bucket.Spec.Location)
 		assert.Equal(t, google.DeletionPolicyAbandon, bucket.ObjectMeta.Annotations[google.
@@ -31,7 +31,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		csb := nais.CloudStorageBucket{Name: "mystoragebucket", RetentionPeriodDays: intp(7)}
 		expectedRetentionPeriod := *csb.RetentionPeriodDays * int(time.Hour.Seconds()*24)
 
-		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb)
+		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb, "projectId")
 		assert.Equal(t, csb.Name, bucket.Name)
 		assert.Equal(t, expectedRetentionPeriod, bucket.Spec.RetentionPolicy.RetentionPeriod)
 		assert.Equal(t, google.Region, bucket.Spec.Location)
@@ -49,7 +49,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 			WithState:        "ANY",
 		}
 		csb := nais.CloudStorageBucket{Name: "mystoragebucket", LifecycleCondition: &lifecycleCondition}
-		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb)
+		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb, "projectId")
 		lifecycleRule := bucket.Spec.LifecycleRules[0]
 
 		assert.Equal(t, csb.Name, bucket.Name)

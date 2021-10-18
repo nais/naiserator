@@ -38,6 +38,7 @@ func availabilityType(highAvailability bool) string {
 func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
+	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
 
 	if !instance.CascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.

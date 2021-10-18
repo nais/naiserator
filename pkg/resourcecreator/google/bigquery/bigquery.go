@@ -43,6 +43,7 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_bigquery_cr
 	}
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = shortName
+	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
 	policy := &google_iam_crd.IAMPolicyMember{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IAMPolicyMember",

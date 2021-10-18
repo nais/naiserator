@@ -14,9 +14,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket) *google_storage_crd.StorageBucket {
+func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket, projectId string) *google_storage_crd.StorageBucket {
 	objectMeta.Name = bucket.Name
-	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{Location: google.Region}
+	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
+	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
+	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{
+		Location:                 google.Region,
+		UniformBucketLevelAccess: bucket.UniformBucketLevelAccess,
+	}
 
 	if !bucket.CascadingDelete {
 		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
@@ -83,11 +88,13 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	}
 
 	for _, b := range naisBucket {
-		bucket := CreateBucket(resource.CreateObjectMeta(source), b)
-		ast.AppendOperation(resource.OperationCreateIfNotExists, bucket)
+		bucket := CreateBucket(resource.CreateObjectMeta(source), b, resourceOptions.GoogleTeamProjectId)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
-		bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
+		if !b.UniformBucketLevelAccess {
+			bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
+			ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
+		}
 
 		iamPolicyMember := iAMPolicyMember(source, bucket, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)

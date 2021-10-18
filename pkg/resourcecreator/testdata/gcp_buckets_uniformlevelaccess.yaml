@@ -2,29 +2,43 @@ config:
   description: google storage bucket with retention period
 
 resourceoptions:
-  CNRMEnabled: true
   AccessPolicy: false
+  CNRMEnabled: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
   NumReplicas: 1
 
 input:
-  kind: Naisjob
-  apiVersion: nais.io/v1
+  kind: Application
+  apiVersion: v1alpha1
   metadata:
-    name: mynaisjob
+    name: myapplication
     namespace: mynamespace
     uid: "123456"
     labels:
       team: myteam
   spec:
-    schedule: "* 2 * * *"
-    image: navikt/mynaisjob:1.2.3
+    image: navikt/myapplication:1.2.3
     gcp:
       buckets:
-        - name: mynaisjob
+        - name: myapplication
+          uniformBucketLevelAccess: true
 
 tests:
+  - match:
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - apiVersion: v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
+
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
     operation: CreateIfNotExists
@@ -38,10 +52,10 @@ tests:
             annotations:
               cnrm.cloud.google.com/project-id: google-project-id
               nais.io/team: mynamespace
-            name: mynaisjob-mynamespac-uih2v7i
+            name: myapplicati-mynamespac-w4o5cwa
             namespace: serviceaccounts
           spec:
-            displayName: mynaisjob
+            displayName: myapplication
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
@@ -53,17 +67,17 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: google-project-id
-            name: mynaisjob-mynamespac-uih2v7i
+            name: myapplicati-mynamespac-w4o5cwa
             namespace: serviceaccounts
           spec:
             bindings:
               - members:
-                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/mynaisjob]
+                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
                 role: roles/iam.workloadIdentityUser
             resourceRef:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
-              name: mynaisjob-mynamespac-uih2v7i
+              name: myapplicati-mynamespac-w4o5cwa
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
@@ -75,15 +89,15 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-            name: mynaisjob-mynamespac-uih2v7i
+            name: myapplicati-mynamespac-w4o5cwa
             namespace: mynamespace
           spec:
-            member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
+            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
             role: roles/storage.objectViewer
             resourceRef:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
               kind: StorageBucket
-              name: mynaisjob
+              name: myapplication
 
   - apiVersion: storage.cnrm.cloud.google.com/v1beta1
     kind: StorageBucket
@@ -95,31 +109,18 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
-            name: mynaisjob
+              cnrm.cloud.google.com/project-id: team-project-id
+              cnrm.cloud.google.com/state-into-spec: merge
+            name: myapplication
             namespace: mynamespace
           spec:
             location: europe-north1
+            uniformBucketLevelAccess: true
 
-  - apiVersion: storage.cnrm.cloud.google.com/v1beta1
-    kind: StorageBucketAccessControl
+  - apiVersion: apps/v1
+    kind: Deployment
     operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "Storage bucket ACL created in team namespace"
-        resource:
-          metadata:
-            name: mynaisjob
-            namespace: mynamespace
-          spec:
-            bucketRef:
-              name: mynaisjob
-            entity: user-mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
-            role: OWNER
-
-  - apiVersion: batch/v1beta1
-    kind: CronJob
-    name: mynaisjob
-    operation: CreateOrUpdate
+    name: myapplication
     match:
       - type: subset
         name: "deployment created"
@@ -129,16 +130,15 @@ tests:
           - .spec.template.metadata
         resource:
           spec:
-            jobTemplate:
+            template:
               spec:
-                template:
-                  spec:
-                    containers:
-                      - image: navikt/mynaisjob:1.2.3
-                        env:
-                          - name: GCP_TEAM_PROJECT_ID
-                            value: team-project-id
-                    dnsPolicy: ClusterFirst
-                    imagePullSecrets:
-                      - name: gh-docker-credentials
-                    serviceAccountName: mynaisjob
+                containers:
+                  - image: navikt/myapplication:1.2.3
+                    env:
+                      - name: GCP_TEAM_PROJECT_ID
+                        value: team-project-id
+                dnsPolicy: ClusterFirst
+                imagePullSecrets:
+                  - name: gh-docker-credentials
+                restartPolicy: Always
+                serviceAccountName: myapplication

@@ -103,7 +103,7 @@ tests:
               name: myapplication
   - apiVersion: storage.cnrm.cloud.google.com/v1beta1
     kind: StorageBucket
-    operation: CreateIfNotExists
+    operation: CreateOrUpdate
     match:
       - type: subset
         name: "Storage bucket created in team namespace"
@@ -162,6 +162,6 @@ tests:
                         value: team-project-id
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
-                  - name: gpr-credentials
+                  - name: gh-docker-credentials
                 restartPolicy: Always
                 serviceAccountName: myapplication

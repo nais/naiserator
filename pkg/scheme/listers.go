@@ -9,7 +9,6 @@ import (
 	"k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -20,7 +19,7 @@ import (
 // These are usually the types we persist to the cluster with names different than the application name.
 
 // Resources that can be queried in all clusters
-func GenericListers() []client.ObjectList{
+func GenericListers() []client.ObjectList {
 	return []client.ObjectList{
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
@@ -29,7 +28,7 @@ func GenericListers() []client.ObjectList{
 		&corev1.ServiceAccountList{},
 		&corev1.ServiceList{},
 		&networkingv1.NetworkPolicyList{},
-		&networkingv1beta1.IngressList{},
+		&networkingv1.IngressList{},
 		&rbacv1.RoleBindingList{},
 		&rbacv1.RoleList{},
 

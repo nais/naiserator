@@ -63,6 +63,7 @@ tests:
           - .spec.jobTemplate.spec.template.metadata.creationTimestamp
         resource:
           spec:
+            concurrencyPolicy: Allow
             failedJobsHistoryLimit: 2
             jobTemplate:
               metadata:
@@ -165,8 +166,7 @@ tests:
                             name: writable-tmp
                     dnsPolicy: ClusterFirst
                     imagePullSecrets:
-                      - name: gpr-credentials
-                      - name: ghcr-credentials
+                      - name: gh-docker-credentials
                     restartPolicy: Never
                     serviceAccountName: mynaisjob
                     volumes:

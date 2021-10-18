@@ -15,7 +15,7 @@ input:
       - https://foo.bar/baz
 
 tests:
-  - apiVersion: networking.k8s.io/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     name: myapplication
     operation: CreateOrUpdate
@@ -41,6 +41,9 @@ tests:
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /baz
+                      pathType: ImplementationSpecific

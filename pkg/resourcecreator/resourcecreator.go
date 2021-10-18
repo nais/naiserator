@@ -9,6 +9,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
@@ -31,6 +32,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
+	"github.com/nais/naiserator/pkg/resourcecreator/wonderwall"
 )
 
 type Generator func(app resource.Source, resourceOptions resource.Options) (resource.Operations, error)
@@ -53,7 +55,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options)
 		return nil, fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", app.GetNamespace())
 	}
 
-	if resourceOptions.DigdiratorEnabled && app.Spec.IDPorten != nil && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar != nil && app.Spec.IDPorten.Sidecar.Enabled {
+	if wonderwall.ShouldEnable(app, resourceOptions) {
 		resourceOptions.WonderwallEnabled = true
 	}
 

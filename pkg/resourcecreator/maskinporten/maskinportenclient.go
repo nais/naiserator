@@ -16,7 +16,8 @@ import (
 
 func secretName(appName string) (string, error) {
 	basename := fmt.Sprintf("%s-%s", "maskinporten", appName)
-	suffix := time.Now().Format("2006-01-02") // YYYY-MM-DD / ISO 8601
+	year, week := time.Now().ISOWeek()
+	suffix := fmt.Sprintf("%d-%d", year, week)
 	maxLen := validation.DNS1035LabelMaxLength
 
 	return namegen.SuffixedShortName(basename, suffix, maxLen)

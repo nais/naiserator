@@ -98,6 +98,6 @@ tests:
                         value: team-project-id
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
-                  - name: gpr-credentials
+                  - name: gh-docker-credentials
                 restartPolicy: Always
                 serviceAccountName: myapplication

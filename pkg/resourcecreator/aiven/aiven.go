@@ -7,10 +7,11 @@ import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 const (
@@ -50,7 +51,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
 
 		ast.Volumes = append(ast.Volumes, credentialFilesVolume)
-		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, ""))
+		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
 	if len(kafkaKeyPaths) > 0 || elasticEnabled {

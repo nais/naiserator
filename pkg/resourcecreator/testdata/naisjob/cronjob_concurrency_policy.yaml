@@ -1,0 +1,28 @@
+config:
+  description: naisjob gets a specified concurrency-policy
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    image: navikt/mynaisjob:1.2.3
+    concurrencyPolicy: "Forbid"
+
+tests:
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "naisjob concurrencyPolicy"
+        resource:
+          spec:
+            concurrencyPolicy: "Forbid"

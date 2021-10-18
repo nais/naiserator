@@ -6,6 +6,7 @@ WORKDIR /src
 COPY go.* /src/
 RUN go mod download
 COPY . /src
+RUN mkdir -p /usr/local/kubebuilder
 RUN make kubebuilder
 RUN go test ./...
 RUN cd cmd/nebula && go build -a -installsuffix cgo -o nebula

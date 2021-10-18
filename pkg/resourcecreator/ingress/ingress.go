@@ -10,25 +10,31 @@ import (
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const regexSuffix = "(/.*)?"
 
-func ingressRule(appName string, u *url.URL) networkingv1beta1.IngressRule {
-	return networkingv1beta1.IngressRule{
+func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
+	pathType := networkingv1.PathTypeImplementationSpecific
+
+	return networkingv1.IngressRule{
 		Host: u.Host,
-		IngressRuleValue: networkingv1beta1.IngressRuleValue{
-			HTTP: &networkingv1beta1.HTTPIngressRuleValue{
-				Paths: []networkingv1beta1.HTTPIngressPath{
+		IngressRuleValue: networkingv1.IngressRuleValue{
+			HTTP: &networkingv1.HTTPIngressRuleValue{
+				Paths: []networkingv1.HTTPIngressPath{
 					{
-						Path: u.Path,
-						Backend: networkingv1beta1.IngressBackend{
-							ServiceName: appName,
-							ServicePort: intstr.IntOrString{IntVal: nais_io_v1alpha1.DefaultServicePort},
+						Path:     u.Path,
+						PathType: &pathType,
+						Backend: networkingv1.IngressBackend{
+							Service: &networkingv1.IngressServiceBackend{
+								Name: appName,
+								Port: networkingv1.ServiceBackendPort{
+									Number: int32(nais_io_v1alpha1.DefaultServicePort),
+								},
+							},
 						},
 					},
 				},
@@ -37,8 +43,8 @@ func ingressRule(appName string, u *url.URL) networkingv1beta1.IngressRule {
 	}
 }
 
-func ingressRules(source resource.Source, naisIngresses []nais_io_v1.Ingress) ([]networkingv1beta1.IngressRule, error) {
-	var rules []networkingv1beta1.IngressRule
+func ingressRules(source resource.Source, naisIngresses []nais_io_v1.Ingress) ([]networkingv1.IngressRule, error) {
+	var rules []networkingv1.IngressRule
 
 	for _, ingress := range naisIngresses {
 		parsedUrl, err := url.Parse(string(ingress))
@@ -59,8 +65,8 @@ func ingressRules(source resource.Source, naisIngresses []nais_io_v1.Ingress) ([
 	return rules, nil
 }
 
-func ingressRulesNginx(source resource.Source, naisIngresses []nais_io_v1.Ingress) ([]networkingv1beta1.IngressRule, error) {
-	var rules []networkingv1beta1.IngressRule
+func ingressRulesNginx(source resource.Source, naisIngresses []nais_io_v1.Ingress) ([]networkingv1.IngressRule, error) {
+	var rules []networkingv1.IngressRule
 
 	for _, ingress := range naisIngresses {
 		parsedUrl, err := url.Parse(string(ingress))
@@ -92,26 +98,26 @@ func copyNginxAnnotations(dst, src map[string]string) {
 	}
 }
 
-func createIngressBase(source resource.Source, rules []networkingv1beta1.IngressRule, livenessPath string) *networkingv1beta1.Ingress {
+func createIngressBase(source resource.Source, rules []networkingv1.IngressRule, livenessPath string) *networkingv1.Ingress {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = livenessPath
 
-	return &networkingv1beta1.Ingress{
+	return &networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "networking.k8s.io/v1beta1",
+			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: objectMeta,
-		Spec: networkingv1beta1.IngressSpec{
+		Spec: networkingv1.IngressSpec{
 			Rules: rules,
 		},
 	}
 }
 
-func createIngressBaseNginx(source resource.Source, ingressClass, livenessPath, serviceProtocol string, naisAnnotations map[string]string) (*networkingv1beta1.Ingress, error) {
+func createIngressBaseNginx(source resource.Source, ingressClass, livenessPath, serviceProtocol string, naisAnnotations map[string]string) (*networkingv1.Ingress, error) {
 	var err error
-	ingress := createIngressBase(source, []networkingv1beta1.IngressRule{}, livenessPath)
+	ingress := createIngressBase(source, []networkingv1.IngressRule{}, livenessPath)
 	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
 	ingress.Name, err = namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
 	if err != nil {
@@ -139,7 +145,7 @@ func backendProtocol(portName string) string {
 	}
 }
 
-func nginxIngresses(source resource.Source, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1beta1.Ingress, error) {
+func nginxIngresses(source resource.Source, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRulesNginx(source, naisIngresses)
 	if err != nil {
 		return nil, err
@@ -150,7 +156,7 @@ func nginxIngresses(source resource.Source, options resource.Options, naisIngres
 		return nil, nil
 	}
 
-	ingresses := make(map[string]*networkingv1beta1.Ingress)
+	ingresses := make(map[string]*networkingv1.Ingress)
 
 	for _, rule := range rules {
 		ingressClass := util.ResolveIngressClass(rule.Host, options.GatewayMappings)
@@ -168,7 +174,7 @@ func nginxIngresses(source resource.Source, options resource.Options, naisIngres
 		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 	}
 
-	ingressList := make([]*networkingv1beta1.Ingress, 0, len(ingresses))
+	ingressList := make([]*networkingv1.Ingress, 0, len(ingresses))
 	for _, ingress := range ingresses {
 		ingressList = append(ingressList, ingress)
 	}

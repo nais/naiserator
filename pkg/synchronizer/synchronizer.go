@@ -28,16 +28,6 @@ import (
 	"github.com/nais/naiserator/updater"
 )
 
-// Machine readable event "Reason" fields, used for determining deployment state.
-const (
-	EventSynchronized          = "Synchronized"
-	EventRolloutComplete       = "RolloutComplete"
-	EventFailedPrepare         = "FailedPrepare"
-	EventFailedSynchronization = "FailedSynchronization"
-	EventFailedStatusUpdate    = "FailedStatusUpdate"
-	EventRetrying              = "Retrying"
-)
-
 const (
 	prepareRetryInterval = time.Minute * 30
 )
@@ -138,7 +128,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 			return n.Update(ctx, existing) // was app
 		})
 		if err != nil {
-			n.reportError(ctx, EventFailedStatusUpdate, err, app)
+			n.reportError(ctx, nais_io_v1.EventFailedStatusUpdate, err, app)
 		} else {
 			logger.Debugf("Application status: %+v'", app.GetStatus())
 		}
@@ -146,7 +136,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 	rollout, err := n.Prepare(ctx, app, generator)
 	if err != nil {
-		app.GetStatus().SynchronizationState = EventFailedPrepare
+		app.GetStatus().SynchronizationState = nais_io_v1.EventFailedPrepare
 		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		return ctrl.Result{RequeueAfter: prepareRetryInterval}, nil
 	}
@@ -156,7 +146,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		logger.Debugf("Synchronization hash not changed; skipping synchronization")
 
 		// Application is not rolled out completely; start monitoring
-		if app.GetStatus().SynchronizationState == EventSynchronized {
+		if app.GetStatus().SynchronizationState == nais_io_v1.EventSynchronized {
 			src, ok := app.(generator2.ImageSource)
 			if ok {
 				n.MonitorRollout(src, logger)
@@ -174,10 +164,10 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	retry, err := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
-			app.GetStatus().SynchronizationState = EventRetrying
+			app.GetStatus().SynchronizationState = nais_io_v1.EventRetrying
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		} else {
-			app.GetStatus().SynchronizationState = EventFailedSynchronization
+			app.GetStatus().SynchronizationState = nais_io_v1.EventFailedSynchronization
 			app.GetStatus().SynchronizationHash = rollout.SynchronizationHash // permanent failure
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 			err = nil
@@ -187,7 +177,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 	// Synchronization OK
 	logger.Debugf("Successful synchronization")
-	app.GetStatus().SynchronizationState = EventSynchronized
+	app.GetStatus().SynchronizationState = nais_io_v1.EventSynchronized
 	app.GetStatus().SynchronizationHash = rollout.SynchronizationHash
 	app.GetStatus().SynchronizationTime = time.Now().UnixNano()
 

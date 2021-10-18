@@ -88,8 +88,7 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 		DNSPolicy:          corev1.DNSClusterFirst,
 		Volumes:            volumes,
 		ImagePullSecrets: []corev1.LocalObjectReference{
-			{Name: "gpr-credentials"},
-			{Name: "ghcr-credentials"},
+			{Name: "gh-docker-credentials"},
 		},
 	}
 
@@ -187,11 +186,15 @@ func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1
 			name := file.ConfigMap
 			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name))
 			ast.VolumeMounts = append(ast.VolumeMounts,
-				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name)))
+				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name), true))
 		} else if nativeSecrets && len(file.Secret) > 0 {
 			name := file.Secret
 			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, name, nil))
-			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath))
+			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath, true))
+		} else if len(file.PersistentVolumeClaim) > 0 {
+			name := file.PersistentVolumeClaim
+			ast.Volumes = append(ast.Volumes, FromFilesPVCVolume(name, name))
+			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultPVCMountPath(name), false))
 		}
 	}
 }

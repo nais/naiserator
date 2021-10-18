@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/metrics"
@@ -127,7 +128,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 			// Save a Kubernetes event for this completed deployment.
 			// The deployment will be reported as complete when this event is picked up by NAIS deploy.
 			if !eventReported {
-				_, err = n.reportEvent(ctx, resource.CreateEvent(app, EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+				_, err = n.reportEvent(ctx, resource.CreateEvent(app, nais_io_v1.EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 				eventReported = err == nil
 				if err != nil {
 					logger.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
@@ -153,9 +154,10 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 			// Only update this field if an event has been persisted to the cluster.
 			if !applicationUpdated && eventReported {
 				err = n.UpdateResource(ctx, app, func(app resource.Source) error {
-					app.GetStatus().SynchronizationState = EventRolloutComplete
+					app.GetStatus().SynchronizationState = nais_io_v1.EventRolloutComplete
 					app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
 					app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
+					app.SetStatusConditions()
 					metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
 					app.SetStatusConditions()
 					return n.Update(ctx, app)

@@ -31,7 +31,7 @@ input:
       - https://bar.baz/trailingslash/
 
 tests:
-  - apiVersion: networking.k8s.io/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     name: myapplication-very-nginx-e55d5da0
     operation: CreateOrUpdate
@@ -61,25 +61,34 @@ tests:
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /
+                      pathType: ImplementationSpecific
               - host: foo.bar
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /
+                      pathType: ImplementationSpecific
               - host: foo.bar
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /baz(/.*)?
+                      pathType: ImplementationSpecific
 
-  - apiVersion: networking.k8s.io/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     name: myapplication-something-else-f697018e
     operation: CreateOrUpdate
@@ -109,20 +118,29 @@ tests:
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /
+                      pathType: ImplementationSpecific
               - host: bar.baz
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /foo(/.*)?
+                      pathType: ImplementationSpecific
               - host: bar.baz
                 http:
                   paths:
                     - backend:
-                        serviceName: myapplication
-                        servicePort: 80
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
                       path: /trailingslash(/.*)?
+                      pathType: ImplementationSpecific

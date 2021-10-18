@@ -219,7 +219,7 @@ tests:
               spec:
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
-                  - name: gpr-credentials
+                  - name: gh-docker-credentials
                 restartPolicy: Always
                 serviceAccountName: myapplication
                 containers:

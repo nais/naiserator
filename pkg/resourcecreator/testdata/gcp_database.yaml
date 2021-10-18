@@ -90,6 +90,7 @@ tests:
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
+              cnrm.cloud.google.com/state-into-spec: merge
             name: myapplication
             namespace: mynamespace
           spec:
@@ -213,7 +214,7 @@ tests:
               spec:
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
-                  - name: gpr-credentials
+                  - name: gh-docker-credentials
                 restartPolicy: Always
                 serviceAccountName: myapplication
                 containers:

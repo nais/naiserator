@@ -39,6 +39,6 @@ type Options struct {
 func NewOptions() Options {
 	return Options{
 		AllowedKernelCapabilities: []string{"NET_RAW", "NET_BIND_SERVICE"},
-		NumReplicas: 1,
+		NumReplicas:               1,
 	}
 }
