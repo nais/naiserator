@@ -59,6 +59,7 @@ tests:
                 labels:
                   aiven: enabled
                   team: myteam
+                  wonderwall: enabled
               spec:
                 containers:
                   - name: myapplication

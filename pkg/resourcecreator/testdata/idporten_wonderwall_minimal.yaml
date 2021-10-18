@@ -68,6 +68,7 @@ tests:
                 labels:
                   aiven: enabled
                   team: myteam
+                  wonderwall: enabled
               spec:
                 volumes:
                   - name: ^idporten-myapplication-a0b907e7-.{7}$

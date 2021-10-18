@@ -46,7 +46,8 @@ type Source interface {
 }
 
 func Create(source Source, ast *resource.Ast, resourceOptions resource.Options, cfg Configuration) error {
-	source.GetLabels()["aiven"] = "enabled"
+	ast.Labels["aiven"] = "enabled"
+	ast.Labels["wonderwall"] = "enabled"
 
 	if len(cfg.Provider) == 0 {
 		return fmt.Errorf("configuration has empty provider")
