@@ -8,20 +8,18 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/wonderwall"
 	"github.com/nais/naiserator/pkg/util"
 )
 
 const (
-	clientDefaultCallbackPath        = "/oauth2/callback"
-	clientDefaultLogoutPath          = "/oauth2/logout"
-	wonderwallFrontChannelLogoutPath = "/oauth2/logout/frontchannel"
-	wonderwallRedisSecretName        = "redis-wonderwall"
+	clientDefaultCallbackPath = "/oauth2/callback"
+	clientDefaultLogoutPath   = "/oauth2/logout"
 )
 
 func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
@@ -158,42 +156,34 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 		return nil
 	}
 
-	// create sidecar container and redis application
-	prefixedName := fmt.Sprintf("idporten-wonderwall-%s", app.GetName())
-	wonderwallSecretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
+	// create sidecar container
+	wonderwallCfg := wonderwallConfig(naisIngresses, naisIdPorten, idportenClient.Spec.SecretName)
+	err = wonderwall.Create(app, ast, resourceOptions, wonderwallCfg)
 	if err != nil {
 		return err
 	}
-
-	wonderwallSecret, err := WonderwallSecret(app, wonderwallSecretName)
-	if err != nil {
-		return err
-	}
-	ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
-
-	wonderwallContainer, err := Wonderwall(app, resourceOptions.Wonderwall.Image)
-	if err != nil {
-		return err
-	}
-	wonderwallContainer.EnvFrom = []v1.EnvFromSource{
-		pod.EnvFromSecret(idportenClient.Spec.SecretName),
-		pod.EnvFromSecret(wonderwallSecretName),
-		pod.EnvFromSecret(wonderwallRedisSecretName),
-	}
-	ast.Containers = append(ast.Containers, *wonderwallContainer)
 
 	// override uris when sidecar is enabled
-	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(naisIngresses, wonderwallFrontChannelLogoutPath)
-	idportenClient.Spec.RedirectURI = idportenURI(naisIngresses, clientDefaultCallbackPath)
+	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(naisIngresses, wonderwall.FrontChannelLogoutPath)
+	idportenClient.Spec.RedirectURI = idportenURI(naisIngresses, wonderwall.RedirectURIPath)
 
 	return nil
 }
 
-func ShouldCreateWonderwallSidecar(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) bool {
-	if app.Spec.IDPorten == nil || app.Spec.IDPorten.Sidecar == nil {
-		return false
+func wonderwallConfig(naisIngresses []nais_io_v1.Ingress, naisIdPorten *nais_io_v1.IDPorten, providerSecretName string) wonderwall.Configuration {
+	cfg := wonderwall.Configuration{
+		AutoLogin:             naisIdPorten.Sidecar.AutoLogin,
+		ErrorPath:             naisIdPorten.Sidecar.ErrorPath,
+		Ingress:               string(naisIngresses[0]),
+		Provider:              "idporten",
+		ProviderSecretName:    providerSecretName,
+		ACRValues:             naisIdPorten.Sidecar.Level,
+		UILocales:             naisIdPorten.Sidecar.Locale,
 	}
 
-	isGCP := len(resourceOptions.GoogleTeamProjectId) > 0
-	return resourceOptions.DigdiratorEnabled && app.Spec.IDPorten.Enabled && app.Spec.IDPorten.Sidecar.Enabled && isGCP
+	if len(naisIdPorten.PostLogoutRedirectURIs) > 0 {
+		cfg.PostLogoutRedirectURI = string(naisIdPorten.PostLogoutRedirectURIs[0])
+	}
+
+	return cfg
 }

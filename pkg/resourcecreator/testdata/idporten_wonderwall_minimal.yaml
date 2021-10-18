@@ -1,5 +1,5 @@
 config:
-  description: idporten config with sidecar should result in wonderwall sidecar injected to pod
+  description: minimal idporten config with sidecar should result in wonderwall sidecar injected to pod
 
 resourceoptions:
   Linkerd: true
@@ -24,21 +24,10 @@ input:
     image: foo/bar
     idporten:
       enabled: true
-      redirectPath: "/some/path"
-      frontchannelLogoutPath: "/some/other/path"
-      postLogoutRedirectURIs:
-        - "https://my-client.nav.no/logged_out"
-        - "https://nav.no/"
-        - "https://some-other-client.nav.no/"
       sidecar:
         enabled: true
-        level: Level3
-        locale: se
-        autoLogin: true
-        errorPath: /some/error
     ingresses:
       - "https://my-client.nav.no/"
-    port: 1234
 
 tests:
   - operation: CreateOrUpdate
@@ -85,27 +74,17 @@ tests:
                     secret:
                       secretName: ^idporten-myapplication-a0b907e7-.{7}$
                 containers:
-                  - name: wonderwall
-                    image: nais/wonderwall
-                    env:
-                      - name: WONDERWALL_UPSTREAM_HOST
-                        value: ^127.0.0.1:1234$
+                  - env:
+                      - name: WONDERWALL_OPENID_PROVIDER
+                        value: ^idporten$
                       - name: WONDERWALL_INGRESS
                         value: ^https://my-client.nav.no/$
-                      - name: WONDERWALL_IDPORTEN_SECURITY_LEVEL_ENABLED
-                        value: ^true$
-                      - name: WONDERWALL_IDPORTEN_LOCALE_ENABLED
-                        value: ^true$
-                      - name: WONDERWALL_IDPORTEN_SECURITY_LEVEL_VALUE
-                        value: ^Level3$
-                      - name: WONDERWALL_IDPORTEN_LOCALE_VALUE
-                        value: ^se$
-                      - name: WONDERWALL_IDPORTEN_POST_LOGOUT_REDIRECT_URI
-                        value: ^https://my-client.nav.no/logged_out$
-                      - name: WONDERWALL_ERROR_PATH
-                        value: ^/some/error$
-                      - name: WONDERWALL_AUTO_LOGIN
-                        value: ^true$
+                      - name: WONDERWALL_UPSTREAM_HOST
+                        value: ^127.0.0.1:8080$
+                      - name: WONDERWALL_BIND_ADDRESS
+                        value: ^0.0.0.0:7564$
+                      - name: WONDERWALL_METRICS_BIND_ADDRESS
+                        value: ^0.0.0.0:7565$
                     envFrom:
                       - secretRef:
                           name: ^idporten-myapplication-a0b907e7-.{7}$
@@ -113,6 +92,8 @@ tests:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                       - secretRef:
                           name: ^redis-wonderwall$
+                    image: nais/wonderwall
+                    name: wonderwall
                     ports:
                       - containerPort: 7564
                         name: wonderwall
@@ -120,6 +101,23 @@ tests:
                       - containerPort: 7565
                         name: ww-metrics
                         protocol: TCP
+                    resources:
+                      limits:
+                        cpu: 250m
+                        memory: 256Mi
+                      requests:
+                        cpu: 20m
+                        memory: 32Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - all
+                      privileged: false
+                      readOnlyRootFilesystem: true
+                      runAsGroup: 1069
+                      runAsNonRoot: true
+                      runAsUser: 1069
 
   - apiVersion: v1
     kind: Service
