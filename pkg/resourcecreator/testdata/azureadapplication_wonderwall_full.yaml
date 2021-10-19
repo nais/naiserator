@@ -84,8 +84,6 @@ tests:
                         value: ^true$
                       - name: WONDERWALL_ERROR_PATH
                         value: ^/some/error$
-                      - name: WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI
-                        value: ^https://my-client.nav.no/$
                     envFrom:
                       - secretRef:
                           name: ^azure-myapplication-4190a8ca-.{7}$

@@ -156,6 +156,5 @@ func wonderwallConfig(source Source, providerSecretName string, ingress nais_io_
 		Ingress:               ing,
 		Provider:              "azure",
 		ProviderSecretName:    providerSecretName,
-		PostLogoutRedirectURI: ing,
 	}
 }
