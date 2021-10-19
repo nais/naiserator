@@ -12,6 +12,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/skatteetaten_resourcecreator/azure/postgres"
+	"github.com/nais/naiserator/pkg/skatteetaten_resourcecreator/azure/storageaccount"
 	"github.com/nais/naiserator/pkg/skatteetaten_resourcecreator/image_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_resourcecreator/istio/authorization_policy"
 	"github.com/nais/naiserator/pkg/skatteetaten_resourcecreator/istio/network_policy"
@@ -40,7 +41,6 @@ func CreateSkatteetatenApplication(source resource.Source, resourceOptions resou
 	virtual_service.Create(app, ast)
 	poddisruptionbudget.Create(app, ast)
 
-	// TODO: Denne er i et annet ns så kan ikke ha owner reference, hvordan får vi slettet ting da?
 	err := image_policy.Create(app, ast)
 	if err != nil {
 		return nil, err
@@ -48,6 +48,7 @@ func CreateSkatteetatenApplication(source resource.Source, resourceOptions resou
 
 	if app.Spec.Azure != nil {
 		postgres.Create(app, ast)
+		storageaccount.Create(app, ast)
 	}
 	err = pod.CreateAppContainer(app, ast, resourceOptions)
 	if err != nil {

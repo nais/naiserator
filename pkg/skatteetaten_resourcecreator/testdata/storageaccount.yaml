@@ -1,0 +1,80 @@
+config:
+  description: azure application with database
+
+resourceoptions:
+  NumReplicas: 1
+  SkattUsePullSecret: true
+  SecurePodSecurityContext: true
+
+input:
+  kind: Application
+  apiVersion: nebula.skatteetaten.no/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    pod:
+      image: navikt/myapplication:1.2.3
+    azure:
+      resourceGroup: rg-test
+      storageAccount:
+        test:
+          enabled: true
+          name: test
+
+tests:
+  - match:
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+            ownerReferences:
+              - apiVersion: nebula.skatteetaten.no/v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - type: subset
+        name: "storageaccount env"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - env:
+                    - name: AZURE_STORAGE_TEST_CONNECTIONSTRING
+                      valueFrom:
+                        secretKeyRef:
+                          key: connectionString0
+                          name: storageaccount-sgmynamespacemyapplicationtest
+
+
+  - operation: CreateIfNotExists
+    apiVersion: azure.microsoft.com/v1alpha1
+    kind: StorageAccount
+    name: sgmynamespacemyapplicationtest
+    match:
+      - type: exact
+        exclude:
+          - .metadata
+          - .status
+          - .output
+          - .additionalResources
+        name: "azure storageaccount"
+        resource:
+          spec:
+            location: norwayeast
+            resourceGroup: rg-test
+            sku:
+              name: Standard_LRS
+            kind: StorageV2
+            accessTier: Hot
+            supportsHttpsTrafficOnly: true
