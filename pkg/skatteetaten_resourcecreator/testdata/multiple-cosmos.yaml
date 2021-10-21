@@ -1,0 +1,109 @@
+config:
+  description: azure application with database
+
+resourceoptions:
+  NumReplicas: 1
+  SkattUsePullSecret: true
+  SecurePodSecurityContext: true
+
+input:
+  kind: Application
+  apiVersion: nebula.skatteetaten.no/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    pod:
+      image: navikt/myapplication:1.2.3
+    azure:
+      resourceGroup: rg-test
+      cosmosDb:
+        test:
+          enabled: true
+          name: test
+          mongoDBVersion: "4.0"
+        test2:
+          enabled: true
+          name: test2
+
+tests:
+  - match:
+      - type: subset
+        name: "common metadata"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+            ownerReferences:
+              - apiVersion: nebula.skatteetaten.no/v1alpha1
+                kind: Application
+                name: myapplication
+                uid: "123456"
+
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - type: subset
+        name: "storageaccount env"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - env:
+                      - name: SPRING_DATA_MONGODB_TEST_URI
+                        valueFrom:
+                          secretKeyRef:
+                            key: connectionString0
+                            name: cosmosdb-cod-mynamespace-myapplication-test
+                      - name: COSMOSDB_TEST2_URI
+                        valueFrom:
+                          secretKeyRef:
+                            key: connectionString0
+                            name: cosmosdb-cod-mynamespace-myapplication-test2
+
+
+  - operation: CreateIfNotExists
+    apiVersion: azure.microsoft.com/v1alpha1
+    kind: CosmosDB
+    name: cod-mynamespace-myapplication-test
+    match:
+      - type: exact
+        exclude:
+          - .metadata
+          - .status
+          - .output
+          - .additionalResources
+        name: "azure storageaccount"
+        resource:
+          spec:
+            kind: MongoDB
+            location: norwayeast
+            resourceGroup: rg-test
+            properties:
+              databaseAccountOfferType: "Standard"
+              mongoDBVersion: "4.0"
+              capabilities:
+                - name: "EnableMongo"
+  - operation: CreateIfNotExists
+    apiVersion: azure.microsoft.com/v1alpha1
+    kind: CosmosDB
+    name: cod-mynamespace-myapplication-test2
+    match:
+      - type: exact
+        exclude:
+          - .metadata
+          - .status
+          - .output
+          - .additionalResources
+        name: "azure storageaccount"
+        resource:
+          spec:
+            kind: GlobalDocumentDB
+            location: norwayeast
+            resourceGroup: rg-test
+            properties:
+              databaseAccountOfferType: "Standard"
