@@ -5,6 +5,7 @@ resourceoptions:
   NumReplicas: 1
   SkattUsePullSecret: true
   SecurePodSecurityContext: true
+  AzureDomainName: "istio.nebula.dev.skatteetaten.io"
 
 input:
   kind: Application

@@ -97,6 +97,9 @@ func run() error {
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall
+	resourceOptions.AzureSubscriptionName = cfg.Azure.SubscriptionName
+	resourceOptions.AzureSubscriptionId = cfg.Azure.SubscriptionId
+	resourceOptions.AzureDomainName = cfg.Azure.DomainName
 
 	mgrClient := mgr.GetClient()
 	simpleClient, err := client.New(kconfig, client.Options{

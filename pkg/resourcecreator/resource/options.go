@@ -33,6 +33,9 @@ type Options struct {
 	Vault                             config.Vault
 	Wonderwall                        config.Wonderwall
 	WonderwallEnabled                 bool
+	AzureSubscriptionName             string
+	AzureSubscriptionId               string
+	AzureDomainName                   string
 }
 
 // NewOptions creates a struct with the default resource options.

@@ -39,7 +39,7 @@ func CreateSkatteetatenApplication(source resource.Source, resourceOptions resou
 	}
 
 	service_entry.Create(app, ast)
-	virtual_service.Create(app, ast)
+	virtual_service.Create(app, ast, resourceOptions)
 	poddisruptionbudget.Create(app, ast)
 
 	err := image_policy.Create(app, ast)

@@ -14,27 +14,27 @@ type Source interface {
 	GetIngress() *skatteetaten_no_v1alpha1.IngressConfig
 }
 
-func Create(app Source, ast *resource.Ast) {
+func Create(app Source, ast *resource.Ast, options resource.Options) {
 	ingressConfig := app.GetIngress()
 	if ingressConfig != nil && ingressConfig.Public != nil {
 		for _, ingress := range ingressConfig.Public {
-			generateVirtualService(app, ast, &ingress)
+			if ! ingress.Disabled {
+				generateVirtualService(app, ast, &ingress, options)
+			}
 		}
 	}
 }
 
-func generateVirtualService(source resource.Source, ast *resource.Ast, ingress *skatteetaten_no_v1alpha1.PublicIngressConfig){
-	domain := "istio.nebula.dev.skatteetaten.io"
-
+func generateVirtualService(source resource.Source, ast *resource.Ast, ingress *skatteetaten_no_v1alpha1.PublicIngressConfig, options resource.Options){
 	// comet-comet-utv.<domain>
-	fqdn := fmt.Sprintf("%s-%s.%s", source.GetName(), source.GetNamespace(), domain)
+	fqdn := fmt.Sprintf("%s-%s.%s", source.GetName(), source.GetNamespace(), options.AzureDomainName)
 
 	if len(ingress.HostPrefix) > 0 {
 		// prefix-comet.comet-utv.<domain>
 		fqdn = fmt.Sprintf("%s-%s", ingress.HostPrefix, fqdn)
 	} else if len(ingress.OverrideHostname) > 0 {
 		// override.<domain>
-		fqdn = fmt.Sprintf("%s.%s", ingress.OverrideHostname, domain)
+		fqdn = fmt.Sprintf("%s.%s", ingress.OverrideHostname, options.AzureDomainName)
 	}
 
 	vs := &networking_istio_io_v1alpha3.VirtualService{
