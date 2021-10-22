@@ -1,12 +1,12 @@
 config:
-  description: idporten config with sidecar should result in wonderwall sidecar injected to pod
+  description: azure config with sidecar should result in wonderwall sidecar injected to pod
 
 resourceoptions:
   Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
   ClusterName: mycluster
-  DigdiratorEnabled: true
+  AzureratorEnabled: true
   NetworkPolicy: true
   Wonderwall:
     Image: nais/wonderwall
@@ -22,18 +22,22 @@ input:
       team: myteam
   spec:
     image: foo/bar
-    idporten:
-      enabled: true
-      redirectPath: "/some/path"
-      frontchannelLogoutPath: "/some/other/path"
-      postLogoutRedirectURIs:
-        - "https://my-client.nav.no/logged_out"
-        - "https://nav.no/"
-        - "https://some-other-client.nav.no/"
+    azure:
+      application:
+        allowAllUsers: true
+        claims:
+          extra:
+            - NAVident
+            - azp_name
+          groups:
+            - id: 00000000-0000-0000-0000-000000000000
+        enabled: true
+        replyURLs:
+          - https://myapplication.nav.no/oauth2/callback
+        singlePageApplication: true
+        tenant: nav.no
       sidecar:
         enabled: true
-        level: Level3
-        locale: se
         autoLogin: true
         errorPath: /some/error
     ingresses:
@@ -67,7 +71,7 @@ tests:
                     image: nais/wonderwall
                     env:
                       - name: WONDERWALL_OPENID_PROVIDER
-                        value: ^idporten$
+                        value: ^azure$
                       - name: WONDERWALL_INGRESS
                         value: ^https://my-client.nav.no/$
                       - name: WONDERWALL_UPSTREAM_HOST
@@ -80,17 +84,11 @@ tests:
                         value: ^true$
                       - name: WONDERWALL_ERROR_PATH
                         value: ^/some/error$
-                      - name: WONDERWALL_OPENID_ACR_VALUES
-                        value: ^Level3$
-                      - name: WONDERWALL_OPENID_UI_LOCALES
-                        value: ^se$
-                      - name: WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI
-                        value: ^https://my-client.nav.no/logged_out$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{7}$
+                          name: ^azure-myapplication-4190a8ca-.{7}$
                       - secretRef:
-                          name: ^idporten-wonderwall-myapplication-.{8}$
+                          name: ^azure-wonderwall-myapplication-.{8}$
                       - secretRef:
                           name: ^redis-wonderwall$
                     ports:

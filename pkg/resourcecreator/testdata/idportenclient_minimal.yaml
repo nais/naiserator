@@ -44,6 +44,7 @@ tests:
           spec:
             redirectURI: "https://my-client.nav.no/oauth2/callback"
             frontchannelLogoutURI: "https://my-client.nav.no/oauth2/logout"
+
   - apiVersion: nais.io/v1
     kind: IDPortenClient
     name: myapplication
