@@ -11,12 +11,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-
 const (
 	IstioNamespace        = "istio-system"
 	DefaultIngressGateway = "istio-ingressgateway"
 	ServiceAccountSuffix  = "-service-account"
-
 )
 
 var appNamespace string
@@ -37,24 +35,22 @@ func Create(app Source, ast *resource.Ast) {
 
 	// Authorization Policies to allow ingress from configured istio gateways
 	for _, ingress := range ingressConfig.Public {
-		if ingress.Enabled {
-			// TODO: can be removed as default is defined in application_types
-			gateway := ingress.Gateway
-			if len(gateway) == 0 {
-				gateway = DefaultIngressGateway
-			}
-
-			authPolicy.Spec.Rules = append(
-				authPolicy.Spec.Rules,
-
-				generateAuthorizationPolicyRule(skatteetaten_no_v1alpha1.InternalIngressConfig{
-					Enabled:     true,
-					Application: fmt.Sprintf("%s%s", gateway, ServiceAccountSuffix),
-					Namespace:   IstioNamespace,
-					Ports:       []skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port)}},
-				}),
-			)
+		// TODO: can be removed as default is defined in application_types
+		gateway := ingress.Gateway
+		if len(gateway) == 0 {
+			gateway = DefaultIngressGateway
 		}
+
+		authPolicy.Spec.Rules = append(
+			authPolicy.Spec.Rules,
+
+			generateAuthorizationPolicyRule(skatteetaten_no_v1alpha1.InternalIngressConfig{
+				Application: fmt.Sprintf("%s%s", gateway, ServiceAccountSuffix),
+				Namespace:   IstioNamespace,
+				Ports:       []skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port)}},
+			}),
+		)
+
 	}
 
 	// Sort to allow fixture testing
@@ -66,12 +62,10 @@ func Create(app Source, ast *resource.Ast) {
 
 	// Authorization Policies for internal ingress
 	for _, rule := range keys {
-		if ingressConfig.Internal[rule].Enabled {
-			authPolicy.Spec.Rules = append(
-				authPolicy.Spec.Rules,
-				generateAuthorizationPolicyRule(ingressConfig.Internal[rule]),
-			)
-		}
+		authPolicy.Spec.Rules = append(
+			authPolicy.Spec.Rules,
+			generateAuthorizationPolicyRule(ingressConfig.Internal[rule]),
+		)
 	}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, authPolicy)
 
@@ -120,11 +114,11 @@ func generateAuthorizationPolicyRule(rule skatteetaten_no_v1alpha1.InternalIngre
 	Operation.Paths = rule.Paths
 	Operation.Methods = rule.Methods
 
-	//TODO: need to find something to simulatte this
-	//if Operation.Size() > 0 {
+	// TODO: need to find something to simulatte this
+	// if Operation.Size() > 0 {
 
-		PolicyRule.To = []*security_istio_io_v1beta1.Rule_To{{Operation: &Operation}}
-	//}
+	PolicyRule.To = []*security_istio_io_v1beta1.Rule_To{{Operation: &Operation}}
+	// }
 
 	return PolicyRule
 }

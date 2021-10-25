@@ -13,22 +13,22 @@ import (
 type Source interface {
 	resource.Source
 	GetAzureResourceGroup() string
-	GetPostgresDatabases() []*skatteetaten_no_v1alpha1.PostgreDatabaseConfig
+	GetPostgresDatabases() map[string]*skatteetaten_no_v1alpha1.PostgreDatabaseConfig
 }
 
-// TODO: where do we want name generation?
 func Create(app Source, ast *resource.Ast) {
 
 	pgd := app.GetPostgresDatabases()
 	resourceGroup := app.GetAzureResourceGroup()
-	// TODO handle updating
-	for dbIndex, db := range pgd {
+	springDataSourceCreated := false
+	for _, db := range pgd {
 		generatePostgresDatabase(app, ast, resourceGroup, *db)
-		for userIndex, user := range db.Users {
-			if dbIndex == 0 && userIndex == 0 {
+		for _, user := range db.Users {
+			if !springDataSourceCreated {
 				secretName := fmt.Sprintf("postgresqluser-pgu-%s-%s", app.GetName(), user.Name)
 				dbVars := GenerateDbEnv("SPRING_DATASOURCE", secretName)
 				ast.Env = append(ast.Env, dbVars...)
+				springDataSourceCreated=true
 			}
 			generatePostgresUser(app, ast, resourceGroup, *db, *user)
 		}

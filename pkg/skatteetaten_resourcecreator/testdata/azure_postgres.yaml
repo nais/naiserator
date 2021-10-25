@@ -19,10 +19,12 @@ input:
     azure:
       resourceGroup: rg-test
       postgresDatabase:
-        - name: mydb
+        mydb:
+          name: mydb
           server: myserver
           users:
-            - name: read
+            read:
+              name: read
               role: azure_pg_admin
 
 tests:

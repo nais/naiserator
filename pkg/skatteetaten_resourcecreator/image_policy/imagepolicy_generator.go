@@ -17,7 +17,7 @@ type Source interface {
 func Create(app Source, ast *resource.Ast) error {
 	imagePolicy := app.GetImagePolicy()
 
-	if imagePolicy == nil || imagePolicy.Enabled == false {
+	if imagePolicy == nil  {
 		return nil
 	}
 
@@ -28,7 +28,7 @@ func Create(app Source, ast *resource.Ast) error {
 		return fmt.Errorf("specify either version or branch, not both")
 	}
 
-	if !hasBranch && !hasVersion && imagePolicy.Enabled == true {
+	if !hasBranch && !hasVersion  {
 		return fmt.Errorf("invalid specification, specify either branchName or semVer range or disable imagePolicy")
 	}
 

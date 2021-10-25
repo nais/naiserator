@@ -17,6 +17,7 @@ const (
 	MetricsPort   = 15020
 	DNSPort       = 53
 )
+
 type Source interface {
 	resource.Source
 	GetIngress() *skatteetaten_no_v1alpha1.IngressConfig
@@ -42,31 +43,27 @@ func Create(app Source, ast *resource.Ast) {
 		sort.Strings(keys)
 
 		for _, rule := range keys {
-			if ingressConfig.Internal[rule].Enabled {
-				np.Spec.Ingress = append(np.Spec.Ingress, *generateNetworkPolicyIngressRule(
-					app,
-					ingressConfig.Internal[rule]))
-			}
+			np.Spec.Ingress = append(np.Spec.Ingress, *generateNetworkPolicyIngressRule(
+				app,
+				ingressConfig.Internal[rule]))
 		}
 
 		// Public ingress
 		for _, ingress := range ingressConfig.Public {
-			if ingress.Enabled {
-				gateway := ingress.Gateway
-				if len(gateway) == 0 {
-					gateway = authorization_policy.DefaultIngressGateway
-				}
-
-				rule := networkingv1.NetworkPolicyIngressRule{}
-				appLabel := map[string]string{
-					"app":   gateway,
-					"istio": "ingressgateway",
-				}
-
-				rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(app, authorization_policy.IstioNamespace, appLabel)}
-				rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port), Protocol: "TCP"}})
-				np.Spec.Ingress = append(np.Spec.Ingress, rule)
+			gateway := ingress.Gateway
+			if len(gateway) == 0 {
+				gateway = authorization_policy.DefaultIngressGateway
 			}
+
+			rule := networkingv1.NetworkPolicyIngressRule{}
+			appLabel := map[string]string{
+				"app":   gateway,
+				"istio": "ingressgateway",
+			}
+
+			rule.From = []networkingv1.NetworkPolicyPeer{*generateNetworkPolicyPeer(app, authorization_policy.IstioNamespace, appLabel)}
+			rule.Ports = *generateNetworkPolicyPorts([]skatteetaten_no_v1alpha1.PortConfig{{Port: uint16(ingress.Port), Protocol: "TCP"}})
+			np.Spec.Ingress = append(np.Spec.Ingress, rule)
 		}
 	}
 
@@ -80,12 +77,10 @@ func Create(app Source, ast *resource.Ast) {
 		sort.Strings(keys)
 
 		for _, rule := range keys {
-			if egressConfig.Internal[rule].Enabled {
-				np.Spec.Egress = append(
-					np.Spec.Egress, *generateNetworkPolicyEgressRule(
-						app,
-						egressConfig.Internal[rule]))
-			}
+			np.Spec.Egress = append(
+				np.Spec.Egress, *generateNetworkPolicyEgressRule(
+					app,
+					egressConfig.Internal[rule]))
 		}
 
 		// External egress

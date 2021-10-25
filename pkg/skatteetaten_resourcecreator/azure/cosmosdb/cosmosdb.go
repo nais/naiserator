@@ -21,38 +21,35 @@ type Source interface {
 func Create(app Source, ast *resource.Ast) {
 	cosmosDb := app.GetCosmosDb()
 	resourceGroup := app.GetAzureResourceGroup()
-	single:=false
+	single := false
 	if len(cosmosDb) == 1 {
-		single=true
+		single = true
 	}
 
 	for _, db := range cosmosDb {
-		if db.Enabled== false {
-			continue
-		}
 		generateCosmosDb(app, ast, resourceGroup, db, single)
 	}
 }
 
-func generateCosmosDb(source resource.Source, ast *resource.Ast, rg string, db *skatteetaten_no_v1alpha1.CosmosDBConfig, single bool ) {
+func generateCosmosDb(source resource.Source, ast *resource.Ast, rg string, db *skatteetaten_no_v1alpha1.CosmosDBConfig, single bool) {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = fmt.Sprintf("cod-%s-%s-%s", source.GetNamespace(), source.GetName(), db.Name)
 
 	spec := azure_microsoft_com_v1alpha1.CosmosDBSpec{
-		Location:               "norwayeast",
-		ResourceGroup:          rg,
-		Properties:             azure_microsoft_com_v1alpha1.CosmosDBProperties{
-			DatabaseAccountOfferType:      "Standard",
+		Location:      "norwayeast",
+		ResourceGroup: rg,
+		Properties: azure_microsoft_com_v1alpha1.CosmosDBProperties{
+			DatabaseAccountOfferType: "Standard",
 		},
 	}
 	if db.MongoDBVersion != "" {
-		spec.Kind="MongoDB"
-		spec.Properties.MongoDBVersion=db.MongoDBVersion
+		spec.Kind = "MongoDB"
+		spec.Properties.MongoDBVersion = db.MongoDBVersion
 		spec.Properties.Capabilities = &[]azure_microsoft_com_v1alpha1.Capability{{
 			Name: pointer.StringPtr("EnableMongo"),
 		}}
 	} else {
-		spec.Kind="GlobalDocumentDB"
+		spec.Kind = "GlobalDocumentDB"
 	}
 
 	object := &azure_microsoft_com_v1alpha1.CosmosDB{
@@ -61,7 +58,7 @@ func generateCosmosDb(source resource.Source, ast *resource.Ast, rg string, db *
 			APIVersion: "azure.microsoft.com/v1alpha1",
 		},
 		ObjectMeta: objectMeta,
-		Spec: spec,
+		Spec:       spec,
 	}
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, object)
@@ -72,9 +69,9 @@ func generateCosmosDb(source resource.Source, ast *resource.Ast, rg string, db *
 func createConnectionStringEnvVar(objectMeta metav1.ObjectMeta, db *skatteetaten_no_v1alpha1.CosmosDBConfig, single bool) []corev1.EnvVar {
 	secretName := fmt.Sprintf("cosmosdb-%s", objectMeta.Name)
 
-	prefix:="SPRING_DATA_MONGODB"
+	prefix := "SPRING_DATA_MONGODB"
 	if db.MongoDBVersion == "" {
-		prefix="COSMOSDB"
+		prefix = "COSMOSDB"
 	}
 
 	if !single {
@@ -105,10 +102,9 @@ func createConnectionStringEnvVar(objectMeta metav1.ObjectMeta, db *skatteetaten
 	}
 
 	name := corev1.EnvVar{
-		Name: fmt.Sprintf("%s_DATABASE", prefix),
+		Name:  fmt.Sprintf("%s_DATABASE", prefix),
 		Value: db.Name,
 	}
 	return []corev1.EnvVar{uri, name}
-
 
 }

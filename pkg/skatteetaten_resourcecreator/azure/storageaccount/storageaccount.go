@@ -21,11 +21,7 @@ type Source interface {
 func Create(app Source, ast *resource.Ast) {
 	storageAccounts := app.GetStorageAccounts()
 	resourceGroup := app.GetAzureResourceGroup()
-	// TODO handle updating
 	for _, sg := range storageAccounts {
-		if sg.Enabled== false {
-			continue
-		}
 		generateStorageAccount(app, ast, resourceGroup, sg)
 	}
 }
