@@ -17,7 +17,7 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscaling "k8s.io/api/autoscaling/v1"
+	autoscaling "k8s.io/api/autoscaling/v2beta2"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -121,6 +121,19 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, app.Namespace, objects.deployment.Namespace)
 		assert.Equal(t, app.Name, objects.deployment.Labels["app"])
 		assert.Equal(t, app.Labels["team"], objects.deployment.Labels["team"])
+	})
+
+	t.Run("no hpa when disableAutoScaling is true", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		opts := resource.NewOptions()
+		err := app.ApplyDefaults()
+		assert.NoError(t, err)
+		app.Spec.Replicas.DisableAutoScaling=true
+		resources, err := resourcecreator.CreateApplication(app, opts)
+		assert.NoError(t, err)
+
+		objects := getRealObjects(resources)
+		assert.Nil(t, objects.hpa)
 	})
 
 	t.Run("an ingress object is created if ingress paths are specified", func(t *testing.T) {

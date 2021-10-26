@@ -67,7 +67,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options)
 	service.Create(app, ast, resourceOptions)
 	serviceaccount.Create(app, ast, resourceOptions)
 
-	if app.Spec.Replicas.Min != app.Spec.Replicas.Max {
+	if !app.Spec.Replicas.DisableAutoScaling && app.Spec.Replicas.Min != app.Spec.Replicas.Max {
 		horizontalpodautoscaler.Create(app, ast)
 	}
 
