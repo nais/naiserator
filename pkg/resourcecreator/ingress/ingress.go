@@ -126,11 +126,7 @@ func createIngressBaseNginx(source resource.Source, ingressClass, livenessPath, 
 
 	copyNginxAnnotations(ingress.Annotations, naisAnnotations)
 
-	// Nginx ingress controller 1.x reads values from ingress spec instead of annotation.
-	// The deprecated line below is retained for compatibility between upgrades.
-	// It can probably be removed from 2022 onwards.
 	ingress.Spec.IngressClassName = &ingressClass
-	ingress.Annotations["kubernetes.io/ingress.class"] = ingressClass // DEPRECATED
 
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(serviceProtocol)
