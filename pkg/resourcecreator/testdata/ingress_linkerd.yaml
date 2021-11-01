@@ -56,6 +56,7 @@ tests:
               nginx.ingress.kubernetes.io/use-regex: "true"
               nginx.ingress.kubernetes.io/backend-protocol: HTTP
           spec:
+            ingressClassName: "very-nginx"
             rules:
               - host: baz.bar
                 http:
@@ -113,6 +114,7 @@ tests:
               nginx.ingress.kubernetes.io/use-regex: "true"
               nginx.ingress.kubernetes.io/backend-protocol: HTTP
           spec:
+            ingressClassName: "something-else"
             rules:
               - host: bar.baz
                 http:
