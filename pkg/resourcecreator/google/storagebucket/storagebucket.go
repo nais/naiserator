@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
+	"k8s.io/apimachinery/pkg/util/validation"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -62,9 +64,12 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket, 
 	}
 }
 
-func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageBucket, resourceOptions resource.Options, role, policyNameSuffix string) *google_iam_crd.IAMPolicyMember {
+func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageBucket, resourceOptions resource.Options, role, policyNameSuffix string) (*google_iam_crd.IAMPolicyMember, error) {
 	objectMeta := resource.CreateObjectMeta(source)
-	policyMemberName := fmt.Sprintf("%s-%s", bucket.Name, policyNameSuffix)
+	policyMemberName, err := namegen.ShortName(fmt.Sprintf("%s-%s", bucket.Name, policyNameSuffix), validation.DNS1035LabelMaxLength)
+	if err != nil {
+		return nil, err
+	}
 	objectMeta.Name = policyMemberName
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
@@ -85,12 +90,12 @@ func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageB
 
 	util.SetAnnotation(policy, google.ProjectIdAnnotation, resourceOptions.GoogleTeamProjectId)
 
-	return policy
+	return policy, nil
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, googleServiceAccount google_iam_crd.IAMServiceAccount, naisBucket []nais.CloudStorageBucket) {
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, googleServiceAccount google_iam_crd.IAMServiceAccount, naisBucket []nais.CloudStorageBucket) error {
 	if naisBucket == nil {
-		return
+		return nil
 	}
 
 	for _, b := range naisBucket {
@@ -98,16 +103,26 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
 		if b.UniformBucketLevelAccess {
-			bucketOwner := iAMPolicyMember(source, bucket, resourceOptions, legacyBucketOwner, "legacy-bucket-owner")
+			bucketOwner, err := iAMPolicyMember(source, bucket, resourceOptions, legacyBucketOwner, "legacy-bucket-owner")
+			if err != nil {
+				return err
+			}
 			ast.AppendOperation(resource.OperationCreateIfNotExists, bucketOwner)
-			objectOwner := iAMPolicyMember(source, bucket, resourceOptions, legacyObjectOwner, "legacy-object-owner")
+			objectOwner, err := iAMPolicyMember(source, bucket, resourceOptions, legacyObjectOwner, "legacy-object-owner")
+			if err != nil {
+				return err
+			}
 			ast.AppendOperation(resource.OperationCreateIfNotExists, objectOwner)
 		} else {
 			bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, resourceOptions.GoogleProjectId, googleServiceAccount.Name)
 			ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
 		}
 
-		iamPolicyMember := iAMPolicyMember(source, bucket, resourceOptions, objectViewer, "object-viewer")
+		iamPolicyMember, err := iAMPolicyMember(source, bucket, resourceOptions, objectViewer, "object-viewer")
+		if err != nil {
+			return err
+		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 	}
+	return nil
 }

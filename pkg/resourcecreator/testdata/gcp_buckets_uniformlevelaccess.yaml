@@ -82,6 +82,7 @@ tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
+    name: myapplication-legacy-bucket-owner-bcdd5bed
     match:
       - type: subset
         name: "IAMPolicyMember created in namespace mynamespace"
@@ -89,7 +90,6 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-            name: myapplicati-mynamespac-w4o5cwa
             namespace: mynamespace
           spec:
             member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
@@ -102,6 +102,7 @@ tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
+    name: myapplication-legacy-object-owner-57077294
     match:
       - type: subset
         name: "IAMPolicyMember created in namespace mynamespace"
@@ -109,7 +110,6 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-            name: myapplicati-mynamespac-w4o5cwa
             namespace: mynamespace
           spec:
             member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
@@ -121,6 +121,7 @@ tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
+    name: myapplication-object-viewer-5ce746e8
     match:
       - type: subset
         name: "IAMPolicyMember created in namespace mynamespace"
@@ -128,7 +129,6 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-            name: myapplicati-mynamespac-w4o5cwa
             namespace: mynamespace
           spec:
             member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com

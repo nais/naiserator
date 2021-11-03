@@ -26,9 +26,11 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	ast.AppendOperation(resource.OperationCreateIfNotExists, &googleServiceAccountBinding)
 
 	if resourceOptions.CNRMEnabled && naisGCP != nil {
-		google_storagebucket.Create(source, ast, resourceOptions, googleServiceAccount, naisGCP.Buckets)
-
-		err := google_bigquery.CreateDataset(source, ast, resourceOptions, naisGCP.BigQueryDatasets, googleServiceAccount.Name)
+		err := google_storagebucket.Create(source, ast, resourceOptions, googleServiceAccount, naisGCP.Buckets)
+		if err != nil {
+			return err
+		}
+		err = google_bigquery.CreateDataset(source, ast, resourceOptions, naisGCP.BigQueryDatasets, googleServiceAccount.Name)
 		if err != nil {
 			return err
 		}
