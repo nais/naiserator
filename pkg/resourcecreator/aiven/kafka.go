@@ -4,10 +4,13 @@ import (
 	"path/filepath"
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
+	kafka_nais_io_v1 "github.com/nais/liberator/pkg/apis/kafka.nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 const (
@@ -95,14 +98,34 @@ func createKafkaKeyToPaths() []corev1.KeyToPath {
 	}
 }
 
-func Kafka(ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) []corev1.KeyToPath {
+func Kafka(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) []corev1.KeyToPath {
 	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
 		addKafkaEnvVariables(ast, aivenApp.Spec.SecretName)
 		ast.Labels["kafka"] = "enabled"
 		aivenApp.Spec.Kafka = &aiven_nais_io_v1.KafkaSpec{
 			Pool: naisKafka.Pool,
 		}
+
+		if naisKafka.Streams {
+			ast.AppendOperation(resource.OperationCreateOrUpdate, CreateStream(source, naisKafka))
+		}
+
 		return createKafkaKeyToPaths()
 	}
+
+
 	return []corev1.KeyToPath{}
+}
+
+func CreateStream(source resource.Source, kafka *nais_io_v1.Kafka) *kafka_nais_io_v1.Stream {
+	return &kafka_nais_io_v1.Stream{
+		TypeMeta:   metav1.TypeMeta{
+			Kind:       "Stream",
+			APIVersion: "kafka.nais.io/v1",
+		},
+		ObjectMeta: resource.CreateObjectMeta(source),
+		Spec:       kafka_nais_io_v1.StreamSpec{
+			Pool: kafka.Pool,
+		},
+	}
 }

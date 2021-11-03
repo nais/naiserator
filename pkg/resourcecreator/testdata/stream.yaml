@@ -1,0 +1,43 @@
+config:
+  description: if Kafkarator is enabled and streams in set to true, create Stream resource
+
+resourceoptions:
+  NumReplicas: 1
+  KafkaratorEnabled: true
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    kafka:
+      pool: some-kafka-pool
+      streams: true
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: kafka.nais.io/v1
+    kind: Stream
+    name: myapplication
+    match:
+      - type: exact
+        exclude:
+          - .status
+          - .metadata.creationTimestamp
+          - .metadata.ownerReferences
+          - .metadata.annotations
+        name: "Stream resource is created"
+        resource:
+          metadata:
+            name: myapplication
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+          spec:
+            pool: some-kafka-pool

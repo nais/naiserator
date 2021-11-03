@@ -40,7 +40,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 
 	Influx(ast, specs.Influx, &aivenApp)
-	kafkaKeyPaths := Kafka(ast, resourceOptions, specs.Kafka, &aivenApp)
+	kafkaKeyPaths := Kafka(source, ast, resourceOptions, specs.Kafka, &aivenApp)
 
 	elasticEnabled, err := Elastic(ast, specs.Elastic, &aivenApp)
 	if err != nil {
