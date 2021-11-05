@@ -4,12 +4,22 @@ import (
 	"net/url"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 )
+
+type Config interface {
+	GetAPIServerIP() string
+	GetAccessPolicyNotAllowedCIDRs() []string
+	GetClusterName() string
+	GetGatewayMappings() []config.GatewayMapping
+	GetGoogleProjectID() string
+	IsNetworkPolicyEnabled() bool
+}
 
 const (
 	prometheusPodSelectorLabelValue        = "prometheus" // Label value denoting the Prometheus pod-selector
@@ -18,8 +28,8 @@ const (
 	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"  // The default IP block CIDR for the default allow network policies per app
 )
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisAccessPolicy nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, naisLeaderElection bool) {
-	if !options.NetworkPolicy {
+func Create(source resource.Source, ast *resource.Ast, cfg Config, naisAccessPolicy nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, naisLeaderElection bool) {
+	if !cfg.IsNetworkPolicyEnabled() {
 		return
 	}
 
@@ -29,7 +39,7 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options,
 			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
-		Spec:       networkPolicySpec(source.GetName(), options, naisAccessPolicy, naisIngresses, naisLeaderElection),
+		Spec:       networkPolicySpec(source.GetName(), cfg, naisAccessPolicy, naisIngresses, naisLeaderElection),
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, networkPolicy)
@@ -43,7 +53,7 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 	}
 }
 
-func networkPolicySpec(appName string, options resource.Options, naisAccessPolicy nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, leaderElection bool) networkingv1.NetworkPolicySpec {
+func networkPolicySpec(appName string, options Config, naisAccessPolicy nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, leaderElection bool) networkingv1.NetworkPolicySpec {
 	return networkingv1.NetworkPolicySpec{
 		PodSelector: *labelSelector("app", appName),
 		PolicyTypes: []networkingv1.PolicyType{
@@ -74,11 +84,11 @@ func networkPolicyEgressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv
 	}
 }
 
-func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, options resource.Options) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, options Config) (networkPolicy []networkingv1.NetworkPolicyPeer) {
 	for _, rule := range rules.GetRules() {
 
 		// non-local access policy rules do not result in network policies
-		if !rule.MatchesCluster(options.ClusterName) {
+		if !rule.MatchesCluster(options.GetClusterName()) {
 			continue
 		}
 
@@ -100,7 +110,7 @@ func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, optio
 	return
 }
 
-func ingressPolicy(options resource.Options, naisAccessPolicyInbound *nais_io_v1.AccessPolicyInbound, naisIngresses []nais_io_v1.Ingress) []networkingv1.NetworkPolicyIngressRule {
+func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPolicyInbound, naisIngresses []nais_io_v1.Ingress) []networkingv1.NetworkPolicyIngressRule {
 	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
 
 	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", prometheusPodSelectorLabelValue, prometheusNamespace)))
@@ -126,7 +136,7 @@ func ingressPolicy(options resource.Options, naisAccessPolicyInbound *nais_io_v1
 			if err != nil {
 				continue
 			}
-			gw := util.ResolveIngressClass(ur.Host, options.GatewayMappings)
+			gw := util.ResolveIngressClass(ur.Host, options.GetGatewayMappings())
 			if gw == nil {
 				continue
 			}
@@ -140,7 +150,7 @@ func ingressPolicy(options resource.Options, naisAccessPolicyInbound *nais_io_v1
 	return rules
 }
 
-func egressPolicy(options resource.Options, naisAccessPolicyOutbound *nais_io_v1.AccessPolicyOutbound, leaderElection bool) []networkingv1.NetworkPolicyEgressRule {
+func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPolicyOutbound, leaderElection bool) []networkingv1.NetworkPolicyEgressRule {
 	defaultRules := defaultAllowEgress(options)
 
 	if len(naisAccessPolicyOutbound.Rules) > 0 {
@@ -148,10 +158,10 @@ func egressPolicy(options resource.Options, naisAccessPolicyOutbound *nais_io_v1
 		defaultRules = append(defaultRules, appRules)
 	}
 
-	if leaderElection && len(options.GoogleProjectId) > 0 {
+	if leaderElection && len(options.GetGoogleProjectID()) > 0 {
 		apiServerAccessRule := networkPolicyEgressRule(networkingv1.NetworkPolicyPeer{
 			IPBlock: &networkingv1.IPBlock{
-				CIDR: options.ApiServerIp,
+				CIDR: options.GetAPIServerIP(),
 			},
 		})
 		defaultRules = append(defaultRules, apiServerAccessRule)
@@ -160,7 +170,7 @@ func egressPolicy(options resource.Options, naisAccessPolicyOutbound *nais_io_v1
 	return defaultRules
 }
 
-func defaultAllowEgress(options resource.Options) []networkingv1.NetworkPolicyEgressRule {
+func defaultAllowEgress(options Config) []networkingv1.NetworkPolicyEgressRule {
 	peers := make([]networkingv1.NetworkPolicyPeer, 0, 4)
 
 	peers = append(peers, networkingv1.NetworkPolicyPeer{
@@ -179,7 +189,7 @@ func defaultAllowEgress(options resource.Options) []networkingv1.NetworkPolicyEg
 	peers = append(peers, networkingv1.NetworkPolicyPeer{
 		IPBlock: &networkingv1.IPBlock{
 			CIDR:   networkPolicyDefaultEgressAllowIPBlock,
-			Except: options.AccessPolicyNotAllowedCIDRs,
+			Except: options.GetAccessPolicyNotAllowedCIDRs(),
 		},
 	})
 

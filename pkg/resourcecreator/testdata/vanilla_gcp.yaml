@@ -8,6 +8,12 @@ resourceoptions:
   NumReplicas: 1
   SecurePodSecurityContext: true
 
+resourceconfig:
+  features:
+    linkerd: true
+    network-policy: true
+  google-project-id: google-project-id
+
 input:
   kind: Application
   apiVersion: v1alpha1

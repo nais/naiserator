@@ -11,6 +11,14 @@ resourceoptions:
   JwkerHosts:
     - dev.tokendings.test
 
+resourceconfig:
+  features:
+    linkerd: true
+    network-policy: true
+    jwker: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+
 input:
   kind: Application
   apiVersion: v1alpha1

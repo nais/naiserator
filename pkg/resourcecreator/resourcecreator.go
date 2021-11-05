@@ -72,7 +72,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 		horizontalpodautoscaler.Create(app, ast)
 	}
 
-	networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+	networkpolicy.Create(app, ast, config, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
 	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func CreateNaisjob(source resource.Source, resourceOptions resource.Options, con
 	ast := resource.NewAst()
 
 	serviceaccount.Create(naisjob, ast, resourceOptions)
-	networkpolicy.Create(naisjob, ast, resourceOptions, *naisjob.Spec.AccessPolicy, []nais_io_v1.Ingress{}, false)
+	networkpolicy.Create(naisjob, ast, config, *naisjob.Spec.AccessPolicy, []nais_io_v1.Ingress{}, false)
 	err := azure.Create(naisjob, ast, resourceOptions)
 	if err != nil {
 		return nil, err

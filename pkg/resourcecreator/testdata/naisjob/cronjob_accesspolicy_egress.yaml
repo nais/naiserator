@@ -9,6 +9,14 @@ resourceoptions:
   ClusterName: mycluster
   JwkerEnabled: true
 
+resourceconfig:
+  features:
+    linkerd: true
+    network-policy: true
+    jwker: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+
 input:
   kind: Naisjob
   apiVersion: nais.io/v1

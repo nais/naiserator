@@ -9,6 +9,14 @@ resourceoptions:
   NumReplicas: 1
   ApiServerIp: "172.16.0.2/32"
 
+resourceconfig:
+  features:
+    linkerd: true
+    network-policy: true
+    access-policy-not-allowed-cidrs: [ "10.6.0.0/15", "192.168.0.0/16", "172.16.0.0/12" ]
+  google-project-id: google-project-id
+  api-server-ip: "172.16.0.2/32"
+
 
 input:
   kind: Application
