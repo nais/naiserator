@@ -18,7 +18,11 @@ const (
 	aivenCredentialFilesVolumeName = "aiven-credentials"
 )
 
-type AivenSpecs struct {
+type Config interface {
+	IsKafkaratorEnabled() bool
+}
+
+type Specs struct {
 	Kafka   *nais.Kafka
 	Elastic *nais.Elastic
 	Influx  *nais.Influx
@@ -30,7 +34,7 @@ func generateAivenSecretName(name string) string {
 	return secretName
 }
 
-func Create(source resource.Source, ast *resource.Ast, config Config, specs AivenSpecs) error {
+func Create(source resource.Source, ast *resource.Ast, config Config, specs Specs) error {
 	secretName := generateAivenSecretName(source.GetName())
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
 		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{

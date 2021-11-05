@@ -38,6 +38,11 @@ import (
 
 type Generator func(app resource.Source, resourceOptions resource.Options, config config.Config) (resource.Operations, error)
 
+type Config interface {
+	aiven.Config
+	networkpolicy.Config
+}
+
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
 func CreateApplication(source resource.Source, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
@@ -105,7 +110,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
 	linkerd.Create(ast, resourceOptions)
 
-	aivenSpecs := aiven.AivenSpecs{
+	aivenSpecs := aiven.Specs{
 		Kafka:   app.Spec.Kafka,
 		Elastic: app.Spec.Elastic,
 		Influx:  app.Spec.Influx,
@@ -171,7 +176,7 @@ func CreateNaisjob(source resource.Source, resourceOptions resource.Options, con
 
 	linkerd.Create(ast, resourceOptions)
 
-	aivenSpecs := aiven.AivenSpecs{
+	aivenSpecs := aiven.Specs{
 		Kafka:   naisjob.Spec.Kafka,
 		Elastic: naisjob.Spec.Elastic,
 		Influx:  naisjob.Spec.Influx,

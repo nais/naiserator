@@ -34,10 +34,6 @@ const (
 	kafkaTruststoreFilename        = "client.truststore.jks"
 )
 
-type Config interface {
-	IsKafkaratorEnabled() bool
-}
-
 func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
 	// Add environment variables for string data
 	ast.Env = append(ast.Env, []corev1.EnvVar{
