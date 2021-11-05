@@ -8,6 +8,9 @@ resourceoptions:
   GoogleTeamProjectID: team-project-id
   NumReplicas: 1
 
+resourceconfig:
+  google-project-id: google-project-id
+
 input:
   kind: Naisjob
   apiVersion: nais.io/v1

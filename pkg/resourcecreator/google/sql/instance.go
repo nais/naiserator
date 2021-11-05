@@ -27,6 +27,10 @@ const (
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
 )
 
+type Config interface {
+	GetGoogleProjectID() string
+}
+
 func availabilityType(highAvailability bool) string {
 	if highAvailability {
 		return AvailabilityTypeRegional
@@ -124,7 +128,7 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 	return instance, err
 }
 
-func instanceIamPolicyMember(source resource.Source, resourceName string, options resource.Options) *google_iam_crd.IAMPolicyMember {
+func instanceIamPolicyMember(source resource.Source, resourceName string, options resource.Options, cfg Config) *google_iam_crd.IAMPolicyMember {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
@@ -136,7 +140,7 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, option
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf(
 				"serviceAccount:%s",
-				google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), options.GoogleProjectId),
+				google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), cfg.GetGoogleProjectID()),
 			),
 			Role: "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
@@ -185,7 +189,7 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 	return nil
 }
 
-func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisSqlInstances *[]nais.CloudSqlInstance) error {
+func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisSqlInstances *[]nais.CloudSqlInstance, cfg Config) error {
 	if naisSqlInstances == nil {
 		return nil
 	}
@@ -209,7 +213,7 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		instance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, instance)
 
-		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, resourceOptions)
+		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, resourceOptions, cfg)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
 		for dbNum, db := range sqlInstance.Databases {

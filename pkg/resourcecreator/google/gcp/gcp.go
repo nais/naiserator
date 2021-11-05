@@ -10,7 +10,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGCP *nais_io_v1.GCP) error {
+type Config interface {
+	google_sql.Config
+}
+
+func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGCP *nais_io_v1.GCP, cfg Config) error {
 	if !resourceOptions.CNRMEnabled && len(resourceOptions.GoogleProjectId) <= 0 {
 		return nil
 	}
@@ -34,7 +38,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		if err != nil {
 			return err
 		}
-		err = google_sql.CreateInstance(source, ast, resourceOptions, &naisGCP.SqlInstances)
+		err = google_sql.CreateInstance(source, ast, resourceOptions, &naisGCP.SqlInstances, cfg)
 		if err != nil {
 			return err
 		}

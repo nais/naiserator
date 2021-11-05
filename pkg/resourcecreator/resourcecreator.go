@@ -91,7 +91,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 	if err != nil {
 		return nil, err
 	}
-	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP)
+	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 
 // CreateNaisjob takes an Naisjob resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateNaisjob(source resource.Source, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
+func CreateNaisjob(source resource.Source, resourceOptions resource.Options, cfg config.Config) (resource.Operations, error) {
 	naisjob, ok := source.(*nais_io_v1.Naisjob)
 	if !ok {
 		return nil, fmt.Errorf("BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects, fix your caller")
@@ -154,12 +154,12 @@ func CreateNaisjob(source resource.Source, resourceOptions resource.Options, con
 	ast := resource.NewAst()
 
 	serviceaccount.Create(naisjob, ast, resourceOptions)
-	networkpolicy.Create(naisjob, ast, config, *naisjob.Spec.AccessPolicy, []nais_io_v1.Ingress{}, false)
+	networkpolicy.Create(naisjob, ast, cfg, *naisjob.Spec.AccessPolicy, []nais_io_v1.Ingress{}, false)
 	err := azure.Create(naisjob, ast, resourceOptions)
 	if err != nil {
 		return nil, err
 	}
-	err = gcp.Create(naisjob, ast, resourceOptions, naisjob.Spec.GCP)
+	err = gcp.Create(naisjob, ast, resourceOptions, naisjob.Spec.GCP, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func CreateNaisjob(source resource.Source, resourceOptions resource.Options, con
 		Elastic: naisjob.Spec.Elastic,
 		Influx:  naisjob.Spec.Influx,
 	}
-	err = aiven.Create(naisjob, ast, config, aivenSpecs)
+	err = aiven.Create(naisjob, ast, cfg, aivenSpecs)
 	if err != nil {
 		return nil, err
 	}
