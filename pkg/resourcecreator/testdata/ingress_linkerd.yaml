@@ -9,6 +9,15 @@ resourceoptions:
     - DomainSuffix: .baz
       IngressClass: something-else
 
+resourceconfig:
+  features:
+    linkerd: true
+  gateway-mappings:
+    - domainSuffix: .bar
+      ingressClass: very-nginx
+    - domainSuffix: .baz
+      ingressClass: something-else
+
 input:
   kind: Application
   apiVersion: v1alpha1

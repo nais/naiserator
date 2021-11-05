@@ -8,6 +8,7 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -16,6 +17,11 @@ import (
 )
 
 const regexSuffix = "(/.*)?"
+
+type Config interface {
+	GetGatewayMappings() []config.GatewayMapping
+	IsLinkerdEnabled() bool
+}
 
 func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 	pathType := networkingv1.PathTypeImplementationSpecific
@@ -146,7 +152,7 @@ func backendProtocol(portName string) string {
 	}
 }
 
-func nginxIngresses(source resource.Source, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1.Ingress, error) {
+func nginxIngresses(source resource.Source, cfg Config, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRulesNginx(source, naisIngresses)
 	if err != nil {
 		return nil, err
@@ -160,7 +166,7 @@ func nginxIngresses(source resource.Source, options resource.Options, naisIngres
 	ingresses := make(map[string]*networkingv1.Ingress)
 
 	for _, rule := range rules {
-		ingressClass := util.ResolveIngressClass(rule.Host, options.GatewayMappings)
+		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 		if ingressClass == nil {
 			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
 		}
@@ -182,8 +188,8 @@ func nginxIngresses(source resource.Source, options resource.Options, naisIngres
 	return ingressList, nil
 }
 
-func linkerdIngresses(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
-	ingresses, err := nginxIngresses(source, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
+func linkerdIngresses(source resource.Source, ast *resource.Ast, cfg Config, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
+	ingresses, err := nginxIngresses(source, cfg, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 	if err != nil {
 		return nil
 	}
@@ -210,9 +216,9 @@ func onPremIngresses(source resource.Source, ast *resource.Ast, naisIngresses []
 	return nil
 }
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
-	if options.Linkerd {
-		err := linkerdIngresses(source, ast, options, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
+func Create(source resource.Source, ast *resource.Ast, cfg Config, naisIngresses []nais_io_v1.Ingress, livenessPath, serviceProtocol string, naisAnnotations map[string]string) error {
+	if cfg.IsLinkerdEnabled() {
+		err := linkerdIngresses(source, ast, cfg, naisIngresses, livenessPath, serviceProtocol, naisAnnotations)
 		if err != nil {
 			return fmt.Errorf("create ingresses: %s", err)
 		}

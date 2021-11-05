@@ -8,6 +8,10 @@ func (c Config) IsNetworkPolicyEnabled() bool {
 	return c.Features.NetworkPolicy
 }
 
+func (c Config) IsLinkerdEnabled() bool {
+	return c.Features.Linkerd
+}
+
 func (c Config) GetAPIServerIP() string {
 	return c.ApiServerIp
 }

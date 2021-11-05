@@ -22,6 +22,7 @@ type Config interface {
 	IsKafkaratorEnabled() bool
 }
 
+// FIXME: this should be refactored to a Source interface, with getters in liberator
 type Specs struct {
 	Kafka   *nais.Kafka
 	Elastic *nais.Elastic
@@ -34,6 +35,7 @@ func generateAivenSecretName(name string) string {
 	return secretName
 }
 
+// FIXME: remove "specs"
 func Create(source resource.Source, ast *resource.Ast, config Config, specs Specs) error {
 	secretName := generateAivenSecretName(source.GetName())
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).

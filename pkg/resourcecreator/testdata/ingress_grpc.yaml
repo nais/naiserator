@@ -7,6 +7,13 @@ resourceoptions:
     - DomainSuffix: .bar
       IngressClass: very-nginx
 
+resourceconfig:
+  features:
+    linkerd: true
+  gateway-mappings:
+    - domainSuffix: .bar
+      ingressClass: very-nginx
+
 input:
   kind: Application
   apiVersion: v1alpha1

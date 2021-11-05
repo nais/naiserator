@@ -45,7 +45,7 @@ type Config interface {
 
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateApplication(source resource.Source, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
+func CreateApplication(source resource.Source, resourceOptions resource.Options, cfg config.Config) (resource.Operations, error) {
 	var err error
 
 	app, ok := source.(*nais_io_v1alpha1.Application)
@@ -77,8 +77,8 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 		horizontalpodautoscaler.Create(app, ast)
 	}
 
-	networkpolicy.Create(app, ast, config, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
-	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	networkpolicy.Create(app, ast, cfg, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+	err = ingress.Create(app, ast, cfg, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 		Elastic: app.Spec.Elastic,
 		Influx:  app.Spec.Influx,
 	}
-	err = aiven.Create(app, ast, config, aivenSpecs)
+	err = aiven.Create(app, ast, cfg, aivenSpecs)
 	if err != nil {
 		return nil, err
 	}
