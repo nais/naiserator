@@ -34,6 +34,10 @@ const (
 	kafkaTruststoreFilename        = "client.truststore.jks"
 )
 
+type Config interface {
+	IsKafkaratorEnabled() bool
+}
+
 func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
 	// Add environment variables for string data
 	ast.Env = append(ast.Env, []corev1.EnvVar{
@@ -98,8 +102,8 @@ func createKafkaKeyToPaths() []corev1.KeyToPath {
 	}
 }
 
-func Kafka(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) []corev1.KeyToPath {
-	if resourceOptions.KafkaratorEnabled && naisKafka != nil {
+func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) []corev1.KeyToPath {
+	if config.IsKafkaratorEnabled() && naisKafka != nil {
 		addKafkaEnvVariables(ast, aivenApp.Spec.SecretName)
 		ast.Labels["kafka"] = "enabled"
 		aivenApp.Spec.Kafka = &aiven_nais_io_v1.KafkaSpec{
@@ -113,18 +117,17 @@ func Kafka(source resource.Source, ast *resource.Ast, resourceOptions resource.O
 		return createKafkaKeyToPaths()
 	}
 
-
 	return []corev1.KeyToPath{}
 }
 
 func CreateStream(source resource.Source, kafka *nais_io_v1.Kafka) *kafka_nais_io_v1.Stream {
 	return &kafka_nais_io_v1.Stream{
-		TypeMeta:   metav1.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "Stream",
 			APIVersion: "kafka.nais.io/v1",
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
-		Spec:       kafka_nais_io_v1.StreamSpec{
+		Spec: kafka_nais_io_v1.StreamSpec{
 			Pool: kafka.Pool,
 		},
 	}

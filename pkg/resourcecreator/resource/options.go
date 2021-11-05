@@ -23,7 +23,6 @@ type Options struct {
 	CNRMEnabled                       bool
 	NetworkPolicy                     bool
 	KafkaratorEnabled                 bool
-	KafkaratorSecretName              string
 	Linkerd                           bool
 	NativeSecrets                     bool
 	NumReplicas                       int32

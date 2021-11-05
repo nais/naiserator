@@ -6,6 +6,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/goldenfile"
 
@@ -27,7 +28,7 @@ type naisjobTestCase struct {
 }
 
 func TestApplicationGoldenFile(t *testing.T) {
-	goldenfile.Run(t, applicationTestDataDirectory, func(input []byte, resourceOptions resource.Options) (resource.Operations, error) {
+	goldenfile.Run(t, applicationTestDataDirectory, func(input []byte, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
 		test := applicationTestCase{}
 		err := yaml.Unmarshal(input, &test)
 		if err != nil {
@@ -39,12 +40,12 @@ func TestApplicationGoldenFile(t *testing.T) {
 			return nil, fmt.Errorf("apply default values to Application object: %s", err)
 		}
 
-		return resourcecreator.CreateApplication(&test.Input, resourceOptions)
+		return resourcecreator.CreateApplication(&test.Input, resourceOptions, config)
 	})
 }
 
 func TestNaisjobGoldenFile(t *testing.T) {
-	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, resourceOptions resource.Options) (resource.Operations, error) {
+	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
 		test := naisjobTestCase{}
 		err := yaml.Unmarshal(input, &test)
 		if err != nil {
@@ -56,6 +57,6 @@ func TestNaisjobGoldenFile(t *testing.T) {
 			return nil, fmt.Errorf("apply default values to Application object: %s", err)
 		}
 
-		return resourcecreator.CreateNaisjob(&test.Input, resourceOptions)
+		return resourcecreator.CreateNaisjob(&test.Input, resourceOptions, config)
 	})
 }

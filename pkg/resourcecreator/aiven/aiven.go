@@ -30,7 +30,7 @@ func generateAivenSecretName(name string) string {
 	return secretName
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, specs AivenSpecs) error {
+func Create(source resource.Source, ast *resource.Ast, config Config, specs AivenSpecs) error {
 	secretName := generateAivenSecretName(source.GetName())
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
 		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
@@ -40,7 +40,7 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 
 	Influx(ast, specs.Influx, &aivenApp)
-	kafkaKeyPaths := Kafka(source, ast, resourceOptions, specs.Kafka, &aivenApp)
+	kafkaKeyPaths := Kafka(source, ast, config, specs.Kafka, &aivenApp)
 
 	elasticEnabled, err := Elastic(ast, specs.Elastic, &aivenApp)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/stretchr/testify/assert"
 
@@ -63,6 +64,7 @@ type Match struct {
 
 type TestCase struct {
 	Config          testCaseConfig
+	ResourceConfig  config.Config
 	ResourceOptions resource.Options
 	Error           *string
 	Tests           []SubTest
@@ -174,7 +176,7 @@ func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCal
 		return
 	}
 
-	resources, err := createOperations(data, test.ResourceOptions)
+	resources, err := createOperations(data, test.ResourceOptions, test.ResourceConfig)
 	if err != nil {
 		if test.Error != nil {
 			assert.EqualError(t, err, *test.Error)
@@ -190,7 +192,7 @@ func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCal
 	}
 }
 
-type CreateOperationsCallback func([]byte, resource.Options) (resource.Operations, error)
+type CreateOperationsCallback func([]byte, resource.Options, config.Config) (resource.Operations, error)
 
 func Run(t *testing.T, testDataDirectory string, createOperations CreateOperationsCallback) {
 	files, err := ioutil.ReadDir(testDataDirectory)

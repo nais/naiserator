@@ -124,6 +124,10 @@ type Config struct {
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 }
 
+func (c Config) IsKafkaratorEnabled() bool {
+	return c.Features.Kafkarator
+}
+
 const (
 	ApiServerIp                         = "api-server-ip"
 	Bind                                = "bind"

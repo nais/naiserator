@@ -9,6 +9,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
@@ -35,11 +36,11 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/wonderwall"
 )
 
-type Generator func(app resource.Source, resourceOptions resource.Options) (resource.Operations, error)
+type Generator func(app resource.Source, resourceOptions resource.Options, config config.Config) (resource.Operations, error)
 
 // CreateApplication takes an Application resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateApplication(source resource.Source, resourceOptions resource.Options) (resource.Operations, error) {
+func CreateApplication(source resource.Source, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
 	var err error
 
 	app, ok := source.(*nais_io_v1alpha1.Application)
@@ -109,7 +110,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options)
 		Elastic: app.Spec.Elastic,
 		Influx:  app.Spec.Influx,
 	}
-	err = aiven.Create(app, ast, resourceOptions, aivenSpecs)
+	err = aiven.Create(app, ast, config, aivenSpecs)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +135,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options)
 
 // CreateNaisjob takes an Naisjob resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func CreateNaisjob(source resource.Source, resourceOptions resource.Options) (resource.Operations, error) {
+func CreateNaisjob(source resource.Source, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
 	naisjob, ok := source.(*nais_io_v1.Naisjob)
 	if !ok {
 		return nil, fmt.Errorf("BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects, fix your caller")
@@ -175,7 +176,7 @@ func CreateNaisjob(source resource.Source, resourceOptions resource.Options) (re
 		Elastic: naisjob.Spec.Elastic,
 		Influx:  naisjob.Spec.Influx,
 	}
-	err = aiven.Create(naisjob, ast, resourceOptions, aivenSpecs)
+	err = aiven.Create(naisjob, ast, config, aivenSpecs)
 	if err != nil {
 		return nil, err
 	}

@@ -323,7 +323,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source, generat
 		rollout.ResourceOptions.Linkerd = true
 	}
 
-	rollout.ResourceOperations, err = generator(app, rollout.ResourceOptions)
+	rollout.ResourceOperations, err = generator(app, rollout.ResourceOptions, n.Config)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)

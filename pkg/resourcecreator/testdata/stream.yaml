@@ -1,9 +1,12 @@
 config:
   description: if Kafkarator is enabled and streams in set to true, create Stream resource
 
+resourceconfig:
+  features:
+    kafkarator: true
+
 resourceoptions:
   NumReplicas: 1
-  KafkaratorEnabled: true
 
 input:
   kind: Application

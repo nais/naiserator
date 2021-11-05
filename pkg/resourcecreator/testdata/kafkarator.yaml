@@ -1,9 +1,12 @@
 config:
   description: if Kafkarator is enabled and pool name is specified, create AivenApplication resource and mount requested secret
 
+resourceconfig:
+  features:
+    kafkarator: true
+
 resourceoptions:
   NumReplicas: 1
-  KafkaratorEnabled: true
 
 input:
   kind: Application
