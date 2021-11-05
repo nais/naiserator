@@ -41,6 +41,7 @@ type testRig struct {
 	manager      ctrl.Manager
 	synchronizer reconcile.Reconciler
 	scheme       *runtime.Scheme
+	config       config.Config
 }
 
 func newTestRig(options resource.Options) (*testRig, error) {
@@ -75,7 +76,7 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		return nil, fmt.Errorf("initialize manager: %w", err)
 	}
 
-	syncerConfig := config.Config{
+	rig.config = config.Config{
 		Synchronizer: config.Synchronizer{
 			SynchronizationTimeout: 2 * time.Second,
 			RolloutCheckInterval:   5 * time.Second,
@@ -90,7 +91,7 @@ func newTestRig(options resource.Options) (*testRig, error) {
 
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
 		Client:          rig.client,
-		Config:          syncerConfig,
+		Config:          rig.config,
 		ResourceOptions: options,
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          rig.scheme,
@@ -172,7 +173,7 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object that should be deleted once processing has run.
 	ast := resource.NewAst()
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	err = ingress.Create(app, ast, rig.config, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
 	ing := ast.Operations[0].Resource.(*networkingv1.Ingress)
 	app.Spec.Ingresses = []nais_io_v1.Ingress{}
@@ -184,7 +185,7 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	err = ingress.Create(app, ast, rig.config, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
 	ing = ast.Operations[1].Resource.(*networkingv1.Ingress)
 	ing.SetName("disowned-ingress")

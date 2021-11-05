@@ -193,6 +193,8 @@ func TestCreate(t *testing.T) {
 		opts.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", IngressClass: "namespace/gateway"}}
 		opts.NetworkPolicy = true
 		cfg, err := config.New()
+		cfg.GatewayMappings = []config.GatewayMapping{{DomainSuffix: ".domain.tld", IngressClass: "namespace/gateway"}}
+		cfg.Features.NetworkPolicy = true
 		assert.NoError(t, err)
 		err = app.ApplyDefaults()
 		assert.NoError(t, err)
@@ -238,7 +240,9 @@ func TestCreate(t *testing.T) {
 		}
 
 		cfg, err := config.New()
+		cfg.GoogleProjectId = "nais-foo-1234"
 		assert.NoError(t, err)
+
 		err = app.ApplyDefaults()
 		assert.NoError(t, err)
 
@@ -284,6 +288,7 @@ func TestCreate(t *testing.T) {
 		}}
 
 		cfg, err := config.New()
+		cfg.GoogleProjectId = "nais-foo-1234"
 		assert.NoError(t, err)
 		err = app.ApplyDefaults()
 		assert.NoError(t, err)
