@@ -34,7 +34,3 @@ func (r *Rollout) SetCurrentDeployment(deployment *appsv1.Deployment, currentRep
 		r.ResourceOptions.NumReplicas = int32(currentReplicasMin)
 	}
 }
-
-func (r *Rollout) SetGoogleTeamProjectId(teamProjectId string) {
-	r.ResourceOptions.GoogleTeamProjectId = teamProjectId
-}
