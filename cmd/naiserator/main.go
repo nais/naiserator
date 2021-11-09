@@ -137,7 +137,6 @@ func run() error {
 	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
 	resourceOptions.Proxy = cfg.Proxy
 	resourceOptions.Securelogs = cfg.Securelogs
-	resourceOptions.SecurePodSecurityContext = cfg.Features.SecurePodSecurityContext
 	resourceOptions.VaultEnabled = cfg.Features.Vault
 	resourceOptions.Vault = cfg.Vault
 	resourceOptions.Wonderwall = cfg.Wonderwall

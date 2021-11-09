@@ -6,7 +6,6 @@ resourceoptions:
   NetworkPolicy: true
   GoogleProjectID: google-project-id
   NumReplicas: 1
-  SecurePodSecurityContext: true
 
 input:
   kind: Application

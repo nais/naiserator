@@ -3,7 +3,6 @@ config:
 
 resourceOptions:
   ClusterName: test-cluster
-  SecurePodSecurityContext: true
 
 input:
   kind: Naisjob

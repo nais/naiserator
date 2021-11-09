@@ -56,7 +56,6 @@ type Features struct {
 	Digdirator                  bool     `json:"digdirator"`
 	GCP                         bool     `json:"gcp"`
 	Webhook                     bool     `json:"webhook"`
-	SecurePodSecurityContext    bool     `json:"secure-pod-security-context"`
 }
 
 type Securelogs struct {
@@ -139,7 +138,6 @@ const (
 	FeaturesLinkerd                     = "features.linkerd"
 	FeaturesNativeSecrets               = "features.native-secrets"
 	FeaturesNetworkPolicy               = "features.network-policy"
-	FeaturesSecurePodSecurityContext    = "features.secure-pod-security-context"
 	FeaturesVault                       = "features.vault"
 	FeaturesWebhook                     = "features.webhook"
 	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
@@ -220,7 +218,6 @@ func init() {
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
-	flag.Bool(FeaturesSecurePodSecurityContext, false, "enforce restrictive pod security context")
 
 	flag.StringSlice(
 		ServiceHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator",

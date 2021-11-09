@@ -18,7 +18,6 @@ type Options struct {
 	GoogleTeamProjectId               string
 	HostAliases                       []config.HostAlias
 	JwkerEnabled                      bool
-	SecurePodSecurityContext          bool
 	AllowedKernelCapabilities         []string
 	CNRMEnabled                       bool
 	NetworkPolicy                     bool

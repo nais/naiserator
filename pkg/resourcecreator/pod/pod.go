@@ -92,7 +92,7 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 		},
 	}
 
-	if resourceOptions.SecurePodSecurityContext && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
+	if !exploitable(annotations) && len(containers) > 0 {
 		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
 			RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
 			RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
