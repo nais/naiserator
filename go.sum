@@ -430,6 +430,10 @@ github.com/nais/liberator v0.0.0-20211026135434-42bc835ea8c2 h1:WKsx4Ttbhp9GREuk
 github.com/nais/liberator v0.0.0-20211026135434-42bc835ea8c2/go.mod h1:AjfPx+WVWt8qKe1IFOSAAH5Im4qD5pMnxzw+SDn3rP8=
 github.com/nais/liberator v0.0.0-20211103102542-2c4188be0716 h1:qnkFZF+TWVUYWQ1INYFFxR16w42QPvogDM/MOx4SeeA=
 github.com/nais/liberator v0.0.0-20211103102542-2c4188be0716/go.mod h1:AjfPx+WVWt8qKe1IFOSAAH5Im4qD5pMnxzw+SDn3rP8=
+github.com/nais/liberator v0.0.0-20211124135743-1f3a1ab9c7d9 h1:5XhqdXa3JiuapfgwOQfSNK9vfxoPtK8l/N8hC8lfcJ8=
+github.com/nais/liberator v0.0.0-20211124135743-1f3a1ab9c7d9/go.mod h1:AjfPx+WVWt8qKe1IFOSAAH5Im4qD5pMnxzw+SDn3rP8=
+github.com/nais/liberator v0.0.0-20211124141023-214bf53a2394 h1:yWbyUAW/IzhWGF7NLSg50lvMH7DG1Skr2tSsH9IrdFk=
+github.com/nais/liberator v0.0.0-20211124141023-214bf53a2394/go.mod h1:AjfPx+WVWt8qKe1IFOSAAH5Im4qD5pMnxzw+SDn3rP8=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e h1:knbz2/KI77qbam+s2aLDSyUt4KdC8bE9XaeQUeTGfs8=
 github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e/go.mod h1:iDeGFp41QxV9wavwD8gqv5/Bhyh2pWJQb4TI3vhG7VQ=
