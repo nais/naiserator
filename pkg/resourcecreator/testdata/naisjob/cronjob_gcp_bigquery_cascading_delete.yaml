@@ -28,7 +28,7 @@ input:
           permission: READ
 
 tests:
-  - apiVersion: bigquery.cnrm.cloud.google.com/v1beta1
+  - apiVersion: google.nais.io/v1
     kind: BigQueryDataset
     operation: CreateIfNotExists
     match:
@@ -44,7 +44,7 @@ tests:
             access:
               - role: READER
                 userByEmail: mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
-            resourceID: my_big_query_instance
+            name: my_big_query_instance
             description: tralalalala
             location: europe-north1
 
