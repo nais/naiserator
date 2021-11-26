@@ -258,10 +258,6 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) 
 	return n.rolloutWithRetryAndMetrics(commits)
 }
 
-type ReplicaResource interface {
-	GetReplicas() *nais_io_v1.Replicas
-}
-
 // Prepare converts a NAIS application spec into a Rollout object.
 // This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
@@ -305,7 +301,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source, generat
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("query existing deployment: %s", err)
 		}
-		rollout.SetCurrentDeployment(previousDeployment, *rr.GetReplicas().Min)
+		rollout.SetNumReplicas(previousDeployment, rr)
 	}
 
 	// Retrieve current namespace to check for labels and annotations

@@ -116,7 +116,7 @@ func deploymentSpec(app Source, ast *resource.Ast, resourceOptions resource.Opti
 	}
 
 	return &appsv1.DeploymentSpec{
-		Replicas: util.Int32p(int32(*app.GetReplicas().Min)),
+		Replicas: util.Int32p(resourceOptions.NumReplicas),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.GetName()},
 		},

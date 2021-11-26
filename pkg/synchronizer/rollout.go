@@ -1,6 +1,7 @@
 package synchronizer
 
 import (
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	appsv1 "k8s.io/api/apps/v1"
 )
@@ -14,7 +15,11 @@ type Rollout struct {
 	SynchronizationHash string
 }
 
-// SetCurrentDeployment makes sure newly created Deployment objects matches autoscaling properties of an
+type ReplicaResource interface {
+	GetReplicas() *nais_io_v1.Replicas
+}
+
+// SetNumReplicas makes sure newly created Deployment objects matches autoscaling properties of an
 // existing deployment.
 //
 // If the autoscaler is unavailable when a deployment is made, we risk scaling the application to the default
@@ -23,15 +28,17 @@ type Rollout struct {
 //
 // The number of replicas is set to whichever is highest: the current number of replicas (which might be zero),
 // or the default number of replicas.
-func (r *Rollout) SetCurrentDeployment(deployment *appsv1.Deployment, currentReplicasMin int) {
-	if currentReplicasMin == 0 {
+func (r *Rollout) SetNumReplicas(deployment *appsv1.Deployment, app ReplicaResource) {
+	if *app.GetReplicas().Min == 0 && *app.GetReplicas().Max == 0 {
+		// first, check if an app _should_ be scaled to zero by setting min = max = 0
 		r.ResourceOptions.NumReplicas = 0
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
-		// if a deployment already exists, use that deployment's number of replicas;
-		// unless it is scaled to zero, in which case we increase the number of replicas to the minimum number required.
-		r.ResourceOptions.NumReplicas = max(int32(currentReplicasMin), *deployment.Spec.Replicas)
+		// if a deployment already exists, use that deployment's number of replicas,
+		// unless the minimum allowed replica count is below that of the application spec.
+		r.ResourceOptions.NumReplicas = max(int32(*app.GetReplicas().Min), *deployment.Spec.Replicas)
 	} else {
-		r.ResourceOptions.NumReplicas = int32(currentReplicasMin)
+		// if this is a new deployment, fall back to the lowest number of replicas allowed in the application spec.
+		r.ResourceOptions.NumReplicas = int32(*app.GetReplicas().Min)
 	}
 }
 
