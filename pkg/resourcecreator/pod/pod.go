@@ -308,6 +308,9 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, opt *resource.Options) m
 	}
 
 	objectMeta.Annotations = map[string]string{}
+
+	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = app.GetName()
+
 	if len(opt.GoogleProjectId) > 0 {
 		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
 	}
@@ -339,6 +342,8 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opt
 	mapMerge(objectMeta.Labels, ast.Labels)
 
 	objectMeta.Annotations = map[string]string{}
+
+	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = naisjob.GetName()
 
 	objectMeta.Annotations["ginuudan.nais.io/dwindle"] = "true"
 

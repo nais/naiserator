@@ -80,6 +80,7 @@ tests:
               metadata:
                 annotations:
                   ginuudan.nais.io/dwindle: "true"
+                  kubectl.kubernetes.io/default-container: mynaisjob
                 labels:
                   app: mynaisjob
                   team: myteam

@@ -118,6 +118,8 @@ tests:
                     uid: "123456"
                 name: myapplication
                 namespace: mynamespace
+                annotations:
+                  kubectl.kubernetes.io/default-container: myapplication
                 labels:
                   team: myteam
                   app: myapplication
