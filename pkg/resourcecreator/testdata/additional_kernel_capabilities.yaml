@@ -36,7 +36,6 @@ tests:
         name: "restricted securitycontext with additional capabilities"
         resource:
           spec:
-            replicas: 2
             template:
               spec:
                 containers:

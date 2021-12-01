@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	google_bigquery_crd "github.com/nais/liberator/pkg/apis/bigquery.cnrm.cloud.google.com/v1beta1"
+	google_nais_io_v1 "github.com/nais/liberator/pkg/apis/google.nais.io/v1"
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -21,7 +21,7 @@ func CreateDataset(source resource.Source, ast *resource.Ast, resourceOptions re
 		return nil
 	}
 	for _, bigQuerySpec := range bigQueryDatasets {
-		bigQueryInstance, err := createDataset(source, bigQuerySpec, resourceOptions.GoogleProjectId, serviceAccountName)
+		bigQueryInstance, err := createDataset(source, bigQuerySpec, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, serviceAccountName)
 		if err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func CreateDataset(source resource.Source, ast *resource.Ast, resourceOptions re
 	return nil
 }
 
-func iAMPolicyMember(source resource.Source, bigqueryDataset *google_bigquery_crd.BigQueryDataset, googleProjectId, teamProjectID, serviceAccountName string) (*google_iam_crd.IAMPolicyMember, error) {
+func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.BigQueryDataset, googleProjectId, teamProjectID, serviceAccountName string) (*google_iam_crd.IAMPolicyMember, error) {
 	shortName, err := namegen.ShortName(bigqueryDataset.Name+"-job-user", validation.DNS1035LabelMaxLength)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_bigquery_cr
 	return policy, nil
 }
 
-func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQueryDataset, projectID, serviceAccountName string) (*google_bigquery_crd.BigQueryDataset, error) {
+func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQueryDataset, projectID, teamProjectID, serviceAccountName string) (*google_nais_io_v1.BigQueryDataset, error) {
 	objectMeta := resource.CreateObjectMeta(source)
 	datasetName := strings.ToLower(bigQuerySpec.Name)
 	baseName := strings.ReplaceAll(fmt.Sprintf("%s-%s", source.GetName(), datasetName), "_", "-")
@@ -82,17 +82,19 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 	}
 	util.SetAnnotation(&objectMeta, google.CascadingDeleteAnnotation, cascadingDeleteAnnotationValue)
 
-	return &google_bigquery_crd.BigQueryDataset{
+	return &google_nais_io_v1.BigQueryDataset{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "BigQueryDataset",
 			APIVersion: google.BigQueryAPIVersion,
 		},
 		ObjectMeta: objectMeta,
-		Spec: google_bigquery_crd.BigqueryDatasetSpec{
-			ResourceID:  datasetName,
-			Location:    google.Region,
-			Description: bigQuerySpec.Description,
-			Access: []*google_bigquery_crd.BigQueryDatasetAccess{
+		Spec: google_nais_io_v1.BigQueryDatasetSpec{
+			Name:            datasetName,
+			Location:        google.Region,
+			Description:     bigQuerySpec.Description,
+			Project:         teamProjectID,
+			CascadingDelete: bigQuerySpec.CascadingDelete,
+			Access: []google_nais_io_v1.DatasetAccess{
 				{
 					Role:        bigQuerySpec.Permission.GoogleType(),
 					UserByEmail: google.GcpServiceAccountName(serviceAccountName, projectID),
