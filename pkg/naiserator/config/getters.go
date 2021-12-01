@@ -1,33 +1,33 @@
 package config
 
-func (c Config) IsKafkaratorEnabled() bool {
+func (c *Config) IsKafkaratorEnabled() bool {
 	return c.Features.Kafkarator
 }
 
-func (c Config) IsNetworkPolicyEnabled() bool {
+func (c *Config) IsNetworkPolicyEnabled() bool {
 	return c.Features.NetworkPolicy
 }
 
-func (c Config) IsLinkerdEnabled() bool {
+func (c *Config) IsLinkerdEnabled() bool {
 	return c.Features.Linkerd
 }
 
-func (c Config) GetAPIServerIP() string {
+func (c *Config) GetAPIServerIP() string {
 	return c.ApiServerIp
 }
 
-func (c Config) GetAccessPolicyNotAllowedCIDRs() []string {
+func (c *Config) GetAccessPolicyNotAllowedCIDRs() []string {
 	return c.Features.AccessPolicyNotAllowedCIDRs
 }
 
-func (c Config) GetGoogleProjectID() string {
+func (c *Config) GetGoogleProjectID() string {
 	return c.GoogleProjectId
 }
 
-func (c Config) GetClusterName() string {
+func (c *Config) GetClusterName() string {
 	return c.ClusterName
 }
 
-func (c Config) GetGatewayMappings() []GatewayMapping {
+func (c *Config) GetGatewayMappings() []GatewayMapping {
 	return c.GatewayMappings
 }

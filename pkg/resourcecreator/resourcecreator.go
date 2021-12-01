@@ -77,8 +77,8 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 		horizontalpodautoscaler.Create(app, ast)
 	}
 
-	networkpolicy.Create(app, ast, cfg, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
-	err = ingress.Create(app, ast, cfg, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	networkpolicy.Create(app, ast, &cfg, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+	err = ingress.Create(app, ast, &cfg, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 	if err != nil {
 		return nil, err
 	}
-	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP, cfg)
+	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP, &cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options,
 		Elastic: app.Spec.Elastic,
 		Influx:  app.Spec.Influx,
 	}
-	err = aiven.Create(app, ast, cfg, aivenSpecs)
+	err = aiven.Create(app, ast, &cfg, aivenSpecs)
 	if err != nil {
 		return nil, err
 	}
@@ -154,12 +154,12 @@ func CreateNaisjob(source resource.Source, resourceOptions resource.Options, cfg
 	ast := resource.NewAst()
 
 	serviceaccount.Create(naisjob, ast, resourceOptions)
-	networkpolicy.Create(naisjob, ast, cfg, *naisjob.Spec.AccessPolicy, []nais_io_v1.Ingress{}, false)
+	networkpolicy.Create(naisjob, ast, &cfg, *naisjob.Spec.AccessPolicy, []nais_io_v1.Ingress{}, false)
 	err := azure.Create(naisjob, ast, resourceOptions)
 	if err != nil {
 		return nil, err
 	}
-	err = gcp.Create(naisjob, ast, resourceOptions, naisjob.Spec.GCP, cfg)
+	err = gcp.Create(naisjob, ast, resourceOptions, naisjob.Spec.GCP, &cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func CreateNaisjob(source resource.Source, resourceOptions resource.Options, cfg
 		Elastic: naisjob.Spec.Elastic,
 		Influx:  naisjob.Spec.Influx,
 	}
-	err = aiven.Create(naisjob, ast, cfg, aivenSpecs)
+	err = aiven.Create(naisjob, ast, &cfg, aivenSpecs)
 	if err != nil {
 		return nil, err
 	}
