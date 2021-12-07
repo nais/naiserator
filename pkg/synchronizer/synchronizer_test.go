@@ -12,6 +12,7 @@ import (
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
+	"github.com/nais/naiserator/pkg/generator"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -90,8 +91,11 @@ func newTestRig(options resource.Options) (*testRig, error) {
 	}
 
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
-		Client:          rig.client,
-		Config:          rig.config,
+		Client: rig.client,
+		Config: rig.config,
+		Generator: &generator.Application{
+			Config: rig.config,
+		},
 		ResourceOptions: options,
 		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
 		Scheme:          rig.scheme,
@@ -173,7 +177,7 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object that should be deleted once processing has run.
 	ast := resource.NewAst()
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, ast, rig.config, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	err = ingress.Create(app, ast, &rig.config, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
 	ing := ast.Operations[0].Resource.(*networkingv1.Ingress)
 	app.Spec.Ingresses = []nais_io_v1.Ingress{}
@@ -185,7 +189,7 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, ast, rig.config, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	err = ingress.Create(app, ast, &rig.config, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
 	assert.NoError(t, err)
 	ing = ast.Operations[1].Resource.(*networkingv1.Ingress)
 	ing.SetName("disowned-ingress")

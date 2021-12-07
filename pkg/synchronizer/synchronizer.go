@@ -23,7 +23,6 @@ import (
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/nais/naiserator/pkg/resourcecreator"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/updater"
 )
@@ -32,17 +31,22 @@ const (
 	prepareRetryInterval = time.Minute * 30
 )
 
+type Generator interface {
+	Generate(source resource.Source, options resource.Options) (resource.Operations, error)
+}
+
 // Synchronizer creates child resources from Application resources in the cluster.
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
-	RolloutMonitor  map[client.ObjectKey]RolloutMonitor
-	SimpleClient    client.Client
-	Scheme          *runtime.Scheme
-	ResourceOptions resource.Options
 	Config          config.Config
+	Generator       Generator
 	Kafka           kafka.Interface
 	Listers         []client.ObjectList
+	ResourceOptions resource.Options
+	RolloutMonitor  map[client.ObjectKey]RolloutMonitor
+	Scheme          *runtime.Scheme
+	SimpleClient    client.Client
 }
 
 // Commit wraps a cluster operation function with extra fields
@@ -92,7 +96,7 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 }
 
 // Reconcile process Application work queue
-func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app resource.Source, generator resourcecreator.Generator) (ctrl.Result, error) {
+func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
@@ -134,7 +138,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		}
 	}()
 
-	rollout, err := n.Prepare(ctx, app, generator)
+	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
 		app.GetStatus().SynchronizationState = nais_io_v1.EventFailedPrepare
 		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
@@ -259,9 +263,9 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) 
 }
 
 // Prepare converts a NAIS application spec into a Rollout object.
-// This is a read-only operation
 // The Rollout object contains callback functions that commits changes in the cluster.
-func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source, generator resourcecreator.Generator) (*Rollout, error) {
+// Prepare is a read-only operation.
+func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source) (*Rollout, error) {
 	var err error
 
 	rollout := &Rollout{
@@ -319,7 +323,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source, generat
 		rollout.ResourceOptions.Linkerd = true
 	}
 
-	rollout.ResourceOperations, err = generator(app, rollout.ResourceOptions, n.Config)
+	rollout.ResourceOperations, err = n.Generator.Generate(app, rollout.ResourceOptions)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
