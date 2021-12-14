@@ -18,7 +18,11 @@ type Source interface {
 	GetService() *nais_io_v1.Service
 }
 
-func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) {
+type Config interface {
+	IsWonderwallEnabled() bool
+}
+
+func Create(source Source, ast *resource.Ast, config Config) {
 	svc := source.GetService()
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -43,7 +47,7 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) 
 		},
 	}
 
-	if resourceOptions.WonderwallEnabled {
+	if config.IsWonderwallEnabled() {
 		service.Spec.Ports[0].TargetPort = intstr.IntOrString{
 			Type:   intstr.String,
 			StrVal: wonderwall.PortName,

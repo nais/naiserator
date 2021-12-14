@@ -1,6 +1,8 @@
 package gcp
 
 import (
+	"fmt"
+
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	google_bigquery "github.com/nais/naiserator/pkg/resourcecreator/google/bigquery"
 	google_iam "github.com/nais/naiserator/pkg/resourcecreator/google/iam"
@@ -15,6 +17,11 @@ type Config interface {
 }
 
 func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGCP *nais_io_v1.GCP, cfg Config) error {
+	if naisGCP != nil && len(resourceOptions.GoogleTeamProjectId) == 0 {
+		// We're not currently in a team namespace with corresponding GCP team project
+		return fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", source.GetNamespace())
+	}
+
 	if !resourceOptions.CNRMEnabled && len(resourceOptions.GoogleProjectId) <= 0 {
 		return nil
 	}

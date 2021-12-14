@@ -9,8 +9,8 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	generator2 "github.com/nais/naiserator/pkg/event/generator"
+	"github.com/nais/naiserator/pkg/readonly"
 	log "github.com/sirupsen/logrus"
-	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -31,22 +31,26 @@ const (
 	prepareRetryInterval = time.Minute * 30
 )
 
+// Generators transform CRD objects such as Application, Naisjob into other kinds of Kubernetes resources.
+// First, `Prepare()` is called. This function has access to (read-only) cluster operations and returns
+// a configuration object. Then, `Generate()` is called with the configuration object, and returns a full
+// set of Kubernetes resources.
 type Generator interface {
-	Generate(source resource.Source, options resource.Options) (resource.Operations, error)
+	Prepare(ctx context.Context, source resource.Source, kube client.Client) (interface{}, error)
+	Generate(source resource.Source, options interface{}) (resource.Operations, error)
 }
 
 // Synchronizer creates child resources from Application resources in the cluster.
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
-	Config          config.Config
-	Generator       Generator
-	Kafka           kafka.Interface
-	Listers         []client.ObjectList
-	ResourceOptions resource.Options
-	RolloutMonitor  map[client.ObjectKey]RolloutMonitor
-	Scheme          *runtime.Scheme
-	SimpleClient    client.Client
+	Config         config.Config
+	Generator      Generator
+	Kafka          kafka.Interface
+	Listers        []client.ObjectList
+	RolloutMonitor map[client.ObjectKey]RolloutMonitor
+	Scheme         *runtime.Scheme
+	SimpleClient   client.Client
 }
 
 // Commit wraps a cluster operation function with extra fields
@@ -265,68 +269,45 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) 
 // Prepare converts a NAIS application spec into a Rollout object.
 // The Rollout object contains callback functions that commits changes in the cluster.
 // Prepare is a read-only operation.
-func (n *Synchronizer) Prepare(ctx context.Context, app resource.Source) (*Rollout, error) {
+func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Rollout, error) {
 	var err error
 
 	rollout := &Rollout{
-		Source:          app,
-		ResourceOptions: n.ResourceOptions,
+		Source: source,
 	}
 
-	err = app.ApplyDefaults()
+	err = source.ApplyDefaults()
 	if err != nil {
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
 
-	rollout.SynchronizationHash, err = app.Hash()
+	rollout.SynchronizationHash, err = source.Hash()
 	if err != nil {
 		return nil, fmt.Errorf("BUG: create application hash: %s", err)
 	}
 
 	// Skip processing if application didn't change since last synchronization.
-	if app.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
+	if source.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
 		return nil, nil
 	}
 
-	err = ensureCorrelationID(app)
+	err = ensureCorrelationID(source)
 	if err != nil {
 		return nil, err
 	}
 
-	rollout.CorrelationID = app.CorrelationID()
-
-	rr, ok := app.(ReplicaResource)
-	if ok {
-		// Make a query to Kubernetes for this application's previous deployment.
-		// The number of replicas is significant, so we need to carry it over to match
-		// this next rollout.
-		previousDeployment := &apps.Deployment{}
-		err = n.Get(ctx, client.ObjectKey{Name: app.GetName(), Namespace: app.GetNamespace()}, previousDeployment)
-		if err != nil && !errors.IsNotFound(err) {
-			return nil, fmt.Errorf("query existing deployment: %s", err)
-		}
-		rollout.SetNumReplicas(previousDeployment, rr)
+	// Prepare for rollout (i.e. use cluster information to generate a configuration object).
+	// For this operation, make sure that write operations are disabled.
+	opts, err := n.Generator.Prepare(ctx, source, readonly.NewClient(n.Client))
+	if err != nil {
+		return nil, fmt.Errorf("preparing rollout configuration: %w", err)
 	}
 
-	// Retrieve current namespace to check for labels and annotations
-	namespace := &corev1.Namespace{}
-	err = n.Get(ctx, client.ObjectKey{Name: app.GetNamespace()}, namespace)
-	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing namespace: %s", err)
-	}
-
-	// Auto-detect Google Team Project ID
-	rollout.ResourceOptions.GoogleTeamProjectId = namespace.Annotations["cnrm.cloud.google.com/project-id"]
-
-	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
-	if n.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
-		rollout.ResourceOptions.Linkerd = true
-	}
-
-	rollout.ResourceOperations, err = n.Generator.Generate(app, rollout.ResourceOptions)
+	rollout.CorrelationID = source.CorrelationID()
+	rollout.ResourceOperations, err = n.Generator.Generate(source, opts)
 
 	if err != nil {
-		return nil, fmt.Errorf("creating cluster resource operations: %s", err)
+		return nil, fmt.Errorf("creating cluster resource operations: %w", err)
 	}
 
 	return rollout, nil
@@ -404,11 +385,4 @@ func (n *Synchronizer) UpdateResource(ctx context.Context, source resource.Sourc
 	}
 
 	return updateFunc(existing)
-}
-
-func max(a, b int32) int32 {
-	if a > b {
-		return a
-	}
-	return b
 }

@@ -6,7 +6,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/generator"
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/goldenfile"
@@ -40,7 +40,7 @@ func TestApplicationGoldenFile(t *testing.T) {
 			return nil, fmt.Errorf("apply default values to Application object: %s", err)
 		}
 
-		gen := &generator.Application{
+		gen := &generators.Application{
 			Config: config,
 		}
 
@@ -61,7 +61,7 @@ func TestNaisjobGoldenFile(t *testing.T) {
 			return nil, fmt.Errorf("apply default values to Naisjob object: %s", err)
 		}
 
-		gen := &generator.Naisjob{
+		gen := &generators.Naisjob{
 			Config: config,
 		}
 

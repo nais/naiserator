@@ -24,13 +24,21 @@ const (
 
 type Source interface {
 	resource.Source
+	wonderwall.Source
 	GetAccessPolicy() *nais_io_v1.AccessPolicy
 	GetAzure() nais_io_v1.AzureInterface
 	GetPort() int
 	GetIngress() []nais_io_v1.Ingress
 }
 
-func adApplication(source Source, resourceOptions resource.Options) (*nais_io_v1.AzureAdApplication, error) {
+type Config interface {
+	wonderwall.Config
+	GetClusterName() string
+	IsAzureratorEnabled() bool
+	IsWonderwallEnabled() bool
+}
+
+func adApplication(source Source, config Config) (*nais_io_v1.AzureAdApplication, error) {
 	replyURLs := source.GetAzure().GetApplication().ReplyURLs
 
 	if len(replyURLs) == 0 {
@@ -45,8 +53,7 @@ func adApplication(source Source, resourceOptions resource.Options) (*nais_io_v1
 	objectMeta := resource.CreateObjectMeta(source)
 	copyAzureAnnotations(source.GetAnnotations(), objectMeta.Annotations)
 
-	clusterName := resourceOptions.ClusterName
-	preAuthorizedApps := accesspolicy.InboundRulesWithDefaults(source.GetAccessPolicy().Inbound.Rules, objectMeta.Namespace, clusterName)
+	preAuthorizedApps := accesspolicy.InboundRulesWithDefaults(source.GetAccessPolicy().Inbound.Rules, objectMeta.Namespace, config.GetClusterName())
 
 	azureapp := source.GetAzure().GetApplication()
 
@@ -101,14 +108,14 @@ func azureSecretName(name string) (string, error) {
 	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
 }
 
-func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) error {
+func Create(source Source, ast *resource.Ast, config Config) error {
 	az := source.GetAzure()
 
-	if !resourceOptions.AzureratorEnabled || az.GetApplication() == nil || !az.GetApplication().Enabled {
+	if !config.IsAzureratorEnabled() || az.GetApplication() == nil || !az.GetApplication().Enabled {
 		return nil
 	}
 
-	azureAdApplication, err := adApplication(source, resourceOptions)
+	azureAdApplication, err := adApplication(source, config)
 	if err != nil {
 		return err
 	}
@@ -118,7 +125,7 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) 
 	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
 
-	if !resourceOptions.WonderwallEnabled || az.GetSidecar() == nil || !az.GetSidecar().Enabled {
+	if !config.IsWonderwallEnabled() || az.GetSidecar() == nil || !az.GetSidecar().Enabled {
 		return nil
 	}
 
@@ -131,8 +138,8 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) 
 	// wonderwall only supports a single ingress, so we use the first
 	ingress := ingresses[0]
 
-	config := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingress)
-	err = wonderwall.Create(source, ast, resourceOptions, config)
+	wonder := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingress)
+	err = wonderwall.Create(source, ast, config, wonder)
 	if err != nil {
 		return err
 	}
@@ -148,13 +155,12 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options) 
 
 func wonderwallConfig(source Source, providerSecretName string, ingress nais_io_v1.Ingress) wonderwall.Configuration {
 	sidecar := source.GetAzure().GetSidecar()
-	ing := string(ingress)
 
 	return wonderwall.Configuration{
-		AutoLogin:             sidecar.AutoLogin,
-		ErrorPath:             sidecar.ErrorPath,
-		Ingress:               ing,
-		Provider:              "azure",
-		ProviderSecretName:    providerSecretName,
+		AutoLogin:          sidecar.AutoLogin,
+		ErrorPath:          sidecar.ErrorPath,
+		Ingress:            string(ingress),
+		Provider:           "azure",
+		ProviderSecretName: providerSecretName,
 	}
 }

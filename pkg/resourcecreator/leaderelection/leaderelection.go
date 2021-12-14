@@ -10,8 +10,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, leaderElection bool) {
-	if !leaderElection {
+type Source interface {
+	resource.Source
+	GetLeaderElection() bool
+}
+
+func Create(source Source, ast *resource.Ast) {
+	if !source.GetLeaderElection() {
 		return
 	}
 

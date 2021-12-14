@@ -12,7 +12,7 @@ import (
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
-	"github.com/nais/naiserator/pkg/generator"
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -93,7 +93,7 @@ func newTestRig(options resource.Options) (*testRig, error) {
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
 		Client: rig.client,
 		Config: rig.config,
-		Generator: &generator.Application{
+		Generator: &generators.Application{
 			Config: rig.config,
 		},
 		ResourceOptions: options,

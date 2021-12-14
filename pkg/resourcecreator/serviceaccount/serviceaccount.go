@@ -7,10 +7,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options) {
+type Config interface {
+	GetGoogleProjectID() string
+}
+
+func Create(source resource.Source, ast *resource.Ast, config Config) {
 	objectMeta := resource.CreateObjectMeta(source)
-	if len(options.GoogleProjectId) > 0 {
-		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), options.GoogleProjectId)
+
+	googleProjectID := config.GetGoogleProjectID()
+	if len(googleProjectID) > 0 {
+		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectID)
 	}
 
 	serviceAccount := &corev1.ServiceAccount{

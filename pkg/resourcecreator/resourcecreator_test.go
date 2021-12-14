@@ -10,7 +10,7 @@ import (
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
-	"github.com/nais/naiserator/pkg/generator"
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -90,7 +90,7 @@ func getRealObjects(resources resource.Operations) (o realObjects) {
 
 // Test that a specified application spec results in the correct Kubernetes resources.
 func TestCreate(t *testing.T) {
-	gen := &generator.Application{}
+	gen := &generators.Application{}
 
 	t.Run("default application spec merges into empty struct", func(t *testing.T) {
 		app := &nais_io_v1alpha1.Application{}
