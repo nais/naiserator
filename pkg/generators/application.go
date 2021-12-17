@@ -121,8 +121,8 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	serviceaccount.Create(app, ast, cfg)
 	horizontalpodautoscaler.Create(app, ast)
 
-	networkpolicy.Create(app, ast, cfg) // &g.Config, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
-	err = ingress.Create(app, ast, cfg) // &g.Config, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	networkpolicy.Create(app, ast, cfg)
+	err = ingress.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	if err != nil {
 		return nil, err
 	}
-	err = idporten.Create(app, ast, resourceOptions)
+	err = idporten.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
