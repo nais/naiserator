@@ -22,8 +22,8 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 	jobSpec := batchv1.JobSpec{
 		ActiveDeadlineSeconds: naisjob.Spec.ActiveDeadlineSeconds,
 		BackoffLimit:          util.Int32p(naisjob.Spec.BackoffLimit),
-		Completions:           util.Int32p(naisjob.Spec.Completions),
-		Parallelism:           util.Int32p(naisjob.Spec.Parallelism),
+		Completions:           naisjob.Spec.Completions,
+		Parallelism:           naisjob.Spec.Parallelism,
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: pod.CreateNaisjobObjectMeta(naisjob, ast, &resourceOptions),
 			Spec:       *podSpec,

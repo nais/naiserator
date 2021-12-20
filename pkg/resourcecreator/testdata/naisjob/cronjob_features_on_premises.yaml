@@ -80,8 +80,6 @@ tests:
                     uid: "123456"
               spec:
                 backoffLimit: 6
-                completions: 1
-                parallelism: 1
                 template:
                   metadata:
                     annotations:
