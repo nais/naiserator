@@ -46,8 +46,7 @@ tests:
     match:
       - type: subset
         name: "service account created"
-        resource: { }
-
+        resource: {}
 
   - operation: CreateOrUpdate
     apiVersion: batch/v1beta1
@@ -81,6 +80,8 @@ tests:
                     uid: "123456"
               spec:
                 backoffLimit: 6
+                completions: 1
+                parallelism: 1
                 template:
                   metadata:
                     annotations:
@@ -181,5 +182,5 @@ tests:
                         name: ca-bundle-pem
                       - emptyDir: {}
                         name: writable-tmp
-            schedule: '* 2 * * *'
+            schedule: "* 2 * * *"
             successfulJobsHistoryLimit: 4

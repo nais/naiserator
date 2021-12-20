@@ -46,8 +46,7 @@ tests:
     match:
       - type: subset
         name: "service account created"
-        resource: { }
-
+        resource: {}
 
   - operation: CreateOrUpdate
     apiVersion: batch/v1
@@ -80,6 +79,8 @@ tests:
           spec:
             activeDeadlineSeconds: 13
             backoffLimit: 7
+            completions: 1
+            parallelism: 1
             template:
               metadata:
                 annotations:

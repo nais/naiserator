@@ -1,0 +1,28 @@
+config:
+  description: naisjob gets a specified concurrency-policy
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/mynaisjob:1.2.3
+    completions: 2
+    parallelism: 4
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: batch/v1
+    kind: Job
+    name: mynaisjob
+    match:
+      - name: "naisjob created"
+        type: subset
+        resource:
+          spec:
+            completions: 2
+            parallelism: 4
