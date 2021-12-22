@@ -10,27 +10,46 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, leaderElection bool) {
+type ElectionMode int
+
+const (
+	ModeEndpoint ElectionMode = iota
+	ModeLease
+)
+
+func Create(source resource.Source, ast *resource.Ast, options resource.Options, leaderElection bool) {
 	if !leaderElection {
 		return
 	}
 
-	ast.AppendOperation(resource.OperationCreateOrUpdate, role(resource.CreateObjectMeta(source)))
-	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(resource.CreateObjectMeta(source)))
-	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace()))
+	ast.AppendOperation(resource.OperationCreateOrUpdate, role(resource.CreateObjectMeta(source), mode(options)))
+	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(resource.CreateObjectMeta(source), mode(options)))
+	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), options))
 	ast.Env = append(ast.Env, electorPathEnv())
 }
 
-func roleBinding(objectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
+func mode(options resource.Options) ElectionMode {
+	if options.LeaderElection.Image != "" {
+		return ModeLease
+	}
+	return ModeEndpoint
+}
+
+func roleBinding(objectMeta metav1.ObjectMeta, electionMode ElectionMode) *rbacv1.RoleBinding {
+	kindPrefix := ""
+	if electionMode == ModeLease {
+		kindPrefix = "Cluster"
+	}
+
 	return &rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
-			Kind:       "RoleBinding",
+			Kind:       kindPrefix + "RoleBinding",
 		},
 		ObjectMeta: objectMeta,
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "Role",
+			Kind:     kindPrefix + "Role",
 			Name:     objectMeta.Name,
 		},
 		Subjects: []rbacv1.Subject{
@@ -43,30 +62,59 @@ func roleBinding(objectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
 	}
 }
 
-func role(objectMeta metav1.ObjectMeta) *rbacv1.Role {
-	return &rbacv1.Role{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "rbac.authorization.k8s.io/v1",
-			Kind:       "Role",
-		},
-		ObjectMeta: objectMeta,
-		Rules: []rbacv1.PolicyRule{
-			{
-				ResourceNames: []string{
-					objectMeta.Name,
-				},
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"endpoints",
-				},
-				Verbs: []string{
-					"get",
-					"update",
+func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode) *rbacv1.Role {
+	if electionMode == ModeEndpoint {
+		return &rbacv1.Role{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "rbac.authorization.k8s.io/v1",
+				Kind:       "Role",
+			},
+			ObjectMeta: objectMeta,
+			Rules: []rbacv1.PolicyRule{
+				{
+					ResourceNames: []string{
+						objectMeta.Name,
+					},
+					APIGroups: []string{
+						"",
+					},
+					Resources: []string{
+						"endpoints",
+					},
+					Verbs: []string{
+						"get",
+						"update",
+					},
 				},
 			},
-		},
+		}
+	} else {
+		return &rbacv1.Role{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "rbac.authorization.k8s.io/v1",
+				Kind:       "ClusterRole",
+			},
+			ObjectMeta: objectMeta,
+			Rules: []rbacv1.PolicyRule{
+				{
+					ResourceNames: []string{
+						objectMeta.Name,
+					},
+					APIGroups: []string{
+						"coordination.k8s.io",
+					},
+					Resources: []string{
+						"leases",
+					},
+					Verbs: []string{
+						"get",
+						"list",
+						"watch",
+						"create",
+					},
+				},
+			},
+		}
 	}
 }
 
@@ -77,10 +125,14 @@ func electorPathEnv() corev1.EnvVar {
 	}
 }
 
-func container(name, namespace string) corev1.Container {
+func container(name, namespace string, options resource.Options) corev1.Container {
+	image := "gcr.io/google_containers/leader-elector:0.5"
+	if options.LeaderElection.Image != "" {
+		image = options.LeaderElection.Image
+	}
 	return corev1.Container{
 		Name:            "elector",
-		Image:           "gcr.io/google_containers/leader-elector:0.5",
+		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{

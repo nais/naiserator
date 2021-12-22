@@ -76,7 +76,7 @@ func CreateApplication(source resource.Source, resourceOptions resource.Options)
 	if err != nil {
 		return nil, err
 	}
-	leaderelection.Create(app, ast, app.Spec.LeaderElection)
+	leaderelection.Create(app, ast, resourceOptions, app.Spec.LeaderElection)
 	err = azure.Create(app, ast, resourceOptions)
 	if err != nil {
 		return nil, err

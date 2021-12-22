@@ -1,0 +1,79 @@
+config:
+  description: leader election container injection, using simple elector
+
+resourceoptions:
+  LeaderElection:
+    Image: "not-a-google-containers-image:latest"
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    leaderElection: true
+
+tests:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "role created with leader election args"
+        resource:
+          rules:
+            - apiGroups:
+                - "coordination.k8s.io"
+              resourceNames:
+                - myapplication
+              resources:
+                - leases
+              verbs:
+                - get
+                - list
+                - watch
+                - create
+
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    name: myapplication
+    operation: CreateOrRecreate
+    match:
+      - type: subset
+        resource:
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: myapplication
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created with leader election args"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: "myapplication"
+                  - name: "elector"
+                    image: "not-a-google-containers-image:latest"
+                    args:
+                      - "--election=myapplication"
+                      - "--http=localhost:4040"
+                      - "--election-namespace=mynamespace"
+                    ports:
+                      - protocol: "TCP"
+                        containerPort: 4040
+                    resources:
+                      requests:
+                        cpu: "100m"
+                    imagePullPolicy: "IfNotPresent"

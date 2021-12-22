@@ -33,6 +33,7 @@ type Options struct {
 	Vault                             config.Vault
 	Wonderwall                        config.Wonderwall
 	WonderwallEnabled                 bool
+	LeaderElection                    config.LeaderElection
 }
 
 // NewOptions creates a struct with the default resource options.
