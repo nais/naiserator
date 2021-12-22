@@ -2,7 +2,7 @@ name: Build and deploy
 on: push
 
 env:
-  image: docker.pkg.github.com/${{ github.repository }}/naiserator
+  image: ghcr.io/${{ github.repository }}/naiserator
 
 jobs:
   build-push:
@@ -20,7 +20,7 @@ jobs:
       - name: Login to Github package registry
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "$GITHUB_TOKEN" | docker login docker.pkg.github.com -u "$GITHUB_REPOSITORY" --password-stdin
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_REPOSITORY" --password-stdin
       - name: Push docker image
         run: docker push $IMAGE
 
@@ -65,7 +65,7 @@ jobs:
           cd nais-yaml
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          sed -E -i "s#image: docker.pkg.github.com/nais/naiserator/naiserator:.+#image: ${IMAGE}#" vars/global.yaml
+          sed -E -i "s#image: ghcr.io/nais/naiserator/naiserator:.+#image: ${IMAGE}#" vars/global.yaml
           git add .
           git --no-pager diff --cached
           git status
