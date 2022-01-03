@@ -19,8 +19,8 @@ input:
 
 tests:
   - apiVersion: rbac.authorization.k8s.io/v1
-    kind: ClusterRole
-    name: myapplication
+    kind: Role
+    name: elector-myapplication-40c4e812
     operation: CreateOrUpdate
     match:
       - type: subset
@@ -40,16 +40,16 @@ tests:
                 - create
 
   - apiVersion: rbac.authorization.k8s.io/v1
-    kind: ClusterRoleBinding
-    name: myapplication
+    kind: RoleBinding
+    name: elector-myapplication-40c4e812
     operation: CreateOrRecreate
     match:
       - type: subset
         resource:
           roleRef:
             apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: myapplication
+            kind: Role
+            name: elector-myapplication-40c4e812
 
   - apiVersion: apps/v1
     kind: Deployment
