@@ -53,19 +53,19 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return nil
 	}
 
-	err := google_storagebucket.Create(source, ast, cfg, googleServiceAccount, gcp.Buckets)
+	err := google_storagebucket.Create(source, ast, cfg, googleServiceAccount)
 	if err != nil {
 		return err
 	}
-	err = google_bigquery.CreateDataset(source, ast, cfg, gcp.BigQueryDatasets, googleServiceAccount.Name)
+	err = google_bigquery.CreateDataset(source, ast, cfg, googleServiceAccount.Name)
 	if err != nil {
 		return err
 	}
-	err = google_sql.CreateInstance(source, ast, cfg, &gcp.SqlInstances)
+	err = google_sql.CreateInstance(source, ast, cfg)
 	if err != nil {
 		return err
 	}
-	err = google_iam.CreatePolicyMember(source, ast, cfg, gcp.Permissions)
+	err = google_iam.CreatePolicyMember(source, ast, cfg)
 	if err != nil {
 		return err
 	}

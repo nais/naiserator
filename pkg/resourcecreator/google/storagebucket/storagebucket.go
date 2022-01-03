@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	google_storage_crd "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,12 +22,17 @@ const (
 	legacyBucketOwner = "roles/storage.legacyBucketOwner"
 )
 
+type Source interface {
+	resource.Source
+	GetGCP() *nais_io_v1.GCP
+}
+
 type Config interface {
 	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 }
 
-func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais.CloudStorageBucket, projectId string) *google_storage_crd.StorageBucket {
+func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBucket, projectId string) *google_storage_crd.StorageBucket {
 	objectMeta.Name = bucket.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
@@ -98,8 +103,13 @@ func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageB
 	return policy, nil
 }
 
-func Create(source resource.Source, ast *resource.Ast, cfg Config, googleServiceAccount google_iam_crd.IAMServiceAccount, buckets []nais.CloudStorageBucket) error {
-	for _, b := range buckets {
+func Create(source Source, ast *resource.Ast, cfg Config, googleServiceAccount google_iam_crd.IAMServiceAccount) error {
+	gcp := source.GetGCP()
+	if gcp == nil {
+		return nil
+	}
+
+	for _, b := range gcp.Buckets {
 		bucket := CreateBucket(resource.CreateObjectMeta(source), b, cfg.GetGoogleTeamProjectID())
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 

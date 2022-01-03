@@ -16,16 +16,23 @@ import (
 	"k8s.io/utils/pointer"
 )
 
+type Source interface {
+	resource.Source
+	GetGCP() *nais_io_v1.GCP
+}
+
 type Config interface {
 	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 }
 
-func CreateDataset(source resource.Source, ast *resource.Ast, cfg Config, bigQueryDatasets []nais_io_v1.CloudBigQueryDataset, serviceAccountName string) error {
-	if bigQueryDatasets == nil {
+func CreateDataset(source Source, ast *resource.Ast, cfg Config, serviceAccountName string) error {
+	gcp := source.GetGCP()
+	if gcp == nil {
 		return nil
 	}
-	for _, bigQuerySpec := range bigQueryDatasets {
+
+	for _, bigQuerySpec := range gcp.BigQueryDatasets {
 		bigQueryInstance, err := createDataset(source, bigQuerySpec, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID(), serviceAccountName)
 		if err != nil {
 			return err
@@ -38,6 +45,7 @@ func CreateDataset(source resource.Source, ast *resource.Ast, cfg Config, bigQue
 		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 	}
+
 	return nil
 }
 

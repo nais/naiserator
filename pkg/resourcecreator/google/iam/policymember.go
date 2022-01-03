@@ -6,7 +6,7 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -15,12 +15,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
+type Source interface {
+	resource.Source
+	GetGCP() *nais_io_v1.GCP
+}
+
 type Config interface {
 	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 }
 
-func policyMember(source resource.Source, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
+func policyMember(source resource.Source, policy nais_io_v1.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
 	name, err := createName(source.GetName(), policy)
 	if err != nil {
 		return nil, err
@@ -50,7 +55,7 @@ func policyMember(source resource.Source, policy nais.CloudIAMPermission, google
 	return policyMember, nil
 }
 
-func createName(appName string, policy nais.CloudIAMPermission) (string, error) {
+func createName(appName string, policy nais_io_v1.CloudIAMPermission) (string, error) {
 	hash, err := hashstructure.Hash(policy, nil)
 	if err != nil {
 		return "", fmt.Errorf("while calculating hash from policy: %w", err)
@@ -66,12 +71,13 @@ func formatExternalName(googleTeamProjectId, resourceName string) string {
 	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
 }
 
-func CreatePolicyMember(source resource.Source, ast *resource.Ast, cfg Config, naisGcpPermission []nais.CloudIAMPermission) error {
-	if naisGcpPermission == nil {
+func CreatePolicyMember(source Source, ast *resource.Ast, cfg Config) error {
+	gcp := source.GetGCP()
+	if gcp == nil {
 		return nil
 	}
 
-	for _, p := range naisGcpPermission {
+	for _, p := range gcp.Permissions {
 		policyMember, err := policyMember(source, p, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID())
 		if err != nil {
 			return fmt.Errorf("unable to create iampolicymember: %w", err)
