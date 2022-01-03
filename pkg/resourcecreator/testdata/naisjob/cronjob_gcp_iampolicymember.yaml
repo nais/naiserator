@@ -1,11 +1,9 @@
 testconfig:
   description: specifying custom port and protocol for mesh-external services in gcp
 
-options:
-  CNRMEnabled: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: google-team-project-id
-  NumReplicas: 1
+config:
+  cnrm: true
+  google-project-id: google-project-id
 
 input:
   kind: Naisjob

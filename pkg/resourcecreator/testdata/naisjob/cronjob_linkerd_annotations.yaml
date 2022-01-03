@@ -1,11 +1,10 @@
 testconfig:
   description: gcp naisjob with overriden linkerd annotations
 
-options:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
+config:
+  linkerd: true
+  network-policy: true
+  google-project-id: google-project-id
 
 input:
   kind: Naisjob

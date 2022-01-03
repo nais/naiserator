@@ -1,9 +1,6 @@
 testconfig:
   description: vanilla application gets a custom container command
 
-options:
-  NumReplicas: 1
-
 input:
   kind: Application
   apiVersion: v1alpha1

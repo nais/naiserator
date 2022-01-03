@@ -1,12 +1,11 @@
 testconfig:
   description: egress rules will create network policies
 
-options:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
+config:
+  linkerd: true
+  network-policy: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
   JwkerEnabled: true
 
 config:

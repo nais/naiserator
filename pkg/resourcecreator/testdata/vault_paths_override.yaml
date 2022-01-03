@@ -1,7 +1,7 @@
 testconfig:
   description: vault enabled with user specified path for default app secrets
 
-options:
+config:
   vaultEnabled: true
   vault:
     address: https://vault.adeo.no

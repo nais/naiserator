@@ -1,15 +1,16 @@
 testconfig:
   description: spec feature flag enabled will result in an AzureAdApplication resource
 
-options:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
-  AzureratorEnabled: true
-  AzureratorHosts:
-    - login.azure-ad.test
-    - graph.microsoft.test
+config:
+  features:
+    linkerd: true
+    azurerator: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  service-hosts:
+    azurerator:
+      - login.azure-ad.test
+      - graph.microsoft.test
 
 input:
   kind: Application

@@ -1,7 +1,7 @@
 testconfig:
   description: secure logging volume
 
-options:
+config:
   Securelogs:
     fluentd-image: fluentd-image
     configmap-reload-image: configmap-reload-image

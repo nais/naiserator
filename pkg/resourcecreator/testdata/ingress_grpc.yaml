@@ -1,11 +1,11 @@
 testconfig:
   description: ingress resource is created on-premises
 
-options:
-  Linkerd: true
-  GatewayMappings:
-    - DomainSuffix: .bar
-      IngressClass: very-nginx
+config:
+  linkerd: true
+  gateway-mappings:
+    - domainSuffix: .bar
+      ingressClass: very-nginx
 
 config:
   features:

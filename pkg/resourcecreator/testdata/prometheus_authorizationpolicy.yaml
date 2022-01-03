@@ -1,10 +1,10 @@
 testconfig:
   description: prometheus config is defined
 
-options:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
+config:
+  linkerd: true
+  network-policy: true
+  google-project-id: google-project-id
 
 config:
   features:

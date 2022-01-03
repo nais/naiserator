@@ -1,12 +1,11 @@
 testconfig:
   description: google storage bucket with retention period
 
-options:
-  AccessPolicy: false
-  CNRMEnabled: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  features:
+    access-policy: false
+    cnrm: true
+  google-project-id: google-project-id
 
 input:
   kind: Application
@@ -23,6 +22,14 @@ input:
       buckets:
         - name: myapplication
           uniformBucketLevelAccess: true
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 tests:
   - match:

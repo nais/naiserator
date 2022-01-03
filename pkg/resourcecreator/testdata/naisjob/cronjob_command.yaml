@@ -1,8 +1,7 @@
 testconfig:
   description: vanilla application gets a custom container command
 
-options:
-  NumReplicas: 1
+config:
 
 input:
   kind: Naisjob

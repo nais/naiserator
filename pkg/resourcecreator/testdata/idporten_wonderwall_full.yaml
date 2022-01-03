@@ -1,16 +1,15 @@
 testconfig:
   description: idporten config with sidecar should result in wonderwall sidecar injected to pod
 
-options:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
-  DigdiratorEnabled: true
-  NetworkPolicy: true
-  Wonderwall:
-    Image: nais/wonderwall
-  WonderwallEnabled: true
+config:
+  features:
+    linkerd: true
+    digdirator: true
+    network-policy: true
+  cluster-name: mycluster
+  google-project-id: google-project-id
+  wonderwall:
+    image: nais/wonderwall
 
 input:
   kind: Application
@@ -88,7 +87,7 @@ tests:
                         value: ^https://my-client.nav.no/logged_out$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{7}$
+                          name: ^idporten-myapplication-a0b907e7-.{6,7}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                       - secretRef:

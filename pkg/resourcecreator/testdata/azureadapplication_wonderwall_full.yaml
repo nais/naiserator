@@ -1,16 +1,15 @@
 testconfig:
   description: azure config with sidecar should result in wonderwall sidecar injected to pod
 
-options:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
+config:
+  linkerd: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
   AzureratorEnabled: true
-  NetworkPolicy: true
+  network-policy: true
   Wonderwall:
     Image: nais/wonderwall
-  WonderwallEnabled: true
+  wonderwall: true
 
 input:
   kind: Application

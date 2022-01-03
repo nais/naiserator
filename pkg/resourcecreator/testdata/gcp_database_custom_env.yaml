@@ -1,12 +1,11 @@
 testconfig:
   description: custom environment variable name on cloud sql databases
 
-options:
-  Linkerd: true
-  CNRMEnabled: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  features:
+    linkerd: true
+    cnrm: true
+  google-project-id: google-project-id
 
 input:
   kind: Application
@@ -25,6 +24,14 @@ input:
             - name: mydb
               envVarPrefix: "PWNED"
           type: POSTGRES_11
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 tests:
   - match:

@@ -1,7 +1,7 @@
 testconfig:
   description: vault enabled with user specified path for managed secret
 
-options:
+config:
   vaultEnabled: true
   vault:
     address: https://vault.adeo.no

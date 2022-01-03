@@ -1,12 +1,10 @@
 testconfig:
   description: Google BigQuery dataset instance
 
-options:
-  CNRMEnabled: true
-  AccessPolicy: false
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  cnrm: true
+  access-policy: false
+  google-project-id: google-project-id
 
 input:
   kind: Naisjob

@@ -1,13 +1,13 @@
 testconfig:
   description: ingress resource is created on-premises
 
-options:
-  Linkerd: true
-  GatewayMappings:
-    - DomainSuffix: .bar
-      IngressClass: very-nginx
-    - DomainSuffix: .baz
-      IngressClass: something-else
+config:
+  linkerd: true
+  gateway-mappings:
+    - domainSuffix: .bar
+      ingressClass: very-nginx
+    - domainSuffix: .baz
+      ingressClass: something-else
 
 config:
   features:
@@ -46,7 +46,7 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: exact
-        name: "ingress for foo.bar created with Linkerd config"
+        name: "ingress for foo.bar created with linkerd config"
         exclude:
           - .status
           - .metadata.creationTimestamp
@@ -103,7 +103,7 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: exact
-        name: "ingress for bar.baz created with Linkerd config"
+        name: "ingress for bar.baz created with linkerd config"
         exclude:
           - .status
           - .metadata.creationTimestamp

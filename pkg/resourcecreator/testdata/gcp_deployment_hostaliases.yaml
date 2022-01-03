@@ -1,18 +1,19 @@
 testconfig:
   description: specifying custom port and protocol for mesh-external services in gcp
 
-options:
-  Linkerd: true
-  CNRMEnabled: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  HostAliases:
-    - Host: b27apvl00045.preprod.local
-      Address: 10.183.160.26
-    - Host: b27apvl00046.preprod.local
-      Address: 10.183.32.47
-    - Host: b27apvl00047.preprod.local
-      Address: 10.183.32.48
+config:
+  features:
+    linkerd: true
+    cnrm: true
+  google-project-id: google-project-id
+  host-aliases:
+    - host: b27apvl00045.preprod.local
+      address: 10.183.160.26
+    - host: b27apvl00046.preprod.local
+      address: 10.183.32.47
+    - host: b27apvl00047.preprod.local
+      address: 10.183.32.48
+
 input:
   kind: Application
   apiVersion: v1alpha1
@@ -24,6 +25,14 @@ input:
       team: myteam
   spec:
     image: navikt/myapplication:1.2.3
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 tests:
   - match:

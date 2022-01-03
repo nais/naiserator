@@ -1,12 +1,10 @@
 testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
 
-options:
-  CNRMEnabled: true
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  cnrm: true
+  linkerd: true
+  google-project-id: google-project-id
 
 config:
   google-project-id: google-project-id

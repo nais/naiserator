@@ -5,8 +5,7 @@ config:
   features:
     kafkarator: true
 
-options:
-  NumReplicas: 1
+config:
 
 input:
   kind: Naisjob

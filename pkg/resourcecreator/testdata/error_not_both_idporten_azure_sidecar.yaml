@@ -1,9 +1,9 @@
 testconfig:
   description: both idporten sidecar and azure sidecar enabled is not allowed
-options:
-  GoogleProjectID: google-project-id
+config:
+  google-project-id: google-project-id
   AzureratorEnabled: true
-  DigdiratorEnabled: true
+  digdirator: true
 input:
   kind: Application
   apiVersion: v1alpha1

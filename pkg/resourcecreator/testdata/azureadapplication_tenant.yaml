@@ -1,11 +1,10 @@
 testconfig:
   description: azure application with explicitly targeted tenant
 
-options:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
+config:
+  linkerd: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
   AzureratorEnabled: true
 
 input:
