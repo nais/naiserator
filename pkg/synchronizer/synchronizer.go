@@ -99,7 +99,7 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 	}
 }
 
-// Reconcile process Application work queue
+// Reconcile processes the work queue
 func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app resource.Source) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
 	defer cancel()

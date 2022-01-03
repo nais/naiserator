@@ -183,7 +183,7 @@ func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCal
 			assert.EqualError(t, err, *test.Error)
 			return
 		}
-		t.Errorf("unable to unmarshal test data input: %s", err)
+		t.Errorf("unable to generate resources: %s", err)
 		t.Fail()
 		return
 	}
