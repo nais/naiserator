@@ -88,7 +88,7 @@ tests:
                         value: ^https://my-client.nav.no/logged_out$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{7}$
+                          name: ^idporten-myapplication-a0b907e7-.{6,7}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                       - secretRef:

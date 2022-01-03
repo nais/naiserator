@@ -86,7 +86,7 @@ tests:
                         value: ^/some/error$
                     envFrom:
                       - secretRef:
-                          name: ^azure-myapplication-4190a8ca-.{7}$
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
                       - secretRef:
                           name: ^azure-wonderwall-myapplication-.{8}$
                       - secretRef:
