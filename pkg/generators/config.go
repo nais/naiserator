@@ -7,26 +7,26 @@ import (
 // Options defines customizations for resource objects.
 // FIXME: clean up
 type Options struct {
-	AccessPolicyNotAllowedCIDRs       []string
-	ApiServerIp                       string
-	AzureratorEnabled                 bool
-	Config                            config.Config
-	DigdiratorEnabled                 bool
-	DigdiratorHosts                   []string
-	GoogleProjectID                   string
-	GoogleTeamProjectID               string
-	JwkerEnabled                      bool
-	SecurePodSecurityContext          bool
-	AllowedKernelCapabilities         []string
-	CNRMEnabled                       bool
-	NetworkPolicy                     bool
-	KafkaratorEnabled                 bool
-	Linkerd                           bool
-	NativeSecrets                     bool
-	NumReplicas                       int32
-	Team                              string
-	VaultEnabled                      bool
-	WonderwallEnabled                 bool
+	AccessPolicyNotAllowedCIDRs []string
+	ApiServerIp                 string
+	AzureratorEnabled           bool
+	Config                      config.Config
+	DigdiratorEnabled           bool
+	DigdiratorHosts             []string
+	GoogleProjectID             string
+	GoogleTeamProjectID         string
+	JwkerEnabled                bool
+	SecurePodSecurityContext    bool
+	AllowedKernelCapabilities   []string
+	CNRMEnabled                 bool
+	NetworkPolicy               bool
+	KafkaratorEnabled           bool
+	Linkerd                     bool
+	NativeSecrets               bool
+	NumReplicas                 int32
+	Team                        string
+	VaultEnabled                bool
+	WonderwallEnabled           bool
 }
 
 func (o *Options) IsLinkerdEnabled() bool {
@@ -87,4 +87,12 @@ func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
 
 func (o *Options) GetWonderwallImage() string {
 	return o.Config.Wonderwall.Image
+}
+
+func (o *Options) GetWebProxyOptions() config.Proxy {
+	return o.Config.Proxy
+}
+
+func (o *Options) GetSecureLogsOptions() config.Securelogs {
+	return o.Config.Securelogs
 }

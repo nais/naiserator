@@ -120,31 +120,37 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	service.Create(app, ast, cfg)
 	serviceaccount.Create(app, ast, cfg)
 	horizontalpodautoscaler.Create(app, ast)
-
 	networkpolicy.Create(app, ast, cfg)
+
 	err = ingress.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
+
 	leaderelection.Create(app, ast)
+
 	err = azure.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
+
 	err = idporten.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
+
 	err = gcp.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
-	err = proxyopts.Create(ast, resourceOptions, app.Spec.WebProxy)
+
+	err = proxyopts.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
-	certificateauthority.Create(ast, app.Spec.SkipCaBundle)
-	securelogs.Create(ast, resourceOptions, app.Spec.SecureLogs)
+
+	certificateauthority.Create(app, ast)
+	securelogs.Create(app, ast, cfg)
 	err = maskinporten.Create(app, ast, resourceOptions, app.Spec.Maskinporten)
 	if err != nil {
 		return nil, err
