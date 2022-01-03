@@ -8,7 +8,6 @@ import (
 // FIXME: clean up
 type Options struct {
 	// FIXME: digdirator hosts - in use or not?
-	ApiServerIp         string
 	Config              config.Config
 	GoogleProjectID     string
 	GoogleTeamProjectID string
@@ -24,7 +23,7 @@ func (o *Options) IsLinkerdEnabled() bool {
 }
 
 func (o *Options) GetAPIServerIP() string {
-	return o.ApiServerIp
+	return o.Config.ApiServerIp
 }
 
 func (o *Options) GetAccessPolicyNotAllowedCIDRs() []string {
