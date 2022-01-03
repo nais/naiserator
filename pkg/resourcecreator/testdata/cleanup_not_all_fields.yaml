@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: Test with cleanup disabled
 
-resourceoptions:
+options:
   Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id

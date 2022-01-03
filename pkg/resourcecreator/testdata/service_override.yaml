@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: override service name and port
 
-resourceoptions:
+options:
   GoogleProjectID: google-project-id
   NumReplicas: 1
 

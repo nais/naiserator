@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: Elastic Search labling and access policy
 
-resourceoptions:
+options:
   Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1

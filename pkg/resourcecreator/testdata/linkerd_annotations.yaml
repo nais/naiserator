@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: gcp application with overriden linkerd annotations
 
-resourceoptions:
+options:
   Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id

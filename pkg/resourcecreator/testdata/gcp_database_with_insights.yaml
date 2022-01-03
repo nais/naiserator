@@ -1,14 +1,14 @@
-config:
+testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
 
-resourceoptions:
+options:
   CNRMEnabled: true
   Linkerd: true
   GoogleProjectID: google-project-id
   GoogleTeamProjectID: team-project-id
   NumReplicas: 1
 
-resourceconfig:
+config:
   google-project-id: google-project-id
 
 input:

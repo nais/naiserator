@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: spec feature flag enabled will result in an AzureAdApplication resource
 
-resourceoptions:
+options:
   Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1

@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: minimal maskinporten config in application spec should result in MaskinportenClient
 
-resourceoptions:
+options:
   Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1

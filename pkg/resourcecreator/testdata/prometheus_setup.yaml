@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: prometheus is enabled with unique scrape port and custom scrape path
 
 input:

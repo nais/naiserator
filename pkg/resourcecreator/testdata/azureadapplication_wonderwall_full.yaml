@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: azure config with sidecar should result in wonderwall sidecar injected to pod
 
-resourceoptions:
+options:
   Linkerd: true
   GoogleProjectID: google-project-id
   NumReplicas: 1

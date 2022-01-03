@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: requests and limits are copied into deployment resource
 
 input:

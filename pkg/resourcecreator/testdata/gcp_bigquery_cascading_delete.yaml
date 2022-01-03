@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: Google BigQuery dataset instance
 
-resourceoptions:
+options:
   AccessPolicy: false
   CNRMEnabled: true
   GoogleProjectID: google-project-id

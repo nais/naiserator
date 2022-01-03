@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: chech that not both preStopHookPath and preStopHook is used
 input:
   kind: Application

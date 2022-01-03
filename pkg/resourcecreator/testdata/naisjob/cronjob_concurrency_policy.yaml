@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: naisjob gets a specified concurrency-policy
 
 input:

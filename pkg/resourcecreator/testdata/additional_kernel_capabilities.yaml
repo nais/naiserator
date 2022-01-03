@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: vanilla application running in GCP with default configuration and access policies
 
-resourceoptions:
+options:
   Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id

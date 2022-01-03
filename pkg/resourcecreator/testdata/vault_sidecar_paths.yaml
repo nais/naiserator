@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: vault enabled with sidecar enabled and user specified paths
 
-resourceoptions:
+options:
   vaultEnabled: true
   vault:
     address: https://vault.adeo.no

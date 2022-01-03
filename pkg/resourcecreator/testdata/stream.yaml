@@ -1,11 +1,11 @@
-config:
+testconfig:
   description: if Kafkarator is enabled and streams in set to true, create Stream resource
 
-resourceconfig:
+config:
   features:
     kafkarator: true
 
-resourceoptions:
+options:
   NumReplicas: 1
 
 input:

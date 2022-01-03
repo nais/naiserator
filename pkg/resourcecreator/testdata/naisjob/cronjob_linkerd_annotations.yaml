@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: gcp naisjob with overriden linkerd annotations
 
-resourceoptions:
+options:
   Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id

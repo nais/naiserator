@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: google storage bucket with retention period
 
-resourceoptions:
+options:
   AccessPolicy: false
   CNRMEnabled: true
   GoogleProjectID: google-project-id

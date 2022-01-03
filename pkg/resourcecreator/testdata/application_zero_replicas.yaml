@@ -1,7 +1,7 @@
-config:
+testconfig:
   description: vanilla application with zero replicas
 
-resourceoptions:
+options:
   Linkerd: true
   NetworkPolicy: true
   GoogleProjectID: google-project-id
