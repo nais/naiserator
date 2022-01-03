@@ -2,6 +2,7 @@ package resourcecreator_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/goldenfile"
+	"k8s.io/apimachinery/pkg/runtime"
+	foobar "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -22,7 +25,8 @@ const (
 )
 
 type applicationTestCase struct {
-	Input nais_io_v1alpha1.Application
+	Input    nais_io_v1alpha1.Application
+	Existing []json.RawMessage
 }
 
 type naisjobTestCase struct {
@@ -37,6 +41,16 @@ func TestApplicationGoldenFile(t *testing.T) {
 			return nil, err
 		}
 
+		decoder := foobar.Codecs.UniversalDeserializer()
+		existing := make([]runtime.Object, 0)
+		for i, data := range test.Existing {
+			object, _, err := decoder.Decode(data, nil, nil)
+			if err != nil {
+				return nil, fmt.Errorf("decoding kubernetes resource %d: %w", i+1, err)
+			}
+			existing = append(existing, object)
+		}
+
 		err = test.Input.ApplyDefaults()
 		if err != nil {
 			return nil, fmt.Errorf("apply default values to Application object: %s", err)
@@ -49,7 +63,7 @@ func TestApplicationGoldenFile(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 
-		mockClient := fake.NewClientBuilder().Build()
+		mockClient := fake.NewClientBuilder().WithRuntimeObjects(existing...).Build()
 		opts, err := gen.Prepare(ctx, &test.Input, mockClient)
 		if err != nil {
 			return nil, fmt.Errorf("failed preparing options for resource generation: %w", err)

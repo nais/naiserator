@@ -1,17 +1,11 @@
 testconfig:
   description: vanilla application running in GCP with default configuration and access policies
 
-options:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  SecurePodSecurityContext: true
-
 config:
   features:
     linkerd: true
     network-policy: true
+    secure-pod-security-context: true
   google-project-id: google-project-id
 
 input:

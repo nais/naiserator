@@ -66,7 +66,8 @@ type Match struct {
 type TestCase struct {
 	TestConfig testCaseConfig
 	Config     config.Config
-	Options    generators.Options
+	Options    generators.Options // deprecated
+	Existing   []json.RawMessage
 	Error      *string
 	Tests      []SubTest
 }

@@ -71,7 +71,7 @@ func (o *Options) IsWonderwallEnabled() bool {
 }
 
 func (o *Options) GetGoogleProjectID() string {
-	return o.GoogleProjectID
+	return o.Config.GoogleProjectId
 }
 
 func (o *Options) GetGoogleTeamProjectID() string {
