@@ -2,16 +2,16 @@ testconfig:
   description: azure application with reply urls
 
 config:
-  linkerd: true
+  features:
+    linkerd: true
+    azurerator: true
   google-project-id: google-project-id
   cluster-name: mycluster
-  AzureratorEnabled: true
   gateway-mappings:
     - domainSuffix: .adeo.no
       ingressClass: adeo-gateway
     - domainSuffix: .domain
       ingressClass: domain-gateway
-
 
 input:
   kind: Application

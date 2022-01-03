@@ -2,10 +2,11 @@ testconfig:
   description: idporten specifying paths should take precedence over URIs
 
 config:
-  linkerd: true
+  features:
+    linkerd: true
+    digdirator: true
   google-project-id: google-project-id
   cluster-name: mycluster
-  digdirator: true
   gateway-mappings:
     - domainSuffix: .adeo.no
       ingressClass: adeo-gateway

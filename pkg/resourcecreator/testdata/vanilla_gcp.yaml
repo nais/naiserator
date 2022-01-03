@@ -109,7 +109,7 @@ tests:
                   - namespaceSelector:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
-                  - namespaceSelector: { }
+                  - namespaceSelector: {}
                     podSelector:
                       matchLabels:
                         k8s-app: kube-dns
@@ -236,4 +236,3 @@ tests:
                       privileged: false
                       capabilities:
                         drop: ["all"]
-

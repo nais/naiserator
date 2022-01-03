@@ -2,10 +2,11 @@ testconfig:
   description: azure application with explicitly targeted tenant
 
 config:
-  linkerd: true
+  features:
+    linkerd: true
+    azurerator: true
   google-project-id: google-project-id
   cluster-name: mycluster
-  AzureratorEnabled: true
 
 input:
   kind: Application

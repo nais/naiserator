@@ -2,7 +2,8 @@ testconfig:
   description: vault enabled with user specified path for managed secret
 
 config:
-  vaultEnabled: true
+  features:
+    vault: true
   vault:
     address: https://vault.adeo.no
     kv-path: /kv/preprod/fss
@@ -74,4 +75,3 @@ tests:
                   - name: "vault-volume"
                     emptyDir:
                       medium: "Memory"
-

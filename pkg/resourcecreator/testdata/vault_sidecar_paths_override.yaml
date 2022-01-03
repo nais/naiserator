@@ -2,7 +2,8 @@ testconfig:
   description: vault enabled with sidecar enabled and user specified path for default app secrets
 
 config:
-  vaultEnabled: true
+  features:
+    vault: true
   vault:
     address: https://vault.adeo.no
     kv-path: /kv/preprod/fss
@@ -88,7 +89,3 @@ tests:
                   - name: "vault-volume"
                     emptyDir:
                       medium: "Memory"
-
-
-
-

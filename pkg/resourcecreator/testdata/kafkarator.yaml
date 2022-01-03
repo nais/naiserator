@@ -5,8 +5,6 @@ config:
   features:
     kafkarator: true
 
-config:
-
 input:
   kind: Application
   apiVersion: v1alpha1
