@@ -11,9 +11,13 @@ import (
 	"github.com/nais/naiserator/pkg/util"
 )
 
-func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) (batchv1.JobSpec, error) {
+type Config interface {
+	pod.Config
+}
 
-	podSpec, err := pod.CreateSpec(ast, resourceOptions, naisjob.GetName(), naisjob.Annotations,
+func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) (batchv1.JobSpec, error) {
+
+	podSpec, err := pod.CreateSpec(ast, cfg, naisjob.GetName(), naisjob.Annotations,
 		RestartPolicy(naisjob.Spec.RestartPolicy))
 	if err != nil {
 		return batchv1.JobSpec{}, err
@@ -23,7 +27,7 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 		ActiveDeadlineSeconds: naisjob.Spec.ActiveDeadlineSeconds,
 		BackoffLimit:          util.Int32p(naisjob.Spec.BackoffLimit),
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: pod.CreateNaisjobObjectMeta(naisjob, ast, &resourceOptions),
+			ObjectMeta: pod.CreateNaisjobObjectMeta(naisjob, ast, cfg),
 			Spec:       *podSpec,
 		},
 		TTLSecondsAfterFinished: naisjob.Spec.TTLSecondsAfterFinished,
@@ -32,7 +36,7 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptio
 	return jobSpec, nil
 }
 
-func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions resource.Options) error {
+func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
 
 	objectMeta := resource.CreateObjectMeta(naisjob)
 
@@ -40,7 +44,7 @@ func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, resourceOptions r
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
-	jobSpec, err := CreateJobSpec(naisjob, ast, resourceOptions)
+	jobSpec, err := CreateJobSpec(naisjob, ast, cfg)
 	if err != nil {
 		return err
 	}

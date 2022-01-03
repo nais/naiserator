@@ -28,7 +28,7 @@ type naisjobTestCase struct {
 }
 
 func TestApplicationGoldenFile(t *testing.T) {
-	goldenfile.Run(t, applicationTestDataDirectory, func(input []byte, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
+	goldenfile.Run(t, applicationTestDataDirectory, func(input []byte, resourceOptions generators.Options, config config.Config) (resource.Operations, error) {
 		test := applicationTestCase{}
 		err := yaml.Unmarshal(input, &test)
 		if err != nil {
@@ -49,7 +49,7 @@ func TestApplicationGoldenFile(t *testing.T) {
 }
 
 func TestNaisjobGoldenFile(t *testing.T) {
-	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, resourceOptions resource.Options, config config.Config) (resource.Operations, error) {
+	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, resourceOptions generators.Options, config config.Config) (resource.Operations, error) {
 		test := naisjobTestCase{}
 		err := yaml.Unmarshal(input, &test)
 		if err != nil {

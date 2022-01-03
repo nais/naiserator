@@ -55,7 +55,7 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinpor
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
-	maskinporten := cfg.GetMaskinporten()
+	maskinporten := source.GetMaskinporten()
 
 	if !cfg.IsDigdiratorEnabled() || maskinporten == nil || !maskinporten.Enabled {
 		return nil
