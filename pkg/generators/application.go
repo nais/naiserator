@@ -135,7 +135,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	if err != nil {
 		return nil, err
 	}
-	err = gcp.Create(app, ast, resourceOptions, app.Spec.GCP, &g.Config)
+	err = gcp.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}

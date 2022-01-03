@@ -15,6 +15,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
+type Config interface {
+	GetGoogleProjectID() string
+	GetGoogleTeamProjectID() string
+}
+
 func policyMember(source resource.Source, policy nais.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
 	name, err := createName(source.GetName(), policy)
 	if err != nil {
@@ -61,13 +66,13 @@ func formatExternalName(googleTeamProjectId, resourceName string) string {
 	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
 }
 
-func CreatePolicyMember(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGcpPermission []nais.CloudIAMPermission) error {
+func CreatePolicyMember(source resource.Source, ast *resource.Ast, cfg Config, naisGcpPermission []nais.CloudIAMPermission) error {
 	if naisGcpPermission == nil {
 		return nil
 	}
 
 	for _, p := range naisGcpPermission {
-		policyMember, err := policyMember(source, p, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId)
+		policyMember, err := policyMember(source, p, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID())
 		if err != nil {
 			return fmt.Errorf("unable to create iampolicymember: %w", err)
 		}

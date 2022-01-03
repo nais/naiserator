@@ -29,6 +29,8 @@ const (
 
 type Config interface {
 	GetGoogleProjectID() string
+	GetGoogleTeamProjectID() string
+	GetGoogleCloudSQLProxyContainerImage() string
 }
 
 func availabilityType(highAvailability bool) string {
@@ -97,8 +99,6 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 }
 
 func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string) (nais.CloudSqlInstance, error) {
-	var err error
-
 	defaultInstance := nais.CloudSqlInstance{
 		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
@@ -108,7 +108,8 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		Collation: DefaultSqlInstanceCollation,
 	}
 
-	if err = mergo.Merge(&instance, defaultInstance); err != nil {
+	err := mergo.Merge(&instance, defaultInstance)
+	if err != nil {
 		return nais.CloudSqlInstance{}, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
 	}
 
@@ -121,14 +122,10 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		instance.Name = appName
 	}
 
-	if err != nil {
-		return nais.CloudSqlInstance{}, fmt.Errorf("unable to setInstanceName name for instance: %s", err)
-	}
-
-	return instance, err
+	return instance, nil
 }
 
-func instanceIamPolicyMember(source resource.Source, resourceName string, options resource.Options, cfg Config) *google_iam_crd.IAMPolicyMember {
+func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Config) *google_iam_crd.IAMPolicyMember {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
@@ -150,7 +147,7 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, option
 		},
 	}
 
-	util.SetAnnotation(policy, google.ProjectIdAnnotation, options.GoogleTeamProjectId)
+	util.SetAnnotation(policy, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
 
 	return policy
 }
@@ -189,14 +186,15 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 	return nil
 }
 
-func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisSqlInstances *[]nais.CloudSqlInstance, cfg Config) error {
-	if naisSqlInstances == nil {
+func CreateInstance(source resource.Source, ast *resource.Ast, cfg Config, instances *[]nais.CloudSqlInstance) error {
+	if instances == nil {
+		// FIXME
 		return nil
 	}
 
 	sourceName := source.GetName()
 
-	for i, sqlInstance := range *naisSqlInstances {
+	for i, sqlInstance := range *instances {
 		// This could potentially be removed to add possibility for several instances.
 		if i > 0 {
 			return fmt.Errorf("only one sql instance is supported")
@@ -208,12 +206,12 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		}
 
 		objectMeta := resource.CreateObjectMeta(source)
-		googleTeamProjectId := resourceOptions.GoogleTeamProjectId
+		googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
 		instance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, instance)
 
-		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, resourceOptions, cfg)
+		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, cfg)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
 		for dbNum, db := range sqlInstance.Databases {
@@ -238,13 +236,14 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			}
 		}
 
-		(*naisSqlInstances)[i].Name = sqlInstance.Name
-		if err := AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName); err != nil {
+		(*instances)[i].Name = sqlInstance.Name
+		err = AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName)
+		if err != nil {
 			return fmt.Errorf("unable to append sql user secret envs: %s", err)
 		}
 		ast.Containers = append(
 			ast.Containers, google.CloudSqlProxyContainer(
-				5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId,
+				5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(),
 				instance.Name,
 			),
 		)

@@ -13,46 +13,61 @@ import (
 )
 
 type Config interface {
+	google_iam.Config
 	google_sql.Config
+	google_storagebucket.Config
+	google_bigquery.Config
+	IsCNRMEnabled() bool
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisGCP *nais_io_v1.GCP, cfg Config) error {
-	if naisGCP != nil && len(resourceOptions.GoogleTeamProjectId) == 0 {
+type Source interface {
+	resource.Source
+	GetGCP() *nais_io_v1.GCP
+}
+
+func Create(source Source, ast *resource.Ast, cfg Config) error {
+	gcp := source.GetGCP()
+	projectID := cfg.GetGoogleProjectID()
+	teamProjectID := cfg.GetGoogleTeamProjectID()
+
+	if gcp != nil && len(teamProjectID) == 0 {
 		// We're not currently in a team namespace with corresponding GCP team project
 		return fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", source.GetNamespace())
 	}
 
-	if !resourceOptions.CNRMEnabled && len(resourceOptions.GoogleProjectId) <= 0 {
+	if !cfg.IsCNRMEnabled() && len(projectID) == 0 {
 		return nil
 	}
 
-	googleServiceAccount := google_iam.CreateServiceAccount(source, resourceOptions.GoogleProjectId)
-	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, resourceOptions.GoogleProjectId)
+	googleServiceAccount := google_iam.CreateServiceAccount(source, projectID)
+	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, projectID)
 	ast.Env = append(ast.Env, v1.EnvVar{
 		Name:  "GCP_TEAM_PROJECT_ID",
-		Value: resourceOptions.GoogleTeamProjectId,
+		Value: teamProjectID,
 	})
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, &googleServiceAccount)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, &googleServiceAccountBinding)
 
-	if resourceOptions.CNRMEnabled && naisGCP != nil {
-		err := google_storagebucket.Create(source, ast, resourceOptions, googleServiceAccount, naisGCP.Buckets)
-		if err != nil {
-			return err
-		}
-		err = google_bigquery.CreateDataset(source, ast, resourceOptions, naisGCP.BigQueryDatasets, googleServiceAccount.Name)
-		if err != nil {
-			return err
-		}
-		err = google_sql.CreateInstance(source, ast, resourceOptions, &naisGCP.SqlInstances, cfg)
-		if err != nil {
-			return err
-		}
-		err = google_iam.CreatePolicyMember(source, ast, resourceOptions, naisGCP.Permissions)
-		if err != nil {
-			return err
-		}
+	if !cfg.IsCNRMEnabled() || gcp == nil {
+		return nil
+	}
+
+	err := google_storagebucket.Create(source, ast, cfg, googleServiceAccount, gcp.Buckets)
+	if err != nil {
+		return err
+	}
+	err = google_bigquery.CreateDataset(source, ast, cfg, gcp.BigQueryDatasets, googleServiceAccount.Name)
+	if err != nil {
+		return err
+	}
+	err = google_sql.CreateInstance(source, ast, cfg, &gcp.SqlInstances)
+	if err != nil {
+		return err
+	}
+	err = google_iam.CreatePolicyMember(source, ast, cfg, gcp.Permissions)
+	if err != nil {
+		return err
 	}
 
 	return nil

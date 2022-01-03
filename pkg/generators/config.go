@@ -13,7 +13,6 @@ type Options struct {
 	Config                            config.Config
 	DigdiratorEnabled                 bool
 	DigdiratorHosts                   []string
-	GoogleCloudSQLProxyContainerImage string
 	GoogleProjectID                   string
 	GoogleTeamProjectID               string
 	JwkerEnabled                      bool
@@ -54,6 +53,10 @@ func (o *Options) IsNetworkPolicyEnabled() bool {
 	return o.Config.Features.NetworkPolicy
 }
 
+func (o *Options) IsCNRMEnabled() bool {
+	return o.Config.Features.CNRM
+}
+
 func (o *Options) GetTeam() string {
 	return o.Team
 }
@@ -72,6 +75,14 @@ func (o *Options) IsWonderwallEnabled() bool {
 
 func (o *Options) GetGoogleProjectID() string {
 	return o.GoogleProjectID
+}
+
+func (o *Options) GetGoogleTeamProjectID() string {
+	return o.GoogleTeamProjectID
+}
+
+func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
+	return o.Config.GoogleCloudSQLProxyContainerImage
 }
 
 func (o *Options) GetWonderwallImage() string {
