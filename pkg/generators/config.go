@@ -7,26 +7,19 @@ import (
 // Options defines customizations for resource objects.
 // FIXME: clean up
 type Options struct {
-	AccessPolicyNotAllowedCIDRs []string
-	ApiServerIp                 string
-	AzureratorEnabled           bool
-	Config                      config.Config
-	DigdiratorEnabled           bool
-	DigdiratorHosts             []string
-	GoogleProjectID             string
-	GoogleTeamProjectID         string
-	AllowedKernelCapabilities   []string
-	CNRMEnabled                 bool
-	NetworkPolicy               bool
-	Linkerd                     bool
-	NativeSecrets               bool
-	NumReplicas                 int32
-	Team                        string
-	VaultEnabled                bool
-	WonderwallEnabled           bool
+	// FIXME: digdirator hosts - in use or not?
+	ApiServerIp         string
+	Config              config.Config
+	GoogleProjectID     string
+	GoogleTeamProjectID string
+	Linkerd             bool
+	NumReplicas         int32
+	Team                string
+	WonderwallEnabled   bool
 }
 
 func (o *Options) IsLinkerdEnabled() bool {
+	// not o.Config.Features - this flag is detected in Prepare()
 	return o.Linkerd
 }
 
@@ -35,7 +28,7 @@ func (o *Options) GetAPIServerIP() string {
 }
 
 func (o *Options) GetAccessPolicyNotAllowedCIDRs() []string {
-	return o.AccessPolicyNotAllowedCIDRs
+	return o.Config.Features.AccessPolicyNotAllowedCIDRs
 }
 
 func (o *Options) GetClusterName() string {
@@ -59,11 +52,11 @@ func (o *Options) GetTeam() string {
 }
 
 func (o *Options) IsDigdiratorEnabled() bool {
-	return o.DigdiratorEnabled
+	return o.Config.Features.Digdirator
 }
 
 func (o *Options) IsAzureratorEnabled() bool {
-	return o.AzureratorEnabled
+	return o.Config.Features.Azurerator
 }
 
 func (o *Options) IsWonderwallEnabled() bool {
