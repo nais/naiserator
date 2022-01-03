@@ -14,6 +14,15 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
+type Source interface {
+	resource.Source
+	GetMaskinporten() *nais_io_v1.Maskinporten
+}
+
+type Config interface {
+	IsDigdiratorEnabled() bool
+}
+
 func secretName(appName string) (string, error) {
 	basename := fmt.Sprintf("%s-%s", "maskinporten", appName)
 	year, week := time.Now().ISOWeek()
@@ -45,12 +54,14 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinpor
 	}, nil
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisMaskinporten *nais_io_v1.Maskinporten) error {
-	if !resourceOptions.DigdiratorEnabled || naisMaskinporten == nil || !naisMaskinporten.Enabled {
+func Create(source Source, ast *resource.Ast, cfg Config) error {
+	maskinporten := cfg.GetMaskinporten()
+
+	if !cfg.IsDigdiratorEnabled() || maskinporten == nil || !maskinporten.Enabled {
 		return nil
 	}
 
-	maskinportenClient, err := client(resource.CreateObjectMeta(source), naisMaskinporten)
+	maskinportenClient, err := client(resource.CreateObjectMeta(source), maskinporten)
 	if err != nil {
 		return err
 	}

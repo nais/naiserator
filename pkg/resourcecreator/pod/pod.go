@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
@@ -45,6 +46,16 @@ type Source interface {
 	GetStartup() *nais_io_v1.Probe
 }
 
+type Config interface {
+	GetClusterName() string
+	GetGoogleProjectID() string
+	GetHostAliases() []config.HostAlias
+	GetAllowedKernelCapabilities() []string
+	IsNativeSecretsEnabled() bool
+	IsLinkerdEnabled() bool
+	IsSecurePodSecurityContextEnabled() bool
+}
+
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
 	reordered := make([]corev1.Container, len(containers))
 	delta := 1
@@ -59,7 +70,7 @@ func reorderContainers(appName string, containers []corev1.Container) []corev1.C
 	return reordered
 }
 
-func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
+func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
 	var err error
 
 	containers := reorderContainers(appName, ast.Containers)
@@ -92,7 +103,7 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 		},
 	}
 
-	if resourceOptions.SecurePodSecurityContext && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
+	if cfg.IsSecurePodSecurityContextEnabled() && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
 		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
 			RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
 			RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
@@ -106,16 +117,16 @@ func CreateSpec(ast *resource.Ast, resourceOptions resource.Options, appName str
 			Drop: []corev1.Capability{"all"},
 		}
 
-		additionalCapabilities := sanitizeCapabilities(annotations, resourceOptions.AllowedKernelCapabilities)
-		if additionalCapabilities != nil && len(additionalCapabilities) > 0 {
+		additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
+		if len(additionalCapabilities) > 0 {
 			capabilities.Add = additionalCapabilities
 		}
 
 		podSpec.Containers[0].SecurityContext.Capabilities = capabilities
 	}
 
-	if len(resourceOptions.HostAliases) > 0 {
-		podSpec.HostAliases = hostAliases(resourceOptions)
+	if len(cfg.GetHostAliases()) > 0 {
+		podSpec.HostAliases = hostAliases(cfg)
 	}
 
 	return podSpec, err
@@ -151,10 +162,10 @@ func runAsGroup(annotations map[string]string) int64 {
 	return int64(uid)
 }
 
-func hostAliases(resourceOptions resource.Options) []corev1.HostAlias {
+func hostAliases(cfg Config) []corev1.HostAlias {
 	var hostAliases []corev1.HostAlias
 
-	for _, hostAlias := range resourceOptions.HostAliases {
+	for _, hostAlias := range cfg.GetHostAliases() {
 		hostAliases = append(hostAliases, corev1.HostAlias{Hostnames: []string{hostAlias.Host}, IP: hostAlias.Address})
 	}
 	return hostAliases
@@ -212,11 +223,11 @@ func fromFilesConfigmapVolume(name string) corev1.Volume {
 	}
 }
 
-func CreateAppContainer(app Source, ast *resource.Ast, options resource.Options) error {
+func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
-	ast.Env = append(ast.Env, defaultEnvVars(app, options.ClusterName, app.GetImage())...)
-	filesFrom(ast, options.NativeSecrets, app.GetFilesFrom())
-	envFrom(ast, options.NativeSecrets, app.GetEnvFrom())
+	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
+	filesFrom(ast, cfg.IsNativeSecretsEnabled(), app.GetFilesFrom())
+	envFrom(ast, cfg.IsNativeSecretsEnabled(), app.GetEnvFrom())
 	lifecycle, err := lifecycle(app.GetPreStopHookPath(), app.GetPreStopHook())
 	if err != nil {
 		return err
@@ -254,11 +265,11 @@ func CreateAppContainer(app Source, ast *resource.Ast, options resource.Options)
 	return nil
 }
 
-func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, options resource.Options) error {
+func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
 	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
-	ast.Env = append(ast.Env, defaultEnvVars(naisjob, options.ClusterName, naisjob.Spec.Image)...)
-	filesFrom(ast, options.NativeSecrets, naisjob.Spec.FilesFrom)
-	envFrom(ast, options.NativeSecrets, naisjob.Spec.EnvFrom)
+	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...)
+	filesFrom(ast, cfg.IsNativeSecretsEnabled(), naisjob.Spec.FilesFrom)
+	envFrom(ast, cfg.IsNativeSecretsEnabled(), naisjob.Spec.EnvFrom)
 	lifecycle, err := lifecycle("", naisjob.Spec.PreStopHook)
 	if err != nil {
 		return err
@@ -297,7 +308,7 @@ func mapMerge(dst, src map[string]string) {
 	}
 }
 
-func CreateAppObjectMeta(app Source, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
+func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(app)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
@@ -311,7 +322,7 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, opt *resource.Options) m
 
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = app.GetName()
 
-	if len(opt.GoogleProjectId) > 0 {
+	if len(cfg.GetGoogleProjectID()) > 0 {
 		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
 	}
 
@@ -329,14 +340,14 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, opt *resource.Options) m
 		objectMeta.Annotations["nais.io/logtransform"] = app.GetLogtransform()
 	}
 
-	if opt.Linkerd {
+	if cfg.IsLinkerdEnabled() {
 		copyLinkerdAnnotations(app.GetAnnotations(), objectMeta.Annotations)
 	}
 
 	return objectMeta
 }
 
-func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opt *resource.Options) metav1.ObjectMeta {
+func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(naisjob)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
@@ -355,7 +366,7 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, opt
 		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
 	}
 
-	if opt.Linkerd {
+	if cfg.IsLinkerdEnabled() {
 		copyLinkerdAnnotations(naisjob.Annotations, objectMeta.Annotations)
 	}
 

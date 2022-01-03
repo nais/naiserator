@@ -15,12 +15,9 @@ type Options struct {
 	DigdiratorHosts             []string
 	GoogleProjectID             string
 	GoogleTeamProjectID         string
-	JwkerEnabled                bool
-	SecurePodSecurityContext    bool
 	AllowedKernelCapabilities   []string
 	CNRMEnabled                 bool
 	NetworkPolicy               bool
-	KafkaratorEnabled           bool
 	Linkerd                     bool
 	NativeSecrets               bool
 	NumReplicas                 int32
@@ -95,4 +92,40 @@ func (o *Options) GetWebProxyOptions() config.Proxy {
 
 func (o *Options) GetSecureLogsOptions() config.Securelogs {
 	return o.Config.Securelogs
+}
+
+func (o *Options) IsJwkerEnabled() bool {
+	return o.Config.Features.Jwker
+}
+
+func (o *Options) IsKafkaratorEnabled() bool {
+	return o.Config.Features.Kafkarator
+}
+
+func (o *Options) IsVaultEnabled() bool {
+	return o.Config.Features.Vault
+}
+
+func (o *Options) GetVaultOptions() config.Vault {
+	return o.Config.Vault
+}
+
+func (o *Options) IsNativeSecretsEnabled() bool {
+	return o.Config.Features.NativeSecrets
+}
+
+func (o *Options) GetHostAliases() []config.HostAlias {
+	return o.Config.HostAliases
+}
+
+func (o *Options) IsSecurePodSecurityContextEnabled() bool {
+	return o.Config.Features.SecurePodSecurityContext
+}
+
+func (o *Options) GetAllowedKernelCapabilities() []string {
+	return []string{"NET_RAW", "NET_BIND_SERVICE"}
+}
+
+func (o *Options) GetNumReplicas() int32 {
+	return o.NumReplicas
 }

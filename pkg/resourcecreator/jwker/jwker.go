@@ -11,12 +11,26 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
+type Source interface {
+	resource.Source
+	GetTokenX() *nais_io_v1.TokenX
+	GetAccessPolicy() *nais_io_v1.AccessPolicy
+}
+
+type Config interface {
+	GetClusterName() string
+	IsJwkerEnabled() bool
+}
+
 func secretName(name string) string {
 	return namegen.PrefixedRandShortName("tokenx", name, validation.DNS1035LabelMaxLength)
 }
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisTokenX nais_io_v1.TokenX, naisAccessPolicy *nais_io_v1.AccessPolicy) {
-	if !options.JwkerEnabled || !naisTokenX.Enabled {
+func Create(source Source, ast *resource.Ast, cfg Config) {
+	naisTokenX := source.GetTokenX()
+	naisAccessPolicy := source.GetAccessPolicy()
+
+	if !cfg.IsJwkerEnabled() || naisTokenX == nil || naisAccessPolicy == nil || !naisTokenX.Enabled {
 		return
 	}
 
@@ -27,7 +41,7 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options,
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: nais_io_v1.JwkerSpec{
-			AccessPolicy: accesspolicy.WithDefaults(naisAccessPolicy, source.GetNamespace(), options.ClusterName),
+			AccessPolicy: accesspolicy.WithDefaults(naisAccessPolicy, source.GetNamespace(), cfg.GetClusterName()),
 			SecretName:   secretName(source.GetName()),
 		},
 	}

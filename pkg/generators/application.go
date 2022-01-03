@@ -53,8 +53,6 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 		Config: g.Config,
 	}
 
-	o.AllowedKernelCapabilities = []string{"NET_RAW", "NET_BIND_SERVICE"}
-
 	// Make a query to Kubernetes for this application's previous deployment.
 	// The number of replicas is significant, so we need to carry it over to match
 	// this next rollout.
@@ -151,36 +149,31 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 
 	certificateauthority.Create(app, ast)
 	securelogs.Create(app, ast, cfg)
-	err = maskinporten.Create(app, ast, resourceOptions, app.Spec.Maskinporten)
+	err = maskinporten.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
 	poddisruptionbudget.Create(app, ast)
 
-	jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
-	linkerd.Create(ast, resourceOptions)
+	jwker.Create(app, ast, cfg)
+	linkerd.Create(ast, cfg)
 
-	aivenSpecs := aiven.Specs{
-		Kafka:   app.Spec.Kafka,
-		Elastic: app.Spec.Elastic,
-		Influx:  app.Spec.Influx,
-	}
-	err = aiven.Create(app, ast, &g.Config, aivenSpecs)
+	err = aiven.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = vault.Create(app, ast, resourceOptions, app.Spec.Vault)
+	err = vault.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = pod.CreateAppContainer(app, ast, resourceOptions)
+	err = pod.CreateAppContainer(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = deployment.Create(app, ast, resourceOptions)
+	err = deployment.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}

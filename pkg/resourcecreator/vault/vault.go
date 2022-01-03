@@ -4,12 +4,26 @@ import (
 	"fmt"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, naisVault *nais_io_v1.Vault) error {
-	if !options.VaultEnabled || !naisVault.Enabled {
+type Source interface {
+	resource.Source
+	GetVault() *nais_io_v1.Vault
+}
+
+type Config interface {
+	IsVaultEnabled() bool
+	GetVaultOptions() config.Vault
+}
+
+func Create(source Source, ast *resource.Ast, cfg Config) error {
+	naisVault := source.GetVault()
+	vaultCfg := cfg.GetVaultOptions()
+
+	if !cfg.IsVaultEnabled() || !naisVault.Enabled {
 		return nil
 	}
 
@@ -24,18 +38,18 @@ func Create(source resource.Source, ast *resource.Ast, options resource.Options,
 		}
 	}
 
-	if !defaultPathExists(paths, options.Vault.KeyValuePath) {
-		paths = append(paths, defaultSecretPath(source, options.Vault.KeyValuePath))
+	if !defaultPathExists(paths, vaultCfg.KeyValuePath) {
+		paths = append(paths, defaultSecretPath(source, vaultCfg.KeyValuePath))
 	}
 
 	if err := validateSecretPaths(paths); err != nil {
 		return err
 	}
 
-	ast.InitContainers = append(ast.InitContainers, createInitContainer(source, options, paths))
+	ast.InitContainers = append(ast.InitContainers, createInitContainer(source, vaultCfg, paths))
 
 	if naisVault.Sidecar {
-		ast.Containers = append(ast.Containers, createSideCarContainer(options))
+		ast.Containers = append(ast.Containers, createSideCarContainer(vaultCfg))
 	}
 
 	ast.Volumes = append(ast.Volumes, corev1.Volume{
