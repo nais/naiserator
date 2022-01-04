@@ -141,37 +141,37 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
-	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
-		Generator: &generators.Application{
+	applicationReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
+		mgrClient,
+		simpleClient,
+		*cfg,
+		&generators.Application{
 			Config: *cfg,
 		},
-		Client:         mgrClient,
-		Config:         *cfg,
-		Kafka:          kafkaClient,
-		RolloutMonitor: make(map[client.ObjectKey]synchronizer.RolloutMonitor),
-		Scheme:         kscheme,
-		SimpleClient:   simpleClient,
-		Listers:        listers,
-	})
+		kafkaClient,
+		listers,
+		kscheme,
+	))
 
-	if err = applicationReconciler.SetupWithManager(mgr); err != nil {
+	err = applicationReconciler.SetupWithManager(mgr)
+	if err != nil {
 		return err
 	}
 
-	naisjobReconciler := controllers.NewNaisjobReconciler(synchronizer.Synchronizer{
-		Generator: &generators.Naisjob{
+	naisjobReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
+		mgrClient,
+		simpleClient,
+		*cfg,
+		&generators.Naisjob{
 			Config: *cfg,
 		},
-		Client:         mgrClient,
-		Config:         *cfg,
-		Kafka:          kafkaClient,
-		RolloutMonitor: make(map[client.ObjectKey]synchronizer.RolloutMonitor),
-		Scheme:         kscheme,
-		SimpleClient:   simpleClient,
-		Listers:        listers,
-	})
+		kafkaClient,
+		listers,
+		kscheme,
+	))
 
-	if err = naisjobReconciler.SetupWithManager(mgr); err != nil {
+	err = naisjobReconciler.SetupWithManager(mgr)
+	if err != nil {
 		return err
 	}
 

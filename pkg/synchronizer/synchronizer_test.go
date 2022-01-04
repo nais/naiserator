@@ -84,17 +84,17 @@ func newTestRig(config config.Config) (*testRig, error) {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
 
-	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
-		Client: rig.client,
-		Config: rig.config,
-		Generator: &generators.Application{
+	applicationReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
+		rig.client,
+		rig.client,
+		rig.config,
+		&generators.Application{
 			Config: rig.config,
 		},
-		RolloutMonitor: make(map[client.ObjectKey]synchronizer.RolloutMonitor),
-		Scheme:         rig.scheme,
-		SimpleClient:   rig.client,
-		Listers:        listers,
-	})
+		nil,
+		listers,
+		rig.scheme,
+	))
 
 	err = applicationReconciler.SetupWithManager(rig.manager)
 	if err != nil {

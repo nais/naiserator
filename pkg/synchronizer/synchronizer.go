@@ -53,6 +53,29 @@ type Synchronizer struct {
 	SimpleClient   client.Client
 }
 
+func NewSynchronizer(
+	cli client.Client,
+	simpleClient client.Client,
+	config config.Config,
+	generator Generator,
+	kafka kafka.Interface,
+	listers []client.ObjectList,
+	scheme *runtime.Scheme,
+) *Synchronizer {
+
+	rolloutMonitor := make(map[client.ObjectKey]RolloutMonitor)
+	return &Synchronizer{
+		Client:         cli,
+		Config:         config,
+		Generator:      generator,
+		Kafka:          kafka,
+		Listers:        listers,
+		RolloutMonitor: rolloutMonitor,
+		Scheme:         scheme,
+		SimpleClient:   simpleClient,
+	}
+}
+
 // Commit wraps a cluster operation function with extra fields
 type commit struct {
 	groupVersionKind schema.GroupVersionKind
