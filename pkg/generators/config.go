@@ -5,9 +5,9 @@ import (
 )
 
 // Options defines customizations for resource objects.
-// FIXME: clean up
+// These parameters are set during the Prepare() stage of the generator,
+// and then passed to the different resource generators.
 type Options struct {
-	// FIXME: digdirator hosts - in use or not?
 	Config              config.Config
 	GoogleProjectID     string
 	GoogleTeamProjectID string
