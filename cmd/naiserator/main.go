@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
+	"github.com/nais/naiserator/pkg/generators"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -141,6 +142,9 @@ func run() error {
 	}
 
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
+		Generator: &generators.Application{
+			Config: *cfg,
+		},
 		Client:         mgrClient,
 		Config:         *cfg,
 		Kafka:          kafkaClient,
@@ -155,6 +159,9 @@ func run() error {
 	}
 
 	naisjobReconciler := controllers.NewNaisjobReconciler(synchronizer.Synchronizer{
+		Generator: &generators.Naisjob{
+			Config: *cfg,
+		},
 		Client:         mgrClient,
 		Config:         *cfg,
 		Kafka:          kafkaClient,
