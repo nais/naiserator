@@ -158,7 +158,7 @@ func run() error {
 		return err
 	}
 
-	naisjobReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
+	naisjobReconciler := controllers.NewNaisjobReconciler(synchronizer.NewSynchronizer(
 		mgrClient,
 		simpleClient,
 		*cfg,
