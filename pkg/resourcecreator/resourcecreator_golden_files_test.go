@@ -30,7 +30,8 @@ type applicationTestCase struct {
 }
 
 type naisjobTestCase struct {
-	Input nais_io_v1.Naisjob
+	Input    nais_io_v1.Naisjob
+	Existing []json.RawMessage
 }
 
 func TestApplicationGoldenFile(t *testing.T) {
@@ -81,6 +82,16 @@ func TestNaisjobGoldenFile(t *testing.T) {
 			return nil, err
 		}
 
+		decoder := foobar.Codecs.UniversalDeserializer()
+		existing := make([]runtime.Object, 0)
+		for i, data := range test.Existing {
+			object, _, err := decoder.Decode(data, nil, nil)
+			if err != nil {
+				return nil, fmt.Errorf("decoding kubernetes resource %d: %w", i+1, err)
+			}
+			existing = append(existing, object)
+		}
+
 		err = test.Input.ApplyDefaults()
 		if err != nil {
 			return nil, fmt.Errorf("apply default values to Naisjob object: %s", err)
@@ -92,7 +103,7 @@ func TestNaisjobGoldenFile(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 
-		mockClient := fake.NewClientBuilder().Build()
+		mockClient := fake.NewClientBuilder().WithRuntimeObjects(existing...).Build()
 		opts, err := gen.Prepare(ctx, &test.Input, mockClient)
 		if err != nil {
 			return nil, fmt.Errorf("failed preparing options for resource generation: %w", err)

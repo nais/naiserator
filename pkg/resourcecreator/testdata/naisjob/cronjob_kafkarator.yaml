@@ -5,8 +5,6 @@ config:
   features:
     kafkarator: true
 
-config:
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1

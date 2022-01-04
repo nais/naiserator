@@ -2,13 +2,18 @@ testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
 
 config:
-  cnrm: true
-  linkerd: true
+  features:
+    cnrm: true
+    linkerd: true
   google-project-id: google-project-id
 
-config:
-  google-project-id: google-project-id
-
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 input:
   kind: Naisjob
   apiVersion: nais.io/v1

@@ -2,9 +2,18 @@ testconfig:
   description: Google BigQuery dataset instance
 
 config:
-  cnrm: true
-  access-policy: false
+  features:
+    cnrm: true
+    access-policy: false
   google-project-id: google-project-id
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 input:
   kind: Naisjob

@@ -3,7 +3,8 @@ testconfig:
 
 config:
   cluster-name: test-cluster
-  SecurePodSecurityContext: true
+  features:
+    secure-pod-security-context: true
 
 input:
   kind: Naisjob

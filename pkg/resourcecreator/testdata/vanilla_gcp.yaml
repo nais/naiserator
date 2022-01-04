@@ -210,10 +210,12 @@ tests:
     name: myapplication
     match:
       - type: subset
+        name: "replicas set to 2"
+        resource:
+          spec:
+            replicas: 2
+      - type: subset
         name: "pod created with safe-to-evict annotation"
-        exlude:
-          - .metadata
-          - .status
         resource:
           spec:
             template:
@@ -224,7 +226,6 @@ tests:
         name: "restricted securitycontext"
         resource:
           spec:
-            replicas: 1
             template:
               spec:
                 containers:

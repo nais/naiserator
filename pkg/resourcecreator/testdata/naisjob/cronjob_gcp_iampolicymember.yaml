@@ -2,8 +2,17 @@ testconfig:
   description: specifying custom port and protocol for mesh-external services in gcp
 
 config:
-  cnrm: true
+  features:
+    cnrm: true
   google-project-id: google-project-id
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 input:
   kind: Naisjob
@@ -76,7 +85,7 @@ tests:
         resource:
           metadata:
             annotations:
-              cnrm.cloud.google.com/project-id: google-team-project-id
+              cnrm.cloud.google.com/project-id: team-project-id
             name: mynaisjob
             namespace: mynamespace
           spec:
@@ -84,5 +93,5 @@ tests:
             resourceRef:
               apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
               kind: PubSubSubscription
-              external: projects/google-team-project-id/subscriptions/my-subscription
+              external: projects/team-project-id/subscriptions/my-subscription
             member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
