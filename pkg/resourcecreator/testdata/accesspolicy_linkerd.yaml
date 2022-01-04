@@ -2,17 +2,6 @@ testconfig:
   description: vanilla application running with linkerd, default configuration and network policies
 
 config:
-  linkerd: true
-  network-policy: true
-  google-project-id: google-project-id
-  JwkerEnabled: true
-  gateway-mappings:
-    - domainSuffix: .adeo.no
-      ingressClass: adeo-gateway
-    - domainSuffix: .domain
-      ingressClass: domain-gateway
-
-config:
   features:
     linkerd: true
     network-policy: true

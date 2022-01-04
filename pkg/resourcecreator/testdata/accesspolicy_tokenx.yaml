@@ -2,15 +2,6 @@ testconfig:
   description: egress rules with tokenx enabled will create network policies and jwker resources
 
 config:
-  linkerd: true
-  network-policy: true
-  google-project-id: google-project-id
-  cluster-name: mycluster
-  JwkerEnabled: true
-  JwkerHosts:
-    - dev.tokendings.test
-
-config:
   features:
     linkerd: true
     network-policy: true
