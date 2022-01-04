@@ -162,6 +162,8 @@ tests:
                         value: test-cluster
                       - name: NAIS_CLIENT_ID
                         value: test-cluster:mynamespace:myapplication
+                      - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+                        value: "true"
                     resources:
                       limits:
                         cpu: 500m

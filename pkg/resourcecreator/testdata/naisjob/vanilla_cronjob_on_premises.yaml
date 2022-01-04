@@ -45,8 +45,7 @@ tests:
     match:
       - type: subset
         name: "service account created"
-        resource: { }
-
+        resource: {}
 
   - operation: CreateOrUpdate
     apiVersion: batch/v1beta1
@@ -112,6 +111,8 @@ tests:
                             value: test-cluster
                           - name: NAIS_CLIENT_ID
                             value: test-cluster:mynamespace:mynaisjob
+                          - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+                            value: "true"
                         image: navikt/mynaisjob:1.2.3
                         securityContext:
                           runAsUser: 1069
@@ -178,5 +179,5 @@ tests:
                         name: ca-bundle-pem
                       - emptyDir: {}
                         name: writable-tmp
-            schedule: '* 2 * * *'
+            schedule: "* 2 * * *"
             successfulJobsHistoryLimit: 3

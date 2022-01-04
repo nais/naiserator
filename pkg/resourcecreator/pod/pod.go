@@ -299,6 +299,7 @@ func defaultEnvVars(source resource.Source, clusterName, appImage string) []core
 		{Name: naisAppImageEnv, Value: appImage},
 		{Name: naisClusterNameEnv, Value: clusterName},
 		{Name: naisClientId, Value: AppClientID(source, clusterName)},
+		{Name: "LOG4J_FORMAT_MSG_NO_LOOKUPS", Value: "true"},
 	}
 }
 

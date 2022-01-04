@@ -44,8 +44,7 @@ tests:
     match:
       - type: subset
         name: "service account created"
-        resource: { }
-
+        resource: {}
 
   - operation: CreateOrUpdate
     apiVersion: batch/v1
@@ -109,6 +108,8 @@ tests:
                         value: test-cluster
                       - name: NAIS_CLIENT_ID
                         value: test-cluster:mynamespace:mynaisjob
+                      - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+                        value: "true"
                     image: navikt/mynaisjob:1.2.3
                     securityContext:
                       runAsUser: 1069
