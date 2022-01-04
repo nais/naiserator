@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -22,13 +22,13 @@ func TestProxyEnvironmentVariables(t *testing.T) {
 		var err error
 		noProxy := []string{"foo", "bar", "baz"}
 
-		options := resource.Options{}
-		options.Proxy = config.Proxy{
+		opts := &generators.Options{}
+		opts.Config.Proxy = config.Proxy{
 			Address: httpProxy,
 			Exclude: noProxy,
 		}
 		var envVars []corev1.EnvVar
-		envVars, err = proxyopts.EnvironmentVariables(options)
+		envVars, err = proxyopts.EnvironmentVariables(opts)
 		nprox := strings.Join(noProxy, ",")
 		assert.NoError(t, err)
 		assert.Len(t, envVars, 7)

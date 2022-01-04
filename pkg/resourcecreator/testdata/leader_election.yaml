@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: leader election container injection
 
 input:

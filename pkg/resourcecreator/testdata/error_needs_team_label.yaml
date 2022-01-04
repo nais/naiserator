@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: require team label
 input:
   kind: "Application"

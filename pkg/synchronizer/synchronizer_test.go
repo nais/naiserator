@@ -12,6 +12,7 @@ import (
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/crd"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -41,14 +42,17 @@ type testRig struct {
 	manager      ctrl.Manager
 	synchronizer reconcile.Reconciler
 	scheme       *runtime.Scheme
+	config       config.Config
 }
 
-func newTestRig(options resource.Options) (*testRig, error) {
+func newTestRig(config config.Config) (*testRig, error) {
 	rig := &testRig{}
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
 		CRDDirectoryPaths: []string{crdPath},
 	}
+
+	rig.config = config
 
 	cfg, err := rig.kubernetes.Start()
 	if err != nil {
@@ -75,28 +79,22 @@ func newTestRig(options resource.Options) (*testRig, error) {
 		return nil, fmt.Errorf("initialize manager: %w", err)
 	}
 
-	syncerConfig := config.Config{
-		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 2 * time.Second,
-			RolloutCheckInterval:   5 * time.Second,
-			RolloutTimeout:         20 * time.Second,
-		},
-	}
-
 	listers := naiserator_scheme.GenericListers()
-	if len(options.GoogleProjectId) > 0 {
+	if len(rig.config.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
 
-	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
-		Client:          rig.client,
-		Config:          syncerConfig,
-		ResourceOptions: options,
-		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
-		Scheme:          rig.scheme,
-		SimpleClient:    rig.client,
-		Listers:         listers,
-	})
+	applicationReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
+		rig.client,
+		rig.client,
+		rig.config,
+		&generators.Application{
+			Config: rig.config,
+		},
+		nil,
+		listers,
+		rig.scheme,
+	))
 
 	err = applicationReconciler.SetupWithManager(rig.manager)
 	if err != nil {
@@ -112,8 +110,15 @@ func newTestRig(options resource.Options) (*testRig, error) {
 // and that orphaned resources are cleaned up properly.
 // The validity of resources generated are not tested here.
 func TestSynchronizer(t *testing.T) {
-	resourceOptions := resource.NewOptions()
-	rig, err := newTestRig(resourceOptions)
+	cfg := config.Config{
+		Synchronizer: config.Synchronizer{
+			SynchronizationTimeout: 2 * time.Second,
+			RolloutCheckInterval:   5 * time.Second,
+			RolloutTimeout:         20 * time.Second,
+		},
+	}
+
+	rig, err := newTestRig(cfg)
 	if err != nil {
 		t.Errorf("unable to run synchronizer integration tests: %s", err)
 		t.FailNow()
@@ -169,10 +174,13 @@ func TestSynchronizer(t *testing.T) {
 		t.Fatalf("Application resource cannot be persisted to fake Kubernetes: %s", err)
 	}
 
+	opts := &generators.Options{}
+	opts.Config = cfg
+
 	// Create an Ingress object that should be deleted once processing has run.
 	ast := resource.NewAst()
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	err = ingress.Create(app, ast, opts)
 	assert.NoError(t, err)
 	ing := ast.Operations[0].Resource.(*networkingv1.Ingress)
 	app.Spec.Ingresses = []nais_io_v1.Ingress{}
@@ -184,7 +192,7 @@ func TestSynchronizer(t *testing.T) {
 	// Create an Ingress object with application label but without ownerReference.
 	// This resource should persist in the cluster even after synchronization.
 	app.Spec.Ingresses = []nais_io_v1.Ingress{"https://foo.bar"}
-	err = ingress.Create(app, ast, resourceOptions, app.Spec.Ingresses, app.Spec.Liveness.Path, app.Spec.Service.Protocol, app.Annotations)
+	err = ingress.Create(app, ast, opts)
 	assert.NoError(t, err)
 	ing = ast.Operations[1].Resource.(*networkingv1.Ingress)
 	ing.SetName("disowned-ingress")
@@ -263,12 +271,20 @@ func TestSynchronizer(t *testing.T) {
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
-	resourceOptions := resource.NewOptions()
-	resourceOptions.CNRMEnabled = true
-	resourceOptions.GoogleProjectId = "something"
-	resourceOptions.GoogleCloudSQLProxyContainerImage = "cloudsqlproxy"
+	cfg := config.Config{
+		Synchronizer: config.Synchronizer{
+			SynchronizationTimeout: 2 * time.Second,
+			RolloutCheckInterval:   5 * time.Second,
+			RolloutTimeout:         20 * time.Second,
+		},
+		Features: config.Features{
+			CNRM: true,
+		},
+		GoogleProjectId:                   "something",
+		GoogleCloudSQLProxyContainerImage: "cloudsqlproxy",
+	}
 
-	rig, err := newTestRig(resourceOptions)
+	rig, err := newTestRig(cfg)
 	if err != nil {
 		t.Errorf("unable to run synchronizer integration tests: %s", err)
 		t.FailNow()

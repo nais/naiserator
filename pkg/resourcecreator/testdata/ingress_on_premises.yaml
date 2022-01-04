@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: ingress resource is created on-premises
 
 input:

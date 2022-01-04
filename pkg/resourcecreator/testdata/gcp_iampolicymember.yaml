@@ -1,11 +1,10 @@
-config:
+testconfig:
   description: specifying custom port and protocol for mesh-external services in gcp
 
-resourceoptions:
-  CNRMEnabled: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: google-team-project-id
-  NumReplicas: 1
+config:
+  features:
+    cnrm: true
+  google-project-id: google-project-id
 
 input:
   kind: Application
@@ -25,6 +24,14 @@ input:
             apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
             kind: PubSubSubscription
             name: subscriptions/my-subscription
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 tests:
   - match:
@@ -88,7 +95,7 @@ tests:
         resource:
           metadata:
             annotations:
-              cnrm.cloud.google.com/project-id: google-team-project-id
+              cnrm.cloud.google.com/project-id: team-project-id
             name: myapplication
             namespace: mynamespace
           spec:
@@ -96,5 +103,5 @@ tests:
             resourceRef:
               apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
               kind: PubSubSubscription
-              external: projects/google-team-project-id/subscriptions/my-subscription
+              external: projects/team-project-id/subscriptions/my-subscription
             member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com

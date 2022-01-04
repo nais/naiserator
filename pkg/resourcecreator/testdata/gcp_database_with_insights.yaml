@@ -1,12 +1,11 @@
-config:
+testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
 
-resourceoptions:
-  CNRMEnabled: true
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  features:
+    cnrm: true
+    linkerd: true
+  google-project-id: google-project-id
 
 input:
   kind: Application
@@ -29,6 +28,15 @@ input:
             queryStringLength: 4500
             recordApplicationTags: true
             recordClientAddress: true
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
+
 tests:
   - match:
       - type: subset

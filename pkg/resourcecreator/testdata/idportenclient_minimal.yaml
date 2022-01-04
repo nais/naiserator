@@ -1,17 +1,18 @@
-config:
+testconfig:
   description: minimal idporten config in application spec should result in idportenclient with generated defaults
 
-resourceoptions:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
-  DigdiratorEnabled: true
-  DigdiratorHosts:
-    - dev.difi.test
-  GatewayMappings:
-    - DomainSuffix: .nav.no
-      IngressClass: nav-no-gateway
+config:
+  features:
+    linkerd: true
+    digdirator: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  service-hosts:
+    digdirator:
+      - dev.difi.test
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: nav-no-gateway
 
 input:
   kind: Application

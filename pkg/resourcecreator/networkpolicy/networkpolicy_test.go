@@ -3,6 +3,7 @@ package networkpolicy_test
 import (
 	"testing"
 
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
@@ -19,9 +20,10 @@ const accessPolicyApp = "allowedAccessApp"
 var defaultIps = []string{"12.0.0.0/12", "123.0.0.0/12"}
 
 func TestNetworkPolicy(t *testing.T) {
-	resourceOptions := resource.NewOptions()
-	resourceOptions.NetworkPolicy = true
-	resourceOptions.AccessPolicyNotAllowedCIDRs = defaultIps
+
+	opts := &generators.Options{}
+	opts.Config.Features.NetworkPolicy = true
+	opts.Config.Features.AccessPolicyNotAllowedCIDRs = defaultIps
 
 	t.Run("default deny all sets app rules to empty slice", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
@@ -29,7 +31,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkpolicy.Create(app, ast, opts)
 		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 1)
@@ -109,7 +111,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkpolicy.Create(app, ast, opts)
 		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 
 		matchLabels := map[string]string{
@@ -126,7 +128,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkpolicy.Create(app, ast, opts)
 		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 
 		assert.Len(t, networkPolicy.Spec.Egress, 2)
@@ -140,7 +142,7 @@ func TestNetworkPolicy(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		networkpolicy.Create(app, ast, resourceOptions, *app.Spec.AccessPolicy, app.Spec.Ingresses, app.Spec.LeaderElection)
+		networkpolicy.Create(app, ast, opts)
 		networkPolicy := ast.Operations[0].Resource.(*networking.NetworkPolicy)
 		assert.NotNil(t, networkPolicy)
 

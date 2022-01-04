@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: horizontal pod autoscaler is set up
 
 input:

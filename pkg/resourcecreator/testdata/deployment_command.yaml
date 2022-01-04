@@ -1,8 +1,5 @@
-config:
+testconfig:
   description: vanilla application gets a custom container command
-
-resourceoptions:
-  NumReplicas: 1
 
 input:
   kind: Application

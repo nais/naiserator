@@ -1,14 +1,15 @@
-config:
+testconfig:
   description: minimal maskinporten config in naisjob spec should result in MaskinportenClient
 
-resourceoptions:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
-  DigdiratorEnabled: true
-  DigdiratorHosts:
-    - dev.maskinporten.test
+config:
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  features:
+    digdirator: true
+    linkerd: true
+  service-hosts:
+    digdirator:
+      - dev.maskinporten.test
 
 input:
   kind: Naisjob

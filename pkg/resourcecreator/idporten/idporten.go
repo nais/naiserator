@@ -22,6 +22,19 @@ const (
 	clientDefaultLogoutPath   = "/oauth2/logout"
 )
 
+type Source interface {
+	resource.Source
+	wonderwall.Source
+	GetIDPorten() *nais_io_v1.IDPorten
+	GetIngress() []nais_io_v1.Ingress
+}
+
+type Config interface {
+	wonderwall.Config
+	IsWonderwallEnabled() bool
+	IsDigdiratorEnabled() bool
+}
+
 func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
 	if err := validateIngresses(naisIngresses); err != nil {
 		return nil, err
@@ -134,15 +147,16 @@ func idPortenSecretName(name string) (string, error) {
 	return namegen.SuffixedShortName(basename, suffix, maxLen)
 }
 
-func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOptions resource.Options) error {
-	naisIdPorten := app.Spec.IDPorten
-	naisIngresses := app.Spec.Ingresses
-	if !resourceOptions.DigdiratorEnabled || naisIdPorten == nil || !naisIdPorten.Enabled {
+func Create(app Source, ast *resource.Ast, cfg Config) error {
+	idPorten := app.GetIDPorten()
+	ingresses := app.GetIngress()
+
+	if !cfg.IsDigdiratorEnabled() || idPorten == nil || !idPorten.Enabled {
 		return nil
 	}
 
 	// create idporten client and attach secrets
-	idportenClient, err := client(resource.CreateObjectMeta(app), naisIdPorten, naisIngresses)
+	idportenClient, err := client(resource.CreateObjectMeta(app), idPorten, ingresses)
 	if err != nil {
 		return err
 	}
@@ -152,33 +166,34 @@ func Create(app *nais_io_v1alpha1.Application, ast *resource.Ast, resourceOption
 	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
 
-	if naisIdPorten.Sidecar == nil || !naisIdPorten.Sidecar.Enabled || !resourceOptions.WonderwallEnabled {
+	// Return early if sidecar or Wonderwall is disabled
+	if idPorten.Sidecar == nil || !idPorten.Sidecar.Enabled || !cfg.IsWonderwallEnabled() {
 		return nil
 	}
 
 	// create sidecar container
-	wonderwallCfg := wonderwallConfig(naisIngresses, naisIdPorten, idportenClient.Spec.SecretName)
-	err = wonderwall.Create(app, ast, resourceOptions, wonderwallCfg)
+	wonderwallCfg := wonderwallConfig(ingresses, idPorten, idportenClient.Spec.SecretName)
+	err = wonderwall.Create(app, ast, cfg, wonderwallCfg)
 	if err != nil {
 		return err
 	}
 
 	// override uris when sidecar is enabled
-	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(naisIngresses, wonderwall.FrontChannelLogoutPath)
-	idportenClient.Spec.RedirectURI = idportenURI(naisIngresses, wonderwall.RedirectURIPath)
+	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
+	idportenClient.Spec.RedirectURI = idportenURI(ingresses, wonderwall.RedirectURIPath)
 
 	return nil
 }
 
 func wonderwallConfig(naisIngresses []nais_io_v1.Ingress, naisIdPorten *nais_io_v1.IDPorten, providerSecretName string) wonderwall.Configuration {
 	cfg := wonderwall.Configuration{
-		AutoLogin:             naisIdPorten.Sidecar.AutoLogin,
-		ErrorPath:             naisIdPorten.Sidecar.ErrorPath,
-		Ingress:               string(naisIngresses[0]),
-		Provider:              "idporten",
-		ProviderSecretName:    providerSecretName,
-		ACRValues:             naisIdPorten.Sidecar.Level,
-		UILocales:             naisIdPorten.Sidecar.Locale,
+		AutoLogin:          naisIdPorten.Sidecar.AutoLogin,
+		ErrorPath:          naisIdPorten.Sidecar.ErrorPath,
+		Ingress:            string(naisIngresses[0]),
+		Provider:           "idporten",
+		ProviderSecretName: providerSecretName,
+		ACRValues:          naisIdPorten.Sidecar.Level,
+		UILocales:          naisIdPorten.Sidecar.Locale,
 	}
 
 	if len(naisIdPorten.PostLogoutRedirectURIs) > 0 {

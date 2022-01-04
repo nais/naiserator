@@ -1,10 +1,10 @@
-config:
+testconfig:
   description: vanilla minimal application running on-premises with default configuration
 
-resourceOptions:
-  NumReplicas: 1
-  ClusterName: test-cluster
-  SecurePodSecurityContext: true
+config:
+  cluster-name: test-cluster
+  features:
+    secure-pod-security-context: true
 
 input:
   kind: Application
@@ -65,7 +65,7 @@ tests:
     match:
       - type: subset
         name: "service account created"
-        resource: { }
+        resource: {}
 
   - operation: CreateOrUpdate
     apiVersion: autoscaling/v2beta2
@@ -105,7 +105,7 @@ tests:
           - .spec.template.metadata.creationTimestamp
         resource:
           spec:
-            replicas: 1
+            replicas: 2
             selector:
               matchLabels:
                 app: myapplication

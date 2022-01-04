@@ -1,12 +1,20 @@
-config:
+testconfig:
   description: custom environment variable name on cloud sql databases
 
-resourceoptions:
-  CNRMEnabled: true
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  features:
+    cnrm: true
+    linkerd: true
+  google-project-id: google-project-id
+
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 input:
   kind: Naisjob

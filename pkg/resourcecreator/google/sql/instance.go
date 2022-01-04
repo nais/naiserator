@@ -12,7 +12,7 @@ import (
 	"github.com/imdario/mergo"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -20,12 +20,23 @@ import (
 const (
 	AvailabilityTypeRegional         = "REGIONAL"
 	AvailabilityTypeZonal            = "ZONAL"
-	DefaultSqlInstanceDiskType       = nais.CloudSqlInstanceDiskTypeSSD
+	DefaultSqlInstanceDiskType       = nais_io_v1.CloudSqlInstanceDiskTypeSSD
 	DefaultSqlInstanceAutoBackupHour = 2
 	DefaultSqlInstanceTier           = "db-f1-micro"
 	DefaultSqlInstanceDiskSize       = 10
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
 )
+
+type Source interface {
+	resource.Source
+	GetGCP() *nais_io_v1.GCP
+}
+
+type Config interface {
+	GetGoogleProjectID() string
+	GetGoogleTeamProjectID() string
+	GetGoogleCloudSQLProxyContainerImage() string
+}
 
 func availabilityType(highAvailability bool) string {
 	if highAvailability {
@@ -35,7 +46,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
+func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
@@ -92,20 +103,19 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais.CloudSqlInsta
 	return sqlInstance
 }
 
-func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string) (nais.CloudSqlInstance, error) {
-	var err error
-
-	defaultInstance := nais.CloudSqlInstance{
+func CloudSqlInstanceWithDefaults(instance nais_io_v1.CloudSqlInstance, appName string) (nais_io_v1.CloudSqlInstance, error) {
+	defaultInstance := nais_io_v1.CloudSqlInstance{
 		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
 		DiskSize: DefaultSqlInstanceDiskSize,
 		// This default will always be overridden by GoogleSQLDatabase(), need to be set, as databases.Name can not be nil.
-		Databases: []nais.CloudSqlDatabase{{Name: "dummy-name"}},
+		Databases: []nais_io_v1.CloudSqlDatabase{{Name: "dummy-name"}},
 		Collation: DefaultSqlInstanceCollation,
 	}
 
-	if err = mergo.Merge(&instance, defaultInstance); err != nil {
-		return nais.CloudSqlInstance{}, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
+	err := mergo.Merge(&instance, defaultInstance)
+	if err != nil {
+		return nais_io_v1.CloudSqlInstance{}, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
 	}
 
 	// Have to do this check explicitly as mergo is not able to distinguish between nil pointer and 0.
@@ -117,14 +127,10 @@ func CloudSqlInstanceWithDefaults(instance nais.CloudSqlInstance, appName string
 		instance.Name = appName
 	}
 
-	if err != nil {
-		return nais.CloudSqlInstance{}, fmt.Errorf("unable to setInstanceName name for instance: %s", err)
-	}
-
-	return instance, err
+	return instance, nil
 }
 
-func instanceIamPolicyMember(source resource.Source, resourceName string, options resource.Options) *google_iam_crd.IAMPolicyMember {
+func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Config) *google_iam_crd.IAMPolicyMember {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
@@ -136,7 +142,7 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, option
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf(
 				"serviceAccount:%s",
-				google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), options.GoogleProjectId),
+				google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), cfg.GetGoogleProjectID()),
 			),
 			Role: "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{
@@ -146,7 +152,7 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, option
 		},
 	}
 
-	util.SetAnnotation(policy, google.ProjectIdAnnotation, options.GoogleTeamProjectId)
+	util.SetAnnotation(policy, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
 
 	return policy
 }
@@ -185,14 +191,15 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 	return nil
 }
 
-func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, naisSqlInstances *[]nais.CloudSqlInstance) error {
-	if naisSqlInstances == nil {
+func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
+	gcp := source.GetGCP()
+	if gcp == nil {
 		return nil
 	}
 
 	sourceName := source.GetName()
 
-	for i, sqlInstance := range *naisSqlInstances {
+	for i, sqlInstance := range gcp.SqlInstances {
 		// This could potentially be removed to add possibility for several instances.
 		if i > 0 {
 			return fmt.Errorf("only one sql instance is supported")
@@ -204,12 +211,12 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 		}
 
 		objectMeta := resource.CreateObjectMeta(source)
-		googleTeamProjectId := resourceOptions.GoogleTeamProjectId
+		googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
 		instance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, instance)
 
-		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, resourceOptions)
+		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, cfg)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
 		for dbNum, db := range sqlInstance.Databases {
@@ -234,13 +241,16 @@ func CreateInstance(source resource.Source, ast *resource.Ast, resourceOptions r
 			}
 		}
 
-		(*naisSqlInstances)[i].Name = sqlInstance.Name
-		if err := AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName); err != nil {
+		// FIXME: re-assign name to original array - why?
+		gcp.SqlInstances[i].Name = sqlInstance.Name
+
+		err = AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName)
+		if err != nil {
 			return fmt.Errorf("unable to append sql user secret envs: %s", err)
 		}
 		ast.Containers = append(
 			ast.Containers, google.CloudSqlProxyContainer(
-				5432, resourceOptions.GoogleCloudSQLProxyContainerImage, resourceOptions.GoogleTeamProjectId,
+				5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(),
 				instance.Name,
 			),
 		)

@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: PreStopHook.http is properly added
 
 input:

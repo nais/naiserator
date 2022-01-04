@@ -4,18 +4,17 @@ import (
 	"context"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/resourcecreator"
-	"github.com/nais/naiserator/pkg/synchronizer"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-// NaisjobReconciler reconciles a Naisjob object
 type NaisjobReconciler struct {
-	synchronizer.Synchronizer
+	synchronizer Interface
 }
 
-func NewNaisjobReconciler(synchronizer synchronizer.Synchronizer) *NaisjobReconciler {
-	return &NaisjobReconciler{Synchronizer: synchronizer}
+func NewNaisjobReconciler(synchronizer Interface) *NaisjobReconciler {
+	return &NaisjobReconciler{
+		synchronizer: synchronizer,
+	}
 }
 
 // +kubebuilder:rbac:groups=nais.io,resources=Naisjobs,verbs=get;list;watch;create;update;patch;delete
@@ -23,7 +22,7 @@ func NewNaisjobReconciler(synchronizer synchronizer.Synchronizer) *NaisjobReconc
 // +kubebuilder:rbac:groups=*,resources=events,verbs=get;list;watch;create;update
 
 func (r *NaisjobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.Synchronizer.Reconcile(ctx, req, &nais_io_v1.Naisjob{}, resourcecreator.CreateNaisjob)
+	return r.synchronizer.Reconcile(ctx, req, &nais_io_v1.Naisjob{})
 }
 
 func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager) error {

@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: chech that not both preStopHook.exec and preStopHook.http is used
 input:
   kind: Application

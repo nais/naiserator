@@ -1,11 +1,10 @@
-config:
+testconfig:
   description: Test with overridden cleanup values
 
-resourceoptions:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
+config:
+  linkerd: true
+  network-policy: true
+  google-project-id: google-project-id
 
 input:
   kind: Application

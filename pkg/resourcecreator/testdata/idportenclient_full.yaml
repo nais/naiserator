@@ -1,15 +1,15 @@
-config:
+testconfig:
   description: idporten enabled should result in expected resources created
 
-resourceoptions:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
-  DigdiratorEnabled: true
-  GatewayMappings:
-    - DomainSuffix: .adeo.no
-      IngressClass: adeo-gateway
+config:
+  features:
+    linkerd: true
+    digdirator: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .adeo.no
+      ingressClass: adeo-gateway
 
 input:
   kind: Application

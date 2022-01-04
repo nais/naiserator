@@ -1,12 +1,19 @@
-config:
+testconfig:
   description: additional cloudsql users with custom env for each user
 
-resourceoptions:
-  CNRMEnabled: true
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  features:
+    cnrm: true
+    linkerd: true
+  google-project-id: google-project-id
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 input:
   kind: Naisjob

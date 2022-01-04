@@ -1,14 +1,15 @@
-config:
+testconfig:
   description: minimal maskinporten config in application spec should result in MaskinportenClient
 
-resourceoptions:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
-  DigdiratorEnabled: true
-  DigdiratorHosts:
-    - dev.maskinporten.test
+config:
+  features:
+    linkerd: true
+    digdirator: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  service-hosts:
+    digdirator:
+      - dev.maskinporten.test
 
 input:
   kind: Application

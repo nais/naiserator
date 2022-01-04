@@ -5,6 +5,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+type Source interface {
+	resource.Source
+	GetSkipCABundle() bool
+}
+
 // These constants refer to a ConfigMap that has already been applied to the cluster.
 // The source filenames refer to a PEM bundle and a JKS keystore, respectively.
 const (
@@ -75,8 +80,8 @@ func certificateAuthorityVolume(configMapName string) corev1.Volume {
 	}
 }
 
-func Create(ast *resource.Ast, skipCaBundle bool) {
-	if skipCaBundle {
+func Create(source Source, ast *resource.Ast) {
+	if source.GetSkipCABundle() {
 		return
 	}
 

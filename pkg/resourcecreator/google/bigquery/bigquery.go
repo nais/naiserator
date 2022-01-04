@@ -16,23 +16,36 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func CreateDataset(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, bigQueryDatasets []nais_io_v1.CloudBigQueryDataset, serviceAccountName string) error {
-	if bigQueryDatasets == nil {
+type Source interface {
+	resource.Source
+	GetGCP() *nais_io_v1.GCP
+}
+
+type Config interface {
+	GetGoogleProjectID() string
+	GetGoogleTeamProjectID() string
+}
+
+func CreateDataset(source Source, ast *resource.Ast, cfg Config, serviceAccountName string) error {
+	gcp := source.GetGCP()
+	if gcp == nil {
 		return nil
 	}
-	for _, bigQuerySpec := range bigQueryDatasets {
-		bigQueryInstance, err := createDataset(source, bigQuerySpec, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, serviceAccountName)
+
+	for _, bigQuerySpec := range gcp.BigQueryDatasets {
+		bigQueryInstance, err := createDataset(source, bigQuerySpec, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID(), serviceAccountName)
 		if err != nil {
 			return err
 		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, bigQueryInstance)
 
-		iamPolicyMember, err := iAMPolicyMember(source, bigQueryInstance, resourceOptions.GoogleProjectId, resourceOptions.GoogleTeamProjectId, serviceAccountName)
+		iamPolicyMember, err := iAMPolicyMember(source, bigQueryInstance, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID(), serviceAccountName)
 		if err != nil {
 			return err
 		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 	}
+
 	return nil
 }
 
