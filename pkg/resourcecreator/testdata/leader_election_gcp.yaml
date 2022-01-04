@@ -1,14 +1,16 @@
-config:
+testconfig:
   description: vanilla application running in GCP with default configuration and access policies
 
-resourceoptions:
-  Linkerd: true
-  NetworkPolicy: true
-  AccessPolicyNotAllowedCIDRs: [ "10.6.0.0/15", "192.168.0.0/16", "172.16.0.0/12" ]
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ApiServerIp: "172.16.0.2/32"
-
+config:
+  features:
+    linkerd: true
+    network-policy: true
+    access-policy-not-allowed-cidrs:
+      - "10.6.0.0/15"
+      - "192.168.0.0/16"
+      - "172.16.0.0/12"
+  google-project-id: google-project-id
+  api-server-ip: "172.16.0.2/32"
 
 input:
   kind: Application
@@ -107,7 +109,7 @@ tests:
                   - namespaceSelector:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
-                  - namespaceSelector: { }
+                  - namespaceSelector: {}
                     podSelector:
                       matchLabels:
                         k8s-app: kube-dns

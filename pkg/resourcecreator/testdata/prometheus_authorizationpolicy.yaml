@@ -1,10 +1,16 @@
-config:
+testconfig:
   description: prometheus config is defined
 
-resourceoptions:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
+config:
+  linkerd: true
+  network-policy: true
+  google-project-id: google-project-id
+
+config:
+  features:
+    linkerd: true
+    network-policy: true
+  google-project-id: google-project-id
 
 input:
   kind: Application

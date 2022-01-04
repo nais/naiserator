@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
@@ -37,12 +38,12 @@ func defaultPathExists(paths []nais_io_v1.SecretPath, kvPath string) bool {
 	return false
 }
 
-func createInitContainer(source resource.Source, options resource.Options, paths []nais_io_v1.SecretPath) corev1.Container {
+func createInitContainer(source resource.Source, options config.Vault, paths []nais_io_v1.SecretPath) corev1.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
 		"-one-shot",
-		fmt.Sprintf("-vault=%s", options.Vault.Address),
+		fmt.Sprintf("-vault=%s", options.Address),
 		fmt.Sprintf("-save-token=%s", defaultVaultTokenFileName()),
 	}
 
@@ -68,7 +69,7 @@ func createInitContainer(source resource.Source, options resource.Options, paths
 		Name:         "vks-init",
 		VolumeMounts: createInitContainerMounts(paths),
 		Args:         args,
-		Image:        options.Vault.InitContainerImage,
+		Image:        options.InitContainerImage,
 		Env: []corev1.EnvVar{
 			{
 				Name:  "VAULT_AUTH_METHOD",
@@ -80,24 +81,25 @@ func createInitContainer(source resource.Source, options resource.Options, paths
 			},
 			{
 				Name:  "VAULT_K8S_LOGIN_PATH",
-				Value: options.Vault.AuthPath,
+				Value: options.AuthPath,
 			},
 		},
 	}
 }
-func createSideCarContainer(options resource.Options) corev1.Container {
+
+func createSideCarContainer(options config.Vault) corev1.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
 		"-renew-token",
-		fmt.Sprintf("-vault=%s", options.Vault.Address),
+		fmt.Sprintf("-vault=%s", options.Address),
 	}
 
 	return corev1.Container{
 		Name:         "vks-sidecar",
 		VolumeMounts: []corev1.VolumeMount{createDefaultMount()},
 		Args:         args,
-		Image:        options.Vault.InitContainerImage,
+		Image:        options.InitContainerImage,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
 				corev1.ResourceCPU: k8sResource.MustParse("10m"),
@@ -115,11 +117,9 @@ func createSideCarContainer(options resource.Options) corev1.Container {
 			},
 		},
 	}
-
 }
 
 func createInitContainerMounts(paths []nais_io_v1.SecretPath) []corev1.VolumeMount {
-
 	volumeMounts := make([]corev1.VolumeMount, 0, len(paths))
 	for _, path := range paths {
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
@@ -130,7 +130,7 @@ func createInitContainerMounts(paths []nais_io_v1.SecretPath) []corev1.VolumeMou
 	}
 
 	// Adding default vault mount if it does not exists
-	var defaultMountExist = false
+	defaultMountExist := false
 	for _, path := range paths {
 		if filepath.Clean(nais_io_v1.DefaultVaultMountPath) == filepath.Clean(path.MountPath) {
 			defaultMountExist = true

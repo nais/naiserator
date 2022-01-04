@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nais/naiserator/pkg/generators"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/stretchr/testify/assert"
 
@@ -62,10 +64,12 @@ type Match struct {
 }
 
 type TestCase struct {
-	Config          testCaseConfig
-	ResourceOptions resource.Options
-	Error           *string
-	Tests           []SubTest
+	TestConfig testCaseConfig
+	Config     config.Config
+	Options    generators.Options // deprecated
+	Existing   []json.RawMessage
+	Error      *string
+	Tests      []SubTest
 }
 
 func (m meta) String() string {
@@ -174,13 +178,13 @@ func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCal
 		return
 	}
 
-	resources, err := createOperations(data, test.ResourceOptions)
+	resources, err := createOperations(data, test.Options, test.Config)
 	if err != nil {
 		if test.Error != nil {
 			assert.EqualError(t, err, *test.Error)
 			return
 		}
-		t.Errorf("unable to unmarshal test data input: %s", err)
+		t.Errorf("unable to generate resources: %s", err)
 		t.Fail()
 		return
 	}
@@ -190,7 +194,7 @@ func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCal
 	}
 }
 
-type CreateOperationsCallback func([]byte, resource.Options) (resource.Operations, error)
+type CreateOperationsCallback func([]byte, generators.Options, config.Config) (resource.Operations, error)
 
 func Run(t *testing.T, testDataDirectory string, createOperations CreateOperationsCallback) {
 	files, err := ioutil.ReadDir(testDataDirectory)

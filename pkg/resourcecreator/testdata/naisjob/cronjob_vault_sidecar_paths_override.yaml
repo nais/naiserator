@@ -1,8 +1,9 @@
-config:
+testconfig:
   description: vault enabled with sidecar enabled and user specified path for default app secrets
 
-resourceoptions:
-  vaultEnabled: true
+config:
+  features:
+    vault: true
   vault:
     address: https://vault.adeo.no
     kv-path: /kv/preprod/fss

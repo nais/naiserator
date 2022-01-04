@@ -1,9 +1,10 @@
-config:
+testconfig:
   description: vanilla minimal naisjob with schedule running on-premises with default configuration
 
-resourceOptions:
-  ClusterName: test-cluster
-  SecurePodSecurityContext: true
+config:
+  cluster-name: test-cluster
+  features:
+    secure-pod-security-context: true
 
 input:
   kind: Naisjob

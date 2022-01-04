@@ -1,12 +1,12 @@
-config:
+testconfig:
   description: vanilla application running in GCP with default configuration and access policies
 
-resourceoptions:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  SecurePodSecurityContext: true
+config:
+  features:
+    linkerd: true
+    network-policy: true
+    secure-pod-security-context: true
+  google-project-id: google-project-id
 
 input:
   kind: Application
@@ -109,7 +109,7 @@ tests:
                   - namespaceSelector:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
-                  - namespaceSelector: { }
+                  - namespaceSelector: {}
                     podSelector:
                       matchLabels:
                         k8s-app: kube-dns
@@ -210,10 +210,12 @@ tests:
     name: myapplication
     match:
       - type: subset
+        name: "replicas set to 2"
+        resource:
+          spec:
+            replicas: 2
+      - type: subset
         name: "pod created with safe-to-evict annotation"
-        exlude:
-          - .metadata
-          - .status
         resource:
           spec:
             template:
@@ -224,7 +226,6 @@ tests:
         name: "restricted securitycontext"
         resource:
           spec:
-            replicas: 1
             template:
               spec:
                 containers:
@@ -236,4 +237,3 @@ tests:
                       privileged: false
                       capabilities:
                         drop: ["all"]
-

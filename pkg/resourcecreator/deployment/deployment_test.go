@@ -3,6 +3,7 @@ package deployment_test
 import (
 	"testing"
 
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -27,7 +28,7 @@ func TestDeployment(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		opts := resource.NewOptions()
+		opts := &generators.Options{}
 		ast := resource.NewAst()
 		err = pod.CreateAppContainer(app, ast, opts)
 		assert.NoError(t, err)
@@ -45,9 +46,9 @@ func TestDeployment(t *testing.T) {
 		err := app.ApplyDefaults()
 		assert.NoError(t, err)
 
-		opts := resource.NewOptions()
-		opts.GoogleProjectId = "googleprojectid"
-		opts.Proxy = config.Proxy{
+		opts := &generators.Options{}
+		opts.GoogleProjectID = "googleprojectid"
+		opts.Config.Proxy = config.Proxy{
 			Address: "httpProxy",
 			Exclude: []string{"foo", "bar", "baz"},
 		}
@@ -71,7 +72,7 @@ func TestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		app.Spec.Strategy.Type = nais_io_v1alpha1.DeploymentStrategyRecreate
-		opts := resource.NewOptions()
+		opts := &generators.Options{}
 		ast := resource.NewAst()
 		err = deployment.Create(app, ast, opts)
 		assert.Nil(t, err)
@@ -92,8 +93,8 @@ func TestDeployment(t *testing.T) {
 		}
 
 		ast := resource.NewAst()
-		opts := resource.NewOptions()
-		opts.NativeSecrets = true
+		opts := &generators.Options{}
+		opts.Config.Features.NativeSecrets = true
 
 		err = pod.CreateAppContainer(app, ast, opts)
 		assert.NoError(t, err)
@@ -117,7 +118,7 @@ func TestDeployment(t *testing.T) {
 		}
 
 		ast := resource.NewAst()
-		opts := resource.NewOptions()
+		opts := &generators.Options{}
 
 		err = pod.CreateAppContainer(app, ast, opts)
 		assert.NoError(t, err)

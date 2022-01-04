@@ -37,9 +37,14 @@ type Source interface {
 	GetStrategy() *nais_io_v1.Strategy
 }
 
-func Create(app Source, ast *resource.Ast, resourceOptions resource.Options) error {
+type Config interface {
+	pod.Config
+	GetNumReplicas() int32
+}
+
+func Create(app Source, ast *resource.Ast, cfg Config) error {
 	objectMeta := resource.CreateObjectMeta(app)
-	spec, err := deploymentSpec(app, ast, resourceOptions)
+	spec, err := deploymentSpec(app, ast, cfg)
 	if err != nil {
 		return fmt.Errorf("create deployment: %w", err)
 	}
@@ -87,8 +92,8 @@ func addCleanupLabels(app Source, meta metav1.ObjectMeta) metav1.ObjectMeta {
 	return meta
 }
 
-func deploymentSpec(app Source, ast *resource.Ast, resourceOptions resource.Options) (*appsv1.DeploymentSpec, error) {
-	podSpec, err := pod.CreateSpec(ast, resourceOptions, app.GetName(), app.GetAnnotations(), corev1.RestartPolicyAlways)
+func deploymentSpec(app Source, ast *resource.Ast, cfg Config) (*appsv1.DeploymentSpec, error) {
+	podSpec, err := pod.CreateSpec(ast, cfg, app.GetName(), app.GetAnnotations(), corev1.RestartPolicyAlways)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +121,7 @@ func deploymentSpec(app Source, ast *resource.Ast, resourceOptions resource.Opti
 	}
 
 	return &appsv1.DeploymentSpec{
-		Replicas: util.Int32p(resourceOptions.NumReplicas),
+		Replicas: util.Int32p(cfg.GetNumReplicas()),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.GetName()},
 		},
@@ -124,7 +129,7 @@ func deploymentSpec(app Source, ast *resource.Ast, resourceOptions resource.Opti
 		ProgressDeadlineSeconds: util.Int32p(300),
 		RevisionHistoryLimit:    util.Int32p(3),
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: pod.CreateAppObjectMeta(app, ast, &resourceOptions),
+			ObjectMeta: pod.CreateAppObjectMeta(app, ast, cfg),
 			Spec:       *podSpec,
 		},
 	}, nil

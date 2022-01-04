@@ -1,11 +1,10 @@
-config:
+testconfig:
   description: Influxdb labling and access policy
 
-resourceoptions:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: dev-localtest
+config:
+  linkerd: true
+  google-project-id: google-project-id
+  cluster-name: dev-localtest
 
 input:
   kind: Naisjob

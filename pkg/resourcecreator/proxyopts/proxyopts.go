@@ -4,10 +4,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 )
+
+type Source interface {
+	resource.Source
+	GetWebProxy() bool
+}
+
+type Config interface {
+	GetGoogleProjectID() string
+	GetWebProxyOptions() config.Proxy
+}
 
 // All pods will have web proxy settings injected as environment variables. This is
 // useful for automatic proxy configuration so that apps don't need to be aware
@@ -20,11 +31,12 @@ import (
 // On top of everything, the Java virtual machine does not honor these environment variables.
 // Instead, JVM must be started with a specific set of command-line options. These are also
 // provided as environment variables, for convenience.
-func EnvironmentVariables(options resource.Options) ([]corev1.EnvVar, error) {
+func EnvironmentVariables(cfg Config) ([]corev1.EnvVar, error) {
 	envVars := make([]corev1.EnvVar, 0)
 
-	excludedHosts := options.Proxy.Exclude
-	proxyURL := options.Proxy.Address
+	options := cfg.GetWebProxyOptions()
+	excludedHosts := options.Exclude
+	proxyURL := options.Address
 	noProxy := strings.Join(excludedHosts, ",")
 
 	// Set non-JVM environment variables
@@ -69,12 +81,12 @@ func appendDualCaseEnvVar(envVars []corev1.EnvVar, key, value string) []corev1.E
 	return envVars
 }
 
-func Create(ast *resource.Ast, resourceOptions resource.Options, webProxyEnabled bool) error {
-	if !webProxyEnabled || len(resourceOptions.GoogleProjectId) > 0 {
+func Create(source Source, ast *resource.Ast, cfg Config) error {
+	if !source.GetWebProxy() || len(cfg.GetGoogleProjectID()) > 0 {
 		return nil
 	}
 
-	envs, err := EnvironmentVariables(resourceOptions)
+	envs, err := EnvironmentVariables(cfg)
 	if err != nil {
 		return fmt.Errorf("generate proxy environment variables: %w", err)
 	}

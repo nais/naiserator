@@ -1,15 +1,14 @@
 package securelogs
 
 import (
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-func FluentdSidecar(options resource.Options) corev1.Container {
+func fluentdSidecar(image string) corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-fluentd",
-		Image:           options.Securelogs.FluentdImage,
+		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
@@ -71,10 +70,10 @@ func FluentdSidecar(options resource.Options) corev1.Container {
 	}
 }
 
-func ConfigmapReloadSidecar(options resource.Options) corev1.Container {
+func configMapReloadSidecar(image string) corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-configmap-reload",
-		Image:           options.Securelogs.ConfigMapReloadImage,
+		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Args: []string{
 			"--volume-dir=/config",

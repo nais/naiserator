@@ -1,17 +1,19 @@
-config:
-  description: vanilla application running with Linkerd, default configuration and network policies
+testconfig:
+  description: vanilla application running with linkerd, default configuration and network policies
 
-resourceoptions:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  JwkerEnabled: true
-  GatewayMappings:
-    - DomainSuffix: .adeo.no
-      IngressClass: adeo-gateway
-    - DomainSuffix: .domain
-      IngressClass: domain-gateway
+config:
+  features:
+    linkerd: true
+    network-policy: true
+    jwker: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .adeo.no
+      ingressClass: adeo-gateway
+    - domainSuffix: .domain
+      ingressClass: domain-gateway
+
 
 input:
   kind: Application

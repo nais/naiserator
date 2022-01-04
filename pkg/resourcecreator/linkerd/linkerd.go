@@ -5,8 +5,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func Create(ast *resource.Ast, resourceOptions resource.Options) {
-	if !resourceOptions.Linkerd {
+type Config interface {
+	IsLinkerdEnabled() bool
+}
+
+func Create(ast *resource.Ast, cfg Config) {
+	if !cfg.IsLinkerdEnabled() {
 		return
 	}
 

@@ -19,6 +19,9 @@ func Create(source Source, ast *resource.Ast) {
 	if (*replicas.Max) <= 0 {
 		return
 	}
+	if replicas.DisableAutoScaling || replicas.Min == replicas.Max {
+		return
+	}
 
 	hpa := &v2beta2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{

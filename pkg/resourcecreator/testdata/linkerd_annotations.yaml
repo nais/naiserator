@@ -1,11 +1,11 @@
-config:
+testconfig:
   description: gcp application with overriden linkerd annotations
 
-resourceoptions:
-  Linkerd: true
-  NetworkPolicy: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
+config:
+  features:
+    linkerd: true
+    network-policy: true
+  google-project-id: google-project-id
 
 input:
   kind: Application
@@ -21,6 +21,14 @@ input:
       team: myteam
   spec:
     image: navikt/myapplication:1.2.3
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        linkerd.io/inject: enabled
 
 tests:
   - operation: CreateOrUpdate

@@ -1,10 +1,10 @@
-config:
+testconfig:
   description: webproxy configuration is injected into the container env
 
-resourceOptions:
-  Proxy:
-    Address: http://foo.bar:5224
-    Exclude:
+config:
+  proxy:
+    address: http://foo.bar:5224
+    exclude:
       - foo
       - bar
       - baz

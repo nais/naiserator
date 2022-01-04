@@ -19,8 +19,13 @@ const (
 	ModeLease
 )
 
-func Create(source resource.Source, ast *resource.Ast, options resource.Options, leaderElection bool) error {
-	if !leaderElection {
+type Source interface {
+	resource.Source
+	GetLeaderElection() bool
+}
+
+func Create(source resource.Source, ast *resource.Ast, cfg Config) error {
+	if !source.GetLeaderElection() {
 		return nil
 	}
 

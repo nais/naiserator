@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: liveness and readiness checks are added
 
 input:

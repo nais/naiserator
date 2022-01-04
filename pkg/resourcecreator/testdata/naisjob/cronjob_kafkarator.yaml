@@ -1,9 +1,9 @@
-config:
+testconfig:
   description: if Kafkarator is enabled and pool name is specified, create AivenApplication resource and mount requested secret
 
-resourceoptions:
-  NumReplicas: 1
-  KafkaratorEnabled: true
+config:
+  features:
+    kafkarator: true
 
 input:
   kind: Naisjob

@@ -1,12 +1,11 @@
-config:
+testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
 
-resourceoptions:
-  CNRMEnabled: true
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  GoogleTeamProjectID: team-project-id
-  NumReplicas: 1
+config:
+  features:
+    cnrm: true
+    linkerd: true
+  google-project-id: google-project-id
 
 input:
   kind: Application
@@ -24,6 +23,14 @@ input:
         - databases:
             - name: mydb
           type: POSTGRES_11
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 tests:
   - match:
@@ -57,6 +64,7 @@ tests:
             namespace: serviceaccounts
           spec:
             displayName: myapplication
+
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
     operation: CreateIfNotExists
@@ -78,6 +86,7 @@ tests:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
               name: myapplicati-mynamespac-w4o5cwa
+
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
     operation: CreateOrUpdate
@@ -111,6 +120,7 @@ tests:
                 queryInsightsEnabled: true
                 recordApplicationTags: false
                 recordClientAddress: false
+
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
@@ -131,6 +141,7 @@ tests:
               kind: Project
               name: ""
             member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SqlDatabase
     operation: CreateIfNotExists
@@ -147,6 +158,7 @@ tests:
           spec:
             instanceRef:
               name: myapplication
+
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
@@ -175,6 +187,7 @@ tests:
             NAIS_DATABASE_MYAPPLICATION_MYDB_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
             NAIS_DATABASE_MYAPPLICATION_MYDB_USERNAME: myapplication
           type: Opaque
+
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -197,6 +210,7 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication
                   key: NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD
+
   - apiVersion: apps/v1
     kind: Deployment
     operation: CreateOrUpdate

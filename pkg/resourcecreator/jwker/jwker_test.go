@@ -5,6 +5,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/jwker"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -14,10 +15,10 @@ import (
 )
 
 func TestJwker(t *testing.T) {
-	resourceOptions := resource.Options{}
-	resourceOptions.JwkerEnabled = true
-	clusterName := "myCluster"
-	resourceOptions.ClusterName = clusterName
+	opts := &generators.Options{}
+	opts.Config.Features.Jwker = true
+	opts.Config.ClusterName = "myCluster"
+
 	otherApplication := "a"
 	otherNamespace := "othernamespace"
 	otherCluster := "otherCluster"
@@ -36,7 +37,7 @@ func TestJwker(t *testing.T) {
 	t.Run("jwker for app with no access policy", func(t *testing.T) {
 		app := fixture()
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
 		assert.NotEmpty(t, jkr)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
@@ -52,13 +53,13 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
 		assert.Equal(t, otherApplication, jkr.Spec.AccessPolicy.Inbound.Rules[0].Application)
 		assert.Equal(t, fixtures.ApplicationNamespace, jkr.Spec.AccessPolicy.Inbound.Rules[0].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 0)
 	})
 
@@ -70,7 +71,7 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 1)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
@@ -84,7 +85,7 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 1)
 		assert.NotEmpty(t, jkr.Spec.SecretName)
@@ -108,7 +109,7 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 3)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 0)
@@ -118,10 +119,10 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, otherCluster, jkr.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
 		assert.Equal(t, otherApplication2, jkr.Spec.AccessPolicy.Inbound.Rules[1].Application)
 		assert.Equal(t, otherNamespace2, jkr.Spec.AccessPolicy.Inbound.Rules[1].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Inbound.Rules[1].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Inbound.Rules[1].Cluster)
 		assert.Equal(t, otherApplication3, jkr.Spec.AccessPolicy.Inbound.Rules[2].Application)
 		assert.Equal(t, fixtures.ApplicationNamespace, jkr.Spec.AccessPolicy.Inbound.Rules[2].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Inbound.Rules[2].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Inbound.Rules[2].Cluster)
 	})
 
 	t.Run("multiple outbound and no inbound", func(t *testing.T) {
@@ -138,7 +139,7 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 3)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 0)
@@ -148,10 +149,10 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, otherCluster, jkr.Spec.AccessPolicy.Outbound.Rules[0].Cluster)
 		assert.Equal(t, otherApplication2, jkr.Spec.AccessPolicy.Outbound.Rules[1].Application)
 		assert.Equal(t, otherNamespace2, jkr.Spec.AccessPolicy.Outbound.Rules[1].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Outbound.Rules[1].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Outbound.Rules[1].Cluster)
 		assert.Equal(t, otherApplication3, jkr.Spec.AccessPolicy.Outbound.Rules[2].Application)
 		assert.Equal(t, fixtures.ApplicationNamespace, jkr.Spec.AccessPolicy.Outbound.Rules[2].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Outbound.Rules[2].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Outbound.Rules[2].Cluster)
 	})
 	//
 	t.Run("multiple inbound and multiple outbound", func(t *testing.T) {
@@ -180,7 +181,7 @@ func TestJwker(t *testing.T) {
 			},
 		}
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
 		assert.Len(t, jkr.Spec.AccessPolicy.Inbound.Rules, 3)
 		assert.Len(t, jkr.Spec.AccessPolicy.Outbound.Rules, 3)
@@ -190,26 +191,26 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, otherCluster, jkr.Spec.AccessPolicy.Inbound.Rules[0].Cluster)
 		assert.Equal(t, otherApplication2, jkr.Spec.AccessPolicy.Inbound.Rules[1].Application)
 		assert.Equal(t, otherNamespace2, jkr.Spec.AccessPolicy.Inbound.Rules[1].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Inbound.Rules[1].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Inbound.Rules[1].Cluster)
 		assert.Equal(t, otherApplication3, jkr.Spec.AccessPolicy.Inbound.Rules[2].Application)
 		assert.Equal(t, fixtures.ApplicationNamespace, jkr.Spec.AccessPolicy.Inbound.Rules[2].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Inbound.Rules[2].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Inbound.Rules[2].Cluster)
 		assert.Equal(t, otherApplication, jkr.Spec.AccessPolicy.Outbound.Rules[0].Application)
 		assert.Equal(t, otherNamespace, jkr.Spec.AccessPolicy.Outbound.Rules[0].Namespace)
 		assert.Equal(t, otherCluster, jkr.Spec.AccessPolicy.Outbound.Rules[0].Cluster)
 		assert.Equal(t, otherApplication2, jkr.Spec.AccessPolicy.Outbound.Rules[1].Application)
 		assert.Equal(t, otherNamespace2, jkr.Spec.AccessPolicy.Outbound.Rules[1].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Outbound.Rules[1].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Outbound.Rules[1].Cluster)
 		assert.Equal(t, otherApplication3, jkr.Spec.AccessPolicy.Outbound.Rules[2].Application)
 		assert.Equal(t, fixtures.ApplicationNamespace, jkr.Spec.AccessPolicy.Outbound.Rules[2].Namespace)
-		assert.Equal(t, clusterName, jkr.Spec.AccessPolicy.Outbound.Rules[2].Cluster)
+		assert.Equal(t, opts.Config.ClusterName, jkr.Spec.AccessPolicy.Outbound.Rules[2].Cluster)
 	})
 
 	t.Run("jwker secrets are mounted when JwkerSecretName is set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.TokenX.Enabled = true
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jwkerSecretName := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker).Spec.SecretName
 
 		volumeMount := test.GetVolumeMountByName(ast.VolumeMounts, jwkerSecretName)
@@ -231,7 +232,7 @@ func TestJwker(t *testing.T) {
 		app.Spec.TokenX.Enabled = true
 		app.Spec.TokenX.MountSecretsAsFilesOnly = true
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
+		jwker.Create(app, ast, opts)
 		jwkerSecretName := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker).Spec.SecretName
 
 		volumeMount := test.GetVolumeMountByName(ast.VolumeMounts, jwkerSecretName)
@@ -250,8 +251,8 @@ func TestJwker(t *testing.T) {
 	t.Run("when no secretName is given there should be no jwker volume mount", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
-		jwker.Create(app, ast, resourceOptions, *app.Spec.TokenX, app.Spec.AccessPolicy)
-		certificateauthority.Create(ast, app.Spec.SkipCaBundle)
+		jwker.Create(app, ast, opts)
+		certificateauthority.Create(app, ast)
 
 		assert.Len(t, ast.VolumeMounts, 6)
 		for _, v := range ast.VolumeMounts {

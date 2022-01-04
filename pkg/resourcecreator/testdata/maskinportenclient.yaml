@@ -1,14 +1,15 @@
-config:
+testconfig:
   description: minimal maskinporten config in application spec should result in MaskinportenClient
 
-resourceoptions:
-  Linkerd: true
-  GoogleProjectID: google-project-id
-  NumReplicas: 1
-  ClusterName: mycluster
-  DigdiratorEnabled: true
-  DigdiratorHosts:
-    - dev.maskinporten.test
+config:
+  features:
+    linkerd: true
+    digdirator: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  service-hosts:
+    digdirator:
+      - dev.maskinporten.test
 
 input:
   kind: Application
@@ -63,7 +64,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^maskinporten-myapplication-9561321b-.{7}$
+            secretName: ^maskinporten-myapplication-9561321b-.{6,7}$
 
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -77,14 +78,14 @@ tests:
             template:
               spec:
                 volumes:
-                  - name: ^maskinporten-myapplication-9561321b-.{7}$
+                  - name: ^maskinporten-myapplication-9561321b-.{6,7}$
                     secret:
-                      secretName: ^maskinporten-myapplication-9561321b-.{7}$
+                      secretName: ^maskinporten-myapplication-9561321b-.{6,7}$
                 containers:
                   - envFrom:
                       - secretRef:
-                          name: ^maskinporten-myapplication-9561321b-.{7}$
+                          name: ^maskinporten-myapplication-9561321b-.{6,7}$
                     volumeMounts:
-                      - name: ^maskinporten-myapplication-9561321b-.{7}$
+                      - name: ^maskinporten-myapplication-9561321b-.{6,7}$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/maskinporten

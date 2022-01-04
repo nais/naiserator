@@ -1,4 +1,4 @@
-config:
+testconfig:
   description: startup probes are added
 
 input:

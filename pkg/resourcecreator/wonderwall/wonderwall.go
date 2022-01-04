@@ -45,7 +45,14 @@ type Source interface {
 	GetPort() int
 }
 
-func Create(source Source, ast *resource.Ast, resourceOptions resource.Options, cfg Configuration) error {
+type Config interface {
+	GetGoogleProjectID() string
+	IsDigdiratorEnabled() bool
+	IsAzureratorEnabled() bool
+	GetWonderwallImage() string
+}
+
+func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) error {
 	ast.Labels["aiven"] = "enabled"
 	ast.Labels["wonderwall"] = "enabled"
 
@@ -66,7 +73,7 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options, 
 		return err
 	}
 
-	container, err := sidecarContainer(source, resourceOptions, cfg)
+	container, err := sidecarContainer(source, config, cfg)
 	if err != nil {
 		return err
 	}
@@ -83,18 +90,18 @@ func Create(source Source, ast *resource.Ast, resourceOptions resource.Options, 
 	return nil
 }
 
-func ShouldEnable(app *nais_io_v1alpha1.Application, resourceOptions resource.Options) (bool, error) {
-	if len(resourceOptions.GoogleProjectId) == 0 {
+func ShouldEnable(app *nais_io_v1alpha1.Application, opts Config) (bool, error) {
+	if len(opts.GetGoogleProjectID()) == 0 {
 		return false, nil
 	}
 
-	idPortenEnabled := resourceOptions.DigdiratorEnabled &&
+	idPortenEnabled := opts.IsDigdiratorEnabled() &&
 		app.Spec.IDPorten != nil &&
 		app.Spec.IDPorten.Enabled &&
 		app.Spec.IDPorten.Sidecar != nil &&
 		app.Spec.IDPorten.Sidecar.Enabled
 
-	azureEnabled := resourceOptions.AzureratorEnabled &&
+	azureEnabled := opts.IsAzureratorEnabled() &&
 		app.Spec.Azure != nil &&
 		app.Spec.Azure.Application != nil &&
 		app.Spec.Azure.Application.Enabled &&
@@ -108,7 +115,7 @@ func ShouldEnable(app *nais_io_v1alpha1.Application, resourceOptions resource.Op
 	return idPortenEnabled || azureEnabled, nil
 }
 
-func sidecarContainer(source Source, resourceOptions resource.Options, cfg Configuration) (*corev1.Container, error) {
+func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.Container, error) {
 	targetPort := source.GetPort()
 	resourcesSpec := nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
@@ -123,7 +130,7 @@ func sidecarContainer(source Source, resourceOptions resource.Options, cfg Confi
 
 	return &corev1.Container{
 		Name:            "wonderwall",
-		Image:           resourceOptions.Wonderwall.Image,
+		Image:           config.GetWonderwallImage(),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Env:             envVars(cfg, targetPort),
 		Ports: []corev1.ContainerPort{

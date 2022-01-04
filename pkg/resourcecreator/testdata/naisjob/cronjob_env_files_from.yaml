@@ -1,8 +1,9 @@
-config:
+testconfig:
   description: file injection
 
-resourceoptions:
-  NativeSecrets: true
+config:
+  features:
+    native-secrets: true
 
 input:
   kind: Naisjob

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
+	"github.com/nais/naiserator/pkg/generators"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -15,7 +16,6 @@ import (
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	"github.com/nais/naiserator/pkg/controllers"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 
@@ -119,35 +119,12 @@ func run() error {
 		}
 	}
 
-	resourceOptions := resource.NewOptions()
-	resourceOptions.AccessPolicyNotAllowedCIDRs = cfg.Features.AccessPolicyNotAllowedCIDRs
-	resourceOptions.ApiServerIp = cfg.ApiServerIp
-	resourceOptions.AzureratorEnabled = cfg.Features.Azurerator
-	resourceOptions.ClusterName = cfg.ClusterName
-	resourceOptions.DigdiratorEnabled = cfg.Features.Digdirator
-	resourceOptions.DigdiratorHosts = cfg.ServiceHosts.Digdirator
-	resourceOptions.GatewayMappings = cfg.GatewayMappings
-	resourceOptions.GoogleCloudSQLProxyContainerImage = cfg.GoogleCloudSQLProxyContainerImage
-	resourceOptions.GoogleProjectId = cfg.GoogleProjectId
-	resourceOptions.HostAliases = cfg.HostAliases
-	resourceOptions.JwkerEnabled = cfg.Features.Jwker
-	resourceOptions.CNRMEnabled = cfg.Features.CNRM
-	resourceOptions.KafkaratorEnabled = cfg.Features.Kafkarator
-	resourceOptions.NativeSecrets = cfg.Features.NativeSecrets
-	resourceOptions.NetworkPolicy = cfg.Features.NetworkPolicy
-	resourceOptions.Proxy = cfg.Proxy
-	resourceOptions.Securelogs = cfg.Securelogs
-	resourceOptions.SecurePodSecurityContext = cfg.Features.SecurePodSecurityContext
-	resourceOptions.VaultEnabled = cfg.Features.Vault
-	resourceOptions.Vault = cfg.Vault
-	resourceOptions.Wonderwall = cfg.Wonderwall
-
-	if cfg.Features.GCP && len(resourceOptions.GatewayMappings) == 0 {
+	if cfg.Features.GCP && len(cfg.GatewayMappings) == 0 {
 		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
 	}
 
 	listers := naiserator_scheme.GenericListers()
-	if len(resourceOptions.GoogleProjectId) > 0 {
+	if len(cfg.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
 
@@ -164,33 +141,37 @@ func run() error {
 		simpleClient = readonly.NewClient(simpleClient)
 	}
 
-	applicationReconciler := controllers.NewAppReconciler(synchronizer.Synchronizer{
-		Client:          mgrClient,
-		Config:          *cfg,
-		Kafka:           kafkaClient,
-		ResourceOptions: resourceOptions,
-		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
-		Scheme:          kscheme,
-		SimpleClient:    simpleClient,
-		Listers:         listers,
-	})
+	applicationReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
+		mgrClient,
+		simpleClient,
+		*cfg,
+		&generators.Application{
+			Config: *cfg,
+		},
+		kafkaClient,
+		listers,
+		kscheme,
+	))
 
-	if err = applicationReconciler.SetupWithManager(mgr); err != nil {
+	err = applicationReconciler.SetupWithManager(mgr)
+	if err != nil {
 		return err
 	}
 
-	naisjobReconciler := controllers.NewNaisjobReconciler(synchronizer.Synchronizer{
-		Client:          mgrClient,
-		Config:          *cfg,
-		Kafka:           kafkaClient,
-		ResourceOptions: resourceOptions,
-		RolloutMonitor:  make(map[client.ObjectKey]synchronizer.RolloutMonitor),
-		Scheme:          kscheme,
-		SimpleClient:    simpleClient,
-		Listers:         listers,
-	})
+	naisjobReconciler := controllers.NewNaisjobReconciler(synchronizer.NewSynchronizer(
+		mgrClient,
+		simpleClient,
+		*cfg,
+		&generators.Naisjob{
+			Config: *cfg,
+		},
+		kafkaClient,
+		listers,
+		kscheme,
+	))
 
-	if err = naisjobReconciler.SetupWithManager(mgr); err != nil {
+	err = naisjobReconciler.SetupWithManager(mgr)
+	if err != nil {
 		return err
 	}
 

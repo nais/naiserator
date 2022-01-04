@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -18,10 +18,15 @@ const (
 	aivenCredentialFilesVolumeName = "aiven-credentials"
 )
 
-type AivenSpecs struct {
-	Kafka   *nais.Kafka
-	Elastic *nais.Elastic
-	Influx  *nais.Influx
+type Source interface {
+	resource.Source
+	GetInflux() *nais_io_v1.Influx
+	GetKafka() *nais_io_v1.Kafka
+	GetElastic() *nais_io_v1.Elastic
+}
+
+type Config interface {
+	IsKafkaratorEnabled() bool
 }
 
 func generateAivenSecretName(name string) string {
@@ -30,7 +35,7 @@ func generateAivenSecretName(name string) string {
 	return secretName
 }
 
-func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.Options, specs AivenSpecs) error {
+func Create(source Source, ast *resource.Ast, config Config) error {
 	secretName := generateAivenSecretName(source.GetName())
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
 		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
@@ -39,10 +44,10 @@ func Create(source resource.Source, ast *resource.Ast, resourceOptions resource.
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 
-	Influx(ast, specs.Influx, &aivenApp)
-	kafkaKeyPaths := Kafka(source, ast, resourceOptions, specs.Kafka, &aivenApp)
+	Influx(ast, source.GetInflux(), &aivenApp)
+	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
 
-	elasticEnabled, err := Elastic(ast, specs.Elastic, &aivenApp)
+	elasticEnabled, err := Elastic(ast, source.GetElastic(), &aivenApp)
 	if err != nil {
 		return err
 	}

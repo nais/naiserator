@@ -44,19 +44,19 @@ type Synchronizer struct {
 }
 
 type Features struct {
-	Linkerd                     bool     `json:"linkerd"`
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
-	NativeSecrets               bool     `json:"native-secrets"`
-	NetworkPolicy               bool     `json:"network-policy"`
-	Vault                       bool     `json:"vault"`
-	Jwker                       bool     `json:"jwker"`
-	CNRM                        bool     `json:"cnrm"`
 	Azurerator                  bool     `json:"azurerator"`
-	Kafkarator                  bool     `json:"kafkarator"`
+	CNRM                        bool     `json:"cnrm"`
 	Digdirator                  bool     `json:"digdirator"`
 	GCP                         bool     `json:"gcp"`
-	Webhook                     bool     `json:"webhook"`
+	Jwker                       bool     `json:"jwker"`
+	Kafkarator                  bool     `json:"kafkarator"`
+	Linkerd                     bool     `json:"linkerd"`
+	NativeSecrets               bool     `json:"native-secrets"`
+	NetworkPolicy               bool     `json:"network-policy"`
 	SecurePodSecurityContext    bool     `json:"secure-pod-security-context"`
+	Vault                       bool     `json:"vault"`
+	Webhook                     bool     `json:"webhook"`
 }
 
 type Securelogs struct {
