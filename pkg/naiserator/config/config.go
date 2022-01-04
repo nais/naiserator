@@ -101,6 +101,10 @@ type Wonderwall struct {
 	Image string `json:"image"`
 }
 
+type LeaderElection struct {
+	Image string `json:"image"`
+}
+
 type Config struct {
 	DryRun                            bool             `json:"dry-run"`
 	Bind                              string           `json:"bind"`
@@ -122,6 +126,7 @@ type Config struct {
 	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
 	ServiceHosts                      ServiceHosts     `json:"service-hosts"`
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
+	LeaderElection                    LeaderElection   `json:"leader-election"`
 }
 
 const (
@@ -172,6 +177,7 @@ const (
 	VaultInitContainerImage             = "vault.init-container-image"
 	VaultKvPath                         = "vault.kv-path"
 	WonderwallImage                     = "wonderwall.image"
+	LeaderElectionImage                 = "leader-election.image"
 )
 
 func bindNAIS() {

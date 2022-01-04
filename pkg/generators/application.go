@@ -125,7 +125,10 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	leaderelection.Create(app, ast)
+	err = leaderelection.Create(app, ast, cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	err = azure.Create(app, ast, cfg)
 	if err != nil {

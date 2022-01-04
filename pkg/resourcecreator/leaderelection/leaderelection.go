@@ -3,27 +3,67 @@ package leaderelection
 import (
 	"fmt"
 
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
+
+type ElectionMode int
+
+const (
+	ModeEndpoint ElectionMode = iota
+	ModeLease
+)
+
+const endpointImage = "gcr.io/google_containers/leader-elector:0.5"
 
 type Source interface {
 	resource.Source
 	GetLeaderElection() bool
 }
 
-func Create(source Source, ast *resource.Ast) {
+type Config interface {
+	GetLeaderElectionImage() string
+}
+
+func Create(source Source, ast *resource.Ast, cfg Config) error {
 	if !source.GetLeaderElection() {
-		return
+		return nil
 	}
 
-	ast.AppendOperation(resource.OperationCreateOrUpdate, role(resource.CreateObjectMeta(source)))
-	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(resource.CreateObjectMeta(source)))
-	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace()))
+	electionMode := mode(cfg)
+	roleObjectMeta := resource.CreateObjectMeta(source)
+	if electionMode == ModeLease {
+		var err error
+		roleObjectMeta.Name, err = namegen.ShortName(fmt.Sprintf("elector-%s", roleObjectMeta.Name), validation.DNS1123LabelMaxLength)
+		if err != nil {
+			return fmt.Errorf("failed to build short name for role: %w", err)
+		}
+	}
+
+	var image string
+	if electionMode == ModeLease {
+		image = cfg.GetLeaderElectionImage()
+	} else {
+		image = endpointImage
+	}
+
+	ast.AppendOperation(resource.OperationCreateOrUpdate, role(roleObjectMeta, electionMode, source.GetName()))
+	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(roleObjectMeta))
+	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
 	ast.Env = append(ast.Env, electorPathEnv())
+	return nil
+}
+
+func mode(cfg Config) ElectionMode {
+	if len(cfg.GetLeaderElectionImage()) != 0 {
+		return ModeLease
+	}
+	return ModeEndpoint
 }
 
 func roleBinding(objectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
@@ -48,30 +88,59 @@ func roleBinding(objectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
 	}
 }
 
-func role(objectMeta metav1.ObjectMeta) *rbacv1.Role {
-	return &rbacv1.Role{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "rbac.authorization.k8s.io/v1",
-			Kind:       "Role",
-		},
-		ObjectMeta: objectMeta,
-		Rules: []rbacv1.PolicyRule{
-			{
-				ResourceNames: []string{
-					objectMeta.Name,
-				},
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"endpoints",
-				},
-				Verbs: []string{
-					"get",
-					"update",
+func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName string) *rbacv1.Role {
+	if electionMode == ModeEndpoint {
+		return &rbacv1.Role{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "rbac.authorization.k8s.io/v1",
+				Kind:       "Role",
+			},
+			ObjectMeta: objectMeta,
+			Rules: []rbacv1.PolicyRule{
+				{
+					ResourceNames: []string{
+						resourceName,
+					},
+					APIGroups: []string{
+						"",
+					},
+					Resources: []string{
+						"endpoints",
+					},
+					Verbs: []string{
+						"get",
+						"update",
+					},
 				},
 			},
-		},
+		}
+	} else {
+		return &rbacv1.Role{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "rbac.authorization.k8s.io/v1",
+				Kind:       "Role",
+			},
+			ObjectMeta: objectMeta,
+			Rules: []rbacv1.PolicyRule{
+				{
+					ResourceNames: []string{
+						resourceName,
+					},
+					APIGroups: []string{
+						"coordination.k8s.io",
+					},
+					Resources: []string{
+						"leases",
+					},
+					Verbs: []string{
+						"get",
+						"list",
+						"watch",
+						"create",
+					},
+				},
+			},
+		}
 	}
 }
 
@@ -82,10 +151,10 @@ func electorPathEnv() corev1.EnvVar {
 	}
 }
 
-func container(name, namespace string) corev1.Container {
+func container(name, namespace, image string) corev1.Container {
 	return corev1.Container{
 		Name:            "elector",
-		Image:           "gcr.io/google_containers/leader-elector:0.5",
+		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
