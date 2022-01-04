@@ -19,17 +19,23 @@ const (
 	ModeLease
 )
 
+const endpointImage = "gcr.io/google_containers/leader-elector:0.5"
+
 type Source interface {
 	resource.Source
 	GetLeaderElection() bool
 }
 
-func Create(source resource.Source, ast *resource.Ast, cfg Config) error {
+type Config interface {
+	GetLeaderElectionImage() string
+}
+
+func Create(source Source, ast *resource.Ast, cfg Config) error {
 	if !source.GetLeaderElection() {
 		return nil
 	}
 
-	electionMode := mode(options)
+	electionMode := mode(cfg)
 	roleObjectMeta := resource.CreateObjectMeta(source)
 	if electionMode == ModeLease {
 		var err error
@@ -39,15 +45,22 @@ func Create(source resource.Source, ast *resource.Ast, cfg Config) error {
 		}
 	}
 
+	var image string
+	if electionMode == ModeLease {
+		image = cfg.GetLeaderElectionImage()
+	} else {
+		image = endpointImage
+	}
+
 	ast.AppendOperation(resource.OperationCreateOrUpdate, role(roleObjectMeta, electionMode, source.GetName()))
 	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(roleObjectMeta))
-	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), options))
+	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
 	ast.Env = append(ast.Env, electorPathEnv())
 	return nil
 }
 
-func mode(options resource.Options) ElectionMode {
-	if options.LeaderElection.Image != "" {
+func mode(cfg Config) ElectionMode {
+	if len(cfg.GetLeaderElectionImage()) != 0 {
 		return ModeLease
 	}
 	return ModeEndpoint
@@ -138,11 +151,7 @@ func electorPathEnv() corev1.EnvVar {
 	}
 }
 
-func container(name, namespace string, options resource.Options) corev1.Container {
-	image := "gcr.io/google_containers/leader-elector:0.5"
-	if options.LeaderElection.Image != "" {
-		image = options.LeaderElection.Image
-	}
+func container(name, namespace, image string) corev1.Container {
 	return corev1.Container{
 		Name:            "elector",
 		Image:           image,

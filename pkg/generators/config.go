@@ -121,3 +121,7 @@ func (o *Options) GetAllowedKernelCapabilities() []string {
 func (o *Options) GetNumReplicas() int32 {
 	return o.NumReplicas
 }
+
+func (o *Options) GetLeaderElectionImage() string {
+	return o.Config.LeaderElection.Image
+}

@@ -1,9 +1,9 @@
-config:
+testconfig:
   description: leader election container injection, using simple elector
 
-resourceoptions:
-  LeaderElection:
-    Image: "not-a-google-containers-image:latest"
+config:
+  leader-election:
+    image: "not-a-google-containers-image:latest"
 
 input:
   kind: Application
