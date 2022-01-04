@@ -36,7 +36,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 	if err != nil {
 		return 0, fmt.Errorf("encode Protobuf: %w", err)
 	}
-	return n.Kafka.Produce(payload)
+	return n.kafka.Produce(payload)
 }
 
 func (n *Synchronizer) MonitorRollout(app generator.ImageSource, logger log.Entry) {
@@ -51,11 +51,11 @@ func (n *Synchronizer) MonitorRollout(app generator.ImageSource, logger log.Entr
 	id := uuid.New()
 	ctx, cancel := context.WithCancel(context.Background())
 	rolloutMonitorLock.Lock()
-	n.RolloutMonitor[objectKey] = RolloutMonitor{
+	n.rolloutMonitor[objectKey] = RolloutMonitor{
 		id:     id,
 		cancel: cancel,
 	}
-	metrics.ResourcesMonitored.Set(float64(len(n.RolloutMonitor)))
+	metrics.ResourcesMonitored.Set(float64(len(n.rolloutMonitor)))
 	rolloutMonitorLock.Unlock()
 
 	go func() {
@@ -69,7 +69,7 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.
 	rolloutMonitorLock.Lock()
 	defer rolloutMonitorLock.Unlock()
 
-	rollout, ok := n.RolloutMonitor[objectKey]
+	rollout, ok := n.rolloutMonitor[objectKey]
 	if !ok {
 		return
 	}
@@ -80,8 +80,8 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.
 	}
 
 	rollout.cancel()
-	delete(n.RolloutMonitor, objectKey)
-	metrics.ResourcesMonitored.Set(float64(len(n.RolloutMonitor)))
+	delete(n.rolloutMonitor, objectKey)
+	metrics.ResourcesMonitored.Set(float64(len(n.rolloutMonitor)))
 }
 
 // Monitoring deployments to signal RolloutComplete.
@@ -99,11 +99,11 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 	var applicationUpdated bool
 
 	// Don't produce Kafka message on certain conditions
-	kafkaProduced = n.Kafka == nil || app.SkipDeploymentMessage()
+	kafkaProduced = n.kafka == nil || app.SkipDeploymentMessage()
 
 	for {
 		select {
-		case <-time.After(n.Config.Synchronizer.RolloutCheckInterval):
+		case <-time.After(n.config.Synchronizer.RolloutCheckInterval):
 			deploy := &appsv1.Deployment{}
 			err := n.Get(ctx, objectKey, deploy)
 

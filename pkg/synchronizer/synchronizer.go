@@ -44,13 +44,13 @@ type Generator interface {
 // If the child resources does not match the Application spec, the resources are updated.
 type Synchronizer struct {
 	client.Client
-	Config         config.Config
-	Generator      Generator
-	Kafka          kafka.Interface
-	Listers        []client.ObjectList
-	RolloutMonitor map[client.ObjectKey]RolloutMonitor
-	Scheme         *runtime.Scheme
-	SimpleClient   client.Client
+	config         config.Config
+	generator      Generator
+	kafka          kafka.Interface
+	listers        []client.ObjectList
+	rolloutMonitor map[client.ObjectKey]RolloutMonitor
+	scheme         *runtime.Scheme
+	simpleClient   client.Client
 }
 
 func NewSynchronizer(
@@ -66,13 +66,13 @@ func NewSynchronizer(
 	rolloutMonitor := make(map[client.ObjectKey]RolloutMonitor)
 	return &Synchronizer{
 		Client:         cli,
-		Config:         config,
-		Generator:      generator,
-		Kafka:          kafka,
-		Listers:        listers,
-		RolloutMonitor: rolloutMonitor,
-		Scheme:         scheme,
-		SimpleClient:   simpleClient,
+		config:         config,
+		generator:      generator,
+		kafka:          kafka,
+		listers:        listers,
+		rolloutMonitor: rolloutMonitor,
+		scheme:         scheme,
+		simpleClient:   simpleClient,
 	}
 }
 
@@ -89,7 +89,7 @@ func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Ev
 		return nil, fmt.Errorf("internal error: unable to parse query: %s", err)
 	}
 	events := &corev1.EventList{}
-	err = n.SimpleClient.List(ctx, events, &client.ListOptions{
+	err = n.simpleClient.List(ctx, events, &client.ListOptions{
 		FieldSelector: selector,
 	})
 	if err != nil && !errors.IsNotFound(err) {
@@ -124,7 +124,7 @@ func (n *Synchronizer) reportError(ctx context.Context, eventSource string, err 
 
 // Reconcile processes the work queue
 func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app resource.Source) (ctrl.Result, error) {
-	ctx, cancel := context.WithTimeout(ctx, n.Config.Synchronizer.SynchronizationTimeout)
+	ctx, cancel := context.WithTimeout(ctx, n.config.Synchronizer.SynchronizationTimeout)
 	defer cancel()
 
 	err := n.Get(ctx, req.NamespacedName, app)
@@ -253,7 +253,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 		return false
 	}
 
-	resources, err := updater.FindAll(ctx, n.Client, n.Scheme, n.Listers, rollout.Source)
+	resources, err := updater.FindAll(ctx, n.Client, n.scheme, n.listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}
@@ -321,13 +321,13 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 
 	// Prepare for rollout (i.e. use cluster information to generate a configuration object).
 	// For this operation, make sure that write operations are disabled.
-	opts, err := n.Generator.Prepare(ctx, source, readonly.NewClient(n.Client))
+	opts, err := n.generator.Prepare(ctx, source, readonly.NewClient(n.Client))
 	if err != nil {
 		return nil, fmt.Errorf("preparing rollout configuration: %w", err)
 	}
 
 	rollout.CorrelationID = source.CorrelationID()
-	rollout.ResourceOperations, err = n.Generator.Generate(source, opts)
+	rollout.ResourceOperations, err = n.generator.Generate(source, opts)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster resource operations: %w", err)
@@ -355,7 +355,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		}
 		switch rop.Operation {
 		case resource.OperationCreateOrUpdate:
-			c.fn = updater.CreateOrUpdate(ctx, n.Client, n.Scheme, rop.Resource)
+			c.fn = updater.CreateOrUpdate(ctx, n.Client, n.scheme, rop.Resource)
 		case resource.OperationCreateOrRecreate:
 			c.fn = updater.CreateOrRecreate(ctx, n.Client, rop.Resource)
 		case resource.OperationCreateIfNotExists:
