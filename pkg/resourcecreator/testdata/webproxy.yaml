@@ -2,9 +2,9 @@ testconfig:
   description: webproxy configuration is injected into the container env
 
 config:
-  Proxy:
+  proxy:
     address: http://foo.bar:5224
-    Exclude:
+    exclude:
       - foo
       - bar
       - baz
