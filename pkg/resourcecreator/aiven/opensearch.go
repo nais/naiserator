@@ -1,0 +1,38 @@
+package aiven
+
+import (
+	"fmt"
+
+	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	corev1 "k8s.io/api/core/v1"
+)
+
+func OpenSearch(ast *resource.Ast, openSearch *nais_io_v1.OpenSearch, aivenApp *aiven_nais_io_v1.AivenApplication) (bool, error) {
+	if openSearch == nil {
+		return false, nil
+	}
+
+	if openSearch.Instance == "" {
+		return false, fmt.Errorf("OpenSearch enabled, but no instance specified")
+	}
+
+	addOpenSearchEnvVariables(ast, aivenApp.Spec.SecretName)
+	aivenApp.Spec.OpenSearch = &aiven_nais_io_v1.OpenSearchSpec{
+		Instance: fmt.Sprintf("opensearch-%s-%s", aivenApp.GetNamespace(), openSearch.Instance),
+		Access:   openSearch.Access,
+	}
+	ast.Labels["aiven"] = "enabled"
+
+	return true, nil
+}
+
+func addOpenSearchEnvVariables(ast *resource.Ast, secretName string) {
+	// Add environment variables for string data
+	ast.Env = append(ast.Env, []corev1.EnvVar{
+		makeSecretEnvVar("OPEN_SEARCH_USERNAME", secretName),
+		makeSecretEnvVar("OPEN_SEARCH_PASSWORD", secretName),
+		makeSecretEnvVar("OPEN_SEARCH_URI", secretName),
+	}...)
+}

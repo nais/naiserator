@@ -1,0 +1,72 @@
+testconfig:
+  description: OpenSearch labling and access policy
+
+config:
+  linkerd: true
+  google-project-id: google-project-id
+  cluster-name: dev-localtest
+
+input:
+  kind: Application
+  apiVersion: v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    openSearch:
+      instance: naistest
+      access: read
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: aiven.nais.io/v1
+    kind: AivenApplication
+    name: myapplication
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^aiven-myapplication-.{8}$
+      - name: "instance and access is propagated"
+        type: subset
+        resource:
+          spec:
+            openSearch:
+              instance: opensearch-mynamespace-naistest
+              access: read
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "deployment network policy selector label"
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  aiven: "enabled"
+              spec:
+                containers:
+                  - name: "myapplication"
+                    env:
+                      - name: OPEN_SEARCH_USERNAME
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_USERNAME
+                            name: ^aiven-myapplication-.{8}$
+                      - name: OPEN_SEARCH_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_PASSWORD
+                            name: ^aiven-myapplication-.{8}$
+                      - name: OPEN_SEARCH_URI
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_URI
+                            name: ^aiven-myapplication-.{8}$
