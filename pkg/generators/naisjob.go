@@ -11,7 +11,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/gcp"
-	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -121,8 +120,6 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	if err != nil {
 		return nil, err
 	}
-
-	linkerd.Create(ast, cfg)
 
 	err = aiven.Create(naisjob, ast, cfg)
 	if err != nil {

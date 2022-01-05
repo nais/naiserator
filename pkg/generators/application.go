@@ -16,7 +16,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/resourcecreator/jwker"
 	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
-	"github.com/nais/naiserator/pkg/resourcecreator/linkerd"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -159,7 +158,6 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	poddisruptionbudget.Create(app, ast)
 
 	jwker.Create(app, ast, cfg)
-	linkerd.Create(ast, cfg)
 
 	err = aiven.Create(app, ast, cfg)
 	if err != nil {
