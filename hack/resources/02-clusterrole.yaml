@@ -24,6 +24,7 @@ rules:
       - 'ingresses'
       - 'jwkers'
       - 'jobs'
+      - 'leases'
       - 'maskinportenclients'
       - 'naisjobs'
       - 'namespaces'
