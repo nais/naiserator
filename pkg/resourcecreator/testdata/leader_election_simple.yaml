@@ -50,6 +50,10 @@ tests:
             apiGroup: rbac.authorization.k8s.io
             kind: Role
             name: elector-myapplication-40c4e812
+          subjects:
+            - kind: ServiceAccount
+              name: myapplication
+              namespace: mynamespace
 
   - apiVersion: apps/v1
     kind: Deployment
