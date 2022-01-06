@@ -44,6 +44,10 @@ tests:
             apiGroup: rbac.authorization.k8s.io
             kind: Role
             name: myapplication
+          subjects:
+            - kind: ServiceAccount
+              name: myapplication
+              namespace: mynamespace
 
   - apiVersion: apps/v1
     kind: Deployment
