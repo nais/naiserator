@@ -135,9 +135,19 @@ func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName 
 					},
 					Verbs: []string{
 						"get",
+						"create",
+					},
+				},
+				{
+					APIGroups: []string{
+						"coordination.k8s.io",
+					},
+					Resources: []string{
+						"leases",
+					},
+					Verbs: []string{
 						"list",
 						"watch",
-						"create",
 					},
 				},
 			},
