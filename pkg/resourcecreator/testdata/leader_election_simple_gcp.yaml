@@ -38,18 +38,11 @@ tests:
           rules:
             - apiGroups:
                 - "coordination.k8s.io"
-              resourceNames:
-                - myapplication
               resources:
                 - leases
               verbs:
                 - get
                 - create
-            - apiGroups:
-                - "coordination.k8s.io"
-              resources:
-                - leases
-              verbs:
                 - list
                 - watch
 

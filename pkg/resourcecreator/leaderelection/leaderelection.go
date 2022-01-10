@@ -124,9 +124,6 @@ func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName 
 			ObjectMeta: objectMeta,
 			Rules: []rbacv1.PolicyRule{
 				{
-					ResourceNames: []string{
-						resourceName,
-					},
 					APIGroups: []string{
 						"coordination.k8s.io",
 					},
@@ -136,16 +133,6 @@ func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName 
 					Verbs: []string{
 						"get",
 						"create",
-					},
-				},
-				{
-					APIGroups: []string{
-						"coordination.k8s.io",
-					},
-					Resources: []string{
-						"leases",
-					},
-					Verbs: []string{
 						"list",
 						"watch",
 					},
