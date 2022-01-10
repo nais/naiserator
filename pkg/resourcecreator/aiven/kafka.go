@@ -107,7 +107,12 @@ func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *
 		}
 
 		if naisKafka.Streams {
-			ast.AppendOperation(resource.OperationCreateOrUpdate, CreateStream(source, naisKafka))
+			stream := CreateStream(source, naisKafka)
+			ast.AppendOperation(resource.OperationCreateOrUpdate, stream)
+			ast.Env = append(ast.Env, corev1.EnvVar{
+				Name:  "KAFKA_STREAMS_APPLICATION_ID",
+				Value: stream.TopicPrefix(),
+			})
 		}
 
 		return createKafkaKeyToPaths()

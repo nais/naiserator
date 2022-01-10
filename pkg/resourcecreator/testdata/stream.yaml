@@ -41,3 +41,18 @@ tests:
               team: myteam
           spec:
             pool: some-kafka-pool
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains kafka streams env-variable"
+        type: subset
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - env:
+                      - name: KAFKA_STREAMS_APPLICATION_ID
+                        value: mynamespace.myapplication_stream_
