@@ -45,7 +45,7 @@ tests:
               app: mynaisjob
               team: myteam
             ownerReferences:
-              - apiVersion: v1
+              - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
@@ -67,7 +67,7 @@ tests:
               app: mynaisjob
               team: myteam
             ownerReferences:
-              - apiVersion: v1
+              - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
@@ -97,7 +97,7 @@ tests:
               app: mynaisjob
               team: myteam
             ownerReferences:
-              - apiVersion: v1
+              - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"

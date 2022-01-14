@@ -38,6 +38,7 @@ tests:
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
+    name: google-sql-mynaisjob
     match:
       - type: regex
         name: "secret"
@@ -51,7 +52,7 @@ tests:
               app: mynaisjob
               team: myteam
             ownerReferences:
-              - apiVersion: v1
+              - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"

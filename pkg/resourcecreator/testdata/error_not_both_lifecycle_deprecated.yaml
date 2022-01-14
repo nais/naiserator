@@ -2,7 +2,7 @@ testconfig:
   description: chech that not both preStopHookPath and preStopHook is used
 input:
   kind: Application
-  apiVersion: v1alpha1
+  apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace

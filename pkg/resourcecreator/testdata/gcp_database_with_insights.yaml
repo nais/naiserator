@@ -9,7 +9,7 @@ config:
 
 input:
   kind: Application
-  apiVersion: v1alpha1
+  apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
@@ -47,7 +47,7 @@ tests:
               app: myapplication
               team: myteam
             ownerReferences:
-              - apiVersion: v1alpha1
+              - apiVersion: nais.io/v1alpha1
                 kind: Application
                 name: myapplication
                 uid: "123456"
@@ -179,7 +179,7 @@ tests:
               - kind: Application
                 name: myapplication
                 uid: "123456"
-                apiVersion: v1alpha1
+                apiVersion: nais.io/v1alpha1
           stringData:
             NAIS_DATABASE_MYAPPLICATION_MYDB_DATABASE: mydb
             NAIS_DATABASE_MYAPPLICATION_MYDB_HOST: 127.0.0.1

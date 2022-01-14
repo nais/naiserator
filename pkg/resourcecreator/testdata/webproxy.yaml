@@ -11,7 +11,7 @@ config:
 
 input:
   kind: Application
-  apiVersion: v1alpha1
+  apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace

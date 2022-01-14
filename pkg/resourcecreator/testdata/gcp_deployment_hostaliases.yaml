@@ -16,7 +16,7 @@ config:
 
 input:
   kind: Application
-  apiVersion: v1alpha1
+  apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
@@ -44,7 +44,7 @@ tests:
               app: myapplication
               team: myteam
             ownerReferences:
-              - apiVersion: v1alpha1
+              - apiVersion: nais.io/v1alpha1
                 kind: Application
                 name: myapplication
                 uid: "123456"

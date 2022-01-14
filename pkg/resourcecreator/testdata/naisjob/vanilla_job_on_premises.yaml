@@ -32,7 +32,7 @@ tests:
               app: mynaisjob
               team: myteam
             ownerReferences:
-              - apiVersion: v1
+              - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
@@ -70,7 +70,7 @@ tests:
             name: mynaisjob
             namespace: mynamespace
             ownerReferences:
-              - apiVersion: v1
+              - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
@@ -87,7 +87,7 @@ tests:
                 name: mynaisjob
                 namespace: mynamespace
                 ownerReferences:
-                  - apiVersion: v1
+                  - apiVersion: nais.io/v1
                     kind: Naisjob
                     name: mynaisjob
                     uid: "123456"

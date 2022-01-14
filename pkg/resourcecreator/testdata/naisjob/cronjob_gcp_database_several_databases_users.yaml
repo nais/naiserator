@@ -50,7 +50,7 @@ tests:
               app: mynaisjob
               team: myteam
             ownerReferences:
-              - apiVersion: v1
+              - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
@@ -92,7 +92,7 @@ tests:
               - kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-                apiVersion: v1
+                apiVersion: nais.io/v1
           stringData:
             NAIS_DATABASE_MYNAISJOB_MYDB_DATABASE: mydb
             NAIS_DATABASE_MYNAISJOB_MYDB_HOST: 127.0.0.1
@@ -122,7 +122,7 @@ tests:
               - kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-                apiVersion: v1
+                apiVersion: nais.io/v1
           stringData:
             NAIS_DATABASE_USER_TWO_MYDB_DATABASE: mydb
             NAIS_DATABASE_USER_TWO_MYDB_HOST: 127.0.0.1
@@ -152,7 +152,7 @@ tests:
               - kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-                apiVersion: v1
+                apiVersion: nais.io/v1
           stringData:
             NAIS_DATABASE_USER_THREE3_MYDB_DATABASE: mydb
             NAIS_DATABASE_USER_THREE3_MYDB_HOST: 127.0.0.1
@@ -273,7 +273,7 @@ tests:
               - kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-                apiVersion: v1
+                apiVersion: nais.io/v1
           stringData:
             NAIS_DATABASE_USER_FOUR_MYDB2_DATABASE: mydb2
             NAIS_DATABASE_USER_FOUR_MYDB2_HOST: 127.0.0.1
@@ -303,7 +303,7 @@ tests:
               - kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-                apiVersion: v1
+                apiVersion: nais.io/v1
           stringData:
             NAIS_DATABASE_USER_FIVE_MYDB2_DATABASE: mydb2
             NAIS_DATABASE_USER_FIVE_MYDB2_HOST: 127.0.0.1
