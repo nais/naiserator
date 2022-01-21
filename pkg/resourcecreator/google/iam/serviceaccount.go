@@ -13,6 +13,7 @@ func CreateServiceAccount(source resource.Source, projectId string) google_iam_c
 	objectMeta.Name = resource.CreateAppNamespaceHash(source)
 	objectMeta.Namespace = google.IAMServiceAccountNamespace
 	objectMeta.Annotations["nais.io/team"] = objectMeta.Namespace
+	objectMeta.OwnerReferences = nil
 
 	iamServiceAccount := google_iam_crd.IAMServiceAccount{
 		TypeMeta: metav1.TypeMeta{

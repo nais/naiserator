@@ -41,20 +41,6 @@ input:
           type: POSTGRES_11
 
 tests:
-  - match:
-      - type: subset
-        name: "common metadata"
-        resource:
-          metadata:
-            labels:
-              app: mynaisjob
-              team: myteam
-            ownerReferences:
-              - apiVersion: nais.io/v1
-                kind: Naisjob
-                name: mynaisjob
-                uid: "123456"
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SqlDatabase
     operation: CreateIfNotExists

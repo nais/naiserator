@@ -31,20 +31,6 @@ existing:
         cnrm.cloud.google.com/project-id: team-project-id
 
 tests:
-  - match:
-      - type: subset
-        name: "common metadata"
-        resource:
-          metadata:
-            labels:
-              app: myapplication
-              team: myteam
-            ownerReferences:
-              - apiVersion: nais.io/v1alpha1
-                kind: Application
-                name: myapplication
-                uid: "123456"
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
     operation: CreateIfNotExists
