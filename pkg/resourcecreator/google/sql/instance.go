@@ -57,7 +57,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 	}
 
 	flags := []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}}
-	for _, flag := range instance.DatabaseFlags {
+	for _, flag := range instance.Flags {
 		flags = append(flags, google_sql_crd.SQLDatabaseFlag{Name: flag.Name, Value: flag.Value})
 	}
 
