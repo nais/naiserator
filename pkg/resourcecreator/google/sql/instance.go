@@ -56,6 +56,11 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
 	}
 
+	flags := []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}}
+	for _, flag := range instance.DatabaseFlags {
+		flags = append(flags, google_sql_crd.SQLDatabaseFlag{Name: flag.Name, Value: flag.Value})
+	}
+
 	sqlInstance := &google_sql_crd.SQLInstance{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLInstance",
@@ -79,7 +84,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 				DiskSize:       instance.DiskSize,
 				DiskType:       instance.DiskType.GoogleType(),
 				Tier:           instance.Tier,
-				DatabaseFlags:  []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}},
+				DatabaseFlags:  flags,
 				InsightsConfig: google_sql_crd.SQLInstanceInsightsConfiguration{
 					QueryInsightsEnabled: instance.Insights.IsEnabled(),
 				},
