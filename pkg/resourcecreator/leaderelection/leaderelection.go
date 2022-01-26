@@ -164,5 +164,15 @@ func container(name, namespace, image string) corev1.Container {
 			Protocol:      corev1.ProtocolTCP,
 		}},
 		Args: []string{fmt.Sprintf("--election=%s", name), "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", namespace)},
+		Env: []corev1.EnvVar{
+			{
+				Name:  "ELECTOR_LOG_FORMAT",
+				Value: "json",
+			},
+			{
+				Name:  "ELECTOR_LOG_LEVEL",
+				Value: "debug",
+			},
+		},
 	}
 }
