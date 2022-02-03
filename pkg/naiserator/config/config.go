@@ -91,12 +91,6 @@ type Ratelimit struct {
 	Burst int `json:"burst"`
 }
 
-type ServiceHosts struct {
-	Azurerator []string `json:"azurerator"`
-	Digdirator []string `json:"digdirator"`
-	Jwker      []string `json:"jwker"`
-}
-
 type Wonderwall struct {
 	Image string `json:"image"`
 }
@@ -124,7 +118,6 @@ type Config struct {
 	Kafka                             Kafka            `json:"kafka"`
 	HostAliases                       []HostAlias      `json:"host-aliases"`
 	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
-	ServiceHosts                      ServiceHosts     `json:"service-hosts"`
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
 }
@@ -160,15 +153,13 @@ const (
 	KafkaTLSPrivateKeyPath              = "kafka.tls.private-key-path"
 	KafkaTopic                          = "kafka.topic"
 	KubeConfig                          = "kubeconfig"
+	LeaderElectionImage                 = "leader-election.image"
 	ProxyAddress                        = "proxy.address"
 	ProxyExclude                        = "proxy.exclude"
 	RateLimitBurst                      = "ratelimit.burst"
 	RateLimitQPS                        = "ratelimit.qps"
 	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
 	SecurelogsFluentdImage              = "securelogs.fluentd-image"
-	ServiceHostsAzurerator              = "service-hosts.azurerator"
-	ServiceHostsDigdirator              = "service-hosts.digdirator"
-	ServiceHostsJwker                   = "service-hosts.jwker"
 	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
 	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
 	SynchronizerSynchronizationTimeout  = "synchronizer.synchronization-timeout"
@@ -177,7 +168,6 @@ const (
 	VaultInitContainerImage             = "vault.init-container-image"
 	VaultKvPath                         = "vault.kv-path"
 	WonderwallImage                     = "wonderwall.image"
-	LeaderElectionImage                 = "leader-election.image"
 )
 
 func bindNAIS() {
@@ -227,16 +217,6 @@ func init() {
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesSecurePodSecurityContext, false, "enforce restrictive pod security context")
-
-	flag.StringSlice(
-		ServiceHostsAzurerator, []string{}, "list of hosts to output to ServiceEntry for Applications using Azurerator",
-	)
-	flag.StringSlice(
-		ServiceHostsDigdirator, []string{}, "list of hosts to output to ServiceEntry for Applications using Digdirator",
-	)
-	flag.StringSlice(
-		ServiceHostsJwker, []string{}, "list of hosts to output to ServiceEntry for Applications using Jwker",
-	)
 
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),
