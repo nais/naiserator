@@ -160,6 +160,7 @@ func wonderwallConfig(source Source, providerSecretName string, ingress nais_io_
 		AutoLogin:          sidecar.AutoLogin,
 		ErrorPath:          sidecar.ErrorPath,
 		Ingress:            string(ingress),
+		Loginstatus:        false,
 		Provider:           "azure",
 		ProviderSecretName: providerSecretName,
 	}

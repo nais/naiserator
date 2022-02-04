@@ -92,7 +92,16 @@ type Ratelimit struct {
 }
 
 type Wonderwall struct {
-	Image string `json:"image"`
+	Image       string                `json:"image"`
+	Loginstatus WonderwallLoginstatus `json:"loginstatus"`
+}
+
+type WonderwallLoginstatus struct {
+	Enabled           bool   `json:"enabled"`
+	CookieDomain      string `json:"cookie-domain"`
+	CookieName        string `json:"cookie-name"`
+	ResourceIndicator string `json:"resource-indicator"`
+	TokenURL          string `json:"token-url"`
 }
 
 type LeaderElection struct {
@@ -123,51 +132,56 @@ type Config struct {
 }
 
 const (
-	ApiServerIp                         = "api-server-ip"
-	Bind                                = "bind"
-	ClusterName                         = "cluster-name"
-	DryRun                              = "dry-run"
-	FeaturesAccessPolicyNotAllowedCIDRs = "features.access-policy-not-allowed-cidrs"
-	FeaturesAzurerator                  = "features.azurerator"
-	FeaturesDigdirator                  = "features.digdirator"
-	FeaturesGCP                         = "features.gcp"
-	FeaturesJwker                       = "features.jwker"
-	FeaturesCNRM                        = "features.cnrm"
-	FeaturesKafkarator                  = "features.kafkarator"
-	FeaturesLinkerd                     = "features.linkerd"
-	FeaturesNativeSecrets               = "features.native-secrets"
-	FeaturesNetworkPolicy               = "features.network-policy"
-	FeaturesSecurePodSecurityContext    = "features.secure-pod-security-context"
-	FeaturesVault                       = "features.vault"
-	FeaturesWebhook                     = "features.webhook"
-	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
-	GoogleProjectId                     = "google-project-id"
-	InformerFullSynchronizationInterval = "informer.full-sync-interval"
-	KafkaBrokers                        = "kafka.brokers"
-	KafkaEnabled                        = "kafka.enabled"
-	KafkaLogVerbosity                   = "kafka.log-verbosity"
-	KafkaTLSCAPath                      = "kafka.tls.ca-path"
-	KafkaTLSCertificatePath             = "kafka.tls.certificate-path"
-	KafkaTLSEnabled                     = "kafka.tls.enabled"
-	KafkaTLSInsecure                    = "kafka.tls.insecure"
-	KafkaTLSPrivateKeyPath              = "kafka.tls.private-key-path"
-	KafkaTopic                          = "kafka.topic"
-	KubeConfig                          = "kubeconfig"
-	LeaderElectionImage                 = "leader-election.image"
-	ProxyAddress                        = "proxy.address"
-	ProxyExclude                        = "proxy.exclude"
-	RateLimitBurst                      = "ratelimit.burst"
-	RateLimitQPS                        = "ratelimit.qps"
-	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
-	SecurelogsFluentdImage              = "securelogs.fluentd-image"
-	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
-	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
-	SynchronizerSynchronizationTimeout  = "synchronizer.synchronization-timeout"
-	VaultAddress                        = "vault.address"
-	VaultAuthPath                       = "vault.auth-path"
-	VaultInitContainerImage             = "vault.init-container-image"
-	VaultKvPath                         = "vault.kv-path"
-	WonderwallImage                     = "wonderwall.image"
+	ApiServerIp                            = "api-server-ip"
+	Bind                                   = "bind"
+	ClusterName                            = "cluster-name"
+	DryRun                                 = "dry-run"
+	FeaturesAccessPolicyNotAllowedCIDRs    = "features.access-policy-not-allowed-cidrs"
+	FeaturesAzurerator                     = "features.azurerator"
+	FeaturesDigdirator                     = "features.digdirator"
+	FeaturesGCP                            = "features.gcp"
+	FeaturesJwker                          = "features.jwker"
+	FeaturesCNRM                           = "features.cnrm"
+	FeaturesKafkarator                     = "features.kafkarator"
+	FeaturesLinkerd                        = "features.linkerd"
+	FeaturesNativeSecrets                  = "features.native-secrets"
+	FeaturesNetworkPolicy                  = "features.network-policy"
+	FeaturesSecurePodSecurityContext       = "features.secure-pod-security-context"
+	FeaturesVault                          = "features.vault"
+	FeaturesWebhook                        = "features.webhook"
+	GoogleCloudSQLProxyContainerImage      = "google-cloud-sql-proxy-container-image"
+	GoogleProjectId                        = "google-project-id"
+	InformerFullSynchronizationInterval    = "informer.full-sync-interval"
+	KafkaBrokers                           = "kafka.brokers"
+	KafkaEnabled                           = "kafka.enabled"
+	KafkaLogVerbosity                      = "kafka.log-verbosity"
+	KafkaTLSCAPath                         = "kafka.tls.ca-path"
+	KafkaTLSCertificatePath                = "kafka.tls.certificate-path"
+	KafkaTLSEnabled                        = "kafka.tls.enabled"
+	KafkaTLSInsecure                       = "kafka.tls.insecure"
+	KafkaTLSPrivateKeyPath                 = "kafka.tls.private-key-path"
+	KafkaTopic                             = "kafka.topic"
+	KubeConfig                             = "kubeconfig"
+	LeaderElectionImage                    = "leader-election.image"
+	ProxyAddress                           = "proxy.address"
+	ProxyExclude                           = "proxy.exclude"
+	RateLimitBurst                         = "ratelimit.burst"
+	RateLimitQPS                           = "ratelimit.qps"
+	SecurelogsConfigMapReloadImage         = "securelogs.configmap-reload-image"
+	SecurelogsFluentdImage                 = "securelogs.fluentd-image"
+	SynchronizerRolloutCheckInterval       = "synchronizer.rollout-check-interval"
+	SynchronizerRolloutTimeout             = "synchronizer.rollout-timeout"
+	SynchronizerSynchronizationTimeout     = "synchronizer.synchronization-timeout"
+	VaultAddress                           = "vault.address"
+	VaultAuthPath                          = "vault.auth-path"
+	VaultInitContainerImage                = "vault.init-container-image"
+	VaultKvPath                            = "vault.kv-path"
+	WonderwallImage                        = "wonderwall.image"
+	WonderwallLoginstatusEnabled           = "wonderwall.loginstatus.enabled"
+	WonderwallLoginstatusCookieDomain      = "wonderwall.loginstatus.cookie-domain"
+	WonderwallLoginstatusCookieName        = "wonderwall.loginstatus.cookie-name"
+	WonderwallLoginstatusResourceIndicator = "wonderwall.loginstatus.resource-indicator"
+	WonderwallLoginstatusTokenURL          = "wonderwall.loginstatus.token-url"
 )
 
 func bindNAIS() {
@@ -261,6 +275,13 @@ func init() {
 	flag.String(KafkaTLSPrivateKeyPath, "", "Path to Kafka TLS private key.")
 	flag.String(KafkaTopic, "deploymentEvents", "Kafka topic for deployment status.")
 	flag.StringSlice(KafkaBrokers, []string{"localhost:9092"}, "Comma-separated list of Kafka brokers, HOST:PORT.")
+
+	flag.String(WonderwallImage, "", "Docker image used for Wonderwall.")
+	flag.Bool(WonderwallLoginstatusEnabled, false, "Enable Loginstatus for Wonderwall.")
+	flag.String(WonderwallLoginstatusCookieDomain, "", "Cookie domain for Loginstatus.")
+	flag.String(WonderwallLoginstatusCookieName, "", "Cookie name for Loginstatus.")
+	flag.String(WonderwallLoginstatusResourceIndicator, "", "Resource indicator for Loginstatus.")
+	flag.String(WonderwallLoginstatusTokenURL, "", "Token URL for Loginstatus.")
 }
 
 // Print out all configuration options except secret stuff.

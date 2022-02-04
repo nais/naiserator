@@ -190,6 +190,7 @@ func wonderwallConfig(naisIngresses []nais_io_v1.Ingress, naisIdPorten *nais_io_
 		AutoLogin:          naisIdPorten.Sidecar.AutoLogin,
 		ErrorPath:          naisIdPorten.Sidecar.ErrorPath,
 		Ingress:            string(naisIngresses[0]),
+		Loginstatus:        true,
 		Provider:           "idporten",
 		ProviderSecretName: providerSecretName,
 		ACRValues:          naisIdPorten.Sidecar.Level,

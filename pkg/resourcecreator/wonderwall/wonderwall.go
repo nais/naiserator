@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/utils/pointer"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
@@ -33,6 +34,7 @@ type Configuration struct {
 	AutoLogin             bool
 	ErrorPath             string
 	Ingress               string
+	Loginstatus           bool
 	Provider              string
 	ProviderSecretName    string
 	ACRValues             string
@@ -49,7 +51,7 @@ type Config interface {
 	GetGoogleProjectID() string
 	IsDigdiratorEnabled() bool
 	IsAzureratorEnabled() bool
-	GetWonderwallImage() string
+	GetWonderwallOptions() config.Wonderwall
 }
 
 func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) error {
@@ -127,12 +129,14 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 			Memory: "32Mi",
 		},
 	}
+	options := config.GetWonderwallOptions()
+	image := options.Image
 
 	return &corev1.Container{
 		Name:            "wonderwall",
-		Image:           config.GetWonderwallImage(),
+		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env:             envVars(cfg, targetPort),
+		Env:             envVars(cfg, targetPort, options),
 		Ports: []corev1.ContainerPort{
 			{
 				ContainerPort: int32(Port),
@@ -160,7 +164,7 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 	}, nil
 }
 
-func envVars(cfg Configuration, targetPort int) []corev1.EnvVar {
+func envVars(cfg Configuration, targetPort int, options config.Wonderwall) []corev1.EnvVar {
 	result := []corev1.EnvVar{
 		{
 			Name:  "WONDERWALL_OPENID_PROVIDER",
@@ -189,6 +193,15 @@ func envVars(cfg Configuration, targetPort int) []corev1.EnvVar {
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_ACR_VALUES", cfg.ACRValues)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_UI_LOCALES", cfg.UILocales)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI", cfg.PostLogoutRedirectURI)
+
+	if cfg.Loginstatus {
+		result = appendBoolEnvVar(result, "WONDERWALL_LOGINSTATUS_ENABLED", options.Loginstatus.Enabled)
+		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_COOKIE_DOMAIN", options.Loginstatus.CookieDomain)
+		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_COOKIE_NAME", options.Loginstatus.CookieName)
+		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_RESOURCE_INDICATOR", options.Loginstatus.ResourceIndicator)
+		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_TOKEN_URL", options.Loginstatus.TokenURL)
+	}
+
 	return result
 }
 

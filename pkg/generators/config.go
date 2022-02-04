@@ -74,8 +74,8 @@ func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
 	return o.Config.GoogleCloudSQLProxyContainerImage
 }
 
-func (o *Options) GetWonderwallImage() string {
-	return o.Config.Wonderwall.Image
+func (o *Options) GetWonderwallOptions() config.Wonderwall {
+	return o.Config.Wonderwall
 }
 
 func (o *Options) GetWebProxyOptions() config.Proxy {
