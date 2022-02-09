@@ -56,6 +56,13 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
 	}
 
+	var backupSettings *google_sql_crd.SQLInstanceBackupRetentionSetting
+	if instance.RetainedBackups != nil {
+		backupSettings = &google_sql_crd.SQLInstanceBackupRetentionSetting{
+			RetainedBackups: *instance.RetainedBackups,
+		}
+	}
+
 	flags := []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}}
 	for _, flag := range instance.Flags {
 		flags = append(flags, google_sql_crd.SQLDatabaseFlag{Name: flag.Name, Value: flag.Value})
@@ -76,6 +83,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 					Enabled:                    true,
 					StartTime:                  fmt.Sprintf("%02d:00", *instance.AutoBackupHour),
 					PointInTimeRecoveryEnabled: instance.PointInTimeRecovery,
+					BackupRetentionSettings:    backupSettings,
 				},
 				IpConfiguration: google_sql_crd.SQLInstanceIpConfiguration{
 					RequireSsl: true,
