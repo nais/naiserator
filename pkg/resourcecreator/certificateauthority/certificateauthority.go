@@ -19,6 +19,7 @@ const (
 	CA_BUNDLE_JKS_SOURCE_FILENAME = "ca-bundle.jks"
 	NAV_TRUSTSTORE_PATH           = "/etc/ssl/certs/java/cacerts"
 	NAV_TRUSTSTORE_PASSWORD       = "changeme" // The contents in this file is not secret
+	NODE_EXTRA_CA_CERT_PATH       = "/etc/pki/tls/certs/ca-bundle.crt"
 )
 
 // The following list was copied from https://golang.org/src/crypto/x509/root_linux.go.
@@ -40,6 +41,10 @@ var envs = []corev1.EnvVar{
 	{
 		Name:  "NAV_TRUSTSTORE_PASSWORD",
 		Value: NAV_TRUSTSTORE_PASSWORD,
+	},
+	{
+		Name:  "NODE_EXTRA_CA_CERTS",
+		Value: NODE_EXTRA_CA_CERT_PATH,
 	},
 }
 

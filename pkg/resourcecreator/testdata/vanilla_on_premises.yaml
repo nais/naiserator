@@ -152,6 +152,8 @@ tests:
                         value: /etc/ssl/certs/java/cacerts
                       - name: NAV_TRUSTSTORE_PASSWORD
                         value: changeme
+                      - name: NODE_EXTRA_CA_CERTS
+                        value: /etc/pki/tls/certs/ca-bundle.crt
                       - name: NAIS_APP_NAME
                         value: myapplication
                       - name: NAIS_NAMESPACE
