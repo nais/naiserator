@@ -1,0 +1,28 @@
+testconfig:
+  description: images from registry docker.pkg.github.com is converted to ghcr.io format
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: docker.pkg.github.com/org/repo/name:version
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "image field is converted"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - image: ghcr.io/org/repo/name:version

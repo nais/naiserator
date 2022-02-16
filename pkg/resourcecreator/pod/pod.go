@@ -235,7 +235,7 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 
 	container := corev1.Container{
 		Name:  app.GetName(),
-		Image: app.GetImage(),
+		Image: ghcrify(app.GetImage()),
 		Ports: []corev1.ContainerPort{
 			{ContainerPort: int32(app.GetPort()), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
 		},
@@ -277,7 +277,7 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg 
 
 	container := corev1.Container{
 		Name:            naisjob.Name,
-		Image:           naisjob.Spec.Image,
+		Image:           ghcrify(naisjob.Spec.Image),
 		Command:         naisjob.Spec.Command,
 		Resources:       ResourceLimits(*naisjob.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
@@ -523,4 +523,8 @@ func allowed(capability string, allowedCapabilites []string) bool {
 		}
 	}
 	return false
+}
+
+func ghcrify(image string) string {
+	return strings.Replace(image, "docker.pkg.github.com", "ghcr.io", 1)
 }
