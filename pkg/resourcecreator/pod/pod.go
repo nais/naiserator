@@ -357,11 +357,8 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg
 
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = naisjob.GetName()
 
-	if naisjob.ObjectMeta.Annotations["nais.io/naisjob"] == "true" {
-		objectMeta.Labels["nais.io/naisjob"] = "true"
-	} else {
-		objectMeta.Annotations["ginuudan.nais.io/dwindle"] = "true"
-	}
+	// enables HAHAHA
+	objectMeta.Labels["nais.io/naisjob"] = "true"
 
 	if len(naisjob.Spec.Logformat) > 0 {
 		objectMeta.Annotations["nais.io/logformat"] = naisjob.Spec.Logformat

@@ -79,11 +79,11 @@ tests:
             template:
               metadata:
                 annotations:
-                  ginuudan.nais.io/dwindle: "true"
                   kubectl.kubernetes.io/default-container: mynaisjob
                 labels:
                   app: mynaisjob
                   team: myteam
+                  nais.io/naisjob: "true"
                 name: mynaisjob
                 namespace: mynamespace
                 ownerReferences:
