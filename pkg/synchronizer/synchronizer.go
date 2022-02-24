@@ -264,7 +264,7 @@ func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Sou
 	if err != nil {
 		return err
 	}
-	labelSelector.Add(*labelreq)
+	labelSelector = labelSelector.Add(*labelreq)
 	listOpts := &client.ListOptions{
 		LabelSelector: labelSelector,
 		Namespace:     google.IAMServiceAccountNamespace,
