@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/search: "true"
+  labels:
+    app: {{ .Release.Name }}-webhook
+  name: {{ .Release.Name }}-webhook
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-webhook
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-webhook
+    spec:
+      containers:
+      - command:
+        - /app/naiserator_webhook
+        image: ghcr.io/nais/naiserator/naiserator:{{ .Values.image.tag }}
+        imagePullPolicy: IfNotPresent
+        name: naiserator-webhook
+        ports:
+        - containerPort: 8443
+          name: webhook-server
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: webhook-cert
+          readOnly: true
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
+      restartPolicy: Always
+      serviceAccount: {{ .Release.Name }}
+      serviceAccountName: {{ .Release.Name }}
+      volumes:
+      - name: webhook-cert
+        secret:
+          defaultMode: 420
+          secretName: naiserator-webhook-certificates

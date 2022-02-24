@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: {{ .Release.Name }}
+    {{- toYaml .Values.labels | nindent 4 }}
+  name: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      labels:
+        app: {{ .Release.Name }}
+        {{- toYaml .Values.labels | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KAFKA_BROKERS
+          valueFrom:
+            secretKeyRef:
+              key: KAFKA_BROKERS
+              name: aiven-naiserator
+        - name: KAFKA_CERTIFICATE_PATH
+          value: /var/run/secrets/nais.io/kafka/kafka.crt
+        - name: KAFKA_PRIVATE_KEY_PATH
+          value: /var/run/secrets/nais.io/kafka/kafka.key
+        - name: KAFKA_CA_PATH
+          value: /var/run/secrets/nais.io/kafka/ca.crt
+        - name: STAKATER_NAISERATOR_SECRET
+          value: 0c697898d6b74c708d5acdc318e8f0d7b3117e31
+        image: ghcr.io/nais/naiserator/naiserator:2022-02-18-8aa3074
+        imagePullPolicy: IfNotPresent
+        name: naiserator
+        ports:
+        - containerPort: 443
+          name: webhook-server
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/naiserator.yaml
+          name: naiserator
+          subPath: naiserator.yaml
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: webhook-cert
+          readOnly: true
+        - mountPath: /var/run/secrets/nais.io/kafka
+          name: kafka-credentials
+          readOnly: true
+      imagePullSecrets:
+      - name: gpr-credentials
+      serviceAccount: {{ .Release.Name }}
+      serviceAccountName: {{ .Release.Name }}
+      volumes:
+      - name: naiserator
+        secret:
+          defaultMode: 420
+          secretName: naiserator
+      - name: webhook-cert
+        secret:
+          defaultMode: 420
+          secretName: naiserator-webhook-certificates
+      - name: kafka-credentials
+        secret:
+          defaultMode: 420
+          items:
+          - key: KAFKA_CERTIFICATE
+            path: kafka.crt
+          - key: KAFKA_PRIVATE_KEY
+            path: kafka.key
+          - key: KAFKA_CA
+            path: ca.crt
+          secretName: aiven-naiserator

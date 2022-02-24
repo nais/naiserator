@@ -1,0 +1,29 @@
+# Default values for naiserator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: 
+
+image:
+  tag: "2022-02-18-8aa3074" 
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+annotations: 
+  reloader.stakater.com/search: "true" 
+
+labels: 
+  kafka: enabled
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
