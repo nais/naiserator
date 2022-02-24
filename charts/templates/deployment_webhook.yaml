@@ -1,8 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  {{- with .Values.annotations }}
   annotations:
-    reloader.stakater.com/search: "true"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app: {{ .Release.Name }}-webhook
   name: {{ .Release.Name }}-webhook
@@ -19,8 +21,8 @@ spec:
       containers:
       - command:
         - /app/naiserator_webhook
-        image: ghcr.io/nais/naiserator/naiserator:{{ .Values.image.tag }}
-        imagePullPolicy: IfNotPresent
+        image: ghcr.io/nais/naiserator/naiserator:{{ .Values.imageTag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator-webhook
         ports:
         - containerPort: 8443
@@ -32,7 +34,6 @@ spec:
           readOnly: true
       imagePullSecrets:
       - name: {{ .Values.imagePullSecret }}
-      restartPolicy: Always
       serviceAccount: {{ .Release.Name }}
       serviceAccountName: {{ .Release.Name }}
       volumes:

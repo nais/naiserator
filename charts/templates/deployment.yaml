@@ -38,9 +38,9 @@ spec:
         - name: KAFKA_CA_PATH
           value: /var/run/secrets/nais.io/kafka/ca.crt
         - name: STAKATER_NAISERATOR_SECRET
-          value: 0c697898d6b74c708d5acdc318e8f0d7b3117e31
-        image: ghcr.io/nais/naiserator/naiserator:2022-02-18-8aa3074
-        imagePullPolicy: IfNotPresent
+          value: {{ .Values.stakaterSecret }} 
+        image: ghcr.io/nais/naiserator/naiserator:{{ .Values.imageTag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator
         ports:
         - containerPort: 443
@@ -57,7 +57,7 @@ spec:
           name: kafka-credentials
           readOnly: true
       imagePullSecrets:
-      - name: gpr-credentials
+      - name: {{ .Values.imagePullSecret }}
       serviceAccount: {{ .Release.Name }}
       serviceAccountName: {{ .Release.Name }}
       volumes:

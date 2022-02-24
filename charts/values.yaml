@@ -2,28 +2,69 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-nameOverride: 
-
-image:
-  tag: "2022-02-18-8aa3074" 
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
 annotations: 
   reloader.stakater.com/search: "true" 
+
+imagePullPolicy: "IfNotPresent"
+imagePullSecret: "gpr-credentials"
+imageTag: "2022-02-18-8aa3074" 
 
 labels: 
   kafka: enabled
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+stakaterSecret: "0c697898d6b74c708d5acdc318e8f0d7b3117e31"
+   
+naiserator:
+  bind: 0.0.0.0:8080
+  cluster-name: 
+  google-project-id:
+  google-cloud-sql-proxy-container-image: "gcr.io/cloudsql-docker/gce-proxy:1.24.0-alpine"
+  api-server-ip:
+  host-aliases:
+  gateway-mappings:
+  features:
+    linkerd: true
+    access-policy-not-allowed-cidrs: []
+    native-secrets: true
+    network-policy: true
+    vault: false
+    jwker: true
+    cnrm: true
+    azurerator: true
+    kafkarator: true
+    digdirator: true
+    gcp: true
+    webhook: true
+    secure-pod-security-context: true
+  informer:
+    full-sync-interval: 4h
+  synchronizer:
+    synchronization-timeout: 1m
+    rollout-timeout: 20m
+  kafka:
+    enabled: true
+    tls:
+      enabled: true
+      insecure: false
+    topic: aura.dev-rapid
+  proxy:
+    address: http://webproxy.nais:8088
+    exclude: localhost,127.0.0.1,10.254.0.1,.local,.adeo.no,.nav.no,.aetat.no,.devillo.no,.oera.no,.nais.io,.aivencloud.com
+  securelogs:
+    configmap-reload-image: ghcr.io/nais/configmap-reload/configmap-reload@sha256:3f30687b1200754924484a12124f7be58a55816661d864f6d1bf44e1131b6de6
+    fluentd-image: ghcr.io/nais/nais-logd/nais-logd:107
+  vault:
+    address: https://vault.adeo.no
+    auth-path: /kubernetes/default/default
+    init-container-image: navikt/vault-sidekick:v0.3.10-26ad67d
+    kv-path: /kv/default/default
+  wonderwall:
+    image: ghcr.io/nais/wonderwall:2022-02-15-9c114f1
+    loginstatus:
+      enabled: true
+      cookie-domain:
+      cookie-name: innloggingsstatus-token
+      resource-indicator:
+      token-url:
+  leader-election:
+    image: ghcr.io/nais/elector:2022-01-25-848dc6a
