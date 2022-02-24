@@ -2,7 +2,7 @@ name: Build and deploy
 on: 
   push:
     paths-ignore: 
-      - charts
+      - 'charts/**'
 
 env:
   image: ghcr.io/${{ github.repository }}/naiserator
