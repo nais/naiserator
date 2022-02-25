@@ -92,7 +92,7 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 	if err != nil {
 		return nil, err
 	}
-	labelSelector.Add(*labelreq)
+	labelSelector = labelSelector.Add(*labelreq)
 	listopt := &client.ListOptions{
 		LabelSelector: labelSelector,
 	}
