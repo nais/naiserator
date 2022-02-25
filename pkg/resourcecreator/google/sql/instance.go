@@ -254,8 +254,9 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 			}
 		}
 
-		// FIXME: re-assign name to original array - why?
-		gcp.SqlInstances[i].Name = sqlInstance.Name
+		if defaultNameNotSetInManifest(gcp.SqlInstances[i]) {
+			gcp.SqlInstances[i].Name = sqlInstance.Name
+		}
 
 		err = AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName)
 		if err != nil {
@@ -269,4 +270,8 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		)
 	}
 	return nil
+}
+
+func defaultNameNotSetInManifest(instance nais_io_v1.CloudSqlInstance) bool {
+	return instance.Name == ""
 }
