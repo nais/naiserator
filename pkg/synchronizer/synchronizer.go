@@ -276,10 +276,8 @@ func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Sou
 		return err
 	}
 
-	logger := *log.WithFields(app.LogFields())
 	for _, item := range IAMServiceAccountList.Items {
-		logger.Infof("Deleting %v:%v in %v", item.GetObjectKind(), item.GetName(), item.GetNamespace())
-		// err = n.Delete(ctx, &item)
+		err = n.Delete(ctx, &item)
 		if err != nil {
 			return err
 		}
@@ -292,8 +290,7 @@ func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Sou
 	}
 
 	for _, item := range IAMPolicies.Items {
-		logger.Infof("Deleting %v:%v in %v", item.GetObjectKind(), item.GetName(), item.GetNamespace())
-		// err = n.Delete(ctx, &item)
+		err = n.Delete(ctx, &item)
 		if err != nil {
 			return err
 		}
