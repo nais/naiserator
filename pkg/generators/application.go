@@ -40,7 +40,7 @@ type Application struct {
 
 var _ synchronizer.Generator = &Application{}
 
-// Generate a configuration context for further processing.
+// Prepare a configuration context for further processing.
 // This function detects run-time parameters from a live running cluster.
 func (g *Application) Prepare(ctx context.Context, source resource.Source, kube client.Client) (interface{}, error) {
 	app, ok := source.(*nais_io_v1alpha1.Application)
@@ -93,7 +93,7 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 	return o, nil
 }
 
-// CreateApplication transforms an Application resource into a set of Kubernetes resources,
+// Generate transforms an Application resource into a set of Kubernetes resources,
 // along with information about what to do with these resources, i.e. CreateOrUpdate, etc.
 func (g *Application) Generate(source resource.Source, config interface{}) (resource.Operations, error) {
 	var err error
