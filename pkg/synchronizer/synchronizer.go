@@ -260,11 +260,16 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 // deleteCNRMResources removes the lingering IAMServiceAccounts and IAMPolicies in the serviceaccounts namespace
 func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Source) error {
 	labelSelector := labels.NewSelector()
-	labelreq, err := labels.NewRequirement("app", selection.Equals, []string{app.GetName()})
+	appLabelreq, err := labels.NewRequirement("app", selection.Equals, []string{app.GetName()})
 	if err != nil {
 		return err
 	}
-	labelSelector = labelSelector.Add(*labelreq)
+	labelSelector = labelSelector.Add(*appLabelreq)
+	teamLabelreq, err := labels.NewRequirement("team", selection.Equals, []string{app.GetLabels()["team"]})
+	if err != nil {
+		return err
+	}
+	labelSelector = labelSelector.Add(*teamLabelreq)
 	listOpts := &client.ListOptions{
 		LabelSelector: labelSelector,
 		Namespace:     google.IAMServiceAccountNamespace,
