@@ -1,0 +1,35 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Release.Name }}-selfsigned-issuer
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: {{ .Release.Name }}
+    {{- toYaml .Values.labels | nindent 4 }}
+spec:
+  selfSigned: {}
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Release.Name }}-serving-cert
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: {{ .Release.Name }}
+    {{- toYaml .Values.labels | nindent 4 }}
+spec:
+  dnsNames:
+  - '{{ .Release.Name }}-webhook.{{ .Release.Namespace }}.svc'
+  - '{{ .Release.Name }}-webhook.{{ .Release.Namespace }}.svc.cluster.local'
+  issuerRef:
+    kind: Issuer
+    name: '{{ .Release.Name }}-selfsigned-issuer'
+  secretName: {{ .Release.Name }}-webhook
