@@ -164,26 +164,10 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		}
 	}()
 
-	if app.GetObjectMeta().GetDeletionTimestamp().IsZero() {
-		if !controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
-			controllerutil.AddFinalizer(app, NaiseratorFinalizer)
-			err = n.Update(ctx, app)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-		}
-	} else {
-		if controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
-			err = n.deleteCNRMResources(ctx, app)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-
-			controllerutil.RemoveFinalizer(app, NaiseratorFinalizer)
-			err = n.Update(ctx, app)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
+	if appIsDeleted(app) {
+		err = n.cleanUpAfterAppDeletion(ctx, app)
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 
 		logger := log.WithFields(log.Fields{
@@ -194,6 +178,11 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		logger.Infof("Application has been deleted from Kubernetes")
 
 		return ctrl.Result{}, nil
+	} else {
+		err = n.ensureFinalizerExists(ctx, app)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	rollout, err := n.Prepare(ctx, app)
@@ -255,6 +244,36 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (n *Synchronizer) cleanUpAfterAppDeletion(ctx context.Context, app resource.Source) error {
+	if controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
+		err := n.deleteCNRMResources(ctx, app)
+		if err != nil {
+			return err
+		}
+
+		controllerutil.RemoveFinalizer(app, NaiseratorFinalizer)
+		err = n.Update(ctx, app)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (n *Synchronizer) ensureFinalizerExists(ctx context.Context, app resource.Source) error {
+	if !controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
+		controllerutil.AddFinalizer(app, NaiseratorFinalizer)
+		return n.Update(ctx, app)
+	}
+
+	return nil
+}
+
+func appIsDeleted(app resource.Source) bool {
+	return !app.GetObjectMeta().GetDeletionTimestamp().IsZero()
 }
 
 // deleteCNRMResources removes the lingering IAMServiceAccounts and IAMPolicies in the serviceaccounts namespace
