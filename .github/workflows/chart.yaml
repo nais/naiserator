@@ -4,7 +4,8 @@ on:
     branches:
       - main
     paths:
-    - charts
+    - 'charts/**'
+    - '.github/workflows/chart.yaml'
 
 jobs:
   build:
