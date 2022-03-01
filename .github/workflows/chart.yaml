@@ -1,0 +1,46 @@
+name: Build and push charts
+on:
+  push:
+    branches:
+      - master
+    paths:
+    - 'charts/**'
+    - '.github/workflows/chart.yaml'
+
+jobs:
+  build:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0.6.0'
+        with:
+          workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: 'gh-naiserator@nais-io.iam.gserviceaccount.com'
+          token_format: 'access_token'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - name: 'Log in to Google Artifact Registry'
+        run: |-
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://europe-north1-docker.pkg.dev
+
+      - uses: azure/setup-helm@v1
+        name: 'Setup Helm'
+        with:
+          version: '3.8.0'
+
+      - name: Build Chart
+        run: |-
+          helm package charts
+
+      - name: Push Chart
+        run: |-
+          helm push naiserator*.tgz oci://europe-north1-docker.pkg.dev/nais-io/nais

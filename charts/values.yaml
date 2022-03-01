@@ -23,16 +23,16 @@ naiserator:
   host-aliases:
   gateway-mappings:
   features:
-    linkerd: true
+    linkerd: false
     access-policy-not-allowed-cidrs: []
     native-secrets: true
     network-policy: true
     vault: false
-    jwker: true
+    jwker: false
     cnrm: true
-    azurerator: true
-    kafkarator: true
-    digdirator: true
+    azurerator: false
+    kafkarator: false
+    digdirator: false
     gcp: true
     webhook: true
     secure-pod-security-context: true
@@ -42,7 +42,7 @@ naiserator:
     synchronization-timeout: 1m
     rollout-timeout: 20m
   kafka:
-    enabled: true
+    enabled: false
     tls:
       enabled: true
       insecure: false
@@ -54,7 +54,7 @@ naiserator:
     configmap-reload-image: ghcr.io/nais/configmap-reload/configmap-reload@sha256:3f30687b1200754924484a12124f7be58a55816661d864f6d1bf44e1131b6de6
     fluentd-image: ghcr.io/nais/nais-logd/nais-logd:107
   vault:
-    address: https://vault.adeo.no
+    address: ""
     auth-path: /kubernetes/default/default
     init-container-image: navikt/vault-sidekick:v0.3.10-26ad67d
     kv-path: /kv/default/default

@@ -3,6 +3,7 @@ on:
   push:
     paths-ignore: 
       - 'charts/**'
+      - '.github/workflows/chart.yaml'
 
 env:
   image: ghcr.io/${{ github.repository }}/naiserator
