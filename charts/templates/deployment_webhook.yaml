@@ -40,4 +40,4 @@ spec:
       - name: webhook-cert
         secret:
           defaultMode: 420
-          secretName: naiserator-webhook-certificates
+          secretName: {{ .Release.Name }}-webhook
