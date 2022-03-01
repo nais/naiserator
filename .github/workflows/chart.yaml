@@ -43,4 +43,4 @@ jobs:
 
       - name: Push Chart
         run: |-
-          helm push nais-crds*.tgz oci://europe-north1-docker.pkg.dev/nais-io/nais
+          helm push naiserator*.tgz oci://europe-north1-docker.pkg.dev/nais-io/nais
