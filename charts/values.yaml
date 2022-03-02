@@ -2,25 +2,25 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-annotations: 
-  reloader.stakater.com/search: "true" 
+annotations:
+  reloader.stakater.com/search: "true"
 
 imagePullPolicy: "IfNotPresent"
 imagePullSecret: "gpr-credentials"
-imageTag: "2022-02-18-8aa3074" 
+imageTag: "2022-02-18-8aa3074"
 
-labels: 
+labels:
   kafka: enabled
 
 stakaterSecret: "0c697898d6b74c708d5acdc318e8f0d7b3117e31"
-   
+
 naiserator:
   bind: 0.0.0.0:8080
-  cluster-name: 
-  google-project-id:
+  cluster-name: ""
+  google-project-id: ""
   google-cloud-sql-proxy-container-image: "gcr.io/cloudsql-docker/gce-proxy:1.24.0-alpine"
-  api-server-ip:
-  host-aliases:
+  api-server-ip: ""
+  host-aliases: ""
   gateway-mappings:
   features:
     linkerd: false
@@ -64,7 +64,7 @@ naiserator:
       enabled: true
       cookie-domain:
       cookie-name: innloggingsstatus-token
-      resource-indicator:
-      token-url:
+      resource-indicator: ""
+      token-url: ""
   leader-election:
     image: ghcr.io/nais/elector:2022-01-25-848dc6a
