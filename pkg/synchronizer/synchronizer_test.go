@@ -109,12 +109,18 @@ func newTestRig(config config.Config) (*testRig, error) {
 // These tests ensure that resources are actually created or updated in the cluster,
 // and that orphaned resources are cleaned up properly.
 // The validity of resources generated are not tested here.
+// This test includes some GCP features suchs as CNRM
 func TestSynchronizer(t *testing.T) {
 	cfg := config.Config{
 		Synchronizer: config.Synchronizer{
 			SynchronizationTimeout: 2 * time.Second,
 			RolloutCheckInterval:   5 * time.Second,
 			RolloutTimeout:         20 * time.Second,
+		},
+		GoogleProjectId:                   "1337",
+		GoogleCloudSQLProxyContainerImage: config.GoogleCloudSQLProxyContainerImage,
+		Features: config.Features{
+			CNRM: true,
 		},
 	}
 
@@ -162,6 +168,14 @@ func TestSynchronizer(t *testing.T) {
 	err = rig.client.Create(ctx, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: app.GetNamespace(),
+		},
+	})
+	assert.NoError(t, err)
+
+	// Ensure that the cnrm namespace exists
+	err = rig.client.Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: google.IAMServiceAccountNamespace,
 		},
 	})
 	assert.NoError(t, err)
@@ -268,6 +282,66 @@ func TestSynchronizer(t *testing.T) {
 	assert.EqualValues(t, 2, eventList.Items[0].Count)
 	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, nais_io_v1.EventSynchronized, eventList.Items[0].Reason)
+
+	// Ensure that we delete correct IAM-resources from cnrm namespace
+	// Start by creating new app, which also will be the one we delete
+	app2 := fixtures.MinimalApplication()
+	app2.SetAnnotations(map[string]string{
+		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id-2",
+	})
+	app2.ObjectMeta.Name = "iam-test"
+	err = rig.client.Create(ctx, app2)
+	if err != nil {
+		t.Fatalf("Application resource cannot be persisted to fake Kubernetes: %s", err)
+	}
+	// Reconcile the new app
+	req = ctrl.Request{
+		NamespacedName: types.NamespacedName{
+			Namespace: app2.Namespace,
+			Name:      app2.Name,
+		},
+	}
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	// Ensure that we now have two IAMPolicy and two IAMServiceAccount
+	var iamPList iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList
+	err = rig.client.List(ctx, &iamPList)
+	assert.NoError(t, err)
+	assert.Len(t, iamPList.Items, 2)
+
+	var iamSAlist iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList
+	err = rig.client.List(ctx, &iamSAlist)
+	assert.NoError(t, err)
+	assert.Len(t, iamSAlist.Items, 2)
+	// Ensure that one of the resources belongs to the last deployed app
+	assert.Equal(t, iamSAlist.Items[0].Labels["app"], app2.GetName())
+
+	// Delete the new app, and reconcile the app
+	rig.client.Delete(ctx, app2)
+	req = ctrl.Request{
+		NamespacedName: types.NamespacedName{
+			Namespace: app2.Namespace,
+			Name:      app2.Name,
+		},
+	}
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	// Ensure that we are left with only on IAMPolicy and IAMServiceAccount
+	err = rig.client.List(ctx, &iamPList)
+	assert.NoError(t, err)
+	assert.Len(t, iamPList.Items, 1)
+
+	err = rig.client.List(ctx, &iamSAlist)
+	assert.NoError(t, err)
+	assert.Len(t, iamSAlist.Items, 1)
+	// Ensure that the resource left belongs to the first app
+	assert.Equal(t, iamSAlist.Items[0].Labels["app"], app.GetName())
+
+	// We also test to see if
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
