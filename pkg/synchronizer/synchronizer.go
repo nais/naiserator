@@ -7,18 +7,23 @@ import (
 	"sync"
 	"time"
 
+	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	generator2 "github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/readonly"
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/selection"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
@@ -29,9 +34,10 @@ import (
 
 const (
 	prepareRetryInterval = time.Minute * 30
+	NaiseratorFinalizer  = "naiserator.nais.io/finalizer"
 )
 
-// Generators transform CRD objects such as Application, Naisjob into other kinds of Kubernetes resources.
+// Generator transform CRD objects such as Application, Naisjob into other kinds of Kubernetes resources.
 // First, `Prepare()` is called. This function has access to (read-only) cluster operations and returns
 // a configuration object. Then, `Generate()` is called with the configuration object, and returns a full
 // set of Kubernetes resources.
@@ -129,17 +135,10 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 	err := n.Get(ctx, req.NamespacedName, app)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			logger := log.WithFields(log.Fields{
-				"namespace": req.Namespace,
-				"name":      req.Name,
-				"gvk":       app.GetObjectKind().GroupVersionKind().String(),
-			})
-			logger.Infof("Application has been deleted from Kubernetes")
-
-			err = nil
-		}
-		return ctrl.Result{}, err
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	kind := app.GetObjectKind().GroupVersionKind().Kind
@@ -164,6 +163,27 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 			logger.Debugf("Application status: %+v'", app.GetStatus())
 		}
 	}()
+
+	if appIsDeleted(app) {
+		err = n.cleanUpAfterAppDeletion(ctx, app)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		logger := log.WithFields(log.Fields{
+			"namespace": req.Namespace,
+			"name":      req.Name,
+			"gvk":       app.GetObjectKind().GroupVersionKind().String(),
+		})
+		logger.Infof("Application has been deleted from Kubernetes")
+
+		return ctrl.Result{}, nil
+	} else {
+		err = n.ensureFinalizerExists(ctx, app)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
@@ -224,6 +244,83 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (n *Synchronizer) cleanUpAfterAppDeletion(ctx context.Context, app resource.Source) error {
+	if controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
+		err := n.deleteCNRMResources(ctx, app)
+		if err != nil {
+			return err
+		}
+
+		controllerutil.RemoveFinalizer(app, NaiseratorFinalizer)
+		err = n.Update(ctx, app)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (n *Synchronizer) ensureFinalizerExists(ctx context.Context, app resource.Source) error {
+	if !controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
+		controllerutil.AddFinalizer(app, NaiseratorFinalizer)
+		return n.Update(ctx, app)
+	}
+
+	return nil
+}
+
+func appIsDeleted(app resource.Source) bool {
+	return !app.GetObjectMeta().GetDeletionTimestamp().IsZero()
+}
+
+// deleteCNRMResources removes the lingering IAMServiceAccounts and IAMPolicies in the serviceaccounts namespace
+func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Source) error {
+	labelSelector := labels.NewSelector()
+	appLabelreq, err := labels.NewRequirement("app", selection.Equals, []string{app.GetName()})
+	if err != nil {
+		return err
+	}
+	labelSelector = labelSelector.Add(*appLabelreq)
+	teamLabelreq, err := labels.NewRequirement("team", selection.Equals, []string{app.GetLabels()["team"]})
+	if err != nil {
+		return err
+	}
+	labelSelector = labelSelector.Add(*teamLabelreq)
+	listOpts := &client.ListOptions{
+		LabelSelector: labelSelector,
+		Namespace:     google.IAMServiceAccountNamespace,
+	}
+
+	IAMServiceAccountList := &iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{}
+	err = n.List(ctx, IAMServiceAccountList, listOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range IAMServiceAccountList.Items {
+		err = n.Delete(ctx, &item)
+		if err != nil {
+			return err
+		}
+	}
+
+	IAMPolicies := &iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{}
+	err = n.List(ctx, IAMPolicies, listOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range IAMPolicies.Items {
+		err = n.Delete(ctx, &item)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Unreferenced return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
