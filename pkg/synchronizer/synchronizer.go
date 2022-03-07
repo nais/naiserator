@@ -278,6 +278,10 @@ func appIsDeleted(app resource.Source) bool {
 
 // deleteCNRMResources removes the lingering IAMServiceAccounts and IAMPolicies in the serviceaccounts namespace
 func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Source) error {
+	if !n.config.Features.CNRM {
+		return nil
+	}
+
 	labelSelector := labels.NewSelector()
 	appLabelreq, err := labels.NewRequirement("app", selection.Equals, []string{app.GetName()})
 	if err != nil {
