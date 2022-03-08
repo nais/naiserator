@@ -49,7 +49,7 @@ tests:
         name: "service account created"
         resource: {}
 
-  - operation: CreateOrUpdate
+  - operation: CreateOrRecreate
     apiVersion: batch/v1
     kind: Job
     name: mynaisjob
