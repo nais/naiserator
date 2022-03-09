@@ -60,6 +60,6 @@ func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error
 		Spec:       jobSpec,
 	}
 
-	ast.AppendOperation(resource.OperationCreateOrRecreate, &job)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, &job)
 	return nil
 }
