@@ -32,7 +32,20 @@ type completionState struct {
 	event              *deployment.Event
 	eventReported      bool
 	kafkaProduced      bool
+	skipKafka          bool
 	applicationUpdated bool
+}
+
+func (s completionState) produceKafkaMessage() bool {
+	return !s.skipKafka && !s.kafkaProduced
+}
+
+func (s completionState) saveK8sEvent() bool {
+	return !s.eventReported
+}
+
+func (s completionState) setSynchronizationState() bool {
+	return !s.applicationUpdated && s.eventReported
 }
 
 func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
@@ -103,7 +116,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 
 	completion := completionState{
 		// Don't produce Kafka message on certain conditions
-		kafkaProduced: n.kafka == nil || app.SkipDeploymentMessage(),
+		skipKafka: n.kafka == nil || app.SkipDeploymentMessage(),
 	}
 
 	for {
@@ -181,8 +194,8 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 
 	// Save a Kubernetes event for this completed deployment.
 	// The deployment will be reported as complete when this event is picked up by NAIS deploy.
-	if !completion.eventReported {
-		_, err := n.reportEvent(ctx, resource.CreateEvent(app, nais_io_v1.EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+	if completion.saveK8sEvent() {
+		_, err := n.reportEvent(ctx, resource.CreateEvent(app, nais_io_v1.EventRolloutComplete, "Rollout has completed", "Normal"))
 		completion.eventReported = err == nil
 
 		if err != nil {
@@ -192,7 +205,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 
 	// Send a deployment event to the dev-rapid topic.
 	// This is picked up by deployment-event-relays and used as official deployment data.
-	if !completion.kafkaProduced {
+	if completion.produceKafkaMessage() {
 		offset, err := n.produceDeploymentEvent(completion.event)
 		completion.kafkaProduced = err == nil
 		if err != nil {
@@ -206,7 +219,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 	// Set the SynchronizationState field of the application to RolloutComplete.
 	// This will prevent the application from being picked up by this function if Naiserator restarts.
 	// Only update this field if an event has been persisted to the cluster.
-	if !completion.applicationUpdated && completion.eventReported {
+	if completion.setSynchronizationState() {
 		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
 			app = setSyncStatus(ctx, app, nais_io_v1.EventRolloutComplete, completion.event)
 			return n.Update(ctx, app)
