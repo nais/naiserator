@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,6 +26,13 @@ var rolloutMonitorLock sync.Mutex
 type RolloutMonitor struct {
 	id     uuid.UUID
 	cancel context.CancelFunc
+}
+
+type completion struct {
+	event              *deployment.Event
+	eventReported      bool
+	kafkaProduced      bool
+	applicationUpdated bool
 }
 
 func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
@@ -93,85 +101,70 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 		Namespace: app.GetNamespace(),
 	}
 
-	var event *deployment.Event
-	var eventReported bool
-	var kafkaProduced bool
-	var applicationUpdated bool
+	completion := completion{}
 
 	// Don't produce Kafka message on certain conditions
-	kafkaProduced = n.kafka == nil || app.SkipDeploymentMessage()
+	completion.kafkaProduced = n.kafka == nil || app.SkipDeploymentMessage()
 
 	for {
 		select {
 		case <-time.After(n.config.Synchronizer.RolloutCheckInterval):
-			deploy := &appsv1.Deployment{}
-			err := n.Get(ctx, objectKey, deploy)
-
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					logger.Errorf("Monitor rollout: failed to query Deployment: %s", err)
-				}
-				continue
-			}
-
-			if !deploymentComplete(deploy, &deploy.Status) {
-				continue
-			}
-
-			// Deployment event for dev-rapid topic.
-			if event == nil {
-				logger.Debugf("Monitor rollout: deployment has rolled out completely")
-				event = generator.NewDeploymentEvent(app)
-				event.RolloutStatus = deployment.RolloutStatus_complete
-			}
-
-			// Save a Kubernetes event for this completed deployment.
-			// The deployment will be reported as complete when this event is picked up by NAIS deploy.
-			if !eventReported {
-				_, err = n.reportEvent(ctx, resource.CreateEvent(app, nais_io_v1.EventRolloutComplete, "Deployment rollout has completed", "Normal"))
-				eventReported = err == nil
+			logger.Infof("Kind: %v", app.GetObjectKind().GroupVersionKind().Kind)
+			switch app.GetObjectKind().GroupVersionKind().Kind {
+			case "Naisjob":
+				logger.Info("No monitor for you")
+				naisjob := &nais_io_v1.Naisjob{}
+				err := n.Get(ctx, objectKey, naisjob)
 				if err != nil {
-					logger.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
+					if !errors.IsNotFound(err) {
+						logger.Errorf("Monitor rollout: failed to query Naisjob: %v", err)
+					}
+					continue
 				}
-			}
+				if naisjob.Spec.Schedule != "" {
+					if n.deploymentCompletion(ctx, app, logger, completion) {
+						return
+					}
 
-			// Send a deployment event to the dev-rapid topic.
-			// This is picked up by deployment-event-relays and used as official deployment data.
-			if !kafkaProduced {
-				offset, err := n.produceDeploymentEvent(event)
-				kafkaProduced = err == nil
-				if err == nil {
-					logger.WithFields(log.Fields{
-						"kafka_offset": offset,
-					}).Infof("Deployment event sent successfully")
-				} else {
-					logger.Errorf("Produce deployment message: %s", err)
+					continue
 				}
-			}
+				job := &batchv1.Job{}
+				err = n.Get(ctx, objectKey, job)
+				if err != nil {
+					if !errors.IsNotFound(err) {
+						logger.Errorf("Monitor rollout: failed to query Job: %s", err)
+					}
+					continue
+				}
 
-			// Set the SynchronizationState field of the application to RolloutComplete.
-			// This will prevent the application from being picked up by this function if Naiserator restarts.
-			// Only update this field if an event has been persisted to the cluster.
-			if !applicationUpdated && eventReported {
-				err = n.UpdateResource(ctx, app, func(app resource.Source) error {
-					app.GetStatus().SynchronizationState = nais_io_v1.EventRolloutComplete
-					app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
-					app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
-					app.SetStatusConditions()
-					metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
-					return n.Update(ctx, app)
-				})
+				if job.Status.Failed > 0 {
+					// TODO: report failed job
+					continue
+				}
 
-				applicationUpdated = err == nil
+				if job.Status.Active == 0 {
+					if n.deploymentCompletion(ctx, app, logger, completion) {
+						return
+					}
+				}
+			default:
+				deploy := &appsv1.Deployment{}
+				err := n.Get(ctx, objectKey, deploy)
 
 				if err != nil {
-					logger.Errorf("Monitor rollout: store application sync status: %s", err)
+					if !errors.IsNotFound(err) {
+						logger.Errorf("Monitor rollout: failed to query Deployment: %s", err)
+					}
+					continue
 				}
-			}
 
-			if applicationUpdated && kafkaProduced && eventReported {
-				log.Infof("All systems updated after successful application rollout; terminating monitoring")
-				return
+				if !deploymentComplete(deploy, &deploy.Status) {
+					continue
+				}
+
+				if n.deploymentCompletion(ctx, app, logger, completion) {
+					return
+				}
 			}
 
 		case <-ctx.Done():
@@ -179,6 +172,65 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 			return
 		}
 	}
+}
+
+func (n *Synchronizer) deploymentCompletion(ctx context.Context, app generator.ImageSource, logger log.Entry, completion completion) bool {
+	// Deployment event for dev-rapid topic.
+	if completion.event == nil {
+		logger.Debugf("Monitor rollout: deployment has rolled out completely")
+		completion.event = generator.NewDeploymentEvent(app)
+		completion.event.RolloutStatus = deployment.RolloutStatus_complete
+	}
+
+	// Save a Kubernetes event for this completed deployment.
+	// The deployment will be reported as complete when this event is picked up by NAIS deploy.
+	if !completion.eventReported {
+		_, err := n.reportEvent(ctx, resource.CreateEvent(app, nais_io_v1.EventRolloutComplete, "Deployment rollout has completed", "Normal"))
+		completion.eventReported = err == nil
+		if err != nil {
+			logger.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
+		}
+	}
+
+	// Send a deployment event to the dev-rapid topic.
+	// This is picked up by deployment-event-relays and used as official deployment data.
+	if !completion.kafkaProduced {
+		offset, err := n.produceDeploymentEvent(completion.event)
+		completion.kafkaProduced = err == nil
+		if err == nil {
+			logger.WithFields(log.Fields{
+				"kafka_offset": offset,
+			}).Infof("Deployment event sent successfully")
+		} else {
+			logger.Errorf("Produce deployment message: %s", err)
+		}
+	}
+
+	// Set the SynchronizationState field of the application to RolloutComplete.
+	// This will prevent the application from being picked up by this function if Naiserator restarts.
+	// Only update this field if an event has been persisted to the cluster.
+	if !completion.applicationUpdated && completion.eventReported {
+		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
+			app.GetStatus().SynchronizationState = nais_io_v1.EventRolloutComplete
+			app.GetStatus().RolloutCompleteTime = completion.event.GetTimestampAsTime().UnixNano()
+			app.GetStatus().DeploymentRolloutStatus = completion.event.RolloutStatus.String()
+			app.SetStatusConditions()
+			metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
+			return n.Update(ctx, app)
+		})
+
+		completion.applicationUpdated = err == nil
+
+		if err != nil {
+			logger.Errorf("Monitor rollout: store application sync status: %s", err)
+		}
+	}
+
+	if completion.applicationUpdated && completion.kafkaProduced && completion.eventReported {
+		log.Infof("All systems updated after successful application rollout; terminating monitoring")
+		return true
+	}
+	return false
 }
 
 // deploymentComplete considers a deployment to be complete once all of its desired replicas
