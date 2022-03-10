@@ -198,8 +198,8 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 		// Application is not rolled out completely; start monitoring
 		if app.GetStatus().SynchronizationState == nais_io_v1.EventSynchronized {
-			src, ok := app.(generator.ImageSource)
-			if ok {
+			src, ok := app.(generator.MonitorSource)
+			if ok && src.MonitorRollout() {
 				n.MonitorRollout(src, logger)
 			}
 		}
@@ -238,8 +238,8 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	src, ok := app.(generator.ImageSource)
-	if ok {
+	src, ok := app.(generator.MonitorSource)
+	if ok && src.MonitorRollout() {
 		n.MonitorRollout(src, logger)
 	}
 

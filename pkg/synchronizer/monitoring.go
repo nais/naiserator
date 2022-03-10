@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/event"
+	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -28,7 +28,7 @@ type RolloutMonitor struct {
 	cancel context.CancelFunc
 }
 
-type completion struct {
+type completionState struct {
 	event              *deployment.Event
 	eventReported      bool
 	kafkaProduced      bool
@@ -47,7 +47,7 @@ func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, e
 	return n.kafka.Produce(payload)
 }
 
-func (n *Synchronizer) MonitorRollout(app generator.ImageSource, logger log.Entry) {
+func (n *Synchronizer) MonitorRollout(app generator.MonitorSource, logger log.Entry) {
 	objectKey := client.ObjectKey{
 		Name:      app.GetName(),
 		Namespace: app.GetNamespace(),
@@ -93,7 +93,7 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.
 }
 
 // Monitoring deployments to signal RolloutComplete.
-func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.ImageSource, logger log.Entry) {
+func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.MonitorSource, logger log.Entry) {
 	logger.Debugf("Monitoring rollout status")
 
 	objectKey := client.ObjectKey{
@@ -101,10 +101,10 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 		Namespace: app.GetNamespace(),
 	}
 
-	completion := completion{}
-
-	// Don't produce Kafka message on certain conditions
-	completion.kafkaProduced = n.kafka == nil || app.SkipDeploymentMessage()
+	completion := completionState{
+		// Don't produce Kafka message on certain conditions
+		kafkaProduced: n.kafka == nil || app.SkipDeploymentMessage(),
+	}
 
 	for {
 		select {
@@ -112,24 +112,8 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 			logger.Infof("Kind: %v", app.GetObjectKind().GroupVersionKind().Kind)
 			switch app.GetObjectKind().GroupVersionKind().Kind {
 			case "Naisjob":
-				logger.Info("No monitor for you")
-				naisjob := &nais_io_v1.Naisjob{}
-				err := n.Get(ctx, objectKey, naisjob)
-				if err != nil {
-					if !errors.IsNotFound(err) {
-						logger.Errorf("Monitor rollout: failed to query Naisjob: %v", err)
-					}
-					continue
-				}
-				if naisjob.Spec.Schedule != "" {
-					if n.deploymentCompletion(ctx, app, logger, completion) {
-						return
-					}
-
-					continue
-				}
 				job := &batchv1.Job{}
-				err = n.Get(ctx, objectKey, job)
+				err := n.Get(ctx, objectKey, job)
 				if err != nil {
 					if !errors.IsNotFound(err) {
 						logger.Errorf("Monitor rollout: failed to query Job: %s", err)
@@ -138,14 +122,24 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 				}
 
 				if job.Status.Failed > 0 {
-					// TODO: report failed job
-					continue
+					err := n.UpdateResource(ctx, app, func(app resource.Source) error {
+						app = setSyncStatus(ctx, app, nais_io_v1.EventFailedSynchronization, completion.event)
+						return n.Update(ctx, app)
+					})
+					if err != nil {
+						logger.Errorf("Monitor rollout: store naisjob sync status: %s", err)
+						continue
+					}
+					return
 				}
 
 				if job.Status.Active == 0 {
-					if n.deploymentCompletion(ctx, app, logger, completion) {
-						return
+					err = n.completeRolloutRoutine(ctx, app, logger, completion)
+					if err != nil {
+						logger.Error(err)
+						continue
 					}
+					return
 				}
 			default:
 				deploy := &appsv1.Deployment{}
@@ -158,13 +152,16 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 					continue
 				}
 
-				if !deploymentComplete(deploy, &deploy.Status) {
+				if !applicationDeploymentComplete(deploy) {
 					continue
 				}
 
-				if n.deploymentCompletion(ctx, app, logger, completion) {
-					return
+				err = n.completeRolloutRoutine(ctx, app, logger, completion)
+				if err != nil {
+					logger.Error(err)
+					continue
 				}
+				return
 			}
 
 		case <-ctx.Done():
@@ -174,7 +171,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 	}
 }
 
-func (n *Synchronizer) deploymentCompletion(ctx context.Context, app generator.ImageSource, logger log.Entry, completion completion) bool {
+func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator.MonitorSource, logger log.Entry, completion completionState) error {
 	// Deployment event for dev-rapid topic.
 	if completion.event == nil {
 		logger.Debugf("Monitor rollout: deployment has rolled out completely")
@@ -187,8 +184,9 @@ func (n *Synchronizer) deploymentCompletion(ctx context.Context, app generator.I
 	if !completion.eventReported {
 		_, err := n.reportEvent(ctx, resource.CreateEvent(app, nais_io_v1.EventRolloutComplete, "Deployment rollout has completed", "Normal"))
 		completion.eventReported = err == nil
+
 		if err != nil {
-			logger.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
+			return fmt.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
 		}
 	}
 
@@ -197,13 +195,12 @@ func (n *Synchronizer) deploymentCompletion(ctx context.Context, app generator.I
 	if !completion.kafkaProduced {
 		offset, err := n.produceDeploymentEvent(completion.event)
 		completion.kafkaProduced = err == nil
-		if err == nil {
-			logger.WithFields(log.Fields{
-				"kafka_offset": offset,
-			}).Infof("Deployment event sent successfully")
-		} else {
-			logger.Errorf("Produce deployment message: %s", err)
+		if err != nil {
+			return fmt.Errorf("Produce deployment message: %s", err)
 		}
+		logger.WithFields(log.Fields{
+			"kafka_offset": offset,
+		}).Infof("Deployment event sent successfully")
 	}
 
 	// Set the SynchronizationState field of the application to RolloutComplete.
@@ -211,36 +208,38 @@ func (n *Synchronizer) deploymentCompletion(ctx context.Context, app generator.I
 	// Only update this field if an event has been persisted to the cluster.
 	if !completion.applicationUpdated && completion.eventReported {
 		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
-			app.GetStatus().SynchronizationState = nais_io_v1.EventRolloutComplete
-			app.GetStatus().RolloutCompleteTime = completion.event.GetTimestampAsTime().UnixNano()
-			app.GetStatus().DeploymentRolloutStatus = completion.event.RolloutStatus.String()
-			app.SetStatusConditions()
-			metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
+			app = setSyncStatus(ctx, app, nais_io_v1.EventRolloutComplete, completion.event)
 			return n.Update(ctx, app)
 		})
 
 		completion.applicationUpdated = err == nil
 
 		if err != nil {
-			logger.Errorf("Monitor rollout: store application sync status: %s", err)
+			return fmt.Errorf("Monitor rollout: store application sync status: %s", err)
 		}
 	}
 
-	if completion.applicationUpdated && completion.kafkaProduced && completion.eventReported {
-		log.Infof("All systems updated after successful application rollout; terminating monitoring")
-		return true
-	}
-	return false
+	log.Infof("All systems updated after successful application rollout; terminating monitoring")
+	return nil
 }
 
-// deploymentComplete considers a deployment to be complete once all of its desired replicas
+// applicationDeploymentComplete considers a deployment to be complete once all of its desired replicas
 // are updated and available, and no old pods are running.
 //
-// Copied verbatim from
+// Copied-ish from
 // https://github.com/kubernetes/kubernetes/blob/74bcefc8b2bf88a2f5816336999b524cc48cf6c0/pkg/controller/deployment/util/deployment_util.go#L745
-func deploymentComplete(deployment *appsv1.Deployment, newStatus *appsv1.DeploymentStatus) bool {
-	return newStatus.UpdatedReplicas == *(deployment.Spec.Replicas) &&
-		newStatus.Replicas == *(deployment.Spec.Replicas) &&
-		newStatus.AvailableReplicas == *(deployment.Spec.Replicas) &&
-		newStatus.ObservedGeneration >= deployment.Generation
+func applicationDeploymentComplete(deployment *appsv1.Deployment) bool {
+	return deployment.Status.UpdatedReplicas == *(deployment.Spec.Replicas) &&
+		deployment.Status.Replicas == *(deployment.Spec.Replicas) &&
+		deployment.Status.AvailableReplicas == *(deployment.Spec.Replicas) &&
+		deployment.Status.ObservedGeneration >= deployment.Generation
+}
+
+func setSyncStatus(ctx context.Context, app resource.Source, synchronizationState string, event *deployment.Event) resource.Source {
+	app.GetStatus().SynchronizationState = synchronizationState
+	app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
+	app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
+	app.SetStatusConditions()
+	metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
+	return app
 }
