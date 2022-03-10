@@ -221,7 +221,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 	// Only update this field if an event has been persisted to the cluster.
 	if completion.setSynchronizationState() {
 		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
-			app = setSyncStatus(ctx, app, nais_io_v1.EventRolloutComplete, completion.event)
+			app = setSyncStatus(app, nais_io_v1.EventRolloutComplete, completion.event)
 			return n.Update(ctx, app)
 		})
 
@@ -248,7 +248,7 @@ func applicationDeploymentComplete(deployment *appsv1.Deployment) bool {
 		deployment.Status.ObservedGeneration >= deployment.Generation
 }
 
-func setSyncStatus(ctx context.Context, app resource.Source, synchronizationState string, event *deployment.Event) resource.Source {
+func setSyncStatus(app resource.Source, synchronizationState string, event *deployment.Event) resource.Source {
 	app.GetStatus().SynchronizationState = synchronizationState
 	app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
 	app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
