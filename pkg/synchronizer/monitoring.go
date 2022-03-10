@@ -129,18 +129,18 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 				err := n.Get(ctx, objectKey, job)
 				if err != nil {
 					if !errors.IsNotFound(err) {
-						logger.Errorf("Monitor rollout: failed to query Job: %s", err)
+						logger.Errorf("Monitor rollout: failed to query Job: %v", err)
 					}
 					continue
 				}
 
 				if job.Status.Failed > 0 {
 					err := n.UpdateResource(ctx, app, func(app resource.Source) error {
-						app = setSyncStatus(ctx, app, nais_io_v1.EventFailedSynchronization, completion.event)
+						app = setSyncStatus(app, nais_io_v1.EventFailedSynchronization, completion.event)
 						return n.Update(ctx, app)
 					})
 					if err != nil {
-						logger.Errorf("Monitor rollout: store naisjob sync status: %s", err)
+						logger.Errorf("Monitor rollout: store Naisjob sync status: %v", err)
 						continue
 					}
 					return
@@ -160,7 +160,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 
 				if err != nil {
 					if !errors.IsNotFound(err) {
-						logger.Errorf("Monitor rollout: failed to query Deployment: %s", err)
+						logger.Errorf("Monitor rollout: failed to query Deployment: %v", err)
 					}
 					continue
 				}
@@ -171,14 +171,14 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 
 				err = n.completeRolloutRoutine(ctx, app, logger, completion)
 				if err != nil {
-					logger.Error(err)
+					logger.Errorf("Monitor rollout: %v", err)
 					continue
 				}
 				return
 			}
 
 		case <-ctx.Done():
-			logger.Debugf("Monitor rollout: application has been redeployed; cancelling monitoring")
+			logger.Debugf("Monitor rollout: deployment has been redeployed; cancelling monitoring")
 			return
 		}
 	}
@@ -199,7 +199,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 		completion.eventReported = err == nil
 
 		if err != nil {
-			return fmt.Errorf("Monitor rollout: unable to report rollout complete event: %s", err)
+			return fmt.Errorf("unable to report rollout complete event: %v", err)
 		}
 	}
 
@@ -209,7 +209,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 		offset, err := n.produceDeploymentEvent(completion.event)
 		completion.kafkaProduced = err == nil
 		if err != nil {
-			return fmt.Errorf("Produce deployment message: %s", err)
+			return fmt.Errorf("failed to produce deployment message: %v", err)
 		}
 		logger.WithFields(log.Fields{
 			"kafka_offset": offset,
@@ -228,7 +228,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 		completion.applicationUpdated = err == nil
 
 		if err != nil {
-			return fmt.Errorf("Monitor rollout: store application sync status: %s", err)
+			return fmt.Errorf("store application sync status: %v", err)
 		}
 	}
 
