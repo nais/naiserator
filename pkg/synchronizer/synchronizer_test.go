@@ -15,6 +15,7 @@ import (
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -43,6 +44,60 @@ type testRig struct {
 	synchronizer reconcile.Reconciler
 	scheme       *runtime.Scheme
 	config       config.Config
+}
+
+func newNaisjobTestRig(config config.Config) (*testRig, error) {
+	rig := &testRig{
+		config: config,
+		kubernetes: &envtest.Environment{
+			CRDDirectoryPaths: []string{crd.YamlDirectory()},
+		},
+	}
+	cfg, err := rig.kubernetes.Start()
+	if err != nil {
+		return nil, fmt.Errorf("setup Kubernetes test environment: %w", err)
+	}
+	rig.scheme, err = liberator_scheme.All()
+	if err != nil {
+		return nil, fmt.Errorf("setup liberator scheme: %w", err)
+	}
+	rig.client, err = client.New(cfg, client.Options{
+		Scheme: rig.scheme,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("initialize Kubernetes client: %w", err)
+	}
+	rig.manager, err = ctrl.NewManager(rig.kubernetes.Config, ctrl.Options{
+		Scheme:             rig.scheme,
+		MetricsBindAddress: "0",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("initialize manager: %w", err)
+	}
+
+	listers := naiserator_scheme.GenericListers()
+	if len(rig.config.GoogleProjectId) > 0 {
+		listers = append(listers, naiserator_scheme.GCPListers()...)
+	}
+
+	reconciler := controllers.NewNaisjobReconciler(synchronizer.NewSynchronizer(
+		rig.client,
+		rig.client,
+		rig.config,
+		&generators.Naisjob{
+			Config: rig.config,
+		},
+		nil,
+		listers,
+		rig.scheme,
+	))
+	err = reconciler.SetupWithManager(rig.manager)
+	if err != nil {
+		return nil, fmt.Errorf("setup synchronizer with manager: %w", err)
+	}
+	rig.synchronizer = reconciler
+
+	return rig, nil
 }
 
 func newTestRig(config config.Config) (*testRig, error) {
@@ -105,6 +160,92 @@ func newTestRig(config config.Config) (*testRig, error) {
 	return rig, nil
 }
 
+func TestNaisjobSynchronizer(t *testing.T) {
+	cfg := config.Config{
+		Synchronizer: config.Synchronizer{
+			SynchronizationTimeout: 2 * time.Second,
+			RolloutCheckInterval:   5 * time.Second,
+			RolloutTimeout:         20 * time.Second,
+		},
+		GoogleProjectId:                   "666",
+		GoogleCloudSQLProxyContainerImage: config.GoogleCloudSQLProxyContainerImage,
+		Features: config.Features{
+			CNRM: true,
+		},
+	}
+
+	rig, err := newNaisjobTestRig(cfg)
+	if err != nil {
+		t.Errorf("unable to run synchronizer integration tests: %v", err)
+		t.FailNow()
+	}
+
+	defer rig.kubernetes.Stop()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	listers := naiserator_scheme.GenericListers()
+	listers = append(listers, naiserator_scheme.GCPListers()...)
+	for _, list := range listers {
+		err = rig.client.List(ctx, list)
+		assert.NoError(t, err)
+	}
+
+	naisjob := fixtures.MinimalNaisjob()
+	naisjob.SetAnnotations(map[string]string{
+		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id",
+	})
+
+	err = rig.client.Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: naisjob.GetNamespace(),
+		},
+	})
+	assert.NoError(t, err)
+
+	// Ensure that the cnrm namespace exists
+	err = rig.client.Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: google.IAMServiceAccountNamespace,
+		},
+	})
+	assert.NoError(t, err)
+
+	err = rig.client.Create(ctx, naisjob)
+	if err != nil {
+		t.Fatalf("Naisjob resource cannot be persisted to fake Kubernetes: %s", err)
+	}
+
+	req := ctrl.Request{
+		NamespacedName: types.NamespacedName{
+			Namespace: naisjob.Namespace,
+			Name:      naisjob.Name,
+		},
+	}
+	result, err := rig.synchronizer.Reconcile(ctx, req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	objectKey := client.ObjectKey{Name: naisjob.Name, Namespace: naisjob.Namespace}
+	persistedNaisjob := &nais_io_v1.Naisjob{}
+	err = rig.client.Get(ctx, objectKey, persistedNaisjob)
+	hash, _ := naisjob.Hash()
+	assert.NotNil(t, persistedNaisjob)
+	assert.NoError(t, err)
+	assert.Equalf(t, hash, persistedNaisjob.Status.SynchronizationHash, "Naisjob resource hash in Kubernetes matches local version")
+
+	rig.testResource(ctx, t, &batchv1.Job{}, objectKey)
+
+	eventList := &corev1.EventList{}
+	err = rig.client.List(ctx, eventList)
+	assert.NoError(t, err)
+	assert.Len(t, eventList.Items, 1)
+	assert.EqualValues(t, 1, eventList.Items[0].Count)
+	assert.Equal(t, "deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, nais_io_v1.EventSynchronized, eventList.Items[0].Reason)
+}
+
 // This test sets up a complete in-memory Kubernetes rig, and tests the reconciler (Synchronizer) against it.
 // These tests ensure that resources are actually created or updated in the cluster,
 // and that orphaned resources are cleaned up properly.
@@ -150,13 +291,6 @@ func TestSynchronizer(t *testing.T) {
 	app.SetAnnotations(map[string]string{
 		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id",
 	})
-
-	// Test that a resource has been created in the fake cluster
-	testResource := func(resource client.Object, objectKey client.ObjectKey) {
-		err := rig.client.Get(ctx, objectKey, resource)
-		assert.NoError(t, err)
-		assert.NotNil(t, resource)
-	}
 
 	// Test that a resource does not exist in the fake cluster
 	testResourceNotExist := func(resource client.Object, objectKey client.ObjectKey) {
@@ -244,9 +378,9 @@ func TestSynchronizer(t *testing.T) {
 	assert.Equalf(t, "deploy-id", persistedApp.Status.CorrelationID, "Correlation ID is set")
 
 	// Test that a base resource set was created successfully
-	testResource(&appsv1.Deployment{}, objectKey)
-	testResource(&corev1.Service{}, objectKey)
-	testResource(&corev1.ServiceAccount{}, objectKey)
+	rig.testResource(ctx, t, &appsv1.Deployment{}, objectKey)
+	rig.testResource(ctx, t, &corev1.Service{}, objectKey)
+	rig.testResource(ctx, t, &corev1.ServiceAccount{}, objectKey)
 
 	// Test that the Ingress resource was removed
 	testResourceNotExist(&networkingv1.Ingress{}, objectKey)
@@ -270,10 +404,10 @@ func TestSynchronizer(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
-	testResource(&appsv1.Deployment{}, objectKey)
-	testResource(&corev1.Service{}, objectKey)
-	testResource(&corev1.ServiceAccount{}, objectKey)
-	testResource(&networkingv1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
+	rig.testResource(ctx, t, &appsv1.Deployment{}, objectKey)
+	rig.testResource(ctx, t, &corev1.Service{}, objectKey)
+	rig.testResource(ctx, t, &corev1.ServiceAccount{}, objectKey)
+	rig.testResource(ctx, t, &networkingv1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
 
 	// Test that the naiserator event was updated with increased count and new correlation id
 	err = rig.client.List(ctx, eventList)
@@ -445,4 +579,10 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	err = rig.client.Get(ctx, req.NamespacedName, iampolicymember)
 	assert.NoError(t, err)
 	assert.Equal(t, testProjectId, iampolicymember.Annotations[google.ProjectIdAnnotation])
+}
+
+func (rig *testRig) testResource(ctx context.Context, t *testing.T, resource client.Object, objectKey client.ObjectKey) {
+	err := rig.client.Get(ctx, objectKey, resource)
+	assert.NoError(t, err)
+	assert.NotNil(t, resource)
 }
