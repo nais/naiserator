@@ -177,6 +177,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		})
 		logger.Infof("Application has been deleted from Kubernetes")
 
+		changed = false // don't run update after deletion
 		return ctrl.Result{}, nil
 	} else {
 		err = n.ensureFinalizerExists(ctx, app)
