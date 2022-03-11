@@ -314,7 +314,9 @@ func TestSynchronizer(t *testing.T) {
 	assert.Len(t, iamSAlist.Items, 2)
 	assert.Equal(t, iamSAlist.Items[0].Labels["app"], app2.GetName())
 
-	rig.client.Delete(ctx, app2)
+	err = rig.client.Delete(ctx, app2)
+	assert.NoError(t, err)
+
 	req = ctrl.Request{
 		NamespacedName: types.NamespacedName{
 			Namespace: app2.Namespace,
@@ -332,7 +334,7 @@ func TestSynchronizer(t *testing.T) {
 	err = rig.client.List(ctx, &iamSAlist)
 	assert.NoError(t, err)
 	assert.Len(t, iamSAlist.Items, 1)
-	assert.Equal(t, iamSAlist.Items[0].Labels["app"], app.GetName())
+	assert.Equal(t, app.GetName(), iamSAlist.Items[0].Labels["app"])
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
