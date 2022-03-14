@@ -229,10 +229,19 @@ func TestSynchronizer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
-	// Test that the Application was updated successfully after processing,
-	// and that the hash is present.
 	objectKey := client.ObjectKey{Name: app.Name, Namespace: app.Namespace}
 	persistedApp := &nais_io_v1alpha1.Application{}
+	err = rig.client.Get(ctx, objectKey, persistedApp)
+	assert.Len(t, persistedApp.ObjectMeta.Finalizers, 1, "After the first reconcile only finalizer is set")
+
+	// We need to run another reconcile after finalizer is set
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	// Test that the Application was updated successfully after processing,
+	// and that the hash is present.
+	persistedApp = &nais_io_v1alpha1.Application{}
 	err = rig.client.Get(ctx, objectKey, persistedApp)
 	hash, _ := app.Hash()
 	assert.NotNil(t, persistedApp)
@@ -299,6 +308,12 @@ func TestSynchronizer(t *testing.T) {
 			Name:      app2.Name,
 		},
 	}
+	// Reconcile for finalizer
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	// Reconcile to be synchronized
 	result, err = rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
@@ -416,6 +431,11 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	}
 
 	result, err := rig.synchronizer.Reconcile(ctx, req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	// We need to run another reconcile after finalizer is set
+	result, err = rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
