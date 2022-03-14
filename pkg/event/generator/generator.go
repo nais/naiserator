@@ -15,7 +15,7 @@ import (
 type MonitorSource interface {
 	resource.Source
 	GetImage() string
-	MonitorRollout() bool
+	ShouldMonitorRollout() bool
 }
 
 func NewDeploymentEvent(source MonitorSource) *deployment.Event {
