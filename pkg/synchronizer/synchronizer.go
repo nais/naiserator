@@ -180,9 +180,14 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		changed = false // don't run update after deletion
 		return ctrl.Result{}, nil
 	} else {
-		err = n.ensureFinalizerExists(ctx, app)
-		if err != nil {
-			return ctrl.Result{}, err
+		if !controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
+			controllerutil.AddFinalizer(app, NaiseratorFinalizer)
+			err = n.Update(ctx, app)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			changed = false // don't run update after finalizer is set
+			return ctrl.Result{}, nil
 		}
 	}
 
@@ -259,15 +264,6 @@ func (n *Synchronizer) cleanUpAfterAppDeletion(ctx context.Context, app resource
 		if err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (n *Synchronizer) ensureFinalizerExists(ctx context.Context, app resource.Source) error {
-	if !controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
-		controllerutil.AddFinalizer(app, NaiseratorFinalizer)
-		return n.Update(ctx, app)
 	}
 
 	return nil
