@@ -10,6 +10,7 @@ import (
 	"github.com/nais/liberator/pkg/namegen"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/utils/pointer"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -149,6 +150,9 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		Url: util.AppendPathToIngress(ingress, applicationDefaultCallbackPath),
 	})
 	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingress, wonderwall.FrontChannelLogoutPath)
+
+	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
+	azureAdApplication.Spec.SinglePageApplication = (*nais_io_v1.AzureAdSinglePageApplication)(pointer.Bool(false))
 
 	return nil
 }

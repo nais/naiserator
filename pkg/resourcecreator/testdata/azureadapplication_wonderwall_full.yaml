@@ -97,3 +97,44 @@ tests:
                       - containerPort: 7565
                         name: ww-metrics
                         protocol: TCP
+
+  - apiVersion: nais.io/v1
+    kind: AzureAdApplication
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^azure-myapplication-4190a8ca-.{6,7}$
+      - type: exact
+        name: "spec is populated with correct values"
+        exclude:
+          - .status
+          - .metadata.creationTimestamp
+          - .metadata.labels
+          - .metadata.ownerReferences
+          - .spec.secretName
+        resource:
+          apiVersion: nais.io/v1
+          kind: AzureAdApplication
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: ""
+            name: myapplication
+            namespace: mynamespace
+          spec:
+            allowAllUsers: true
+            claims:
+              extra:
+                - NAVident
+                - azp_name
+              groups:
+                - id: 00000000-0000-0000-0000-000000000000
+            logoutUrl: "https://my-client.nav.no/oauth2/logout/frontchannel"
+            replyUrls:
+              - url: "https://myapplication.nav.no/oauth2/callback"
+              - url: "https://my-client.nav.no/oauth2/callback"
+            singlePageApplication: false
+            tenant: nav.no
