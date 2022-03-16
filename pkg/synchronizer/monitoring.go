@@ -171,8 +171,9 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 			logger.Error(err)
 			return true
 		}
+		return false
 	}
-	return false
+	return true
 }
 
 func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
