@@ -39,6 +39,7 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{
 		Location:                 google.Region,
 		UniformBucketLevelAccess: bucket.UniformBucketLevelAccess,
+		PublicAccessPrevention:   publicAccessPreventionAsString(bucket.PublicAccessPrevention),
 	}
 
 	if !bucket.CascadingDelete {
@@ -138,4 +139,11 @@ func Create(source Source, ast *resource.Ast, cfg Config, googleServiceAccount g
 	}
 
 	return nil
+}
+
+func publicAccessPreventionAsString(enforced bool) string {
+	if enforced {
+		return "enforced"
+	}
+	return "inherited"
 }

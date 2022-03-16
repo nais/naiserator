@@ -62,7 +62,6 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 			DeletionPolicyAnnotation])
 		assert.Nil(t, bucket.Spec.RetentionPolicy)
 	})
-
 }
 
 func intp(i int) *int {
