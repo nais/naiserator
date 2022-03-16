@@ -22,7 +22,6 @@ type Source interface {
 	resource.Source
 	GetInflux() *nais_io_v1.Influx
 	GetKafka() *nais_io_v1.Kafka
-	GetElastic() *nais_io_v1.Elastic
 	GetOpenSearch() *nais_io_v1.OpenSearch
 }
 
@@ -48,11 +47,6 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	Influx(ast, source.GetInflux(), &aivenApp)
 	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
 
-	elasticEnabled, err := Elastic(ast, source.GetElastic(), &aivenApp)
-	if err != nil {
-		return err
-	}
-
 	openSearchEnabled, err := OpenSearch(ast, source.GetOpenSearch(), &aivenApp)
 	if err != nil {
 		return err
@@ -65,7 +59,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
-	if len(kafkaKeyPaths) > 0 || elasticEnabled || openSearchEnabled {
+	if len(kafkaKeyPaths) > 0 || openSearchEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 	}
 	return nil
