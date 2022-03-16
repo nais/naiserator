@@ -122,66 +122,80 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 	for {
 		select {
 		case <-time.After(n.config.Synchronizer.RolloutCheckInterval):
-			logger.Infof("Kind: %v", app.GetObjectKind().GroupVersionKind().Kind)
 			switch app.GetObjectKind().GroupVersionKind().Kind {
 			case "Naisjob":
-				job := &batchv1.Job{}
-				err := n.Get(ctx, objectKey, job)
-				if err != nil {
-					if !errors.IsNotFound(err) {
-						logger.Errorf("Monitor rollout: failed to query Job: %v", err)
-					}
+				shouldContinue := n.monitorNaisjob(ctx, app, logger, objectKey, completion)
+				if shouldContinue {
 					continue
 				}
-
-				if job.Status.Failed > 0 {
-					err := n.UpdateResource(ctx, app, func(app resource.Source) error {
-						app = setSyncStatus(app, nais_io_v1.EventFailedSynchronization, completion.event)
-						return n.Update(ctx, app)
-					})
-					if err != nil {
-						logger.Errorf("Monitor rollout: store Naisjob sync status: %v", err)
-						continue
-					}
-					return
-				}
-
-				if job.Status.Active == 0 {
-					err = n.completeRolloutRoutine(ctx, app, logger, completion)
-					if err != nil {
-						logger.Error(err)
-						continue
-					}
-					return
-				}
+				return
 			default:
-				deploy := &appsv1.Deployment{}
-				err := n.Get(ctx, objectKey, deploy)
-
-				if err != nil {
-					if !errors.IsNotFound(err) {
-						logger.Errorf("Monitor rollout: failed to query Deployment: %v", err)
-					}
-					continue
-				}
-
-				if !applicationDeploymentComplete(deploy) {
-					continue
-				}
-
-				err = n.completeRolloutRoutine(ctx, app, logger, completion)
-				if err != nil {
-					logger.Errorf("Monitor rollout: %v", err)
+				shouldContinue := n.monitorApplication(ctx, app, logger, objectKey, completion)
+				if shouldContinue {
 					continue
 				}
 				return
 			}
-
 		case <-ctx.Done():
 			logger.Debugf("Monitor rollout: deployment has been redeployed; cancelling monitoring")
 			return
 		}
 	}
+}
+
+func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
+	job := &batchv1.Job{}
+	err := n.Get(ctx, objectKey, job)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			logger.Errorf("Monitor rollout: failed to query Job: %v", err)
+		}
+		return true
+	}
+
+	if job.Status.Failed > 0 {
+		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
+			app = setSyncStatus(app, nais_io_v1.EventFailedSynchronization, completion.event)
+			return n.Update(ctx, app)
+		})
+		if err != nil {
+			logger.Errorf("Monitor rollout: store Naisjob sync status: %v", err)
+			return true
+		}
+		return false
+	}
+
+	if job.Status.Active == 0 {
+		err = n.completeRolloutRoutine(ctx, app, logger, completion)
+		if err != nil {
+			logger.Error(err)
+			return true
+		}
+	}
+	return false
+}
+
+func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
+	deploy := &appsv1.Deployment{}
+	err := n.Get(ctx, objectKey, deploy)
+
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			logger.Errorf("Monitor rollout: failed to query Deployment: %v", err)
+		}
+		return true
+	}
+
+	if !applicationDeploymentComplete(deploy) {
+		return true
+	}
+
+	err = n.completeRolloutRoutine(ctx, app, logger, completion)
+	if err != nil {
+		logger.Errorf("Monitor rollout: %v", err)
+		return true
+	}
+	return false
 }
 
 func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator.MonitorSource, logger log.Entry, completion completionState) error {
