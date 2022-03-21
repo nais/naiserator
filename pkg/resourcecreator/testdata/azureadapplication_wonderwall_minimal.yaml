@@ -110,3 +110,14 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
+
+  - apiVersion: nais.io/v1
+    kind: AzureAdApplication
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^azure-myapplication-4190a8ca-.{6,7}$
