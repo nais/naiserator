@@ -229,19 +229,10 @@ func TestSynchronizer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
-	objectKey := client.ObjectKey{Name: app.Name, Namespace: app.Namespace}
-	persistedApp := &nais_io_v1alpha1.Application{}
-	err = rig.client.Get(ctx, objectKey, persistedApp)
-	assert.Len(t, persistedApp.ObjectMeta.Finalizers, 1, "After the first reconcile only finalizer is set")
-
-	// We need to run another reconcile after finalizer is set
-	result, err = rig.synchronizer.Reconcile(ctx, req)
-	assert.NoError(t, err)
-	assert.Equal(t, ctrl.Result{}, result)
-
 	// Test that the Application was updated successfully after processing,
 	// and that the hash is present.
-	persistedApp = &nais_io_v1alpha1.Application{}
+	objectKey := client.ObjectKey{Name: app.Name, Namespace: app.Namespace}
+	persistedApp := &nais_io_v1alpha1.Application{}
 	err = rig.client.Get(ctx, objectKey, persistedApp)
 	hash, _ := app.Hash()
 	assert.NotNil(t, persistedApp)
@@ -308,12 +299,6 @@ func TestSynchronizer(t *testing.T) {
 			Name:      app2.Name,
 		},
 	}
-	// Reconcile for finalizer
-	result, err = rig.synchronizer.Reconcile(ctx, req)
-	assert.NoError(t, err)
-	assert.Equal(t, ctrl.Result{}, result)
-
-	// Reconcile to be synchronized
 	result, err = rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
@@ -329,9 +314,7 @@ func TestSynchronizer(t *testing.T) {
 	assert.Len(t, iamSAlist.Items, 2)
 	assert.Equal(t, iamSAlist.Items[0].Labels["app"], app2.GetName())
 
-	err = rig.client.Delete(ctx, app2)
-	assert.NoError(t, err)
-
+	rig.client.Delete(ctx, app2)
 	req = ctrl.Request{
 		NamespacedName: types.NamespacedName{
 			Namespace: app2.Namespace,
@@ -349,7 +332,7 @@ func TestSynchronizer(t *testing.T) {
 	err = rig.client.List(ctx, &iamSAlist)
 	assert.NoError(t, err)
 	assert.Len(t, iamSAlist.Items, 1)
-	assert.Equal(t, app.GetName(), iamSAlist.Items[0].Labels["app"])
+	assert.Equal(t, iamSAlist.Items[0].Labels["app"], app.GetName())
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
@@ -431,11 +414,6 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	}
 
 	result, err := rig.synchronizer.Reconcile(ctx, req)
-	assert.NoError(t, err)
-	assert.Equal(t, ctrl.Result{}, result)
-
-	// We need to run another reconcile after finalizer is set
-	result, err = rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 

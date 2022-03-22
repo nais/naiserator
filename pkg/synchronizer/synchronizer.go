@@ -177,17 +177,11 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		})
 		logger.Infof("Application has been deleted from Kubernetes")
 
-		changed = false // don't run update after deletion
 		return ctrl.Result{}, nil
 	} else {
-		if !controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
-			controllerutil.AddFinalizer(app, NaiseratorFinalizer)
-			err = n.Update(ctx, app)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-			changed = false // don't run update after finalizer is set
-			return ctrl.Result{}, nil
+		err = n.ensureFinalizerExists(ctx, app)
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -204,8 +198,8 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 		// Application is not rolled out completely; start monitoring
 		if app.GetStatus().SynchronizationState == nais_io_v1.EventSynchronized {
-			src, ok := app.(generator.MonitorSource)
-			if ok && src.ShouldMonitorRollout() {
+			src, ok := app.(generator.ImageSource)
+			if ok {
 				n.MonitorRollout(src, logger)
 			}
 		}
@@ -244,8 +238,8 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	src, ok := app.(generator.MonitorSource)
-	if ok && src.ShouldMonitorRollout() {
+	src, ok := app.(generator.ImageSource)
+	if ok {
 		n.MonitorRollout(src, logger)
 	}
 
@@ -264,6 +258,15 @@ func (n *Synchronizer) cleanUpAfterAppDeletion(ctx context.Context, app resource
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (n *Synchronizer) ensureFinalizerExists(ctx context.Context, app resource.Source) error {
+	if !controllerutil.ContainsFinalizer(app, NaiseratorFinalizer) {
+		controllerutil.AddFinalizer(app, NaiseratorFinalizer)
+		return n.Update(ctx, app)
 	}
 
 	return nil

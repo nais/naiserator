@@ -5,20 +5,19 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	deployment "github.com/nais/naiserator/pkg/event"
+	"github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	docker "github.com/novln/docker-parser"
 	"github.com/spf13/viper"
 )
 
-type MonitorSource interface {
+type ImageSource interface {
 	resource.Source
 	GetImage() string
-	ShouldMonitorRollout() bool
 }
 
-func NewDeploymentEvent(source MonitorSource) *deployment.Event {
+func NewDeploymentEvent(source ImageSource) *deployment.Event {
 	image := ContainerImage(source.GetImage())
 	ts := convertTimestamp(time.Now())
 
