@@ -143,6 +143,8 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 	}
 }
 
+// monitorNaisjob will return false when the job has completed successfully or failed. We can then stop monitoring this
+// deployment. As long as we return true we should keep monitoring the deployment.
 func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
 	job := &batchv1.Job{}
 	err := n.Get(ctx, objectKey, job)
@@ -177,6 +179,8 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 	return true
 }
 
+// monitorApplication will only return false when all pods are successfully up and running. As long as we return true
+// we should keep monitoring the deployment.
 func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
 	deploy := &appsv1.Deployment{}
 	err := n.Get(ctx, objectKey, deploy)
