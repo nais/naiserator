@@ -2,7 +2,6 @@ package deployment
 
 import (
 	"fmt"
-	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -17,7 +16,6 @@ import (
 
 type Source interface {
 	resource.Source
-	GetCleanup() *nais_io_v1.Cleanup
 	GetCommand() []string
 	GetEnv() nais_io_v1.EnvVars
 	GetEnvFrom() []nais_io_v1.EnvFrom
@@ -53,7 +51,6 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
 	}
 
-	objectMeta = addCleanupLabels(app, objectMeta)
 	objectMeta.Annotations["reloader.stakater.com/search"] = "true"
 
 	deployment := &appsv1.Deployment{
@@ -68,28 +65,6 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	ast.AppendOperation(resource.OperationCreateOrUpdate, deployment)
 
 	return nil
-}
-
-func addCleanupLabels(app Source, meta metav1.ObjectMeta) metav1.ObjectMeta {
-	cleanup := app.GetCleanup()
-
-	if cleanup == nil {
-		meta.Annotations["babylon.nais.io/enabled"] = "true"
-		meta.Annotations["babylon.nais.io/strategy"] = "abort-rollout,downscale"
-		meta.Annotations["babylon.nais.io/grace-period"] = "24h"
-
-		return meta
-	}
-
-	meta.Annotations["babylon.nais.io/enabled"] = fmt.Sprintf("%t", cleanup.Enabled)
-	var strategies []string
-	for _, s := range cleanup.Strategy {
-		strategies = append(strategies, string(s))
-	}
-	meta.Annotations["babylon.nais.io/strategy"] = strings.Join(strategies, ",")
-	meta.Annotations["babylon.nais.io/grace-period"] = cleanup.GracePeriod
-
-	return meta
 }
 
 func deploymentSpec(app Source, ast *resource.Ast, cfg Config) (*appsv1.DeploymentSpec, error) {
