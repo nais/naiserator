@@ -168,7 +168,7 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 	if job.Status.Active == 0 {
 		err = n.completeRolloutRoutine(ctx, app, logger, completion)
 		if err != nil {
-			logger.Error(err)
+			logger.Errorf("Monitor rollout: %v", err)
 			return true
 		}
 	}
