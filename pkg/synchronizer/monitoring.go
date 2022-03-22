@@ -21,6 +21,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	RolloutMessageCompleted = "Rollout has completed"
+	RolloutMessageFailed    = "Rollout has failed"
+)
+
 var rolloutMonitorLock sync.Mutex
 
 type RolloutMonitor struct {
@@ -156,10 +161,7 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 	}
 
 	if job.Status.Failed > 0 {
-		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
-			app = setSyncStatus(app, nais_io_v1.EventFailedSynchronization, completion.event)
-			return n.Update(ctx, app)
-		})
+		err = n.completeRolloutRoutine(ctx, app, logger, completion, nais_io_v1.EventJobFailed, RolloutMessageFailed)
 		if err != nil {
 			logger.Errorf("Monitor rollout: store Naisjob sync status: %v", err)
 			return true
@@ -168,7 +170,7 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 	}
 
 	if job.Status.Active == 0 {
-		err = n.completeRolloutRoutine(ctx, app, logger, completion)
+		err = n.completeRolloutRoutine(ctx, app, logger, completion, nais_io_v1.EventJobCompleted, RolloutMessageCompleted)
 		if err != nil {
 			logger.Errorf("Monitor rollout: %v", err)
 			return true
@@ -196,7 +198,7 @@ func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.Mon
 		return true
 	}
 
-	err = n.completeRolloutRoutine(ctx, app, logger, completion)
+	err = n.completeRolloutRoutine(ctx, app, logger, completion, nais_io_v1.EventRolloutComplete, RolloutMessageCompleted)
 	if err != nil {
 		logger.Errorf("Monitor rollout: %v", err)
 		return true
@@ -204,7 +206,7 @@ func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.Mon
 	return false
 }
 
-func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator.MonitorSource, logger log.Entry, completion completionState) error {
+func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator.MonitorSource, logger log.Entry, completion completionState, rolloutStatus, rolloutMessage string) error {
 	// Deployment event for dev-rapid topic.
 	if completion.event == nil {
 		logger.Debugf("Monitor rollout: deployment has rolled out completely")
@@ -215,7 +217,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 	// Save a Kubernetes event for this completed deployment.
 	// The deployment will be reported as complete when this event is picked up by NAIS deploy.
 	if completion.saveK8sEvent() {
-		_, err := n.reportEvent(ctx, resource.CreateEvent(app, nais_io_v1.EventRolloutComplete, "Rollout has completed", "Normal"))
+		_, err := n.reportEvent(ctx, resource.CreateEvent(app, rolloutStatus, rolloutMessage, "Normal"))
 		completion.eventReported = err == nil
 
 		if err != nil {
@@ -241,7 +243,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 	// Only update this field if an event has been persisted to the cluster.
 	if completion.setSynchronizationState() {
 		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
-			app = setSyncStatus(app, nais_io_v1.EventRolloutComplete, completion.event)
+			app = setSyncStatus(app, rolloutStatus, completion.event)
 			return n.Update(ctx, app)
 		})
 
