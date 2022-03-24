@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/events"
 	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/metrics"
@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	RolloutMessageCompleted = "Rollout has completed"
-	RolloutMessageFailed    = "Rollout has failed"
+	RolloutMessageCompleted    = "Rollout has completed"
+	RolloutMessageJobCompleted = "Job finished successfully"
+	RolloutMessageJobFailed    = "Job has failed"
 )
 
 var rolloutMonitorLock sync.Mutex
@@ -161,7 +162,7 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 	}
 
 	if job.Status.Failed > 0 {
-		err = n.completeRolloutRoutine(ctx, app, logger, completion, nais_io_v1.EventJobFailed, RolloutMessageFailed)
+		err = n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageJobFailed)
 		if err != nil {
 			logger.Errorf("Monitor rollout: store Naisjob sync status: %v", err)
 			return true
@@ -170,7 +171,7 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 	}
 
 	if job.Status.Active == 0 {
-		err = n.completeRolloutRoutine(ctx, app, logger, completion, nais_io_v1.EventJobCompleted, RolloutMessageCompleted)
+		err = n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageJobCompleted)
 		if err != nil {
 			logger.Errorf("Monitor rollout: %v", err)
 			return true
@@ -198,7 +199,7 @@ func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.Mon
 		return true
 	}
 
-	err = n.completeRolloutRoutine(ctx, app, logger, completion, nais_io_v1.EventRolloutComplete, RolloutMessageCompleted)
+	err = n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageCompleted)
 	if err != nil {
 		logger.Errorf("Monitor rollout: %v", err)
 		return true
