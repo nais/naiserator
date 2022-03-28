@@ -17,14 +17,16 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/api/batch/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	RolloutMessageCompleted    = "Rollout has completed"
-	RolloutMessageJobCompleted = "Job finished successfully"
-	RolloutMessageJobFailed    = "Job has failed"
+	RolloutMessageCompleted        = "Rollout has completed"
+	RolloutMessageCronJobCompleted = "No support for monitoring CronJobs"
+	RolloutMessageJobCompleted     = "Job finished successfully"
+	RolloutMessageJobFailed        = "Job has failed"
 )
 
 var rolloutMonitorLock sync.Mutex
@@ -152,8 +154,21 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 // monitorNaisjob will return false when the job has completed successfully or failed. We can then stop monitoring this
 // deployment. As long as we return true we should keep monitoring the deployment.
 func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
+	cronJob := v1beta1.CronJob{}
+	err := n.Get(ctx, objectKey, &cronJob)
+	if err == nil {
+		// If we find a cronjob with the same name, it's most probably a Naisjob with schedule, and we can mark the rollout
+		// as completed, and finish the monitoring
+		err := n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageCronJobCompleted)
+		if err != nil {
+			logger.Errorf("Monitor rollout: %v", err)
+			return true
+		}
+		return false
+	}
+
 	job := &batchv1.Job{}
-	err := n.Get(ctx, objectKey, job)
+	err = n.Get(ctx, objectKey, job)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			logger.Errorf("Monitor rollout: failed to query Job: %v", err)
