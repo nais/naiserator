@@ -84,7 +84,7 @@ func copyAzureAnnotations(src, dst map[string]string) {
 	}
 }
 
-func mapReplyURLs(urls []string) []nais_io_v1.AzureAdReplyUrl {
+func mapReplyURLs(urls []nais_io_v1.AzureAdReplyUrlString) []nais_io_v1.AzureAdReplyUrl {
 	maps := make([]nais_io_v1.AzureAdReplyUrl, len(urls))
 	for i := range urls {
 		maps[i].Url = urls[i]
@@ -92,10 +92,10 @@ func mapReplyURLs(urls []string) []nais_io_v1.AzureAdReplyUrl {
 	return maps
 }
 
-func oauthCallbackURLs(ingresses []nais_io_v1.Ingress) []string {
-	urls := make([]string, len(ingresses))
+func oauthCallbackURLs(ingresses []nais_io_v1.Ingress) []nais_io_v1.AzureAdReplyUrlString {
+	urls := make([]nais_io_v1.AzureAdReplyUrlString, len(ingresses))
 	for i := range ingresses {
-		urls[i] = util.AppendPathToIngress(ingresses[i], applicationDefaultCallbackPath)
+		urls[i] = appendPathToIngress(ingresses[i], applicationDefaultCallbackPath)
 	}
 	return urls
 }
@@ -147,14 +147,18 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 
 	// ensure that the ingress is added to the configured Azure AD reply URLs
 	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, nais_io_v1.AzureAdReplyUrl{
-		Url: util.AppendPathToIngress(ingress, applicationDefaultCallbackPath),
+		Url: appendPathToIngress(ingress, applicationDefaultCallbackPath),
 	})
 	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingress, wonderwall.FrontChannelLogoutPath)
 
 	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
-	azureAdApplication.Spec.SinglePageApplication = (*nais_io_v1.AzureAdSinglePageApplication)(pointer.Bool(false))
+	azureAdApplication.Spec.SinglePageApplication = pointer.Bool(false)
 
 	return nil
+}
+
+func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAdReplyUrlString {
+	return (nais_io_v1.AzureAdReplyUrlString)(util.AppendPathToIngress(url, path))
 }
 
 func wonderwallConfig(source Source, providerSecretName string, ingress nais_io_v1.Ingress) wonderwall.Configuration {
