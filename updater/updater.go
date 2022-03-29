@@ -67,6 +67,7 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, scheme *runtime.Sc
 			return fmt.Errorf("internal error: %w", err)
 		}
 		objectKey := client.ObjectKeyFromObject(resource)
+		timedOut := time.Now().Add(time.Minute + time.Duration(5))
 
 		for {
 			err = cli.Get(ctx, objectKey, existing.(client.Object))
@@ -75,6 +76,9 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, scheme *runtime.Sc
 			}
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err)
+			}
+			if time.Now().After(timedOut) {
+				return fmt.Errorf("timed out waiting for deletion of %v/%v", resource.GetObjectKind(), resource.GetName())
 			}
 			time.Sleep(1 * time.Second)
 		}
