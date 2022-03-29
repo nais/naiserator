@@ -3,6 +3,7 @@ package updater
 import (
 	"context"
 	"fmt"
+	"time"
 
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
@@ -51,13 +52,37 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 	}
 }
 
-func CreateOrRecreate(ctx context.Context, cli client.Client, resource client.Object) func() error {
+func CreateOrRecreate(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource client.Object) func() error {
 	return func() error {
 		log.Infof("CreateOrRecreate %s", liberator_scheme.TypeName(resource))
-		err := cli.Delete(ctx, resource)
+		deleteOptions := &client.DeleteOptions{}
+		client.PropagationPolicy(metav1.DeletePropagationBackground).ApplyToDelete(deleteOptions)
+		err := cli.Delete(ctx, resource, deleteOptions)
 		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
+
+		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
+		if err != nil {
+			return fmt.Errorf("internal error: %w", err)
+		}
+		objectKey := client.ObjectKeyFromObject(resource)
+		timedOut := time.Now().Add(time.Minute + time.Duration(5))
+
+		for {
+			err = cli.Get(ctx, objectKey, existing.(client.Object))
+			if errors.IsNotFound(err) {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("internal error: %v", err)
+			}
+			if time.Now().After(timedOut) {
+				return fmt.Errorf("timed out waiting for deletion of %v/%v", resource.GetObjectKind(), resource.GetName())
+			}
+			time.Sleep(1 * time.Second)
+		}
+
 		return cli.Create(ctx, resource)
 	}
 }
