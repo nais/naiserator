@@ -1,0 +1,61 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  labels:
+    app: {{ .Release.Name }}
+  name: {{ .Release.Name }}
+spec:
+  allowPrivilegeEscalation: false
+  fsGroup:
+    ranges:
+    - max: {.Values.securityContext.runAsUser}
+      min: {.Values.securityContext.runAsUser}
+    rule: MustRunAs
+  runAsUser:
+    ranges:
+    - max: {.Values.securityContext.runAsUser}
+      min: {.Values.securityContext.runAsUser}
+    rule: MustRunAs
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    ranges:
+    - max: {.Values.securityContext.runAsUser}
+      min: {.Values.securityContext.runAsUser}
+    rule: MustRunAs
+  volumes:
+  - secret
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: {{ .Release.Name }}
+  name: psp:{{ .Release.Name }}
+rules:
+- apiGroups:
+  - policy
+  resourceNames:
+  - {{ .Release.Name }}
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app: {{ .Release.Name }}
+  name: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: psp:{{ .Release.Name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}
+    namespace: {{ .Release.Namespace }}
