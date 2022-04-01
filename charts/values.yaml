@@ -73,8 +73,6 @@ naiserator:
 podSecurityContext:
   fsGroup: 65532
   runAsNonRoot: true
-  seccompProfile:
-    type: RuntimeDefault
   supplementalGroups:
     - 65532
 
