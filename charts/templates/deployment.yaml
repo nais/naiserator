@@ -31,6 +31,8 @@ spec:
         image: ghcr.io/nais/naiserator/naiserator:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
         volumeMounts:
         - mountPath: /etc/naiserator.yaml
           name: naiserator
@@ -42,6 +44,8 @@ spec:
       - name: {{ .Values.imagePullSecret }}
       serviceAccount: {{ .Release.Name }}
       serviceAccountName: {{ .Release.Name }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
       - name: naiserator
         secret:

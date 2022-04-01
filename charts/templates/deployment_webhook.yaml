@@ -24,6 +24,8 @@ spec:
         image: ghcr.io/nais/naiserator/naiserator:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator-webhook
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
         ports:
         - containerPort: 8443
           name: webhook-server
@@ -36,6 +38,8 @@ spec:
       - name: {{ .Values.imagePullSecret }}
       serviceAccount: {{ .Release.Name }}
       serviceAccountName: {{ .Release.Name }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
       - name: webhook-cert
         secret:

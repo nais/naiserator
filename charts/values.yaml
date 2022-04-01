@@ -69,3 +69,15 @@ naiserator:
       token-url: ""
   leader-election:
     image: ghcr.io/nais/elector:2022-01-25-848dc6a
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
