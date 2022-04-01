@@ -71,7 +71,13 @@ naiserator:
     image: ghcr.io/nais/elector:2022-01-25-848dc6a
 
 podSecurityContext:
-  {}
+  fsGroup: 65532
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+  supplementalGroups:
+    - 65532
+
   # fsGroup: 2000
 
 securityContext:
@@ -81,8 +87,3 @@ securityContext:
   readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 65532
-  fsGroup: 65532
-  seccompProfile:
-    type: RuntimeDefault
-  supplementalGroups:
-    - 65532
