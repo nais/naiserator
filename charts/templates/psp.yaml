@@ -8,20 +8,20 @@ spec:
   allowPrivilegeEscalation: false
   fsGroup:
     ranges:
-    - max: {.Values.securityContext.runAsUser}
-      min: {.Values.securityContext.runAsUser}
+    - max: {{.Values.securityContext.runAsUser}}
+      min: {{.Values.securityContext.runAsUser}}
     rule: MustRunAs
   runAsUser:
     ranges:
-    - max: {.Values.securityContext.runAsUser}
-      min: {.Values.securityContext.runAsUser}
+    - max: {{.Values.securityContext.runAsUser}}
+      min: {{.Values.securityContext.runAsUser}}
     rule: MustRunAs
   seLinux:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-    - max: {.Values.securityContext.runAsUser}
-      min: {.Values.securityContext.runAsUser}
+    - max: {{.Values.securityContext.runAsUser}}
+      min: {{.Values.securityContext.runAsUser}}
     rule: MustRunAs
   volumes:
   - secret
