@@ -172,7 +172,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	// create sidecar container
-	wonderwallCfg := wonderwallConfig(ingresses, idPorten, idportenClient.Spec.SecretName)
+	wonderwallCfg := wonderwallConfig(app, idportenClient.Spec.SecretName)
 	err = wonderwall.Create(app, ast, cfg, wonderwallCfg)
 	if err != nil {
 		return err
@@ -185,15 +185,19 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	return nil
 }
 
-func wonderwallConfig(naisIngresses []nais_io_v1.Ingress, naisIdPorten *nais_io_v1.IDPorten, providerSecretName string) wonderwall.Configuration {
+func wonderwallConfig(source Source, providerSecretName string) wonderwall.Configuration {
+	naisIngresses := source.GetIngress()
+	naisIdPorten := source.GetIDPorten()
+
 	cfg := wonderwall.Configuration{
+		ACRValues:          naisIdPorten.Sidecar.Level,
 		AutoLogin:          naisIdPorten.Sidecar.AutoLogin,
 		ErrorPath:          naisIdPorten.Sidecar.ErrorPath,
 		Ingress:            string(naisIngresses[0]),
 		Loginstatus:        true,
 		Provider:           "idporten",
 		ProviderSecretName: providerSecretName,
-		ACRValues:          naisIdPorten.Sidecar.Level,
+		Resources:          naisIdPorten.Sidecar.Resources,
 		UILocales:          naisIdPorten.Sidecar.Locale,
 	}
 

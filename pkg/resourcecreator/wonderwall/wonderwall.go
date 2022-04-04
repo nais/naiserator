@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/imdario/mergo"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/keygen"
@@ -31,15 +32,16 @@ const (
 )
 
 type Configuration struct {
+	ACRValues             string
 	AutoLogin             bool
 	ErrorPath             string
 	Ingress               string
 	Loginstatus           bool
+	PostLogoutRedirectURI string
 	Provider              string
 	ProviderSecretName    string
-	ACRValues             string
+	Resources             *nais_io_v1.ResourceRequirements
 	UILocales             string
-	PostLogoutRedirectURI string
 }
 
 type Source interface {
@@ -49,9 +51,9 @@ type Source interface {
 
 type Config interface {
 	GetGoogleProjectID() string
+	GetWonderwallOptions() config.Wonderwall
 	IsDigdiratorEnabled() bool
 	IsAzureratorEnabled() bool
-	GetWonderwallOptions() config.Wonderwall
 }
 
 func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) error {
@@ -77,7 +79,7 @@ func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) 
 
 	container, err := sidecarContainer(source, config, cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating wonderwall container spec: %w", err)
 	}
 
 	container.EnvFrom = []corev1.EnvFromSource{
@@ -119,18 +121,12 @@ func ShouldEnable(app *nais_io_v1alpha1.Application, opts Config) (bool, error) 
 
 func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.Container, error) {
 	targetPort := source.GetPort()
-	resourcesSpec := nais_io_v1.ResourceRequirements{
-		Limits: &nais_io_v1.ResourceSpec{
-			Cpu:    "250m",
-			Memory: "256Mi",
-		},
-		Requests: &nais_io_v1.ResourceSpec{
-			Cpu:    "20m",
-			Memory: "32Mi",
-		},
-	}
 	options := config.GetWonderwallOptions()
 	image := options.Image
+	resourceReqs, err := resourceRequirements(cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	return &corev1.Container{
 		Name:            "wonderwall",
@@ -149,7 +145,7 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 				Name:          MetricsPortName,
 			},
 		},
-		Resources: pod.ResourceLimits(resourcesSpec),
+		Resources: pod.ResourceLimits(*resourceReqs),
 		SecurityContext: &corev1.SecurityContext{
 			AllowPrivilegeEscalation: pointer.Bool(false),
 			Capabilities: &corev1.Capabilities{
@@ -162,6 +158,31 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 			RunAsUser:              pointer.Int64(1069),
 		},
 	}, nil
+}
+
+func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, error) {
+	reqs := cfg.Resources
+	defaultReqs := &nais_io_v1.ResourceRequirements{
+		Limits: &nais_io_v1.ResourceSpec{
+			Cpu:    "250m",
+			Memory: "256Mi",
+		},
+		Requests: &nais_io_v1.ResourceSpec{
+			Cpu:    "20m",
+			Memory: "32Mi",
+		},
+	}
+
+	if reqs == nil {
+		return defaultReqs, nil
+	}
+
+	err := mergo.Merge(reqs, defaultReqs)
+	if err != nil {
+		return nil, fmt.Errorf("merging default resource requirements: %w", err)
+	}
+
+	return reqs, nil
 }
 
 func envVars(cfg Configuration, targetPort int, options config.Wonderwall) []corev1.EnvVar {

@@ -41,6 +41,13 @@ input:
         locale: se
         autoLogin: true
         errorPath: /some/error
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
     ingresses:
       - "https://my-client.nav.no/"
     port: 1234
@@ -115,3 +122,10 @@ tests:
                       - containerPort: 7565
                         name: ww-metrics
                         protocol: TCP
+                    resources:
+                      limits:
+                        cpu: 100m
+                        memory: 128Mi
+                      requests:
+                        cpu: 100m
+                        memory: 64Mi
