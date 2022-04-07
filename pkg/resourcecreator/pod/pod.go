@@ -377,7 +377,7 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg
 
 func copyLinkerdAnnotations(src, dst map[string]string) {
 	for k, v := range src {
-		if strings.HasPrefix(k, "config.linkerd.io/") {
+		if strings.HasPrefix(k, "config.linkerd.io/") || strings.HasPrefix(k, "config.alpha.linkerd.io/") {
 			dst[k] = v
 		}
 	}
