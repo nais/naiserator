@@ -43,6 +43,7 @@ type Source interface {
 	GetPrometheus() *nais_io_v1.PrometheusConfig
 	GetReadiness() *nais_io_v1.Probe
 	GetResources() *nais_io_v1.ResourceRequirements
+	GetSalsa() *nais_io_v1.Salsa
 	GetStartup() *nais_io_v1.Probe
 }
 
@@ -345,6 +346,10 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 		copyLinkerdAnnotations(app.GetAnnotations(), objectMeta.Annotations)
 	}
 
+	if app.GetSalsa() != nil && app.GetSalsa().Enabled {
+		objectMeta.Annotations["salsa.nais.io/verify"] = "true"
+	}
+
 	return objectMeta
 }
 
@@ -370,6 +375,10 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg
 
 	if cfg.IsLinkerdEnabled() {
 		copyLinkerdAnnotations(naisjob.Annotations, objectMeta.Annotations)
+	}
+
+	if naisjob.Spec.Salsa != nil && naisjob.Spec.Salsa.Enabled {
+		objectMeta.Annotations["salsa.nais.io/verify"] = "true"
 	}
 
 	return objectMeta

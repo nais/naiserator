@@ -31,6 +31,7 @@ type Source interface {
 	GetReadiness() *nais_io_v1.Probe
 	GetReplicas() *nais_io_v1.Replicas
 	GetResources() *nais_io_v1.ResourceRequirements
+	GetSalsa() *nais_io_v1.Salsa
 	GetStartup() *nais_io_v1.Probe
 	GetStrategy() *nais_io_v1.Strategy
 }

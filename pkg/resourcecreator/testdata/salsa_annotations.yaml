@@ -1,0 +1,30 @@
+testconfig:
+  description: application with salsa annotations
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    salsa:
+      enabled: true
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "podspec contains salsa annotation"
+        type: subset
+        resource:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  kubectl.kubernetes.io/default-container: myapplication
+                  salsa.nais.io/verify: "true"
