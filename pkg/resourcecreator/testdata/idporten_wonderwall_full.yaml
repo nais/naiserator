@@ -96,8 +96,6 @@ tests:
                         value: ^Level3$
                       - name: WONDERWALL_OPENID_UI_LOCALES
                         value: ^se$
-                      - name: WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI
-                        value: ^https://my-client.nav.no/logged_out$
                       - name: WONDERWALL_LOGINSTATUS_ENABLED
                         value: "true"
                       - name: WONDERWALL_LOGINSTATUS_COOKIE_DOMAIN
@@ -129,3 +127,17 @@ tests:
                       requests:
                         cpu: 100m
                         memory: 64Mi
+
+  - apiVersion: nais.io/v1
+    kind: IDPortenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "client config should match expected paths for sidecar"
+        resource:
+          spec:
+            frontchannelLogoutURI: https://my-client.nav.no/oauth2/logout/frontchannel
+            redirectURI: https://my-client.nav.no/oauth2/callback
+            postLogoutRedirectURIs:
+              - https://my-client.nav.no/oauth2/logout/callback

@@ -29,6 +29,7 @@ const (
 
 	RedirectURIPath        = "/oauth2/callback"
 	FrontChannelLogoutPath = "/oauth2/logout/frontchannel"
+	LogoutCallbackPath     = "/oauth2/logout/callback"
 )
 
 type Configuration struct {

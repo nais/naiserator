@@ -138,6 +138,15 @@ func idportenURI(ingresses []nais_io_v1.Ingress, path string) nais_io_v1.IDPorte
 	return nais_io_v1.IDPortenURI(util.AppendPathToIngress(ingresses[0], path))
 }
 
+func idportenURIs(ingresses []nais_io_v1.Ingress, path string) []nais_io_v1.IDPortenURI {
+	uris := make([]nais_io_v1.IDPortenURI, 0)
+	for _, ingress := range ingresses {
+		uris = append(uris, nais_io_v1.IDPortenURI(util.AppendPathToIngress(ingress, path)))
+	}
+
+	return uris
+}
+
 func idPortenSecretName(name string) (string, error) {
 	basename := fmt.Sprintf("%s-%s", "idporten", name)
 	year, week := time.Now().ISOWeek()
@@ -181,6 +190,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	// override uris when sidecar is enabled
 	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
 	idportenClient.Spec.RedirectURI = idportenURI(ingresses, wonderwall.RedirectURIPath)
+	idportenClient.Spec.PostLogoutRedirectURIs = idportenURIs(ingresses, wonderwall.LogoutCallbackPath)
 
 	return nil
 }
@@ -199,10 +209,6 @@ func wonderwallConfig(source Source, providerSecretName string) wonderwall.Confi
 		ProviderSecretName: providerSecretName,
 		Resources:          naisIdPorten.Sidecar.Resources,
 		UILocales:          naisIdPorten.Sidecar.Locale,
-	}
-
-	if len(naisIdPorten.PostLogoutRedirectURIs) > 0 {
-		cfg.PostLogoutRedirectURI = string(naisIdPorten.PostLogoutRedirectURIs[0])
 	}
 
 	return cfg
