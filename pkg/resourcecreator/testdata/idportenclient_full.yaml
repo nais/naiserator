@@ -23,15 +23,15 @@ input:
     image: foo/bar
     idporten:
       enabled: true
-      clientURI: https://my-client.adeo.no
-      redirectURI: https://my-client.adeo.no/whatever
-      frontchannelLogoutURI: https://my-client.adeo.no/logout
+      clientURI: https://my-client.adeo.no/some-path
+      redirectPath: /whatever
+      frontchannelLogoutPath: /logout
       postLogoutRedirectURIs:
         - https://my-client.adeo.no/something
       sessionLifetime: 7200
       accessTokenLifetime: 3600
     ingresses:
-      - https://my-client.adeo.no
+      - https://my-client.adeo.no/some-path
 
 tests:
   - apiVersion: nais.io/v1
@@ -47,9 +47,9 @@ tests:
           - .spec.secretName
         resource:
           spec:
-            clientURI: https://my-client.adeo.no
-            redirectURI: https://my-client.adeo.no/whatever
-            frontchannelLogoutURI: https://my-client.adeo.no/logout
+            clientURI: https://my-client.adeo.no/some-path
+            redirectURI: https://my-client.adeo.no/some-path/whatever
+            frontchannelLogoutURI: https://my-client.adeo.no/some-path/logout
             postLogoutRedirectURIs:
               - https://my-client.adeo.no/something
             sessionLifetime: 7200

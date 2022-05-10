@@ -2,7 +2,6 @@ package idporten
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -40,10 +39,6 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		return nil, err
 	}
 
-	if err := validateRedirectURI(naisIdPorten, naisIngresses); err != nil {
-		return nil, err
-	}
-
 	secretName, err := idPortenSecretName(objectMeta.Name)
 	if err != nil {
 		return nil, err
@@ -78,50 +73,20 @@ func validateIngresses(ingresses []nais_io_v1.Ingress) error {
 	return nil
 }
 
-func validateRedirectURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) error {
-	ingress := ingresses[0]
-	redirectURI := idPorten.RedirectURI
-
-	if len(redirectURI) == 0 {
-		return nil
+func redirectURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) nais_io_v1.IDPortenURI {
+	if len(idPorten.RedirectPath) == 0 {
+		return idportenURI(ingresses, clientDefaultCallbackPath)
 	}
 
-	if !strings.HasPrefix(string(redirectURI), string(ingress)) {
-		return fmt.Errorf("redirect URI ('%s') must be a subpath of the ingress ('%s')", redirectURI, ingress)
-	}
-
-	if !strings.HasPrefix(string(redirectURI), "https://") {
-		return fmt.Errorf("redirect URI must start with https://")
-	}
-	return nil
+	return idportenURI(ingresses, idPorten.RedirectPath)
 }
 
-func redirectURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) (redirectURI nais_io_v1.IDPortenURI) {
-	redirectURI = idPorten.RedirectURI
-
-	if len(idPorten.RedirectURI) == 0 {
-		redirectURI = idportenURI(ingresses, clientDefaultCallbackPath)
+func frontchannelLogoutURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) nais_io_v1.IDPortenURI {
+	if len(idPorten.FrontchannelLogoutPath) == 0 {
+		return idportenURI(ingresses, clientDefaultLogoutPath)
 	}
 
-	if len(idPorten.RedirectPath) > 0 {
-		redirectURI = idportenURI(ingresses, idPorten.RedirectPath)
-	}
-
-	return
-}
-
-func frontchannelLogoutURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) (frontchannelLogoutURI nais_io_v1.IDPortenURI) {
-	frontchannelLogoutURI = idPorten.FrontchannelLogoutURI
-
-	if len(idPorten.FrontchannelLogoutURI) == 0 {
-		frontchannelLogoutURI = idportenURI(ingresses, clientDefaultLogoutPath)
-	}
-
-	if len(idPorten.FrontchannelLogoutPath) > 0 {
-		frontchannelLogoutURI = idportenURI(ingresses, idPorten.FrontchannelLogoutPath)
-	}
-
-	return
+	return idportenURI(ingresses, idPorten.FrontchannelLogoutPath)
 }
 
 func postLogoutRedirectURIs(idPorten *nais_io_v1.IDPorten) (postLogoutRedirectURIs []nais_io_v1.IDPortenURI) {
