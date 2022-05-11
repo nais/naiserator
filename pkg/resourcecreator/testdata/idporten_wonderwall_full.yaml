@@ -108,7 +108,7 @@ tests:
                         value: ^https://domain.test/loginstatus/token$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{6,7}$
+                          name: ^idporten-myapplication-.{8}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                       - secretRef:

@@ -2,7 +2,6 @@ package idporten
 
 import (
 	"fmt"
-	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -39,11 +38,6 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		return nil, err
 	}
 
-	secretName, err := idPortenSecretName(objectMeta.Name)
-	if err != nil {
-		return nil, err
-	}
-
 	return &nais_io_v1.IDPortenClient{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IDPortenClient",
@@ -53,7 +47,7 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		Spec: nais_io_v1.IDPortenClientSpec{
 			ClientURI:              naisIdPorten.ClientURI,
 			RedirectURI:            redirectURI(naisIdPorten, naisIngresses),
-			SecretName:             secretName,
+			SecretName:             secretName(objectMeta.Name),
 			FrontchannelLogoutURI:  frontchannelLogoutURI(naisIdPorten, naisIngresses),
 			PostLogoutRedirectURIs: postLogoutRedirectURIs(naisIdPorten),
 			SessionLifetime:        naisIdPorten.SessionLifetime,
@@ -112,13 +106,8 @@ func idportenURIs(ingresses []nais_io_v1.Ingress, path string) []nais_io_v1.IDPo
 	return uris
 }
 
-func idPortenSecretName(name string) (string, error) {
-	basename := fmt.Sprintf("%s-%s", "idporten", name)
-	year, week := time.Now().ISOWeek()
-	suffix := fmt.Sprintf("%d-%d", year, week)
-	maxLen := validation.DNS1035LabelMaxLength
-
-	return namegen.SuffixedShortName(basename, suffix, maxLen)
+func secretName(name string) string {
+	return namegen.PrefixedRandShortName("idporten", name, validation.DNS1035LabelMaxLength)
 }
 
 func Create(app Source, ast *resource.Ast, cfg Config) error {

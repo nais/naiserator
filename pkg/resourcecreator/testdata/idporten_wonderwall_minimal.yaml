@@ -47,15 +47,15 @@ tests:
             template:
               spec:
                 volumes:
-                  - name: ^idporten-myapplication-a0b907e7-.{6,7}$
+                  - name: ^idporten-myapplication-.{8}$
                     secret:
-                      secretName: ^idporten-myapplication-a0b907e7-.{6,7}$
+                      secretName: ^idporten-myapplication-.{8}$
                 containers:
                   - envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{6,7}$
+                          name: ^idporten-myapplication-.{8}$
                     volumeMounts:
-                      - name: ^idporten-myapplication-a0b907e7-.{6,7}$
+                      - name: ^idporten-myapplication-.{8}$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/idporten
 
@@ -76,9 +76,9 @@ tests:
                   wonderwall: enabled
               spec:
                 volumes:
-                  - name: ^idporten-myapplication-a0b907e7-.{6,7}$
+                  - name: ^idporten-myapplication-.{8}$
                     secret:
-                      secretName: ^idporten-myapplication-a0b907e7-.{6,7}$
+                      secretName: ^idporten-myapplication-.{8}$
                 containers:
                   - env:
                       - name: WONDERWALL_OPENID_PROVIDER
@@ -103,7 +103,7 @@ tests:
                         value: ^https://domain.test/loginstatus/token$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7-.{6,7}$
+                          name: ^idporten-myapplication-.{8}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                       - secretRef:
