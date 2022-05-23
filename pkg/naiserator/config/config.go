@@ -46,6 +46,7 @@ type Synchronizer struct {
 type Features struct {
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	Azurerator                  bool     `json:"azurerator"`
+	Cilium                      bool     `json:"cilium"`
 	CNRM                        bool     `json:"cnrm"`
 	Digdirator                  bool     `json:"digdirator"`
 	GCP                         bool     `json:"gcp"`
@@ -139,6 +140,7 @@ const (
 	DryRun                                 = "dry-run"
 	FeaturesAccessPolicyNotAllowedCIDRs    = "features.access-policy-not-allowed-cidrs"
 	FeaturesAzurerator                     = "features.azurerator"
+	FeaturesCilium                         = "features.cilium"
 	FeaturesDigdirator                     = "features.digdirator"
 	FeaturesGCP                            = "features.gcp"
 	FeaturesJwker                          = "features.jwker"
@@ -230,6 +232,7 @@ func init() {
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
 	flag.Bool(FeaturesCNRM, false, "enable creation of CNRM resources")
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
+	flag.Bool(FeaturesCilium, false, "enable creation of CiliumNetworkPolicy resources")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")

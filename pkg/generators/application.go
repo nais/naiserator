@@ -9,6 +9,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
+	"github.com/nais/naiserator/pkg/resourcecreator/ciliumnetworkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/gcp"
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
@@ -117,7 +118,12 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	service.Create(app, ast, cfg)
 	serviceaccount.Create(app, ast, cfg)
 	horizontalpodautoscaler.Create(app, ast)
-	networkpolicy.Create(app, ast, cfg)
+
+	if cfg.Config.Features.Cilium {
+		ciliumnetworkpolicy.Create(app, ast, cfg)
+	} else {
+		networkpolicy.Create(app, ast, cfg)
+	}
 
 	err = ingress.Create(app, ast, cfg)
 	if err != nil {

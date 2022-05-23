@@ -1,0 +1,103 @@
+testconfig:
+  description: vanilla application running with cilium, default configuration and network policies
+
+config:
+  features:
+    cilium: true
+    network-policy: true
+    jwker: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .adeo.no
+      ingressClass: adeo-gateway
+    - domainSuffix: .domain
+      ingressClass: domain-gateway
+
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    ingresses:
+      - 'https://myapplication.dev.adeo.no'
+      - 'https://myapplication.other.domain'
+    accessPolicy:
+      inbound:
+        rules:
+          - application: app1
+          - application: app2
+            namespace: q1
+          - application: '*'
+            namespace: t1
+      outbound:
+        rules:
+          - application: app3
+          - application: app4
+            namespace: q2
+          - application: '*'
+            namespace: t2
+        external:
+          - host: www.external-application.com
+          - host: https://www.another-external-application.com
+          - host: http://www.yet-another-external-application.com
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: cilium.io/v2
+    kind: CiliumNetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            egress:
+              toCIDRSet:
+              - cidr: 0.0.0.0/0
+              toEndpoints:
+              - matchLabels:
+                  io.kubernetes.pod.namespace: kube-system
+                  k8s-app: kube-dns
+              - matchLabels:
+                  app: app3
+              - matchLabels:
+                  app: app4
+                  io.kubernetes.pod.namespace: q2
+              - matchLabels:
+                  io.kubernetes.pod.namespace: t2
+            endpointSelector:
+              matchLabels:
+                app: myapplication
+            ingress:
+            - fromEndpoints:
+                matchLabels:
+                  app: prometheus
+                  io.kubernetes.pod.namespace: nais
+            - fromEndpoints:
+                matchLabels:
+                  app: app1
+            - fromEndpoints:
+                matchLabels:
+                  app: app2
+                  io.kubernetes.pod.namespace: q1
+            - fromEndpoints:
+                matchLabels:
+                  io.kubernetes.pod.namespace: t1
+            - fromEndpoints:
+                matchLabels:
+                  app.kubernetes.io/instance: adeo-gateway
+                  io.kubernetes.pod.namespace: nginx
+            - fromEndpoints:
+                matchLabels:
+                  app.kubernetes.io/instance: domain-gateway
+                  io.kubernetes.pod.namespace: nginx
