@@ -81,9 +81,9 @@ tests:
             - toFQDNs:
               - matchName: www.external-application.com
             - toFQDNs:
-              - matchName: https://www.another-external-application.com
+              - matchName: www.another-external-application.com
             - toFQDNs:
-              - matchName: http://www.yet-another-external-application.com
+              - matchName: www.yet-another-external-application.com
             endpointSelector:
               matchLabels:
                 app: myapplication

@@ -169,10 +169,20 @@ func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPol
 	}
 
 	for _, ext := range naisAccessPolicyOutbound.External {
+		u, err := url.Parse(ext.Host)
+		if err != nil {
+			continue
+		}
+
+		host := u.Host
+		if host == "" {
+			host = u.Path
+		}
+
 		defaultRules = append(defaultRules, cilium_io_v2.Egress{
 			ToFQDNs: []cilium_io_v2.FQDN{
 				{
-					MatchName: ext.Host,
+					MatchName: host,
 				},
 			},
 		})
