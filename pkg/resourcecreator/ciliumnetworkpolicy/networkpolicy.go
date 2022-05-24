@@ -6,10 +6,9 @@ import (
 	cilium_io_v2 "github.com/nais/liberator/pkg/apis/cilium.io/v2"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Source interface {
@@ -80,22 +79,32 @@ func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, optio
 		}
 
 		networkPolicyPeer := cilium_io_v2.Ingress{
-			FromEndpoints: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": rule.Application,
+			FromEndpoints: []*metav1.LabelSelector{
+				{
+					MatchLabels: map[string]string{
+						"app": rule.Application,
+					},
 				},
 			},
 		}
 
 		if rule.Application == "*" {
-			networkPolicyPeer = cilium_io_v2.Ingress{FromEndpoints: &metav1.LabelSelector{}}
+			networkPolicyPeer = cilium_io_v2.Ingress{FromEndpoints: []*metav1.LabelSelector{}}
 		}
 
 		if rule.Namespace != "" {
-			if networkPolicyPeer.FromEndpoints.MatchLabels == nil {
-				networkPolicyPeer.FromEndpoints.MatchLabels = map[string]string{}
+			if len(networkPolicyPeer.FromEndpoints) > 0 {
+				if networkPolicyPeer.FromEndpoints[0].MatchLabels == nil {
+					networkPolicyPeer.FromEndpoints[0].MatchLabels = map[string]string{}
+				}
+			} else {
+				networkPolicyPeer.FromEndpoints = []*metav1.LabelSelector{
+					{
+						MatchLabels: map[string]string{},
+					},
+				}
 			}
-			networkPolicyPeer.FromEndpoints.MatchLabels[namespaceSelector] = rule.Namespace
+			networkPolicyPeer.FromEndpoints[0].MatchLabels[namespaceSelector] = rule.Namespace
 		}
 
 		networkPolicy = append(networkPolicy, networkPolicyPeer)
@@ -138,48 +147,68 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 
 func ingressPeer(labelName, labelValue, namespace string) cilium_io_v2.Ingress {
 	return cilium_io_v2.Ingress{
-		FromEndpoints: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				labelName:         labelValue,
-				namespaceSelector: namespace,
+		FromEndpoints: []*metav1.LabelSelector{
+			{
+				MatchLabels: map[string]string{
+					labelName:         labelValue,
+					namespaceSelector: namespace,
+				},
 			},
 		},
 	}
 }
 
-func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPolicyOutbound, leaderElection bool) *cilium_io_v2.Egress {
+func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPolicyOutbound, leaderElection bool) []cilium_io_v2.Egress {
 	defaultRules := defaultAllowEgress(options)
 
 	if len(naisAccessPolicyOutbound.Rules) > 0 {
 		rules := networkPolicyApplicationRules(naisAccessPolicyOutbound.Rules, options)
 		for _, rule := range rules {
-			defaultRules.ToEndpoints = append(defaultRules.ToEndpoints, rule.FromEndpoints)
+			defaultRules = append(defaultRules, cilium_io_v2.Egress{ToEndpoints: rule.FromEndpoints})
 		}
 	}
 
+	for _, ext := range naisAccessPolicyOutbound.External {
+		defaultRules = append(defaultRules, cilium_io_v2.Egress{
+			ToFQDNs: []cilium_io_v2.FQDN{
+				{
+					MatchName: ext.Host,
+				},
+			},
+		})
+	}
+
 	if leaderElection && len(options.GetGoogleProjectID()) > 0 {
-		defaultRules.ToCIDRSet = append(defaultRules.ToCIDRSet, cilium_io_v2.CIDRSet{
-			CIDR: options.GetAPIServerIP(),
+		defaultRules = append(defaultRules, cilium_io_v2.Egress{
+			ToCIDRSet: []cilium_io_v2.CIDRSet{
+				{
+					CIDR: options.GetAPIServerIP(),
+				},
+			},
 		})
 	}
 
 	return defaultRules
 }
 
-func defaultAllowEgress(options Config) *cilium_io_v2.Egress {
-	return &cilium_io_v2.Egress{
-		ToEndpoints: []*metav1.LabelSelector{
-			{
-				MatchLabels: map[string]string{
-					"io.kubernetes.pod.namespace": "kube-system",
-					"k8s-app":                     "kube-dns",
+func defaultAllowEgress(options Config) []cilium_io_v2.Egress {
+	return []cilium_io_v2.Egress{
+		{
+			ToEndpoints: []*metav1.LabelSelector{
+				{
+					MatchLabels: map[string]string{
+						"io.kubernetes.pod.namespace": "kube-system",
+						"k8s-app":                     "kube-dns",
+					},
 				},
 			},
 		},
-		ToCIDRSet: []cilium_io_v2.CIDRSet{
-			{
-				CIDR:   networkPolicyDefaultEgressAllowIPBlock,
-				Except: options.GetAccessPolicyNotAllowedCIDRs(),
+		{
+			ToCIDRSet: []cilium_io_v2.CIDRSet{
+				{
+					CIDR:   networkPolicyDefaultEgressAllowIPBlock,
+					Except: options.GetAccessPolicyNotAllowedCIDRs(),
+				},
 			},
 		},
 	}

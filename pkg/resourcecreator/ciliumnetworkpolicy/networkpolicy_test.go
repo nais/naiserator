@@ -3,15 +3,14 @@ package ciliumnetworkpolicy_test
 import (
 	"testing"
 
+	cilium_io_v2 "github.com/nais/liberator/pkg/apis/cilium.io/v2"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/resourcecreator/ciliumnetworkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"gopkg.in/yaml.v2"
-
-	cilium_io_v2 "github.com/nais/liberator/pkg/apis/cilium.io/v2"
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,15 +32,17 @@ func TestNetworkPolicy(t *testing.T) {
 		ciliumnetworkpolicy.Create(app, ast, opts)
 		networkPolicy := ast.Operations[0].Resource.(*cilium_io_v2.NetworkPolicy)
 
-		assert.Len(t, networkPolicy.Spec.Egress.ToCIDRSet, 1)
+		assert.Len(t, networkPolicy.Spec.Egress[0].ToEndpoints, 1)
 
 		testPolicy := make([]cilium_io_v2.Ingress, 0)
 
 		testPolicy = append(testPolicy, cilium_io_v2.Ingress{
-			FromEndpoints: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app":                         "prometheus",
-					"io.kubernetes.pod.namespace": "nais",
+			FromEndpoints: []*metav1.LabelSelector{
+				{
+					MatchLabels: map[string]string{
+						"app":                         "prometheus",
+						"io.kubernetes.pod.namespace": "nais",
+					},
 				},
 			},
 		})
@@ -65,7 +66,7 @@ func TestNetworkPolicy(t *testing.T) {
 			},
 		}
 
-		assert.Equal(t, matchLabels, networkPolicy.Spec.Egress.ToEndpoints[1])
+		assert.Equal(t, matchLabels, networkPolicy.Spec.Egress[2].ToEndpoints[0])
 	})
 
 	t.Run("allowed app in egress rule sets egress app rules and default rules", func(t *testing.T) {
@@ -77,13 +78,16 @@ func TestNetworkPolicy(t *testing.T) {
 
 		ciliumnetworkpolicy.Create(app, ast, opts)
 		networkPolicy := ast.Operations[0].Resource.(*cilium_io_v2.NetworkPolicy)
-		matchLabels := []*metav1.LabelSelector{
+		matchLabels0 := []*metav1.LabelSelector{
 			{
 				MatchLabels: map[string]string{
 					"io.kubernetes.pod.namespace": "kube-system",
 					"k8s-app":                     "kube-dns",
 				},
 			},
+		}
+
+		matchLabels2 := []*metav1.LabelSelector{
 			{
 				MatchLabels: map[string]string{
 					"app": accessPolicyApp,
@@ -91,7 +95,8 @@ func TestNetworkPolicy(t *testing.T) {
 			},
 		}
 
-		assert.Equal(t, matchLabels, networkPolicy.Spec.Egress.ToEndpoints)
+		assert.Equal(t, matchLabels0, networkPolicy.Spec.Egress[0].ToEndpoints)
+		assert.Equal(t, matchLabels2, networkPolicy.Spec.Egress[2].ToEndpoints)
 	})
 
 	t.Run("all traffic inside namespace sets from rule to empty podspec", func(t *testing.T) {
@@ -109,6 +114,6 @@ func TestNetworkPolicy(t *testing.T) {
 		yamlres, err := yaml.Marshal(networkPolicy)
 		assert.NoError(t, err)
 		assert.NotNil(t, yamlres)
-		assert.Empty(t, networkPolicy.Spec.Ingress[1].FromEndpoints.MatchLabels)
+		assert.Empty(t, networkPolicy.Spec.Ingress[1].FromEndpoints)
 	})
 }

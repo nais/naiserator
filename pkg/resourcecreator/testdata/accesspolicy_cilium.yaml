@@ -62,42 +62,51 @@ tests:
         resource:
           spec:
             egress:
-              toCIDRSet:
-              - cidr: 0.0.0.0/0
-              toEndpoints:
+            - toEndpoints:
               - matchLabels:
                   io.kubernetes.pod.namespace: kube-system
                   k8s-app: kube-dns
+            - toCIDRSet:
+              - cidr: 0.0.0.0/0
+            - toEndpoints:
               - matchLabels:
                   app: app3
+            - toEndpoints:
               - matchLabels:
                   app: app4
                   io.kubernetes.pod.namespace: q2
+            - toEndpoints:
               - matchLabels:
                   io.kubernetes.pod.namespace: t2
+            - toFQDNs:
+              - matchName: www.external-application.com
+            - toFQDNs:
+              - matchName: https://www.another-external-application.com
+            - toFQDNs:
+              - matchName: http://www.yet-another-external-application.com
             endpointSelector:
               matchLabels:
                 app: myapplication
             ingress:
             - fromEndpoints:
-                matchLabels:
+              - matchLabels:
                   app: prometheus
                   io.kubernetes.pod.namespace: nais
             - fromEndpoints:
-                matchLabels:
+              - matchLabels:
                   app: app1
             - fromEndpoints:
-                matchLabels:
+              - matchLabels:
                   app: app2
                   io.kubernetes.pod.namespace: q1
             - fromEndpoints:
-                matchLabels:
+              - matchLabels:
                   io.kubernetes.pod.namespace: t1
             - fromEndpoints:
-                matchLabels:
+              - matchLabels:
                   app.kubernetes.io/instance: adeo-gateway
                   io.kubernetes.pod.namespace: nginx
             - fromEndpoints:
-                matchLabels:
+              - matchLabels:
                   app.kubernetes.io/instance: domain-gateway
                   io.kubernetes.pod.namespace: nginx
