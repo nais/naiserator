@@ -39,6 +39,7 @@ naiserator:
     gcp: true
     webhook: true
     secure-pod-security-context: true
+    cilium: true
   informer:
     full-sync-interval: 4h
   synchronizer:
