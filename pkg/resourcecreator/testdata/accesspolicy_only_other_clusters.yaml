@@ -1,0 +1,87 @@
+testconfig:
+  description: accesspolicy containing rules for only other clusters should not add empty ingress and egress rules
+
+config:
+  features:
+    linkerd: true
+    network-policy: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    accessPolicy:
+      inbound:
+        rules:
+          - application: bar
+            namespace: baz
+            cluster: othercluster
+      outbound:
+        rules:
+          - application: foo
+            namespace: bar
+            cluster: othercluster
+
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "egress and ingress network policies"
+        exclude:
+          - .metadata
+        resource:
+          spec:
+            ingress:
+              - from:
+                - podSelector:
+                    matchLabels:
+                      app: prometheus
+                  namespaceSelector:
+                    matchLabels:
+                      name: nais
+              - from:
+                - namespaceSelector:
+                    matchLabels:
+                      linkerd.io/is-control-plane: "true"
+              - from:
+                - namespaceSelector:
+                    matchLabels:
+                      linkerd.io/extension: viz
+                  podSelector:
+                    matchLabels:
+                      component: tap
+              - from:
+                - namespaceSelector:
+                    matchLabels:
+                      linkerd.io/extension: viz
+                  podSelector:
+                    matchLabels:
+                      component: prometheus
+            egress:
+              - to:
+                - namespaceSelector:
+                    matchLabels:
+                      linkerd.io/is-control-plane: "true"
+                - podSelector:
+                    matchLabels:
+                      k8s-app: kube-dns
+                  namespaceSelector: { }
+                - ipBlock:
+                    cidr: 0.0.0.0/0
+            policyTypes:
+              - Ingress
+              - Egress
+            podSelector:
+              matchLabels:
+                app: myapplication
