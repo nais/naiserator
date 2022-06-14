@@ -4,10 +4,10 @@ import (
 	"net/url"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/naiserator/config"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 )
@@ -93,6 +93,10 @@ func networkPolicyEgressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv
 }
 
 func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, options Config) (networkPolicy []networkingv1.NetworkPolicyPeer) {
+	if len(rules.GetRules()) == 0 {
+		return
+	}
+
 	for _, rule := range rules.GetRules() {
 
 		// non-local access policy rules do not result in network policies
@@ -134,8 +138,11 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 		PodSelector:       labelSelector("component", "prometheus"),
 	}))
 
-	if len(naisAccessPolicyInbound.Rules) > 0 {
-		rules = append(rules, networkPolicyIngressRule(networkPolicyApplicationRules(naisAccessPolicyInbound.Rules, options)...))
+	appRules := networkPolicyApplicationRules(naisAccessPolicyInbound.Rules, options)
+
+	if len(appRules) > 0 {
+		appIngressRule := networkPolicyIngressRule(appRules...)
+		rules = append(rules, appIngressRule)
 	}
 
 	if len(naisIngresses) > 0 {
@@ -166,10 +173,11 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 
 func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPolicyOutbound, leaderElection bool) []networkingv1.NetworkPolicyEgressRule {
 	defaultRules := defaultAllowEgress(options)
+	appRules := networkPolicyApplicationRules(naisAccessPolicyOutbound.Rules, options)
 
-	if len(naisAccessPolicyOutbound.Rules) > 0 {
-		appRules := networkPolicyEgressRule(networkPolicyApplicationRules(naisAccessPolicyOutbound.Rules, options)...)
-		defaultRules = append(defaultRules, appRules)
+	if len(appRules) > 0 {
+		appEgressRule := networkPolicyEgressRule(appRules...)
+		defaultRules = append(defaultRules, appEgressRule)
 	}
 
 	if leaderElection && len(options.GetGoogleProjectID()) > 0 {
