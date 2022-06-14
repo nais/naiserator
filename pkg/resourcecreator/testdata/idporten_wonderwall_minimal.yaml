@@ -107,7 +107,7 @@ tests:
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                       - secretRef:
-                          name: ^redis-wonderwall$
+                          name: ^wonderwall-secret$
                     image: nais/wonderwall
                     name: wonderwall
                     ports:

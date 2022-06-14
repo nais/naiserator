@@ -25,7 +25,7 @@ const (
 	MetricsPortName = "ww-metrics"
 	Port            = 7564
 	MetricsPort     = 7565
-	RedisSecretName = "redis-wonderwall"
+	SecretName      = "wonderwall-secret"
 
 	RedirectURIPath        = "/oauth2/callback"
 	FrontChannelLogoutPath = "/oauth2/logout/frontchannel"
@@ -86,7 +86,7 @@ func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) 
 	container.EnvFrom = []corev1.EnvFromSource{
 		pod.EnvFromSecret(cfg.ProviderSecretName),
 		pod.EnvFromSecret(wonderwallSecret.GetName()),
-		pod.EnvFromSecret(RedisSecretName),
+		pod.EnvFromSecret(SecretName),
 	}
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
