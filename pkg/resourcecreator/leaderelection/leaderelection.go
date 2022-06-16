@@ -169,10 +169,6 @@ func container(name, namespace, image string) corev1.Container {
 				Name:  "ELECTOR_LOG_FORMAT",
 				Value: "json",
 			},
-			{
-				Name:  "ELECTOR_LOG_LEVEL",
-				Value: "debug",
-			},
 		},
 	}
 }
