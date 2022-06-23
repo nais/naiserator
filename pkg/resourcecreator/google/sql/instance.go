@@ -226,26 +226,26 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		objectMeta := resource.CreateObjectMeta(source)
 		googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
-		instance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, instance)
+		googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
-		iamPolicyMember := instanceIamPolicyMember(source, instance.Name, cfg)
+		iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
 		for dbNum, db := range sqlInstance.Databases {
 
 			googledb := GoogleSQLDatabase(
-				objectMeta, instance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
+				objectMeta, googleSqlInstance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
 			)
 			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
-			sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, instance.Name, dbNum)
+			sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, googleSqlInstance.Name, dbNum)
 			if err != nil {
 				return err
 			}
 
 			for _, user := range sqlUsers {
-				googleSqlUser := SetupGoogleSqlUser(user.Name, &db, instance)
+				googleSqlUser := SetupGoogleSqlUser(user.Name, &db, googleSqlInstance)
 				if err = createSqlUserDBResources(
 					objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId,
 				); err != nil {
@@ -265,7 +265,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		ast.Containers = append(
 			ast.Containers, google.CloudSqlProxyContainer(
 				5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(),
-				instance.Name,
+				googleSqlInstance.Name,
 			),
 		)
 	}
