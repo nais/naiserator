@@ -10,6 +10,7 @@ import (
 	"github.com/ghodss/yaml"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -38,6 +39,11 @@ func TestApplicationGoldenFile(t *testing.T) {
 	goldenfile.Run(t, applicationTestDataDirectory, func(input []byte, options generators.Options, config config.Config) (resource.Operations, error) {
 		test := applicationTestCase{}
 		err := yaml.Unmarshal(input, &test)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = liberator_scheme.AddAll(foobar.Scheme)
 		if err != nil {
 			return nil, err
 		}
@@ -78,6 +84,11 @@ func TestNaisjobGoldenFile(t *testing.T) {
 	goldenfile.Run(t, naisjobTestDataDirectory, func(input []byte, options generators.Options, config config.Config) (resource.Operations, error) {
 		test := naisjobTestCase{}
 		err := yaml.Unmarshal(input, &test)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = liberator_scheme.AddAll(foobar.Scheme)
 		if err != nil {
 			return nil, err
 		}
