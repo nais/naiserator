@@ -2,17 +2,19 @@ package google_iam
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/mitchellh/hashstructure"
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
+
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 type Source interface {
@@ -65,10 +67,12 @@ func createName(appName string, policy nais_io_v1.CloudIAMPermission) (string, e
 }
 
 func formatExternalName(googleTeamProjectId, resourceName string) string {
+	projectPrefix := fmt.Sprintf("projects/%s", googleTeamProjectId)
 	if len(resourceName) == 0 {
-		return fmt.Sprintf("projects/%s", googleTeamProjectId)
+		return projectPrefix
 	}
-	return fmt.Sprintf("projects/%s/%s", googleTeamProjectId, resourceName)
+
+	return path.Join(projectPrefix, resourceName)
 }
 
 func CreatePolicyMember(source Source, ast *resource.Ast, cfg Config) error {
