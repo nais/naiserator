@@ -72,6 +72,10 @@ func formatExternalName(googleTeamProjectId, resourceName string) string {
 		return projectPrefix
 	}
 
+	if strings.HasPrefix(resourceName, projectPrefix) {
+		return resourceName
+	}
+
 	return path.Join(projectPrefix, resourceName)
 }
 

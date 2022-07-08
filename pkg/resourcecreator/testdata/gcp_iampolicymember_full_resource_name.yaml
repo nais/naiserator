@@ -1,0 +1,56 @@
+testconfig:
+  description: specifying custom port and protocol for mesh-external services in gcp
+
+config:
+  features:
+    cnrm: true
+  google-project-id: google-project-id
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    gcp:
+      permissions:
+        - role: roles/pubsub.subscriber
+          resource:
+            apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
+            kind: PubSubSubscription
+            name: projects/team-project-id/subscriptions/my-subscription
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
+
+tests:
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicyMember
+    operation: CreateIfNotExists
+    name: myapplication-pubsubsubscription-c35d6be4ceeadd3a-da27ca50
+    match:
+      - type: subset
+        name: "iam policy member created"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: myapplication
+            namespace: mynamespace
+          spec:
+            role: roles/pubsub.subscriber
+            resourceRef:
+              apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
+              kind: PubSubSubscription
+              external: projects/team-project-id/subscriptions/my-subscription
+            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
