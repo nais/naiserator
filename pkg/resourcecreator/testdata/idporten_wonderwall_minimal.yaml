@@ -122,7 +122,7 @@ tests:
                         cpu: 250m
                         memory: 256Mi
                       requests:
-                        cpu: 60m
+                        cpu: 20m
                         memory: 32Mi
                     securityContext:
                       allowPrivilegeEscalation: false
