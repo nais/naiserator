@@ -49,6 +49,13 @@ input:
     ingresses:
       - "https://my-client.nav.no/"
     port: 1234
+    prometheus:
+      enabled: true
+      path: /metrics
+    liveness:
+      path: internal/liveness
+    readiness:
+      path: internal/readiness
 
 tests:
   - operation: CreateOrUpdate
@@ -90,6 +97,8 @@ tests:
                         value: ^true$
                       - name: WONDERWALL_ERROR_PATH
                         value: ^/some/error$
+                      - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
+                        value: ^/metrics,/internal/liveness,/internal/readiness$
                     envFrom:
                       - secretRef:
                           name: ^azure-myapplication-4190a8ca-.{6,7}$
