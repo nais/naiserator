@@ -71,7 +71,9 @@ func reorderContainers(appName string, containers []corev1.Container) []corev1.C
 }
 
 func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
-	var err error
+	if len(ast.Containers) == 0 {
+		return &corev1.PodSpec{}, nil
+	}
 
 	containers := reorderContainers(appName, ast.Containers)
 
@@ -84,12 +86,10 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		},
 	})
 
-	if len(containers) > 0 {
-		containers[0].VolumeMounts = append(containers[0].VolumeMounts, corev1.VolumeMount{
-			Name:      "writable-tmp",
-			MountPath: "/tmp",
-		})
-	}
+	containers[0].VolumeMounts = append(containers[0].VolumeMounts, corev1.VolumeMount{
+		Name:      "writable-tmp",
+		MountPath: "/tmp",
+	})
 
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
@@ -131,7 +131,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		podSpec.HostAliases = hostAliases(cfg)
 	}
 
-	return podSpec, err
+	return podSpec, nil
 }
 
 func runAsUser(annotations map[string]string) int64 {
