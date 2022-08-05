@@ -53,7 +53,7 @@ type Config interface {
 	GetAllowedKernelCapabilities() []string
 	IsNativeSecretsEnabled() bool
 	IsLinkerdEnabled() bool
-	IsSecurePodSecurityContextEnabled() bool
+	IsSecurePodSecurityContextEnforced() bool
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -103,26 +103,28 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		},
 	}
 
-	if cfg.IsSecurePodSecurityContextEnabled() && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
-		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
-			RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
-			RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
-			RunAsNonRoot:             pointer.BoolPtr(true),
-			Privileged:               pointer.BoolPtr(false),
-			AllowPrivilegeEscalation: pointer.BoolPtr(false),
-			ReadOnlyRootFilesystem:   pointer.BoolPtr(readOnlyFileSystem(annotations)),
-		}
+	podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
+		RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
+		RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
+		RunAsNonRoot:             pointer.BoolPtr(true),
+		Privileged:               pointer.BoolPtr(false),
+		AllowPrivilegeEscalation: pointer.BoolPtr(false),
+		ReadOnlyRootFilesystem:   pointer.BoolPtr(readOnlyFileSystem(annotations)),
+	}
 
-		capabilities := &corev1.Capabilities{
-			Drop: []corev1.Capability{"all"},
-		}
+	capabilities := &corev1.Capabilities{
+		Drop: []corev1.Capability{"all"},
+	}
 
-		additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
-		if len(additionalCapabilities) > 0 {
-			capabilities.Add = additionalCapabilities
-		}
+	additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
+	if len(additionalCapabilities) > 0 {
+		capabilities.Add = additionalCapabilities
+	}
 
-		podSpec.Containers[0].SecurityContext.Capabilities = capabilities
+	podSpec.Containers[0].SecurityContext.Capabilities = capabilities
+
+	if exploitable(annotations) && !cfg.IsSecurePodSecurityContextEnforced() {
+		podSpec.Containers[0].SecurityContext = nil
 	}
 
 	if len(cfg.GetHostAliases()) > 0 {
