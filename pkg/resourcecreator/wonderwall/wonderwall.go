@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/imdario/mergo"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -48,6 +49,9 @@ type Configuration struct {
 type Source interface {
 	resource.Source
 	GetPort() int
+	GetPrometheus() *nais_io_v1.PrometheusConfig
+	GetLiveness() *nais_io_v1.Probe
+	GetReadiness() *nais_io_v1.Probe
 }
 
 type Config interface {
@@ -121,7 +125,6 @@ func ShouldEnable(app *nais_io_v1alpha1.Application, opts Config) (bool, error) 
 }
 
 func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.Container, error) {
-	targetPort := source.GetPort()
 	options := config.GetWonderwallOptions()
 	image := options.Image
 	resourceReqs, err := resourceRequirements(cfg)
@@ -133,7 +136,7 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 		Name:            "wonderwall",
 		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env:             envVars(cfg, targetPort, options),
+		Env:             envVars(source, cfg, options),
 		Ports: []corev1.ContainerPort{
 			{
 				ContainerPort: int32(Port),
@@ -186,7 +189,7 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 	return reqs, nil
 }
 
-func envVars(cfg Configuration, targetPort int, options config.Wonderwall) []corev1.EnvVar {
+func envVars(source Source, cfg Configuration, options config.Wonderwall) []corev1.EnvVar {
 	result := []corev1.EnvVar{
 		{
 			Name:  "WONDERWALL_OPENID_PROVIDER",
@@ -198,7 +201,7 @@ func envVars(cfg Configuration, targetPort int, options config.Wonderwall) []cor
 		},
 		{
 			Name:  "WONDERWALL_UPSTREAM_HOST",
-			Value: fmt.Sprintf("127.0.0.1:%d", targetPort),
+			Value: fmt.Sprintf("127.0.0.1:%d", source.GetPort()),
 		},
 		{
 			Name:  "WONDERWALL_BIND_ADDRESS",
@@ -215,6 +218,10 @@ func envVars(cfg Configuration, targetPort int, options config.Wonderwall) []cor
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_ACR_VALUES", cfg.ACRValues)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_UI_LOCALES", cfg.UILocales)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI", cfg.PostLogoutRedirectURI)
+
+	if cfg.AutoLogin {
+		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source))
+	}
 
 	if cfg.Loginstatus {
 		result = appendBoolEnvVar(result, "WONDERWALL_LOGINSTATUS_ENABLED", options.Loginstatus.Enabled)
@@ -269,4 +276,43 @@ func appendBoolEnvVar(envVars []corev1.EnvVar, key string, value bool) []corev1.
 	}
 
 	return envVars
+}
+
+func autoLoginIgnorePaths(source Source) string {
+	seen := make(map[string]bool)
+	paths := make([]string, 0)
+
+	addPath := func(p string) {
+		if len(p) == 0 {
+			return
+		}
+
+		p = leadingSlash(p)
+
+		if _, found := seen[p]; !found {
+			seen[p] = true
+			paths = append(paths, p)
+		}
+	}
+
+	if source.GetPrometheus() != nil && source.GetPrometheus().Enabled {
+		addPath(source.GetPrometheus().Path)
+	}
+
+	if source.GetLiveness() != nil {
+		addPath(source.GetLiveness().Path)
+	}
+
+	if source.GetReadiness() != nil {
+		addPath(source.GetReadiness().Path)
+	}
+
+	return strings.Join(paths, ",")
+}
+
+func leadingSlash(s string) string {
+	if strings.HasPrefix(s, "/") {
+		return s
+	}
+	return "/" + s
 }
