@@ -70,7 +70,7 @@ func reorderContainers(appName string, containers []corev1.Container) []corev1.C
 	return reordered
 }
 
-func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
+func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy, terminationGracePeriodSeconds *int64) (*corev1.PodSpec, error) {
 	var err error
 
 	containers := reorderContainers(appName, ast.Containers)
@@ -101,6 +101,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gh-docker-credentials"},
 		},
+		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 	}
 
 	if cfg.IsSecurePodSecurityContextEnabled() && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
