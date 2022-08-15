@@ -55,6 +55,7 @@ type Features struct {
 	NaisSystem                  bool     `json:"nais-system"`
 	NativeSecrets               bool     `json:"native-secrets"`
 	NetworkPolicy               bool     `json:"network-policy"`
+	PrometheusOperator          bool     `json:"prometheus-operator"`
 	SecurePodSecurityContext    bool     `json:"secure-pod-security-context"`
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`
@@ -149,6 +150,7 @@ const (
 	FeaturesNativeSecrets                  = "features.native-secrets"
 	FeaturesNetworkPolicy                  = "features.network-policy"
 	FeaturesSecurePodSecurityContext       = "features.secure-pod-security-context"
+	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
 	FeaturesWebhook                        = "features.webhook"
 	GoogleCloudSQLProxyContainerImage      = "google-cloud-sql-proxy-container-image"
@@ -234,6 +236,7 @@ func init() {
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesSecurePodSecurityContext, false, "enforce restrictive pod security context")
+	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),

@@ -25,6 +25,7 @@ func (o *Options) IsLinkerdEnabled() bool {
 func (o *Options) GetAPIServerIP() string {
 	return o.Config.ApiServerIp
 }
+
 func (o *Options) IsNaisSystemEnabled() bool {
 	return o.Config.Features.NaisSystem
 }
@@ -127,4 +128,8 @@ func (o *Options) GetNumReplicas() int32 {
 
 func (o *Options) GetLeaderElectionImage() string {
 	return o.Config.LeaderElection.Image
+}
+
+func (o *Options) IsPrometheusOperatorEnabled() bool {
+	return o.Config.Features.PrometheusOperator
 }

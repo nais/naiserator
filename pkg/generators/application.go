@@ -20,6 +20,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
+	"github.com/nais/naiserator/pkg/resourcecreator/podmonitor"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
@@ -178,6 +179,8 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	if err != nil {
 		return nil, err
 	}
+
+	podmonitor.Create(app, ast, cfg)
 
 	return ast.Operations, nil
 }
