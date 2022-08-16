@@ -2,7 +2,6 @@ package pod
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 
@@ -241,12 +240,12 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	if cfg.IsPrometheusOperatorEnabled() {
-		promPort, _ := strconv.Atoi(app.GetPrometheus().Port)
-		if promPort > math.MaxInt32 {
+		promPort, err := strconv.ParseInt(app.GetPrometheus().Port, 10, 32)
+		if err != nil {
 			return fmt.Errorf("invalid port provided, unable to convert to int32")
 		}
 
-		if promPort != 0 && promPort != app.GetPort() {
+		if promPort != 0 && int(promPort) != app.GetPort() {
 			containerPorts = append(containerPorts, corev1.ContainerPort{
 				ContainerPort: int32(promPort),
 				Protocol:      corev1.ProtocolTCP,
