@@ -59,6 +59,7 @@ tests:
         type: exact
         exclude:
           - .metadata
+          - .status
         resource:
           spec:
             ingress:
