@@ -17,8 +17,7 @@ type Config interface {
 
 func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) (batchv1.JobSpec, error) {
 
-	podSpec, err := pod.CreateSpec(ast, cfg, naisjob.GetName(), naisjob.Annotations,
-		RestartPolicy(naisjob.Spec.RestartPolicy))
+	podSpec, err := pod.CreateSpec(ast, cfg, naisjob.GetName(), naisjob.Annotations, RestartPolicy(naisjob.Spec.RestartPolicy), naisjob.Spec.TerminationGracePeriodSeconds)
 	if err != nil {
 		return batchv1.JobSpec{}, err
 	}

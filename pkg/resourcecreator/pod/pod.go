@@ -54,6 +54,7 @@ type Config interface {
 	IsNativeSecretsEnabled() bool
 	IsLinkerdEnabled() bool
 	IsSecurePodSecurityContextEnforced() bool
+	IsPrometheusOperatorEnabled() bool
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -70,11 +71,11 @@ func reorderContainers(appName string, containers []corev1.Container) []corev1.C
 	return reordered
 }
 
-func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy) (*corev1.PodSpec, error) {
+func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy, terminationGracePeriodSeconds *int64) (*corev1.PodSpec, error) {
 	if len(ast.Containers) == 0 {
 		return &corev1.PodSpec{}, nil
 	}
-
+  
 	containers := reorderContainers(appName, ast.Containers)
 
 	// Pod security context will by default make the filesystem read-only. Mount an emptyDir on /tmp
@@ -101,6 +102,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gh-docker-credentials"},
 		},
+		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 	}
 
 	podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
@@ -235,12 +237,31 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
+	containerPorts := []corev1.ContainerPort{
+		{ContainerPort: int32(app.GetPort()), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
+	}
+
+	if cfg.IsPrometheusOperatorEnabled() {
+		if app.GetPrometheus().Port != "" {
+			promPort, err := strconv.ParseInt(app.GetPrometheus().Port, 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid port provided, unable to convert to int32")
+			}
+
+			if promPort != 0 && int(promPort) != app.GetPort() {
+				containerPorts = append(containerPorts, corev1.ContainerPort{
+					ContainerPort: int32(promPort),
+					Protocol:      corev1.ProtocolTCP,
+					Name:          "metrics",
+				})
+			}
+		}
+	}
+
 	container := corev1.Container{
-		Name:  app.GetName(),
-		Image: app.GetImage(),
-		Ports: []corev1.ContainerPort{
-			{ContainerPort: int32(app.GetPort()), Protocol: corev1.ProtocolTCP, Name: nais_io_v1alpha1.DefaultPortName},
-		},
+		Name:            app.GetName(),
+		Image:           app.GetImage(),
+		Ports:           containerPorts,
 		Command:         app.GetCommand(),
 		Resources:       ResourceLimits(*app.GetResources()),
 		ImagePullPolicy: corev1.PullIfNotPresent,
@@ -329,7 +350,7 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
 	}
 
-	if app.GetPrometheus().Enabled {
+	if !cfg.IsPrometheusOperatorEnabled() && app.GetPrometheus().Enabled {
 		objectMeta.Annotations["prometheus.io/scrape"] = "true"
 		objectMeta.Annotations["prometheus.io/port"] = port
 		objectMeta.Annotations["prometheus.io/path"] = app.GetPrometheus().Path
@@ -397,7 +418,7 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 	// Legacy behavior.
 	if len(preStopHookPath) > 0 {
 		return &corev1.Lifecycle{
-			PreStop: &corev1.Handler{
+			PreStop: &corev1.LifecycleHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: strings.TrimLeft(preStopHookPath, "/"),
 					Port: intstr.FromString(nais_io_v1alpha1.DefaultPortName),
@@ -408,7 +429,7 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 
 	if preStopHook == nil {
 		return &corev1.Lifecycle{
-			PreStop: &corev1.Handler{
+			PreStop: &corev1.LifecycleHandler{
 				Exec: &corev1.ExecAction{
 					Command: []string{"sleep", "5"},
 				},
@@ -422,7 +443,7 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 
 	if preStopHook.Exec != nil {
 		return &corev1.Lifecycle{
-			PreStop: &corev1.Handler{
+			PreStop: &corev1.LifecycleHandler{
 				Exec: &corev1.ExecAction{
 					Command: preStopHook.Exec.Command,
 				},
@@ -438,7 +459,7 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 	}
 
 	return &corev1.Lifecycle{
-		PreStop: &corev1.Handler{
+		PreStop: &corev1.LifecycleHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: preStopHook.Http.Path,
 				Port: port,
@@ -454,7 +475,7 @@ func probe(appPort int, probe nais_io_v1.Probe) *corev1.Probe {
 	}
 
 	k8sprobe := &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: leadingSlash(probe.Path),
 				Port: intstr.FromInt(port),
@@ -467,7 +488,7 @@ func probe(appPort int, probe nais_io_v1.Probe) *corev1.Probe {
 	}
 
 	if probe.Port != 0 {
-		k8sprobe.Handler.HTTPGet.Port = intstr.FromInt(probe.Port)
+		k8sprobe.ProbeHandler.HTTPGet.Port = intstr.FromInt(probe.Port)
 	}
 
 	return k8sprobe

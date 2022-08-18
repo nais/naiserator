@@ -33,6 +33,7 @@ type Source interface {
 	GetResources() *nais_io_v1.ResourceRequirements
 	GetStartup() *nais_io_v1.Probe
 	GetStrategy() *nais_io_v1.Strategy
+	GetTerminationGracePeriodSeconds() *int64
 }
 
 type Config interface {
@@ -68,7 +69,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 }
 
 func deploymentSpec(app Source, ast *resource.Ast, cfg Config) (*appsv1.DeploymentSpec, error) {
-	podSpec, err := pod.CreateSpec(ast, cfg, app.GetName(), app.GetAnnotations(), corev1.RestartPolicyAlways)
+	podSpec, err := pod.CreateSpec(ast, cfg, app.GetName(), app.GetAnnotations(), corev1.RestartPolicyAlways, app.GetTerminationGracePeriodSeconds())
 	if err != nil {
 		return nil, err
 	}

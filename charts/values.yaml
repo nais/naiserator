@@ -7,7 +7,7 @@ annotations:
 
 imagePullPolicy: "IfNotPresent"
 imagePullSecret: "gpr-credentials"
-imageTag: "2022-03-02-09a2c1f"
+imageTag: "2022-08-16-844bbe1"
 
 labels:
   kafka: enabled
@@ -36,10 +36,10 @@ naiserator:
     azurerator: false
     kafkarator: false
     digdirator: false
+    prometheus-operator: true
     gcp: true
     webhook: true
     secure-pod-security-context: true
-    cilium: true
   informer:
     full-sync-interval: 4h
   synchronizer:

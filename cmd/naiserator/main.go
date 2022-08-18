@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/nais/liberator/pkg/tlsutil"
+	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/generators"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
+	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
-
-	"github.com/nais/naiserator/pkg/controllers"
 
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 
@@ -93,6 +93,13 @@ func run() error {
 	kscheme, err := liberator_scheme.All()
 	if err != nil {
 		return err
+	}
+
+	if cfg.Features.PrometheusOperator {
+		err = pov1.AddToScheme(kscheme)
+		if err != nil {
+			return err
+		}
 	}
 
 	kconfig, err := ctrl.GetConfig()

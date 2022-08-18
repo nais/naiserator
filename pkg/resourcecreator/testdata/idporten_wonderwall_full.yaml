@@ -51,6 +51,13 @@ input:
     ingresses:
       - "https://my-client.nav.no/"
     port: 1234
+    prometheus:
+      enabled: true
+      path: /metrics
+    liveness:
+      path: internal/liveness
+    readiness:
+      path: internal/readiness
 
 tests:
   - operation: CreateOrUpdate
@@ -96,6 +103,8 @@ tests:
                         value: ^Level3$
                       - name: WONDERWALL_OPENID_UI_LOCALES
                         value: ^se$
+                      - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
+                        value: ^/metrics,/internal/liveness,/internal/readiness$
                       - name: WONDERWALL_LOGINSTATUS_ENABLED
                         value: "true"
                       - name: WONDERWALL_LOGINSTATUS_COOKIE_DOMAIN

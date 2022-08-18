@@ -1,0 +1,66 @@
+testconfig:
+  description: prometheus is enabled with unique scrape port and custom scrape path
+
+config:
+  features:
+    prometheus-operator: true
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    port: 11335
+    prometheus:
+      enabled: true
+      path: "/scrape/path"
+      port: "22222"
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created with no additional annotations"
+        exclude:
+          - .spec.env
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - ports:
+                      - containerPort: 11335
+                        name: http
+                        protocol: TCP
+                      - containerPort: 22222
+                        name: metrics
+                        protocol: TCP
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PodMonitor
+    operation: CreateOrUpdate
+    name: myapplication
+    match:
+      - type: subset
+        name: "podmonitor created with promethues enabled with unique port and custom path"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            podMetricsEndpoints:
+              - bearerTokenSecret:
+                  key: ""
+                port: metrics
+                path: /scrape/path
+            jobLabel: app.kubernetes.io/name
+            selector:
+              matchLabels:
+                app: myapplication

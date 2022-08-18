@@ -28,7 +28,6 @@ type Source interface {
 	wonderwall.Source
 	GetAccessPolicy() *nais_io_v1.AccessPolicy
 	GetAzure() nais_io_v1.AzureInterface
-	GetPort() int
 	GetIngress() []nais_io_v1.Ingress
 }
 
@@ -39,14 +38,69 @@ type Config interface {
 	IsWonderwallEnabled() bool
 }
 
-func adApplication(source Source, config Config) (*nais_io_v1.AzureAdApplication, error) {
+func Create(source Source, ast *resource.Ast, config Config) error {
+	if shouldNotCreate(source, config) {
+		return nil
+	}
+
+	azureAdApplication, err := application(source, config)
+	if err != nil {
+		return err
+	}
+
+	ast.AppendOperation(resource.OperationCreateOrUpdate, azureAdApplication)
+	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
+	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
+
+	if shouldNotCreateWonderwall(source, config) {
+		return nil
+	}
+
+	// configure sidecar
+	ingresses := source.GetIngress()
+	if len(ingresses) == 0 {
+		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
+	}
+
+	// wonderwall only supports a single ingress, so we use the first
+	ingress := ingresses[0]
+
+	wonder := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingress)
+	err = wonderwall.Create(source, ast, config, wonder)
+	if err != nil {
+		return err
+	}
+
+	// ensure that the ingress is added to the configured Azure AD reply URLs
+	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, nais_io_v1.AzureAdReplyUrl{
+		Url: appendPathToIngress(ingress, applicationDefaultCallbackPath),
+	})
+	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingress, wonderwall.FrontChannelLogoutPath)
+
+	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
+	azureAdApplication.Spec.SinglePageApplication = pointer.Bool(false)
+
+	return nil
+}
+
+func shouldNotCreate(source Source, config Config) bool {
+	az := source.GetAzure()
+	return !config.IsAzureratorEnabled() || az.GetApplication() == nil || !az.GetApplication().Enabled
+}
+
+func shouldNotCreateWonderwall(source Source, config Config) bool {
+	az := source.GetAzure()
+	return !config.IsWonderwallEnabled() || az.GetSidecar() == nil || !az.GetSidecar().Enabled
+}
+
+func application(source Source, config Config) (*nais_io_v1.AzureAdApplication, error) {
 	replyURLs := source.GetAzure().GetApplication().ReplyURLs
 
 	if len(replyURLs) == 0 {
-		replyURLs = oauthCallbackURLs(source.GetIngress())
+		replyURLs = callbackURLs(source.GetIngress())
 	}
 
-	secretName, err := azureSecretName(source.GetName())
+	secretName, err := secretName(source.GetName())
 	if err != nil {
 		return &nais_io_v1.AzureAdApplication{}, err
 	}
@@ -92,7 +146,7 @@ func mapReplyURLs(urls []nais_io_v1.AzureAdReplyUrlString) []nais_io_v1.AzureAdR
 	return maps
 }
 
-func oauthCallbackURLs(ingresses []nais_io_v1.Ingress) []nais_io_v1.AzureAdReplyUrlString {
+func callbackURLs(ingresses []nais_io_v1.Ingress) []nais_io_v1.AzureAdReplyUrlString {
 	urls := make([]nais_io_v1.AzureAdReplyUrlString, len(ingresses))
 	for i := range ingresses {
 		urls[i] = appendPathToIngress(ingresses[i], applicationDefaultCallbackPath)
@@ -100,61 +154,13 @@ func oauthCallbackURLs(ingresses []nais_io_v1.Ingress) []nais_io_v1.AzureAdReply
 	return urls
 }
 
-func azureSecretName(name string) (string, error) {
+func secretName(name string) (string, error) {
 	prefixedName := fmt.Sprintf("%s-%s", "azure", name)
 	year, week := time.Now().ISOWeek()
 	suffix := fmt.Sprintf("%d-%d", year, week)
 	maxLen := validation.DNS1035LabelMaxLength
 
 	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
-}
-
-func Create(source Source, ast *resource.Ast, config Config) error {
-	az := source.GetAzure()
-
-	if !config.IsAzureratorEnabled() || az.GetApplication() == nil || !az.GetApplication().Enabled {
-		return nil
-	}
-
-	azureAdApplication, err := adApplication(source, config)
-	if err != nil {
-		return err
-	}
-
-	ast.AppendOperation(resource.OperationCreateOrUpdate, azureAdApplication)
-
-	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
-	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
-
-	if !config.IsWonderwallEnabled() || az.GetSidecar() == nil || !az.GetSidecar().Enabled {
-		return nil
-	}
-
-	// configure sidecar
-	ingresses := source.GetIngress()
-	if len(ingresses) == 0 {
-		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
-	}
-
-	// wonderwall only supports a single ingress, so we use the first
-	ingress := ingresses[0]
-
-	wonder := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingress)
-	err = wonderwall.Create(source, ast, config, wonder)
-	if err != nil {
-		return err
-	}
-
-	// ensure that the ingress is added to the configured Azure AD reply URLs
-	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, nais_io_v1.AzureAdReplyUrl{
-		Url: appendPathToIngress(ingress, applicationDefaultCallbackPath),
-	})
-	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingress, wonderwall.FrontChannelLogoutPath)
-
-	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
-	azureAdApplication.Spec.SinglePageApplication = pointer.Bool(false)
-
-	return nil
 }
 
 func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAdReplyUrlString {
