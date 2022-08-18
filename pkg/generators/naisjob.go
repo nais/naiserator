@@ -114,7 +114,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	if err != nil {
 		return nil, err
 	}
-	certificateauthority.Create(naisjob, ast)
+	certificateauthority.Create(naisjob, ast, cfg)
 	securelogs.Create(naisjob, ast, cfg)
 	err = maskinporten.Create(naisjob, ast, cfg)
 	if err != nil {
