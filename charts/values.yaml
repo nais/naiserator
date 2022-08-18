@@ -36,6 +36,7 @@ naiserator:
     azurerator: false
     kafkarator: false
     digdirator: false
+    prometheus-operator: true
     gcp: true
     webhook: true
     secure-pod-security-context: true
