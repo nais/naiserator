@@ -75,7 +75,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	if len(ast.Containers) == 0 {
 		return &corev1.PodSpec{}, nil
 	}
-  
+
 	containers := reorderContainers(appName, ast.Containers)
 
 	// Pod security context will by default make the filesystem read-only. Mount an emptyDir on /tmp
@@ -105,13 +105,27 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 	}
 
-	podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
-		RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
-		RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
-		RunAsNonRoot:             pointer.BoolPtr(true),
-		Privileged:               pointer.BoolPtr(false),
-		AllowPrivilegeEscalation: pointer.BoolPtr(false),
-		ReadOnlyRootFilesystem:   pointer.BoolPtr(readOnlyFileSystem(annotations)),
+	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
+
+	if len(cfg.GetHostAliases()) > 0 {
+		podSpec.HostAliases = hostAliases(cfg)
+	}
+
+	return podSpec, nil
+}
+
+func configureSecurityContext(annotations map[string]string, cfg Config) *corev1.SecurityContext {
+	if exploitable(annotations) && !cfg.IsSecurePodSecurityContextEnforced() {
+		return nil
+	}
+
+	ctx := &corev1.SecurityContext{
+		RunAsUser:                pointer.Int64(runAsUser(annotations)),
+		RunAsGroup:               pointer.Int64(runAsGroup(annotations)),
+		RunAsNonRoot:             pointer.Bool(true),
+		Privileged:               pointer.Bool(false),
+		AllowPrivilegeEscalation: pointer.Bool(false),
+		ReadOnlyRootFilesystem:   pointer.Bool(readOnlyFileSystem(annotations)),
 	}
 
 	capabilities := &corev1.Capabilities{
@@ -123,17 +137,8 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		capabilities.Add = additionalCapabilities
 	}
 
-	podSpec.Containers[0].SecurityContext.Capabilities = capabilities
-
-	if exploitable(annotations) && !cfg.IsSecurePodSecurityContextEnforced() {
-		podSpec.Containers[0].SecurityContext = nil
-	}
-
-	if len(cfg.GetHostAliases()) > 0 {
-		podSpec.HostAliases = hostAliases(cfg)
-	}
-
-	return podSpec, nil
+	ctx.Capabilities = capabilities
+	return ctx
 }
 
 func runAsUser(annotations map[string]string) int64 {
