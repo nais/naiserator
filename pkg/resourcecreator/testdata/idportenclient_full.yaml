@@ -30,6 +30,7 @@ input:
         - https://my-client.adeo.no/something
       sessionLifetime: 7200
       accessTokenLifetime: 3600
+      integrationType: krr
     ingresses:
       - https://my-client.adeo.no/some-path
 
@@ -54,3 +55,4 @@ tests:
               - https://my-client.adeo.no/something
             sessionLifetime: 7200
             accessTokenLifetime: 3600
+            integrationType: krr
