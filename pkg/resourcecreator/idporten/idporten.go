@@ -46,6 +46,7 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		ObjectMeta: objectMeta,
 		Spec: nais_io_v1.IDPortenClientSpec{
 			ClientURI:              naisIdPorten.ClientURI,
+			IntegrationType:        naisIdPorten.IntegrationType,
 			RedirectURI:            redirectURI(naisIdPorten, naisIngresses),
 			SecretName:             secretName(objectMeta.Name),
 			FrontchannelLogoutURI:  frontchannelLogoutURI(naisIdPorten, naisIngresses),
