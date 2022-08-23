@@ -53,6 +53,7 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 			PostLogoutRedirectURIs: postLogoutRedirectURIs(naisIdPorten),
 			SessionLifetime:        naisIdPorten.SessionLifetime,
 			AccessTokenLifetime:    naisIdPorten.AccessTokenLifetime,
+			Scopes:                 naisIdPorten.Scopes,
 		},
 	}, nil
 }

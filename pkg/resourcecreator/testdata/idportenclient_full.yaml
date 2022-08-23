@@ -31,6 +31,10 @@ input:
       sessionLifetime: 7200
       accessTokenLifetime: 3600
       integrationType: krr
+      scopes:
+        - "openid"
+        - "profile"
+        - "ks:fiks"
     ingresses:
       - https://my-client.adeo.no/some-path
 
@@ -56,3 +60,7 @@ tests:
             sessionLifetime: 7200
             accessTokenLifetime: 3600
             integrationType: krr
+            scopes:
+              - "openid"
+              - "profile"
+              - "ks:fiks"
