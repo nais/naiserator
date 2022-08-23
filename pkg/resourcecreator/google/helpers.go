@@ -6,6 +6,7 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/pointer"
 )
 
 func GcpServiceAccountName(appNamespaceHash, projectId string) string {
@@ -14,8 +15,6 @@ func GcpServiceAccountName(appNamespaceHash, projectId string) string {
 
 func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, projectId, instanceName string) corev1.Container {
 	connectionName := fmt.Sprintf("%s:%s:%s", projectId, Region, instanceName)
-	var runAsUser int64 = 2
-	allowPrivilegeEscalation := false
 	cloudSqlProxyContainerResourceSpec := nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
 			Cpu:    "250m",
@@ -41,8 +40,18 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 		},
 		Resources: pod.ResourceLimits(cloudSqlProxyContainerResourceSpec),
 		SecurityContext: &corev1.SecurityContext{
-			RunAsUser:                &runAsUser,
-			AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+			RunAsUser:                pointer.Int64(2),
+			RunAsGroup:               pointer.Int64(2),
+			RunAsNonRoot:             pointer.Bool(true),
+			Privileged:               pointer.Bool(false),
+			AllowPrivilegeEscalation: pointer.Bool(false),
+			ReadOnlyRootFilesystem:   pointer.Bool(true),
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
+			},
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
 		},
 	}
 }

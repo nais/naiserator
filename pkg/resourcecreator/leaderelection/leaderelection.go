@@ -10,6 +10,7 @@ import (
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/utils/pointer"
 )
 
 type ElectionMode int
@@ -168,6 +169,20 @@ func container(name, namespace, image string) corev1.Container {
 			{
 				Name:  "ELECTOR_LOG_FORMAT",
 				Value: "json",
+			},
+		},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser:                pointer.Int64(1069),
+			RunAsGroup:               pointer.Int64(1069),
+			RunAsNonRoot:             pointer.Bool(true),
+			Privileged:               pointer.Bool(false),
+			AllowPrivilegeEscalation: pointer.Bool(false),
+			ReadOnlyRootFilesystem:   pointer.Bool(true),
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
+			},
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
 			},
 		},
 	}

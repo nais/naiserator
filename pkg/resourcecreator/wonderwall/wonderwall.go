@@ -153,13 +153,16 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 		SecurityContext: &corev1.SecurityContext{
 			AllowPrivilegeEscalation: pointer.Bool(false),
 			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"all"},
+				Drop: []corev1.Capability{"ALL"},
 			},
 			Privileged:             pointer.Bool(false),
 			ReadOnlyRootFilesystem: pointer.Bool(true),
 			RunAsGroup:             pointer.Int64(1069),
 			RunAsNonRoot:           pointer.Bool(true),
 			RunAsUser:              pointer.Int64(1069),
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
 		},
 	}, nil
 }
