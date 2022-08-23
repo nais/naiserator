@@ -113,10 +113,19 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 			Privileged:               pointer.BoolPtr(false),
 			AllowPrivilegeEscalation: pointer.BoolPtr(false),
 			ReadOnlyRootFilesystem:   pointer.BoolPtr(readOnlyFileSystem(annotations)),
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
+		}
+
+		podSpec.SecurityContext = &corev1.PodSecurityContext{
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
 		}
 
 		capabilities := &corev1.Capabilities{
-			Drop: []corev1.Capability{"all"},
+			Drop: []corev1.Capability{"ALL"},
 		}
 
 		additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
