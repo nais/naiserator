@@ -20,6 +20,8 @@ spec:
         prometheus.io/path: /metrics
         prometheus.io/port: "8080"
         prometheus.io/scrape: "true"
+        kubectl.kubernetes.io/default-container: naiserator
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
       labels:
         app: {{ .Release.Name }}
         {{- toYaml .Values.labels | nindent 8 }}
