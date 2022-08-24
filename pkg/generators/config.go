@@ -133,3 +133,7 @@ func (o *Options) GetLeaderElectionImage() string {
 func (o *Options) IsPrometheusOperatorEnabled() bool {
 	return o.Config.Features.PrometheusOperator
 }
+
+func (o *Options) IsNAVCABundleEnabled() bool {
+	return o.Config.Features.NAVCABundle
+}

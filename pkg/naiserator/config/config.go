@@ -59,6 +59,7 @@ type Features struct {
 	SecurePodSecurityContext    bool     `json:"secure-pod-security-context"`
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`
+	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 }
 
 type Securelogs struct {
