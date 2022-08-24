@@ -114,7 +114,7 @@ func (o *Options) GetHostAliases() []config.HostAlias {
 	return o.Config.HostAliases
 }
 
-func (o *Options) IsSecurePodSecurityContextEnabled() bool {
+func (o *Options) IsSecurePodSecurityContextEnforced() bool {
 	return o.Config.Features.SecurePodSecurityContext
 }
 

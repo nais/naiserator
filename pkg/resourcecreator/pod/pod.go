@@ -53,7 +53,7 @@ type Config interface {
 	GetAllowedKernelCapabilities() []string
 	IsNativeSecretsEnabled() bool
 	IsLinkerdEnabled() bool
-	IsSecurePodSecurityContextEnabled() bool
+	IsSecurePodSecurityContextEnforced() bool
 	IsPrometheusOperatorEnabled() bool
 }
 
@@ -72,7 +72,9 @@ func reorderContainers(appName string, containers []corev1.Container) []corev1.C
 }
 
 func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[string]string, restartPolicy corev1.RestartPolicy, terminationGracePeriodSeconds *int64) (*corev1.PodSpec, error) {
-	var err error
+	if len(ast.Containers) == 0 {
+		return &corev1.PodSpec{}, nil
+	}
 
 	containers := reorderContainers(appName, ast.Containers)
 
@@ -85,12 +87,10 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		},
 	})
 
-	if len(containers) > 0 {
-		containers[0].VolumeMounts = append(containers[0].VolumeMounts, corev1.VolumeMount{
-			Name:      "writable-tmp",
-			MountPath: "/tmp",
-		})
-	}
+	containers[0].VolumeMounts = append(containers[0].VolumeMounts, corev1.VolumeMount{
+		Name:      "writable-tmp",
+		MountPath: "/tmp",
+	})
 
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
@@ -105,33 +105,40 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 	}
 
-	if cfg.IsSecurePodSecurityContextEnabled() && !exploitable(annotations) { // TODO(jhrv): remove SecurePodSecurityContext option all together when this is rolled out in all clusters
-		podSpec.Containers[0].SecurityContext = &corev1.SecurityContext{
-			RunAsUser:                pointer.Int64Ptr(runAsUser(annotations)),
-			RunAsGroup:               pointer.Int64Ptr(runAsGroup(annotations)),
-			RunAsNonRoot:             pointer.BoolPtr(true),
-			Privileged:               pointer.BoolPtr(false),
-			AllowPrivilegeEscalation: pointer.BoolPtr(false),
-			ReadOnlyRootFilesystem:   pointer.BoolPtr(readOnlyFileSystem(annotations)),
-		}
-
-		capabilities := &corev1.Capabilities{
-			Drop: []corev1.Capability{"all"},
-		}
-
-		additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
-		if len(additionalCapabilities) > 0 {
-			capabilities.Add = additionalCapabilities
-		}
-
-		podSpec.Containers[0].SecurityContext.Capabilities = capabilities
-	}
+	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
 
 	if len(cfg.GetHostAliases()) > 0 {
 		podSpec.HostAliases = hostAliases(cfg)
 	}
 
-	return podSpec, err
+	return podSpec, nil
+}
+
+func configureSecurityContext(annotations map[string]string, cfg Config) *corev1.SecurityContext {
+	if exploitable(annotations) && !cfg.IsSecurePodSecurityContextEnforced() {
+		return nil
+	}
+
+	ctx := &corev1.SecurityContext{
+		RunAsUser:                pointer.Int64(runAsUser(annotations)),
+		RunAsGroup:               pointer.Int64(runAsGroup(annotations)),
+		RunAsNonRoot:             pointer.Bool(true),
+		Privileged:               pointer.Bool(false),
+		AllowPrivilegeEscalation: pointer.Bool(false),
+		ReadOnlyRootFilesystem:   pointer.Bool(readOnlyFileSystem(annotations)),
+	}
+
+	capabilities := &corev1.Capabilities{
+		Drop: []corev1.Capability{"all"},
+	}
+
+	additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
+	if len(additionalCapabilities) > 0 {
+		capabilities.Add = additionalCapabilities
+	}
+
+	ctx.Capabilities = capabilities
+	return ctx
 }
 
 func runAsUser(annotations map[string]string) int64 {
