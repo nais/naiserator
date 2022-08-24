@@ -69,6 +69,13 @@ tests:
                   podSelector:
                     matchLabels:
                       component: prometheus
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+                    namespaceSelector:
+                      matchLabels:
+                        name: nais-system
             egress:
               - to:
                 - namespaceSelector:

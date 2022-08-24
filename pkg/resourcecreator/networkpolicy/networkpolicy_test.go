@@ -101,6 +101,23 @@ func TestNetworkPolicy(t *testing.T) {
 			},
 		})
 
+		testPolicy = append(testPolicy, networking.NetworkPolicyIngressRule{
+			From: []networking.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app.kubernetes.io/name": "prometheus",
+						},
+					},
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"name": "nais-system",
+						},
+					},
+				},
+			},
+		})
+
 		assert.Equal(t, testPolicy, networkPolicy.Spec.Ingress)
 	})
 
