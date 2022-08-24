@@ -56,20 +56,6 @@ tests:
                     matchLabels:
                       linkerd.io/is-control-plane: "true"
               - from:
-                - namespaceSelector:
-                    matchLabels:
-                      linkerd.io/extension: viz
-                  podSelector:
-                    matchLabels:
-                      component: tap
-              - from:
-                - namespaceSelector:
-                    matchLabels:
-                      linkerd.io/extension: viz
-                  podSelector:
-                    matchLabels:
-                      component: prometheus
-              - from:
                   - podSelector:
                       matchLabels:
                         app.kubernetes.io/name: prometheus

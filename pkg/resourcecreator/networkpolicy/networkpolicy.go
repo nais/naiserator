@@ -130,14 +130,6 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
 		NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
 	}))
-	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
-		PodSelector:       labelSelector("component", "tap"),
-	}))
-	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
-		PodSelector:       labelSelector("component", "prometheus"),
-	}))
 	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app.kubernetes.io/name", prometheusPodSelectorLabelValue, prometheusNaasNamespace)))
 
 	appRules := networkPolicyApplicationRules(naisAccessPolicyInbound.Rules, options)
