@@ -119,20 +119,6 @@ tests:
                         value: ^https://domain.test$
                       - name: WONDERWALL_LOGINSTATUS_TOKEN_URL
                         value: ^https://domain.test/loginstatus/token$
-                    envFrom:
-                      - secretRef:
-                          name: ^idporten-myapplication-.{8}$
-                      - secretRef:
-                          name: ^idporten-wonderwall-myapplication-.{8}$
-                      - secretRef:
-                          name: ^wonderwall-secret$
-                    ports:
-                      - containerPort: 7564
-                        name: wonderwall
-                        protocol: TCP
-                      - containerPort: 7565
-                        name: ww-metrics
-                        protocol: TCP
                     resources:
                       limits:
                         cpu: 100m

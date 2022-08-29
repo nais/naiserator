@@ -39,7 +39,7 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: "deployment contains sidecar with idporten secrets and desired configuration"
+      - name: "deployment contains sidecar with azure secrets and desired configuration"
         type: regex
         resource:
           spec:
@@ -63,6 +63,8 @@ tests:
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
                     envFrom:
+                      - secretRef:
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
                       - secretRef:
                           name: ^azure-wonderwall-myapplication-.{8}$
                       - secretRef:
@@ -125,3 +127,26 @@ tests:
         resource:
           spec:
             secretName: ^azure-myapplication-4190a8ca-.{6,7}$
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    match:
+      - type: regex
+        name: "secret for wonderwall created"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: ^azure-wonderwall-myapplication-.{8}$
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                apiVersion: nais.io/v1alpha1
+          stringData:
+            WONDERWALL_ENCRYPTION_KEY: ".{44}"
+          type: Opaque

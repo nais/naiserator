@@ -44,30 +44,6 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: "deployment contains idporten secrets"
-        type: regex
-        resource:
-          spec:
-            template:
-              spec:
-                volumes:
-                  - name: ^idporten-myapplication-.{8}$
-                    secret:
-                      secretName: ^idporten-myapplication-.{8}$
-                containers:
-                  - envFrom:
-                      - secretRef:
-                          name: ^idporten-myapplication-.{8}$
-                    volumeMounts:
-                      - name: ^idporten-myapplication-.{8}$
-                        readOnly: true
-                        mountPath: /var/run/secrets/nais.io/idporten
-
-  - operation: CreateOrUpdate
-    apiVersion: apps/v1
-    kind: Deployment
-    name: myapplication
-    match:
       - name: "deployment contains sidecar with idporten secrets and desired configuration"
         type: regex
         resource:
@@ -171,3 +147,26 @@ tests:
           spec:
             frontchannelLogoutURI: https://my-client.nav.no/oauth2/logout/frontchannel
             redirectURI: https://my-client.nav.no/oauth2/callback
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    match:
+      - type: regex
+        name: "secret for wonderwall created"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: ^idporten-wonderwall-myapplication-.{8}$
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                apiVersion: nais.io/v1alpha1
+          stringData:
+            WONDERWALL_ENCRYPTION_KEY: ".{44}"
+          type: Opaque

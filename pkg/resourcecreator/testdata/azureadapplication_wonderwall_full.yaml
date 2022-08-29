@@ -103,20 +103,6 @@ tests:
                         value: ^/some/error$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
                         value: ^/metrics,/internal/liveness,/internal/readiness$
-                    envFrom:
-                      - secretRef:
-                          name: ^azure-myapplication-4190a8ca-.{6,7}$
-                      - secretRef:
-                          name: ^azure-wonderwall-myapplication-.{8}$
-                      - secretRef:
-                          name: ^wonderwall-secret$
-                    ports:
-                      - containerPort: 7564
-                        name: wonderwall
-                        protocol: TCP
-                      - containerPort: 7565
-                        name: ww-metrics
-                        protocol: TCP
                     resources:
                       limits:
                         cpu: 100m
