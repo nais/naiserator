@@ -175,17 +175,24 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	ingresses := make(map[string]*networkingv1.Ingress)
 
 	for _, rule := range rules {
-		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-		if ingressClass == nil {
-			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
+		var ingressClass string
+
+		if len(cfg.GetGatewayMappings()) > 0 {
+			ingressClass = *util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+			if ingressClass == "" {
+				return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
+			}
+		} else {
+			ingressClass = "nginx"
 		}
-		ingress := ingresses[*ingressClass]
+
+		ingress := ingresses[ingressClass]
 		if ingress == nil {
-			ingress, err = createIngressBaseNginx(source, *ingressClass)
+			ingress, err = createIngressBaseNginx(source, ingressClass)
 			if err != nil {
 				return nil, err
 			}
-			ingresses[*ingressClass] = ingress
+			ingresses[ingressClass] = ingress
 		}
 		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 	}
@@ -197,8 +204,10 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func linkerdIngresses(source Source, ast *resource.Ast, cfg Config) error {
+func Create(source Source, ast *resource.Ast, cfg Config) error {
+	fmt.Printf("Creating %v\n", source)
 	ingresses, err := nginxIngresses(source, cfg)
+	fmt.Printf("%+v\n", ingresses)
 	if err != nil {
 		return err
 	}
@@ -206,37 +215,5 @@ func linkerdIngresses(source Source, ast *resource.Ast, cfg Config) error {
 	for _, ing := range ingresses {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, ing)
 	}
-	return nil
-}
-
-func onPremIngresses(source Source, ast *resource.Ast) error {
-	rules, err := ingressRules(source)
-	if err != nil {
-		return err
-	}
-
-	// Ingress objects must have at least one path rule to be valid.
-	if len(rules) == 0 {
-		return nil
-	}
-
-	ingress := createIngressBase(source, rules)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, ingress)
-	return nil
-}
-
-func Create(source Source, ast *resource.Ast, cfg Config) error {
-	if cfg.IsLinkerdEnabled() {
-		err := linkerdIngresses(source, ast, cfg)
-		if err != nil {
-			return fmt.Errorf("create ingresses: %s", err)
-		}
-	} else {
-		err := onPremIngresses(source, ast)
-		if err != nil {
-			return fmt.Errorf("create ingresses: %s", err)
-		}
-	}
-
 	return nil
 }
