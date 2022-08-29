@@ -1,5 +1,9 @@
 testconfig:
   description: ingress resource is created on-premises
+config:
+  gateway-mappings:
+    - domainSuffix: .bar
+      ingressClass: very-nginx
 
 input:
   kind: Application
@@ -17,7 +21,7 @@ input:
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: myapplication
+    name: myapplication-very-nginx-e55d5da0
     operation: CreateOrUpdate
     match:
       - type: exact
@@ -33,9 +37,12 @@ tests:
           metadata:
             annotations:
               nais.io/deploymentCorrelationID: ""
+              nginx.ingress.kubernetes.io/backend-protocol: HTTP
+              nginx.ingress.kubernetes.io/use-regex: "true"
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
           spec:
+            ingressClassName: very-nginx
             rules:
               - host: foo.bar
                 http:
@@ -45,5 +52,5 @@ tests:
                           name: myapplication
                           port:
                             number: 80
-                      path: /baz
+                      path: /baz(/.*)?
                       pathType: ImplementationSpecific

@@ -90,13 +90,14 @@ func ingressRulesNginx(source Source) ([]networkingv1.IngressRule, error) {
 		}
 
 		if len(parsedUrl.Path) > 1 {
-			err = util.ValidateUrl(parsedUrl)
-			if err != nil {
-				return nil, err
-			}
 			parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
 		} else {
 			parsedUrl.Path = "/"
+		}
+
+		err = util.ValidateUrl(parsedUrl)
+		if err != nil {
+			return nil, err
 		}
 
 		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
@@ -140,8 +141,9 @@ func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.I
 	}
 
 	copyNginxAnnotations(ingress.Annotations, source.GetAnnotations())
-
+	// if ingressClass != "default" {
 	ingress.Spec.IngressClassName = &ingressClass
+	// }
 
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
@@ -175,24 +177,23 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	ingresses := make(map[string]*networkingv1.Ingress)
 
 	for _, rule := range rules {
-		var ingressClass string
+		var ingressClass *string
 
 		if len(cfg.GetGatewayMappings()) > 0 {
-			ingressClass = *util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-			if ingressClass == "" {
-				return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
-			}
-		} else {
-			ingressClass = "nginx"
+			ingressClass = util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 		}
 
-		ingress := ingresses[ingressClass]
+		if ingressClass == nil {
+			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
+		}
+
+		ingress := ingresses[*ingressClass]
 		if ingress == nil {
-			ingress, err = createIngressBaseNginx(source, ingressClass)
+			ingress, err = createIngressBaseNginx(source, *ingressClass)
 			if err != nil {
 				return nil, err
 			}
-			ingresses[ingressClass] = ingress
+			ingresses[*ingressClass] = ingress
 		}
 		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 	}
@@ -205,9 +206,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
-	fmt.Printf("Creating %v\n", source)
 	ingresses, err := nginxIngresses(source, cfg)
-	fmt.Printf("%+v\n", ingresses)
 	if err != nil {
 		return err
 	}

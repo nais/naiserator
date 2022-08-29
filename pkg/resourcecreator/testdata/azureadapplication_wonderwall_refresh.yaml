@@ -6,6 +6,10 @@ config:
     linkerd: true
     azurerator: true
     network-policy: true
+  gcp: true
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: very-nginx
   google-project-id: google-project-id
   cluster-name: mycluster
   wonderwall:
