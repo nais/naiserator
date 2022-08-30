@@ -164,6 +164,7 @@ func wonderwallConfig(source Source, providerSecretName string) wonderwall.Confi
 		Provider:           "idporten",
 		ProviderSecretName: providerSecretName,
 		Resources:          naisIdPorten.Sidecar.Resources,
+		SessionRefresh:     false,
 		UILocales:          naisIdPorten.Sidecar.Locale,
 	}
 

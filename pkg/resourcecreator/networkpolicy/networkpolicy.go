@@ -30,10 +30,11 @@ type Config interface {
 }
 
 const (
-	prometheusPodSelectorLabelValue        = "prometheus" // Label value denoting the Prometheus pod-selector
-	prometheusNamespace                    = "nais"       // Which namespace Prometheus is installed in
-	nginxNamespace                         = "nginx"      // Which namespace Nginx ingress controller runs in
-	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"  // The default IP block CIDR for the default allow network policies per app
+	prometheusPodSelectorLabelValue        = "prometheus"  // Label value denoting the Prometheus pod-selector
+	prometheusNamespace                    = "nais"        // Which namespace Prometheus is installed in
+	prometheusNaasNamespace                = "nais-system" // Which namespace Prometheus is installed in naas-clusters
+	nginxNamespace                         = "nginx"       // Which namespace Nginx ingress controller runs in
+	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"   // The default IP block CIDR for the default allow network policies per app
 )
 
 func Create(source Source, ast *resource.Ast, cfg Config) {
@@ -129,14 +130,7 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
 		NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
 	}))
-	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
-		PodSelector:       labelSelector("component", "tap"),
-	}))
-	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: labelSelector("linkerd.io/extension", "viz"),
-		PodSelector:       labelSelector("component", "prometheus"),
-	}))
+	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app.kubernetes.io/name", prometheusPodSelectorLabelValue, prometheusNaasNamespace)))
 
 	appRules := networkPolicyApplicationRules(naisAccessPolicyInbound.Rules, options)
 

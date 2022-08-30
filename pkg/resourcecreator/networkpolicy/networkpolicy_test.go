@@ -72,29 +72,12 @@ func TestNetworkPolicy(t *testing.T) {
 				{
 					PodSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
-							"component": "tap",
+							"app.kubernetes.io/name": "prometheus",
 						},
 					},
 					NamespaceSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
-							"linkerd.io/extension": "viz",
-						},
-					},
-				},
-			},
-		})
-
-		testPolicy = append(testPolicy, networking.NetworkPolicyIngressRule{
-			From: []networking.NetworkPolicyPeer{
-				{
-					PodSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"component": "prometheus",
-						},
-					},
-					NamespaceSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"linkerd.io/extension": "viz",
+							"name": "nais-system",
 						},
 					},
 				},

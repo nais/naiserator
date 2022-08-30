@@ -150,7 +150,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	certificateauthority.Create(app, ast)
+	certificateauthority.Create(app, ast, cfg)
 	securelogs.Create(app, ast, cfg)
 	err = maskinporten.Create(app, ast, cfg)
 	if err != nil {

@@ -43,6 +43,7 @@ type Configuration struct {
 	Provider              string
 	ProviderSecretName    string
 	Resources             *nais_io_v1.ResourceRequirements
+	SessionRefresh        bool
 	UILocales             string
 }
 
@@ -232,6 +233,11 @@ func envVars(source Source, cfg Configuration, options config.Wonderwall) []core
 		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_COOKIE_NAME", options.Loginstatus.CookieName)
 		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_RESOURCE_INDICATOR", options.Loginstatus.ResourceIndicator)
 		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_TOKEN_URL", options.Loginstatus.TokenURL)
+	}
+
+	if cfg.SessionRefresh {
+		result = appendStringEnvVar(result, "WONDERWALL_SESSION_REFRESH", "true")
+		result = appendStringEnvVar(result, "WONDERWALL_SESSION_MAX_LIFETIME", "10h")
 	}
 
 	return result

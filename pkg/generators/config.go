@@ -114,7 +114,7 @@ func (o *Options) GetHostAliases() []config.HostAlias {
 	return o.Config.HostAliases
 }
 
-func (o *Options) IsSecurePodSecurityContextEnabled() bool {
+func (o *Options) IsSecurePodSecurityContextEnforced() bool {
 	return o.Config.Features.SecurePodSecurityContext
 }
 
@@ -132,4 +132,8 @@ func (o *Options) GetLeaderElectionImage() string {
 
 func (o *Options) IsPrometheusOperatorEnabled() bool {
 	return o.Config.Features.PrometheusOperator
+}
+
+func (o *Options) IsNAVCABundleEnabled() bool {
+	return o.Config.Features.NAVCABundle
 }

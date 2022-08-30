@@ -10,6 +10,10 @@ type Source interface {
 	GetSkipCABundle() bool
 }
 
+type Config interface {
+	IsNAVCABundleEnabled() bool
+}
+
 // These constants refer to a ConfigMap that has already been applied to the cluster.
 // The source filenames refer to a PEM bundle and a JKS keystore, respectively.
 const (
@@ -85,8 +89,8 @@ func certificateAuthorityVolume(configMapName string) corev1.Volume {
 	}
 }
 
-func Create(source Source, ast *resource.Ast) {
-	if source.GetSkipCABundle() {
+func Create(source Source, ast *resource.Ast, cfg Config) {
+	if !cfg.IsNAVCABundleEnabled() || source.GetSkipCABundle() {
 		return
 	}
 

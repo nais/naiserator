@@ -18,6 +18,7 @@ func TestJwker(t *testing.T) {
 	opts := &generators.Options{}
 	opts.Config.Features.Jwker = true
 	opts.Config.ClusterName = "myCluster"
+	opts.Config.Features.NAVCABundle = true
 
 	otherApplication := "a"
 	otherNamespace := "othernamespace"
@@ -252,7 +253,7 @@ func TestJwker(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
 		jwker.Create(app, ast, opts)
-		certificateauthority.Create(app, ast)
+		certificateauthority.Create(app, ast, opts)
 
 		assert.Len(t, ast.VolumeMounts, 6)
 		for _, v := range ast.VolumeMounts {
