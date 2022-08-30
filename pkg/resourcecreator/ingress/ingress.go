@@ -66,28 +66,6 @@ func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 		}
-		if len(parsedUrl.Path) == 0 {
-			parsedUrl.Path = "/"
-		}
-		err = util.ValidateUrl(parsedUrl)
-		if err != nil {
-			return nil, err
-		}
-
-		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
-	}
-
-	return rules, nil
-}
-
-func ingressRulesNginx(source Source) ([]networkingv1.IngressRule, error) {
-	var rules []networkingv1.IngressRule
-
-	for _, ingress := range source.GetIngress() {
-		parsedUrl, err := url.Parse(string(ingress))
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
-		}
 
 		if len(parsedUrl.Path) > 1 {
 			parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
@@ -141,9 +119,7 @@ func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.I
 	}
 
 	copyNginxAnnotations(ingress.Annotations, source.GetAnnotations())
-	// if ingressClass != "default" {
 	ingress.Spec.IngressClassName = &ingressClass
-	// }
 
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
@@ -164,7 +140,7 @@ func backendProtocol(portName string) string {
 }
 
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
-	rules, err := ingressRulesNginx(source)
+	rules, err := ingressRules(source)
 	if err != nil {
 		return nil, err
 	}
@@ -179,9 +155,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	for _, rule := range rules {
 		var ingressClass *string
 
-		if len(cfg.GetGatewayMappings()) > 0 {
-			ingressClass = util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-		}
+		ingressClass = util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 
 		if ingressClass == nil {
 			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
