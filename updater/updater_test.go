@@ -62,3 +62,36 @@ func TestCopyAnnotation(t *testing.T) {
 	assert.EqualValues(t, expected, dst.GetAnnotations())
 	assert.EqualValues(t, expected, src.GetAnnotations())
 }
+
+func TestAssertOwnerReferenceEqual(t *testing.T) {
+	existing := fixtures.MinimalApplication()
+	foreign := fixtures.MinimalApplication()
+	candidate := fixtures.MinimalApplication()
+
+	existing.OwnerReferences = []metav1.OwnerReference{
+		{
+			APIVersion: "v1",
+			Kind:       "Application",
+			Name:       "myapplication",
+		},
+	}
+
+	foreign.OwnerReferences = []metav1.OwnerReference{
+		{
+			APIVersion: "v1",
+			Kind:       "Application",
+			Name:       "otherapplication", // different
+		},
+	}
+
+	candidate.OwnerReferences = []metav1.OwnerReference{
+		{
+			APIVersion: "v1",
+			Kind:       "Application",
+			Name:       "myapplication",
+		},
+	}
+
+	assert.NoError(t, updater.AssertOwnerReferenceEqual(existing, candidate))
+	assert.Error(t, updater.AssertOwnerReferenceEqual(foreign, candidate))
+}

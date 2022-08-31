@@ -42,6 +42,10 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 			if err != nil {
 				return err
 			}
+			err = AssertOwnerReferenceEqual(resource, existing)
+			if err != nil {
+				return err
+			}
 			err = cli.Update(ctx, resource)
 		}
 
@@ -137,6 +141,40 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 	}
 
 	return withOwnerReference(source, resources), nil
+}
+
+func ownerReferenceSimilar(a, b metav1.OwnerReference) bool {
+	return a.Name == b.Name && a.APIVersion == b.APIVersion && a.Kind == b.Kind
+}
+
+func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
+	srcacc, err := meta.Accessor(src)
+	if err != nil {
+		return err
+	}
+
+	dstacc, err := meta.Accessor(dst)
+	if err != nil {
+		return err
+	}
+
+	srcReferences := srcacc.GetOwnerReferences()
+	dstReferences := dstacc.GetOwnerReferences()
+
+	// Resources with no ownerReference will be claimed for backwards compatibility.
+	if len(srcReferences) == 0 {
+		return nil
+	}
+
+	for _, dstRef := range dstReferences {
+		for _, srcRef := range srcReferences {
+			if ownerReferenceSimilar(srcRef, dstRef) {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("resource exists in cluster, but is not owned by the triggered resource; refusing to overwrite with potential data loss")
 }
 
 // CopyMeta copies resource metadata from one resource to another.
