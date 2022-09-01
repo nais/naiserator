@@ -107,6 +107,12 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 
 	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
 
+	podSpec.SecurityContext = &corev1.PodSecurityContext{
+		SeccompProfile: &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		},
+	}
+
 	if len(cfg.GetHostAliases()) > 0 {
 		podSpec.HostAliases = hostAliases(cfg)
 	}
@@ -126,10 +132,13 @@ func configureSecurityContext(annotations map[string]string, cfg Config) *corev1
 		Privileged:               pointer.Bool(false),
 		AllowPrivilegeEscalation: pointer.Bool(false),
 		ReadOnlyRootFilesystem:   pointer.Bool(readOnlyFileSystem(annotations)),
+		SeccompProfile: &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		},
 	}
 
 	capabilities := &corev1.Capabilities{
-		Drop: []corev1.Capability{"all"},
+		Drop: []corev1.Capability{"ALL"},
 	}
 
 	additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())

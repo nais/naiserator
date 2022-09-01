@@ -83,7 +83,9 @@ tests:
                       allowPrivilegeEscalation: false
                       capabilities:
                         drop:
-                          - all
+                          - ALL
+                      seccompProfile:
+                        type: RuntimeDefault
                       privileged: false
                       readOnlyRootFilesystem: true
                       runAsGroup: 1069
