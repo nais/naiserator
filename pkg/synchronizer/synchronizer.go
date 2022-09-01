@@ -375,7 +375,7 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []commit) (bool, error
 				retry = true
 			}
 			reason := errors.ReasonForError(err)
-			return retry, fmt.Errorf("persisting resource to Kubernetes: %s: %s", reason, err)
+			return retry, fmt.Errorf("persisting %s to Kubernetes: %s: %s", commit.groupVersionKind.Kind, reason, err)
 		}
 		metrics.ResourcesGenerated.WithLabelValues(commit.groupVersionKind.Kind).Inc()
 	}
