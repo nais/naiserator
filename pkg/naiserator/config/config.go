@@ -55,6 +55,7 @@ type Features struct {
 	NaisSystem                  bool     `json:"nais-system"`
 	NativeSecrets               bool     `json:"native-secrets"`
 	NetworkPolicy               bool     `json:"network-policy"`
+	Seccomp                     bool     `json:"seccomp"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
 	SecurePodSecurityContext    bool     `json:"secure-pod-security-context"`
 	Vault                       bool     `json:"vault"`
@@ -151,6 +152,7 @@ const (
 	FeaturesNativeSecrets                  = "features.native-secrets"
 	FeaturesNetworkPolicy                  = "features.network-policy"
 	FeaturesSecurePodSecurityContext       = "features.secure-pod-security-context"
+	FeaturesSeccomp                        = "features.seccomp"
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
 	FeaturesWebhook                        = "features.webhook"
@@ -238,6 +240,7 @@ func init() {
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesSecurePodSecurityContext, false, "enforce restrictive pod security context")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
+	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
 
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),

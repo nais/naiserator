@@ -29,6 +29,7 @@ type Source interface {
 
 type Config interface {
 	GetLeaderElectionImage() string
+	IsSeccompEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
@@ -56,7 +57,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, role(roleObjectMeta, electionMode, source.GetName()))
 	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleObjectMeta))
-	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
+	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image, cfg.IsSeccompEnabled()))
 	ast.Env = append(ast.Env, electorPathEnv())
 	return nil
 }
@@ -150,7 +151,14 @@ func electorPathEnv() corev1.EnvVar {
 	}
 }
 
-func container(name, namespace, image string) corev1.Container {
+func container(name, namespace, image string, seccomp bool) corev1.Container {
+	var sc *corev1.SeccompProfile
+	if seccomp {
+		sc = &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		}
+	}
+
 	return corev1.Container{
 		Name:            "elector",
 		Image:           image,
@@ -181,9 +189,7 @@ func container(name, namespace, image string) corev1.Container {
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
+			SeccompProfile: sc,
 		},
 	}
 }

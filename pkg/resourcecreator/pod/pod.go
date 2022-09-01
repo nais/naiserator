@@ -55,6 +55,7 @@ type Config interface {
 	IsLinkerdEnabled() bool
 	IsSecurePodSecurityContextEnforced() bool
 	IsPrometheusOperatorEnabled() bool
+	IsSeccompEnabled() bool
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -107,10 +108,12 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 
 	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
 
-	podSpec.SecurityContext = &corev1.PodSecurityContext{
-		SeccompProfile: &corev1.SeccompProfile{
-			Type: corev1.SeccompProfileTypeRuntimeDefault,
-		},
+	if cfg.IsSeccompEnabled() {
+		podSpec.SecurityContext = &corev1.PodSecurityContext{
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
+		}
 	}
 
 	if len(cfg.GetHostAliases()) > 0 {
@@ -132,11 +135,13 @@ func configureSecurityContext(annotations map[string]string, cfg Config) *corev1
 		Privileged:               pointer.Bool(false),
 		AllowPrivilegeEscalation: pointer.Bool(false),
 		ReadOnlyRootFilesystem:   pointer.Bool(readOnlyFileSystem(annotations)),
-		SeccompProfile: &corev1.SeccompProfile{
-			Type: corev1.SeccompProfileTypeRuntimeDefault,
-		},
 	}
 
+	if cfg.IsSeccompEnabled() {
+		ctx.SeccompProfile = &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		}
+	}
 	capabilities := &corev1.Capabilities{
 		Drop: []corev1.Capability{"ALL"},
 	}

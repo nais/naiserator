@@ -96,9 +96,6 @@ tests:
                         name: mynaisjob
                         uid: "123456"
                   spec:
-                    securityContext:
-                      seccompProfile:
-                        type: RuntimeDefault
                     containers:
                       - env:
                           - name: NAV_TRUSTSTORE_PATH
@@ -127,8 +124,6 @@ tests:
                           runAsNonRoot: true
                           readOnlyRootFilesystem: true
                           privileged: false
-                          seccompProfile:
-                            type: RuntimeDefault
                           capabilities:
                             drop: ["ALL"]
                         imagePullPolicy: IfNotPresent

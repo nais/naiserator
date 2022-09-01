@@ -13,7 +13,7 @@ func GcpServiceAccountName(appNamespaceHash, projectId string) string {
 	return fmt.Sprintf("%s@%s.iam.gserviceaccount.com", appNamespaceHash, projectId)
 }
 
-func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, projectId, instanceName string) corev1.Container {
+func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, projectId, instanceName string, seccomp bool) corev1.Container {
 	connectionName := fmt.Sprintf("%s:%s:%s", projectId, Region, instanceName)
 	cloudSqlProxyContainerResourceSpec := nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
@@ -25,6 +25,14 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 			Memory: "32Mi",
 		},
 	}
+
+	var sc *corev1.SeccompProfile
+	if seccomp {
+		sc = &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		}
+	}
+
 	return corev1.Container{
 		Name:            "cloudsql-proxy",
 		Image:           googleCloudSQLProxyContainerImage,
@@ -49,9 +57,7 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
+			SeccompProfile: sc,
 		},
 	}
 }

@@ -36,6 +36,7 @@ type Config interface {
 	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 	GetGoogleCloudSQLProxyContainerImage() string
+	IsSeccompEnabled() bool
 }
 
 func availabilityType(highAvailability bool) string {
@@ -266,6 +267,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 			ast.Containers, google.CloudSqlProxyContainer(
 				5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(),
 				googleSqlInstance.Name,
+				cfg.IsSeccompEnabled(),
 			),
 		)
 	}

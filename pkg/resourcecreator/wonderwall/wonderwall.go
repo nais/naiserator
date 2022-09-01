@@ -60,6 +60,7 @@ type Config interface {
 	GetWonderwallOptions() config.Wonderwall
 	IsDigdiratorEnabled() bool
 	IsAzureratorEnabled() bool
+	IsSeccompEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) error {
@@ -133,6 +134,13 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 		return nil, err
 	}
 
+	var sc *corev1.SeccompProfile
+	if config.IsSeccompEnabled() {
+		sc = &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		}
+	}
+
 	return &corev1.Container{
 		Name:            "wonderwall",
 		Image:           image,
@@ -161,9 +169,7 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 			RunAsGroup:             pointer.Int64(1069),
 			RunAsNonRoot:           pointer.Bool(true),
 			RunAsUser:              pointer.Int64(1069),
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
+			SeccompProfile:         sc,
 		},
 	}, nil
 }

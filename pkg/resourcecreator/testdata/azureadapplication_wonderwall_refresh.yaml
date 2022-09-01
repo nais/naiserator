@@ -99,5 +99,3 @@ tests:
                       runAsGroup: 1069
                       runAsNonRoot: true
                       runAsUser: 1069
-                      seccompProfile:
-                        type: RuntimeDefault

@@ -208,9 +208,6 @@ tests:
           spec:
             template:
               spec:
-                securityContext:
-                  seccompProfile:
-                    type: RuntimeDefault
                 containers:
                   - securityContext:
                       runAsUser: 1069
@@ -218,7 +215,5 @@ tests:
                       allowPrivilegeEscalation: false
                       runAsNonRoot: true
                       privileged: false
-                      seccompProfile:
-                        type: RuntimeDefault
                       capabilities:
                         drop: ["ALL"]

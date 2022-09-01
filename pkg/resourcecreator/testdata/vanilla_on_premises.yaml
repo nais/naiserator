@@ -125,9 +125,6 @@ tests:
                   team: myteam
                   app: myapplication
               spec:
-                securityContext:
-                  seccompProfile:
-                    type: RuntimeDefault
                 volumes:
                   - name: ca-bundle-jks
                     configMap:
@@ -149,8 +146,6 @@ tests:
                       readOnlyRootFilesystem: true
                       runAsNonRoot: true
                       privileged: false
-                      seccompProfile:
-                        type: RuntimeDefault
                       capabilities:
                         drop: ["ALL"]
                     env:

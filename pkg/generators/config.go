@@ -137,3 +137,7 @@ func (o *Options) IsPrometheusOperatorEnabled() bool {
 func (o *Options) IsNAVCABundleEnabled() bool {
 	return o.Config.Features.NAVCABundle
 }
+
+func (o *Options) IsSeccompEnabled() bool {
+	return o.Config.Features.Seccomp
+}

@@ -133,8 +133,6 @@ tests:
                       capabilities:
                         drop:
                           - ALL
-                      seccompProfile:
-                        type: RuntimeDefault
                       privileged: false
                       readOnlyRootFilesystem: true
                       runAsGroup: 1069
