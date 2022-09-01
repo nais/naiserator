@@ -64,34 +64,33 @@ func TestCopyAnnotation(t *testing.T) {
 }
 
 func TestAssertOwnerReferenceEqual(t *testing.T) {
-	existing := fixtures.MinimalApplication()
-	foreign := fixtures.MinimalApplication()
+	ownedByCandidate := fixtures.MinimalApplication()
+	ownedBySomethingElse := fixtures.MinimalApplication()
+	notOwned := fixtures.MinimalApplication()
 	candidate := fixtures.MinimalApplication()
 
-	existing.OwnerReferences = []metav1.OwnerReference{
+	ownedByCandidate.OwnerReferences = []metav1.OwnerReference{
 		{
-			APIVersion: "v1",
-			Kind:       "Application",
-			Name:       "myapplication",
+			Kind: "Application",
+			Name: "myapplication",
 		},
 	}
 
-	foreign.OwnerReferences = []metav1.OwnerReference{
+	ownedBySomethingElse.OwnerReferences = []metav1.OwnerReference{
 		{
-			APIVersion: "v1",
-			Kind:       "Application",
-			Name:       "otherapplication", // different
+			Kind: "Application",
+			Name: "otherapplication", // different
 		},
 	}
 
 	candidate.OwnerReferences = []metav1.OwnerReference{
 		{
-			APIVersion: "v1",
-			Kind:       "Application",
-			Name:       "myapplication",
+			Kind: "Application",
+			Name: "myapplication",
 		},
 	}
 
-	assert.NoError(t, updater.AssertOwnerReferenceEqual(existing, candidate))
-	assert.Error(t, updater.AssertOwnerReferenceEqual(foreign, candidate))
+	assert.NoError(t, updater.AssertOwnerReferenceEqual(ownedByCandidate, candidate))
+	assert.Error(t, updater.AssertOwnerReferenceEqual(ownedBySomethingElse, candidate))
+	assert.Error(t, updater.AssertOwnerReferenceEqual(notOwned, candidate))
 }

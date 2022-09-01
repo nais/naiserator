@@ -144,7 +144,7 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 }
 
 func ownerReferenceSimilar(a, b metav1.OwnerReference) bool {
-	return a.Name == b.Name && a.APIVersion == b.APIVersion && a.Kind == b.Kind
+	return a.Name == b.Name && a.Kind == b.Kind
 }
 
 func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
@@ -158,23 +158,22 @@ func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
 		return err
 	}
 
-	srcReferences := srcacc.GetOwnerReferences()
-	dstReferences := dstacc.GetOwnerReferences()
+	existingReferences := srcacc.GetOwnerReferences()
+	newReferences := dstacc.GetOwnerReferences()
 
-	// Resources with no ownerReference will be claimed for backwards compatibility.
-	if len(srcReferences) == 0 {
-		return nil
-	}
-
-	for _, dstRef := range dstReferences {
-		for _, srcRef := range srcReferences {
+	// Resources with no ownerReference will not be touched, in case it was created manually.
+	//
+	// Iterate through all combinations, and if resource is owned by the same Application/NaisJob that triggered
+	// the creation, it should be allowed. Otherwise, reject it.
+	for _, dstRef := range newReferences {
+		for _, srcRef := range existingReferences {
 			if ownerReferenceSimilar(srcRef, dstRef) {
 				return nil
 			}
 		}
 	}
 
-	return fmt.Errorf("resource exists in cluster, but is not owned by the triggered resource; refusing to overwrite with potential data loss")
+	return fmt.Errorf("refusing to overwrite orphan resource with potential data loss")
 }
 
 // CopyMeta copies resource metadata from one resource to another.
