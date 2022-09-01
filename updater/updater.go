@@ -42,6 +42,10 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 			if err != nil {
 				return err
 			}
+			err = AssertOwnerReferenceEqual(resource, existing)
+			if err != nil {
+				return err
+			}
 			err = cli.Update(ctx, resource)
 		}
 
@@ -137,6 +141,39 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 	}
 
 	return withOwnerReference(source, resources), nil
+}
+
+func ownerReferenceSimilar(a, b metav1.OwnerReference) bool {
+	return a.Name == b.Name && a.Kind == b.Kind
+}
+
+func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
+	srcacc, err := meta.Accessor(src)
+	if err != nil {
+		return err
+	}
+
+	dstacc, err := meta.Accessor(dst)
+	if err != nil {
+		return err
+	}
+
+	existingReferences := srcacc.GetOwnerReferences()
+	newReferences := dstacc.GetOwnerReferences()
+
+	// Resources with no ownerReference will not be touched, in case it was created manually.
+	//
+	// Iterate through all combinations, and if resource is owned by the same Application/NaisJob that triggered
+	// the creation, it should be allowed. Otherwise, reject it.
+	for _, dstRef := range newReferences {
+		for _, srcRef := range existingReferences {
+			if ownerReferenceSimilar(srcRef, dstRef) {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("refusing to overwrite orphan resource with potential data loss")
 }
 
 // CopyMeta copies resource metadata from one resource to another.
