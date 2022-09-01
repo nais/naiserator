@@ -126,8 +126,8 @@ func run() error {
 		}
 	}
 
-	if cfg.Features.GCP && len(cfg.GatewayMappings) == 0 {
-		return fmt.Errorf("running in GCP and no gateway mappings defined. Will not be able to set the right gateway on the ingress")
+	if len(cfg.GatewayMappings) == 0 {
+		return fmt.Errorf("no gateway mappings defined. Will not be able to set the right gateway on the ingress")
 	}
 
 	listers := naiserator_scheme.GenericListers()

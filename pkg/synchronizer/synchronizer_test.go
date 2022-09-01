@@ -191,6 +191,16 @@ func TestSynchronizer(t *testing.T) {
 
 	opts := &generators.Options{}
 	opts.Config = cfg
+	opts.Config.GatewayMappings = []config.GatewayMapping{
+		{
+			DomainSuffix: ".bar",
+			IngressClass: "very-nginx",
+		},
+		{
+			DomainSuffix: ".baz",
+			IngressClass: "something-else",
+		},
+	}
 
 	// Create an Ingress object that should be deleted once processing has run.
 	ast := resource.NewAst()

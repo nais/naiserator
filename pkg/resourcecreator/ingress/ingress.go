@@ -66,37 +66,16 @@ func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 		}
-		if len(parsedUrl.Path) == 0 {
-			parsedUrl.Path = "/"
-		}
-		err = util.ValidateUrl(parsedUrl)
-		if err != nil {
-			return nil, err
-		}
-
-		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
-	}
-
-	return rules, nil
-}
-
-func ingressRulesNginx(source Source) ([]networkingv1.IngressRule, error) {
-	var rules []networkingv1.IngressRule
-
-	for _, ingress := range source.GetIngress() {
-		parsedUrl, err := url.Parse(string(ingress))
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
-		}
 
 		if len(parsedUrl.Path) > 1 {
-			err = util.ValidateUrl(parsedUrl)
-			if err != nil {
-				return nil, err
-			}
 			parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
 		} else {
 			parsedUrl.Path = "/"
+		}
+
+		err = util.ValidateUrl(parsedUrl)
+		if err != nil {
+			return nil, err
 		}
 
 		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
@@ -140,7 +119,6 @@ func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.I
 	}
 
 	copyNginxAnnotations(ingress.Annotations, source.GetAnnotations())
-
 	ingress.Spec.IngressClassName = &ingressClass
 
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
@@ -162,7 +140,7 @@ func backendProtocol(portName string) string {
 }
 
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
-	rules, err := ingressRulesNginx(source)
+	rules, err := ingressRules(source)
 	if err != nil {
 		return nil, err
 	}
@@ -175,10 +153,14 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	ingresses := make(map[string]*networkingv1.Ingress)
 
 	for _, rule := range rules {
-		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+		var ingressClass *string
+
+		ingressClass = util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+
 		if ingressClass == nil {
 			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
 		}
+
 		ingress := ingresses[*ingressClass]
 		if ingress == nil {
 			ingress, err = createIngressBaseNginx(source, *ingressClass)
@@ -197,7 +179,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func linkerdIngresses(source Source, ast *resource.Ast, cfg Config) error {
+func Create(source Source, ast *resource.Ast, cfg Config) error {
 	ingresses, err := nginxIngresses(source, cfg)
 	if err != nil {
 		return err
@@ -206,37 +188,5 @@ func linkerdIngresses(source Source, ast *resource.Ast, cfg Config) error {
 	for _, ing := range ingresses {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, ing)
 	}
-	return nil
-}
-
-func onPremIngresses(source Source, ast *resource.Ast) error {
-	rules, err := ingressRules(source)
-	if err != nil {
-		return err
-	}
-
-	// Ingress objects must have at least one path rule to be valid.
-	if len(rules) == 0 {
-		return nil
-	}
-
-	ingress := createIngressBase(source, rules)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, ingress)
-	return nil
-}
-
-func Create(source Source, ast *resource.Ast, cfg Config) error {
-	if cfg.IsLinkerdEnabled() {
-		err := linkerdIngresses(source, ast, cfg)
-		if err != nil {
-			return fmt.Errorf("create ingresses: %s", err)
-		}
-	} else {
-		err := onPremIngresses(source, ast)
-		if err != nil {
-			return fmt.Errorf("create ingresses: %s", err)
-		}
-	}
-
 	return nil
 }
