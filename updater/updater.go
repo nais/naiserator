@@ -46,6 +46,10 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 			if err != nil {
 				return err
 			}
+			err = KeepOwnerReference(resource, existing)
+			if err != nil {
+				return err
+			}
 			err = cli.Update(ctx, resource)
 		}
 
@@ -141,6 +145,30 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 	}
 
 	return withOwnerReference(source, resources), nil
+}
+
+// KeepOwnerReference ensures that if ownerReference is set on the source object,
+// it is copied to the destination object.
+//
+// Otherwise, it doesn't touch the destination object.
+func KeepOwnerReference(dst, src runtime.Object) error {
+	srcacc, err := meta.Accessor(src)
+	if err != nil {
+		return err
+	}
+
+	dstacc, err := meta.Accessor(dst)
+	if err != nil {
+		return err
+	}
+
+	existingReferences := srcacc.GetOwnerReferences()
+
+	if len(existingReferences) > 0 {
+		dstacc.SetOwnerReferences(existingReferences)
+	}
+
+	return nil
 }
 
 func ownerReferenceSimilar(a, b metav1.OwnerReference) bool {

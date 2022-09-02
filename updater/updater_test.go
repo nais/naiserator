@@ -64,10 +64,11 @@ func TestCopyAnnotation(t *testing.T) {
 }
 
 func TestAssertOwnerReferenceEqual(t *testing.T) {
+	multiOwnership := fixtures.MinimalApplication()
 	ownedByCandidate := fixtures.MinimalApplication()
 	ownedBySomethingElse := fixtures.MinimalApplication()
 	notOwned := fixtures.MinimalApplication()
-	candidate := fixtures.MinimalApplication()
+	resource := fixtures.MinimalApplication()
 
 	ownedByCandidate.OwnerReferences = []metav1.OwnerReference{
 		{
@@ -83,14 +84,71 @@ func TestAssertOwnerReferenceEqual(t *testing.T) {
 		},
 	}
 
-	candidate.OwnerReferences = []metav1.OwnerReference{
+	multiOwnership.OwnerReferences = []metav1.OwnerReference{
+		{
+			Kind: "Application",
+			Name: "myapplication",
+		},
+		{
+			Kind: "Application",
+			Name: "otherapplication",
+		},
+	}
+
+	resource.OwnerReferences = []metav1.OwnerReference{
 		{
 			Kind: "Application",
 			Name: "myapplication",
 		},
 	}
 
-	assert.NoError(t, updater.AssertOwnerReferenceEqual(ownedByCandidate, candidate))
-	assert.Error(t, updater.AssertOwnerReferenceEqual(ownedBySomethingElse, candidate))
-	assert.Error(t, updater.AssertOwnerReferenceEqual(notOwned, candidate))
+	assert.NoError(t, updater.AssertOwnerReferenceEqual(resource, ownedByCandidate))
+	assert.Error(t, updater.AssertOwnerReferenceEqual(resource, ownedBySomethingElse))
+	assert.Error(t, updater.AssertOwnerReferenceEqual(resource, notOwned))
+}
+
+func TestKeepOwnerReferenceMultiOwner(t *testing.T) {
+	resource := fixtures.MinimalApplication()
+	existing := fixtures.MinimalApplication()
+
+	resource.OwnerReferences = []metav1.OwnerReference{
+		{
+			Kind: "Application",
+			Name: "myapplication",
+		},
+	}
+
+	existing.OwnerReferences = []metav1.OwnerReference{
+		{
+			Kind: "Application",
+			Name: "myapplication",
+		},
+		{
+			Kind: "Application",
+			Name: "otherapplication",
+		},
+	}
+
+	assert.NoError(t, updater.KeepOwnerReference(resource, existing))
+
+	assert.Len(t, resource.OwnerReferences, 2)
+	assert.Equal(t, "myapplication", resource.OwnerReferences[0].Name)
+	assert.Equal(t, "otherapplication", resource.OwnerReferences[1].Name)
+}
+
+func TestKeepOwnerReferenceNoOwner(t *testing.T) {
+	resource := fixtures.MinimalApplication()
+	existing := fixtures.MinimalApplication()
+
+	resource.OwnerReferences = []metav1.OwnerReference{
+		{
+			Kind: "Application",
+			Name: "myapplication",
+		},
+	}
+
+	assert.NoError(t, updater.KeepOwnerReference(resource, existing))
+
+	assert.Len(t, resource.OwnerReferences, 1)
+	assert.Equal(t, "myapplication", resource.OwnerReferences[0].Name)
 }
