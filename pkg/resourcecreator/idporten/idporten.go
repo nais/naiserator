@@ -156,10 +156,12 @@ func wonderwallConfig(source Source, providerSecretName string) wonderwall.Confi
 	naisIdPorten := source.GetIDPorten()
 
 	cfg := wonderwall.Configuration{
-		ACRValues:          naisIdPorten.Sidecar.Level,
-		AutoLogin:          naisIdPorten.Sidecar.AutoLogin,
-		ErrorPath:          naisIdPorten.Sidecar.ErrorPath,
-		Ingress:            string(naisIngresses[0]),
+		ACRValues: naisIdPorten.Sidecar.Level,
+		AutoLogin: naisIdPorten.Sidecar.AutoLogin,
+		ErrorPath: naisIdPorten.Sidecar.ErrorPath,
+		Ingresses: []string{
+			string(naisIngresses[0]),
+		},
 		Loginstatus:        true,
 		Provider:           "idporten",
 		ProviderSecretName: providerSecretName,

@@ -37,7 +37,7 @@ type Configuration struct {
 	ACRValues             string
 	AutoLogin             bool
 	ErrorPath             string
-	Ingress               string
+	Ingresses             []string
 	Loginstatus           bool
 	PostLogoutRedirectURI string
 	Provider              string
@@ -75,8 +75,8 @@ func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) 
 		return fmt.Errorf("configuration has empty provider secret name")
 	}
 
-	if len(cfg.Ingress) == 0 {
-		return fmt.Errorf("configuration has empty ingress")
+	if len(cfg.Ingresses) == 0 {
+		return fmt.Errorf("configuration has no ingresses")
 	}
 
 	wonderwallSecret, err := sidecarSecret(source, cfg)
@@ -207,7 +207,7 @@ func envVars(source Source, cfg Configuration, options config.Wonderwall) []core
 		},
 		{
 			Name:  "WONDERWALL_INGRESS",
-			Value: cfg.Ingress,
+			Value: strings.Join(cfg.Ingresses, ","),
 		},
 		{
 			Name:  "WONDERWALL_UPSTREAM_HOST",

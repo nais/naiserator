@@ -52,6 +52,7 @@ input:
             memory: 64Mi
     ingresses:
       - "https://my-client.nav.no/"
+      - "https://my-old-client.nav.no"
     port: 1234
     prometheus:
       enabled: true
@@ -90,7 +91,7 @@ tests:
                       - name: WONDERWALL_OPENID_PROVIDER
                         value: ^azure$
                       - name: WONDERWALL_INGRESS
-                        value: ^https://my-client.nav.no/$
+                        value: ^https://my-client.nav.no/,https://my-old-client.nav.no$
                       - name: WONDERWALL_UPSTREAM_HOST
                         value: ^127.0.0.1:1234$
                       - name: WONDERWALL_BIND_ADDRESS
@@ -149,5 +150,6 @@ tests:
             replyUrls:
               - url: "https://myapplication.nav.no/oauth2/callback"
               - url: "https://my-client.nav.no/oauth2/callback"
+              - url: "https://my-old-client.nav.no/oauth2/callback"
             singlePageApplication: false
             tenant: nav.no

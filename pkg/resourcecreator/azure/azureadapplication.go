@@ -62,20 +62,15 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
 	}
 
-	// wonderwall only supports a single ingress, so we use the first
-	ingress := ingresses[0]
-
-	wonder := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingress)
-	err = wonderwall.Create(source, ast, config, wonder)
+	wwCfg := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingresses)
+	err = wonderwall.Create(source, ast, config, wwCfg)
 	if err != nil {
 		return err
 	}
 
 	// ensure that the ingress is added to the configured Azure AD reply URLs
-	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, nais_io_v1.AzureAdReplyUrl{
-		Url: appendPathToIngress(ingress, applicationDefaultCallbackPath),
-	})
-	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingress, wonderwall.FrontChannelLogoutPath)
+	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, mapReplyURLs(callbackURLs(ingresses))...)
+	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingresses[0], wonderwall.FrontChannelLogoutPath)
 
 	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
 	azureAdApplication.Spec.SinglePageApplication = pointer.Bool(false)
@@ -167,7 +162,7 @@ func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAd
 	return (nais_io_v1.AzureAdReplyUrlString)(util.AppendPathToIngress(url, path))
 }
 
-func wonderwallConfig(source Source, providerSecretName string, ingress nais_io_v1.Ingress) wonderwall.Configuration {
+func wonderwallConfig(source Source, providerSecretName string, ingresses []nais_io_v1.Ingress) wonderwall.Configuration {
 	sidecar := source.GetAzure().GetSidecar()
 
 	annotations := source.GetAnnotations()
@@ -179,10 +174,15 @@ func wonderwallConfig(source Source, providerSecretName string, ingress nais_io_
 		sessionRefresh = true
 	}
 
+	ingressesStrings := make([]string, 0)
+	for _, i := range ingresses {
+		ingressesStrings = append(ingressesStrings, string(i))
+	}
+
 	return wonderwall.Configuration{
 		AutoLogin:          sidecar.AutoLogin,
 		ErrorPath:          sidecar.ErrorPath,
-		Ingress:            string(ingress),
+		Ingresses:          ingressesStrings,
 		Loginstatus:        false,
 		Provider:           "azure",
 		ProviderSecretName: providerSecretName,
