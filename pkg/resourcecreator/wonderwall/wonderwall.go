@@ -36,6 +36,7 @@ const (
 type Configuration struct {
 	ACRValues             string
 	AutoLogin             bool
+	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
 	ErrorPath             string
 	Ingresses             []string
 	Loginstatus           bool
@@ -230,7 +231,7 @@ func envVars(source Source, cfg Configuration, options config.Wonderwall) []core
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI", cfg.PostLogoutRedirectURI)
 
 	if cfg.AutoLogin {
-		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source))
+		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source, cfg))
 	}
 
 	if cfg.Loginstatus {
@@ -293,7 +294,7 @@ func appendBoolEnvVar(envVars []corev1.EnvVar, key string, value bool) []corev1.
 	return envVars
 }
 
-func autoLoginIgnorePaths(source Source) string {
+func autoLoginIgnorePaths(source Source, cfg Configuration) string {
 	seen := make(map[string]bool)
 	paths := make([]string, 0)
 
@@ -320,6 +321,10 @@ func autoLoginIgnorePaths(source Source) string {
 
 	if source.GetReadiness() != nil {
 		addPath(source.GetReadiness().Path)
+	}
+
+	for _, path := range cfg.AutoLoginIgnorePaths {
+		addPath(string(path))
 	}
 
 	return strings.Join(paths, ",")

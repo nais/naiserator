@@ -42,6 +42,9 @@ input:
       sidecar:
         enabled: true
         autoLogin: true
+        autoLoginIgnorePaths:
+          - "/internal/*"
+          - "/path"
         errorPath: /some/error
         resources:
           limits:
@@ -103,7 +106,7 @@ tests:
                       - name: WONDERWALL_ERROR_PATH
                         value: ^/some/error$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
-                        value: ^/metrics,/internal/liveness,/internal/readiness$
+                        value: ^/metrics,/internal/liveness,/internal/readiness,/internal/\*,/path$
                       - name: WONDERWALL_SESSION_REFRESH
                         value: ^true$
                       - name: WONDERWALL_SESSION_MAX_LIFETIME

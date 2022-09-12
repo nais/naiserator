@@ -171,13 +171,14 @@ func wonderwallConfig(source Source, providerSecretName string, ingresses []nais
 	}
 
 	return wonderwall.Configuration{
-		AutoLogin:          sidecar.AutoLogin,
-		ErrorPath:          sidecar.ErrorPath,
-		Ingresses:          ingressesStrings,
-		Loginstatus:        false,
-		Provider:           "azure",
-		ProviderSecretName: providerSecretName,
-		Resources:          sidecar.Resources,
-		SessionRefresh:     true,
+		AutoLogin:            sidecar.AutoLogin,
+		AutoLoginIgnorePaths: sidecar.AutoLoginIgnorePaths,
+		ErrorPath:            sidecar.ErrorPath,
+		Ingresses:            ingressesStrings,
+		Loginstatus:          false,
+		Provider:             "azure",
+		ProviderSecretName:   providerSecretName,
+		Resources:            sidecar.Resources,
+		SessionRefresh:       true,
 	}
 }

@@ -44,6 +44,9 @@ input:
         level: Level3
         locale: se
         autoLogin: true
+        autoLoginIgnorePaths:
+          - "/internal/*"
+          - "/path"
         errorPath: /some/error
         resources:
           limits:
@@ -108,7 +111,7 @@ tests:
                       - name: WONDERWALL_OPENID_UI_LOCALES
                         value: ^se$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
-                        value: ^/metrics,/internal/liveness,/internal/readiness$
+                        value: ^/metrics,/internal/liveness,/internal/readiness,/internal/\*,/path$
                       - name: WONDERWALL_LOGINSTATUS_ENABLED
                         value: "true"
                       - name: WONDERWALL_LOGINSTATUS_COOKIE_DOMAIN
