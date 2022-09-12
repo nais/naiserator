@@ -62,6 +62,10 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
+                      - name: WONDERWALL_SESSION_REFRESH
+                        value: ^true$
+                      - name: WONDERWALL_SESSION_MAX_LIFETIME
+                        value: ^10h$
                     envFrom:
                       - secretRef:
                           name: ^azure-myapplication-4190a8ca-.{6,7}$

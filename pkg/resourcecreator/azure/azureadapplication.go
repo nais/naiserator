@@ -165,15 +165,6 @@ func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAd
 func wonderwallConfig(source Source, providerSecretName string, ingresses []nais_io_v1.Ingress) wonderwall.Configuration {
 	sidecar := source.GetAzure().GetSidecar()
 
-	annotations := source.GetAnnotations()
-
-	sessionRefresh := false
-
-	val, ok := annotations["wonderwall.nais.io/beta"]
-	if ok && val == "true" {
-		sessionRefresh = true
-	}
-
 	ingressesStrings := make([]string, 0)
 	for _, i := range ingresses {
 		ingressesStrings = append(ingressesStrings, string(i))
@@ -187,6 +178,6 @@ func wonderwallConfig(source Source, providerSecretName string, ingresses []nais
 		Provider:           "azure",
 		ProviderSecretName: providerSecretName,
 		Resources:          sidecar.Resources,
-		SessionRefresh:     sessionRefresh,
+		SessionRefresh:     true,
 	}
 }
