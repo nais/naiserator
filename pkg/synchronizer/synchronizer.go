@@ -13,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -375,6 +376,9 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []commit) (bool, error
 				retry = true
 			}
 			reason := errors.ReasonForError(err)
+			if reason == metav1.StatusReasonUnknown {
+				reason = "validation error"
+			}
 			return retry, fmt.Errorf("persisting %s to Kubernetes: %s: %s", commit.groupVersionKind.Kind, reason, err)
 		}
 		metrics.ResourcesGenerated.WithLabelValues(commit.groupVersionKind.Kind).Inc()
