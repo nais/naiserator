@@ -201,7 +201,7 @@ func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
 		}
 	}
 
-	return fmt.Errorf("refusing to overwrite orphan resource with potential data loss")
+	return fmt.Errorf("refusing to overwrite manually edited resource; please add the correct ownerReference in order to continue")
 }
 
 // CopyMeta copies resource metadata from one resource to another.
