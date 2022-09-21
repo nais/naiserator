@@ -2,10 +2,11 @@ package horizontalpodautoscaler
 
 import (
 	"github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/api/autoscaling/v2beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 )
 
 type Source interface {
@@ -19,7 +20,7 @@ func Create(source Source, ast *resource.Ast) {
 	if (*replicas.Max) <= 0 {
 		return
 	}
-	if replicas.DisableAutoScaling || replicas.Min == replicas.Max {
+	if replicas.DisableAutoScaling || *replicas.Min == *replicas.Max {
 		return
 	}
 
