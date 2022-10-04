@@ -59,7 +59,7 @@ tests:
                     resources:
                       requests:
                         cpu: 10m
-                        memory: 200m
+                        memory: 200M
                     volumeMounts:
                       - mountPath: /secure-logs
                         name: secure-logs
@@ -80,7 +80,7 @@ tests:
                     resources:
                       requests:
                         cpu: 10m
-                        memory: 50m
+                        memory: 50M
                     volumeMounts:
                       - mountPath: /config
                         name: secure-logs-config

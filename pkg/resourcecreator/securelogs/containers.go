@@ -13,7 +13,7 @@ func fluentdSidecar(image string) corev1.Container {
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
 				corev1.ResourceCPU:    k8sResource.MustParse("10m"),
-				corev1.ResourceMemory: k8sResource.MustParse("200m"),
+				corev1.ResourceMemory: k8sResource.MustParse("200M"),
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
@@ -83,7 +83,7 @@ func configMapReloadSidecar(image string) corev1.Container {
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
 				corev1.ResourceCPU:    k8sResource.MustParse("10m"),
-				corev1.ResourceMemory: k8sResource.MustParse("50m"),
+				corev1.ResourceMemory: k8sResource.MustParse("50M"),
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
