@@ -3,87 +3,104 @@ package google_sql
 import (
 	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestBoolTrue(t *testing.T) {
-	value := "true"
-	valid, err := ValidateFlag("auto_explain.log_analyze", value)
+	flagName := "auto_explain.log_analyze"
+	flagValue := "true"
+	valid, err := ValidateFlag(flagName, flagValue)
 	if err != nil || !valid {
-		t.Fatalf("true should be a valid bool")
+		t.Fatalf("'%s' should be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestBoolBogus(t *testing.T) {
-	value := "bogus"
-	_, err := ValidateFlag("auto_explain.log_analyze", value)
+	flagName := "auto_explain.log_analyze"
+	flagValue := "bogus"
+	_, err := ValidateFlag(flagName, flagValue)
 	if err == nil {
-		assert.Fail(t, "non-boolean value should raise error")
+		t.Fatalf("'%s' should not be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestStringWithinEnum(t *testing.T) {
-	value := "json"
-	valid, err := ValidateFlag("auto_explain.log_format", value)
+	flagName := "auto_explain.log_format"
+	flagValue := "json"
+	valid, err := ValidateFlag(flagName, flagValue)
 	if err != nil || !valid {
-		assert.Fail(t, "this instance flag should be valid")
+		t.Fatalf("'%s' should be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestStringNotWithinEnum(t *testing.T) {
-	value := "bogus"
-	valid, err := ValidateFlag("auto_explain.log_format", value)
+	flagName := "auto_explain.log_format"
+	flagValue := "bogus"
+	valid, err := ValidateFlag(flagName, flagValue)
 	fmt.Printf("%v %v\n", valid, err)
 	if err != nil || valid {
-		assert.Fail(t, "enum does not contain 'bogus', this instance flag should not be valid")
+		t.Fatalf("'%s' should not be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestIntWithinRange(t *testing.T) {
-	value := "2"
-	valid, err := ValidateFlag("commit_siblings", value)
+	flagName := "commit_siblings"
+	flagValue := "2"
+	valid, err := ValidateFlag(flagName, flagValue)
 	if !valid || err != nil {
-		assert.Fail(t, "nr is within range, this instance flag should be valid")
+		t.Fatalf("'%s' should be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestIntNotWithinRange(t *testing.T) {
-	value := "1001"
-	valid, _ := ValidateFlag("commit_siblings", value)
+	flagName := "commit_siblings"
+	flagValue := "1001"
+	valid, _ := ValidateFlag(flagName, flagValue)
 	if valid {
-		assert.Fail(t, "nr is not within range, this instance flag should not be valid")
+		t.Fatalf("'%s' should not be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestFloatWithinRange(t *testing.T) {
-	value := "10"
-	valid, _ := ValidateFlag("autovacuum_vacuum_scale_factor", value)
+	flagName := "autovacuum_vacuum_scale_factor"
+	flagValue := "10"
+	valid, _ := ValidateFlag(flagName, flagValue)
 	if !valid {
-		assert.Fail(t, "nr is within range, this instance flag should be valid")
+		t.Fatalf("'%s' should be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestFloatNotWithinRange(t *testing.T) {
-	value := "-1"
-	valid, _ := ValidateFlag("autovacuum_vacuum_scale_factor", value)
+	flagName := "autovacuum_vacuum_scale_factor"
+	flagValue := "-1"
+	valid, _ := ValidateFlag(flagName, flagValue)
 	if valid {
-		assert.Fail(t, "nr is not within range, this instance flag should not be valid")
+		t.Fatalf("'%s' should not be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestIsUnitOf(t *testing.T) {
-	value := "24576"
-	valid, err := ValidateFlag("effective_cache_size", value)
+	flagName := "effective_cache_size"
+	flagValue := "24576"
+	valid, err := ValidateFlag(flagName, flagValue)
 	if !valid || err != nil {
-		assert.Fail(t, "this instance flag should be valid")
+		t.Fatalf("'%s' should be a valid value for '%s'", flagValue, flagName)
 	}
 }
 
 func TestIsNotUnitOf(t *testing.T) {
-	value := "24277"
-	valid, _ := ValidateFlag("effective_cache_size", value)
+	flagName := "effective_cache_size"
+	flagValue := "24277"
+	valid, _ := ValidateFlag(flagName, flagValue)
 	if valid {
-		assert.Fail(t, "this instance flag should not be valid")
+		t.Fatalf("'%s' should not be a valid value for '%s'", flagValue, flagName)
+	}
+}
+
+func TestIsNotEmpty(t *testing.T) {
+	flagName := "pglogical.conflict_log_level"
+	flagValue := ""
+	valid, _ := ValidateFlag(flagName, flagValue)
+	if valid {
+		t.Fatalf("'%s' should not be a valid value for '%s'", flagValue, flagName)
 	}
 }
