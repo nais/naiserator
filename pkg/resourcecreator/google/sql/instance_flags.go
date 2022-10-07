@@ -1,20 +1,21 @@
 package google_sql
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
 
-type flagValidator = func(value string) (bool, error)
+type flagValidator = func(value string) error
 
 const maxFloat32 float64 = 3.4028235e+38
 const maxInt32 = 2147483647
 const eightk = 8192
 
-func ValidateFlag(key string, value string) (bool, error) {
+func ValidateFlag(key string, value string) error {
 	validatorFunc := validators[key]
 	if validatorFunc == nil {
-		return false, fmt.Errorf("couldn't find validator for instance flag '%s'", key)
+		return fmt.Errorf("couldn't find validator for instance flag '%s'", key)
 	}
 	return validatorFunc(value)
 }
@@ -204,12 +205,69 @@ var validators = map[string]flagValidator{
 	"work_mem":                                      intWithinRange(64, maxInt32),
 }
 
-func toBool(str string) (bool, error) {
-	parsed, err := strconv.ParseBool(str)
-	if err != nil {
-		return false, fmt.Errorf("expected a bool, got '%s'", str)
+func intWithinRange(min int, max int) func(n string) error {
+	return func(n string) error {
+		i, err := toInt(n)
+		if err != nil {
+			return err
+		}
+		if i < min || i > max {
+			return fmt.Errorf("%d is not between %d and %d", i, min, max)
+		}
+		return nil
 	}
-	return parsed, nil
+}
+
+func floatWithinRange(min float64, max float64) func(n string) error {
+	return func(n string) error {
+		f, err := toFloat(n)
+		if err != nil {
+			return err
+		}
+		if f < min || f > max {
+			return fmt.Errorf("%f is not between %f and %f", f, min, max)
+		}
+		return nil
+	}
+}
+
+func inEnum(allowedVals []string) func(val string) error {
+	return func(val string) error {
+		for _, v := range allowedVals {
+			if val == v {
+				return nil
+			}
+		}
+		return fmt.Errorf("%s is not in %v", val, allowedVals)
+	}
+}
+
+func unit(unitSize int) func(n string) error {
+	return func(n string) error {
+		i, err := toInt(n)
+		if err != nil {
+			return err
+		}
+		if i%unitSize != 0 {
+			return fmt.Errorf("%d is not a unit of %d", i, unitSize)
+		}
+		return nil
+	}
+}
+
+func notEmpty(str string) error {
+	if str == "" {
+		return errors.New("value cannot be empty")
+	}
+	return nil
+}
+
+func toBool(str string) error {
+	_, err := strconv.ParseBool(str)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func toInt(str string) (int, error) {
@@ -226,49 +284,4 @@ func toFloat(str string) (float64, error) {
 		return 0, fmt.Errorf("expected a float, got '%s'", str)
 	}
 	return f, nil
-}
-
-func intWithinRange(min int, max int) func(n string) (bool, error) {
-	return func(n string) (bool, error) {
-		i, err := toInt(n)
-		if err != nil {
-			return false, err
-		}
-		return i >= min && i <= max, nil
-	}
-}
-
-func floatWithinRange(min float64, max float64) func(n string) (bool, error) {
-	return func(n string) (bool, error) {
-		f, err := toFloat(n)
-		if err != nil {
-			return false, err
-		}
-		return f >= min && f <= max, nil
-	}
-}
-
-func inEnum(allowedVals []string) func(val string) (bool, error) {
-	return func(val string) (bool, error) {
-		for _, v := range allowedVals {
-			if val == v {
-				return true, nil
-			}
-		}
-		return false, nil
-	}
-}
-
-func unit(unitSize int) func(n string) (bool, error) {
-	return func(n string) (bool, error) {
-		i, err := toInt(n)
-		if err != nil {
-			return false, err
-		}
-		return i%unitSize == 0, nil
-	}
-}
-
-func notEmpty(str string) (bool, error) {
-	return str != "", nil
 }
