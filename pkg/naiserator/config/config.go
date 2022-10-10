@@ -57,7 +57,6 @@ type Features struct {
 	NetworkPolicy               bool     `json:"network-policy"`
 	Seccomp                     bool     `json:"seccomp"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
-	SecurePodSecurityContext    bool     `json:"secure-pod-security-context"`
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
@@ -151,7 +150,6 @@ const (
 	FeaturesNaisSystem                     = "features.nais-system"
 	FeaturesNativeSecrets                  = "features.native-secrets"
 	FeaturesNetworkPolicy                  = "features.network-policy"
-	FeaturesSecurePodSecurityContext       = "features.secure-pod-security-context"
 	FeaturesSeccomp                        = "features.seccomp"
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
@@ -238,7 +236,6 @@ func init() {
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
-	flag.Bool(FeaturesSecurePodSecurityContext, false, "enforce restrictive pod security context")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
 

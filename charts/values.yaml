@@ -39,7 +39,6 @@ naiserator:
     prometheus-operator: true
     gcp: true
     webhook: true
-    secure-pod-security-context: true
     seccomp: true
   informer:
     full-sync-interval: 4h

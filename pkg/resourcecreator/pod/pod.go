@@ -53,7 +53,6 @@ type Config interface {
 	GetAllowedKernelCapabilities() []string
 	IsNativeSecretsEnabled() bool
 	IsLinkerdEnabled() bool
-	IsSecurePodSecurityContextEnforced() bool
 	IsPrometheusOperatorEnabled() bool
 	IsSeccompEnabled() bool
 }
@@ -124,10 +123,6 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 }
 
 func configureSecurityContext(annotations map[string]string, cfg Config) *corev1.SecurityContext {
-	if exploitable(annotations) && !cfg.IsSecurePodSecurityContextEnforced() {
-		return nil
-	}
-
 	ctx := &corev1.SecurityContext{
 		RunAsUser:                pointer.Int64(runAsUser(annotations)),
 		RunAsGroup:               pointer.Int64(runAsGroup(annotations)),
@@ -518,15 +513,6 @@ func leadingSlash(s string) string {
 		return s
 	}
 	return "/" + s
-}
-
-func exploitable(annotations map[string]string) bool {
-	val, found := annotations["nais.io/security-does-not-matter"]
-	if !found {
-		return false
-	}
-
-	return strings.ToLower(val) == "true"
 }
 
 func readOnlyFileSystem(annotations map[string]string) bool {

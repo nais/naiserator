@@ -4,7 +4,6 @@ testconfig:
 config:
   cluster-name: test-cluster
   features:
-    secure-pod-security-context: true
     nav-ca-bundle: true
 
 input:
