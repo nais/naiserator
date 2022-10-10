@@ -114,10 +114,6 @@ func (o *Options) GetHostAliases() []config.HostAlias {
 	return o.Config.HostAliases
 }
 
-func (o *Options) IsSecurePodSecurityContextEnforced() bool {
-	return o.Config.Features.SecurePodSecurityContext
-}
-
 func (o *Options) GetAllowedKernelCapabilities() []string {
 	return []string{"NET_RAW", "NET_BIND_SERVICE"}
 }

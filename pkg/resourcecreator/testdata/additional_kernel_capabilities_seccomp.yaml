@@ -6,7 +6,6 @@ config:
     linkerd: true
     network-policy: true
     seccomp: true
-    secure-pod-security-context: true
   google-project-id: google-project-id
 
 input:
