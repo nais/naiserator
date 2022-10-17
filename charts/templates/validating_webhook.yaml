@@ -1,0 +1,32 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Release.Name }}-serving-cert
+  name: naiserator-validating-webhook-configuration
+  labels:
+    app: naiserator
+webhooks:
+  - clientConfig:
+      service:
+        name: {{ .Release.Name }}-webhook
+        namespace: {{ .Release.Namespace }}
+        # kind (the last element of the path) has to be the lowercased name of the Go struct
+        path: /validate-nais-io-v1alpha1-application
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    sideEffects: None
+    admissionReviewVersions:
+      - v1beta1
+    name: validation.applications.nais.io
+    rules:
+      - apiGroups:
+          - nais.io
+        apiVersions:
+          - v1alpha1
+        operations:
+          - UPDATE
+        resources:
+          # Resource name is the path defined in +kubebuilder comment
+          - applications
