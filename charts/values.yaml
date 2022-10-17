@@ -14,6 +14,8 @@ labels:
 
 stakaterSecret: "0c697898d6b74c708d5acdc318e8f0d7b3117e31"
 
+gatewayMappings: [""]
+ingressClass: "nais-ingress"
 naiserator:
   bind: 0.0.0.0:8080
   cluster-name: ""
@@ -21,9 +23,6 @@ naiserator:
   google-cloud-sql-proxy-container-image: "gcr.io/cloudsql-docker/gce-proxy:1.24.0-alpine"
   api-server-ip: ""
   host-aliases: ""
-  gateway-mappings:
-    - domainSuffix: ""
-      ingressClass: "nais-ingress"
   features:
     linkerd: false
     access-policy-not-allowed-cidrs: []
