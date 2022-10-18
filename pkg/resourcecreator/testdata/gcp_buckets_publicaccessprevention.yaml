@@ -1,11 +1,11 @@
 testconfig:
-  description: google storage bucket with retention period
+  description: google storage bucket with public access prevention
 
 config:
   features:
+    access-policy: false
     cnrm: true
   google-project-id: google-project-id
-  cluster-name: mycluster
 
 input:
   kind: Application
@@ -21,6 +21,7 @@ input:
     gcp:
       buckets:
         - name: myapplication
+          publicAccessPrevention: true
 
 existing:
   - kind: Namespace
@@ -48,6 +49,7 @@ tests:
             namespace: serviceaccounts
           spec:
             displayName: myapplication
+
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
     operation: CreateIfNotExists
@@ -69,9 +71,11 @@ tests:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
               name: myapplicati-mynamespac-w4o5cwa
+
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
+    name: myapplication-object-viewer-5ce746e8
     match:
       - type: subset
         name: "IAMPolicyMember created in namespace mynamespace"
@@ -79,7 +83,6 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-            name: myapplicati-mynamespac-w4o5cwa
             namespace: mynamespace
           spec:
             member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
@@ -88,6 +91,7 @@ tests:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
               kind: StorageBucket
               name: myapplication
+
   - apiVersion: storage.cnrm.cloud.google.com/v1beta1
     kind: StorageBucket
     operation: CreateOrUpdate
@@ -104,22 +108,8 @@ tests:
             namespace: mynamespace
           spec:
             location: europe-north1
-            publicAccessPrevention: "inherited"
-  - apiVersion: storage.cnrm.cloud.google.com/v1beta1
-    kind: StorageBucketAccessControl
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "Storage bucket ACL created in team namespace"
-        resource:
-          metadata:
-            name: myapplication
-            namespace: mynamespace
-          spec:
-            bucketRef:
-              name: myapplication
-            entity: user-myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
-            role: OWNER
+            publicAccessPrevention: "enforced"
+
   - apiVersion: apps/v1
     kind: Deployment
     operation: CreateOrUpdate
