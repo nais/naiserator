@@ -7,14 +7,14 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.0
-	github.com/imdario/mergo v0.3.12
+	github.com/imdario/mergo v0.3.13
 	github.com/klauspost/compress v1.12.2 // indirect
 	github.com/magiconair/properties v1.8.5
 	github.com/mitchellh/hashstructure v1.1.0
-	github.com/mitchellh/mapstructure v1.4.2
-	github.com/nais/liberator v0.0.0-20220912093159-eedd304fc123
+	github.com/mitchellh/mapstructure v1.5.0
+	github.com/nais/liberator v0.0.0-20221018115630-9a0669dd1ef8
 	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e
 	github.com/prometheus/client_golang v1.12.1
 	github.com/sirupsen/logrus v1.9.0
@@ -106,5 +106,3 @@ require (
 )
 
 go 1.18
-
-replace github.com/nais/liberator => ../liberator
