@@ -122,7 +122,10 @@ func run() error {
 	}
 
 	// make us immediately healthy
-	mgr.AddHealthzCheck("ready", func(req *http.Request) error { return nil })
+	err = mgr.AddHealthzCheck("ready", func(req *http.Request) error { return nil })
+	if err != nil {
+		return err
+	}
 
 	if cfg.Features.Webhook {
 		// Register create/update validation webhooks for liberator_scheme's CRDs
