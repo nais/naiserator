@@ -20,7 +20,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 	"github.com/nais/naiserator/pkg/synchronizer"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,25 +43,12 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 		Config: g.Config,
 	}
 
-	// Make a query to Kubernetes for this application's previous deployment.
-	// The number of replicas is significant, so we need to carry it over to match
-	// this next rollout.
-	key := client.ObjectKey{
-		Name:      source.GetName(),
-		Namespace: source.GetNamespace(),
-	}
-	deploy := &appsv1.Deployment{}
-	err := kube.Get(ctx, key, deploy)
-	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing deployment: %s", err)
-	}
-
 	o.NumReplicas = 1
 
 	// Retrieve current namespace to check for labels and annotations
-	key = client.ObjectKey{Name: source.GetNamespace()}
+	key := client.ObjectKey{Name: source.GetNamespace()}
 	namespace := &corev1.Namespace{}
-	err = kube.Get(ctx, key, namespace)
+	err := kube.Get(ctx, key, namespace)
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
