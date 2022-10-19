@@ -111,9 +111,10 @@ func run() error {
 
 	metrics.Register(kubemetrics.Registry)
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
-		SyncPeriod:         &cfg.Informer.FullSyncInterval,
-		Scheme:             kscheme,
-		MetricsBindAddress: cfg.Bind,
+		SyncPeriod:             &cfg.Informer.FullSyncInterval,
+		Scheme:                 kscheme,
+		MetricsBindAddress:     cfg.Bind,
+		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
 	})
 	if err != nil {
 		return err

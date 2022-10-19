@@ -113,6 +113,7 @@ type LeaderElection struct {
 type Config struct {
 	DryRun                            bool             `json:"dry-run"`
 	Bind                              string           `json:"bind"`
+	HealthProbeBindAddress            string           `json:"health-probe-bind-address"`
 	Informer                          Informer         `json:"informer"`
 	Synchronizer                      Synchronizer     `json:"synchronizer"`
 	Kubeconfig                        string           `json:"kubeconfig"`
@@ -136,6 +137,7 @@ type Config struct {
 const (
 	ApiServerIp                            = "api-server-ip"
 	Bind                                   = "bind"
+	HealthProbeBindAddress                 = "health-probe-bind-address"
 	ClusterName                            = "cluster-name"
 	DryRun                                 = "dry-run"
 	FeaturesAccessPolicyNotAllowedCIDRs    = "features.access-policy-not-allowed-cidrs"
@@ -214,6 +216,7 @@ func init() {
 	flag.Bool(DryRun, false, "set to true to run without any actual changes to the cluster")
 	flag.String(KubeConfig, "", "path to Kubernetes config file")
 	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
+	flag.String(HealthProbeBindAddress, "127.0.0.1:8085", "ip:port where health probes are performed")
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")

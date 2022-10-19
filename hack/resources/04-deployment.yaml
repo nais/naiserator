@@ -20,3 +20,7 @@ spec:
       containers:
         - name: naiserator
           image: navikt/naiserator:latest
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8085
