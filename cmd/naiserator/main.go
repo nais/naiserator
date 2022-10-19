@@ -122,7 +122,7 @@ func run() error {
 	}
 
 	// make us immediately healthy
-	err = mgr.AddHealthzCheck("ready", func(req *http.Request) error { return nil })
+	err = mgr.AddReadyzCheck("ready", func(req *http.Request) error { return nil })
 	if err != nil {
 		return err
 	}
