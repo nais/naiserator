@@ -2,8 +2,7 @@ testconfig:
   description: file injection
 
 config:
-  features:
-    native-secrets: true
+  features: {}
 
 input:
   kind: Naisjob

@@ -53,7 +53,6 @@ type Features struct {
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`
 	NaisSystem                  bool     `json:"nais-system"`
-	NativeSecrets               bool     `json:"native-secrets"`
 	NetworkPolicy               bool     `json:"network-policy"`
 	Seccomp                     bool     `json:"seccomp"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
@@ -148,7 +147,6 @@ const (
 	FeaturesKafkarator                     = "features.kafkarator"
 	FeaturesLinkerd                        = "features.linkerd"
 	FeaturesNaisSystem                     = "features.nais-system"
-	FeaturesNativeSecrets                  = "features.native-secrets"
 	FeaturesNetworkPolicy                  = "features.network-policy"
 	FeaturesSeccomp                        = "features.seccomp"
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
@@ -226,7 +224,6 @@ func init() {
 		"CIDRs that should not be included within the allowed IP Block rule for network policy",
 	)
 	flag.Bool(FeaturesNaisSystem, false, "enable nais-system features")
-	flag.Bool(FeaturesNativeSecrets, false, "enable use of native secrets")
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 	flag.Bool(FeaturesGCP, false, "running in gcp and enable use of CNRM resources")

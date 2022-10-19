@@ -51,7 +51,6 @@ type Config interface {
 	GetGoogleProjectID() string
 	GetHostAliases() []config.HostAlias
 	GetAllowedKernelCapabilities() []string
-	IsNativeSecretsEnabled() bool
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsSeccompEnabled() bool
@@ -189,11 +188,11 @@ func hostAliases(cfg Config) []corev1.HostAlias {
 	return hostAliases
 }
 
-func envFrom(ast *resource.Ast, nativeSecrets bool, naisEnvFrom []nais_io_v1.EnvFrom) {
+func envFrom(ast *resource.Ast, naisEnvFrom []nais_io_v1.EnvFrom) {
 	for _, env := range naisEnvFrom {
 		if len(env.ConfigMap) > 0 {
 			ast.EnvFrom = append(ast.EnvFrom, fromEnvConfigmap(env.ConfigMap))
-		} else if nativeSecrets && len(env.Secret) > 0 {
+		} else if len(env.Secret) > 0 {
 			ast.EnvFrom = append(ast.EnvFrom, EnvFromSecret(env.Secret))
 		}
 	}
@@ -209,14 +208,14 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
-func filesFrom(ast *resource.Ast, nativeSecrets bool, naisFilesFrom []nais_io_v1.FilesFrom) {
+func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
 	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
 			name := file.ConfigMap
 			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name))
 			ast.VolumeMounts = append(ast.VolumeMounts,
 				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name), true))
-		} else if nativeSecrets && len(file.Secret) > 0 {
+		} else if len(file.Secret) > 0 {
 			name := file.Secret
 			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, name, nil))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath, true))
@@ -244,8 +243,8 @@ func fromFilesConfigmapVolume(name string) corev1.Volume {
 func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
 	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
-	filesFrom(ast, cfg.IsNativeSecretsEnabled(), app.GetFilesFrom())
-	envFrom(ast, cfg.IsNativeSecretsEnabled(), app.GetEnvFrom())
+	filesFrom(ast, app.GetFilesFrom())
+	envFrom(ast, app.GetEnvFrom())
 	lifecycle, err := lifecycle(app.GetPreStopHookPath(), app.GetPreStopHook())
 	if err != nil {
 		return err
@@ -305,8 +304,8 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
 	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
 	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...)
-	filesFrom(ast, cfg.IsNativeSecretsEnabled(), naisjob.Spec.FilesFrom)
-	envFrom(ast, cfg.IsNativeSecretsEnabled(), naisjob.Spec.EnvFrom)
+	filesFrom(ast, naisjob.Spec.FilesFrom)
+	envFrom(ast, naisjob.Spec.EnvFrom)
 	lifecycle, err := lifecycle("", naisjob.Spec.PreStopHook)
 	if err != nil {
 		return err

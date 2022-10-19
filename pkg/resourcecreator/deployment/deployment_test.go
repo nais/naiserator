@@ -94,7 +94,6 @@ func TestDeployment(t *testing.T) {
 
 		ast := resource.NewAst()
 		opts := &generators.Options{}
-		opts.Config.Features.NativeSecrets = true
 
 		err = pod.CreateAppContainer(app, ast, opts)
 		assert.NoError(t, err)
@@ -103,30 +102,5 @@ func TestDeployment(t *testing.T) {
 		assert.NotNil(t, appContainer)
 		assert.Equal(t, nais_io_v1alpha1.DefaultSecretMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
 		assert.Equal(t, customMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
-	})
-
-	t.Run("secrets are not configured when feature flag for secrets is false", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		err := app.ApplyDefaults()
-		assert.NoError(t, err)
-
-		app.Spec.EnvFrom = []nais_io_v1.EnvFrom{
-			{Secret: "foo"},
-		}
-		app.Spec.FilesFrom = []nais_io_v1.FilesFrom{
-			{Secret: "bar"},
-		}
-
-		ast := resource.NewAst()
-		opts := &generators.Options{}
-
-		err = pod.CreateAppContainer(app, ast, opts)
-		assert.NoError(t, err)
-		appContainer := ast.Containers[0]
-
-		assert.NotNil(t, appContainer)
-		assert.Equal(t, 0, len(appContainer.EnvFrom))
-		volumeMount := test.GetVolumeMountByName(appContainer.VolumeMounts, "bar")
-		assert.Nil(t, volumeMount)
 	})
 }

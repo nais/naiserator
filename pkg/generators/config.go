@@ -106,10 +106,6 @@ func (o *Options) GetVaultOptions() config.Vault {
 	return o.Config.Vault
 }
 
-func (o *Options) IsNativeSecretsEnabled() bool {
-	return o.Config.Features.NativeSecrets
-}
-
 func (o *Options) GetHostAliases() []config.HostAlias {
 	return o.Config.HostAliases
 }

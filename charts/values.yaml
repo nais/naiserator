@@ -27,7 +27,6 @@ naiserator:
     linkerd: false
     access-policy-not-allowed-cidrs: []
     nais-system: true
-    native-secrets: true
     network-policy: true
     vault: false
     jwker: false
