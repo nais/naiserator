@@ -13,7 +13,6 @@ labels:
   kafka: enabled
 
 stakaterSecret: "0c697898d6b74c708d5acdc318e8f0d7b3117e31"
-psp: false
 gatewayMappings: [""]
 ingressClass: "nais-ingress"
 naiserator:
