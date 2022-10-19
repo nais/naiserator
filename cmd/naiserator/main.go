@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -119,6 +120,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
+	// make us immediately healthy
+	mgr.AddHealthzCheck("ready", func(req *http.Request) error { return nil })
 
 	if cfg.Features.Webhook {
 		// Register create/update validation webhooks for liberator_scheme's CRDs
