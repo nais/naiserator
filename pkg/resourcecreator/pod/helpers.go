@@ -81,3 +81,25 @@ func FromFilesPVCVolume(volumeName, pvcName string) corev1.Volume {
 		},
 	}
 }
+
+func FilesFromEmptyDir(volumeName string, medium nais_io_v1.MediumType) corev1.Volume {
+	return corev1.Volume{
+		Name: volumeName,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{
+				Medium: naisMediumToStorageMedium(medium),
+			},
+		},
+	}
+}
+
+func naisMediumToStorageMedium(medium nais_io_v1.MediumType) corev1.StorageMedium {
+	switch medium {
+	case nais_io_v1.MediumTypeDisk:
+		return corev1.StorageMediumDefault
+	case nais_io_v1.MediumTypeMemory:
+		return corev1.StorageMediumMemory
+	}
+
+	return corev1.StorageMediumDefault
+}

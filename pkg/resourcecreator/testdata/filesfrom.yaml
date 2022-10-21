@@ -17,6 +17,12 @@ input:
       - configmap: mycm
       - secret: mysecret
       - persistentVolumeClaim: pvc-name
+      - emptydir:
+          medium: Memory
+        mountPath: /var/cache/memory
+      - emptydir:
+          medium: Disk
+        mountPath: /var/cache/disk
 
 tests:
   - apiVersion: apps/v1
@@ -40,6 +46,11 @@ tests:
                   - name: pvc-name
                     persistentVolumeClaim:
                       claimName: pvc-name
+                  - emptyDir:
+                      medium: Memory
+                    name: var-cache-memory
+                  - emptyDir: {}
+                    name: var-cache-disk
                 containers:
                   - name: myapplication
                     volumeMounts:
@@ -51,3 +62,7 @@ tests:
                         mountPath: /var/run/secrets
                       - name: pvc-name
                         mountPath: /var/run/pvc/pvc-name
+                      - mountPath: /var/cache/memory
+                        name: var-cache-memory
+                      - mountPath: /var/cache/disk
+                        name: var-cache-disk

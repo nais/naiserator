@@ -208,6 +208,11 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
+func generateNameFromMountPath(mountPath string) string {
+	s := strings.Trim(mountPath, "/")
+	return strings.ReplaceAll(s, "/", "-")
+}
+
 func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
 	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
@@ -223,6 +228,10 @@ func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
 			name := file.PersistentVolumeClaim
 			ast.Volumes = append(ast.Volumes, FromFilesPVCVolume(name, name))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultPVCMountPath(name), false))
+		} else if len(file.EmptyDir.Medium) > 0 && len(file.MountPath) > 0 {
+			name := generateNameFromMountPath(file.MountPath)
+			ast.Volumes = append(ast.Volumes, FilesFromEmptyDir(name, file.EmptyDir.Medium))
+			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, file.MountPath, false))
 		}
 	}
 }
