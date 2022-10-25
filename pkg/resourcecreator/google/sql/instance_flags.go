@@ -267,11 +267,10 @@ func notEmpty(str string) error {
 }
 
 func toBool(str string) error {
-	_, err := strconv.ParseBool(str)
-	if err != nil {
-		return err
+	if str == "on" || str == "off" {
+		return nil
 	}
-	return nil
+	return fmt.Errorf("expected 'on|off' int, got '%s'", str)
 }
 
 func toInt(str string) (int, error) {

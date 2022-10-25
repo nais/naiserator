@@ -8,20 +8,23 @@ import (
 
 func TestBoolTrue(t *testing.T) {
 	flagName := "auto_explain.log_analyze"
-	flagValue := "true"
+	flagValue := "on"
 	err := ValidateFlag(flagName, flagValue)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err, "'%s' is not within spec", flagValue)
+}
+
+func TestBoolFalse(t *testing.T) {
+	flagName := "auto_explain.log_analyze"
+	flagValue := "off"
+	err := ValidateFlag(flagName, flagValue)
+	assert.NoError(t, err, "'%s' is not within spec", flagValue)
 }
 
 func TestBoolBogus(t *testing.T) {
 	flagName := "auto_explain.log_analyze"
 	flagValue := "bogus"
 	err := ValidateFlag(flagName, flagValue)
-	if err == nil {
-		t.Errorf("'%s' is not within spec", flagValue)
-	}
+	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
 }
 
 func TestSingleValueWithinEnum(t *testing.T) {
