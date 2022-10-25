@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
+
+	"k8s.io/utils/strings/slices"
 )
 
 type flagValidator = func(value string) error
@@ -232,13 +235,14 @@ func floatWithinRange(min float64, max float64) func(n string) error {
 }
 
 func inEnum(allowedVals []string) func(val string) error {
-	return func(val string) error {
-		for _, v := range allowedVals {
-			if val == v {
-				return nil
+	return func(commaSeparatedSuppliedVals string) error {
+		parts := strings.Split(commaSeparatedSuppliedVals, ",")
+		for _, v := range parts {
+			if !slices.Contains(allowedVals, v) {
+				return fmt.Errorf("%s is not in %v", commaSeparatedSuppliedVals, allowedVals)
 			}
 		}
-		return fmt.Errorf("%s is not in %v", val, allowedVals)
+		return nil
 	}
 }
 

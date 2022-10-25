@@ -24,11 +24,25 @@ func TestBoolBogus(t *testing.T) {
 	}
 }
 
-func TestStringWithinEnum(t *testing.T) {
+func TestSingleValueWithinEnum(t *testing.T) {
 	flagName := "auto_explain.log_format"
 	flagValue := "json"
 	err := ValidateFlag(flagName, flagValue)
 	assert.NoError(t, err)
+}
+
+func TestMultipleValuesAllWithinEnum(t *testing.T) {
+	flagName := "auto_explain.log_format"
+	flagValue := "json,xml"
+	err := ValidateFlag(flagName, flagValue)
+	assert.NoError(t, err)
+}
+
+func TestMultipleValuesOnlySomeWithinEnum(t *testing.T) {
+	flagName := "auto_explain.log_format"
+	flagValue := "json,xml, bogus"
+	err := ValidateFlag(flagName, flagValue)
+	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
 }
 
 func TestStringNotWithinEnum(t *testing.T) {
