@@ -1,0 +1,12 @@
+---
+apiVersion: aiven.nais.io/v1
+kind: AivenApplication
+metadata:
+  labels:
+    app: {{ .Release.Name }}
+    {{ - toYaml .Values.labels | nindent 4 }}
+  name: {{ .Release.Name }}
+spec:
+  kafka:
+    pool: nav-infrastructure
+  secretName: aiven-{{ .Release.Name }}
