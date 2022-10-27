@@ -16,6 +16,9 @@ func numReplicas(deployment *appsv1.Deployment, minReplicas, maxReplicas *int) i
 	if *minReplicas == 0 && *maxReplicas == 0 {
 		// first, check if an app _should_ be scaled to zero by setting min = max = 0
 		return 0
+	} else if *minReplicas == *maxReplicas {
+		// if min == max, the autoscaler is disabled - scale to the desired number of replicas in the application spec
+		return int32(*minReplicas)
 	} else if deployment != nil && deployment.Spec.Replicas != nil {
 		// if a deployment already exists, use that deployment's number of replicas,
 		// unless the minimum allowed replica count is below that of the application spec.
