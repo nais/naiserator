@@ -30,6 +30,19 @@ spec:
       - env:
         - name: STAKATER_NAISERATOR_SECRET
           value: {{ .Values.stakaterSecret }}
+        {{ if .Values.naiserator.kafka.enabled }}
+        - name: KAFKA_BROKERS
+          valueFrom:
+            secretKeyRef:
+              key: KAFKA_BROKERS
+              name: aiven-naiserator
+        - name: KAFKA_CERTIFICATE_PATH
+          value: /var/run/secrets/nais.io/kafka/kafka.crt
+        - name: KAFKA_PRIVATE_KEY_PATH
+          value: /var/run/secrets/nais.io/kafka/kafka.key
+        - name: KAFKA_CA_PATH
+          value: /var/run/secrets/nais.io/kafka/ca.crt
+        {{ end }}
         image: ghcr.io/nais/naiserator/naiserator:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator
@@ -42,6 +55,11 @@ spec:
         - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: webhook-cert
           readOnly: true
+        {{ if .Values.naiserator.kafka.enabled }}
+        - mountPath: /var/run/secrets/nais.io/kafka
+          name: kafka-credentials
+          readOnly: true
+        {{ end}}
       imagePullSecrets:
       - name: {{ .Values.imagePullSecret }}
       serviceAccount: {{ .Release.Name }}
@@ -57,3 +75,17 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ .Release.Name }}-webhook
+      {{ if .Values.naiserator.kafka.enabled }}
+      - name: kafka-credentials
+        secret:
+          defaultMode: 420
+          items:
+            - key: KAFKA_CERTIFICATE
+              path: kafka.crt
+            - key: KAFKA_PRIVATE_KEY
+              path: kafka.key
+            - key: KAFKA_CA
+              path: ca.crt
+          secretName: aiven-naiserator
+      {{ end }}
+
