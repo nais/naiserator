@@ -21,7 +21,6 @@ input:
     gcp:
       buckets:
         - name: myapplication
-          publicAccessPrevention: true
 
 existing:
   - kind: Namespace
@@ -108,7 +107,6 @@ tests:
             namespace: mynamespace
           spec:
             location: europe-north1
-            publicAccessPrevention: "enforced"
 
   - apiVersion: apps/v1
     kind: Deployment

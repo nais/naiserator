@@ -64,12 +64,6 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 		storagebucketPolicySpec.LifecycleRules = append(storagebucketPolicySpec.LifecycleRules, lifecycleRule)
 	}
 
-	if bucket.PublicAccessPrevention {
-		storagebucketPolicySpec.PublicAccessPrevention = google_storage_crd.PublicAccessPreventionEnforced
-	} else {
-		storagebucketPolicySpec.PublicAccessPrevention = google_storage_crd.PublicAccessPreventionInherited
-	}
-
 	return &google_storage_crd.StorageBucket{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StorageBucket",
