@@ -35,10 +35,19 @@ func AppendPathToIngress(ingress nais_io_v1.Ingress, joinPath string) string {
 }
 
 func ResolveIngressClass(host string, mappings []config.GatewayMapping) *string {
+	ingressClass := ""
+	matchLength := 0
+
 	for _, mapping := range mappings {
 		if strings.HasSuffix(host, mapping.DomainSuffix) {
-			return &mapping.IngressClass
+			if len(mapping.DomainSuffix) > matchLength {
+				ingressClass = mapping.IngressClass
+				matchLength = len(mapping.DomainSuffix)
+			}
 		}
+	}
+	if ingressClass != "" {
+		return &ingressClass
 	}
 	return nil
 }
