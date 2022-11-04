@@ -33,7 +33,7 @@ const (
 	prometheusPodSelectorLabelValue        = "prometheus"  // Label value denoting the Prometheus pod-selector
 	prometheusNamespace                    = "nais"        // Which namespace Prometheus is installed in
 	prometheusNaasNamespace                = "nais-system" // Which namespace Prometheus is installed in naas-clusters
-	nginxNamespace                         = "nginx"       // Which namespace Nginx ingress controller runs in
+	ingressControllerNamespace             = "nginx"       // Which namespace Nginx ingress controller runs in
 	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"   // The default IP block CIDR for the default allow network policies per app
 )
 
@@ -149,15 +149,15 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 			if gw == nil {
 				continue
 			}
-			nginxNamespace := nginxNamespace
+			ingressControllerNamespace := ingressControllerNamespace
 			instance := *gw
 			if options.IsNaisSystemEnabled() {
-				nginxNamespace = "nais-system"
-				instance = "loadbalancer"
+				ingressControllerNamespace = "nais-system"
 			}
+			// assumes that ingressClass equals instance name label
 			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
 				PodSelector:       labelSelector("app.kubernetes.io/instance", instance),
-				NamespaceSelector: labelSelector("name", nginxNamespace),
+				NamespaceSelector: labelSelector("name", ingressControllerNamespace),
 			}))
 		}
 	}
