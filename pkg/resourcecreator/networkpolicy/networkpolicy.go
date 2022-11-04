@@ -151,12 +151,15 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 			}
 			ingressControllerNamespace := ingressControllerNamespace
 			instance := *gw
+			// assumes that ingressClass equals instance name label
+			ls := labelSelector("app.kubernetes.io/name", instance)
+
 			if options.IsNaisSystemEnabled() {
 				ingressControllerNamespace = "nais-system"
+				ls = labelSelector("nais.io/ingressClass", instance)
 			}
-			// assumes that ingressClass equals instance name label
 			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-				PodSelector:       labelSelector("app.kubernetes.io/instance", instance),
+				PodSelector:       ls,
 				NamespaceSelector: labelSelector("name", ingressControllerNamespace),
 			}))
 		}
