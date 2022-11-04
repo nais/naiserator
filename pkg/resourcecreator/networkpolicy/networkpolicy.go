@@ -152,7 +152,7 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 			ingressControllerNamespace := ingressControllerNamespace
 			instance := *gw
 			// assumes that ingressClass equals instance name label
-			ls := labelSelector("app.kubernetes.io/name", instance)
+			ls := labelSelector("app.kubernetes.io/instance", instance)
 
 			if options.IsNaisSystemEnabled() {
 				ingressControllerNamespace = "nais-system"

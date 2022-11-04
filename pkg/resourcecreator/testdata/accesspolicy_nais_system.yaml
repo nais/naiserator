@@ -101,14 +101,14 @@ tests:
                         name: nais-system
                     podSelector:
                       matchLabels:
-                        app.kubernetes.io/instance: loadbalancer
+                        nais.io/ingressClass: adeo-gateway
               - from:
                   - namespaceSelector:
                       matchLabels:
                         name: nais-system
                     podSelector:
                       matchLabels:
-                        app.kubernetes.io/instance: loadbalancer
+                        nais.io/ingressClass: domain-gateway
             egress:
               - to:
                   - namespaceSelector:
