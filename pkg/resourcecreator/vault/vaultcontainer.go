@@ -9,6 +9,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/utils/pointer"
 )
 
 func defaultVaultTokenFileName() string {
@@ -38,7 +39,7 @@ func defaultPathExists(paths []nais_io_v1.SecretPath, kvPath string) bool {
 	return false
 }
 
-func createInitContainer(source resource.Source, options config.Vault, paths []nais_io_v1.SecretPath) corev1.Container {
+func createInitContainer(source resource.Source, options config.Vault, paths []nais_io_v1.SecretPath, seccomp bool) corev1.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
@@ -64,7 +65,6 @@ func createInitContainer(source resource.Source, options config.Vault, paths []n
 
 		args = append(args, fmt.Sprintf("-cn=secret:%s:%s=%s,fmt=%s,retries=1", path.KvPath, paramname, path.MountPath, format))
 	}
-
 	return corev1.Container{
 		Name:         "vks-init",
 		VolumeMounts: createInitContainerMounts(paths),
@@ -84,10 +84,32 @@ func createInitContainer(source resource.Source, options config.Vault, paths []n
 				Value: options.AuthPath,
 			},
 		},
+		SecurityContext: createSecurityContext(seccomp),
 	}
 }
 
-func createSideCarContainer(options config.Vault) corev1.Container {
+func createSecurityContext(seccomp bool) *corev1.SecurityContext {
+	var seccompProfile *corev1.SeccompProfile
+	if seccomp {
+		seccompProfile = &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		}
+	}
+	return &corev1.SecurityContext{
+		RunAsUser:                pointer.Int64(1069),
+		RunAsGroup:               pointer.Int64(1069),
+		RunAsNonRoot:             pointer.Bool(true),
+		Privileged:               pointer.Bool(false),
+		AllowPrivilegeEscalation: pointer.Bool(false),
+		ReadOnlyRootFilesystem:   pointer.Bool(true),
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{"ALL"},
+		},
+		SeccompProfile: seccompProfile,
+	}
+}
+
+func createSideCarContainer(options config.Vault, seccomp bool) corev1.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
@@ -116,6 +138,7 @@ func createSideCarContainer(options config.Vault) corev1.Container {
 				Value: defaultVaultTokenFileName(),
 			},
 		},
+		SecurityContext: createSecurityContext(seccomp),
 	}
 }
 

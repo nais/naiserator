@@ -17,6 +17,7 @@ type Source interface {
 type Config interface {
 	IsVaultEnabled() bool
 	GetVaultOptions() config.Vault
+	IsSeccompEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
@@ -46,10 +47,10 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
-	ast.InitContainers = append(ast.InitContainers, createInitContainer(source, vaultCfg, paths))
+	ast.InitContainers = append(ast.InitContainers, createInitContainer(source, vaultCfg, paths, cfg.IsSeccompEnabled()))
 
 	if naisVault.Sidecar {
-		ast.Containers = append(ast.Containers, createSideCarContainer(vaultCfg))
+		ast.Containers = append(ast.Containers, createSideCarContainer(vaultCfg, cfg.IsSeccompEnabled()))
 	}
 
 	ast.Volumes = append(ast.Volumes, corev1.Volume{
