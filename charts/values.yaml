@@ -35,6 +35,7 @@ naiserator:
     gcp: true
     webhook: true
     seccomp: true
+    nav-ca-bundle: false
   informer:
     full-sync-interval: 4h
   synchronizer:
