@@ -14,6 +14,7 @@ type Source interface {
 
 type Config interface {
 	GetSecureLogsOptions() config.Securelogs
+	IsSeccompEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) {
@@ -22,10 +23,8 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 		return
 	}
 
-	opts := cfg.GetSecureLogsOptions()
-
-	ast.Containers = append(ast.Containers, fluentdSidecar(opts.FluentdImage))
-	ast.Containers = append(ast.Containers, configMapReloadSidecar(opts.ConfigMapReloadImage))
+	ast.Containers = append(ast.Containers, fluentdSidecar(cfg))
+	ast.Containers = append(ast.Containers, configMapReloadSidecar(cfg))
 	ast.Volumes = append(ast.Volumes, Volumes()...)
 	ast.VolumeMounts = append(ast.VolumeMounts, corev1.VolumeMount{
 		Name:      "secure-logs",

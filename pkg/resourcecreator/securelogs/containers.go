@@ -3,12 +3,13 @@ package securelogs
 import (
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/utils/pointer"
 )
 
-func fluentdSidecar(image string) corev1.Container {
+func fluentdSidecar(cfg Config) corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-fluentd",
-		Image:           image,
+		Image:           cfg.GetSecureLogsOptions().FluentdImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
@@ -16,6 +17,7 @@ func fluentdSidecar(image string) corev1.Container {
 				corev1.ResourceMemory: k8sResource.MustParse("200M"),
 			},
 		},
+		SecurityContext: configureSecurityContext(cfg) ,
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "secure-logs",
@@ -70,10 +72,10 @@ func fluentdSidecar(image string) corev1.Container {
 	}
 }
 
-func configMapReloadSidecar(image string) corev1.Container {
+func configMapReloadSidecar(cfg Config) corev1.Container {
 	return corev1.Container{
 		Name:            "secure-logs-configmap-reload",
-		Image:           image,
+		Image:           cfg.GetSecureLogsOptions().ConfigMapReloadImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Args: []string{
 			"--volume-dir=/config",
@@ -86,6 +88,7 @@ func configMapReloadSidecar(image string) corev1.Container {
 				corev1.ResourceMemory: k8sResource.MustParse("50M"),
 			},
 		},
+		SecurityContext: configureSecurityContext(cfg),
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "secure-logs-config",
@@ -94,4 +97,27 @@ func configMapReloadSidecar(image string) corev1.Container {
 			},
 		},
 	}
+}
+
+func configureSecurityContext(cfg Config) *corev1.SecurityContext {
+	ctx := &corev1.SecurityContext{
+		RunAsUser:                pointer.Int64(1069),
+		RunAsGroup:               pointer.Int64(1069),
+		RunAsNonRoot:             pointer.Bool(true),
+		Privileged:               pointer.Bool(false),
+		AllowPrivilegeEscalation: pointer.Bool(false),
+		ReadOnlyRootFilesystem:   pointer.Bool(true),
+	}
+
+	if cfg.IsSeccompEnabled() {
+		ctx.SeccompProfile = &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		}
+	}
+	capabilities := &corev1.Capabilities{
+		Drop: []corev1.Capability{"ALL"},
+	}
+
+	ctx.Capabilities = capabilities
+	return ctx
 }

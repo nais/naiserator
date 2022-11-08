@@ -2,6 +2,8 @@ testconfig:
   description: secure logging volume
 
 config:
+  features:
+    seccomp: true
   Securelogs:
     fluentd-image: fluentd-image
     configmap-reload-image: configmap-reload-image
@@ -56,6 +58,18 @@ tests:
                             fieldPath: spec.nodeName
                     imagePullPolicy: IfNotPresent
                     image: fluentd-image
+                    securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      runAsNonRoot: true
+                      privileged: false
+                      allowPrivilegeEscalation: False
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                        drop:
+                          - ALL
+                      seccompProfile:
+                        type: RuntimeDefault
                     resources:
                       requests:
                         cpu: 10m
