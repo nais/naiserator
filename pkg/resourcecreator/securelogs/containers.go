@@ -101,8 +101,8 @@ func configMapReloadSidecar(cfg Config) corev1.Container {
 
 func configureSecurityContext(cfg Config) *corev1.SecurityContext {
 	ctx := &corev1.SecurityContext{
-		RunAsUser:                pointer.Int64(1069),
-		RunAsGroup:               pointer.Int64(1069),
+		RunAsUser:                pointer.Int64(1065),
+		RunAsGroup:               pointer.Int64(1065),
 		RunAsNonRoot:             pointer.Bool(true),
 		Privileged:               pointer.Bool(false),
 		AllowPrivilegeEscalation: pointer.Bool(false),

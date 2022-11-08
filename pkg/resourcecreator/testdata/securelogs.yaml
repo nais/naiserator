@@ -59,8 +59,8 @@ tests:
                     imagePullPolicy: IfNotPresent
                     image: fluentd-image
                     securityContext:
-                      runAsUser: 1069
-                      runAsGroup: 1069
+                      runAsUser: 1065
+                      runAsGroup: 1065
                       runAsNonRoot: true
                       privileged: false
                       allowPrivilegeEscalation: False
