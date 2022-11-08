@@ -63,8 +63,8 @@ tests:
                       runAsGroup: 1065
                       runAsNonRoot: true
                       privileged: false
-                      allowPrivilegeEscalation: False
-                      readOnlyRootFilesystem: true
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: false
                       capabilities:
                         drop:
                           - ALL

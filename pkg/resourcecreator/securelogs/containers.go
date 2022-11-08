@@ -106,7 +106,7 @@ func configureSecurityContext(cfg Config) *corev1.SecurityContext {
 		RunAsNonRoot:             pointer.Bool(true),
 		Privileged:               pointer.Bool(false),
 		AllowPrivilegeEscalation: pointer.Bool(false),
-		ReadOnlyRootFilesystem:   pointer.Bool(true),
+		ReadOnlyRootFilesystem:   pointer.Bool(false),
 	}
 
 	if cfg.IsSeccompEnabled() {
