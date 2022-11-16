@@ -18,6 +18,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/jwker"
 	"github.com/nais/naiserator/pkg/resourcecreator/leaderelection"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
+	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/poddisruptionbudget"
 	"github.com/nais/naiserator/pkg/resourcecreator/podmonitor"
@@ -118,6 +119,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	service.Create(app, ast, cfg)
 	serviceaccount.Create(app, ast, cfg)
 	horizontalpodautoscaler.Create(app, ast)
+	networkpolicy.Create(app, ast, cfg)
 	fqdnpolicy.Create(app, ast, cfg)
 
 	err = ingress.Create(app, ast, cfg)

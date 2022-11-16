@@ -17,9 +17,11 @@ type Config interface {
 }
 
 func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
-	if !cfg.IsNetworkPolicyEnabled() || !cfg.IsFQDNPolicyEnabled() {
+	if !(cfg.IsNetworkPolicyEnabled() && cfg.IsFQDNPolicyEnabled()) {
 		return
 	}
+
+	source.SetName(source.GetName() + "-fqdn")
 
 	policy := &fqdn.FQDNNetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
