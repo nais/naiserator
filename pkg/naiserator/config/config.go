@@ -54,6 +54,7 @@ type Features struct {
 	Linkerd                     bool     `json:"linkerd"`
 	NaisSystem                  bool     `json:"nais-system"`
 	NetworkPolicy               bool     `json:"network-policy"`
+	FQDNPolicy                  bool     `json:"fqdn-policy"`
 	Seccomp                     bool     `json:"seccomp"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
 	Vault                       bool     `json:"vault"`

@@ -133,3 +133,7 @@ func (o *Options) IsNAVCABundleEnabled() bool {
 func (o *Options) IsSeccompEnabled() bool {
 	return o.Config.Features.Seccomp
 }
+
+func (o *Options) IsFQDNPolicyEnabled() bool {
+	return o.Config.Features.FQDNPolicy
+}
