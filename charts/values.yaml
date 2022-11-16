@@ -67,7 +67,7 @@ naiserator:
       resource-indicator: ""
       token-url: ""
   leader-election:
-    image: ghcr.io/nais/elector:2022-01-25-848dc6a
+    image: ghcr.io/nais/elector:latest
 
 podSecurityContext:
   fsGroup: 65532
