@@ -10,9 +10,9 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
+	"github.com/nais/naiserator/pkg/resourcecreator/fqdnpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/gcp"
 	"github.com/nais/naiserator/pkg/resourcecreator/maskinporten"
-	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -87,7 +87,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	ast := resource.NewAst()
 
 	serviceaccount.Create(naisjob, ast, cfg)
-	networkpolicy.Create(naisjob, ast, cfg)
+	fqdnpolicy.Create(naisjob, ast, cfg)
 	err := azure.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err

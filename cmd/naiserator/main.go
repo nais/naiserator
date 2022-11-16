@@ -96,6 +96,8 @@ func run() error {
 		return err
 	}
 
+	// TODO: add fqdn policies crd to scheme
+
 	if cfg.Features.PrometheusOperator {
 		err = pov1.AddToScheme(kscheme)
 		if err != nil {
