@@ -26,9 +26,8 @@ input:
               - port: 9443
               - port: 8443
           - host: https://www.withprotocol.com
-          #- host: http://www.yet-another-external-application.com
+          - host: http://www.anotherprotocol.com
 
-## TODO:  hosts med protokoll,
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.gke.io/v1alpha2
@@ -63,6 +62,12 @@ tests:
                 to:
                   - fqdns:
                       - www.withprotocol.com
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - www.anotherprotocol.com
             podSelector:
               matchLabels:
                 app: myapplication

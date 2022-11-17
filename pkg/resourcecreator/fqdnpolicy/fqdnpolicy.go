@@ -1,6 +1,8 @@
 package fqdnpolicy
 
 import (
+	"strings"
+
 	fqdn "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha2"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
@@ -64,11 +66,13 @@ func egressPolicy(outbound *nais_io_v1.AccessPolicyOutbound) []fqdn.FQDNNetworkP
 		} else {
 			np = networkPolicyPorts(e.Ports)
 		}
+
+		host := strings.Replace(strings.Replace(e.Host, "https://", "", 1), "http://", "", 1)
 		rules = append(rules, fqdn.FQDNNetworkPolicyEgressRule{
 			Ports: np,
 			To: []fqdn.FQDNNetworkPolicyPeer{
 				{
-					FQDNs: []string{e.Host},
+					FQDNs: []string{host},
 				},
 			},
 		})
