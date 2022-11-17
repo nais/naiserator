@@ -151,6 +151,7 @@ const (
 	FeaturesLinkerd                        = "features.linkerd"
 	FeaturesNaisSystem                     = "features.nais-system"
 	FeaturesNetworkPolicy                  = "features.network-policy"
+	FeaturesFQDNPolicy                     = "features.fqdn-policy"
 	FeaturesSeccomp                        = "features.seccomp"
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
@@ -229,6 +230,7 @@ func init() {
 	)
 	flag.Bool(FeaturesNaisSystem, false, "enable nais-system features")
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
+	flag.Bool(FeaturesFQDNPolicy, false, "enable creation of fqdn egress policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 	flag.Bool(FeaturesGCP, false, "running in gcp and enable use of CNRM resources")
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
