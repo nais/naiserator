@@ -11,6 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const defaultPort = 443
+
 type Config interface {
 	IsFQDNPolicyEnabled() bool
 	IsNetworkPolicyEnabled() bool
@@ -56,8 +58,14 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 func egressPolicy(outbound *nais_io_v1.AccessPolicyOutbound) []fqdn.FQDNNetworkPolicyEgressRule {
 	var rules []fqdn.FQDNNetworkPolicyEgressRule
 	for _, e := range outbound.External {
+		np := make([]networkingv1.NetworkPolicyPort, 0)
+		if e.Ports == nil {
+			np = []networkingv1.NetworkPolicyPort{defaultNetworkPolicyPort()}
+		} else {
+			np = networkPolicyPorts(e.Ports)
+		}
 		rules = append(rules, fqdn.FQDNNetworkPolicyEgressRule{
-			Ports: networkPolicyPorts(e.Ports),
+			Ports: np,
 			To: []fqdn.FQDNNetworkPolicyPeer{
 				{
 					FQDNs: []string{e.Host},
@@ -71,12 +79,25 @@ func egressPolicy(outbound *nais_io_v1.AccessPolicyOutbound) []fqdn.FQDNNetworkP
 func networkPolicyPorts(rules []nais_io_v1.AccessPolicyPortRule) []networkingv1.NetworkPolicyPort {
 	var ports []networkingv1.NetworkPolicyPort
 	for _, rule := range rules {
-		proto := v1.ProtocolTCP
-		port := intstr.FromInt(int(rule.Port))
-		ports = append(ports, networkingv1.NetworkPolicyPort{
-			Protocol: &proto,
-			Port:     &port,
-		})
+		ports = append(ports, networkPolicyPort(&rule))
 	}
 	return ports
+}
+
+func networkPolicyPort(rule *nais_io_v1.AccessPolicyPortRule) networkingv1.NetworkPolicyPort {
+	np := defaultNetworkPolicyPort()
+	if rule.Port != 0 {
+		port := intstr.FromInt(int(rule.Port))
+		np.Port = &port
+	}
+	return np
+}
+
+func defaultNetworkPolicyPort() networkingv1.NetworkPolicyPort {
+	proto := v1.ProtocolTCP
+	port := intstr.FromInt(defaultPort)
+	return networkingv1.NetworkPolicyPort{
+		Protocol: &proto,
+		Port:     &port,
+	}
 }
