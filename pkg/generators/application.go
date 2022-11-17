@@ -10,6 +10,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
 	"github.com/nais/naiserator/pkg/resourcecreator/certificateauthority"
 	"github.com/nais/naiserator/pkg/resourcecreator/deployment"
+	"github.com/nais/naiserator/pkg/resourcecreator/fqdnpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/gcp"
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
 	"github.com/nais/naiserator/pkg/resourcecreator/idporten"
@@ -119,6 +120,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	serviceaccount.Create(app, ast, cfg)
 	horizontalpodautoscaler.Create(app, ast)
 	networkpolicy.Create(app, ast, cfg)
+	fqdnpolicy.Create(app, ast, cfg)
 
 	err = ingress.Create(app, ast, cfg)
 	if err != nil {

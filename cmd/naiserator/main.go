@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
+	fqdn_scheme "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha2"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 
 	"github.com/nais/naiserator/pkg/kafka"
@@ -94,6 +95,13 @@ func run() error {
 	kscheme, err := liberator_scheme.All()
 	if err != nil {
 		return err
+	}
+
+	if cfg.Features.FQDNPolicy {
+		err := fqdn_scheme.AddToScheme(kscheme)
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfg.Features.PrometheusOperator {
