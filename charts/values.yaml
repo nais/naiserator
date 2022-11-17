@@ -7,7 +7,7 @@ annotations:
 
 imagePullPolicy: "IfNotPresent"
 imagePullSecret: "gpr-credentials"
-imageTag: "2022-10-19-3915235"
+imageTag: "2022-11-17-36dcdff"
 
 labels:
   kafka: enabled
