@@ -21,14 +21,14 @@ func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
 		return
 	}
 
-	source.SetName(source.GetName() + "-fqdn")
-
+	meta := resource.CreateObjectMeta(source)
+	meta.SetName(source.GetName() + "-fqdn")
 	policy := &fqdn.FQDNNetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FQDNNetworkPolicy",
 			APIVersion: "networking.gke.io/v1alpha2",
 		},
-		ObjectMeta: resource.CreateObjectMeta(source),
+		ObjectMeta: meta,
 		Spec:       fqdnPolicySpec(source.GetName(), source.GetAccessPolicy()),
 	}
 

@@ -1,0 +1,54 @@
+testconfig:
+  description: vanilla application running with outbound hosts configured
+
+config:
+  features:
+    network-policy: true
+    fqdn-policy: true
+  google-project-id: google-project-id
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    accessPolicy:
+      outbound:
+        external:
+          - host: www.external-application.com
+#            ports:
+#              - port: 443
+          #- host: https://www.another-external-application.com
+          #- host: http://www.yet-another-external-application.com
+
+## TODO: default port, custom port, flere hosts, hosts med protokoll,
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.gke.io/v1alpha2
+    kind: FQDNNetworkPolicy
+    name: myapplication-fqdn
+    match:
+      - name: "FQDN policy created"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            egress:
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - www.external-application.com
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+              - Egress
