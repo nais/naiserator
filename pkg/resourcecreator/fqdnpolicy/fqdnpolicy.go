@@ -60,7 +60,7 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 func egressPolicy(outbound *nais_io_v1.AccessPolicyOutbound) []fqdn.FQDNNetworkPolicyEgressRule {
 	var rules []fqdn.FQDNNetworkPolicyEgressRule
 	for _, e := range outbound.External {
-		np := make([]networkingv1.NetworkPolicyPort, 0)
+		var np []networkingv1.NetworkPolicyPort
 		if e.Ports == nil {
 			np = []networkingv1.NetworkPolicyPort{defaultNetworkPolicyPort()}
 		} else {
