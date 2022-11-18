@@ -99,8 +99,6 @@ tests:
                     podSelector:
                       matchLabels:
                         k8s-app: kube-dns
-                  - ipBlock:
-                      cidr: 0.0.0.0/0
             ingress:
               - from:
                   - namespaceSelector:

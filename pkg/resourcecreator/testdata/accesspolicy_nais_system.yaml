@@ -118,8 +118,6 @@ tests:
                       matchLabels:
                         k8s-app: kube-dns
                     namespaceSelector: { }
-                  - ipBlock:
-                      cidr: 0.0.0.0/0
               - to:
                   - podSelector:
                       matchLabels:

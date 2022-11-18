@@ -205,13 +205,6 @@ func defaultAllowEgress(options Config) []networkingv1.NetworkPolicyEgressRule {
 		},
 	})
 
-	peers = append(peers, networkingv1.NetworkPolicyPeer{
-		IPBlock: &networkingv1.IPBlock{
-			CIDR:   networkPolicyDefaultEgressAllowIPBlock,
-			Except: options.GetAccessPolicyNotAllowedCIDRs(),
-		},
-	})
-
 	return []networkingv1.NetworkPolicyEgressRule{
 		networkPolicyEgressRule(peers...),
 	}
