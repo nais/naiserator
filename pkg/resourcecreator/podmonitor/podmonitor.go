@@ -39,7 +39,8 @@ func Create(source Source, ast *resource.Ast, config Config) {
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: pov1.PodMonitorSpec{
-			JobLabel: "app.kubernetes.io/name",
+			JobLabel:        "app.kubernetes.io/name",
+			PodTargetLabels: []string{"app", "team"},
 			PodMetricsEndpoints: []pov1.PodMetricsEndpoint{
 				{
 					Port:        port,
