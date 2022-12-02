@@ -372,7 +372,7 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
 	}
 
-	if !cfg.IsPrometheusOperatorEnabled() && app.GetPrometheus().Enabled {
+	if app.GetPrometheus().Enabled {
 		objectMeta.Annotations["prometheus.io/scrape"] = "true"
 		objectMeta.Annotations["prometheus.io/port"] = port
 		objectMeta.Annotations["prometheus.io/path"] = app.GetPrometheus().Path
