@@ -31,11 +31,10 @@ type Config interface {
 }
 
 const (
-	prometheusPodSelectorLabelValue        = "prometheus"  // Label value denoting the Prometheus pod-selector
-	prometheusNamespace                    = "nais"        // Which namespace Prometheus is installed in
-	prometheusNaasNamespace                = "nais-system" // Which namespace Prometheus is installed in naas-clusters
-	ingressControllerNamespace             = "nginx"       // Which namespace Nginx ingress controller runs in
-	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"   // The default IP block CIDR for the default allow network policies per app
+	prometheusPodSelectorLabelValue = "prometheus"  // Label value denoting the Prometheus pod-selector
+	prometheusNamespace             = "nais"        // Which namespace Prometheus is installed in
+	prometheusNaasNamespace         = "nais-system" // Which namespace Prometheus is installed in naas-clusters
+	ingressControllerNamespace      = "nginx"       // Which namespace Nginx ingress controller runs in
 )
 
 func baseNetworkPolicy(source Source) *networkingv1.NetworkPolicy {
@@ -58,35 +57,23 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 		np.Spec = legacyNetpolSpec(source.GetName(), cfg, source.GetAccessPolicy(), source.GetIngress(), source.GetLeaderElection())
 		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 	}
-	// If legacy gcp, create the following:
-	// ingress:
-	//   - from:
-	//   - namespaceSelector:
-	// 	  matchLabels:
-	// 		name: nais
-	// 	podSelector:
-	// 	  matchLabels:
-	// 		app: prometheus
-	//   - from:
-	//     - namespaceSelector:
-	// 	    matchLabels:
-	// 		linkerd.io/is-control-plane: "true"
-	//
-	// default allow:
-	// - ipBlock:
-	// cidr: 0.0.0.0/0
-	// except:
-	// - 10.6.0.0/15
-	// - 172.16.0.0/12
-	// - 192.168.0.0/16
-	//
-	// egress:
-	// - to:
-	//   - namespaceSelector:
-	// 	  matchLabels:
-	// 		linkerd.io/is-control-plane: "true"
 
-	// If naas, create the following:
+	// # outbound network policy
+	// - kube-dns
+	// - if (leaderelection) apiserver
+	// - if (accesspolicy) accesspolicies
+	// - aiven range private, fra config (via chart, via fasit mapping values fra nais-terraform-modules) cfg.Features.AivenRange
+	//
+	// - private.googleapis (fqdn)
+	// - google metadata (fqdn)
+	// - aivencloud (fqdn)
+	// - login.microsoftonline.com (fqdn)
+	// - idporten (fqdn?)
+	// # inbound network policy
+	// - prometheus
+	// - if (accesspolicy) accesspolicies
+	// - if (ingress) ingresscontroller (sjekk diff her på legacy vs naas)
+
 	//  egress:
 	//   - namespaceSelector: {}
 	// 	   podSelector:
@@ -101,26 +88,10 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 	//     matchLabels:
 	//       app.kubernetes.io/name: prometheus
 
-	// peers = append(peers, networkingv1.NetworkPolicyPeer{
-	// 	PodSelector: labelSelector("k8s-app", "kube-dns"),
-	// 	NamespaceSelector: &metav1.LabelSelector{
-	// 		MatchLabels: map[string]string{
-	// 			// select in all namespaces since labels on kube-system is regularly deleted in GCP
-	// 		},
-	// 	},
-	// })
-}
-
-func labelSelector(label string, value string) *metav1.LabelSelector {
-	return &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			label: value,
-		},
-	}
 }
 
 func legacyNetpolSpec(appName string, options Config, naisAccessPolicy *nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, leaderElection bool) networkingv1.NetworkPolicySpec {
-	nps := networkingv1.NetworkPolicySpec{
+	return networkingv1.NetworkPolicySpec{
 		PodSelector: *labelSelector("app", appName),
 		PolicyTypes: []networkingv1.PolicyType{
 			networkingv1.PolicyTypeIngress,
@@ -145,27 +116,15 @@ func legacyNetpolSpec(appName string, options Config, naisAccessPolicy *nais_io_
 					NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
 				}},
 			},
+			{
+				To: []networkingv1.NetworkPolicyPeer{{
+					IPBlock: &networkingv1.IPBlock{
+						CIDR:   "0.0.0.0/0",
+						Except: []string{"10.6.0.0/15", "172.16.0.0/12", "192.168.0.0/16"},
+					}},
+				},
+			},
 		},
-	}
-	return nps
-}
-
-func networkPolicyPeer(podLabelName, podLabelValue, namespace string) networkingv1.NetworkPolicyPeer {
-	return networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: labelSelector("name", namespace),
-		PodSelector:       labelSelector(podLabelName, podLabelValue),
-	}
-}
-
-func networkPolicyIngressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv1.NetworkPolicyIngressRule {
-	return networkingv1.NetworkPolicyIngressRule{
-		From: peer,
-	}
-}
-
-func networkPolicyEgressRule(peer ...networkingv1.NetworkPolicyPeer) networkingv1.NetworkPolicyEgressRule {
-	return networkingv1.NetworkPolicyEgressRule{
-		To: peer,
 	}
 }
 
@@ -200,13 +159,6 @@ func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, optio
 }
 
 func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPolicyInbound, naisIngresses []nais_io_v1.Ingress) []networkingv1.NetworkPolicyIngressRule {
-	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
-
-	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app", prometheusPodSelectorLabelValue, prometheusNamespace)))
-	rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-	}))
-	rules = append(rules, networkPolicyIngressRule(networkPolicyPeer("app.kubernetes.io/name", prometheusPodSelectorLabelValue, prometheusNaasNamespace)))
 
 	appRules := networkPolicyApplicationRules(naisAccessPolicyInbound.Rules, options)
 
@@ -245,7 +197,6 @@ func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPol
 }
 
 func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPolicyOutbound, leaderElection bool) []networkingv1.NetworkPolicyEgressRule {
-	defaultRules := defaultAllowEgress(options)
 	appRules := networkPolicyApplicationRules(naisAccessPolicyOutbound.Rules, options)
 
 	if len(appRules) > 0 {
@@ -265,23 +216,10 @@ func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPol
 	return defaultRules
 }
 
-func defaultAllowEgress(options Config) []networkingv1.NetworkPolicyEgressRule {
-	peers := make([]networkingv1.NetworkPolicyPeer, 0, 4)
-
-	peers = append(peers, networkingv1.NetworkPolicyPeer{
-		NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-	})
-
-	peers = append(peers, networkingv1.NetworkPolicyPeer{
-		PodSelector: labelSelector("k8s-app", "kube-dns"),
-		NamespaceSelector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				// select in all namespaces since labels on kube-system is regularly deleted in GCP
-			},
+func labelSelector(label string, value string) *metav1.LabelSelector {
+	return &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			label: value,
 		},
-	})
-
-	return []networkingv1.NetworkPolicyEgressRule{
-		networkPolicyEgressRule(peers...),
 	}
 }
