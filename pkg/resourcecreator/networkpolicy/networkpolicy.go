@@ -42,6 +42,49 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 		return
 	}
 
+	// If legacy gcp, create the following:
+	// ingress:
+	//   - from:
+	//   - namespaceSelector:
+	// 	  matchLabels:
+	// 		name: nais
+	// 	podSelector:
+	// 	  matchLabels:
+	// 		app: prometheus
+	//   - from:
+	//     - namespaceSelector:
+	// 	    matchLabels:
+	// 		linkerd.io/is-control-plane: "true"
+	//
+	// default allow:
+	// - ipBlock:
+	// cidr: 0.0.0.0/0
+	// except:
+	// - 10.6.0.0/15
+	// - 172.16.0.0/12
+	// - 192.168.0.0/16
+	//
+	// egress:
+	// - to:
+	//   - namespaceSelector:
+	// 	  matchLabels:
+	// 		linkerd.io/is-control-plane: "true"
+
+	// If naas, create the following:
+	//  egress:
+	//   - namespaceSelector: {}
+	// 	   podSelector:
+	// 	     matchLabels:
+	// 		   k8s-app: kube-dns
+	// ingress:
+	//   - from:
+	// - namespaceSelector:
+	//     matchLabels:
+	//       name: nais-system
+	//   podSelector:
+	//     matchLabels:
+	//       app.kubernetes.io/name: prometheus
+
 	networkPolicy := &networkingv1.NetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "NetworkPolicy",
