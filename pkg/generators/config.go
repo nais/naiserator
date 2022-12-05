@@ -46,6 +46,10 @@ func (o *Options) IsNetworkPolicyEnabled() bool {
 	return o.Config.Features.NetworkPolicy
 }
 
+func (o *Options) IsLegacyGCP() bool {
+	return o.Config.Features.LegacyGCP
+}
+
 func (o *Options) IsCNRMEnabled() bool {
 	return o.Config.Features.CNRM
 }

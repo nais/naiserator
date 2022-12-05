@@ -27,6 +27,7 @@ type Config interface {
 	GetGoogleProjectID() string
 	IsNaisSystemEnabled() bool
 	IsNetworkPolicyEnabled() bool
+	IsLegacyGCP() bool
 }
 
 const (
@@ -37,11 +38,26 @@ const (
 	networkPolicyDefaultEgressAllowIPBlock = "0.0.0.0/0"   // The default IP block CIDR for the default allow network policies per app
 )
 
+func baseNetworkPolicy(source Source) *networkingv1.NetworkPolicy {
+	return &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
+		ObjectMeta: resource.CreateObjectMeta(source),
+	}
+}
+
 func Create(source Source, ast *resource.Ast, cfg Config) {
 	if !cfg.IsNetworkPolicyEnabled() {
 		return
 	}
 
+	if cfg.IsLegacyGCP() {
+		np := baseNetworkPolicy(source)
+		np.Spec = legacyNetpolSpec(source.GetName(), cfg, source.GetAccessPolicy(), source.GetIngress(), source.GetLeaderElection())
+		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
+	}
 	// If legacy gcp, create the following:
 	// ingress:
 	//   - from:
@@ -85,16 +101,14 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 	//     matchLabels:
 	//       app.kubernetes.io/name: prometheus
 
-	networkPolicy := &networkingv1.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
-		ObjectMeta: resource.CreateObjectMeta(source),
-		Spec:       networkPolicySpec(source.GetName(), cfg, source.GetAccessPolicy(), source.GetIngress(), source.GetLeaderElection()),
-	}
-
-	ast.AppendOperation(resource.OperationCreateOrUpdate, networkPolicy)
+	// peers = append(peers, networkingv1.NetworkPolicyPeer{
+	// 	PodSelector: labelSelector("k8s-app", "kube-dns"),
+	// 	NamespaceSelector: &metav1.LabelSelector{
+	// 		MatchLabels: map[string]string{
+	// 			// select in all namespaces since labels on kube-system is regularly deleted in GCP
+	// 		},
+	// 	},
+	// })
 }
 
 func labelSelector(label string, value string) *metav1.LabelSelector {
@@ -105,16 +119,35 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 	}
 }
 
-func networkPolicySpec(appName string, options Config, naisAccessPolicy *nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, leaderElection bool) networkingv1.NetworkPolicySpec {
-	return networkingv1.NetworkPolicySpec{
+func legacyNetpolSpec(appName string, options Config, naisAccessPolicy *nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, leaderElection bool) networkingv1.NetworkPolicySpec {
+	nps := networkingv1.NetworkPolicySpec{
 		PodSelector: *labelSelector("app", appName),
 		PolicyTypes: []networkingv1.PolicyType{
 			networkingv1.PolicyTypeIngress,
 			networkingv1.PolicyTypeEgress,
 		},
-		Ingress: ingressPolicy(options, naisAccessPolicy.Inbound, naisIngresses),
-		Egress:  egressPolicy(options, naisAccessPolicy.Outbound, leaderElection),
+		Ingress: []networkingv1.NetworkPolicyIngressRule{
+			{
+				From: []networkingv1.NetworkPolicyPeer{
+					{
+						NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+					},
+					{
+						NamespaceSelector: labelSelector("name", prometheusNamespace),
+						PodSelector:       labelSelector("app", prometheusPodSelectorLabelValue),
+					},
+				},
+			},
+		},
+		Egress: []networkingv1.NetworkPolicyEgressRule{
+			{
+				To: []networkingv1.NetworkPolicyPeer{{
+					NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+				}},
+			},
+		},
 	}
+	return nps
 }
 
 func networkPolicyPeer(podLabelName, podLabelValue, namespace string) networkingv1.NetworkPolicyPeer {

@@ -60,6 +60,7 @@ type Features struct {
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
+	LegacyGCP                   bool     `json:"legacy-gcp"`
 }
 
 type Securelogs struct {
