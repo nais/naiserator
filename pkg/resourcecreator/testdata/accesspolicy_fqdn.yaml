@@ -47,6 +47,16 @@ tests:
                     protocol: TCP
                 to:
                   - fqdns:
+                      - metadata.google.internal
+                      - private.googleapis.com
+                      - login.microsoftonline.com
+                      - idporten.no
+                      - aivencloud.com
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
                       - www.external-application.com
               - ports:
                   - port: 9443

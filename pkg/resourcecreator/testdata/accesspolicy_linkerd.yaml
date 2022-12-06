@@ -6,6 +6,7 @@ config:
     linkerd: true
     network-policy: true
     jwker: true
+    legacy-gcp: true
   google-project-id: google-project-id
   cluster-name: mycluster
   gateway-mappings:
@@ -13,6 +14,7 @@ config:
       ingressClass: adeo-gateway
     - domainSuffix: .domain
       ingressClass: domain-gateway
+  nais-namespace: nais
 
 
 input:
@@ -53,6 +55,42 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
+    name: myapplication-legacy
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/is-control-plane: "true"
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/is-control-plane: "true"
+              - to:
+                  - ipBlock:
+                      cidr: 0.0.0.0/0
+                      except:
+                        - 10.6.0.0/15
+                        - 172.16.0.0/12
+                        - 192.168.0.0/16
+            policyTypes:
+              - Ingress
+              - Egress
+            podSelector:
+              matchLabels:
+                app: myapplication
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
     name: myapplication
     match:
       - name: "network policy created"
@@ -66,35 +104,10 @@ tests:
               - from:
                   - podSelector:
                       matchLabels:
-                        app: prometheus
-                    namespaceSelector:
-                      matchLabels:
-                        name: nais
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        linkerd.io/is-control-plane: "true"
-              - from:
-                  - podSelector:
-                      matchLabels:
                         app.kubernetes.io/name: prometheus
                     namespaceSelector:
                       matchLabels:
-                        name: nais-system
-              - from:
-                  - podSelector:
-                      matchLabels:
-                        app: app1
-                  - podSelector:
-                      matchLabels:
-                        app: app2
-                    namespaceSelector:
-                      matchLabels:
-                        name: q1
-                  - podSelector: { }
-                    namespaceSelector:
-                      matchLabels:
-                        name: t1
+                        name: nais
               - from:
                   - namespaceSelector:
                       matchLabels:
@@ -109,11 +122,22 @@ tests:
                     podSelector:
                       matchLabels:
                         app.kubernetes.io/instance: domain-gateway
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app: app1
+                  - podSelector:
+                      matchLabels:
+                        app: app2
+                    namespaceSelector:
+                      matchLabels:
+                        name: q1
+                  - podSelector: { }
+                    namespaceSelector:
+                      matchLabels:
+                        name: t1
             egress:
               - to:
-                  - namespaceSelector:
-                      matchLabels:
-                        linkerd.io/is-control-plane: "true"
                   - podSelector:
                       matchLabels:
                         k8s-app: kube-dns
@@ -128,10 +152,6 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         name: q2
-                  - podSelector: { }
-                    namespaceSelector:
-                      matchLabels:
-                        name: t2
             policyTypes:
               - Ingress
               - Egress

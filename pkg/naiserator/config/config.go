@@ -135,9 +135,11 @@ type Config struct {
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
 	NaisNamespace                     string           `json:"nais-namespace"`
+	AivenRange                        string           `json:"aiven-range"`
 }
 
 const (
+	AivenRange                             = "aiven-range"
 	ApiServerIp                            = "api-server-ip"
 	Bind                                   = "bind"
 	HealthProbeBindAddress                 = "health-probe-bind-address"
@@ -224,6 +226,7 @@ func init() {
 	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
 	flag.String(HealthProbeBindAddress, "127.0.0.1:8085", "ip:port where health probes are performed")
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
+	flag.String(AivenRange, "aiven-range", "range of IP addresses for Aiven services")
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
