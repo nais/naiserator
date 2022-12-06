@@ -145,3 +145,7 @@ func (o *Options) IsFQDNPolicyEnabled() bool {
 func (o *Options) GetNaisNamespace() string {
 	return o.Config.NaisNamespace
 }
+
+func (o *Options) GetAivenRange() string {
+	return o.Config.AivenRange
+}
