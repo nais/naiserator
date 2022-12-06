@@ -40,9 +40,10 @@ func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
 }
 
 func fqdnPolicySpec(name string, policy *nais_io_v1.AccessPolicy) fqdn.FQDNNetworkPolicySpec {
+	merged := append(defaultEgressPolicy(), egressPolicy(policy.Outbound)...)
 	return fqdn.FQDNNetworkPolicySpec{
 		PodSelector: *labelSelector("app", name),
-		Egress:      egressPolicy(policy.Outbound),
+		Egress:      merged,
 		PolicyTypes: []networkingv1.PolicyType{
 			networkingv1.PolicyTypeEgress,
 		},
@@ -53,6 +54,24 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 	return &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			label: value,
+		},
+	}
+}
+
+func defaultEgressPolicy() []fqdn.FQDNNetworkPolicyEgressRule {
+	return []fqdn.FQDNNetworkPolicyEgressRule{
+		{
+			Ports: []networkingv1.NetworkPolicyPort{
+				{
+					Protocol: &[]v1.Protocol{v1.ProtocolTCP}[0],
+					Port:     &[]intstr.IntOrString{intstr.FromInt(443)}[0],
+				},
+			},
+			To: []fqdn.FQDNNetworkPolicyPeer{
+				{
+					FQDNs: []string{"metadata.google.internal", "private.googleapis.com", "login.microsoftonline.com", "idporten.no", "aivencloud.com"},
+				},
+			},
 		},
 	}
 }

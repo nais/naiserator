@@ -54,9 +54,13 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 
 	if cfg.IsLegacyGCP() {
 		np := baseNetworkPolicy(source)
-		np.Spec = legacyNetpolSpec(source.GetName(), cfg, source.GetAccessPolicy(), source.GetIngress(), source.GetLeaderElection())
+		np.Spec = legacyNetpolSpec(source.GetName())
+		np.SetName(source.GetName() + "-legacy")
 		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 	}
+
+	np := baseNetworkPolicy(source)
+	np.Spec = netpolSpec(source.GetName(), cfg, source.GetAccessPolicy(), source.GetIngress(), source.GetLeaderElection())
 
 	// # outbound network policy
 	// - kube-dns
@@ -64,15 +68,11 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 	// - if (accesspolicy) accesspolicies
 	// - aiven range private, fra config (via chart, via fasit mapping values fra nais-terraform-modules) cfg.Features.AivenRange
 	//
-	// - private.googleapis (fqdn)
-	// - google metadata (fqdn)
-	// - aivencloud (fqdn)
-	// - login.microsoftonline.com (fqdn)
-	// - idporten (fqdn?)
 	// # inbound network policy
 	// - prometheus
 	// - if (accesspolicy) accesspolicies
 	// - if (ingress) ingresscontroller (sjekk diff her på legacy vs naas)
+	// - policy for at kubelet skal kunne kalle helsesjekk
 
 	//  egress:
 	//   - namespaceSelector: {}
@@ -90,7 +90,11 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 
 }
 
-func legacyNetpolSpec(appName string, options Config, naisAccessPolicy *nais_io_v1.AccessPolicy, naisIngresses []nais_io_v1.Ingress, leaderElection bool) networkingv1.NetworkPolicySpec {
+func netpolSpec(name string, cfg Config, policy *nais_io_v1.AccessPolicy, ingress []nais_io_v1.Ingress, election bool) networkingv1.NetworkPolicySpec {
+
+}
+
+func legacyNetpolSpec(appName string) networkingv1.NetworkPolicySpec {
 	return networkingv1.NetworkPolicySpec{
 		PodSelector: *labelSelector("app", appName),
 		PolicyTypes: []networkingv1.PolicyType{
