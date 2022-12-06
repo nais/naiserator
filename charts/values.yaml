@@ -20,6 +20,7 @@ naiserator:
   google-cloud-sql-proxy-container-image: "gcr.io/cloudsql-docker/gce-proxy:1.24.0-alpine"
   api-server-ip: ""
   host-aliases: ""
+  nais-namespace: "nais-system"
   features:
     linkerd: false
     access-policy-not-allowed-cidrs: []

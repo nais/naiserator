@@ -141,3 +141,7 @@ func (o *Options) IsSeccompEnabled() bool {
 func (o *Options) IsFQDNPolicyEnabled() bool {
 	return o.Config.Features.FQDNPolicy
 }
+
+func (o *Options) GetNaisNamespace() string {
+	return o.Config.NaisNamespace
+}

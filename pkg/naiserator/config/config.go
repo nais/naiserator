@@ -134,6 +134,7 @@ type Config struct {
 	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
+	NaisNamespace                     string           `json:"nais-namespace"`
 }
 
 const (
@@ -142,6 +143,7 @@ const (
 	HealthProbeBindAddress                 = "health-probe-bind-address"
 	ClusterName                            = "cluster-name"
 	DryRun                                 = "dry-run"
+	NaisNamespace                          = "nais-namespace"
 	FeaturesAccessPolicyNotAllowedCIDRs    = "features.access-policy-not-allowed-cidrs"
 	FeaturesAzurerator                     = "features.azurerator"
 	FeaturesDigdirator                     = "features.digdirator"
@@ -157,6 +159,7 @@ const (
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
 	FeaturesWebhook                        = "features.webhook"
+	FeaturesLegacyGCP                      = "features.legacy-gcp"
 	GoogleCloudSQLProxyContainerImage      = "google-cloud-sql-proxy-container-image"
 	GoogleProjectId                        = "google-project-id"
 	InformerFullSynchronizationInterval    = "informer.full-sync-interval"
@@ -224,6 +227,7 @@ func init() {
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
+	flag.String(NaisNamespace, "nais-system", "namespace where nais resources are deployed")
 	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
 	flag.StringSlice(
 		FeaturesAccessPolicyNotAllowedCIDRs, []string{""},
@@ -242,6 +246,7 @@ func init() {
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
+	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
 
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),

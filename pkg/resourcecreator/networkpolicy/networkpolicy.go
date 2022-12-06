@@ -25,16 +25,14 @@ type Config interface {
 	GetClusterName() string
 	GetGatewayMappings() []config.GatewayMapping
 	GetGoogleProjectID() string
+	GetNaisNamespace() string
 	IsNaisSystemEnabled() bool
 	IsNetworkPolicyEnabled() bool
 	IsLegacyGCP() bool
 }
 
 const (
-	prometheusPodSelectorLabelValue = "prometheus"  // Label value denoting the Prometheus pod-selector
-	prometheusNamespace             = "nais"        // Which namespace Prometheus is installed in
-	prometheusNaasNamespace         = "nais-system" // Which namespace Prometheus is installed in naas-clusters
-	ingressControllerNamespace      = "nginx"       // Which namespace Nginx ingress controller runs in
+	prometheusPodSelectorLabelValue = "prometheus" // Label value denoting the Prometheus pod-selector
 )
 
 func baseNetworkPolicy(source Source) *networkingv1.NetworkPolicy {
@@ -91,7 +89,73 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 }
 
 func netpolSpec(name string, cfg Config, policy *nais_io_v1.AccessPolicy, ingress []nais_io_v1.Ingress, election bool) networkingv1.NetworkPolicySpec {
+	return networkingv1.NetworkPolicySpec{
+		PodSelector: *labelSelector("app", name),
+		PolicyTypes: []networkingv1.PolicyType{
+			networkingv1.PolicyTypeIngress,
+			networkingv1.PolicyTypeEgress,
+		},
+		Ingress: ingressRules(ingress, policy, cfg),
+	}
+}
 
+func ingressRules(ingress []nais_io_v1.Ingress, policy *nais_io_v1.AccessPolicy, cfg Config) []networkingv1.NetworkPolicyIngressRule {
+	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
+
+	rules = append(rules, defaultIngressRules(cfg)...)
+	rules = append(rules, ingressRulesFromIngress(ingress, cfg)...)
+	rules = append(rules, ingressRulesFromAccessPolicy(policy, cfg)...)
+
+	return rules
+}
+
+func ingressRulesFromIngress(ingress []nais_io_v1.Ingress, cfg Config) []networkingv1.NetworkPolicyIngressRule {
+	rules := make([]networkingv1.NetworkPolicyIngressRule, 0)
+	if len(ingress) > 0 {
+		for _, ingress := range ingress {
+			ur, err := url.Parse(string(ingress))
+			if err != nil {
+				continue
+			}
+			ingressClass := util.ResolveIngressClass(ur.Host, cfg.GetGatewayMappings())
+			if ingressClass == nil {
+				continue
+			}
+
+			ls := labelSelector("nais.io/ingressClass", *ingressClass)
+			ns := cfg.GetNaisNamespace()
+
+			// TODO: remove when loadbalancer features are installed in nais-system for legacy gcp
+			if cfg.IsLegacyGCP() {
+				ns = "nginx"
+				// assumes that ingressClass equals instance name label
+				ls = labelSelector("app.kubernetes.io/instance", *ingressClass)
+			}
+
+			rules = append(rules, networkingv1.NetworkPolicyIngressRule{
+				From: []networkingv1.NetworkPolicyPeer{
+					{
+						NamespaceSelector: labelSelector("name", ns),
+						PodSelector:       ls,
+					},
+				},
+			})
+		}
+	}
+	return rules
+}
+
+func defaultIngressRules(cfg Config) []networkingv1.NetworkPolicyIngressRule {
+	return []networkingv1.NetworkPolicyIngressRule{
+		{
+			From: []networkingv1.NetworkPolicyPeer{
+				{
+					NamespaceSelector: labelSelector("name", cfg.GetNaisNamespace()),
+					PodSelector:       labelSelector("app.kubernetes.io/name", prometheusPodSelectorLabelValue),
+				},
+			},
+		},
+	}
 }
 
 func legacyNetpolSpec(appName string) networkingv1.NetworkPolicySpec {
@@ -106,10 +170,6 @@ func legacyNetpolSpec(appName string) networkingv1.NetworkPolicySpec {
 				From: []networkingv1.NetworkPolicyPeer{
 					{
 						NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-					},
-					{
-						NamespaceSelector: labelSelector("name", prometheusNamespace),
-						PodSelector:       labelSelector("app", prometheusPodSelectorLabelValue),
 					},
 				},
 			},
@@ -132,72 +192,37 @@ func legacyNetpolSpec(appName string) networkingv1.NetworkPolicySpec {
 	}
 }
 
-func networkPolicyApplicationRules(rules nais_io_v1.AccessPolicyBaseRules, options Config) (networkPolicy []networkingv1.NetworkPolicyPeer) {
-	if len(rules.GetRules()) == 0 {
-		return
+func ingressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, options Config) []networkingv1.NetworkPolicyIngressRule {
+	if policy == nil || policy.Inbound == nil || len(policy.Inbound.Rules) == 0 {
+		return nil
 	}
 
-	for _, rule := range rules.GetRules() {
-
+	peers := make([]networkingv1.NetworkPolicyPeer, 0)
+	for _, rule := range policy.Inbound.Rules.GetRules() {
 		// non-local access policy rules do not result in network policies
 		if !rule.MatchesCluster(options.GetClusterName()) {
 			continue
 		}
 
-		networkPolicyPeer := networkingv1.NetworkPolicyPeer{
-			PodSelector: labelSelector("app", rule.Application),
-		}
-
+		peer := networkingv1.NetworkPolicyPeer{}
 		if rule.Application == "*" {
-			networkPolicyPeer = networkingv1.NetworkPolicyPeer{PodSelector: &metav1.LabelSelector{}}
+			peer.PodSelector = &metav1.LabelSelector{}
+		} else {
+			peer.PodSelector = labelSelector("app", rule.Application)
 		}
 
 		if rule.Namespace != "" {
-			networkPolicyPeer.NamespaceSelector = labelSelector("name", rule.Namespace)
+			peer.NamespaceSelector = labelSelector("name", rule.Namespace)
 		}
 
-		networkPolicy = append(networkPolicy, networkPolicyPeer)
+		peers = append(peers, peer)
 	}
 
-	return
-}
-
-func ingressPolicy(options Config, naisAccessPolicyInbound *nais_io_v1.AccessPolicyInbound, naisIngresses []nais_io_v1.Ingress) []networkingv1.NetworkPolicyIngressRule {
-
-	appRules := networkPolicyApplicationRules(naisAccessPolicyInbound.Rules, options)
-
-	if len(appRules) > 0 {
-		appIngressRule := networkPolicyIngressRule(appRules...)
-		rules = append(rules, appIngressRule)
+	return []networkingv1.NetworkPolicyIngressRule{
+		{
+			From: peers,
+		},
 	}
-
-	if len(naisIngresses) > 0 {
-		for _, ingress := range naisIngresses {
-			ur, err := url.Parse(string(ingress))
-			if err != nil {
-				continue
-			}
-			gw := util.ResolveIngressClass(ur.Host, options.GetGatewayMappings())
-			if gw == nil {
-				continue
-			}
-			ingressControllerNamespace := ingressControllerNamespace
-			instance := *gw
-			// assumes that ingressClass equals instance name label
-			ls := labelSelector("app.kubernetes.io/instance", instance)
-
-			if options.IsNaisSystemEnabled() {
-				ingressControllerNamespace = "nais-system"
-				ls = labelSelector("nais.io/ingressClass", instance)
-			}
-			rules = append(rules, networkPolicyIngressRule(networkingv1.NetworkPolicyPeer{
-				PodSelector:       ls,
-				NamespaceSelector: labelSelector("name", ingressControllerNamespace),
-			}))
-		}
-	}
-
-	return rules
 }
 
 func egressPolicy(options Config, naisAccessPolicyOutbound *nais_io_v1.AccessPolicyOutbound, leaderElection bool) []networkingv1.NetworkPolicyEgressRule {
