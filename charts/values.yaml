@@ -34,6 +34,7 @@ naiserator:
     kafkarator: false
     digdirator: false
     prometheus-operator: true
+    legacy-gcp: false
     gcp: true
     webhook: true
     seccomp: true
