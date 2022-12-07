@@ -26,10 +26,6 @@ func (o *Options) GetAPIServerIP() string {
 	return o.Config.ApiServerIp
 }
 
-func (o *Options) IsNaisSystemEnabled() bool {
-	return o.Config.Features.NaisSystem
-}
-
 func (o *Options) GetAccessPolicyNotAllowedCIDRs() []string {
 	return o.Config.Features.AccessPolicyNotAllowedCIDRs
 }
@@ -44,6 +40,10 @@ func (o *Options) GetGatewayMappings() []config.GatewayMapping {
 
 func (o *Options) IsNetworkPolicyEnabled() bool {
 	return o.Config.Features.NetworkPolicy
+}
+
+func (o *Options) IsLegacyGCP() bool {
+	return o.Config.Features.LegacyGCP
 }
 
 func (o *Options) IsCNRMEnabled() bool {
@@ -136,4 +136,12 @@ func (o *Options) IsSeccompEnabled() bool {
 
 func (o *Options) IsFQDNPolicyEnabled() bool {
 	return o.Config.Features.FQDNPolicy
+}
+
+func (o *Options) GetNaisNamespace() string {
+	return o.Config.NaisNamespace
+}
+
+func (o *Options) GetAivenRange() string {
+	return o.Config.AivenRange
 }

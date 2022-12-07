@@ -3,10 +3,11 @@ testconfig:
 
 config:
   features:
-    linkerd: true
+    linkerd: false
     network-policy: true
   google-project-id: google-project-id
   cluster-name: mycluster
+  nais-namespace: nais-system
 
 input:
   kind: Application
@@ -45,17 +46,6 @@ tests:
           spec:
             ingress:
               - from:
-                - podSelector:
-                    matchLabels:
-                      app: prometheus
-                  namespaceSelector:
-                    matchLabels:
-                      name: nais
-              - from:
-                - namespaceSelector:
-                    matchLabels:
-                      linkerd.io/is-control-plane: "true"
-              - from:
                   - podSelector:
                       matchLabels:
                         app.kubernetes.io/name: prometheus
@@ -64,9 +54,6 @@ tests:
                         name: nais-system
             egress:
               - to:
-                - namespaceSelector:
-                    matchLabels:
-                      linkerd.io/is-control-plane: "true"
                 - podSelector:
                     matchLabels:
                       k8s-app: kube-dns

@@ -52,7 +52,6 @@ type Features struct {
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`
-	NaisSystem                  bool     `json:"nais-system"`
 	NetworkPolicy               bool     `json:"network-policy"`
 	FQDNPolicy                  bool     `json:"fqdn-policy"`
 	Seccomp                     bool     `json:"seccomp"`
@@ -60,6 +59,7 @@ type Features struct {
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
+	LegacyGCP                   bool     `json:"legacy-gcp"`
 }
 
 type Securelogs struct {
@@ -133,14 +133,18 @@ type Config struct {
 	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
+	NaisNamespace                     string           `json:"nais-namespace"`
+	AivenRange                        string           `json:"aiven-range"`
 }
 
 const (
+	AivenRange                             = "aiven-range"
 	ApiServerIp                            = "api-server-ip"
 	Bind                                   = "bind"
 	HealthProbeBindAddress                 = "health-probe-bind-address"
 	ClusterName                            = "cluster-name"
 	DryRun                                 = "dry-run"
+	NaisNamespace                          = "nais-namespace"
 	FeaturesAccessPolicyNotAllowedCIDRs    = "features.access-policy-not-allowed-cidrs"
 	FeaturesAzurerator                     = "features.azurerator"
 	FeaturesDigdirator                     = "features.digdirator"
@@ -149,13 +153,13 @@ const (
 	FeaturesCNRM                           = "features.cnrm"
 	FeaturesKafkarator                     = "features.kafkarator"
 	FeaturesLinkerd                        = "features.linkerd"
-	FeaturesNaisSystem                     = "features.nais-system"
 	FeaturesNetworkPolicy                  = "features.network-policy"
 	FeaturesFQDNPolicy                     = "features.fqdn-policy"
 	FeaturesSeccomp                        = "features.seccomp"
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
 	FeaturesWebhook                        = "features.webhook"
+	FeaturesLegacyGCP                      = "features.legacy-gcp"
 	GoogleCloudSQLProxyContainerImage      = "google-cloud-sql-proxy-container-image"
 	GoogleProjectId                        = "google-project-id"
 	InformerFullSynchronizationInterval    = "informer.full-sync-interval"
@@ -220,15 +224,16 @@ func init() {
 	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
 	flag.String(HealthProbeBindAddress, "127.0.0.1:8085", "ip:port where health probes are performed")
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
+	flag.String(AivenRange, "aiven-range", "range of IP addresses for Aiven services")
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
+	flag.String(NaisNamespace, "nais-system", "namespace where nais resources are deployed")
 	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
 	flag.StringSlice(
 		FeaturesAccessPolicyNotAllowedCIDRs, []string{""},
 		"CIDRs that should not be included within the allowed IP Block rule for network policy",
 	)
-	flag.Bool(FeaturesNaisSystem, false, "enable nais-system features")
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesFQDNPolicy, false, "enable creation of fqdn egress policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
@@ -241,6 +246,7 @@ func init() {
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
+	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
 
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),

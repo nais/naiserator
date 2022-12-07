@@ -1,10 +1,12 @@
 testconfig:
-  description: vanilla application running in GCP with default configuration and access policies
+  description: vanilla application running in legacy GCP with default configuration and access policies
 
 config:
   features:
     linkerd: true
     network-policy: true
+    legacy-gcp: true
+  nais-namespace: nais
   google-project-id: google-project-id
 
 input:
@@ -81,7 +83,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: myapplication
+    name: myapplication-legacy
     match:
       - name: "network policy created with only system services"
         type: exact
@@ -95,6 +97,39 @@ tests:
                   - namespaceSelector:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
+              - to:
+                  - ipBlock:
+                      cidr: 0.0.0.0/0
+                      except:
+                        - 10.6.0.0/15
+                        - 172.16.0.0/12
+                        - 192.168.0.0/16
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        linkerd.io/is-control-plane: "true"
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+              - Ingress
+              - Egress
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created with only system services"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            egress:
+              - to:
                   - namespaceSelector: {}
                     podSelector:
                       matchLabels:
@@ -106,18 +141,7 @@ tests:
                         name: nais
                     podSelector:
                       matchLabels:
-                        app: prometheus
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        linkerd.io/is-control-plane: "true"
-              - from:
-                  - podSelector:
-                      matchLabels:
                         app.kubernetes.io/name: prometheus
-                    namespaceSelector:
-                      matchLabels:
-                        name: nais-system
             podSelector:
               matchLabels:
                 app: myapplication

@@ -7,23 +7,24 @@ annotations:
 
 imagePullPolicy: "IfNotPresent"
 imagePullSecret: "gpr-credentials"
-imageTag: "2022-11-17-36dcdff"
+imageTag: "2022-12-07-d6d04ef"
 
 labels:
   kafka: enabled
 
 stakaterSecret: "0c697898d6b74c708d5acdc318e8f0d7b3117e31"
 naiserator:
+  aiven-range: ""
   bind: 0.0.0.0:8080
   cluster-name: ""
   google-project-id: ""
   google-cloud-sql-proxy-container-image: "gcr.io/cloudsql-docker/gce-proxy:1.24.0-alpine"
   api-server-ip: ""
   host-aliases: ""
+  nais-namespace: "nais-system"
   features:
     linkerd: false
     access-policy-not-allowed-cidrs: []
-    nais-system: true
     network-policy: true
     fqdn-policy: false
     vault: false
@@ -33,6 +34,7 @@ naiserator:
     kafkarator: false
     digdirator: false
     prometheus-operator: true
+    legacy-gcp: false
     gcp: true
     webhook: true
     seccomp: true
