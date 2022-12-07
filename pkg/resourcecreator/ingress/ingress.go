@@ -29,7 +29,6 @@ type Source interface {
 type Config interface {
 	GetGatewayMappings() []config.GatewayMapping
 	IsLinkerdEnabled() bool
-	IsNaisSystemEnabled() bool
 }
 
 func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {

@@ -52,7 +52,6 @@ type Features struct {
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`
-	NaisSystem                  bool     `json:"nais-system"`
 	NetworkPolicy               bool     `json:"network-policy"`
 	FQDNPolicy                  bool     `json:"fqdn-policy"`
 	Seccomp                     bool     `json:"seccomp"`
@@ -154,7 +153,6 @@ const (
 	FeaturesCNRM                           = "features.cnrm"
 	FeaturesKafkarator                     = "features.kafkarator"
 	FeaturesLinkerd                        = "features.linkerd"
-	FeaturesNaisSystem                     = "features.nais-system"
 	FeaturesNetworkPolicy                  = "features.network-policy"
 	FeaturesFQDNPolicy                     = "features.fqdn-policy"
 	FeaturesSeccomp                        = "features.seccomp"
@@ -236,7 +234,6 @@ func init() {
 		FeaturesAccessPolicyNotAllowedCIDRs, []string{""},
 		"CIDRs that should not be included within the allowed IP Block rule for network policy",
 	)
-	flag.Bool(FeaturesNaisSystem, false, "enable nais-system features")
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesFQDNPolicy, false, "enable creation of fqdn egress policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")

@@ -1,0 +1,232 @@
+testconfig:
+  description: vanilla application with default configuration
+
+config:
+  features:
+    network-policy: true
+    fqdn-policy: true
+  nais-namespace: nais-system
+  google-project-id: google-project-id
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+tests:
+  - apiVersion: v1
+    kind: Service
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "service created with tcp port 80"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            ports:
+              - port: 80
+                targetPort: http
+                name: http
+                protocol: TCP
+            selector:
+              app: myapplication
+            type: ClusterIP
+
+  - operation: CreateIfNotExists
+    apiVersion: v1
+    kind: ServiceAccount
+    name: myapplication
+    match:
+      - type: subset
+        name: "service account created with google IaM annotation"
+        resource:
+          metadata:
+            annotations:
+              iam.gke.io/gcp-service-account: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+
+  - operation: CreateOrUpdate
+    apiVersion: autoscaling/v2beta2
+    kind: HorizontalPodAutoscaler
+    match:
+      - type: exact
+        name: "hpa created with 2-4 replicas and 50% cpu threshold"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            scaleTargetRef:
+              kind: Deployment
+              name: myapplication
+              apiVersion: apps/v1
+            minReplicas: 2
+            maxReplicas: 4
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 50
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created with only system services"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector: {}
+                    podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+              - Ingress
+              - Egress
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.gke.io/v1alpha2
+    kind: FQDNNetworkPolicy
+    name: myapplication-fqdn
+    match:
+      - name: "FQDN policy created"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            egress:
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - metadata.google.internal
+                      - private.googleapis.com
+                      - login.microsoftonline.com
+                      - idporten.no
+                      - aivencloud.com
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+              - Egress
+
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMServiceAccount
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "IAMServiceAccount created in namespace serviceaccounts"
+        exclude:
+          - .metadata.creationTimestamp
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+              nais.io/team: mynamespace
+            name: myapplicati-mynamespac-w4o5cwa
+            namespace: serviceaccounts
+          spec:
+            displayName: myapplication
+
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicy
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "IAMPolicy created in namespace serviceaccounts"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+            name: myapplicati-mynamespac-w4o5cwa
+            namespace: serviceaccounts
+          spec:
+            bindings:
+              - members:
+                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
+                role: roles/iam.workloadIdentityUser
+            resourceRef:
+              apiVersion: iam.cnrm.cloud.google.com/v1beta1
+              kind: IAMServiceAccount
+              name: myapplicati-mynamespac-w4o5cwa
+
+  - operation: CreateOrUpdate
+    apiVersion: policy/v1beta1
+    kind: PodDisruptionBudget
+    name: myapplication
+    match:
+      - type: exact
+        name: "pdb created with 1 max unavailable"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            maxUnavailable: 1
+            selector:
+              matchLabels:
+                app: myapplication
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - type: subset
+        name: "replicas set to 2"
+        resource:
+          spec:
+            replicas: 2
+      - type: subset
+        name: "pod created with safe-to-evict annotation"
+        resource:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      - type: subset
+        name: "restricted securitycontext"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - securityContext:
+                      runAsUser: 1069
+                      runAsGroup: 1069
+                      allowPrivilegeEscalation: false
+                      runAsNonRoot: true
+                      privileged: false
+                      capabilities:
+                        drop: ["ALL"]

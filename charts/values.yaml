@@ -25,7 +25,6 @@ naiserator:
   features:
     linkerd: false
     access-policy-not-allowed-cidrs: []
-    nais-system: true
     network-policy: true
     fqdn-policy: false
     vault: false

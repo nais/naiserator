@@ -26,10 +26,6 @@ func (o *Options) GetAPIServerIP() string {
 	return o.Config.ApiServerIp
 }
 
-func (o *Options) IsNaisSystemEnabled() bool {
-	return o.Config.Features.NaisSystem
-}
-
 func (o *Options) GetAccessPolicyNotAllowedCIDRs() []string {
 	return o.Config.Features.AccessPolicyNotAllowedCIDRs
 }

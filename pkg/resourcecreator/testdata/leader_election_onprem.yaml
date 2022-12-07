@@ -1,9 +1,5 @@
 testconfig:
-  description: leader election container injection, using simple elector
-
-config:
-  leader-election:
-    image: "not-a-google-containers-image:latest"
+  description: leader election container injection
 
 input:
   kind: Application
@@ -20,7 +16,7 @@ input:
 tests:
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
-    name: elector-myapplication-40c4e812
+    name: myapplication
     operation: CreateOrUpdate
     match:
       - type: subset
@@ -28,18 +24,18 @@ tests:
         resource:
           rules:
             - apiGroups:
-                - "coordination.k8s.io"
+                - ""
+              resourceNames:
+                - myapplication
               resources:
-                - leases
+                - endpoints
               verbs:
                 - get
-                - create
-                - list
-                - watch
+                - update
 
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
-    name: elector-myapplication-40c4e812
+    name: myapplication
     operation: CreateOrRecreate
     match:
       - type: subset
@@ -47,7 +43,7 @@ tests:
           roleRef:
             apiGroup: rbac.authorization.k8s.io
             kind: Role
-            name: elector-myapplication-40c4e812
+            name: myapplication
           subjects:
             - kind: ServiceAccount
               name: myapplication
@@ -67,7 +63,7 @@ tests:
                 containers:
                   - name: "myapplication"
                   - name: "elector"
-                    image: "not-a-google-containers-image:latest"
+                    image: "gcr.io/google_containers/leader-elector:0.5"
                     args:
                       - "--election=myapplication"
                       - "--http=localhost:4040"

@@ -3,9 +3,7 @@ testconfig:
 
 config:
   features:
-    linkerd: false
     network-policy: true
-    nais-system: true
     fqdn-policy: true
   google-project-id: google-project-id
   cluster-name: mycluster
@@ -28,9 +26,6 @@ input:
       team: myteam
   spec:
     image: navikt/myapplication:1.2.3
-    ingresses:
-      - 'https://myapplication.dev.nais.io'
-      - 'https://myapplication.other.domain'
     accessPolicy:
       inbound:
         rules:
@@ -76,20 +71,6 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         name: nais-system
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        name: nais-system
-                    podSelector:
-                      matchLabels:
-                        nais.io/ingressClass: nais-ingress
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        name: nais-system
-                    podSelector:
-                      matchLabels:
-                        nais.io/ingressClass: nais-ingress-external
               - from:
                   - podSelector:
                       matchLabels:

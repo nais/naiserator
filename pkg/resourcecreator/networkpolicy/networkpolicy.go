@@ -27,7 +27,6 @@ type Config interface {
 	GetGatewayMappings() []config.GatewayMapping
 	GetGoogleProjectID() string
 	GetNaisNamespace() string
-	IsNaisSystemEnabled() bool
 	IsNetworkPolicyEnabled() bool
 	IsLegacyGCP() bool
 }
