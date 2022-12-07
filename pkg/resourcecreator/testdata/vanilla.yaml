@@ -6,6 +6,7 @@ config:
     network-policy: true
     fqdn-policy: true
   nais-namespace: nais-system
+  aiven-range: 1.2.3.4/32
   google-project-id: google-project-id
 
 input:
@@ -97,6 +98,9 @@ tests:
                     podSelector:
                       matchLabels:
                         k8s-app: kube-dns
+              - to:
+                  - ipBlock:
+                      cidr: 1.2.3.4/32
             ingress:
               - from:
                   - namespaceSelector:
