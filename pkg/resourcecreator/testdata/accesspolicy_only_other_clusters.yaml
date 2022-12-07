@@ -3,10 +3,11 @@ testconfig:
 
 config:
   features:
-    linkerd: true
+    linkerd: false
     network-policy: true
   google-project-id: google-project-id
   cluster-name: mycluster
+  nais-namespace: nais-system
 
 input:
   kind: Application
@@ -45,17 +46,6 @@ tests:
           spec:
             ingress:
               - from:
-                - podSelector:
-                    matchLabels:
-                      app: prometheus
-                  namespaceSelector:
-                    matchLabels:
-                      name: nais
-              - from:
-                - namespaceSelector:
-                    matchLabels:
-                      linkerd.io/is-control-plane: "true"
-              - from:
                   - podSelector:
                       matchLabels:
                         app.kubernetes.io/name: prometheus
@@ -63,20 +53,7 @@ tests:
                       matchLabels:
                         name: nais-system
             egress:
-              - ports:
-                  - port: 443
-                    protocol: TCP
-                to:
-                  - fqdns:
-                      - metadata.google.internal
-                      - private.googleapis.com
-                      - login.microsoftonline.com
-                      - idporten.no
-                      - aivencloud.com
               - to:
-                - namespaceSelector:
-                    matchLabels:
-                      linkerd.io/is-control-plane: "true"
                 - podSelector:
                     matchLabels:
                       k8s-app: kube-dns

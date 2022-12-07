@@ -6,13 +6,15 @@ config:
     linkerd: false
     network-policy: true
     nais-system: true
+    fqdn-policy: true
   google-project-id: google-project-id
   cluster-name: mycluster
   gateway-mappings:
-    - domainSuffix: .adeo.no
-      ingressClass: adeo-gateway
+    - domainSuffix: .nais.io
+      ingressClass: nais-ingress
     - domainSuffix: .domain
-      ingressClass: domain-gateway
+      ingressClass: nais-ingress-external
+  nais-namespace: nais-system
 
 
 input:
@@ -27,7 +29,7 @@ input:
   spec:
     image: navikt/myapplication:1.2.3
     ingresses:
-      - 'https://myapplication.dev.adeo.no'
+      - 'https://myapplication.dev.nais.io'
       - 'https://myapplication.other.domain'
     accessPolicy:
       inbound:
@@ -46,8 +48,12 @@ input:
             namespace: t2
         external:
           - host: www.external-application.com
-          - host: https://www.another-external-application.com
-          - host: http://www.yet-another-external-application.com
+          - host: www.customport.com
+            ports:
+              - port: 9443
+              - port: 8443
+          - host: https://www.withprotocol.com
+          - host: http://www.anotherprotocol.com
 
 tests:
   - operation: CreateOrUpdate
@@ -66,21 +72,24 @@ tests:
               - from:
                   - podSelector:
                       matchLabels:
-                        app: prometheus
-                    namespaceSelector:
-                      matchLabels:
-                        name: nais
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        linkerd.io/is-control-plane: "true"
-              - from:
-                  - podSelector:
-                      matchLabels:
                         app.kubernetes.io/name: prometheus
                     namespaceSelector:
                       matchLabels:
                         name: nais-system
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nais-system
+                    podSelector:
+                      matchLabels:
+                        nais.io/ingressClass: nais-ingress
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nais-system
+                    podSelector:
+                      matchLabels:
+                        nais.io/ingressClass: nais-ingress-external
               - from:
                   - podSelector:
                       matchLabels:
@@ -95,35 +104,8 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         name: t1
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        name: nais-system
-                    podSelector:
-                      matchLabels:
-                        nais.io/ingressClass: adeo-gateway
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        name: nais-system
-                    podSelector:
-                      matchLabels:
-                        nais.io/ingressClass: domain-gateway
             egress:
-              - ports:
-                  - port: 443
-                    protocol: TCP
-                to:
-                  - fqdns:
-                      - metadata.google.internal
-                      - private.googleapis.com
-                      - login.microsoftonline.com
-                      - idporten.no
-                      - aivencloud.com
               - to:
-                  - namespaceSelector:
-                      matchLabels:
-                        linkerd.io/is-control-plane: "true"
                   - podSelector:
                       matchLabels:
                         k8s-app: kube-dns
@@ -138,13 +120,64 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         name: q2
-                  - podSelector: { }
-                    namespaceSelector:
-                      matchLabels:
-                        name: t2
             policyTypes:
               - Ingress
               - Egress
             podSelector:
               matchLabels:
                 app: myapplication
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.gke.io/v1alpha2
+    kind: FQDNNetworkPolicy
+    name: myapplication-fqdn
+    match:
+      - name: "FQDN policy created"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            egress:
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - metadata.google.internal
+                      - private.googleapis.com
+                      - login.microsoftonline.com
+                      - idporten.no
+                      - aivencloud.com
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - www.external-application.com
+              - ports:
+                  - port: 9443
+                    protocol: TCP
+                  - port: 8443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - www.customport.com
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - www.withprotocol.com
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
+                      - www.anotherprotocol.com
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+              - Egress

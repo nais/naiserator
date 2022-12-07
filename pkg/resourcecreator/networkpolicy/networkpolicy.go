@@ -75,7 +75,7 @@ func egressRules(policy *nais_io_v1.AccessPolicy, cfg Config, election bool) []n
 	rules := make([]networkingv1.NetworkPolicyEgressRule, 0)
 
 	rules = append(rules, defaultEgressRules(cfg)...)
-	rules = append(rules, egressRulesFromAccessPolicy(policy, cfg))
+	rules = append(rules, egressRulesFromAccessPolicy(policy, cfg)...)
 	if election {
 		rules = append(rules, networkingv1.NetworkPolicyEgressRule{
 			To: []networkingv1.NetworkPolicyPeer{
@@ -91,9 +91,9 @@ func egressRules(policy *nais_io_v1.AccessPolicy, cfg Config, election bool) []n
 	return rules
 }
 
-func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) networkingv1.NetworkPolicyEgressRule {
+func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) []networkingv1.NetworkPolicyEgressRule {
 	if policy == nil || policy.Outbound == nil || len(policy.Outbound.Rules) == 0 {
-		return networkingv1.NetworkPolicyEgressRule{}
+		return nil
 	}
 
 	peers := make([]networkingv1.NetworkPolicyPeer, 0)
@@ -114,8 +114,14 @@ func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) ne
 		peers = append(peers, peer)
 	}
 
-	return networkingv1.NetworkPolicyEgressRule{
-		To: peers,
+	if len(peers) == 0 {
+		return nil
+	}
+
+	return []networkingv1.NetworkPolicyEgressRule{
+		{
+			To: peers,
+		},
 	}
 }
 
@@ -261,6 +267,10 @@ func ingressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, options Confi
 		}
 
 		peers = append(peers, peer)
+	}
+
+	if len(peers) == 0 {
+		return nil
 	}
 
 	return []networkingv1.NetworkPolicyIngressRule{
