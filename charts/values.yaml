@@ -26,7 +26,6 @@ naiserator:
     linkerd: false
     access-policy-not-allowed-cidrs: []
     network-policy: true
-    fqdn-policy: false
     vault: false
     jwker: false
     cnrm: true
@@ -71,6 +70,26 @@ naiserator:
       token-url: ""
   leader-election:
     image: ghcr.io/nais/elector:latest
+
+  fqdn-policy:
+    enabled: false
+    rules:
+      - host: metadata.google.internal
+        port: 80
+      - host: private.googleapis.com
+        port: 443
+      - host: login.microsoftonline.com
+        port: 443
+      - host: oidc.difi.no
+        port: 443
+      - host: ver2.maskinporten.no
+        port: 443
+      - host: maskinporten.no
+        port: 443
+      - host: oidc-ver2.difi.no
+        port: 443
+      - host: aivencloud.com
+        port: 443
 
 podSecurityContext:
   fsGroup: 65532

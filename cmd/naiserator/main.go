@@ -97,7 +97,7 @@ func run() error {
 		return err
 	}
 
-	if cfg.Features.FQDNPolicy {
+	if cfg.FQDNPolicy.Enabled {
 		err := fqdn_scheme.AddToScheme(kscheme)
 		if err != nil {
 			return err

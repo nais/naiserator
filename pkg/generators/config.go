@@ -122,6 +122,10 @@ func (o *Options) GetLeaderElectionImage() string {
 	return o.Config.LeaderElection.Image
 }
 
+func (o *Options) GetFQDNPolicy() config.FQDNPolicy {
+	return o.Config.FQDNPolicy
+}
+
 func (o *Options) IsPrometheusOperatorEnabled() bool {
 	return o.Config.Features.PrometheusOperator
 }
@@ -132,10 +136,6 @@ func (o *Options) IsNAVCABundleEnabled() bool {
 
 func (o *Options) IsSeccompEnabled() bool {
 	return o.Config.Features.Seccomp
-}
-
-func (o *Options) IsFQDNPolicyEnabled() bool {
-	return o.Config.Features.FQDNPolicy
 }
 
 func (o *Options) GetNaisNamespace() string {

@@ -53,7 +53,6 @@ type Features struct {
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`
 	NetworkPolicy               bool     `json:"network-policy"`
-	FQDNPolicy                  bool     `json:"fqdn-policy"`
 	Seccomp                     bool     `json:"seccomp"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
 	Vault                       bool     `json:"vault"`
@@ -111,6 +110,16 @@ type LeaderElection struct {
 	Image string `json:"image"`
 }
 
+type FQDNPolicy struct {
+	Enabled bool       `json:"enabled"`
+	Rules   []FQDNRule `json:"rules"`
+}
+
+type FQDNRule struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
+}
+
 type Config struct {
 	DryRun                            bool             `json:"dry-run"`
 	Bind                              string           `json:"bind"`
@@ -135,6 +144,7 @@ type Config struct {
 	LeaderElection                    LeaderElection   `json:"leader-election"`
 	NaisNamespace                     string           `json:"nais-namespace"`
 	AivenRange                        string           `json:"aiven-range"`
+	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
 }
 
 const (
@@ -154,12 +164,12 @@ const (
 	FeaturesKafkarator                     = "features.kafkarator"
 	FeaturesLinkerd                        = "features.linkerd"
 	FeaturesNetworkPolicy                  = "features.network-policy"
-	FeaturesFQDNPolicy                     = "features.fqdn-policy"
 	FeaturesSeccomp                        = "features.seccomp"
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
 	FeaturesWebhook                        = "features.webhook"
 	FeaturesLegacyGCP                      = "features.legacy-gcp"
+	FQDNPolicyEnabled                      = "fqdn-policy.enabled"
 	GoogleCloudSQLProxyContainerImage      = "google-cloud-sql-proxy-container-image"
 	GoogleProjectId                        = "google-project-id"
 	InformerFullSynchronizationInterval    = "informer.full-sync-interval"
@@ -235,7 +245,6 @@ func init() {
 		"CIDRs that should not be included within the allowed IP Block rule for network policy",
 	)
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
-	flag.Bool(FeaturesFQDNPolicy, false, "enable creation of fqdn egress policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 	flag.Bool(FeaturesGCP, false, "running in gcp and enable use of CNRM resources")
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
@@ -247,7 +256,7 @@ func init() {
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
 	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
-
+	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),
 		"how often to run a full synchronization of all applications",

@@ -4,8 +4,14 @@ testconfig:
 config:
   features:
     network-policy: true
-    fqdn-policy: true
   google-project-id: google-project-id
+  fqdn-policy:
+    enabled: true
+    rules:
+      - host: "yolo.com"
+        port: 80
+      - host: "google.com"
+        port: 443
 
 input:
   kind: Application
@@ -47,16 +53,13 @@ tests:
                     protocol: TCP
                 to:
                   - fqdns:
-                      - metadata.google.internal
+                      - yolo.com
               - ports:
                   - port: 443
                     protocol: TCP
                 to:
                   - fqdns:
-                      - private.googleapis.com
-                      - login.microsoftonline.com
-                      - idporten.no
-                      - aivencloud.com
+                      - google.com
               - ports:
                   - port: 443
                     protocol: TCP
