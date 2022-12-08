@@ -64,12 +64,25 @@ func defaultEgressPolicy() []fqdn.FQDNNetworkPolicyEgressRule {
 			Ports: []networkingv1.NetworkPolicyPort{
 				{
 					Protocol: &[]v1.Protocol{v1.ProtocolTCP}[0],
+					Port:     &[]intstr.IntOrString{intstr.FromInt(80)}[0],
+				},
+			},
+			To: []fqdn.FQDNNetworkPolicyPeer{
+				{
+					FQDNs: []string{"metadata.google.internal"},
+				},
+			},
+		},
+		{
+			Ports: []networkingv1.NetworkPolicyPort{
+				{
+					Protocol: &[]v1.Protocol{v1.ProtocolTCP}[0],
 					Port:     &[]intstr.IntOrString{intstr.FromInt(443)}[0],
 				},
 			},
 			To: []fqdn.FQDNNetworkPolicyPeer{
 				{
-					FQDNs: []string{"metadata.google.internal", "private.googleapis.com", "login.microsoftonline.com", "idporten.no", "aivencloud.com"},
+					FQDNs: []string{"private.googleapis.com", "login.microsoftonline.com", "idporten.no", "aivencloud.com"},
 				},
 			},
 		},

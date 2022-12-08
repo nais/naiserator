@@ -130,11 +130,16 @@ tests:
           spec:
             egress:
               - ports:
-                  - port: 443
+                  - port: 80
                     protocol: TCP
                 to:
                   - fqdns:
                       - metadata.google.internal
+              - ports:
+                  - port: 443
+                    protocol: TCP
+                to:
+                  - fqdns:
                       - private.googleapis.com
                       - login.microsoftonline.com
                       - idporten.no
