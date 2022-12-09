@@ -7,7 +7,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
-	github.com/hashicorp/go-multierror v1.1.0
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.13
 	github.com/klauspost/compress v1.12.2 // indirect
 	github.com/magiconair/properties v1.8.6
