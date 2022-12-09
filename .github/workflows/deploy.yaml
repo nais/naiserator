@@ -1,31 +1,30 @@
 name: Build and deploy
-on: 
-  push:
-    branches:
-      - master
-    paths-ignore: 
-      - 'charts/**'
-      - '.github/workflows/chart.yaml'
+on:
+    push:
+        paths-ignore:
+            - "charts/**"
+            - ".github/workflows/chart.yaml"
 
 env:
-  image: ghcr.io/${{ github.repository }}/naiserator
+    image: ghcr.io/${{ github.repository }}/naiserator
 
 jobs:
-  build-push:
-    name: Build and push image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout naiserator
-        uses: actions/checkout@v3
-      - name: Generate image environment variable
-        run: |
-          version=$(./version.sh)
-          echo "IMAGE=${image}:${version}" >> $GITHUB_ENV
-      - name: Build docker image
-        run: docker build . --tag $IMAGE
-      - name: Login to Github package registry
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_REPOSITORY" --password-stdin
-      - name: Push docker image
-        run: docker push $IMAGE
+    build-push:
+        name: Build and push image
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout naiserator
+              uses: actions/checkout@v3
+            - name: Generate image environment variable
+              run: |
+                  version=$(./version.sh)
+                  echo "IMAGE=${image}:${version}" >> $GITHUB_ENV
+            - name: Build docker image
+              run: docker build . --tag $IMAGE
+            - name: Login to Github package registry
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_REPOSITORY" --password-stdin
+            - name: Push docker image
+              if: github.ref == 'refs/heads/master'
+              run: docker push $IMAGE
