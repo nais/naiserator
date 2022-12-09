@@ -1,6 +1,8 @@
 name: Build and deploy
 on: 
   push:
+    branches:
+      - master
     paths-ignore: 
       - 'charts/**'
       - '.github/workflows/chart.yaml'
