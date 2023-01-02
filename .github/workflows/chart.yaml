@@ -32,7 +32,7 @@ jobs:
         run: |-
           echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://europe-north1-docker.pkg.dev
 
-      - uses: azure/setup-helm@v1
+      - uses: azure/setup-helm@v3
         name: 'Setup Helm'
         with:
           version: '3.8.0'
