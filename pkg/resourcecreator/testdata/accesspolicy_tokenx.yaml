@@ -91,6 +91,9 @@ tests:
         resource:
           spec:
             template:
+              metadata:
+                labels:
+                  tokenx: enabled
               spec:
                 volumes:
                   - name: ^tokenx-myapplication-.+$
