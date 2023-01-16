@@ -12,7 +12,7 @@ RUN go test ./...
 RUN cd cmd/naiserator && go build -a -installsuffix cgo -o naiserator
 RUN cd cmd/naiserator_webhook && go build -a -installsuffix cgo -o naiserator_webhook
 
-FROM alpine:3.16
+FROM alpine:3.17
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /src/cmd/naiserator/naiserator /app/naiserator
