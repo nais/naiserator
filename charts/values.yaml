@@ -61,7 +61,7 @@ naiserator:
     init-container-image: navikt/vault-sidekick:v0.3.10-26ad67d
     kv-path: /kv/default/default
   wonderwall:
-    image: ghcr.io/nais/wonderwall:2022-11-10-30f155a
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-01-10-d8493e1
     loginstatus:
       enabled: true
       cookie-domain:
