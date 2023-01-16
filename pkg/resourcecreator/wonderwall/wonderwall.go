@@ -179,7 +179,7 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 	reqs := cfg.Resources
 	defaultReqs := &nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
-			Cpu:    "250m",
+			Cpu:    "2",
 			Memory: "256Mi",
 		},
 		Requests: &nais_io_v1.ResourceSpec{

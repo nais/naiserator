@@ -100,7 +100,7 @@ tests:
                         protocol: TCP
                     resources:
                       limits:
-                        cpu: 250m
+                        cpu: "2"
                         memory: 256Mi
                       requests:
                         cpu: 20m
