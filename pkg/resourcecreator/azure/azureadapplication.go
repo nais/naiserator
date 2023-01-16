@@ -52,6 +52,8 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
 
+	ast.Labels["azure"] = "enabled"
+
 	if shouldNotCreateWonderwall(source, config) {
 		return nil
 	}

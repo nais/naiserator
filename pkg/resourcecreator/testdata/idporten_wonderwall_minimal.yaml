@@ -52,6 +52,7 @@ tests:
               metadata:
                 labels:
                   aiven: enabled
+                  idporten: enabled
                   team: myteam
                   wonderwall: enabled
               spec:

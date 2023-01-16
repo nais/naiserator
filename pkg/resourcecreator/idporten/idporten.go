@@ -131,6 +131,8 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
 
+	ast.Labels["idporten"] = "enabled"
+
 	// Return early if sidecar or Wonderwall is disabled
 	if idPorten.Sidecar == nil || !idPorten.Sidecar.Enabled || !cfg.IsWonderwallEnabled() {
 		return nil

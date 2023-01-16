@@ -47,6 +47,7 @@ tests:
               metadata:
                 labels:
                   aiven: enabled
+                  azure: enabled
                   team: myteam
                   wonderwall: enabled
               spec:

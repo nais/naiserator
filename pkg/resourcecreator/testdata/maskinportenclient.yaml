@@ -76,6 +76,9 @@ tests:
         resource:
           spec:
             template:
+              metadata:
+                labels:
+                  maskinporten: enabled
               spec:
                 volumes:
                   - name: ^maskinporten-myapplication-.{8}$

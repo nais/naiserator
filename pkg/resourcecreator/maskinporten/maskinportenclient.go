@@ -48,6 +48,8 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return nil
 	}
 
+	ast.Labels["maskinporten"] = "enabled"
+
 	maskinportenClient, err := client(resource.CreateObjectMeta(source), maskinporten)
 	if err != nil {
 		return err

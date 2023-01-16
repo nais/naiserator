@@ -67,6 +67,9 @@ tests:
         resource:
           spec:
             template:
+              metadata:
+                labels:
+                  idporten: enabled
               spec:
                 volumes:
                   - name: ^idporten-myapplication-.{8}$

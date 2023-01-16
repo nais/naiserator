@@ -63,6 +63,9 @@ tests:
         resource:
           spec:
             template:
+              metadata:
+                labels:
+                  azure: enabled
               spec:
                 volumes:
                   - name: ^azure-myapplication-4190a8ca-.{6,7}$
