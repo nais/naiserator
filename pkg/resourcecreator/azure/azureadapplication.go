@@ -21,6 +21,7 @@ import (
 
 const (
 	applicationDefaultCallbackPath = "/oauth2/callback"
+	wonderwallSecretName           = "wonderwall-azure-config"
 )
 
 type Source interface {
@@ -39,8 +40,13 @@ type Config interface {
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	if shouldNotCreate(source, config) {
+	az := source.GetAzure()
+	if az == nil || az.GetApplication() == nil || !az.GetApplication().Enabled {
 		return nil
+	}
+
+	if !config.IsAzureratorEnabled() {
+		return fmt.Errorf("azure ad is not enabled for this cluster")
 	}
 
 	azureAdApplication, err := application(source, config)
@@ -48,14 +54,17 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
+	ast.Labels["azure"] = "enabled"
 	ast.AppendOperation(resource.OperationCreateOrUpdate, azureAdApplication)
 	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
 
-	ast.Labels["azure"] = "enabled"
-
-	if shouldNotCreateWonderwall(source, config) {
+	if az.GetSidecar() == nil || !az.GetSidecar().Enabled {
 		return nil
+	}
+
+	if !config.IsWonderwallEnabled() {
+		return fmt.Errorf("azure ad sidecar is not enabled for this cluster")
 	}
 
 	// configure sidecar
@@ -64,8 +73,8 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
 	}
 
-	wwCfg := wonderwallConfig(source, azureAdApplication.Spec.SecretName, ingresses)
-	err = wonderwall.Create(source, ast, config, wwCfg)
+	wonderwallCfg := makeWonderwallConfig(source, azureAdApplication.Spec.SecretName, ingresses)
+	err = wonderwall.Create(source, ast, config, wonderwallCfg)
 	if err != nil {
 		return err
 	}
@@ -78,16 +87,6 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	azureAdApplication.Spec.SinglePageApplication = pointer.Bool(false)
 
 	return nil
-}
-
-func shouldNotCreate(source Source, config Config) bool {
-	az := source.GetAzure()
-	return !config.IsAzureratorEnabled() || az.GetApplication() == nil || !az.GetApplication().Enabled
-}
-
-func shouldNotCreateWonderwall(source Source, config Config) bool {
-	az := source.GetAzure()
-	return !config.IsWonderwallEnabled() || az.GetSidecar() == nil || !az.GetSidecar().Enabled
 }
 
 func application(source Source, config Config) (*nais_io_v1.AzureAdApplication, error) {
@@ -164,7 +163,7 @@ func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAd
 	return (nais_io_v1.AzureAdReplyUrlString)(util.AppendPathToIngress(url, path))
 }
 
-func wonderwallConfig(source Source, providerSecretName string, ingresses []nais_io_v1.Ingress) wonderwall.Configuration {
+func makeWonderwallConfig(source Source, providerSecretName string, ingresses []nais_io_v1.Ingress) wonderwall.Configuration {
 	sidecar := source.GetAzure().GetSidecar()
 
 	ingressesStrings := make([]string, 0)
@@ -177,9 +176,8 @@ func wonderwallConfig(source Source, providerSecretName string, ingresses []nais
 		AutoLoginIgnorePaths: sidecar.AutoLoginIgnorePaths,
 		ErrorPath:            sidecar.ErrorPath,
 		Ingresses:            ingressesStrings,
-		Loginstatus:          false,
 		Provider:             "azure",
-		ProviderSecretName:   providerSecretName,
+		SecretNames:          []string{providerSecretName, wonderwallSecretName},
 		Resources:            sidecar.Resources,
 		SessionRefresh:       true,
 	}

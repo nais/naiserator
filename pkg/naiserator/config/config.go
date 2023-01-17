@@ -95,16 +95,7 @@ type Ratelimit struct {
 }
 
 type Wonderwall struct {
-	Image       string                `json:"image"`
-	Loginstatus WonderwallLoginstatus `json:"loginstatus"`
-}
-
-type WonderwallLoginstatus struct {
-	Enabled           bool   `json:"enabled"`
-	CookieDomain      string `json:"cookie-domain"`
-	CookieName        string `json:"cookie-name"`
-	ResourceIndicator string `json:"resource-indicator"`
-	TokenURL          string `json:"token-url"`
+	Image string `json:"image"`
 }
 
 type LeaderElection struct {
@@ -305,11 +296,6 @@ func init() {
 	flag.StringSlice(KafkaBrokers, []string{"localhost:9092"}, "Comma-separated list of Kafka brokers, HOST:PORT.")
 
 	flag.String(WonderwallImage, "", "Docker image used for Wonderwall.")
-	flag.Bool(WonderwallLoginstatusEnabled, false, "Enable Loginstatus for Wonderwall.")
-	flag.String(WonderwallLoginstatusCookieDomain, "", "Cookie domain for Loginstatus.")
-	flag.String(WonderwallLoginstatusCookieName, "", "Cookie name for Loginstatus.")
-	flag.String(WonderwallLoginstatusResourceIndicator, "", "Resource indicator for Loginstatus.")
-	flag.String(WonderwallLoginstatusTokenURL, "", "Token URL for Loginstatus.")
 }
 
 // Print out all configuration options except secret stuff.

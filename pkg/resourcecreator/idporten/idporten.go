@@ -18,6 +18,7 @@ import (
 const (
 	clientDefaultCallbackPath = "/oauth2/callback"
 	clientDefaultLogoutPath   = "/oauth2/logout"
+	wonderwallSecretName      = "wonderwall-idporten-config"
 )
 
 type Source interface {
@@ -116,8 +117,12 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	idPorten := app.GetIDPorten()
 	ingresses := app.GetIngress()
 
-	if !cfg.IsDigdiratorEnabled() || idPorten == nil || !idPorten.Enabled {
+	if idPorten == nil || !idPorten.Enabled {
 		return nil
+	}
+
+	if !cfg.IsDigdiratorEnabled() {
+		return fmt.Errorf("idporten is not enabled for this cluster")
 	}
 
 	// create idporten client and attach secrets
@@ -126,20 +131,22 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
+	ast.Labels["idporten"] = "enabled"
 	ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
-
 	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
 
-	ast.Labels["idporten"] = "enabled"
-
-	// Return early if sidecar or Wonderwall is disabled
-	if idPorten.Sidecar == nil || !idPorten.Sidecar.Enabled || !cfg.IsWonderwallEnabled() {
+	// return early if sidecar is not enabled
+	if idPorten.Sidecar == nil || !idPorten.Sidecar.Enabled {
 		return nil
 	}
 
+	if !cfg.IsWonderwallEnabled() {
+		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
+	}
+
 	// create sidecar container
-	wonderwallCfg := wonderwallConfig(app, idportenClient.Spec.SecretName)
+	wonderwallCfg := makeWonderwallConfig(app, idportenClient.Spec.SecretName)
 	err = wonderwall.Create(app, ast, cfg, wonderwallCfg)
 	if err != nil {
 		return err
@@ -153,7 +160,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	return nil
 }
 
-func wonderwallConfig(source Source, providerSecretName string) wonderwall.Configuration {
+func makeWonderwallConfig(source Source, providerSecretName string) wonderwall.Configuration {
 	naisIngresses := source.GetIngress()
 	naisIdPorten := source.GetIDPorten()
 
@@ -165,12 +172,11 @@ func wonderwallConfig(source Source, providerSecretName string) wonderwall.Confi
 		Ingresses: []string{
 			string(naisIngresses[0]),
 		},
-		Loginstatus:        true,
-		Provider:           "idporten",
-		ProviderSecretName: providerSecretName,
-		Resources:          naisIdPorten.Sidecar.Resources,
-		SessionRefresh:     false,
-		UILocales:          naisIdPorten.Sidecar.Locale,
+		Provider:       "idporten",
+		SecretNames:    []string{providerSecretName, wonderwallSecretName},
+		Resources:      naisIdPorten.Sidecar.Resources,
+		SessionRefresh: false,
+		UILocales:      naisIdPorten.Sidecar.Locale,
 	}
 
 	return cfg

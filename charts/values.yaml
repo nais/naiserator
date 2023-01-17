@@ -63,12 +63,6 @@ naiserator:
     kv-path: /kv/default/default
   wonderwall:
     image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-01-10-d8493e1
-    loginstatus:
-      enabled: true
-      cookie-domain:
-      cookie-name: innloggingsstatus-token
-      resource-indicator: ""
-      token-url: ""
   leader-election:
     image: ghcr.io/nais/elector:latest
 
