@@ -14,7 +14,6 @@ type Options struct {
 	Linkerd             bool
 	NumReplicas         int32
 	Team                string
-	WonderwallEnabled   bool
 }
 
 func (o *Options) IsLinkerdEnabled() bool {
@@ -63,7 +62,7 @@ func (o *Options) IsAzureratorEnabled() bool {
 }
 
 func (o *Options) IsWonderwallEnabled() bool {
-	return o.WonderwallEnabled
+	return o.Config.Features.Wonderwall
 }
 
 func (o *Options) GetGoogleProjectID() string {

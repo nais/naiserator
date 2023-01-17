@@ -4,14 +4,11 @@ testconfig:
 config:
   cluster-name: mycluster
   features:
-    linkerd: true
     digdirator: true
-    network-policy: true
-    gcp: true
+    wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no
       ingressClass: very-nginx
-  google-project-id: google-project-id
   wonderwall:
     image: nais/wonderwall
     loginstatus:

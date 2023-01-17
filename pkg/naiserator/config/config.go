@@ -59,6 +59,7 @@ type Features struct {
 	Webhook                     bool     `json:"webhook"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	LegacyGCP                   bool     `json:"legacy-gcp"`
+	Wonderwall                  bool     `json:"wonderwall"`
 }
 
 type Securelogs struct {
@@ -168,6 +169,7 @@ const (
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
 	FeaturesWebhook                        = "features.webhook"
+	FeaturesWonderwall                     = "features.wonderwall"
 	FeaturesLegacyGCP                      = "features.legacy-gcp"
 	FQDNPolicyEnabled                      = "fqdn-policy.enabled"
 	GoogleCloudSQLProxyContainerImage      = "google-cloud-sql-proxy-container-image"
@@ -256,6 +258,7 @@ func init() {
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
 	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
+	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),

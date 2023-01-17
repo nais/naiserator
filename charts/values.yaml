@@ -38,6 +38,7 @@ naiserator:
     webhook: true
     seccomp: true
     nav-ca-bundle: false
+    wonderwall: false
   informer:
     full-sync-interval: 4h
   synchronizer:
