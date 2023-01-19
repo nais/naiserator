@@ -4,22 +4,13 @@ testconfig:
 config:
   cluster-name: mycluster
   features:
-    linkerd: true
     digdirator: true
-    network-policy: true
-    gcp: true
+    wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no
       ingressClass: very-nginx
-  google-project-id: google-project-id
   wonderwall:
     image: nais/wonderwall
-    loginstatus:
-      enabled: true
-      cookie-domain: domain.test
-      cookie-name: cool-cookie
-      resource-indicator: https://domain.test
-      token-url: https://domain.test/loginstatus/token
 
 input:
   kind: Application
@@ -52,6 +43,7 @@ tests:
               metadata:
                 labels:
                   aiven: enabled
+                  idporten: enabled
                   team: myteam
                   wonderwall: enabled
               spec:
@@ -71,23 +63,13 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
-                      - name: WONDERWALL_LOGINSTATUS_ENABLED
-                        value: "true"
-                      - name: WONDERWALL_LOGINSTATUS_COOKIE_DOMAIN
-                        value: ^domain.test$
-                      - name: WONDERWALL_LOGINSTATUS_COOKIE_NAME
-                        value: ^cool-cookie$
-                      - name: WONDERWALL_LOGINSTATUS_RESOURCE_INDICATOR
-                        value: ^https://domain.test$
-                      - name: WONDERWALL_LOGINSTATUS_TOKEN_URL
-                        value: ^https://domain.test/loginstatus/token$
                     envFrom:
-                      - secretRef:
-                          name: ^idporten-myapplication-.{8}$
                       - secretRef:
                           name: ^idporten-wonderwall-myapplication-.{8}$
                       - secretRef:
-                          name: ^wonderwall-secret$
+                          name: ^idporten-myapplication-.{8}$
+                      - secretRef:
+                          name: ^wonderwall-idporten-config
                     image: nais/wonderwall
                     name: wonderwall
                     ports:
@@ -99,7 +81,7 @@ tests:
                         protocol: TCP
                     resources:
                       limits:
-                        cpu: 250m
+                        cpu: "2"
                         memory: 256Mi
                       requests:
                         cpu: 20m

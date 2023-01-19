@@ -4,22 +4,13 @@ testconfig:
 config:
   cluster-name: mycluster
   features:
-    linkerd: true
     digdirator: true
-    network-policy: true
-  gcp: true
+    wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no
       ingressClass: very-nginx
-  google-project-id: google-project-id
   wonderwall:
     image: nais/wonderwall
-    loginstatus:
-      enabled: true
-      cookie-domain: domain.test
-      cookie-name: cool-cookie
-      resource-indicator: https://domain.test
-      token-url: https://domain.test/loginstatus/token
 
 input:
   kind: Application
@@ -112,16 +103,6 @@ tests:
                         value: ^se$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
                         value: ^/metrics,/internal/liveness,/internal/readiness,/internal/\*,/path$
-                      - name: WONDERWALL_LOGINSTATUS_ENABLED
-                        value: "true"
-                      - name: WONDERWALL_LOGINSTATUS_COOKIE_DOMAIN
-                        value: ^domain.test$
-                      - name: WONDERWALL_LOGINSTATUS_COOKIE_NAME
-                        value: ^cool-cookie$
-                      - name: WONDERWALL_LOGINSTATUS_RESOURCE_INDICATOR
-                        value: ^https://domain.test$
-                      - name: WONDERWALL_LOGINSTATUS_TOKEN_URL
-                        value: ^https://domain.test/loginstatus/token$
                     resources:
                       limits:
                         cpu: 100m

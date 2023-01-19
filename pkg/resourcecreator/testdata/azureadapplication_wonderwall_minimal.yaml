@@ -3,14 +3,11 @@ testconfig:
 
 config:
   features:
-    linkerd: true
     azurerator: true
-    network-policy: true
-  gcp: true
+    wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no
       ingressClass: very-nginx
-  google-project-id: google-project-id
   cluster-name: mycluster
   wonderwall:
     image: nais/wonderwall
@@ -47,6 +44,7 @@ tests:
               metadata:
                 labels:
                   aiven: enabled
+                  azure: enabled
                   team: myteam
                   wonderwall: enabled
               spec:
@@ -68,11 +66,11 @@ tests:
                         value: ^10h$
                     envFrom:
                       - secretRef:
-                          name: ^azure-myapplication-4190a8ca-.{6,7}$
-                      - secretRef:
                           name: ^azure-wonderwall-myapplication-.{8}$
                       - secretRef:
-                          name: ^wonderwall-secret$
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                      - secretRef:
+                          name: ^wonderwall-azure-config$
                     image: nais/wonderwall
                     name: wonderwall
                     ports:
@@ -84,7 +82,7 @@ tests:
                         protocol: TCP
                     resources:
                       limits:
-                        cpu: 250m
+                        cpu: "2"
                         memory: 256Mi
                       requests:
                         cpu: 20m

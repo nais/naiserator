@@ -13,10 +13,10 @@ import (
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/stretchr/testify/assert"
+	"github.com/nais/naiserator/pkg/test/deepcomp"
 
 	"github.com/ghodss/yaml"
-	"github.com/nais/naiserator/pkg/test/deepcomp"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -179,11 +179,11 @@ func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCal
 	}
 
 	resources, err := createOperations(data, test.Options, test.Config)
+	if test.Error != nil {
+		assert.EqualError(t, err, *test.Error)
+		return
+	}
 	if err != nil {
-		if test.Error != nil {
-			assert.EqualError(t, err, *test.Error)
-			return
-		}
 		t.Errorf("unable to generate resources: %s", err)
 		t.Fail()
 		return

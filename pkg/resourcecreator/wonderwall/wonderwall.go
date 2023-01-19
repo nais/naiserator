@@ -8,7 +8,6 @@ import (
 
 	"github.com/imdario/mergo"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/keygen"
 	"github.com/nais/liberator/pkg/namegen"
 	corev1 "k8s.io/api/core/v1"
@@ -22,12 +21,10 @@ import (
 )
 
 const (
-	PortName        = "wonderwall"
-	MetricsPortName = "ww-metrics"
-	Port            = 7564
-	MetricsPort     = 7565
-	SecretName      = "wonderwall-secret"
-
+	PortName               = "wonderwall"
+	MetricsPortName        = "ww-metrics"
+	Port                   = 7564
+	MetricsPort            = 7565
 	RedirectURIPath        = "/oauth2/callback"
 	FrontChannelLogoutPath = "/oauth2/logout/frontchannel"
 	LogoutCallbackPath     = "/oauth2/logout/callback"
@@ -39,20 +36,21 @@ type Configuration struct {
 	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
 	ErrorPath             string
 	Ingresses             []string
-	Loginstatus           bool
 	PostLogoutRedirectURI string
 	Provider              string
-	ProviderSecretName    string
 	Resources             *nais_io_v1.ResourceRequirements
+	SecretNames           []string
 	SessionRefresh        bool
 	UILocales             string
 }
 
 type Source interface {
 	resource.Source
+	GetAzure() nais_io_v1.AzureInterface
+	GetIDPorten() *nais_io_v1.IDPorten
+	GetLiveness() *nais_io_v1.Probe
 	GetPort() int
 	GetPrometheus() *nais_io_v1.PrometheusConfig
-	GetLiveness() *nais_io_v1.Probe
 	GetReadiness() *nais_io_v1.Probe
 }
 
@@ -62,72 +60,71 @@ type Config interface {
 	IsDigdiratorEnabled() bool
 	IsAzureratorEnabled() bool
 	IsSeccompEnabled() bool
+	IsWonderwallEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) error {
 	ast.Labels["aiven"] = "enabled"
 	ast.Labels["wonderwall"] = "enabled"
 
+	err := validate(source, config, cfg)
+	if err != nil {
+		return err
+	}
+
+	encryptionKeySecret, err := makeEncryptionKeySecret(source, cfg)
+	if err != nil {
+		return err
+	}
+
+	container, err := sidecarContainer(source, config, cfg, encryptionKeySecret)
+	if err != nil {
+		return fmt.Errorf("creating wonderwall container spec: %w", err)
+	}
+
+	ast.AppendOperation(resource.OperationCreateIfNotExists, encryptionKeySecret)
+	ast.Containers = append(ast.Containers, *container)
+
+	return nil
+}
+
+func validate(source Source, config Config, cfg Configuration) error {
+	if !config.IsWonderwallEnabled() {
+		return fmt.Errorf("wonderwall is not enabled for this cluster")
+	}
+
 	if len(cfg.Provider) == 0 {
 		return fmt.Errorf("configuration has empty provider")
 	}
 
-	if len(cfg.ProviderSecretName) == 0 {
-		return fmt.Errorf("configuration has empty provider secret name")
+	if len(cfg.SecretNames) == 0 {
+		return fmt.Errorf("configuration has no secret names")
 	}
 
 	if len(cfg.Ingresses) == 0 {
 		return fmt.Errorf("configuration has no ingresses")
 	}
 
-	wonderwallSecret, err := sidecarSecret(source, cfg)
-	if err != nil {
-		return err
+	for _, name := range cfg.SecretNames {
+		if len(name) == 0 {
+			return fmt.Errorf("configuration contains empty secret names")
+		}
 	}
 
-	container, err := sidecarContainer(source, config, cfg)
-	if err != nil {
-		return fmt.Errorf("creating wonderwall container spec: %w", err)
-	}
+	idporten := source.GetIDPorten()
+	idPortenEnabled := idporten != nil && idporten.Sidecar != nil && idporten.Sidecar.Enabled
 
-	container.EnvFrom = []corev1.EnvFromSource{
-		pod.EnvFromSecret(cfg.ProviderSecretName),
-		pod.EnvFromSecret(wonderwallSecret.GetName()),
-		pod.EnvFromSecret(SecretName),
-	}
+	azure := source.GetAzure()
+	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
 
-	ast.AppendOperation(resource.OperationCreateIfNotExists, wonderwallSecret)
-	ast.Containers = append(ast.Containers, *container)
+	if idPortenEnabled && azureEnabled {
+		return fmt.Errorf("only one of Azure AD or ID-porten sidecars can be enabled, but not both")
+	}
 
 	return nil
 }
 
-func ShouldEnable(app *nais_io_v1alpha1.Application, opts Config) (bool, error) {
-	if len(opts.GetGoogleProjectID()) == 0 {
-		return false, nil
-	}
-
-	idPortenEnabled := opts.IsDigdiratorEnabled() &&
-		app.Spec.IDPorten != nil &&
-		app.Spec.IDPorten.Enabled &&
-		app.Spec.IDPorten.Sidecar != nil &&
-		app.Spec.IDPorten.Sidecar.Enabled
-
-	azureEnabled := opts.IsAzureratorEnabled() &&
-		app.Spec.Azure != nil &&
-		app.Spec.Azure.Application != nil &&
-		app.Spec.Azure.Application.Enabled &&
-		app.Spec.Azure.Sidecar != nil &&
-		app.Spec.Azure.Sidecar.Enabled
-
-	if idPortenEnabled && azureEnabled {
-		return false, fmt.Errorf("only one of Azure AD or ID-Porten sidecars can be enabled, but not both")
-	}
-
-	return idPortenEnabled || azureEnabled, nil
-}
-
-func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.Container, error) {
+func sidecarContainer(source Source, config Config, cfg Configuration, encryptionKeySecret *corev1.Secret) (*corev1.Container, error) {
 	options := config.GetWonderwallOptions()
 	image := options.Image
 	resourceReqs, err := resourceRequirements(cfg)
@@ -142,11 +139,19 @@ func sidecarContainer(source Source, config Config, cfg Configuration) (*corev1.
 		}
 	}
 
+	envFromSources := []corev1.EnvFromSource{
+		pod.EnvFromSecret(encryptionKeySecret.GetName()),
+	}
+	for _, name := range cfg.SecretNames {
+		envFromSources = append(envFromSources, pod.EnvFromSecret(name))
+	}
+
 	return &corev1.Container{
 		Name:            "wonderwall",
 		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Env:             envVars(source, cfg, options),
+		EnvFrom:         envFromSources,
 		Ports: []corev1.ContainerPort{
 			{
 				ContainerPort: int32(Port),
@@ -179,7 +184,7 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 	reqs := cfg.Resources
 	defaultReqs := &nais_io_v1.ResourceRequirements{
 		Limits: &nais_io_v1.ResourceSpec{
-			Cpu:    "250m",
+			Cpu:    "2",
 			Memory: "256Mi",
 		},
 		Requests: &nais_io_v1.ResourceSpec{
@@ -234,14 +239,6 @@ func envVars(source Source, cfg Configuration, options config.Wonderwall) []core
 		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source, cfg))
 	}
 
-	if cfg.Loginstatus {
-		result = appendBoolEnvVar(result, "WONDERWALL_LOGINSTATUS_ENABLED", options.Loginstatus.Enabled)
-		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_COOKIE_DOMAIN", options.Loginstatus.CookieDomain)
-		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_COOKIE_NAME", options.Loginstatus.CookieName)
-		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_RESOURCE_INDICATOR", options.Loginstatus.ResourceIndicator)
-		result = appendStringEnvVar(result, "WONDERWALL_LOGINSTATUS_TOKEN_URL", options.Loginstatus.TokenURL)
-	}
-
 	if cfg.SessionRefresh {
 		result = appendStringEnvVar(result, "WONDERWALL_SESSION_REFRESH", "true")
 		result = appendStringEnvVar(result, "WONDERWALL_SESSION_MAX_LIFETIME", "10h")
@@ -250,7 +247,7 @@ func envVars(source Source, cfg Configuration, options config.Wonderwall) []core
 	return result
 }
 
-func sidecarSecret(source Source, cfg Configuration) (*corev1.Secret, error) {
+func makeEncryptionKeySecret(source Source, cfg Configuration) (*corev1.Secret, error) {
 	prefixedName := fmt.Sprintf("%s-wonderwall-%s", cfg.Provider, source.GetName())
 	secretName, err := namegen.ShortName(prefixedName, validation.DNS1123LabelMaxLength)
 	if err != nil {

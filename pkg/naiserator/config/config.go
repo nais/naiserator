@@ -59,6 +59,7 @@ type Features struct {
 	Webhook                     bool     `json:"webhook"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	LegacyGCP                   bool     `json:"legacy-gcp"`
+	Wonderwall                  bool     `json:"wonderwall"`
 }
 
 type Securelogs struct {
@@ -94,16 +95,7 @@ type Ratelimit struct {
 }
 
 type Wonderwall struct {
-	Image       string                `json:"image"`
-	Loginstatus WonderwallLoginstatus `json:"loginstatus"`
-}
-
-type WonderwallLoginstatus struct {
-	Enabled           bool   `json:"enabled"`
-	CookieDomain      string `json:"cookie-domain"`
-	CookieName        string `json:"cookie-name"`
-	ResourceIndicator string `json:"resource-indicator"`
-	TokenURL          string `json:"token-url"`
+	Image string `json:"image"`
 }
 
 type LeaderElection struct {
@@ -168,6 +160,7 @@ const (
 	FeaturesPrometheusOperator             = "features.prometheus-operator"
 	FeaturesVault                          = "features.vault"
 	FeaturesWebhook                        = "features.webhook"
+	FeaturesWonderwall                     = "features.wonderwall"
 	FeaturesLegacyGCP                      = "features.legacy-gcp"
 	FQDNPolicyEnabled                      = "fqdn-policy.enabled"
 	GoogleCloudSQLProxyContainerImage      = "google-cloud-sql-proxy-container-image"
@@ -256,6 +249,7 @@ func init() {
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
 	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
+	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),
@@ -302,11 +296,6 @@ func init() {
 	flag.StringSlice(KafkaBrokers, []string{"localhost:9092"}, "Comma-separated list of Kafka brokers, HOST:PORT.")
 
 	flag.String(WonderwallImage, "", "Docker image used for Wonderwall.")
-	flag.Bool(WonderwallLoginstatusEnabled, false, "Enable Loginstatus for Wonderwall.")
-	flag.String(WonderwallLoginstatusCookieDomain, "", "Cookie domain for Loginstatus.")
-	flag.String(WonderwallLoginstatusCookieName, "", "Cookie name for Loginstatus.")
-	flag.String(WonderwallLoginstatusResourceIndicator, "", "Resource indicator for Loginstatus.")
-	flag.String(WonderwallLoginstatusTokenURL, "", "Token URL for Loginstatus.")
 }
 
 // Print out all configuration options except secret stuff.

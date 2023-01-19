@@ -1,9 +1,13 @@
 testconfig:
   description: both idporten sidecar and azure sidecar enabled is not allowed
 config:
-  google-project-id: google-project-id
-  AzureratorEnabled: true
-  digdirator: true
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: very-nginx
+  features:
+    azurerator: true
+    digdirator: true
+    wonderwall: true
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,9 +18,14 @@ input:
       team: myteam
   spec:
     azure:
+      applicaion:
+        enabled: true
       sidecar:
         enabled: true
     idporten:
+      enabled: true
       sidecar:
         enabled: true
-error: "only one of Azure AD or ID-Porten sidecars can be enabled, but not both"
+    ingresses:
+      - "https://app.nav.no/"
+error: "only one of Azure AD or ID-porten sidecars can be enabled, but not both"
