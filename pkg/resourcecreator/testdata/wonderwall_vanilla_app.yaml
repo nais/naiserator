@@ -1,0 +1,42 @@
+testconfig:
+  description: applications without idporten/azure sidecar should not have service overridden by wonderwall
+
+config:
+  features:
+    wonderwall: true
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    annotations:
+      nais.io/deploymentCorrelationID: corr
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+tests:
+  - apiVersion: v1
+    kind: Service
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "service created with tcp port 80"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            ports:
+              - port: 80
+                targetPort: http
+                name: http
+                protocol: TCP
+            selector:
+              app: myapplication
+            type: ClusterIP
