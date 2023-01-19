@@ -15,6 +15,7 @@ import (
 
 type Source interface {
 	resource.Source
+	wonderwall.Source
 	GetService() *nais_io_v1.Service
 }
 
@@ -47,7 +48,7 @@ func Create(source Source, ast *resource.Ast, config Config) {
 		},
 	}
 
-	if config.IsWonderwallEnabled() {
+	if useWonderwallTarget(source, config) {
 		service.Spec.Ports[0].TargetPort = intstr.IntOrString{
 			Type:   intstr.String,
 			StrVal: wonderwall.PortName,
@@ -55,4 +56,14 @@ func Create(source Source, ast *resource.Ast, config Config) {
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, service)
+}
+
+func useWonderwallTarget(source Source, config Config) bool {
+	idporten := source.GetIDPorten()
+	idPortenEnabled := idporten != nil && idporten.Sidecar != nil && idporten.Sidecar.Enabled
+
+	azure := source.GetAzure()
+	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
+
+	return config.IsWonderwallEnabled() && (idPortenEnabled || azureEnabled)
 }
