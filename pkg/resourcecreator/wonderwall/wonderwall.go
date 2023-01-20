@@ -31,17 +31,16 @@ const (
 )
 
 type Configuration struct {
-	ACRValues             string
-	AutoLogin             bool
-	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
-	ErrorPath             string
-	Ingresses             []string
-	PostLogoutRedirectURI string
-	Provider              string
-	Resources             *nais_io_v1.ResourceRequirements
-	SecretNames           []string
-	SessionRefresh        bool
-	UILocales             string
+	ACRValues            string
+	AutoLogin            bool
+	AutoLoginIgnorePaths []nais_io_v1.WonderwallIgnorePaths
+	ErrorPath            string
+	Ingresses            []string
+	Provider             string
+	Resources            *nais_io_v1.ResourceRequirements
+	SecretNames          []string
+	SessionRefresh       bool
+	UILocales            string
 }
 
 type Source interface {
@@ -55,10 +54,7 @@ type Source interface {
 }
 
 type Config interface {
-	GetGoogleProjectID() string
 	GetWonderwallOptions() config.Wonderwall
-	IsDigdiratorEnabled() bool
-	IsAzureratorEnabled() bool
 	IsSeccompEnabled() bool
 	IsWonderwallEnabled() bool
 }
@@ -233,7 +229,6 @@ func envVars(source Source, cfg Configuration, options config.Wonderwall) []core
 	result = appendStringEnvVar(result, "WONDERWALL_ERROR_PATH", cfg.ErrorPath)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_ACR_VALUES", cfg.ACRValues)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_UI_LOCALES", cfg.UILocales)
-	result = appendStringEnvVar(result, "WONDERWALL_OPENID_POST_LOGOUT_REDIRECT_URI", cfg.PostLogoutRedirectURI)
 
 	if cfg.AutoLogin {
 		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source, cfg))
