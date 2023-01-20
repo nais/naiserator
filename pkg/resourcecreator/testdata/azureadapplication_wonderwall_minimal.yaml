@@ -23,8 +23,6 @@ input:
   spec:
     image: foo/bar
     azure:
-      application:
-        enabled: true
       sidecar:
         enabled: true
     ingresses:

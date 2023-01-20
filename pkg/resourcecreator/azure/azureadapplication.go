@@ -41,12 +41,18 @@ type Config interface {
 
 func Create(source Source, ast *resource.Ast, config Config) error {
 	az := source.GetAzure()
-	if az == nil || az.GetApplication() == nil || !az.GetApplication().Enabled {
+	if az == nil {
+		return nil
+	}
+
+	azureEnabled := az.GetApplication() != nil && az.GetApplication().Enabled
+	sidecarEnabled := az.GetSidecar() != nil && az.GetSidecar().Enabled
+	if !azureEnabled && !sidecarEnabled {
 		return nil
 	}
 
 	if !config.IsAzureratorEnabled() {
-		return fmt.Errorf("azure ad is not enabled for this cluster")
+		return fmt.Errorf("azure ad is not available in this cluster")
 	}
 
 	azureAdApplication, err := application(source, config)
@@ -59,32 +65,9 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	pod.WithAdditionalSecret(ast, azureAdApplication.Spec.SecretName, nais_io_v1alpha1.DefaultAzureratorMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
 
-	if az.GetSidecar() == nil || !az.GetSidecar().Enabled {
-		return nil
+	if sidecarEnabled {
+		return sidecar(source, ast, config, azureAdApplication)
 	}
-
-	if !config.IsWonderwallEnabled() {
-		return fmt.Errorf("azure ad sidecar is not enabled for this cluster")
-	}
-
-	// configure sidecar
-	ingresses := source.GetIngress()
-	if len(ingresses) == 0 {
-		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
-	}
-
-	wonderwallCfg := makeWonderwallConfig(source, azureAdApplication.Spec.SecretName, ingresses)
-	err = wonderwall.Create(source, ast, config, wonderwallCfg)
-	if err != nil {
-		return err
-	}
-
-	// ensure that the ingress is added to the configured Azure AD reply URLs
-	azureAdApplication.Spec.ReplyUrls = append(azureAdApplication.Spec.ReplyUrls, mapReplyURLs(callbackURLs(ingresses))...)
-	azureAdApplication.Spec.LogoutUrl = util.AppendPathToIngress(ingresses[0], wonderwall.FrontChannelLogoutPath)
-
-	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
-	azureAdApplication.Spec.SinglePageApplication = pointer.Bool(false)
 
 	return nil
 }
@@ -124,6 +107,33 @@ func application(source Source, config Config) (*nais_io_v1.AzureAdApplication, 
 			AllowAllUsers:             azureapp.AllowAllUsers,
 		},
 	}, nil
+}
+
+func sidecar(source Source, ast *resource.Ast, config Config, azureApp *nais_io_v1.AzureAdApplication) error {
+	if !config.IsWonderwallEnabled() {
+		return fmt.Errorf("azure ad sidecar is not enabled for this cluster")
+	}
+
+	// configure sidecar
+	ingresses := source.GetIngress()
+	if len(ingresses) == 0 {
+		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
+	}
+
+	wonderwallCfg := makeWonderwallConfig(source, azureApp.Spec.SecretName, ingresses)
+	err := wonderwall.Create(source, ast, config, wonderwallCfg)
+	if err != nil {
+		return err
+	}
+
+	// ensure that the ingress is added to the configured Azure AD reply URLs
+	azureApp.Spec.ReplyUrls = append(azureApp.Spec.ReplyUrls, mapReplyURLs(callbackURLs(ingresses))...)
+	azureApp.Spec.LogoutUrl = util.AppendPathToIngress(ingresses[0], wonderwall.FrontChannelLogoutPath)
+
+	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
+	azureApp.Spec.SinglePageApplication = pointer.Bool(false)
+
+	return nil
 }
 
 func copyAzureAnnotations(src, dst map[string]string) {
