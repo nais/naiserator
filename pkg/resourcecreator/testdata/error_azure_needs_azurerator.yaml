@@ -1,0 +1,18 @@
+testconfig:
+  description: applications with azure ad needs azurerator
+config:
+  features:
+    azurerator: false
+input:
+  kind: "Application"
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    azure:
+      application:
+        enabled: true
+error: "azure ad is not available in this cluster"

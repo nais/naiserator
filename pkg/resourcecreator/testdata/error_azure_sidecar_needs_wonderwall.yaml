@@ -1,0 +1,19 @@
+testconfig:
+  description: applications with azure ad sidecar needs wonderwall
+config:
+  features:
+    azurerator: true
+    wonderwall: false
+input:
+  kind: "Application"
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    azure:
+      sidecar:
+        enabled: true
+error: "azure ad sidecar is not enabled for this cluster"
