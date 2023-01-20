@@ -1,0 +1,24 @@
+testconfig:
+  description: applications with idporten sidecar needs wonderwall
+config:
+  features:
+    digdirator: true
+    wonderwall: false
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: nav-no-gateway
+input:
+  kind: "Application"
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    idporten:
+      sidecar:
+        enabled: true
+    ingresses:
+      - "https://my-client.nav.no/"
+error: "idporten sidecar is not enabled for this cluster"

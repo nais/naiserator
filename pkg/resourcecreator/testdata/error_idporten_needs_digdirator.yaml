@@ -1,0 +1,17 @@
+testconfig:
+  description: applications with idporten needs digdirator
+config:
+  features:
+    digdirator: false
+input:
+  kind: "Application"
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    idporten:
+      enabled: true
+error: "idporten is not available in this cluster"
