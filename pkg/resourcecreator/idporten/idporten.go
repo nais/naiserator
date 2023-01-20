@@ -34,8 +34,45 @@ type Config interface {
 	IsDigdiratorEnabled() bool
 }
 
-func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, naisIngresses []nais_io_v1.Ingress) (*nais_io_v1.IDPortenClient, error) {
-	if err := validateIngresses(naisIngresses); err != nil {
+func Create(source Source, ast *resource.Ast, cfg Config) error {
+	idporten := source.GetIDPorten()
+	if idporten == nil {
+		return nil
+	}
+
+	sidecarEnabled := idporten.Sidecar != nil && idporten.Sidecar.Enabled
+	if !idporten.Enabled && !sidecarEnabled {
+		return nil
+	}
+
+	if !cfg.IsDigdiratorEnabled() {
+		return fmt.Errorf("idporten is not available in this cluster")
+	}
+
+	// create idporten client and attach secrets
+	idportenClient, err := client(source)
+	if err != nil {
+		return err
+	}
+
+	ast.Labels["idporten"] = "enabled"
+	ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
+	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
+	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
+
+	if sidecarEnabled {
+		return sidecar(source, ast, cfg, idportenClient)
+	}
+
+	return nil
+}
+
+func client(source Source) (*nais_io_v1.IDPortenClient, error) {
+	objectMeta := resource.CreateObjectMeta(source)
+	idporten := source.GetIDPorten()
+	ingresses := source.GetIngress()
+
+	if err := validateIngresses(ingresses); err != nil {
 		return nil, err
 	}
 
@@ -51,17 +88,38 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		},
 		ObjectMeta: objectMeta,
 		Spec: nais_io_v1.IDPortenClientSpec{
-			ClientURI:              naisIdPorten.ClientURI,
-			IntegrationType:        naisIdPorten.IntegrationType,
-			RedirectURIs:           redirectURIs(naisIdPorten, naisIngresses),
+			ClientURI:              idporten.ClientURI,
+			IntegrationType:        idporten.IntegrationType,
+			RedirectURIs:           redirectURIs(idporten, ingresses),
 			SecretName:             name,
-			FrontchannelLogoutURI:  frontchannelLogoutURI(naisIdPorten, naisIngresses),
-			PostLogoutRedirectURIs: postLogoutRedirectURIs(naisIdPorten),
-			SessionLifetime:        naisIdPorten.SessionLifetime,
-			AccessTokenLifetime:    naisIdPorten.AccessTokenLifetime,
-			Scopes:                 naisIdPorten.Scopes,
+			FrontchannelLogoutURI:  frontchannelLogoutURI(idporten, ingresses),
+			PostLogoutRedirectURIs: postLogoutRedirectURIs(idporten),
+			SessionLifetime:        idporten.SessionLifetime,
+			AccessTokenLifetime:    idporten.AccessTokenLifetime,
+			Scopes:                 idporten.Scopes,
 		},
 	}, nil
+}
+
+func sidecar(source Source, ast *resource.Ast, cfg Config, idportenClient *nais_io_v1.IDPortenClient) error {
+	if !cfg.IsWonderwallEnabled() {
+		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
+	}
+
+	// create sidecar container
+	wonderwallCfg := makeWonderwallConfig(source, idportenClient.Spec.SecretName)
+	err := wonderwall.Create(source, ast, cfg, wonderwallCfg)
+	if err != nil {
+		return err
+	}
+
+	// override uris when sidecar is enabled
+	ingresses := source.GetIngress()
+	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
+	idportenClient.Spec.RedirectURIs = idportenURIs(ingresses, wonderwall.RedirectURIPath)
+	idportenClient.Spec.PostLogoutRedirectURIs = idportenURIs(ingresses, wonderwall.LogoutCallbackPath)
+
+	return nil
 }
 
 func validateIngresses(ingresses []nais_io_v1.Ingress) error {
@@ -113,53 +171,6 @@ func idportenURIs(ingresses []nais_io_v1.Ingress, path string) []nais_io_v1.IDPo
 
 func secretName(name string) (string, error) {
 	return namegen.ShortName(fmt.Sprintf("idporten-%s", name), validation.DNS1035LabelMaxLength)
-}
-
-func Create(app Source, ast *resource.Ast, cfg Config) error {
-	idPorten := app.GetIDPorten()
-	ingresses := app.GetIngress()
-
-	if idPorten == nil || !idPorten.Enabled {
-		return nil
-	}
-
-	if !cfg.IsDigdiratorEnabled() {
-		return fmt.Errorf("idporten is not enabled for this cluster")
-	}
-
-	// create idporten client and attach secrets
-	idportenClient, err := client(resource.CreateObjectMeta(app), idPorten, ingresses)
-	if err != nil {
-		return err
-	}
-
-	ast.Labels["idporten"] = "enabled"
-	ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
-	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
-	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
-
-	// return early if sidecar is not enabled
-	if idPorten.Sidecar == nil || !idPorten.Sidecar.Enabled {
-		return nil
-	}
-
-	if !cfg.IsWonderwallEnabled() {
-		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
-	}
-
-	// create sidecar container
-	wonderwallCfg := makeWonderwallConfig(app, idportenClient.Spec.SecretName)
-	err = wonderwall.Create(app, ast, cfg, wonderwallCfg)
-	if err != nil {
-		return err
-	}
-
-	// override uris when sidecar is enabled
-	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
-	idportenClient.Spec.RedirectURIs = idportenURIs(ingresses, wonderwall.RedirectURIPath)
-	idportenClient.Spec.PostLogoutRedirectURIs = idportenURIs(ingresses, wonderwall.LogoutCallbackPath)
-
-	return nil
 }
 
 func makeWonderwallConfig(source Source, providerSecretName string) wonderwall.Configuration {
