@@ -189,6 +189,5 @@ func makeWonderwallConfig(source Source, providerSecretName string, ingresses []
 		Provider:             "azure",
 		SecretNames:          []string{providerSecretName, wonderwallSecretName},
 		Resources:            sidecar.Resources,
-		SessionRefresh:       true,
 	}
 }

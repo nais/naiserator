@@ -191,7 +191,6 @@ func makeWonderwallConfig(source Source, providerSecretName string) wonderwall.C
 		Provider:             "idporten",
 		SecretNames:          []string{providerSecretName, wonderwallSecretName},
 		Resources:            idporten.Sidecar.Resources,
-		SessionRefresh:       false,
 		UILocales:            idporten.Sidecar.Locale,
 	}
 

@@ -39,7 +39,6 @@ type Configuration struct {
 	Provider             string
 	Resources            *nais_io_v1.ResourceRequirements
 	SecretNames          []string
-	SessionRefresh       bool
 	UILocales            string
 }
 
@@ -146,7 +145,7 @@ func sidecarContainer(source Source, config Config, cfg Configuration, encryptio
 		Name:            "wonderwall",
 		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env:             envVars(source, cfg, options),
+		Env:             envVars(source, cfg),
 		EnvFrom:         envFromSources,
 		Ports: []corev1.ContainerPort{
 			{
@@ -201,7 +200,7 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 	return reqs, nil
 }
 
-func envVars(source Source, cfg Configuration, options config.Wonderwall) []corev1.EnvVar {
+func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 	result := []corev1.EnvVar{
 		{
 			Name:  "WONDERWALL_OPENID_PROVIDER",
@@ -232,11 +231,6 @@ func envVars(source Source, cfg Configuration, options config.Wonderwall) []core
 
 	if cfg.AutoLogin {
 		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source, cfg))
-	}
-
-	if cfg.SessionRefresh {
-		result = appendStringEnvVar(result, "WONDERWALL_SESSION_REFRESH", "true")
-		result = appendStringEnvVar(result, "WONDERWALL_SESSION_MAX_LIFETIME", "10h")
 	}
 
 	return result

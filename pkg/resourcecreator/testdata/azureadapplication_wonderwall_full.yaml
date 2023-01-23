@@ -104,10 +104,6 @@ tests:
                         value: ^/some/error$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
                         value: ^/metrics,/internal/liveness,/internal/readiness,/internal/\*,/path$
-                      - name: WONDERWALL_SESSION_REFRESH
-                        value: ^true$
-                      - name: WONDERWALL_SESSION_MAX_LIFETIME
-                        value: ^10h$
                     resources:
                       limits:
                         cpu: 100m
