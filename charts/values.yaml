@@ -32,7 +32,7 @@ naiserator:
     azurerator: false
     kafkarator: false
     digdirator: false
-    prometheus-operator: true
+    prometheus-operator: false
     legacy-gcp: false
     gcp: true
     webhook: true
