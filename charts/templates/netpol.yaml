@@ -10,6 +10,11 @@ spec:
       to:
         - ipBlock:
             cidr: {{ index .Values.naiserator "api-server-ip" }}
+    - to:
+      - namespaceSelector: {}
+        podSelector:
+          matchLabels:
+            k8s-app: kube-dns
   ingress:
     - ports:
         - port: 9443
