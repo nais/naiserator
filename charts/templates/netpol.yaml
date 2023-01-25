@@ -9,7 +9,7 @@ spec:
           protocol: TCP
       to:
         - ipBlock:
-            cidr: {{ index .Values.naiserator "api-server-ip" }}/32
+            cidr: {{ index .Values.naiserator "api-server-ip" }}
   ingress:
     - ports:
         - port: 9443
