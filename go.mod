@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.13
 	github.com/klauspost/compress v1.15.11 // indirect
-	github.com/magiconair/properties v1.8.6
+	github.com/magiconair/properties v1.8.7
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nais/liberator v0.0.0-20230116141902-5d65b7f9256c
