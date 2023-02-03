@@ -178,3 +178,15 @@ tests:
                     name: ca-bundle-pem
                   - emptyDir: {}
                     name: writable-tmp
+                affinity:
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: name
+                                operator: In
+                                values:
+                                  - mynaisjob
+                          topologyKey: kubernetes.io/hostname
+                        weight: 10
