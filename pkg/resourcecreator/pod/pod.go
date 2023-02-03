@@ -96,7 +96,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 				{Weight: 10, PodAffinityTerm: corev1.PodAffinityTerm{
 					LabelSelector: &metav1.LabelSelector{
 						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{Key: "name", Operator: "In", Values: []string{appName}},
+							{Key: "app", Operator: "In", Values: []string{appName}},
 						},
 					},
 					TopologyKey: "kubernetes.io/hostname",

@@ -184,7 +184,7 @@ tests:
                       - podAffinityTerm:
                           labelSelector:
                             matchExpressions:
-                              - key: name
+                              - key: app
                                 operator: In
                                 values:
                                   - mynaisjob
