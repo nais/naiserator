@@ -214,6 +214,18 @@ tests:
                 serviceAccountName: myapplication
                 imagePullSecrets:
                   - name: gh-docker-credentials
+                affinity:
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - myapplication
+                          topologyKey: kubernetes.io/hostname
+                        weight: 10
             strategy:
               type: RollingUpdate
               rollingUpdate:

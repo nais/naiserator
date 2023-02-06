@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-
 	"k8s.io/utils/pointer"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -91,6 +90,21 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		MountPath: "/tmp",
 	})
 
+	affinity := &corev1.Affinity{
+		PodAntiAffinity: &corev1.PodAntiAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
+				{Weight: 10, PodAffinityTerm: corev1.PodAffinityTerm{
+					LabelSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{Key: "app", Operator: "In", Values: []string{appName}},
+						},
+					},
+					TopologyKey: "kubernetes.io/hostname",
+				}},
+			},
+		},
+	}
+
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
 		Containers:         containers,
@@ -102,6 +116,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 			{Name: "gh-docker-credentials"},
 		},
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
+		Affinity:                      affinity,
 	}
 
 	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
