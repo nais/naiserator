@@ -6,7 +6,7 @@ config:
     linkerd: true
     network-policy: true
     legacy-gcp: true
-  nais-namespace: nais
+  nais-namespace: nais-system
   google-project-id: google-project-id
 
 input:
@@ -106,6 +106,13 @@ tests:
                         - 192.168.0.0/16
             ingress:
               - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          name: "nais"
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: prometheus
+              - from:
                   - namespaceSelector:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
@@ -138,7 +145,7 @@ tests:
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: nais
+                        name: nais-system
                     podSelector:
                       matchLabels:
                         app.kubernetes.io/name: prometheus

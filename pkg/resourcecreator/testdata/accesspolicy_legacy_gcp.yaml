@@ -14,7 +14,7 @@ config:
       ingressClass: adeo-gateway
     - domainSuffix: .domain
       ingressClass: domain-gateway
-  nais-namespace: nais
+  nais-namespace: nais-system
 
 
 input:
@@ -68,6 +68,13 @@ tests:
               - from:
                   - namespaceSelector:
                       matchLabels:
+                        name: "nais"
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
                         linkerd.io/is-control-plane: "true"
             egress:
               - to:
@@ -107,7 +114,7 @@ tests:
                         app.kubernetes.io/name: prometheus
                     namespaceSelector:
                       matchLabels:
-                        name: nais
+                        name: nais-system
               - from:
                   - namespaceSelector:
                       matchLabels:
@@ -118,10 +125,24 @@ tests:
               - from:
                   - namespaceSelector:
                       matchLabels:
+                        name: nais-system
+                    podSelector:
+                      matchLabels:
+                        nais.io/ingressClass: adeo-gateway
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
                         name: nginx
                     podSelector:
                       matchLabels:
                         app.kubernetes.io/instance: domain-gateway
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: nais-system
+                    podSelector:
+                      matchLabels:
+                        nais.io/ingressClass: domain-gateway
               - from:
                   - podSelector:
                       matchLabels:
