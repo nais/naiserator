@@ -18,7 +18,7 @@ jobs:
             - name: Generate image environment variable
               run: |
                   version=$(./version.sh)
-                  echo "IMAGE=${image}:${version}-fqdn" >> $GITHUB_ENV
+                  echo "IMAGE=${image}:${version}" >> $GITHUB_ENV
             - name: Build docker image
               run: docker build . --tag $IMAGE
             - name: Login to Github package registry
@@ -26,4 +26,5 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_REPOSITORY" --password-stdin
             - name: Push docker image
+              if: github.ref == 'refs/heads/master'
               run: docker push $IMAGE
