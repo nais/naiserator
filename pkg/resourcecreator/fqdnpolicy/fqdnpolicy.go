@@ -3,7 +3,7 @@ package fqdnpolicy
 import (
 	"strings"
 
-	fqdn "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha2"
+	fqdn "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha3"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
@@ -32,7 +32,7 @@ func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
 	policy := &fqdn.FQDNNetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FQDNNetworkPolicy",
-			APIVersion: "networking.gke.io/v1alpha2",
+			APIVersion: "networking.gke.io/v1alpha3",
 		},
 		ObjectMeta: meta,
 		Spec:       fqdnPolicySpec(cfg, source.GetName(), source.GetAccessPolicy()),

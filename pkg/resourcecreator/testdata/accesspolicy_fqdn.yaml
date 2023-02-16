@@ -36,7 +36,7 @@ input:
 
 tests:
   - operation: CreateOrUpdate
-    apiVersion: networking.gke.io/v1alpha2
+    apiVersion: networking.gke.io/v1alpha3
     kind: FQDNNetworkPolicy
     name: myapplication-fqdn
     match:
