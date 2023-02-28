@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -112,6 +113,14 @@ type FQDNRule struct {
 	Port int    `json:"port"`
 }
 
+type Toleration struct {
+	Key               string                    `json:"key"`
+	Operator          corev1.TolerationOperator `json:"operator"`
+	Value             string                    `json:"value"`
+	Effect            corev1.TaintEffect        `json:"effect"`
+	TolerationSeconds *int64                    `json:"tolerationSeconds"`
+}
+
 type Config struct {
 	DryRun                            bool             `json:"dry-run"`
 	Bind                              string           `json:"bind"`
@@ -137,6 +146,7 @@ type Config struct {
 	NaisNamespace                     string           `json:"nais-namespace"`
 	AivenRange                        string           `json:"aiven-range"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
+	Tolerations                       []Toleration     `json:"tolerations"`
 }
 
 const (

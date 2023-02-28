@@ -53,6 +53,7 @@ type Config interface {
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsSeccompEnabled() bool
+	GetTolerations() []config.Toleration
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -90,21 +91,6 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		MountPath: "/tmp",
 	})
 
-	affinity := &corev1.Affinity{
-		PodAntiAffinity: &corev1.PodAntiAffinity{
-			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-				{Weight: 10, PodAffinityTerm: corev1.PodAffinityTerm{
-					LabelSelector: &metav1.LabelSelector{
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{Key: "app", Operator: "In", Values: []string{appName}},
-						},
-					},
-					TopologyKey: "kubernetes.io/hostname",
-				}},
-			},
-		},
-	}
-
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
 		Containers:         containers,
@@ -116,8 +102,18 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 			{Name: "gh-docker-credentials"},
 		},
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
-		Affinity:                      affinity,
 	}
+
+	tolerations, err := SetupTolerations(cfg.GetTolerations())
+	if err != nil {
+		return nil, err
+	}
+
+	if len(tolerations) > 0 {
+		podSpec.Tolerations = tolerations
+	}
+
+	podSpec.Affinity = ConfigureAffinity(appName, tolerations)
 
 	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
 

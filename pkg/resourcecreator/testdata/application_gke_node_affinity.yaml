@@ -1,0 +1,66 @@
+testconfig:
+  description: application configured with gke spot toleration
+
+config:
+  tolerations:
+    - key: "cloud.google.com/gke-spot"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "some-other-key"
+      operator: "In"
+      value: "some-other-value"
+      effect: "NoExecute"
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "node affinity"
+        resource:
+          spec:
+            template:
+              spec:
+                tolerations:
+                  - key: "cloud.google.com/gke-spot"
+                    operator: "Equal"
+                    value: "true"
+                    effect: "NoSchedule"
+                  - key: "some-other-key"
+                    operator: "In"
+                    value: "some-other-value"
+                    effect: "NoExecute"
+                affinity:
+                  nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                      nodeSelectorTerms:
+                        - matchExpressions:
+                            - key: cloud.google.com/gke-spot
+                              operator: In
+                              values:
+                                - "true"
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - myapplication
+                          topologyKey: kubernetes.io/hostname
+                        weight: 10
