@@ -42,7 +42,8 @@ jobs:
         if: github.ref == 'refs/heads/master'
         steps:
             - name: debug
-              run: echo '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
+              run: |
+                 echo '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
             - uses: nais/fasit-deploy@main
               with:
                   json: '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
