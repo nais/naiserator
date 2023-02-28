@@ -13,7 +13,7 @@ jobs:
         name: Build and push image
         runs-on: ubuntu-latest
         outputs:
-          tag: ${{ steps.version.tag }}
+            tag: ${{ steps.version.outputs.tag }}
         steps:
             - name: Checkout naiserator
               uses: actions/checkout@v3
@@ -41,9 +41,9 @@ jobs:
         runs-on: fasit-deploy
         if: github.ref == 'refs/heads/master'
         steps:
-            - name: debug
+            - name: info
               run: |
-                 echo '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
+                  echo 'Rolling out: {"imageTag": "${{ needs.build-push.outputs.tag }}"}'
             - uses: nais/fasit-deploy@main
               with:
                   json: '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
