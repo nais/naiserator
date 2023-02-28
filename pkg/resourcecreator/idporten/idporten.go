@@ -39,6 +39,11 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		return nil, err
 	}
 
+	name, err := secretName(objectMeta.Name)
+	if err != nil {
+		return nil, fmt.Errorf("generate secret name: %w", err)
+	}
+
 	return &nais_io_v1.IDPortenClient{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IDPortenClient",
@@ -49,7 +54,7 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 			ClientURI:              naisIdPorten.ClientURI,
 			IntegrationType:        naisIdPorten.IntegrationType,
 			RedirectURIs:           redirectURIs(naisIdPorten, naisIngresses),
-			SecretName:             secretName(objectMeta.Name),
+			SecretName:             name,
 			FrontchannelLogoutURI:  frontchannelLogoutURI(naisIdPorten, naisIngresses),
 			PostLogoutRedirectURIs: postLogoutRedirectURIs(naisIdPorten),
 			SessionLifetime:        naisIdPorten.SessionLifetime,
@@ -106,8 +111,8 @@ func idportenURIs(ingresses []nais_io_v1.Ingress, path string) []nais_io_v1.IDPo
 	return uris
 }
 
-func secretName(name string) string {
-	return namegen.PrefixedRandShortName("idporten", name, validation.DNS1035LabelMaxLength)
+func secretName(name string) (string, error) {
+	return namegen.ShortName(fmt.Sprintf("idporten-%s", name), validation.DNS1035LabelMaxLength)
 }
 
 func Create(app Source, ast *resource.Ast, cfg Config) error {

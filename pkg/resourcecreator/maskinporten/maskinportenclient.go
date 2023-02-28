@@ -1,6 +1,8 @@
 package maskinporten
 
 import (
+	"fmt"
+
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -20,11 +22,16 @@ type Config interface {
 	IsDigdiratorEnabled() bool
 }
 
-func secretName(name string) string {
-	return namegen.PrefixedRandShortName("maskinporten", name, validation.DNS1035LabelMaxLength)
+func secretName(name string) (string, error) {
+	return namegen.ShortName(fmt.Sprintf("maskinporten-%s", name), validation.DNS1035LabelMaxLength)
 }
 
 func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinporten) (*nais_io_v1.MaskinportenClient, error) {
+	name, err := secretName(objectMeta.Name)
+	if err != nil {
+		return nil, fmt.Errorf("generate secret name: %w", err)
+	}
+
 	return &nais_io_v1.MaskinportenClient{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "MaskinportenClient",
@@ -36,7 +43,7 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinpor
 				ConsumedScopes: naisMaskinporten.Scopes.ConsumedScopes,
 				ExposedScopes:  naisMaskinporten.Scopes.ExposedScopes,
 			},
-			SecretName: secretName(objectMeta.Name),
+			SecretName: name,
 		},
 	}, nil
 }
