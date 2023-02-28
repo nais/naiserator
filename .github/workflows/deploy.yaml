@@ -12,13 +12,17 @@ jobs:
     build-push:
         name: Build and push image
         runs-on: ubuntu-latest
+        outputs:
+          tag: ${{ steps.version.tag }}
         steps:
             - name: Checkout naiserator
               uses: actions/checkout@v3
             - name: Generate image environment variable
+              id: version
               run: |
                   version=$(./version.sh)
                   echo "IMAGE=${image}:${version}" >> $GITHUB_ENV
+                  echo "tag=${version}" >> $GITHUB_OUTPUT
             - name: Build docker image
               run: docker build . --tag $IMAGE
             - name: Login to Github package registry
@@ -28,3 +32,15 @@ jobs:
             - name: Push docker image
               if: github.ref == 'refs/heads/master'
               run: docker push $IMAGE
+
+    rollout:
+        permissions:
+            id-token: write
+        needs: ["build-push"]
+        runs-on: fasit-deploy
+        if: github.ref == 'refs/heads/master'
+        steps:
+            - uses: nais/fasit-deploy@main
+              with:
+                  json: '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
+                  feature_name: naiserator
