@@ -128,7 +128,8 @@ tests:
         resource:
           spec:
             frontchannelLogoutURI: https://my-client.nav.no/oauth2/logout/frontchannel
-            redirectURI: https://my-client.nav.no/oauth2/callback
+            redirectURIs:
+              - https://my-client.nav.no/oauth2/callback
 
   - apiVersion: v1
     kind: Secret

@@ -48,7 +48,7 @@ func client(objectMeta metav1.ObjectMeta, naisIdPorten *nais_io_v1.IDPorten, nai
 		Spec: nais_io_v1.IDPortenClientSpec{
 			ClientURI:              naisIdPorten.ClientURI,
 			IntegrationType:        naisIdPorten.IntegrationType,
-			RedirectURI:            redirectURI(naisIdPorten, naisIngresses),
+			RedirectURIs:           redirectURIs(naisIdPorten, naisIngresses),
 			SecretName:             secretName(objectMeta.Name),
 			FrontchannelLogoutURI:  frontchannelLogoutURI(naisIdPorten, naisIngresses),
 			PostLogoutRedirectURIs: postLogoutRedirectURIs(naisIdPorten),
@@ -64,18 +64,15 @@ func validateIngresses(ingresses []nais_io_v1.Ingress) error {
 		return fmt.Errorf("you must specify an ingress to be able to use the idporten integration")
 	}
 
-	if len(ingresses) > 1 {
-		return fmt.Errorf("cannot have more than one ingress when using the idporten integration")
-	}
 	return nil
 }
 
-func redirectURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) nais_io_v1.IDPortenURI {
+func redirectURIs(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) []nais_io_v1.IDPortenURI {
 	if len(idPorten.RedirectPath) == 0 {
-		return idportenURI(ingresses, clientDefaultCallbackPath)
+		return idportenURIs(ingresses, clientDefaultCallbackPath)
 	}
 
-	return idportenURI(ingresses, idPorten.RedirectPath)
+	return idportenURIs(ingresses, idPorten.RedirectPath)
 }
 
 func frontchannelLogoutURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) nais_io_v1.IDPortenURI {
@@ -154,7 +151,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 
 	// override uris when sidecar is enabled
 	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
-	idportenClient.Spec.RedirectURI = idportenURI(ingresses, wonderwall.RedirectURIPath)
+	idportenClient.Spec.RedirectURIs = idportenURIs(ingresses, wonderwall.RedirectURIPath)
 	idportenClient.Spec.PostLogoutRedirectURIs = idportenURIs(ingresses, wonderwall.LogoutCallbackPath)
 
 	return nil

@@ -10,6 +10,8 @@ config:
   gateway-mappings:
     - domainSuffix: .adeo.no
       ingressClass: adeo-gateway
+    - domainSuffix: .nav.no
+      ingressClass: nav-gateway
 
 input:
   kind: Application
@@ -37,6 +39,7 @@ input:
         - "ks:fiks"
     ingresses:
       - https://my-client.adeo.no/some-path
+      - https://my-client.nav.no/some-path
 
 tests:
   - apiVersion: nais.io/v1
@@ -53,7 +56,9 @@ tests:
         resource:
           spec:
             clientURI: https://my-client.adeo.no/some-path
-            redirectURI: https://my-client.adeo.no/some-path/whatever
+            redirectURIs:
+              - https://my-client.adeo.no/some-path/whatever
+              - https://my-client.nav.no/some-path/whatever
             frontchannelLogoutURI: https://my-client.adeo.no/some-path/logout
             postLogoutRedirectURIs:
               - https://my-client.adeo.no/something
