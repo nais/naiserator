@@ -36,10 +36,13 @@ jobs:
     rollout:
         permissions:
             id-token: write
-        needs: ["build-push"]
+        needs: 
+            - build-push
         runs-on: fasit-deploy
         if: github.ref == 'refs/heads/master'
         steps:
+            - name: debug
+              run: echo '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
             - uses: nais/fasit-deploy@main
               with:
                   json: '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
