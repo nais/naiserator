@@ -5,16 +5,16 @@ updates:
     schedule:
       interval: "monthly"
     reviewers:
-      - "@nais/features-dependabot-reviwer"
+      - "nais/features-dependabot-reviewer"
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "monthly"
     reviewers:
-      - "@nais/features-dependabot-reviwer"
+      - "nais/features-dependabot-reviewer"
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "monthly"
     reviewers:
-      - "@nais/features-dependabot-reviwer"
+      - "nais/features-dependabot-reviewer"
