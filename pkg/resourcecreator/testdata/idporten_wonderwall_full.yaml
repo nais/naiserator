@@ -127,3 +127,4 @@ tests:
               - https://my-client-2.nav.no/oauth2/callback
             postLogoutRedirectURIs:
               - https://my-client.nav.no/oauth2/logout/callback
+              - https://my-client-2.nav.no/oauth2/logout/callback
