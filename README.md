@@ -123,3 +123,23 @@ A known working version of controller-gen is `v0.2.5`. Download with
 ```
 GO111MODULE=off go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
 ```
+
+## Verifying the Naiserator image and its contents
+
+The image is signed "keylessly" (is that a word?) using [Sigstore cosign](https://github.com/sigstore/cosign).
+To verify its authenticity run
+```
+cosign verify \
+--certificate-identity "https://github.com/nais/naiserator/.github/workflows/deploy.yaml@refs/heads/master" \
+--certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+ghcr.io/nais/naiserator/naiserator@sha256:<shasum>
+```
+
+The images are also attested with SBOMs in the [CycloneDX](https://cyclonedx.org/) format.
+You can verify these by running
+```
+cosign verify-attestation --type cyclonedx \
+--certificate-identity "https://github.com/nais/naiserator/.github/workflows/deploy.yaml@refs/heads/master" \
+--certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+ghcr.io/nais/naiserator/naiserator@sha256:<shasum>
+```
