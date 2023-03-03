@@ -163,22 +163,25 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 }
 
 func makeWonderwallConfig(source Source, providerSecretName string) wonderwall.Configuration {
-	naisIngresses := source.GetIngress()
-	naisIdPorten := source.GetIDPorten()
+	ingresses := source.GetIngress()
+	idporten := source.GetIDPorten()
+
+	ingressesStrings := make([]string, 0)
+	for _, i := range ingresses {
+		ingressesStrings = append(ingressesStrings, string(i))
+	}
 
 	cfg := wonderwall.Configuration{
-		ACRValues:            naisIdPorten.Sidecar.Level,
-		AutoLogin:            naisIdPorten.Sidecar.AutoLogin,
-		AutoLoginIgnorePaths: naisIdPorten.Sidecar.AutoLoginIgnorePaths,
-		ErrorPath:            naisIdPorten.Sidecar.ErrorPath,
-		Ingresses: []string{
-			string(naisIngresses[0]),
-		},
-		Provider:       "idporten",
-		SecretNames:    []string{providerSecretName, wonderwallSecretName},
-		Resources:      naisIdPorten.Sidecar.Resources,
-		SessionRefresh: false,
-		UILocales:      naisIdPorten.Sidecar.Locale,
+		ACRValues:            idporten.Sidecar.Level,
+		AutoLogin:            idporten.Sidecar.AutoLogin,
+		AutoLoginIgnorePaths: idporten.Sidecar.AutoLoginIgnorePaths,
+		ErrorPath:            idporten.Sidecar.ErrorPath,
+		Ingresses:            ingressesStrings,
+		Provider:             "idporten",
+		SecretNames:          []string{providerSecretName, wonderwallSecretName},
+		Resources:            idporten.Sidecar.Resources,
+		SessionRefresh:       false,
+		UILocales:            idporten.Sidecar.Locale,
 	}
 
 	return cfg
