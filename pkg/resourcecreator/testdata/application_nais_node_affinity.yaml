@@ -49,10 +49,10 @@ tests:
                     requiredDuringSchedulingIgnoredDuringExecution:
                       nodeSelectorTerms:
                         - matchExpressions:
-                            - key: nais.io/node-type
+                            - key: nais.io/active-node-pool
                               operator: In
                               values:
-                                - "spot"
+                                - "true"
                   podAntiAffinity:
                     preferredDuringSchedulingIgnoredDuringExecution:
                       - podAffinityTerm:

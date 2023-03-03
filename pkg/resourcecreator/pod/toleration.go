@@ -10,9 +10,14 @@ import (
 
 type TolerationType string
 
+func (t TolerationType) String() string {
+	return string(t)
+}
+
 const (
-	TolerationTypeNais = "cloud.google.com/gke-spot"
-	TolerationTypeGKE  = "nais.io/node-type"
+	TolerationTypeNais  TolerationType = "nais.io/node-type"
+	NodeAffinityKeyNais string         = "nais.io/active-node-pool"
+	TolerationTypeGKE   TolerationType = "cloud.google.com/gke-spot"
 )
 
 func mapTolerations(tolerations []config.Toleration) []corev1.Toleration {
@@ -35,16 +40,16 @@ func mapTolerations(tolerations []config.Toleration) []corev1.Toleration {
 	return ts
 }
 
-func nodeAffinity(toleration corev1.Toleration) *corev1.NodeAffinity {
+func nodeAffinity(key, value string) *corev1.NodeAffinity {
 	return &corev1.NodeAffinity{
 		RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
 			NodeSelectorTerms: []corev1.NodeSelectorTerm{
 				{
 					MatchExpressions: []corev1.NodeSelectorRequirement{
 						{
-							Key:      toleration.Key,
+							Key:      key,
 							Operator: corev1.NodeSelectorOpIn,
-							Values:   []string{toleration.Value},
+							Values:   []string{value},
 						},
 					},
 				},
@@ -78,9 +83,15 @@ func ConfigureAffinity(appName string, tolerations []corev1.Toleration) *corev1.
 
 	a := &corev1.Affinity{}
 	for _, toleration := range tolerations {
-		if toleration.Key == TolerationTypeGKE || toleration.Key == TolerationTypeNais {
+		switch toleration.Key {
+		case TolerationTypeGKE.String():
 			a = &corev1.Affinity{
-				NodeAffinity:    nodeAffinity(toleration),
+				NodeAffinity:    nodeAffinity(toleration.Key, toleration.Value),
+				PodAntiAffinity: appAffinity(appName),
+			}
+		case TolerationTypeNais.String():
+			a = &corev1.Affinity{
+				NodeAffinity:    nodeAffinity(NodeAffinityKeyNais, "true"),
 				PodAntiAffinity: appAffinity(appName),
 			}
 		}
@@ -99,7 +110,9 @@ func contains(tolerations []config.Toleration, key string) bool {
 
 func SetupTolerations(tolerations []config.Toleration) ([]corev1.Toleration, error) {
 
-	if len(tolerations) > 1 && contains(tolerations, TolerationTypeGKE) && contains(tolerations, TolerationTypeNais) {
+	if len(tolerations) > 1 &&
+		contains(tolerations, TolerationTypeGKE.String()) &&
+		contains(tolerations, TolerationTypeNais.String()) {
 		return nil, fmt.Errorf("cannot have both %s and %s tolerations", TolerationTypeGKE, TolerationTypeNais)
 	}
 
