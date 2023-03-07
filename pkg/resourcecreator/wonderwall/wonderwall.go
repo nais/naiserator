@@ -57,21 +57,21 @@ type Config interface {
 	IsWonderwallEnabled() bool
 }
 
-func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) error {
+func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Configuration) error {
 	ast.Labels["aiven"] = "enabled"
 	ast.Labels["wonderwall"] = "enabled"
 
-	err := validate(source, config, cfg)
+	err := validate(source, naisCfg, wonderwallCfg)
 	if err != nil {
 		return err
 	}
 
-	encryptionKeySecret, err := makeEncryptionKeySecret(source, cfg)
+	encryptionKeySecret, err := makeEncryptionKeySecret(source, wonderwallCfg)
 	if err != nil {
 		return err
 	}
 
-	container, err := sidecarContainer(source, config, cfg, encryptionKeySecret)
+	container, err := sidecarContainer(source, naisCfg, wonderwallCfg, encryptionKeySecret)
 	if err != nil {
 		return fmt.Errorf("creating wonderwall container spec: %w", err)
 	}
@@ -82,24 +82,24 @@ func Create(source Source, ast *resource.Ast, config Config, cfg Configuration) 
 	return nil
 }
 
-func validate(source Source, config Config, cfg Configuration) error {
-	if !config.IsWonderwallEnabled() {
+func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error {
+	if !naisCfg.IsWonderwallEnabled() {
 		return fmt.Errorf("wonderwall is not enabled for this cluster")
 	}
 
-	if len(cfg.Provider) == 0 {
+	if len(wonderwallCfg.Provider) == 0 {
 		return fmt.Errorf("configuration has empty provider")
 	}
 
-	if len(cfg.SecretNames) == 0 {
+	if len(wonderwallCfg.SecretNames) == 0 {
 		return fmt.Errorf("configuration has no secret names")
 	}
 
-	if len(cfg.Ingresses) == 0 {
+	if len(wonderwallCfg.Ingresses) == 0 {
 		return fmt.Errorf("configuration has no ingresses")
 	}
 
-	for _, name := range cfg.SecretNames {
+	for _, name := range wonderwallCfg.SecretNames {
 		if len(name) == 0 {
 			return fmt.Errorf("configuration contains empty secret names")
 		}
@@ -118,16 +118,16 @@ func validate(source Source, config Config, cfg Configuration) error {
 	return nil
 }
 
-func sidecarContainer(source Source, config Config, cfg Configuration, encryptionKeySecret *corev1.Secret) (*corev1.Container, error) {
-	options := config.GetWonderwallOptions()
+func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration, encryptionKeySecret *corev1.Secret) (*corev1.Container, error) {
+	options := naisCfg.GetWonderwallOptions()
 	image := options.Image
-	resourceReqs, err := resourceRequirements(cfg)
+	resourceReqs, err := resourceRequirements(wonderwallCfg)
 	if err != nil {
 		return nil, err
 	}
 
 	var sc *corev1.SeccompProfile
-	if config.IsSeccompEnabled() {
+	if naisCfg.IsSeccompEnabled() {
 		sc = &corev1.SeccompProfile{
 			Type: corev1.SeccompProfileTypeRuntimeDefault,
 		}
@@ -136,7 +136,7 @@ func sidecarContainer(source Source, config Config, cfg Configuration, encryptio
 	envFromSources := []corev1.EnvFromSource{
 		pod.EnvFromSecret(encryptionKeySecret.GetName()),
 	}
-	for _, name := range cfg.SecretNames {
+	for _, name := range wonderwallCfg.SecretNames {
 		envFromSources = append(envFromSources, pod.EnvFromSecret(name))
 	}
 
@@ -144,7 +144,7 @@ func sidecarContainer(source Source, config Config, cfg Configuration, encryptio
 		Name:            "wonderwall",
 		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env:             envVars(source, cfg),
+		Env:             envVars(source, wonderwallCfg),
 		EnvFrom:         envFromSources,
 		Ports: []corev1.ContainerPort{
 			{
