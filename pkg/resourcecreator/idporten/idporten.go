@@ -186,7 +186,6 @@ func makeWonderwallConfig(source Source, providerSecretName string) wonderwall.C
 		ACRValues:            idporten.Sidecar.Level,
 		AutoLogin:            idporten.Sidecar.AutoLogin,
 		AutoLoginIgnorePaths: idporten.Sidecar.AutoLoginIgnorePaths,
-		ErrorPath:            idporten.Sidecar.ErrorPath,
 		Ingresses:            ingressesStrings,
 		Provider:             "idporten",
 		SecretNames:          []string{providerSecretName, wonderwallSecretName},

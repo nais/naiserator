@@ -184,7 +184,6 @@ func makeWonderwallConfig(source Source, providerSecretName string, ingresses []
 	return wonderwall.Configuration{
 		AutoLogin:            sidecar.AutoLogin,
 		AutoLoginIgnorePaths: sidecar.AutoLoginIgnorePaths,
-		ErrorPath:            sidecar.ErrorPath,
 		Ingresses:            ingressesStrings,
 		Provider:             "azure",
 		SecretNames:          []string{providerSecretName, wonderwallSecretName},

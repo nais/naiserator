@@ -34,7 +34,6 @@ type Configuration struct {
 	ACRValues            string
 	AutoLogin            bool
 	AutoLoginIgnorePaths []nais_io_v1.WonderwallIgnorePaths
-	ErrorPath            string
 	Ingresses            []string
 	Provider             string
 	Resources            *nais_io_v1.ResourceRequirements
@@ -225,7 +224,6 @@ func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 	}
 
 	result = appendBoolEnvVar(result, "WONDERWALL_AUTO_LOGIN", cfg.AutoLogin)
-	result = appendStringEnvVar(result, "WONDERWALL_ERROR_PATH", cfg.ErrorPath)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_ACR_VALUES", cfg.ACRValues)
 	result = appendStringEnvVar(result, "WONDERWALL_OPENID_UI_LOCALES", cfg.UILocales)
 

@@ -42,7 +42,6 @@ input:
         autoLoginIgnorePaths:
           - "/internal/*"
           - "/path"
-        errorPath: /some/error
         resources:
           limits:
             cpu: 100m
@@ -100,8 +99,6 @@ tests:
                         value: ^0.0.0.0:7565$
                       - name: WONDERWALL_AUTO_LOGIN
                         value: ^true$
-                      - name: WONDERWALL_ERROR_PATH
-                        value: ^/some/error$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
                         value: ^/metrics,/internal/liveness,/internal/readiness,/internal/\*,/path$
                     resources:
