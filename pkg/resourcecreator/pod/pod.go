@@ -53,7 +53,7 @@ type Config interface {
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsSeccompEnabled() bool
-	GetTolerations() []config.Toleration
+	GetToleration() config.Toleration
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -104,15 +104,10 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 	}
 
-	tolerations, err := SetupTolerations(cfg.GetTolerations())
-	if err != nil {
-		return nil, err
-	}
-
-	if len(tolerations) > 0 {
+	tolerations := SetupToleration(cfg.GetToleration())
+	if tolerations != nil {
 		podSpec.Tolerations = tolerations
 	}
-
 	podSpec.Affinity = ConfigureAffinity(appName, tolerations)
 
 	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)

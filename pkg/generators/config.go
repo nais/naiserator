@@ -145,6 +145,6 @@ func (o *Options) GetAivenRange() string {
 	return o.Config.AivenRange
 }
 
-func (o *Options) GetTolerations() []config.Toleration {
-	return o.Config.Tolerations
+func (o *Options) GetToleration() config.Toleration {
+	return o.Config.Toleration
 }

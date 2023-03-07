@@ -2,15 +2,8 @@ testconfig:
   description: application configured with gke spot toleration
 
 config:
-  tolerations:
-    - key: "cloud.google.com/gke-spot"
-      operator: "Equal"
-      value: "true"
-      effect: "NoSchedule"
-    - key: "some-other-key"
-      operator: "In"
-      value: "some-other-value"
-      effect: "NoExecute"
+  toleration:
+    enable-spot: true
 
 input:
   kind: Application
@@ -40,10 +33,6 @@ tests:
                     operator: "Equal"
                     value: "true"
                     effect: "NoSchedule"
-                  - key: "some-other-key"
-                    operator: "In"
-                    value: "some-other-value"
-                    effect: "NoExecute"
                 affinity:
                   nodeAffinity:
                     requiredDuringSchedulingIgnoredDuringExecution:

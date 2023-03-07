@@ -1,8 +1,6 @@
 package pod
 
 import (
-	"fmt"
-
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,30 +13,8 @@ func (t TolerationType) String() string {
 }
 
 const (
-	TolerationTypeNais  TolerationType = "nais.io/node-type"
-	NodeAffinityKeyNais string         = "nais.io/active-node-pool"
-	TolerationTypeGKE   TolerationType = "cloud.google.com/gke-spot"
+	TolerationTypeGKE TolerationType = "cloud.google.com/gke-spot"
 )
-
-func mapTolerations(tolerations []config.Toleration) []corev1.Toleration {
-	var ts []corev1.Toleration
-
-	for _, toleration := range tolerations {
-		ts = append(ts, corev1.Toleration{
-			Key:      toleration.Key,
-			Operator: toleration.Operator,
-			Value:    toleration.Value,
-			Effect:   toleration.Effect,
-			TolerationSeconds: func() *int64 {
-				if toleration.TolerationSeconds != nil {
-					return toleration.TolerationSeconds
-				}
-				return nil
-			}(),
-		})
-	}
-	return ts
-}
 
 func nodeAffinity(key, value string) *corev1.NodeAffinity {
 	return &corev1.NodeAffinity{
@@ -77,7 +53,7 @@ func appAffinity(appName string) *corev1.PodAntiAffinity {
 }
 
 func ConfigureAffinity(appName string, tolerations []corev1.Toleration) *corev1.Affinity {
-	if len(tolerations) == 0 {
+	if tolerations == nil {
 		return &corev1.Affinity{PodAntiAffinity: appAffinity(appName)}
 	}
 
@@ -89,32 +65,21 @@ func ConfigureAffinity(appName string, tolerations []corev1.Toleration) *corev1.
 				NodeAffinity:    nodeAffinity(toleration.Key, toleration.Value),
 				PodAntiAffinity: appAffinity(appName),
 			}
-		case TolerationTypeNais.String():
-			a = &corev1.Affinity{
-				NodeAffinity:    nodeAffinity(NodeAffinityKeyNais, "true"),
-				PodAntiAffinity: appAffinity(appName),
-			}
 		}
 	}
 	return a
 }
 
-func contains(tolerations []config.Toleration, key string) bool {
-	for _, toleration := range tolerations {
-		if toleration.Key == key {
-			return true
+func SetupToleration(toleration config.Toleration) []corev1.Toleration {
+	if toleration.EnableSpot {
+		return []corev1.Toleration{
+			{
+				Key:      TolerationTypeGKE.String(),
+				Operator: corev1.TolerationOpEqual,
+				Value:    "true",
+				Effect:   corev1.TaintEffectNoSchedule,
+			},
 		}
 	}
-	return false
-}
-
-func SetupTolerations(tolerations []config.Toleration) ([]corev1.Toleration, error) {
-
-	if len(tolerations) > 1 &&
-		contains(tolerations, TolerationTypeGKE.String()) &&
-		contains(tolerations, TolerationTypeNais.String()) {
-		return nil, fmt.Errorf("cannot have both %s and %s tolerations", TolerationTypeGKE, TolerationTypeNais)
-	}
-
-	return mapTolerations(tolerations), nil
+	return nil
 }
