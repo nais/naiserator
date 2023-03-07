@@ -3,7 +3,8 @@ testconfig:
 
 config:
   toleration:
-    enable-spot: true
+    spot:
+      enabled: true
 
 input:
   kind: Naisjob

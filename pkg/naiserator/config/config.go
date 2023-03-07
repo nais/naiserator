@@ -112,7 +112,11 @@ type FQDNRule struct {
 }
 
 type Toleration struct {
-	EnableSpot bool `json:"enable-spot"`
+	Spot *Spot `json:"spot"`
+}
+
+type Spot struct {
+	Enabled bool `json:"enabled"`
 }
 
 type Config struct {

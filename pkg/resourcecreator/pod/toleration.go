@@ -71,15 +71,20 @@ func ConfigureAffinity(appName string, tolerations []corev1.Toleration) *corev1.
 }
 
 func SetupToleration(toleration config.Toleration) []corev1.Toleration {
-	if toleration.EnableSpot {
-		return []corev1.Toleration{
-			{
-				Key:      TolerationTypeGKE.String(),
-				Operator: corev1.TolerationOpEqual,
-				Value:    "true",
-				Effect:   corev1.TaintEffectNoSchedule,
-			},
-		}
+	if toleration.Spot == nil {
+		return nil
 	}
-	return nil
+
+	if !toleration.Spot.Enabled {
+		return nil
+	}
+
+	return []corev1.Toleration{
+		{
+			Key:      TolerationTypeGKE.String(),
+			Operator: corev1.TolerationOpEqual,
+			Value:    "true",
+			Effect:   corev1.TaintEffectNoSchedule,
+		},
+	}
 }

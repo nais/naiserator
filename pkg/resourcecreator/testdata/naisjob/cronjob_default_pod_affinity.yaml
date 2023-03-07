@@ -1,6 +1,11 @@
 testconfig:
   description: cronjob with default pod affinity
 
+config:
+  toleration:
+    spot:
+      enabled: false
+
 input:
   kind: Naisjob
   apiVersion: nais.io/v1

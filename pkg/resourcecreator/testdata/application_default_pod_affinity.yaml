@@ -1,6 +1,11 @@
 testconfig:
   description: application with default pod affinity
 
+config:
+  toleration:
+    spot:
+      enabled: false
+
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
