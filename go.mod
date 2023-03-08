@@ -14,7 +14,7 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nais/liberator v0.0.0-20230228095441-c9a9154448c9
-	github.com/novln/docker-parser v0.0.0-20190306203532-b3f122c6978e
+	github.com/novln/docker-parser v1.0.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/pflag v1.0.5
