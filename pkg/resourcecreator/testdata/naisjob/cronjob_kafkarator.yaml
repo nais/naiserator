@@ -29,7 +29,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^aiven-mynaisjob-.{8}$
+            secretName: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
       - name: "pool is propagated"
         type: subset
         resource:
@@ -53,7 +53,7 @@ tests:
                     volumes:
                       - name: aiven-credentials
                         secret:
-                          secretName: ^aiven-mynaisjob-.{8}$
+                          secretName: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           items:
                             - key: KAFKA_CERTIFICATE
                               path: kafka.crt
@@ -75,42 +75,42 @@ tests:
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_CERTIFICATE
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_PRIVATE_KEY
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_PRIVATE_KEY
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_BROKERS
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_BROKERS
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_SCHEMA_REGISTRY
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_SCHEMA_REGISTRY
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_SCHEMA_REGISTRY_USER
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_SCHEMA_REGISTRY_USER
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_SCHEMA_REGISTRY_PASSWORD
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_SCHEMA_REGISTRY_PASSWORD
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_CA
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_CA
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_CREDSTORE_PASSWORD
                             valueFrom:
                               secretKeyRef:
                                 key: KAFKA_CREDSTORE_PASSWORD
-                                name: ^aiven-mynaisjob-.{8}$
+                                name: ^aiven-mynaisjob-.{8}-\d{4}-\d{2}$
                           - name: KAFKA_CERTIFICATE_PATH
                             value: /var/run/secrets/nais.io/kafka/kafka.crt
                           - name: KAFKA_PRIVATE_KEY_PATH

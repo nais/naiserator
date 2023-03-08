@@ -2,6 +2,7 @@ package aiven
 
 import (
 	"fmt"
+	"time"
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -29,14 +30,21 @@ type Config interface {
 	IsKafkaratorEnabled() bool
 }
 
-func generateAivenSecretName(name string) string {
-	secretName := namegen.RandShortName(fmt.Sprintf("aiven-%s", name), validation.DNS1035LabelMaxLength)
+func generateAivenSecretName(name string) (string, error) {
+	prefixedName := fmt.Sprintf("aiven-%s", name)
+	year, week := time.Now().ISOWeek()
+	suffix := fmt.Sprintf("%d-%d", year, week)
+	maxLen := validation.DNS1035LabelMaxLength
 
-	return secretName
+	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	secretName := generateAivenSecretName(source.GetName())
+	secretName, err := generateAivenSecretName(source.GetName())
+	if err != nil {
+		return err
+	}
+
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
 		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
 			SecretName: secretName,
