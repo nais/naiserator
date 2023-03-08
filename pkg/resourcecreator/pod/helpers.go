@@ -54,18 +54,15 @@ func EnvFromSecret(name string) corev1.EnvFromSource {
 }
 
 func ResourceLimits(reqs nais_io_v1.ResourceRequirements) corev1.ResourceRequirements {
-	limits := corev1.ResourceList{
-		corev1.ResourceMemory: k8sResource.MustParse(reqs.Limits.Memory),
-	}
-	if len(reqs.Limits.Cpu) > 0 {
-		limits[corev1.ResourceCPU] = k8sResource.MustParse(reqs.Limits.Cpu)
-	}
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    k8sResource.MustParse(reqs.Requests.Cpu),
 			corev1.ResourceMemory: k8sResource.MustParse(reqs.Requests.Memory),
 		},
-		Limits: limits,
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    k8sResource.MustParse(reqs.Limits.Cpu),
+			corev1.ResourceMemory: k8sResource.MustParse(reqs.Limits.Memory),
+		},
 	}
 }
 
