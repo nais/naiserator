@@ -1,4 +1,9 @@
 name: Build and deploy
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -7,8 +12,10 @@ on:
       - "charts/**"
       - ".github/workflows/chart.yaml"
       - "*.md"
+
 env:
   image: ghcr.io/${{ github.repository }}/naiserator
+
 jobs:
   build-push:
     name: Build and push image
