@@ -48,6 +48,7 @@ type Features struct {
 	Azurerator                  bool     `json:"azurerator"`
 	CNRM                        bool     `json:"cnrm"`
 	Digdirator                  bool     `json:"digdirator"`
+	GARToleration               bool     `json:"gar-toleration"`
 	GCP                         bool     `json:"gcp"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`

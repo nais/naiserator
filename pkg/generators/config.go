@@ -144,3 +144,7 @@ func (o *Options) GetNaisNamespace() string {
 func (o *Options) GetAivenRange() string {
 	return o.Config.AivenRange
 }
+
+func (o *Options) IsGARTolerationEnabled() bool {
+	return o.Config.Features.GARToleration
+}
