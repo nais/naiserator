@@ -53,6 +53,7 @@ type Config interface {
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsSeccompEnabled() bool
+	IsGARTolerationEnabled() bool
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -107,7 +108,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 
 	var toleration []corev1.Toleration
 
-	if strings.HasPrefix(containers[0].Image, "europe-north1-docker.pkg.dev/") {
+	if cfg.IsGARTolerationEnabled() && strings.HasPrefix(containers[0].Image, "europe-north1-docker.pkg.dev/") {
 		toleration = append(toleration, corev1.Toleration{
 			Key:      "nais.io/gar",
 			Operator: "Equal",

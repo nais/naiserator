@@ -145,6 +145,6 @@ func (o *Options) GetAivenRange() string {
 	return o.Config.AivenRange
 }
 
-func (o *Options) GetGARTolerationEnabled() bool {
+func (o *Options) IsGARTolerationEnabled() bool {
 	return o.Config.Features.GARToleration
 }
