@@ -13,89 +13,34 @@ on:
       - ".github/workflows/chart.yaml"
       - "*.md"
 
-env:
-  image: ghcr.io/${{ github.repository }}/naiserator
-
 jobs:
-  build-push:
-    name: Build and push image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout naiserator
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3
-      - name: Generate image environment variable
-        id: version
-        run: |
-          version=$(./version.sh)
-          echo "tag=${version}" >> $GITHUB_OUTPUT
-      - name: Login to GitHub Packages Docker Registry
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # Use commit-sha1 instead of tag for security concerns
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push
-        id: build-push
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # ratchet:docker/build-push-action@v4
-        with:
-          context: .
-          push: "${{ github.ref == 'refs/heads/master' }}"
-          tags: ${{ env.image }}:latest,${{ env.image }}:${{ steps.version.outputs.tag }}
-    outputs:
-      tag: ${{ steps.version.outputs.tag }}
-      digest: ${{ steps.build-push.outputs.digest }}
-
-  rollout:
-    permissions:
-      id-token: write
-    needs:
-      - build-push
-    runs-on: fasit-deploy
-    if: github.ref == 'refs/heads/master'
-    steps:
-      - name: info
-        run: |
-          echo 'Rolling out: {"imageTag": "${{ needs.build-push.outputs.tag }}"}'
-      - uses: nais/fasit-deploy@b2c0b6d049b53bef41b321eec406fe66938576fd # ratchet:nais/fasit-deploy@main
-        with:
-          json: '{"imageTag": "${{ needs.build-push.outputs.tag }}"}'
-          feature_name: naiserator
-
-  slsafy:
-    name: Sign and attest the image
-    if: github.ref == 'refs/heads/master'
-    needs:
-      - build-push
+  build_push_sign:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
       id-token: write
     steps:
-      - name: Install cosign
-        uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65 # ratchet:sigstore/cosign-installer@main
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3
+      - uses: nais/build-push-sign@main
         with:
-          cosign-release: 'v2.0.0'
-      - name: Login to GitHub Packages Docker Registry
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # ratchet:docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Sign the container image
-        run: echo "y" | cosign sign ${{ env.image }}@${{ env.image_digest }}
-        env:
-          image_digest: ${{ needs.build-push.outputs.digest }}
-      - name: Create SBOM
-        uses: aquasecurity/trivy-action@8bd2f9fbda2109502356ff8a6a89da55b1ead252 # ratchet:aquasecurity/trivy-action@master
-        with:
-          scan-type: 'image'
-          format: 'cyclonedx'
-          output: 'cyclone.sbom.json'
-          image-ref: ${{ env.image }}@${{ env.image_digest }}
-        env:
-          image_digest: ${{ needs.build-push.outputs.digest }}
-      - name: Attest image
-        run: echo "y" | cosign attest --predicate cyclone.sbom.json --type cyclonedx ${{ env.image }}@${{ env.image_digest }}
-        env:
-          image_digest: ${{ needs.build-push.outputs.digest }}
+          name: naiserator
+          dockerfile: Dockerfile
+          service_account: gh-naiserator
+          push: ${{ github.actor != "dependabot[bot]" }}
+          workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
+
+    rollout:
+        permissions:
+            id-token: write
+        needs:
+            - build-push-sign
+        runs-on: fasit-deploy
+        if: github.ref == 'refs/heads/master'
+        steps:
+            - name: info
+              run: |
+                  echo 'Rolling out: {"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
+            - uses: nais/fasit-deploy@main
+              with:
+                  json: '{"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
+                  feature_name: naiserator

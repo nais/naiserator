@@ -43,7 +43,7 @@ spec:
         - name: KAFKA_CA_PATH
           value: /var/run/secrets/nais.io/kafka/ca.crt
         {{ end }}
-        image: ghcr.io/nais/naiserator/naiserator:{{ .Values.imageTag }}
+        image: europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator
         securityContext:
@@ -88,4 +88,3 @@ spec:
               path: ca.crt
           secretName: aiven-naiserator
       {{ end }}
-

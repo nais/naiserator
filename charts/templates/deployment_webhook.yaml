@@ -21,7 +21,7 @@ spec:
       containers:
       - command:
         - /app/naiserator_webhook
-        image: ghcr.io/nais/naiserator/naiserator:{{ .Values.imageTag }}
+        image: europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator-webhook
         securityContext:
