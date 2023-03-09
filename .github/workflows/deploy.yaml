@@ -33,14 +33,14 @@ jobs:
     permissions:
       id-token: write
     needs:
-      - build-push-sign
+      - build_push_sign
     runs-on: fasit-deploy
     if: github.ref == 'refs/heads/master'
     steps:
       - name: info
         run: |
-          echo 'Rolling out: {"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
+          echo 'Rolling out: {"imageTag": "${{ needs.build_push_sign.outputs.version }}"}'
       - uses: nais/fasit-deploy@main
         with:
-          json: '{"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
+          json: '{"imageTag": "${{ needs.build_push_sign.outputs.version }}"}'
           feature_name: naiserator
