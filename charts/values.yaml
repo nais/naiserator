@@ -65,7 +65,7 @@ naiserator:
   wonderwall:
     image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-01-10-d8493e1
   leader-election:
-    image: ghcr.io/nais/elector:latest
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/elector:20230309-041449-20c6f50
 
   fqdn-policy:
     enabled: true
