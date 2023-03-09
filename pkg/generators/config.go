@@ -148,3 +148,7 @@ func (o *Options) GetAivenRange() string {
 func (o *Options) IsGARTolerationEnabled() bool {
 	return o.Config.Features.GARToleration
 }
+
+func (o *Options) IsSpotTolerationEnabled() bool {
+	return o.Config.Features.SpotToleration
+}

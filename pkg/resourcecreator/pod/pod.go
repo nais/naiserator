@@ -54,6 +54,7 @@ type Config interface {
 	IsPrometheusOperatorEnabled() bool
 	IsSeccompEnabled() bool
 	IsGARTolerationEnabled() bool
+	IsSpotTolerationEnabled() bool
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -91,31 +92,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		MountPath: "/tmp",
 	})
 
-	affinity := &corev1.Affinity{
-		PodAntiAffinity: &corev1.PodAntiAffinity{
-			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-				{Weight: 10, PodAffinityTerm: corev1.PodAffinityTerm{
-					LabelSelector: &metav1.LabelSelector{
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{Key: "app", Operator: "In", Values: []string{appName}},
-						},
-					},
-					TopologyKey: "kubernetes.io/hostname",
-				}},
-			},
-		},
-	}
-
-	var toleration []corev1.Toleration
-
-	if cfg.IsGARTolerationEnabled() && strings.HasPrefix(containers[0].Image, "europe-north1-docker.pkg.dev/") {
-		toleration = append(toleration, corev1.Toleration{
-			Key:      "nais.io/gar",
-			Operator: "Equal",
-			Value:    "true",
-			Effect:   "NoSchedule",
-		})
-	}
+	tolerations := SetupTolerations(cfg, containers[0].Image)
 
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
@@ -128,8 +105,8 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 			{Name: "gh-docker-credentials"},
 		},
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
-		Affinity:                      affinity,
-		Tolerations:                   toleration,
+		Affinity:                      ConfigureAffinity(appName, tolerations),
+		Tolerations:                   tolerations,
 	}
 
 	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
@@ -147,6 +124,85 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	}
 
 	return podSpec, nil
+}
+
+func SetupTolerations(cfg Config, image string) []corev1.Toleration {
+	var tolerations []corev1.Toleration
+
+	if cfg.IsSpotTolerationEnabled() {
+		tolerations = append(tolerations, corev1.Toleration{
+			Key:      GKESpotTolerationKey,
+			Operator: corev1.TolerationOpEqual,
+			Value:    "true",
+			Effect:   corev1.TaintEffectNoSchedule,
+		})
+	}
+
+	if cfg.IsGARTolerationEnabled() && strings.HasPrefix(image, "europe-north1-docker.pkg.dev/") {
+		tolerations = append(tolerations, corev1.Toleration{
+			Key:      "nais.io/gar",
+			Operator: corev1.TolerationOpEqual,
+			Value:    "true",
+			Effect:   corev1.TaintEffectNoSchedule,
+		})
+	}
+	return tolerations
+}
+
+func ConfigureAffinity(appName string, tolerations []corev1.Toleration) *corev1.Affinity {
+	if tolerations == nil {
+		return &corev1.Affinity{PodAntiAffinity: appAffinity(appName)}
+	}
+
+	a := &corev1.Affinity{}
+	for _, toleration := range tolerations {
+		switch toleration.Key {
+		case GKESpotTolerationKey:
+			a = &corev1.Affinity{
+				NodeAffinity:    nodeAffinity(toleration.Key, toleration.Value),
+				PodAntiAffinity: appAffinity(appName),
+			}
+		default:
+			a = &corev1.Affinity{PodAntiAffinity: appAffinity(appName)}
+		}
+	}
+	return a
+}
+
+func nodeAffinity(key, value string) *corev1.NodeAffinity {
+	return &corev1.NodeAffinity{
+		RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+			NodeSelectorTerms: []corev1.NodeSelectorTerm{
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						{
+							Key:      key,
+							Operator: corev1.NodeSelectorOpIn,
+							Values:   []string{value},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func appAffinity(appName string) *corev1.PodAntiAffinity {
+	return &corev1.PodAntiAffinity{
+		PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
+			{Weight: 10, PodAffinityTerm: corev1.PodAffinityTerm{
+				LabelSelector: &metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      "app",
+							Operator: metav1.LabelSelectorOpIn,
+							Values:   []string{appName}},
+					},
+				},
+				TopologyKey: "kubernetes.io/hostname",
+			}},
+		},
+	}
 }
 
 func configureSecurityContext(annotations map[string]string, cfg Config) *corev1.SecurityContext {

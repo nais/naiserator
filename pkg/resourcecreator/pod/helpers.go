@@ -10,6 +10,10 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
+const (
+	GKESpotTolerationKey = "cloud.google.com/gke-spot"
+)
+
 func FromFilesSecretVolume(volumeName, secretName string, items []corev1.KeyToPath) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
