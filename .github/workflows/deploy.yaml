@@ -29,18 +29,18 @@ jobs:
           push: ${{ github.actor != 'dependabot[bot]' }}
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
 
-    rollout:
-        permissions:
-            id-token: write
-        needs:
-            - build-push-sign
-        runs-on: fasit-deploy
-        if: github.ref == 'refs/heads/master'
-        steps:
-            - name: info
-              run: |
-                  echo 'Rolling out: {"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
-            - uses: nais/fasit-deploy@main
-              with:
-                  json: '{"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
-                  feature_name: naiserator
+  rollout:
+    permissions:
+      id-token: write
+    needs:
+      - build-push-sign
+    runs-on: fasit-deploy
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: info
+        run: |
+          echo 'Rolling out: {"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
+      - uses: nais/fasit-deploy@main
+        with:
+          json: '{"imageTag": "${{ needs.build-push-sign.outputs.version }}"}'
+          feature_name: naiserator
