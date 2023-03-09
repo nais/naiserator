@@ -1,0 +1,98 @@
+testconfig:
+  description: gar-toleration enabled with image not from gar
+
+config:
+  features:
+    gar-toleration: true
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: ghcr.io/nais/testapp:latest
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.spec.dnsPolicy
+          - .spec.template.metadata
+          - .spec.template.spec.restartPolicy
+          - .spec.template.spec.affinity
+          - .spec.template.spec.serviceAccountName
+          - .spec.template.spec.volumes
+          - .spec.template.spec.imagePullSecrets
+        name: "no gar toleration"
+        resource:
+          spec:
+            progressDeadlineSeconds: 300
+            replicas: 2
+            revisionHistoryLimit: 3
+            selector:
+              matchLabels:
+                app: myapplication
+            strategy:
+              rollingUpdate:
+                maxSurge: 25%
+                maxUnavailable: 0
+              type: RollingUpdate
+            template:
+              spec:
+                containers:
+                  - env:
+                      - name: NAIS_APP_NAME
+                        value: myapplication
+                      - name: NAIS_NAMESPACE
+                        value: mynamespace
+                      - name: NAIS_APP_IMAGE
+                        value: ghcr.io/nais/testapp:latest
+                      - name: NAIS_CLUSTER_NAME
+                      - name: NAIS_CLIENT_ID
+                        value: :mynamespace:myapplication
+                      - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+                        value: "true"
+                    image: ghcr.io/nais/testapp:latest
+                    imagePullPolicy: IfNotPresent
+                    lifecycle:
+                      preStop:
+                        exec:
+                          command:
+                            - sleep
+                            - "5"
+                    name: myapplication
+                    ports:
+                      - containerPort: 8080
+                        name: http
+                        protocol: TCP
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 200m
+                        memory: 256Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+                      privileged: false
+                      readOnlyRootFilesystem: true
+                      runAsGroup: 1069
+                      runAsNonRoot: true
+                      runAsUser: 1069
+                    volumeMounts:
+                      - mountPath: /tmp
+                        name: writable-tmp

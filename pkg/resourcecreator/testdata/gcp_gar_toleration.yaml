@@ -1,0 +1,36 @@
+testconfig:
+  description: gar-toleration enabled with image from gar
+
+config:
+  features:
+    gar-toleration: true
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/testapp:latest
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "gar toleration"
+        resource:
+          spec:
+            template:
+              spec:
+                tolerations:
+                  - effect: NoSchedule
+                    key: nais.io/gar
+                    operator: Equal
+                    value: "true"

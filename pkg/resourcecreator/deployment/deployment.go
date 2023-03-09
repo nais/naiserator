@@ -39,6 +39,7 @@ type Source interface {
 type Config interface {
 	pod.Config
 	GetNumReplicas() int32
+	GetGARTolerationEnabled() bool
 }
 
 func Create(app Source, ast *resource.Ast, cfg Config) error {
