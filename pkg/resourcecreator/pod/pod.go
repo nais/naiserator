@@ -115,6 +115,22 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 			Value:    "true",
 			Effect:   "NoSchedule",
 		})
+
+		affinity.NodeAffinity = &corev1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+				NodeSelectorTerms: []corev1.NodeSelectorTerm{
+					{
+						MatchExpressions: []corev1.NodeSelectorRequirement{
+							{
+								Key:      "nais.io/gar",
+								Operator: corev1.NodeSelectorOpIn,
+								Values:   []string{"true"},
+							},
+						},
+					},
+				},
+			},
+		}
 	}
 
 	podSpec := &corev1.PodSpec{

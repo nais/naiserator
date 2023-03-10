@@ -29,6 +29,15 @@ tests:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                      nodeSelectorTerms:
+                        - matchExpressions:
+                            - key: nais.io/gar
+                              operator: In
+                              values:
+                                - "true"
                 tolerations:
                   - effect: NoSchedule
                     key: nais.io/gar
