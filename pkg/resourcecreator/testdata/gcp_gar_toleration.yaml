@@ -34,7 +34,7 @@ tests:
                     requiredDuringSchedulingIgnoredDuringExecution:
                       nodeSelectorTerms:
                         - matchExpressions:
-                            - key: nais.io/gar
+                            - key: nais.io/gar-node-pool
                               operator: In
                               values:
                                 - "true"
