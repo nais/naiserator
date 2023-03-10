@@ -2,7 +2,7 @@ NAME        := naiserator
 TAG         := navikt/${NAME}
 LATEST      := ${TAG}:latest
 ROOT_DIR    := $(shell git rev-parse --show-toplevel)
-K8S_VERSION := 1.19.0
+K8S_VERSION := 1.24.0
 arch        := amd64
 os          := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
