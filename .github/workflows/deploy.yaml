@@ -22,12 +22,15 @@ jobs:
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3
       - uses: nais/build-push-sign@main
+        id: build_push_sign
         with:
           name: naiserator
           dockerfile: Dockerfile
           google_service_account: gh-naiserator
           push: ${{ github.actor != 'dependabot[bot]' }}
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
+    outputs:
+        version: ${{ steps.build_push_sign.outputs.version }}
 
   rollout:
     permissions:

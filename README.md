@@ -65,7 +65,7 @@ kubectl apply -f hack/resources/
 
 ## Development
 
-* The [Go](https://golang.org/dl/) programming language, version 1.18 or later
+* The [Go](https://golang.org/dl/) programming language, as indicated by go.mod
 * [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
 * [Docker Desktop](https://www.docker.com/products/docker-desktop) or other Docker release compatible with Kubernetes
 * Kubernetes, either through [minikube](https://github.com/kubernetes/minikube) or a local cluster
