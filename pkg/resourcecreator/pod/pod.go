@@ -122,7 +122,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 					{
 						MatchExpressions: []corev1.NodeSelectorRequirement{
 							{
-								Key:      "nais.io/gar",
+								Key:      "nais.io/gar-node-pool",
 								Operator: corev1.NodeSelectorOpIn,
 								Values:   []string{"true"},
 							},
