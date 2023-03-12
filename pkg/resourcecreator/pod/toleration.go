@@ -1,6 +1,8 @@
 package pod
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -9,6 +11,29 @@ const (
 	GKESpotTolerationKey = "cloud.google.com/gke-spot"
 	NaisGarToleranceKey  = "nais.io/gar"
 )
+
+func SetupTolerations(cfg Config, image string) []corev1.Toleration {
+	var tolerations []corev1.Toleration
+
+	if cfg.IsSpotTolerationEnabled() {
+		tolerations = append(tolerations, corev1.Toleration{
+			Key:      GKESpotTolerationKey,
+			Operator: corev1.TolerationOpEqual,
+			Value:    "true",
+			Effect:   corev1.TaintEffectNoSchedule,
+		})
+	}
+
+	if cfg.IsGARTolerationEnabled() && strings.HasPrefix(image, "europe-north1-docker.pkg.dev/") {
+		tolerations = append(tolerations, corev1.Toleration{
+			Key:      NaisGarToleranceKey,
+			Operator: corev1.TolerationOpEqual,
+			Value:    "true",
+			Effect:   corev1.TaintEffectNoSchedule,
+		})
+	}
+	return tolerations
+}
 
 func ConfigureAffinity(appName string, tolerations []corev1.Toleration) *corev1.Affinity {
 	if tolerations == nil {

@@ -126,29 +126,6 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	return podSpec, nil
 }
 
-func SetupTolerations(cfg Config, image string) []corev1.Toleration {
-	var tolerations []corev1.Toleration
-
-	if cfg.IsSpotTolerationEnabled() {
-		tolerations = append(tolerations, corev1.Toleration{
-			Key:      GKESpotTolerationKey,
-			Operator: corev1.TolerationOpEqual,
-			Value:    "true",
-			Effect:   corev1.TaintEffectNoSchedule,
-		})
-	}
-
-	if cfg.IsGARTolerationEnabled() && strings.HasPrefix(image, "europe-north1-docker.pkg.dev/") {
-		tolerations = append(tolerations, corev1.Toleration{
-			Key:      NaisGarToleranceKey,
-			Operator: corev1.TolerationOpEqual,
-			Value:    "true",
-			Effect:   corev1.TaintEffectNoSchedule,
-		})
-	}
-	return tolerations
-}
-
 func configureSecurityContext(annotations map[string]string, cfg Config) *corev1.SecurityContext {
 	ctx := &corev1.SecurityContext{
 		RunAsUser:                pointer.Int64(runAsUser(annotations)),
