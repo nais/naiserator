@@ -86,5 +86,5 @@ spec:
               path: kafka.key
             - key: KAFKA_CA
               path: ca.crt
-          secretName: aiven-naiserator
+          secretName: aiven-{{ .Release.Name }}
       {{ end }}
