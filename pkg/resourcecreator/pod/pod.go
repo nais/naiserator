@@ -93,6 +93,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	})
 
 	tolerations := SetupTolerations(cfg, containers[0].Image)
+	affinity := ConfigureAffinity(appName, tolerations)
 
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
@@ -105,7 +106,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 			{Name: "gh-docker-credentials"},
 		},
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
-		Affinity:                      ConfigureAffinity(appName, tolerations),
+		Affinity:                      affinity,
 		Tolerations:                   tolerations,
 	}
 
