@@ -1,3 +1,4 @@
+{{ if .Values.naiserator.kafka.enabled }}
 apiVersion: aiven.nais.io/v1
 kind: AivenApplication
 metadata:
@@ -8,3 +9,4 @@ spec:
   kafka:
     pool: nav-infrastructure
   secretName: aiven-{{ .Release.Name }}
+{{ end }}
