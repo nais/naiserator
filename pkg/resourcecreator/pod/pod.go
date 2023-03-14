@@ -54,6 +54,7 @@ type Config interface {
 	IsPrometheusOperatorEnabled() bool
 	IsSeccompEnabled() bool
 	IsGARTolerationEnabled() bool
+	IsSpotTolerationEnabled() bool
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {
@@ -91,47 +92,8 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		MountPath: "/tmp",
 	})
 
-	affinity := &corev1.Affinity{
-		PodAntiAffinity: &corev1.PodAntiAffinity{
-			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-				{Weight: 10, PodAffinityTerm: corev1.PodAffinityTerm{
-					LabelSelector: &metav1.LabelSelector{
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{Key: "app", Operator: "In", Values: []string{appName}},
-						},
-					},
-					TopologyKey: "kubernetes.io/hostname",
-				}},
-			},
-		},
-	}
-
-	var toleration []corev1.Toleration
-
-	if cfg.IsGARTolerationEnabled() && strings.HasPrefix(containers[0].Image, "europe-north1-docker.pkg.dev/") {
-		toleration = append(toleration, corev1.Toleration{
-			Key:      "nais.io/gar",
-			Operator: "Equal",
-			Value:    "true",
-			Effect:   "NoSchedule",
-		})
-
-		affinity.NodeAffinity = &corev1.NodeAffinity{
-			RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
-				NodeSelectorTerms: []corev1.NodeSelectorTerm{
-					{
-						MatchExpressions: []corev1.NodeSelectorRequirement{
-							{
-								Key:      "nais.io/gar-node-pool",
-								Operator: corev1.NodeSelectorOpIn,
-								Values:   []string{"true"},
-							},
-						},
-					},
-				},
-			},
-		}
-	}
+	tolerations := SetupTolerations(cfg, containers[0].Image)
+	affinity := ConfigureAffinity(appName, tolerations)
 
 	podSpec := &corev1.PodSpec{
 		InitContainers:     ast.InitContainers,
@@ -145,7 +107,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		},
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 		Affinity:                      affinity,
-		Tolerations:                   toleration,
+		Tolerations:                   tolerations,
 	}
 
 	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)

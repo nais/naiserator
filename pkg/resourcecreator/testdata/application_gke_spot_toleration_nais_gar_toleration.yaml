@@ -1,0 +1,65 @@
+testconfig:
+  description: application configured with gke spot toleration and gar toleration
+
+config:
+  features:
+    spot-toleration: true
+    gar-toleration: true
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/testapp:latest
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "node and gar toleration and affinity"
+        resource:
+          spec:
+            template:
+              spec:
+                tolerations:
+                  - key: "cloud.google.com/gke-spot"
+                    operator: "Equal"
+                    value: "true"
+                    effect: "NoSchedule"
+                  - key: "nais.io/gar"
+                    operator: "Equal"
+                    value: "true"
+                    effect: "NoSchedule"
+                affinity:
+                  nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                      nodeSelectorTerms:
+                        - matchExpressions:
+                            - key: cloud.google.com/gke-spot
+                              operator: In
+                              values:
+                                - "true"
+                        - matchExpressions:
+                            - key: nais.io/gar-node-pool
+                              operator: In
+                              values:
+                                - "true"
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - myapplication
+                          topologyKey: kubernetes.io/hostname
+                        weight: 10
