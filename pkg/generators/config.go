@@ -152,3 +152,7 @@ func (o *Options) IsGARTolerationEnabled() bool {
 func (o *Options) IsSpotTolerationEnabled() bool {
 	return o.Config.Features.SpotToleration
 }
+
+func (o *Options) IsAivenSharedSecretsEnabled() bool {
+	return o.Config.Features.AivenSharedSecrets
+}
