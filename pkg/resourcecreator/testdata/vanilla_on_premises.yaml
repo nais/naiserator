@@ -214,6 +214,7 @@ tests:
                 serviceAccountName: myapplication
                 imagePullSecrets:
                   - name: gh-docker-credentials
+                  - name: gar-docker-credentials
                 affinity:
                   podAntiAffinity:
                     preferredDuringSchedulingIgnoredDuringExecution:

@@ -104,6 +104,7 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		Volumes:            volumes,
 		ImagePullSecrets: []corev1.LocalObjectReference{
 			{Name: "gh-docker-credentials"},
+			{Name: "gar-docker-credentials"},
 		},
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 		Affinity:                      affinity,

@@ -171,6 +171,7 @@ tests:
                 dnsPolicy: ClusterFirst
                 imagePullSecrets:
                   - name: gh-docker-credentials
+                  - name: gar-docker-credentials
                 restartPolicy: Never
                 serviceAccountName: mynaisjob
                 volumes:
