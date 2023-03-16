@@ -23,6 +23,7 @@ naiserator:
   host-aliases: ""
   nais-namespace: "nais-system"
   features:
+    aiven-shared-secrets: false
     linkerd: false
     access-policy-not-allowed-cidrs: []
     network-policy: true
