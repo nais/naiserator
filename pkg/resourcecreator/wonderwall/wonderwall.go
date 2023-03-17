@@ -31,14 +31,15 @@ const (
 )
 
 type Configuration struct {
-	ACRValues            string
-	AutoLogin            bool
-	AutoLoginIgnorePaths []nais_io_v1.WonderwallIgnorePaths
-	Ingresses            []string
-	Provider             string
-	Resources            *nais_io_v1.ResourceRequirements
-	SecretNames          []string
-	UILocales            string
+	ACRValues             string
+	AutoLogin             bool
+	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
+	Ingresses             []string
+	NeedsEncryptionSecret bool
+	Provider              string
+	Resources             *nais_io_v1.ResourceRequirements
+	SecretNames           []string
+	UILocales             string
 }
 
 type Source interface {
@@ -66,17 +67,21 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 		return err
 	}
 
-	encryptionKeySecret, err := makeEncryptionKeySecret(source, wonderwallCfg)
-	if err != nil {
-		return err
-	}
-
-	container, err := sidecarContainer(source, naisCfg, wonderwallCfg, encryptionKeySecret)
+	container, err := sidecarContainer(source, naisCfg, wonderwallCfg)
 	if err != nil {
 		return fmt.Errorf("creating wonderwall container spec: %w", err)
 	}
 
-	ast.AppendOperation(resource.OperationCreateIfNotExists, encryptionKeySecret)
+	if wonderwallCfg.NeedsEncryptionSecret {
+		encryptionKeySecret, err := makeEncryptionKeySecret(source, wonderwallCfg)
+		if err != nil {
+			return err
+		}
+
+		container.EnvFrom = append(container.EnvFrom, pod.EnvFromSecret(encryptionKeySecret.GetName()))
+		ast.AppendOperation(resource.OperationCreateIfNotExists, encryptionKeySecret)
+	}
+
 	ast.Containers = append(ast.Containers, *container)
 
 	return nil
@@ -118,7 +123,7 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 	return nil
 }
 
-func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration, encryptionKeySecret *corev1.Secret) (*corev1.Container, error) {
+func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration) (*corev1.Container, error) {
 	options := naisCfg.GetWonderwallOptions()
 	image := options.Image
 	resourceReqs, err := resourceRequirements(wonderwallCfg)
@@ -133,9 +138,7 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 		}
 	}
 
-	envFromSources := []corev1.EnvFromSource{
-		pod.EnvFromSecret(encryptionKeySecret.GetName()),
-	}
+	envFromSources := make([]corev1.EnvFromSource, 0)
 	for _, name := range wonderwallCfg.SecretNames {
 		envFromSources = append(envFromSources, pod.EnvFromSecret(name))
 	}

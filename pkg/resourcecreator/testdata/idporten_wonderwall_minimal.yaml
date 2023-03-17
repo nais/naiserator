@@ -64,11 +64,11 @@ tests:
                         value: ^0.0.0.0:7565$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-wonderwall-myapplication-.{8}$
-                      - secretRef:
                           name: ^idporten-myapplication-a0b907e7$
                       - secretRef:
                           name: ^wonderwall-idporten-config
+                      - secretRef:
+                          name: ^idporten-wonderwall-myapplication-76c8c4c8$
                     image: nais/wonderwall
                     name: wonderwall
                     ports:
@@ -140,7 +140,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: ^idporten-wonderwall-myapplication-.{8}$
+            name: ^idporten-wonderwall-myapplication-76c8c4c8$$
             namespace: mynamespace
             labels:
               app: myapplication

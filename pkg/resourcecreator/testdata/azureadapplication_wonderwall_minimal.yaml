@@ -60,11 +60,11 @@ tests:
                         value: ^0.0.0.0:7565$
                     envFrom:
                       - secretRef:
-                          name: ^azure-wonderwall-myapplication-.{8}$
-                      - secretRef:
                           name: ^azure-myapplication-4190a8ca-.{6,7}$
                       - secretRef:
                           name: ^wonderwall-azure-config$
+                      - secretRef:
+                          name: ^azure-wonderwall-myapplication-02bb4643$
                     image: nais/wonderwall
                     name: wonderwall
                     ports:
@@ -134,7 +134,7 @@ tests:
           - metadata.creationTimestamp
         resource:
           metadata:
-            name: ^azure-wonderwall-myapplication-.{8}$
+            name: ^azure-wonderwall-myapplication-02bb4643$
             namespace: mynamespace
             labels:
               app: myapplication
