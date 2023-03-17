@@ -19,6 +19,8 @@ const (
 	clientDefaultCallbackPath = "/oauth2/callback"
 	clientDefaultLogoutPath   = "/oauth2/logout"
 	wonderwallSecretName      = "wonderwall-idporten-config"
+	idportenSsoSecretName     = "idporten-sso"
+	wonderwallSsoSecretName   = "wonderwall-idporten-sso-proxy-config"
 )
 
 type Source interface {
@@ -32,6 +34,7 @@ type Config interface {
 	wonderwall.Config
 	IsWonderwallEnabled() bool
 	IsDigdiratorEnabled() bool
+	IsWonderwallSSOEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
@@ -49,13 +52,21 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return fmt.Errorf("idporten is not available in this cluster")
 	}
 
-	// create idporten client and attach secrets
+	ast.Labels["idporten"] = "enabled"
+
+	// use SSO client for sidecar if feature toggled
+	if sidecarEnabled && cfg.IsWonderwallSSOEnabled() {
+		pod.WithAdditionalSecret(ast, idportenSsoSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
+		pod.WithAdditionalEnvFromSecret(ast, idportenSsoSecretName)
+		return sidecarSso(source, ast, cfg)
+	}
+
+	// otherwise, create idporten client and attach secrets
 	idportenClient, err := client(source)
 	if err != nil {
 		return err
 	}
 
-	ast.Labels["idporten"] = "enabled"
 	ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
 	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
@@ -107,7 +118,8 @@ func sidecar(source Source, ast *resource.Ast, cfg Config, idportenClient *nais_
 	}
 
 	// create sidecar container
-	wonderwallCfg := makeWonderwallConfig(source, idportenClient.Spec.SecretName)
+	secrets := []string{idportenClient.Spec.SecretName, wonderwallSecretName}
+	wonderwallCfg := makeWonderwallConfig(source, secrets, true)
 	err := wonderwall.Create(source, ast, cfg, wonderwallCfg)
 	if err != nil {
 		return err
@@ -118,6 +130,22 @@ func sidecar(source Source, ast *resource.Ast, cfg Config, idportenClient *nais_
 	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
 	idportenClient.Spec.RedirectURIs = idportenURIs(ingresses, wonderwall.RedirectURIPath)
 	idportenClient.Spec.PostLogoutRedirectURIs = idportenURIs(ingresses, wonderwall.LogoutCallbackPath)
+
+	return nil
+}
+
+func sidecarSso(source Source, ast *resource.Ast, cfg Config) error {
+	if !cfg.IsWonderwallEnabled() {
+		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
+	}
+
+	// create sidecar container
+	secrets := []string{idportenSsoSecretName, wonderwallSsoSecretName}
+	wonderwallCfg := makeWonderwallConfig(source, secrets, false)
+	err := wonderwall.Create(source, ast, cfg, wonderwallCfg)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -173,7 +201,7 @@ func secretName(name string) (string, error) {
 	return namegen.ShortName(fmt.Sprintf("idporten-%s", name), validation.DNS1035LabelMaxLength)
 }
 
-func makeWonderwallConfig(source Source, providerSecretName string) wonderwall.Configuration {
+func makeWonderwallConfig(source Source, secretNames []string, needsEncryptionSecret bool) wonderwall.Configuration {
 	ingresses := source.GetIngress()
 	idporten := source.GetIDPorten()
 
@@ -183,14 +211,15 @@ func makeWonderwallConfig(source Source, providerSecretName string) wonderwall.C
 	}
 
 	cfg := wonderwall.Configuration{
-		ACRValues:            idporten.Sidecar.Level,
-		AutoLogin:            idporten.Sidecar.AutoLogin,
-		AutoLoginIgnorePaths: idporten.Sidecar.AutoLoginIgnorePaths,
-		Ingresses:            ingressesStrings,
-		Provider:             "idporten",
-		SecretNames:          []string{providerSecretName, wonderwallSecretName},
-		Resources:            idporten.Sidecar.Resources,
-		UILocales:            idporten.Sidecar.Locale,
+		ACRValues:             idporten.Sidecar.Level,
+		AutoLogin:             idporten.Sidecar.AutoLogin,
+		AutoLoginIgnorePaths:  idporten.Sidecar.AutoLoginIgnorePaths,
+		Ingresses:             ingressesStrings,
+		NeedsEncryptionSecret: needsEncryptionSecret,
+		Provider:              "idporten",
+		SecretNames:           secretNames,
+		Resources:             idporten.Sidecar.Resources,
+		UILocales:             idporten.Sidecar.Locale,
 	}
 
 	return cfg
