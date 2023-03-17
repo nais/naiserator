@@ -40,6 +40,7 @@ naiserator:
     seccomp: true
     nav-ca-bundle: false
     wonderwall: false
+    wonderwall-sso: false
     gar-toleration: false
   informer:
     full-sync-interval: 4h
@@ -64,7 +65,7 @@ naiserator:
     init-container-image: navikt/vault-sidekick:v0.3.10-26ad67d
     kv-path: /kv/default/default
   wonderwall:
-    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-01-10-d8493e1
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-03-21-bf964e4
   leader-election:
     image: europe-north1-docker.pkg.dev/nais-io/nais/images/elector:20230309-041449-20c6f50
 
