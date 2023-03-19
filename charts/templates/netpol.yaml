@@ -17,7 +17,7 @@ spec:
             k8s-app: kube-dns
   ingress:
     - ports:
-        - port: 9443
+        - port: 8443
           protocol: TCP
       from: []
   podSelector:
@@ -46,7 +46,7 @@ spec:
             k8s-app: kube-dns
   ingress:
     - ports:
-        - port: 9443
+        - port: 8443
           protocol: TCP
       from: []
   podSelector:
