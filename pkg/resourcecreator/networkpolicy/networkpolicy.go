@@ -216,7 +216,31 @@ func defaultIngressRules(cfg Config) []networkingv1.NetworkPolicyIngressRule {
 
 func legacyNetpolSpec(appName string, clusterName string) networkingv1.NetworkPolicySpec {
 	// TODO: remove when all clusters are migrated to new network policies
-	if clusterName == "prod-gcp" {
+	if clusterName != "prod-gcp" {
+		return networkingv1.NetworkPolicySpec{
+			PodSelector: *labelSelector("app", appName),
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeIngress,
+				networkingv1.PolicyTypeEgress,
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+						},
+					},
+				},
+			},
+			Egress: []networkingv1.NetworkPolicyEgressRule{
+				{
+					To: []networkingv1.NetworkPolicyPeer{{
+						NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+					}},
+				},
+			},
+		}
+	} else {
 		return networkingv1.NetworkPolicySpec{
 			PodSelector: *labelSelector("app", appName),
 			PolicyTypes: []networkingv1.PolicyType{
@@ -245,30 +269,6 @@ func legacyNetpolSpec(appName string, clusterName string) networkingv1.NetworkPo
 							Except: []string{"10.6.0.0/15", "172.16.0.0/12", "192.168.0.0/16"},
 						}},
 					},
-				},
-			},
-		}
-	} else {
-		return networkingv1.NetworkPolicySpec{
-			PodSelector: *labelSelector("app", appName),
-			PolicyTypes: []networkingv1.PolicyType{
-				networkingv1.PolicyTypeIngress,
-				networkingv1.PolicyTypeEgress,
-			},
-			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-						},
-					},
-				},
-			},
-			Egress: []networkingv1.NetworkPolicyEgressRule{
-				{
-					To: []networkingv1.NetworkPolicyPeer{{
-						NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-					}},
 				},
 			},
 		}
