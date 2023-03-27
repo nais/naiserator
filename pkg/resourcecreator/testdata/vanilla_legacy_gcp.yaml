@@ -8,6 +8,7 @@ config:
     legacy-gcp: true
   nais-namespace: nais-system
   google-project-id: google-project-id
+  cluster-name: prod-gcp
 
 input:
   kind: Application
@@ -105,13 +106,6 @@ tests:
                         - 172.16.0.0/12
                         - 192.168.0.0/16
             ingress:
-              - from:
-                    - namespaceSelector:
-                        matchLabels:
-                          name: "nais"
-                      podSelector:
-                        matchLabels:
-                          app.kubernetes.io/name: prometheus
               - from:
                   - namespaceSelector:
                       matchLabels:

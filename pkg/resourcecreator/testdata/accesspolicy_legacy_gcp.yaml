@@ -68,26 +68,12 @@ tests:
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: "nais"
-                    podSelector:
-                      matchLabels:
-                        app.kubernetes.io/name: prometheus
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
                         linkerd.io/is-control-plane: "true"
             egress:
               - to:
                   - namespaceSelector:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
-              - to:
-                  - ipBlock:
-                      cidr: 0.0.0.0/0
-                      except:
-                        - 10.6.0.0/15
-                        - 172.16.0.0/12
-                        - 192.168.0.0/16
             policyTypes:
               - Ingress
               - Egress
