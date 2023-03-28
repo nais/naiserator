@@ -48,7 +48,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 
 	if cfg.IsLegacyGCP() {
 		np := baseNetworkPolicy(source)
-		np.Spec = legacyNetpolSpec(source.GetName())
+		np.Spec = legacyNetpolSpec(source.GetName(), cfg.GetClusterName())
 		np.SetName(source.GetName() + "-legacy")
 		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 	}
@@ -214,45 +214,64 @@ func defaultIngressRules(cfg Config) []networkingv1.NetworkPolicyIngressRule {
 	}
 }
 
-func legacyNetpolSpec(appName string) networkingv1.NetworkPolicySpec {
-	return networkingv1.NetworkPolicySpec{
-		PodSelector: *labelSelector("app", appName),
-		PolicyTypes: []networkingv1.PolicyType{
-			networkingv1.PolicyTypeIngress,
-			networkingv1.PolicyTypeEgress,
-		},
-		Ingress: []networkingv1.NetworkPolicyIngressRule{
-			{
-				From: []networkingv1.NetworkPolicyPeer{
-					{
-						NamespaceSelector: labelSelector("name", "nais"),
-						PodSelector:       labelSelector("app.kubernetes.io/name", "prometheus"),
+func legacyNetpolSpec(appName string, clusterName string) networkingv1.NetworkPolicySpec {
+	// TODO: remove when all clusters are migrated to new network policies
+	if clusterName != "prod-gcp" {
+		return networkingv1.NetworkPolicySpec{
+			PodSelector: *labelSelector("app", appName),
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeIngress,
+				networkingv1.PolicyTypeEgress,
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+						},
 					},
 				},
 			},
-			{
-				From: []networkingv1.NetworkPolicyPeer{
-					{
+			Egress: []networkingv1.NetworkPolicyEgressRule{
+				{
+					To: []networkingv1.NetworkPolicyPeer{{
 						NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-					},
-				},
-			},
-		},
-		Egress: []networkingv1.NetworkPolicyEgressRule{
-			{
-				To: []networkingv1.NetworkPolicyPeer{{
-					NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-				}},
-			},
-			{
-				To: []networkingv1.NetworkPolicyPeer{{
-					IPBlock: &networkingv1.IPBlock{
-						CIDR:   "0.0.0.0/0",
-						Except: []string{"10.6.0.0/15", "172.16.0.0/12", "192.168.0.0/16"},
 					}},
 				},
 			},
-		},
+		}
+	} else {
+		return networkingv1.NetworkPolicySpec{
+			PodSelector: *labelSelector("app", appName),
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeIngress,
+				networkingv1.PolicyTypeEgress,
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+						},
+					},
+				},
+			},
+			Egress: []networkingv1.NetworkPolicyEgressRule{
+				{
+					To: []networkingv1.NetworkPolicyPeer{{
+						NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
+					}},
+				},
+				{
+					To: []networkingv1.NetworkPolicyPeer{{
+						IPBlock: &networkingv1.IPBlock{
+							CIDR:   "0.0.0.0/0",
+							Except: []string{"10.6.0.0/15", "172.16.0.0/12", "192.168.0.0/16"},
+						}},
+					},
+				},
+			},
+		}
 	}
 }
 
