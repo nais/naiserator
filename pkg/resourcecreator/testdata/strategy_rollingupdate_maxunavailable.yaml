@@ -1,0 +1,33 @@
+testconfig:
+  description: maxUnavailable configuration for rollingUpdate
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 50%
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created with overridden rollingUpdate maxUnavailable and default maxSurge"
+        resource:
+          spec:
+            strategy:
+              rollingUpdate:
+                maxSurge: 25%
+                maxUnavailable: 50%
+              type: RollingUpdate

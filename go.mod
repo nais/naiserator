@@ -8,12 +8,12 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/imdario/mergo v0.3.13
+	github.com/imdario/mergo v0.3.15
 	github.com/klauspost/compress v1.15.14 // indirect
 	github.com/magiconair/properties v1.8.7
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nais/liberator v0.0.0-20230308082954-870af94e1121
+	github.com/nais/liberator v0.0.0-20230330105604-7d3949c9d985
 	github.com/novln/docker-parser v1.0.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0

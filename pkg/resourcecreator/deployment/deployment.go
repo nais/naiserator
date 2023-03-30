@@ -5,13 +5,14 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 )
 
 type Source interface {
@@ -74,34 +75,12 @@ func deploymentSpec(app Source, ast *resource.Ast, cfg Config) (*appsv1.Deployme
 		return nil, err
 	}
 
-	var strategy appsv1.DeploymentStrategy
-
-	if app.GetStrategy().Type == nais_io_v1alpha1.DeploymentStrategyRecreate {
-		strategy = appsv1.DeploymentStrategy{
-			Type: appsv1.RecreateDeploymentStrategyType,
-		}
-	} else if app.GetStrategy().Type == nais_io_v1alpha1.DeploymentStrategyRollingUpdate {
-		strategy = appsv1.DeploymentStrategy{
-			Type: appsv1.RollingUpdateDeploymentStrategyType,
-			RollingUpdate: &appsv1.RollingUpdateDeployment{
-				MaxUnavailable: &intstr.IntOrString{
-					Type:   intstr.Int,
-					IntVal: int32(0),
-				},
-				MaxSurge: &intstr.IntOrString{
-					Type:   intstr.String,
-					StrVal: "25%",
-				},
-			},
-		}
-	}
-
 	return &appsv1.DeploymentSpec{
 		Replicas: util.Int32p(cfg.GetNumReplicas()),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.GetName()},
 		},
-		Strategy:                strategy,
+		Strategy:                deploymentStrategy(app),
 		ProgressDeadlineSeconds: util.Int32p(300),
 		RevisionHistoryLimit:    util.Int32p(3),
 		Template: corev1.PodTemplateSpec{
@@ -109,4 +88,39 @@ func deploymentSpec(app Source, ast *resource.Ast, cfg Config) (*appsv1.Deployme
 			Spec:       *podSpec,
 		},
 	}, nil
+}
+
+func deploymentStrategy(app Source) appsv1.DeploymentStrategy {
+	if app.GetStrategy().Type == nais_io_v1alpha1.DeploymentStrategyRecreate {
+		return appsv1.DeploymentStrategy{
+			Type: appsv1.RecreateDeploymentStrategyType,
+		}
+	}
+
+	rollingUpdateConfig := &appsv1.RollingUpdateDeployment{
+		MaxUnavailable: &intstr.IntOrString{
+			Type:   intstr.Int,
+			IntVal: int32(0),
+		},
+		MaxSurge: &intstr.IntOrString{
+			Type:   intstr.String,
+			StrVal: "25%",
+		},
+	}
+
+	override := app.GetStrategy().RollingUpdate
+	if override != nil {
+		if override.MaxSurge != nil {
+			rollingUpdateConfig.MaxSurge = override.MaxSurge
+		}
+
+		if override.MaxUnavailable != nil {
+			rollingUpdateConfig.MaxUnavailable = override.MaxUnavailable
+		}
+	}
+
+	return appsv1.DeploymentStrategy{
+		Type:          appsv1.RollingUpdateDeploymentStrategyType,
+		RollingUpdate: rollingUpdateConfig,
+	}
 }
