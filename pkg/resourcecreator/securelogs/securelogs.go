@@ -23,6 +23,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 		return
 	}
 
+	ast.Labels["secure-logs"] = "enabled"
 	ast.Containers = append(ast.Containers, fluentdSidecar(cfg))
 	ast.Containers = append(ast.Containers, configMapReloadSidecar(cfg))
 	ast.Volumes = append(ast.Volumes, Volumes()...)

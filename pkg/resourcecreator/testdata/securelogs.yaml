@@ -32,6 +32,9 @@ tests:
         resource:
           spec:
             template:
+              metadata:
+                labels:
+                  secure-logs: enabled
               spec:
                 containers:
                   - name: "myapplication"
