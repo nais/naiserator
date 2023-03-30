@@ -12,13 +12,6 @@
 name: "CodeQL"
 
 on:
-  pull_request:
-    paths:
-      - "go.mod"
-      - "go.sum"
-      - "**.go"
-      - .github/workflows/codeql-analysis.yml
-    branches: [master]
   schedule:
     - cron: "00 4 * * 1-6"
 
