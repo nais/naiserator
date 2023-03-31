@@ -299,8 +299,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
-github.com/nais/liberator v0.0.0-20230330105604-7d3949c9d985 h1:9VRF9lyurifA6/237QaEB4V+AJ871vMZMFWKQ4KZNSg=
-github.com/nais/liberator v0.0.0-20230330105604-7d3949c9d985/go.mod h1:Cml3lgG3iPI9dvzotqJc1w7j3GgtdNhOk0yd6l/DBKk=
+github.com/nais/liberator v0.0.0-20230331130952-da33a75022d5 h1:AfOnP0YvWOYsG04QPiP9eqo7kdF1QSJCzPtgSS3EhgI=
+github.com/nais/liberator v0.0.0-20230331130952-da33a75022d5/go.mod h1:Cml3lgG3iPI9dvzotqJc1w7j3GgtdNhOk0yd6l/DBKk=
 github.com/novln/docker-parser v1.0.0 h1:PjEBd9QnKixcWczNGyEdfUrP6GR0YUilAqG7Wksg3uc=
 github.com/novln/docker-parser v1.0.0/go.mod h1:oCeM32fsoUwkwByB5wVjsrsVQySzPWkl3JdlTn1txpE=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
