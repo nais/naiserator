@@ -33,7 +33,7 @@ jobs:
           name: naiserator
           dockerfile: Dockerfile
           google_service_account: gh-naiserator
-          push: ${{ github.actor != 'dependabot[bot]' }}
+          push: ${{ github.actor != 'dependabot[bot]' && github.ref == 'refs/heads/master' }}
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
     outputs:
         version: ${{ steps.build_push_sign.outputs.version }}
