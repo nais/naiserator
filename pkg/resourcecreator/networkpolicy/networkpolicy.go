@@ -294,7 +294,9 @@ func ingressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, options Confi
 			peer.PodSelector = labelSelector("app", rule.Application)
 		}
 
-		if rule.Namespace != "" {
+		if rule.Namespace == "*" {
+			peer.NamespaceSelector = &metav1.LabelSelector{}
+		} else if rule.Namespace != "" {
 			peer.NamespaceSelector = labelSelector("name", rule.Namespace)
 		}
 
