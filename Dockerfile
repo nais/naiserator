@@ -11,7 +11,7 @@ RUN go test ./...
 RUN cd cmd/naiserator && go build -a -installsuffix cgo -o naiserator
 RUN cd cmd/naiserator_webhook && go build -a -installsuffix cgo -o naiserator_webhook
 
-FROM gcr.io/distroless/static-debian11
+FROM gcr.io/distroless/static-debian11:nonroot
 WORKDIR /app
 COPY --from=builder /src/cmd/naiserator/naiserator /app/naiserator
 COPY --from=builder /src/cmd/naiserator_webhook/naiserator_webhook /app/naiserator_webhook
