@@ -123,3 +123,16 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
+
+  - apiVersion: nais.io/v1
+    kind: IDPortenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "redirect and front-channel logout URIs should match expected paths for sidecar"
+        resource:
+          spec:
+            frontchannelLogoutURI: https://my-client.nav.no/oauth2/logout/frontchannel
+            redirectURIs:
+              - https://my-client.nav.no/oauth2/callback
