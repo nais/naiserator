@@ -41,7 +41,7 @@ kubebuilder: $(testbin_dir)/$(tools_archive)
 
 $(testbin_dir)/$(tools_archive):
 	mkdir -p $(testbin_dir)
-	curl -L -O --output-dir $(testbin_dir) "https://storage.googleapis.com/kubebuilder-tools/$(tools_archive)"
+	wget -q --directory-prefix=$(testbin_dir) "https://storage.googleapis.com/kubebuilder-tools/$(tools_archive)"
 
 proto:
 	wget -O pkg/event/event.proto https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
