@@ -3,6 +3,9 @@ package synchronizer_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	go_runtime "runtime"
 	"testing"
 	"time"
 
@@ -46,8 +49,19 @@ type testRig struct {
 	config       config.Config
 }
 
+func testBinDirectory() string {
+	_, filename, _, _ := go_runtime.Caller(0)
+	return filepath.Clean(filepath.Join(filepath.Dir(filename), "../../.testbin/"))
+}
+
 func newTestRig(config config.Config) (*testRig, error) {
 	rig := &testRig{}
+
+	err := os.Setenv("KUBEBUILDER_ASSETS", testBinDirectory())
+	if err != nil {
+		return nil, fmt.Errorf("failed to set environment variable: %w", err)
+	}
+
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
 		CRDDirectoryPaths: []string{crdPath},
