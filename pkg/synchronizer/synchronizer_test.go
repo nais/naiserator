@@ -17,6 +17,7 @@ import (
 	"github.com/nais/liberator/pkg/events"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/generators"
+	resourcecreator_secret "github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -38,6 +39,10 @@ import (
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
+)
+
+const (
+	correlationId = "my-correlation-id"
 )
 
 type testRig struct {
@@ -405,6 +410,9 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
+	app.SetAnnotations(map[string]string{
+		nais_io_v1.DeploymentCorrelationIDAnnotation: correlationId,
+	})
 	app.Spec.GCP = &nais_io_v1.GCP{
 		SqlInstances: []nais_io_v1.CloudSqlInstance{
 			{
@@ -440,6 +448,16 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
+	// Create a secret in the cluster that should get updated correlationId to trigger password sync
+	googleSqlSecretName := fmt.Sprintf("google-sql-%s", app.GetName())
+	objectMeta := metav1.ObjectMeta{
+		Name:      googleSqlSecretName,
+		Namespace: app.GetNamespace(),
+	}
+	existingGoogleSqlSecret := resourcecreator_secret.OpaqueSecret(objectMeta, googleSqlSecretName, nil)
+	err = rig.client.Create(ctx, existingGoogleSqlSecret)
+	assert.NoError(t, err)
+
 	// Store the Application resource in the cluster before testing commences.
 	// This simulates a deployment into the cluster which is then picked up by the
 	// informer queue.
@@ -469,6 +487,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	sqluser := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}
 	sqldatabase := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}
 	iampolicymember := &iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember{}
+	secret := &corev1.Secret{}
 
 	err = rig.client.Get(ctx, req.NamespacedName, deploy)
 	assert.NoError(t, err)
@@ -490,4 +509,11 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	err = rig.client.Get(ctx, req.NamespacedName, iampolicymember)
 	assert.NoError(t, err)
 	assert.Equal(t, testProjectId, iampolicymember.Annotations[google.ProjectIdAnnotation])
+
+	err = rig.client.Get(ctx, types.NamespacedName{
+		Namespace: req.Namespace,
+		Name:      googleSqlSecretName,
+	}, secret)
+	assert.NoError(t, err)
+	assert.Equal(t, correlationId, secret.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 }
