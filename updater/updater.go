@@ -20,6 +20,34 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// AnnotateIfExists copies annotations of the given resource into the existing resource.
+// No other parts of the existing resource is touched.
+func AnnotateIfExists(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource client.Object) func() error {
+	return func() error {
+		log.Infof("AnnotateIfExists %s", liberator_scheme.TypeName(resource))
+		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
+		if err != nil {
+			return fmt.Errorf("internal error: %w", err)
+		}
+		objectKey := client.ObjectKeyFromObject(resource)
+
+		err = cli.Get(ctx, objectKey, existing.(client.Object))
+
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			} else {
+				return err
+			}
+		}
+
+		obj := existing.(client.Object)
+		CopyAnnotations(obj, resource)
+
+		return cli.Update(ctx, obj)
+	}
+}
+
 func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource client.Object) func() error {
 	return func() error {
 		log.Infof("CreateOrUpdate %s", liberator_scheme.TypeName(resource))
@@ -237,6 +265,17 @@ func CopyAnnotation(dst, src metav1.Object, key string) {
 	v := src.GetAnnotations()[key]
 	if len(v) > 0 {
 		anno[key] = v
+	}
+	dst.SetAnnotations(anno)
+}
+
+func CopyAnnotations(dst, src metav1.Object) {
+	anno := dst.GetAnnotations()
+	if anno == nil {
+		anno = make(map[string]string)
+	}
+	for key, value := range src.GetAnnotations() {
+		anno[key] = value
 	}
 	dst.SetAnnotations(anno)
 }

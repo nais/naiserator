@@ -464,6 +464,8 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 			c.fn = updater.CreateIfNotExists(ctx, n.Client, rop.Resource)
 		case resource.OperationDeleteIfExists:
 			c.fn = updater.DeleteIfExists(ctx, n.Client, rop.Resource)
+		case resource.AnnotateIfExists:
+			c.fn = updater.AnnotateIfExists(ctx, n.Client, n.scheme, rop.Resource)
 		default:
 			return []commit{
 				{

@@ -12,6 +12,7 @@ const (
 	OperationCreateOrRecreate  OperationType = `CreateOrRecreate`
 	OperationCreateIfNotExists OperationType = `CreateIfNotExists`
 	OperationDeleteIfExists    OperationType = `CreateDeleteIfExists`
+	AnnotateIfExists           OperationType = `AnnotateIfExists`
 )
 
 // Operation is the combination of a Kubernetes resource and what operation to perform on it.
