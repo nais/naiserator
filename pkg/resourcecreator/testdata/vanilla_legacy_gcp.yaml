@@ -98,13 +98,6 @@ tests:
                   - namespaceSelector:
                       matchLabels:
                         linkerd.io/is-control-plane: "true"
-              - to:
-                  - ipBlock:
-                      cidr: 0.0.0.0/0
-                      except:
-                        - 10.6.0.0/15
-                        - 172.16.0.0/12
-                        - 192.168.0.0/16
             ingress:
               - from:
                   - namespaceSelector:
