@@ -33,9 +33,9 @@ func (n *Client) RESTMapper() meta.RESTMapper {
 	return n.client.RESTMapper()
 }
 
-func (c *Client) Get(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+func (c *Client) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
 	// log.Debugf("Read-only client: GET %s", naiserator_scheme.TypeName(obj))
-	return c.client.Get(ctx, key, obj)
+	return c.client.Get(ctx, key, obj, opts...)
 }
 
 func (c *Client) List(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
@@ -69,5 +69,9 @@ func (c *Client) DeleteAllOf(ctx context.Context, obj client.Object, opts ...cli
 }
 
 func (c *Client) Status() client.StatusWriter {
-	return c
+	return c.client.Status()
+}
+
+func (c *Client) SubResource(subResource string) client.SubResourceClient {
+	return c.client.SubResource(subResource)
 }
