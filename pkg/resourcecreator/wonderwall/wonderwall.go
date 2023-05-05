@@ -72,14 +72,13 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 		return fmt.Errorf("creating wonderwall container spec: %w", err)
 	}
 
-	// TODO: move back when SSO sidecar is the default for idporten
-	encryptionKeySecret, err := makeEncryptionKeySecret(source, wonderwallCfg)
-	if err != nil {
-		return err
-	}
-	ast.AppendOperation(resource.OperationCreateIfNotExists, encryptionKeySecret)
-
 	if wonderwallCfg.NeedsEncryptionSecret {
+		encryptionKeySecret, err := makeEncryptionKeySecret(source, wonderwallCfg)
+		if err != nil {
+			return err
+		}
+
+		ast.AppendOperation(resource.OperationCreateIfNotExists, encryptionKeySecret)
 		container.EnvFrom = append(container.EnvFrom, pod.EnvFromSecret(encryptionKeySecret.GetName()))
 	}
 

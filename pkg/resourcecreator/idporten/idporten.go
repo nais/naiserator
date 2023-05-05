@@ -20,7 +20,6 @@ const (
 	clientDefaultLogoutPath   = "/oauth2/logout"
 	wonderwallSecretName      = "wonderwall-idporten-config"
 	idportenSsoSecretName     = "idporten-sso"
-	wonderwallSsoSecretName   = "wonderwall-idporten-sso-proxy-config"
 )
 
 type Source interface {
@@ -34,7 +33,6 @@ type Config interface {
 	wonderwall.Config
 	IsWonderwallEnabled() bool
 	IsDigdiratorEnabled() bool
-	IsWonderwallSSOEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
@@ -54,37 +52,21 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	ast.Labels["idporten"] = "enabled"
 
-	// create idporten client
-	// TODO: move back down when SSO sidecar is the default
+	if sidecarEnabled {
+		pod.WithAdditionalSecret(ast, idportenSsoSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
+		pod.WithAdditionalEnvFromSecret(ast, idportenSsoSecretName)
+		return sidecar(source, ast, cfg)
+	}
+
+	// if not using sidecar, create idporten client
 	idportenClient, err := client(source)
 	if err != nil {
 		return err
 	}
+
 	ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
-
-	// use SSO client for sidecar if feature toggled
-	if sidecarEnabled && cfg.IsWonderwallSSOEnabled() {
-		pod.WithAdditionalSecret(ast, idportenSsoSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
-		pod.WithAdditionalEnvFromSecret(ast, idportenSsoSecretName)
-
-		// override idportenclient uris when sidecar is enabled
-		// TODO: remove when SSO sidecar is the default
-		ingresses := source.GetIngress()
-		idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
-		idportenClient.Spec.RedirectURIs = idportenURIs(ingresses, wonderwall.RedirectURIPath)
-		idportenClient.Spec.PostLogoutRedirectURIs = idportenURIs(ingresses, wonderwall.LogoutCallbackPath)
-
-		return sidecarSso(source, ast, cfg)
-	}
-
-	// mount secrets if not using SSO
 	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
-
-	if sidecarEnabled {
-		return sidecar(source, ast, cfg, idportenClient)
-	}
-
 	return nil
 }
 
@@ -122,35 +104,12 @@ func client(source Source) (*nais_io_v1.IDPortenClient, error) {
 	}, nil
 }
 
-func sidecar(source Source, ast *resource.Ast, cfg Config, idportenClient *nais_io_v1.IDPortenClient) error {
+func sidecar(source Source, ast *resource.Ast, cfg Config) error {
 	if !cfg.IsWonderwallEnabled() {
 		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
 	}
 
-	// create sidecar container
-	secrets := []string{idportenClient.Spec.SecretName, wonderwallSecretName}
-	wonderwallCfg := makeWonderwallConfig(source, secrets, true)
-	err := wonderwall.Create(source, ast, cfg, wonderwallCfg)
-	if err != nil {
-		return err
-	}
-
-	// override uris when sidecar is enabled
-	ingresses := source.GetIngress()
-	idportenClient.Spec.FrontchannelLogoutURI = idportenURI(ingresses, wonderwall.FrontChannelLogoutPath)
-	idportenClient.Spec.RedirectURIs = idportenURIs(ingresses, wonderwall.RedirectURIPath)
-	idportenClient.Spec.PostLogoutRedirectURIs = idportenURIs(ingresses, wonderwall.LogoutCallbackPath)
-
-	return nil
-}
-
-func sidecarSso(source Source, ast *resource.Ast, cfg Config) error {
-	if !cfg.IsWonderwallEnabled() {
-		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
-	}
-
-	// create sidecar container
-	secrets := []string{idportenSsoSecretName, wonderwallSsoSecretName}
+	secrets := []string{idportenSsoSecretName, wonderwallSecretName}
 	wonderwallCfg := makeWonderwallConfig(source, secrets, false)
 	err := wonderwall.Create(source, ast, cfg, wonderwallCfg)
 	if err != nil {

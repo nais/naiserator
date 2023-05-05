@@ -156,7 +156,3 @@ func (o *Options) IsSpotTolerationEnabled() bool {
 func (o *Options) IsAivenSharedSecretsEnabled() bool {
 	return o.Config.Features.AivenSharedSecrets
 }
-
-func (o *Options) IsWonderwallSSOEnabled() bool {
-	return o.Config.Features.WonderwallSSO
-}
