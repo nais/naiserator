@@ -40,7 +40,6 @@ naiserator:
     seccomp: true
     nav-ca-bundle: false
     wonderwall: false
-    wonderwall-sso: false
     gar-toleration: false
   informer:
     full-sync-interval: 4h
