@@ -63,7 +63,6 @@ type Features struct {
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	LegacyGCP                   bool     `json:"legacy-gcp"`
 	Wonderwall                  bool     `json:"wonderwall"`
-	WonderwallSSO               bool     `json:"wonderwall-sso"`
 }
 
 type Securelogs struct {
