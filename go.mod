@@ -113,3 +113,5 @@ require (
 )
 
 go 1.20
+
+replace github.com/nais/liberator => ../liberator
