@@ -1,7 +1,9 @@
 testconfig:
   description: application with frontend configuration in a file
 
-config: { }
+config:
+  frontend:
+    telemetry-url: http://telemetry-collector
 
 input:
   kind: Application
@@ -27,7 +29,8 @@ tests:
         name: javascript configuration configmap created
         resource:
           data:
-            nais.js: "const nais_hello = 'hello, world!';"
+            nais.js: "\nconst vars = {\n\ttelemetryCollectorURL: \"http://telemetry-collector\";\n};\nexport default {vars};\n"
+
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication

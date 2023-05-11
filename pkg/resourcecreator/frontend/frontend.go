@@ -1,8 +1,11 @@
 package frontend
 
 import (
+	"fmt"
+
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,17 +18,23 @@ type Source interface {
 }
 
 type Config interface {
+	GetFrontendOptions() config.Frontend
 }
 
 const volumeName = "frontend-config"
 const configFileName = "nais.js"
 const configMapSuffix = "-frontend-config-js"
 
-func naisJs() string {
-	return "const nais_hello = 'hello, world!';"
+func naisJs(telemetryURL string) string {
+	return fmt.Sprintf(`
+const vars = {
+	telemetryCollectorURL: %q;
+};
+export default {vars};
+`, telemetryURL)
 }
 
-func naisJsConfigMap(source Source, name string) corev1.ConfigMap {
+func naisJsConfigMap(source Source, name, contents string) corev1.ConfigMap {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = name
 
@@ -36,7 +45,7 @@ func naisJsConfigMap(source Source, name string) corev1.ConfigMap {
 		},
 		ObjectMeta: objectMeta,
 		Data: map[string]string{
-			configFileName: naisJs(),
+			configFileName: contents,
 		},
 	}
 }
@@ -76,7 +85,8 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
-	cm := naisJsConfigMap(source, configMapName)
+	naisJsContents := naisJs(cfg.GetFrontendOptions().TelemetryURL)
+	cm := naisJsConfigMap(source, configMapName, naisJsContents)
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cm)
 	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(*frontendSpec.ConfigJSPath))

@@ -115,6 +115,10 @@ type FQDNRule struct {
 	Port int    `json:"port"`
 }
 
+type Frontend struct {
+	TelemetryURL string `json:"telemetry-url"`
+}
+
 type Config struct {
 	DryRun                            bool             `json:"dry-run"`
 	Bind                              string           `json:"bind"`
@@ -140,6 +144,7 @@ type Config struct {
 	NaisNamespace                     string           `json:"nais-namespace"`
 	AivenRange                        string           `json:"aiven-range"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
+	Frontend                          Frontend         `json:"frontend"`
 }
 
 const (
