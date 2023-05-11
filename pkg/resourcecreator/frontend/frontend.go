@@ -73,6 +73,17 @@ func volume(configMapName string) corev1.Volume {
 	}
 }
 
+const envVarTelemetryURL = "NAIS_FRONTEND_TELEMETRY_COLLECTOR_URL"
+
+func envVars(telemetryURL string) []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{
+			Name:  envVarTelemetryURL,
+			Value: telemetryURL,
+		},
+	}
+}
+
 func Create(source Source, ast *resource.Ast, cfg Config) error {
 	frontendSpec := source.GetFrontend()
 	if frontendSpec == nil || frontendSpec.GeneratedConfig == nil {
@@ -89,6 +100,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	cm := naisJsConfigMap(source, configMapName, naisJsContents)
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cm)
+	ast.Env = append(ast.Env, envVars(cfg.GetFrontendOptions().TelemetryURL)...)
 	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(frontendSpec.GeneratedConfig.MountPath))
 	ast.Volumes = append(ast.Volumes, volume(configMapName))
 

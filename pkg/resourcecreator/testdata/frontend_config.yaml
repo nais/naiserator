@@ -48,7 +48,11 @@ tests:
                     configMap:
                       name: myapplication-frontend-config-js-cf21ef39
                 containers:
-                  - name: myapplication
+                  - image: navikt/myapplication:1.2.3
+                    name: myapplication
+                    env:
+                      - name: NAIS_FRONTEND_TELEMETRY_COLLECTOR_URL
+                        value: http://telemetry-collector
                     volumeMounts:
                       - name: frontend-config
                         readOnly: true
