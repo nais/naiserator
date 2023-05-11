@@ -109,6 +109,10 @@ func (o *Options) GetHostAliases() []config.HostAlias {
 	return o.Config.HostAliases
 }
 
+func (o *Options) GetFrontendOptions() config.Frontend {
+	return o.Config.Frontend
+}
+
 func (o *Options) GetAllowedKernelCapabilities() []string {
 	return []string{"NET_RAW", "NET_BIND_SERVICE"}
 }
