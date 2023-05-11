@@ -28,7 +28,7 @@ const configMapSuffix = "-frontend-config-js"
 func naisJs(telemetryURL string) string {
 	return fmt.Sprintf(`
 const vars = {
-	telemetryCollectorURL: %q;
+	telemetryCollectorURL: '%s';
 };
 export default {vars};
 `, telemetryURL)
@@ -75,7 +75,7 @@ func volume(configMapName string) corev1.Volume {
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
 	frontendSpec := source.GetFrontend()
-	if frontendSpec == nil || frontendSpec.ConfigJSPath == nil {
+	if frontendSpec == nil || frontendSpec.GeneratedConfig == nil {
 		return nil
 	}
 
@@ -89,7 +89,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	cm := naisJsConfigMap(source, configMapName, naisJsContents)
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cm)
-	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(*frontendSpec.ConfigJSPath))
+	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(frontendSpec.GeneratedConfig.MountPath))
 	ast.Volumes = append(ast.Volumes, volume(configMapName))
 
 	return nil
