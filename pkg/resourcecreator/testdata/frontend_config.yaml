@@ -17,7 +17,8 @@ input:
   spec:
     image: navikt/myapplication:1.2.3
     frontend:
-      configJSPath: /path/to/nais.js
+      generatedConfig:
+        mountPath: /path/to/nais.js
 
 tests:
   - apiVersion: v1
@@ -29,7 +30,7 @@ tests:
         name: javascript configuration configmap created
         resource:
           data:
-            nais.js: "\nconst vars = {\n\ttelemetryCollectorURL: \"http://telemetry-collector\";\n};\nexport default {vars};\n"
+            nais.js: "\nconst vars = {\n\ttelemetryCollectorURL: 'http://telemetry-collector';\n};\nexport default {vars};\n"
 
   - apiVersion: apps/v1
     kind: Deployment
