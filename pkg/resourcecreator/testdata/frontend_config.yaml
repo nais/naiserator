@@ -30,7 +30,7 @@ tests:
         name: javascript configuration configmap created
         resource:
           data:
-            nais.js: "\nconst vars = {\n\ttelemetryCollectorURL: 'http://telemetry-collector';\n};\nexport default {vars};\n"
+            nais.js: "\nexport default {\n\ttelemetryCollectorURL: 'http://telemetry-collector',\n\tapp: {\n\t\tname: 'myapplication',\n\t\tversion: '1.2.3'\n\t}\n};\n"
 
   - apiVersion: apps/v1
     kind: Deployment
