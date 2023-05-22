@@ -8,3 +8,4 @@ cover.out
 /bin/
 *.proto
 /.testbin/
+*.DS_Store
