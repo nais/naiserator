@@ -34,7 +34,6 @@ type Source interface {
 }
 
 type Config interface {
-	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 	GetGoogleCloudSQLProxyContainerImage() string
 	IsSeccompEnabled() bool
@@ -282,3 +281,4 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 func defaultNameNotSetInManifest(instance nais_io_v1.CloudSqlInstance) bool {
 	return instance.Name == ""
 }
+

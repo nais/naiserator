@@ -25,7 +25,6 @@ type Config interface {
 	GetClusterName() string
 	GetAivenRange() string
 	GetGatewayMappings() []config.GatewayMapping
-	GetGoogleProjectID() string
 	GetNaisNamespace() string
 	IsNetworkPolicyEnabled() bool
 	IsLegacyGCP() bool

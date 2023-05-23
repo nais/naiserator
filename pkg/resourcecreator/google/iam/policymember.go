@@ -22,7 +22,6 @@ type Source interface {
 }
 
 type Config interface {
-	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 }
 
@@ -92,3 +91,4 @@ func CreatePolicyMember(source Source, ast *resource.Ast, cfg Config) error {
 
 	return nil
 }
+

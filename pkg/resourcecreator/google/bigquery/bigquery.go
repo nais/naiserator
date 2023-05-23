@@ -22,7 +22,6 @@ type Source interface {
 }
 
 type Config interface {
-	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 }
 
@@ -116,3 +115,4 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 		},
 	}, nil
 }
+

@@ -8,7 +8,6 @@ import (
 )
 
 type Config interface {
-	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 }
 
@@ -30,4 +29,3 @@ func Create(source resource.Source, ast *resource.Ast, config Config) {
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, serviceAccount)
 }
-

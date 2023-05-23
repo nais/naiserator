@@ -28,7 +28,6 @@ type Source interface {
 }
 
 type Config interface {
-	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 }
 
@@ -145,3 +144,4 @@ func Create(source Source, ast *resource.Ast, cfg Config, googleServiceAccount g
 
 	return nil
 }
+

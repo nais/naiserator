@@ -200,3 +200,4 @@ func run() error {
 
 	return mgr.Start(ctrl.SetupSignalHandler())
 }
+
