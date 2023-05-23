@@ -28,7 +28,6 @@ import (
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/readonly"
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/updater"
 )
@@ -293,7 +292,6 @@ func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Sou
 	labelSelector = labelSelector.Add(*teamLabelreq)
 	listOpts := &client.ListOptions{
 		LabelSelector: labelSelector,
-		Namespace:     google.IAMServiceAccountNamespace,
 	}
 
 	IAMServiceAccountList := &iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{}

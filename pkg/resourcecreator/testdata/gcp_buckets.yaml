@@ -41,11 +41,8 @@ tests:
           - .metadata.creationTimestamp
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-              nais.io/team: mynamespace
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
+            name: myapplication
+            namespace: mynamespace
           spec:
             displayName: myapplication
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
@@ -56,19 +53,17 @@ tests:
         name: "IAMPolicy created in namespace serviceaccounts"
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
+            name: myapplication
+            namespace: mynamespace
           spec:
             bindings:
               - members:
-                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
+                  - serviceAccount:team-project-id.svc.id.goog[mynamespace/myapplication]
                 role: roles/iam.workloadIdentityUser
             resourceRef:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
-              name: myapplicati-mynamespac-w4o5cwa
+              name: myapplication
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
@@ -79,10 +74,10 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-            name: myapplicati-mynamespac-w4o5cwa
+            name: myapplication
             namespace: mynamespace
           spec:
-            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+            member: serviceAccount:myapplication@team-project-id.iam.gserviceaccount.com
             role: roles/storage.objectViewer
             resourceRef:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
@@ -118,7 +113,7 @@ tests:
           spec:
             bucketRef:
               name: myapplication
-            entity: user-myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+            entity: user-myapplication@team-project-id.iam.gserviceaccount.com
             role: OWNER
   - apiVersion: apps/v1
     kind: Deployment

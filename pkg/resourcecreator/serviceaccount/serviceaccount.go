@@ -9,14 +9,15 @@ import (
 
 type Config interface {
 	GetGoogleProjectID() string
+	GetGoogleTeamProjectID() string
 }
 
 func Create(source resource.Source, ast *resource.Ast, config Config) {
 	objectMeta := resource.CreateObjectMeta(source)
 
-	googleProjectID := config.GetGoogleProjectID()
-	if len(googleProjectID) > 0 {
-		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectID)
+	googleTeamProjectID := config.GetGoogleTeamProjectID()
+	if len(googleTeamProjectID) > 0 {
+		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(source.GetName(), googleTeamProjectID)
 	}
 
 	serviceAccount := &corev1.ServiceAccount{
@@ -29,3 +30,4 @@ func Create(source resource.Source, ast *resource.Ast, config Config) {
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, serviceAccount)
 }
+

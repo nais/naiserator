@@ -9,8 +9,8 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func GcpServiceAccountName(appNamespaceHash, projectId string) string {
-	return fmt.Sprintf("%s@%s.iam.gserviceaccount.com", appNamespaceHash, projectId)
+func GcpServiceAccountName(name, projectId string) string {
+	return fmt.Sprintf("%s@%s.iam.gserviceaccount.com", name, projectId)
 }
 
 func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, projectId, instanceName string, seccomp bool) corev1.Container {

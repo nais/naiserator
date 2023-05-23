@@ -4,6 +4,7 @@ testconfig:
 config:
   features:
     network-policy: true
+    cnrm: true
   nais-namespace: nais-system
   aiven-range: 1.2.3.4/32
   google-project-id: google-project-id
@@ -26,6 +27,14 @@ input:
       team: myteam
   spec:
     image: navikt/myapplication:1.2.3
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
 
 tests:
   - apiVersion: v1
@@ -59,7 +68,7 @@ tests:
         resource:
           metadata:
             annotations:
-              iam.gke.io/gcp-service-account: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+              iam.gke.io/gcp-service-account: myapplication@team-project-id.iam.gserviceaccount.com
 
   - operation: CreateOrUpdate
     apiVersion: autoscaling/v2beta2
@@ -158,16 +167,13 @@ tests:
     operation: CreateIfNotExists
     match:
       - type: subset
-        name: "IAMServiceAccount created in namespace serviceaccounts"
+        name: "IAMServiceAccount created in namespace mynamespace"
         exclude:
           - .metadata.creationTimestamp
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-              nais.io/team: mynamespace
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
+            name: myapplication
+            namespace: mynamespace
           spec:
             displayName: myapplication
 
@@ -176,22 +182,20 @@ tests:
     operation: CreateIfNotExists
     match:
       - type: subset
-        name: "IAMPolicy created in namespace serviceaccounts"
+        name: "IAMPolicy created in namespace mynamespace"
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
+            name: myapplication
+            namespace: mynamespace
           spec:
             bindings:
               - members:
-                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
+                  - serviceAccount:team-project-id.svc.id.goog[mynamespace/myapplication]
                 role: roles/iam.workloadIdentityUser
             resourceRef:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
-              name: myapplicati-mynamespac-w4o5cwa
+              name: myapplication
 
   - operation: CreateOrUpdate
     apiVersion: policy/v1beta1

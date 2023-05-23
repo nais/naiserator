@@ -27,7 +27,6 @@ type Source interface {
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
 	gcp := source.GetGCP()
-	projectID := cfg.GetGoogleProjectID()
 	teamProjectID := cfg.GetGoogleTeamProjectID()
 
 	if gcp != nil && len(teamProjectID) == 0 {
@@ -35,12 +34,12 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", source.GetNamespace())
 	}
 
-	if !cfg.IsCNRMEnabled() && len(projectID) == 0 {
+	if !cfg.IsCNRMEnabled() {
 		return nil
 	}
 
-	googleServiceAccount := google_iam.CreateServiceAccount(source, projectID)
-	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, projectID)
+	googleServiceAccount := google_iam.CreateServiceAccount(source)
+	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, teamProjectID)
 	ast.Env = append(ast.Env, v1.EnvVar{
 		Name:  "GCP_TEAM_PROJECT_ID",
 		Value: teamProjectID,

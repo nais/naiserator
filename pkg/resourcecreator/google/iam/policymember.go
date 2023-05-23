@@ -14,7 +14,6 @@ import (
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 )
 
 type Source interface {
@@ -27,7 +26,7 @@ type Config interface {
 	GetGoogleTeamProjectID() string
 }
 
-func policyMember(source resource.Source, policy nais_io_v1.CloudIAMPermission, googleProjectId, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
+func policyMember(source resource.Source, policy nais_io_v1.CloudIAMPermission, googleTeamProjectId string) (*google_iam_crd.IAMPolicyMember, error) {
 	name, err := createName(source.GetName(), policy)
 	if err != nil {
 		return nil, err
@@ -42,7 +41,7 @@ func policyMember(source resource.Source, policy nais_io_v1.CloudIAMPermission, 
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(source.GetName(), googleTeamProjectId)),
 			Role:   policy.Role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: policy.Resource.APIVersion,
@@ -51,8 +50,6 @@ func policyMember(source resource.Source, policy nais_io_v1.CloudIAMPermission, 
 			},
 		},
 	}
-
-	util.SetAnnotation(policyMember, google.ProjectIdAnnotation, googleTeamProjectId)
 
 	return policyMember, nil
 }
@@ -86,7 +83,7 @@ func CreatePolicyMember(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	for _, p := range gcp.Permissions {
-		policyMember, err := policyMember(source, p, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID())
+		policyMember, err := policyMember(source, p, cfg.GetGoogleTeamProjectID())
 		if err != nil {
 			return fmt.Errorf("unable to create iampolicymember: %w", err)
 		}

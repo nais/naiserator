@@ -5,7 +5,6 @@ import (
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,9 +12,6 @@ import (
 
 func CreatePolicy(source resource.Source, sa *google_iam_crd.IAMServiceAccount, projectId string) google_iam_crd.IAMPolicy {
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = resource.CreateAppNamespaceHash(source)
-	objectMeta.Namespace = google.IAMServiceAccountNamespace
-	objectMeta.OwnerReferences = nil
 
 	member := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, source.GetNamespace(), source.GetName())
 	iamPolicy := google_iam_crd.IAMPolicy{
@@ -38,8 +34,6 @@ func CreatePolicy(source resource.Source, sa *google_iam_crd.IAMServiceAccount, 
 			},
 		},
 	}
-
-	util.SetAnnotation(&iamPolicy, google.ProjectIdAnnotation, projectId)
 
 	return iamPolicy
 }

@@ -45,11 +45,8 @@ tests:
           - .metadata.creationTimestamp
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-              nais.io/team: mynamespace
-            name: mynaisjob-mynamespac-uih2v7i
-            namespace: serviceaccounts
+            name: mynaisjob
+            namespace: mynamespace
           spec:
             displayName: mynaisjob
 
@@ -61,19 +58,17 @@ tests:
         name: "IAMPolicy created in namespace serviceaccounts"
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-            name: mynaisjob-mynamespac-w4o5cwa
-            namespace: serviceaccounts
+            name: mynaisjob
+            namespace: mynamespace
           spec:
             bindings:
               - members:
-                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/mynaisjob]
+                  - serviceAccount:team-project-id.svc.id.goog[mynamespace/mynaisjob]
                 role: roles/iam.workloadIdentityUser
             resourceRef:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
-              name: mynaisjob-mynamespac-uih2v7i
+              name: mynaisjob
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
@@ -84,8 +79,6 @@ tests:
         name: "iam policy member created"
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: team-project-id
             name: mynaisjob
             namespace: mynamespace
           spec:
@@ -94,4 +87,4 @@ tests:
               apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
               kind: PubSubSubscription
               external: projects/team-project-id/subscriptions/my-subscription
-            member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
+            member: serviceAccount:mynaisjob@team-project-id.iam.gserviceaccount.com

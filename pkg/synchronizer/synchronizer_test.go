@@ -192,14 +192,6 @@ func TestSynchronizer(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// Ensure that the cnrm namespace exists
-	err = rig.client.Create(ctx, &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: google.IAMServiceAccountNamespace,
-		},
-	})
-	assert.NoError(t, err)
-
 	// Store the Application resource in the cluster before testing commences.
 	// This simulates a deployment into the cluster which is then picked up by the
 	// informer queue.
@@ -438,14 +430,6 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	})
 
 	err = rig.client.Create(ctx, testNamespace)
-	assert.NoError(t, err)
-
-	// Ensure that namespace for Google IAM service accounts exists
-	err = rig.client.Create(ctx, &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: google.IAMServiceAccountNamespace,
-		},
-	})
 	assert.NoError(t, err)
 
 	// Create a secret in the cluster that should get updated correlationId to trigger password sync

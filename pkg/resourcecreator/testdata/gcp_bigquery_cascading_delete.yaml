@@ -49,7 +49,7 @@ tests:
           spec:
             access:
               - role: READER
-                userByEmail: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+                userByEmail: myapplication@team-project-id.iam.gserviceaccount.com
             name: my_big_query_instance
             description: tralalalala
             location: europe-north1
@@ -64,10 +64,10 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-            name: myapplicati-mynamespac-w4o5cwa
+            name: myapplication
             namespace: mynamespace
           spec:
-            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+            member: serviceAccount:myapplication@team-project-id.iam.gserviceaccount.com
             role: roles/bigquery.jobUser
             resourceRef:
               kind: Project

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/google/iam"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 
@@ -13,7 +12,7 @@ import (
 
 func TestCreateGoogleIAMPolicy(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	iamServiceAccount := google_iam.CreateServiceAccount(app, "")
+	iamServiceAccount := google_iam.CreateServiceAccount(app)
 	projectId := "nais-env-1234"
 	iamPolicy := google_iam.CreatePolicy(app, &iamServiceAccount, projectId)
 	testMember := fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/%s]", projectId, app.Namespace, app.Name)
@@ -21,5 +20,4 @@ func TestCreateGoogleIAMPolicy(t *testing.T) {
 	assert.Equal(t, &iamServiceAccount.Name, iamPolicy.Spec.ResourceRef.Name)
 	assert.Equal(t, "roles/iam.workloadIdentityUser", iamPolicy.Spec.Bindings[0].Role)
 	assert.Equal(t, testMember, iamPolicy.Spec.Bindings[0].Members[0])
-	assert.Equal(t, projectId, iamPolicy.Annotations[google.ProjectIdAnnotation])
 }

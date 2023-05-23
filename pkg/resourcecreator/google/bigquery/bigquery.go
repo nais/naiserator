@@ -33,13 +33,13 @@ func CreateDataset(source Source, ast *resource.Ast, cfg Config, serviceAccountN
 	}
 
 	for _, bigQuerySpec := range gcp.BigQueryDatasets {
-		bigQueryInstance, err := createDataset(source, bigQuerySpec, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID(), serviceAccountName)
+		bigQueryInstance, err := createDataset(source, bigQuerySpec, cfg.GetGoogleTeamProjectID(), serviceAccountName)
 		if err != nil {
 			return err
 		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, bigQueryInstance)
 
-		iamPolicyMember, err := iAMPolicyMember(source, bigQueryInstance, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID(), serviceAccountName)
+		iamPolicyMember, err := iAMPolicyMember(source, bigQueryInstance, cfg.GetGoogleTeamProjectID(), serviceAccountName)
 		if err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func CreateDataset(source Source, ast *resource.Ast, cfg Config, serviceAccountN
 	return nil
 }
 
-func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.BigQueryDataset, googleProjectId, teamProjectID, serviceAccountName string) (*google_iam_crd.IAMPolicyMember, error) {
+func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.BigQueryDataset, teamProjectID, serviceAccountName string) (*google_iam_crd.IAMPolicyMember, error) {
 	shortName, err := namegen.ShortName(bigqueryDataset.Name+"-job-user", validation.DNS1035LabelMaxLength)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(serviceAccountName, googleProjectId)),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(serviceAccountName, teamProjectID)),
 			Role:   "roles/bigquery.jobUser",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
@@ -78,7 +78,7 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.
 	return policy, nil
 }
 
-func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQueryDataset, projectID, teamProjectID, serviceAccountName string) (*google_nais_io_v1.BigQueryDataset, error) {
+func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQueryDataset, teamProjectID, serviceAccountName string) (*google_nais_io_v1.BigQueryDataset, error) {
 	objectMeta := resource.CreateObjectMeta(source)
 	datasetName := strings.ToLower(bigQuerySpec.Name)
 	baseName := strings.ReplaceAll(fmt.Sprintf("%s-%s", source.GetName(), datasetName), "_", "-")
@@ -110,7 +110,7 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 			Access: []google_nais_io_v1.DatasetAccess{
 				{
 					Role:        bigQuerySpec.Permission.GoogleType(),
-					UserByEmail: google.GcpServiceAccountName(serviceAccountName, projectID),
+					UserByEmail: google.GcpServiceAccountName(serviceAccountName, teamProjectID),
 				},
 			},
 		},

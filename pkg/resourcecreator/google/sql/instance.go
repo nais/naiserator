@@ -161,7 +161,7 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Co
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf(
 				"serviceAccount:%s",
-				google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), cfg.GetGoogleProjectID()),
+				google.GcpServiceAccountName(source.GetName(), cfg.GetGoogleTeamProjectID()),
 			),
 			Role: "roles/cloudsql.client",
 			ResourceRef: google_iam_crd.ResourceRef{

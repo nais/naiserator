@@ -94,7 +94,7 @@ func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageB
 			APIVersion: google.IAMAPIVersion,
 		},
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
-			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), cfg.GetGoogleProjectID())),
+			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(source.GetName(), cfg.GetGoogleTeamProjectID())),
 			Role:   role,
 			ResourceRef: google_iam_crd.ResourceRef{
 				ApiVersion: bucket.APIVersion,
@@ -131,7 +131,7 @@ func Create(source Source, ast *resource.Ast, cfg Config, googleServiceAccount g
 			}
 			ast.AppendOperation(resource.OperationCreateIfNotExists, objectOwner)
 		} else {
-			bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, cfg.GetGoogleProjectID(), googleServiceAccount.Name)
+			bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, cfg.GetGoogleTeamProjectID(), googleServiceAccount.Name)
 			ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
 		}
 

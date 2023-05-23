@@ -42,11 +42,8 @@ tests:
           - .metadata.creationTimestamp
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-              nais.io/team: mynamespace
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
+            name: myapplication
+            namespace: mynamespace
           spec:
             displayName: myapplication
 
@@ -58,19 +55,17 @@ tests:
         name: "IAMPolicy created in namespace serviceaccounts"
         resource:
           metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
+            name: myapplication
+            namespace: mynamespace
           spec:
             bindings:
               - members:
-                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
+                  - serviceAccount:team-project-id.svc.id.goog[mynamespace/myapplication]
                 role: roles/iam.workloadIdentityUser
             resourceRef:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
-              name: myapplicati-mynamespac-w4o5cwa
+              name: myapplication
 
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
@@ -85,7 +80,7 @@ tests:
               cnrm.cloud.google.com/project-id: team-project-id
             namespace: mynamespace
           spec:
-            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+            member: serviceAccount:myapplication@team-project-id.iam.gserviceaccount.com
             role: roles/storage.legacyBucketOwner
             resourceRef:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
@@ -105,7 +100,7 @@ tests:
               cnrm.cloud.google.com/project-id: team-project-id
             namespace: mynamespace
           spec:
-            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+            member: serviceAccount:myapplication@team-project-id.iam.gserviceaccount.com
             role: roles/storage.legacyObjectOwner
             resourceRef:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
@@ -124,7 +119,7 @@ tests:
               cnrm.cloud.google.com/project-id: team-project-id
             namespace: mynamespace
           spec:
-            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
+            member: serviceAccount:myapplication@team-project-id.iam.gserviceaccount.com
             role: roles/storage.objectViewer
             resourceRef:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
