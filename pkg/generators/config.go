@@ -137,10 +137,6 @@ func (o *Options) IsNAVCABundleEnabled() bool {
 	return o.Config.Features.NAVCABundle
 }
 
-func (o *Options) IsSeccompEnabled() bool {
-	return o.Config.Features.Seccomp
-}
-
 func (o *Options) GetNaisNamespace() string {
 	return o.Config.NaisNamespace
 }

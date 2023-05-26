@@ -122,6 +122,8 @@ tests:
                       privileged: false
                       capabilities:
                         drop: ["ALL"]
+                      seccompProfile:
+                          type: RuntimeDefault
                     imagePullPolicy: IfNotPresent
                     lifecycle:
                       preStop:
@@ -169,6 +171,9 @@ tests:
                   - name: gh-docker-credentials
                   - name: gar-docker-credentials
                 restartPolicy: Never
+                securityContext:
+                  seccompProfile:
+                    type: RuntimeDefault
                 serviceAccountName: mynaisjob
                 volumes:
                   - configMap:

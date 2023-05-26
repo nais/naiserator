@@ -17,7 +17,7 @@ func fluentdSidecar(cfg Config) corev1.Container {
 				corev1.ResourceMemory: k8sResource.MustParse("200M"),
 			},
 		},
-		SecurityContext: configureSecurityContext(cfg) ,
+		SecurityContext: configureSecurityContext(cfg),
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "secure-logs",
@@ -100,24 +100,18 @@ func configMapReloadSidecar(cfg Config) corev1.Container {
 }
 
 func configureSecurityContext(cfg Config) *corev1.SecurityContext {
-	ctx := &corev1.SecurityContext{
+	return &corev1.SecurityContext{
 		RunAsUser:                pointer.Int64(1065),
 		RunAsGroup:               pointer.Int64(1065),
 		RunAsNonRoot:             pointer.Bool(true),
 		Privileged:               pointer.Bool(false),
 		AllowPrivilegeEscalation: pointer.Bool(false),
 		ReadOnlyRootFilesystem:   pointer.Bool(false),
-	}
-
-	if cfg.IsSeccompEnabled() {
-		ctx.SeccompProfile = &corev1.SeccompProfile{
+		SeccompProfile: &corev1.SeccompProfile{
 			Type: corev1.SeccompProfileTypeRuntimeDefault,
-		}
+		},
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{"ALL"},
+		},
 	}
-	capabilities := &corev1.Capabilities{
-		Drop: []corev1.Capability{"ALL"},
-	}
-
-	ctx.Capabilities = capabilities
-	return ctx
 }

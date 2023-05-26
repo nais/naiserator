@@ -147,6 +147,8 @@ tests:
                       privileged: false
                       capabilities:
                         drop: ["ALL"]
+                      seccompProfile:
+                          type: RuntimeDefault
                     env:
                       - name: NAV_TRUSTSTORE_PATH
                         value: /etc/ssl/certs/java/cacerts
@@ -209,6 +211,9 @@ tests:
                     name: myapplication
                     image: navikt/myapplication:1.2.3
                 restartPolicy: Always
+                securityContext:
+                  seccompProfile:
+                    type: RuntimeDefault
                 dnsPolicy: ClusterFirst
                 serviceAccountName: myapplication
                 imagePullSecrets:

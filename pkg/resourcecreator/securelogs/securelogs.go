@@ -14,7 +14,6 @@ type Source interface {
 
 type Config interface {
 	GetSecureLogsOptions() config.Securelogs
-	IsSeccompEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) {

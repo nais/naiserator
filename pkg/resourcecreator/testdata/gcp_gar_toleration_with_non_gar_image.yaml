@@ -30,6 +30,7 @@ tests:
           - .spec.template.spec.dnsPolicy
           - .spec.template.metadata
           - .spec.template.spec.restartPolicy
+          - .spec.template.spec.securityContext
           - .spec.template.spec.affinity
           - .spec.template.spec.serviceAccountName
           - .spec.template.spec.volumes
@@ -92,6 +93,8 @@ tests:
                       runAsGroup: 1069
                       runAsNonRoot: true
                       runAsUser: 1069
+                      seccompProfile:
+                        type: RuntimeDefault
                     volumeMounts:
                       - mountPath: /tmp
                         name: writable-tmp

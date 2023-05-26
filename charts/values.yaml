@@ -37,7 +37,6 @@ naiserator:
     legacy-gcp: false
     gcp: true
     webhook: true
-    seccomp: true
     nav-ca-bundle: false
     wonderwall: false
     gar-toleration: false
@@ -99,8 +98,6 @@ podSecurityContext:
     - 65532
   seccompProfile:
     type: RuntimeDefault
-
-  # fsGroup: 2000
 
 securityContext:
   capabilities:
