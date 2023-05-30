@@ -5,7 +5,6 @@ config:
   features:
     linkerd: true
     network-policy: true
-    seccomp: true
   google-project-id: google-project-id
 
 input:

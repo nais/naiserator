@@ -3,7 +3,6 @@ testconfig:
 
 config:
   features:
-    seccomp: true
   Securelogs:
     fluentd-image: fluentd-image
     configmap-reload-image: configmap-reload-image

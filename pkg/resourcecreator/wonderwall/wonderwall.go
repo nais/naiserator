@@ -54,7 +54,6 @@ type Source interface {
 
 type Config interface {
 	GetWonderwallOptions() config.Wonderwall
-	IsSeccompEnabled() bool
 	IsWonderwallEnabled() bool
 }
 
@@ -131,13 +130,6 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 		return nil, err
 	}
 
-	var sc *corev1.SeccompProfile
-	if naisCfg.IsSeccompEnabled() {
-		sc = &corev1.SeccompProfile{
-			Type: corev1.SeccompProfileTypeRuntimeDefault,
-		}
-	}
-
 	envFromSources := make([]corev1.EnvFromSource, 0)
 	for _, name := range wonderwallCfg.SecretNames {
 		envFromSources = append(envFromSources, pod.EnvFromSecret(name))
@@ -172,7 +164,9 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 			RunAsGroup:             pointer.Int64(1069),
 			RunAsNonRoot:           pointer.Bool(true),
 			RunAsUser:              pointer.Int64(1069),
-			SeccompProfile:         sc,
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
 		},
 	}, nil
 }

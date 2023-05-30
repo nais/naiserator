@@ -39,7 +39,7 @@ func defaultPathExists(paths []nais_io_v1.SecretPath, kvPath string) bool {
 	return false
 }
 
-func createInitContainer(source resource.Source, options config.Vault, paths []nais_io_v1.SecretPath, seccomp bool) corev1.Container {
+func createInitContainer(source resource.Source, options config.Vault, paths []nais_io_v1.SecretPath) corev1.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
@@ -84,17 +84,11 @@ func createInitContainer(source resource.Source, options config.Vault, paths []n
 				Value: options.AuthPath,
 			},
 		},
-		SecurityContext: createSecurityContext(seccomp),
+		SecurityContext: createSecurityContext(),
 	}
 }
 
-func createSecurityContext(seccomp bool) *corev1.SecurityContext {
-	var seccompProfile *corev1.SeccompProfile
-	if seccomp {
-		seccompProfile = &corev1.SeccompProfile{
-			Type: corev1.SeccompProfileTypeRuntimeDefault,
-		}
-	}
+func createSecurityContext() *corev1.SecurityContext {
 	return &corev1.SecurityContext{
 		RunAsUser:                pointer.Int64(1069),
 		RunAsGroup:               pointer.Int64(1069),
@@ -105,11 +99,13 @@ func createSecurityContext(seccomp bool) *corev1.SecurityContext {
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{"ALL"},
 		},
-		SeccompProfile: seccompProfile,
+		SeccompProfile: &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		},
 	}
 }
 
-func createSideCarContainer(options config.Vault, seccomp bool) corev1.Container {
+func createSideCarContainer(options config.Vault) corev1.Container {
 	args := []string{
 		"-v=10",
 		"-logtostderr",
@@ -138,7 +134,7 @@ func createSideCarContainer(options config.Vault, seccomp bool) corev1.Container
 				Value: defaultVaultTokenFileName(),
 			},
 		},
-		SecurityContext: createSecurityContext(seccomp),
+		SecurityContext: createSecurityContext(),
 	}
 }
 
