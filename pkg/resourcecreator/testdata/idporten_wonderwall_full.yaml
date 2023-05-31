@@ -108,20 +108,3 @@ tests:
                       requests:
                         cpu: 100m
                         memory: 64Mi
-
-  - apiVersion: nais.io/v1
-    kind: IDPortenClient
-    name: myapplication
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "client config should match expected paths for sidecar"
-        resource:
-          spec:
-            frontchannelLogoutURI: https://my-client.nav.no/oauth2/logout/frontchannel
-            redirectURIs:
-              - https://my-client.nav.no/oauth2/callback
-              - https://my-client-2.nav.no/oauth2/callback
-            postLogoutRedirectURIs:
-              - https://my-client.nav.no/oauth2/logout/callback
-              - https://my-client-2.nav.no/oauth2/logout/callback

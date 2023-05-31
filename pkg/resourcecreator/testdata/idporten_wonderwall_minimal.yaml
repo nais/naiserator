@@ -47,10 +47,18 @@ tests:
                   wonderwall: enabled
               spec:
                 volumes:
-                  - name: ^idporten-myapplication-a0b907e7$
+                  - name: ^idporten-sso$
                     secret:
-                      secretName: ^idporten-myapplication-a0b907e7$
+                      secretName: ^idporten-sso$
                 containers:
+                  - envFrom:
+                      - secretRef:
+                          name: ^idporten-sso$
+                    name: myapplication
+                    volumeMounts:
+                      - mountPath: /var/run/secrets/nais.io/idporten
+                        name: ^idporten-sso$
+                        readOnly: true
                   - env:
                       - name: WONDERWALL_OPENID_PROVIDER
                         value: ^idporten$
@@ -64,11 +72,9 @@ tests:
                         value: ^0.0.0.0:7565$
                     envFrom:
                       - secretRef:
-                          name: ^idporten-myapplication-a0b907e7$
+                          name: ^idporten-sso$
                       - secretRef:
                           name: ^wonderwall-idporten-config$
-                      - secretRef:
-                          name: ^idporten-wonderwall-myapplication-76c8c4c8$
                     image: nais/wonderwall
                     name: wonderwall
                     ports:
@@ -116,39 +122,3 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
-
-  - apiVersion: nais.io/v1
-    kind: IDPortenClient
-    name: myapplication
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "redirect and front-channel logout URIs should match expected paths for sidecar"
-        resource:
-          spec:
-            frontchannelLogoutURI: https://my-client.nav.no/oauth2/logout/frontchannel
-            redirectURIs:
-              - https://my-client.nav.no/oauth2/callback
-
-  - apiVersion: v1
-    kind: Secret
-    operation: CreateIfNotExists
-    match:
-      - type: regex
-        name: "secret for wonderwall created"
-        exclude:
-          - metadata.creationTimestamp
-        resource:
-          metadata:
-            name: ^idporten-wonderwall-myapplication-76c8c4c8$
-            namespace: mynamespace
-            labels:
-              app: myapplication
-              team: myteam
-            ownerReferences:
-              - kind: Application
-                name: myapplication
-                apiVersion: nais.io/v1alpha1
-          stringData:
-            WONDERWALL_ENCRYPTION_KEY: ".{44}"
-          type: Opaque

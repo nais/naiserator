@@ -55,7 +55,6 @@ type Features struct {
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`
 	NetworkPolicy               bool     `json:"network-policy"`
-	Seccomp                     bool     `json:"seccomp"`
 	SpotToleration              bool     `json:"spot-toleration"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
 	Vault                       bool     `json:"vault"`
@@ -63,7 +62,6 @@ type Features struct {
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	LegacyGCP                   bool     `json:"legacy-gcp"`
 	Wonderwall                  bool     `json:"wonderwall"`
-	WonderwallSSO               bool     `json:"wonderwall-sso"`
 }
 
 type Securelogs struct {
@@ -116,6 +114,10 @@ type FQDNRule struct {
 	Port int    `json:"port"`
 }
 
+type Frontend struct {
+	TelemetryURL string `json:"telemetry-url"`
+}
+
 type Config struct {
 	DryRun                            bool             `json:"dry-run"`
 	Bind                              string           `json:"bind"`
@@ -141,6 +143,7 @@ type Config struct {
 	NaisNamespace                     string           `json:"nais-namespace"`
 	AivenRange                        string           `json:"aiven-range"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
+	Frontend                          Frontend         `json:"frontend"`
 }
 
 const (
@@ -160,7 +163,6 @@ const (
 	FeaturesKafkarator                  = "features.kafkarator"
 	FeaturesLinkerd                     = "features.linkerd"
 	FeaturesNetworkPolicy               = "features.network-policy"
-	FeaturesSeccomp                     = "features.seccomp"
 	FeaturesPrometheusOperator          = "features.prometheus-operator"
 	FeaturesVault                       = "features.vault"
 	FeaturesWebhook                     = "features.webhook"
@@ -246,7 +248,6 @@ func init() {
 	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
-	flag.Bool(FeaturesSeccomp, false, "enable Seccomp security context")
 	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
 	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")

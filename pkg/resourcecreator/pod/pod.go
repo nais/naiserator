@@ -52,7 +52,6 @@ type Config interface {
 	GetAllowedKernelCapabilities() []string
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
-	IsSeccompEnabled() bool
 	IsGARTolerationEnabled() bool
 	IsSpotTolerationEnabled() bool
 }
@@ -109,17 +108,14 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 		Affinity:                      affinity,
 		Tolerations:                   tolerations,
-	}
-
-	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
-
-	if cfg.IsSeccompEnabled() {
-		podSpec.SecurityContext = &corev1.PodSecurityContext{
+		SecurityContext: &corev1.PodSecurityContext{
 			SeccompProfile: &corev1.SeccompProfile{
 				Type: corev1.SeccompProfileTypeRuntimeDefault,
 			},
-		}
+		},
 	}
+
+	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
 
 	if len(cfg.GetHostAliases()) > 0 {
 		podSpec.HostAliases = hostAliases(cfg)
@@ -136,23 +132,19 @@ func configureSecurityContext(annotations map[string]string, cfg Config) *corev1
 		Privileged:               pointer.Bool(false),
 		AllowPrivilegeEscalation: pointer.Bool(false),
 		ReadOnlyRootFilesystem:   pointer.Bool(readOnlyFileSystem(annotations)),
-	}
-
-	if cfg.IsSeccompEnabled() {
-		ctx.SeccompProfile = &corev1.SeccompProfile{
+		SeccompProfile: &corev1.SeccompProfile{
 			Type: corev1.SeccompProfileTypeRuntimeDefault,
-		}
-	}
-	capabilities := &corev1.Capabilities{
-		Drop: []corev1.Capability{"ALL"},
+		},
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{"ALL"},
+		},
 	}
 
 	additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
 	if len(additionalCapabilities) > 0 {
-		capabilities.Add = additionalCapabilities
+		ctx.Capabilities.Add = additionalCapabilities
 	}
 
-	ctx.Capabilities = capabilities
 	return ctx
 }
 

@@ -1,0 +1,59 @@
+testconfig:
+  description: application with frontend configuration in a file
+
+config:
+  frontend:
+    telemetry-url: http://telemetry-collector
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    frontend:
+      generatedConfig:
+        mountPath: /path/to/nais.js
+
+tests:
+  - apiVersion: v1
+    kind: ConfigMap
+    name: myapplication-frontend-config-js-cf21ef39
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: javascript configuration configmap created
+        resource:
+          data:
+            nais.js: "\nexport default {\n\ttelemetryCollectorURL: 'http://telemetry-collector',\n\tapp: {\n\t\tname: 'myapplication',\n\t\tversion: '1.2.3'\n\t}\n};\n"
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: javascript configmap injected to pod
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: frontend-config
+                    configMap:
+                      name: myapplication-frontend-config-js-cf21ef39
+                containers:
+                  - image: navikt/myapplication:1.2.3
+                    name: myapplication
+                    env:
+                      - name: NAIS_FRONTEND_TELEMETRY_COLLECTOR_URL
+                        value: http://telemetry-collector
+                    volumeMounts:
+                      - name: frontend-config
+                        readOnly: true
+                        mountPath: /path/to/nais.js

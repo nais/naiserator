@@ -37,11 +37,11 @@ naiserator:
     legacy-gcp: false
     gcp: true
     webhook: true
-    seccomp: true
     nav-ca-bundle: false
     wonderwall: false
-    wonderwall-sso: false
     gar-toleration: false
+  frontend:
+    telemetry-url: http://localhost:12347/collect
   informer:
     full-sync-interval: 4h
   synchronizer:
@@ -98,8 +98,6 @@ podSecurityContext:
     - 65532
   seccompProfile:
     type: RuntimeDefault
-
-  # fsGroup: 2000
 
 securityContext:
   capabilities:

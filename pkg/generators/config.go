@@ -109,6 +109,10 @@ func (o *Options) GetHostAliases() []config.HostAlias {
 	return o.Config.HostAliases
 }
 
+func (o *Options) GetFrontendOptions() config.Frontend {
+	return o.Config.Frontend
+}
+
 func (o *Options) GetAllowedKernelCapabilities() []string {
 	return []string{"NET_RAW", "NET_BIND_SERVICE"}
 }
@@ -133,10 +137,6 @@ func (o *Options) IsNAVCABundleEnabled() bool {
 	return o.Config.Features.NAVCABundle
 }
 
-func (o *Options) IsSeccompEnabled() bool {
-	return o.Config.Features.Seccomp
-}
-
 func (o *Options) GetNaisNamespace() string {
 	return o.Config.NaisNamespace
 }
@@ -155,8 +155,4 @@ func (o *Options) IsSpotTolerationEnabled() bool {
 
 func (o *Options) IsAivenSharedSecretsEnabled() bool {
 	return o.Config.Features.AivenSharedSecrets
-}
-
-func (o *Options) IsWonderwallSSOEnabled() bool {
-	return o.Config.Features.WonderwallSSO
 }

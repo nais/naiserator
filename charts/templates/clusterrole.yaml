@@ -12,6 +12,7 @@ rules:
       - 'applications'
       - 'azureadapplications'
       - 'bigquerydatasets'
+      - 'configmaps'
       - 'cronjobs'
       - 'deployments'
       - 'endpoints'
