@@ -24,7 +24,7 @@ jobs:
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v1.1.0'
+        uses: 'google-github-actions/auth@v1.1.1'
         with:
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: 'gh-naiserator@nais-io.iam.gserviceaccount.com'
