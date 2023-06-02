@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -31,6 +32,14 @@ func (n *Client) Scheme() *runtime.Scheme {
 // RESTMapper returns the scheme this client is using.
 func (n *Client) RESTMapper() meta.RESTMapper {
 	return n.client.RESTMapper()
+}
+
+func (n *Client) GroupVersionKindFor(obj runtime.Object) (schema.GroupVersionKind, error) {
+	return n.client.GroupVersionKindFor(obj)
+}
+
+func (n *Client) IsObjectNamespaced(obj runtime.Object) (bool, error) {
+	return n.client.IsObjectNamespaced(obj)
 }
 
 func (c *Client) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
