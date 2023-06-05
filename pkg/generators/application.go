@@ -6,6 +6,7 @@ import (
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/frontend"
+	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -119,6 +120,11 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	fqdnpolicy.Create(app, ast, cfg)
 
 	err = frontend.Create(app, ast, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = observability.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
