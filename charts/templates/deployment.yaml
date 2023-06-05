@@ -43,6 +43,10 @@ spec:
         - name: KAFKA_CA_PATH
           value: /var/run/secrets/nais.io/kafka/ca.crt
         {{ end }}
+        ports:
+          - name: metrics
+            containerPort: 8080
+            protocol: TCP
         image: europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator
