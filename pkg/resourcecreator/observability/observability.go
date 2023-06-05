@@ -2,10 +2,12 @@ package observability
 
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 type Source interface {
@@ -27,13 +29,21 @@ func envVars() []corev1.EnvVar {
 	}
 }
 
-func netpol(source Source) *networkingv1.NetworkPolicy {
+func netpol(source Source) (*networkingv1.NetworkPolicy, error) {
+	name, err := namegen.ShortName(source.GetName()+"-"+"tracing", validation.DNS1035LabelMaxLength)
+	if err != nil {
+		return nil, err
+	}
+
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = name
+
 	return &networkingv1.NetworkPolicy{
+		ObjectMeta: objectMeta,
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "NetworkPolicy",
 			APIVersion: "networking.k8s.io/v1",
 		},
-		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -62,7 +72,7 @@ func netpol(source Source) *networkingv1.NetworkPolicy {
 				networkingv1.PolicyTypeEgress,
 			},
 		},
-	}
+	}, nil
 }
 
 func Create(source Source, ast *resource.Ast, _ any) error {
@@ -71,9 +81,13 @@ func Create(source Source, ast *resource.Ast, _ any) error {
 		return nil
 	}
 
-	source.GetObjectMeta()
+	np, err := netpol(source)
+	if err != nil {
+		return err
+	}
+
 	ast.Env = append(ast.Env, envVars()...)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, netpol(source))
+	ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 
 	return nil
 }

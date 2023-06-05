@@ -37,7 +37,7 @@ tests:
 
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: myapplication
+    name: myapplication-tracing-438f0c6d
     operation: CreateOrUpdate
     match:
       - type: subset
