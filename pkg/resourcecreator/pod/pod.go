@@ -208,11 +208,14 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
-var regNameNormalizer = regexp.MustCompile("[^a-zA-Z0-9_-]+")
+// A lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-',
+// and must start and end with an alphanumeric character
+var regNameNormalizer = regexp.MustCompile("[^a-z0-9-]+")
 
 func generateNameFromMountPath(mountPath string) string {
-	s := regNameNormalizer.ReplaceAllString(mountPath, "-")
-	s = strings.Trim(s, "-_")
+	s := strings.ToLower(mountPath)
+	s = regNameNormalizer.ReplaceAllString(s, "-")
+	s = strings.Trim(s, "-")
 	return s
 }
 
