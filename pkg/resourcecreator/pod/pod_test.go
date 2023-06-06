@@ -7,7 +7,7 @@ func TestGenerateNameFromMountPath(t *testing.T) {
 		mountPath := "/var/run/my-config_maps"
 		name := generateNameFromMountPath(mountPath)
 		if name != "var-run-my-config_maps" {
-			t.Errorf("expected name to be 'var-run-configmaps', was '%s'", name)
+			t.Errorf("expected name to be 'var-run-my-config_maps', was '%s'", name)
 		}
 	})
 
@@ -23,7 +23,7 @@ func TestGenerateNameFromMountPath(t *testing.T) {
 		mountPath := ".var/run/my-config_maps_"
 		name := generateNameFromMountPath(mountPath)
 		if name != "var-run-my-config_maps" {
-			t.Errorf("expected name to be 'var-run-configmaps', was '%s'", name)
+			t.Errorf("expected name to be 'var-run-my-config_maps', was '%s'", name)
 		}
 	})
 
