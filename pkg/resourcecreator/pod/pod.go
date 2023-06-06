@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -208,8 +209,13 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 }
 
 func generateNameFromMountPath(mountPath string) string {
-	s := strings.Trim(mountPath, "/")
-	return strings.ReplaceAll(s, "/", "-")
+	reg, err := regexp.Compile("[^a-zA-Z0-9_-]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+	s := reg.ReplaceAllString(mountPath, "-")
+	s = strings.Trim(s, "-_")
+	return s
 }
 
 func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
