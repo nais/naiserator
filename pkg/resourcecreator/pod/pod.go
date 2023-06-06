@@ -208,12 +208,10 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
+var regNameNormalizer = regexp.MustCompile("[^a-zA-Z0-9_-]+")
+
 func generateNameFromMountPath(mountPath string) string {
-	reg, err := regexp.Compile("[^a-zA-Z0-9_-]+")
-	if err != nil {
-		log.Fatal(err)
-	}
-	s := reg.ReplaceAllString(mountPath, "-")
+	s := regNameNormalizer.ReplaceAllString(mountPath, "-")
 	s = strings.Trim(s, "-_")
 	return s
 }
