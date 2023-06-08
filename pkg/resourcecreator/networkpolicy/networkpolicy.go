@@ -6,6 +6,7 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -91,7 +92,7 @@ func egressRules(policy *nais_io_v1.AccessPolicy, cfg Config, election bool) []n
 }
 
 func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) []networkingv1.NetworkPolicyEgressRule {
-	if policy == nil || policy.Outbound == nil || len(policy.Outbound.Rules) == 0 {
+	if policy == nil || policy.Outbound == nil || (len(policy.Outbound.Rules) == 0 && len(policy.Outbound.External) == 0) {
 		return nil
 	}
 
@@ -113,13 +114,33 @@ func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) []
 		peers = append(peers, peer)
 	}
 
+	var ports []networkingv1.NetworkPolicyPort
+	for _, outboundExtPol := range policy.Outbound.External {
+		if onlyIPv4IsSpecified(outboundExtPol) {
+			peer := networkingv1.NetworkPolicyPeer{
+				IPBlock: &networkingv1.IPBlock{
+					CIDR: outboundExtPol.IPv4 + "/32",
+				},
+			}
+			for _, port := range outboundExtPol.Ports {
+				ports = append(ports, networkingv1.NetworkPolicyPort{
+					Port: &intstr.IntOrString{
+						IntVal: int32(port.Port),
+					},
+				})
+			}
+			peers = append(peers, peer)
+		}
+	}
+
 	if len(peers) == 0 {
 		return nil
 	}
 
 	return []networkingv1.NetworkPolicyEgressRule{
 		{
-			To: peers,
+			To:    peers,
+			Ports: ports,
 		},
 	}
 }
@@ -285,4 +306,8 @@ func labelSelector(label string, value string) *metav1.LabelSelector {
 			label: value,
 		},
 	}
+}
+
+func onlyIPv4IsSpecified(externalRule nais_io_v1.AccessPolicyExternalRule) bool {
+	return externalRule.IPv4 != "" && externalRule.Host == ""
 }

@@ -92,6 +92,9 @@ func defaultEgressPolicy(cfg Config) []fqdn.FQDNNetworkPolicyEgressRule {
 func egressPolicy(outbound *nais_io_v1.AccessPolicyOutbound) []fqdn.FQDNNetworkPolicyEgressRule {
 	var rules []fqdn.FQDNNetworkPolicyEgressRule
 	for _, e := range outbound.External {
+		if e.IPv4 != "" {
+			continue
+		}
 		var np []networkingv1.NetworkPolicyPort
 		if e.Ports == nil {
 			np = []networkingv1.NetworkPolicyPort{defaultNetworkPolicyPort()}
