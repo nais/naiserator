@@ -15,16 +15,22 @@ type Source interface {
 	GetObservability() *nais_io_v1.Observability
 }
 
-// Standard environment variable name from https://opentelemetry.io/docs/specs/otel/protocol/exporter/
-// Location is hard-coded because it is the same across installations, feel free to make it configurable.
+// Standard environment variable names from https://opentelemetry.io/docs/specs/otel/protocol/exporter/
+// These are hard-coded because they are the same across installations, feel free to make them configurable.
 const otelExporterEndpoint = "OTEL_EXPORTER_OTLP_ENDPOINT"
 const collectorEndpoint = "http://tempo-distributor.nais-system:4317"
+const otelExporterProtocol = "OTEL_EXPORTER_OTLP_PROTOCOL"
+const collectorProtocol = "grpc"
 
 func envVars() []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{
 			Name:  otelExporterEndpoint,
 			Value: collectorEndpoint,
+		},
+		{
+			Name:  otelExporterProtocol,
+			Value: collectorProtocol,
 		},
 	}
 }
