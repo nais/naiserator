@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -207,9 +208,15 @@ func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	}
 }
 
+// A lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-',
+// and must start and end with an alphanumeric character
+var regNameNormalizer = regexp.MustCompile("[^a-z0-9-]+")
+
 func generateNameFromMountPath(mountPath string) string {
-	s := strings.Trim(mountPath, "/")
-	return strings.ReplaceAll(s, "/", "-")
+	s := strings.ToLower(mountPath)
+	s = regNameNormalizer.ReplaceAllString(s, "-")
+	s = strings.Trim(s, "-")
+	return s
 }
 
 func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {

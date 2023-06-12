@@ -1,0 +1,56 @@
+testconfig:
+  description: inject opentelemetry tracing environment variable and network policy
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    observability:
+      tracing:
+        enabled: true
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "tracing collector endpoint configured in pod"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - image: navikt/myapplication:1.2.3
+                    name: myapplication
+                    env:
+                      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                        value: http://tempo-distributor.nais-system:4317
+                      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+                        value: grpc
+
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication-tracing-438f0c6d
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "network policy allows traffic to data collector"
+        resource:
+          spec:
+            egress:
+              - to:
+                - namespaceSelector:
+                    matchLabels:
+                      name: nais-system
+                  podSelector:
+                    matchLabels:
+                      app.kubernetes.io/instance: tempo
