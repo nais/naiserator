@@ -1,0 +1,77 @@
+testconfig:
+  description: Redis labeling and access policy
+
+config:
+  linkerd: true
+  google-project-id: google-project-id
+  cluster-name: dev-localtest
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    redis:
+    - instance: naistest1
+      access: read
+    - instance: naistest2
+      access: write
+
+
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: aiven.nais.io/v1
+    kind: AivenApplication
+    name: myapplication
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^aiven-myapplication-.{8}$
+      - name: "instance and access is propagated"
+        type: subset
+        resource:
+          spec:
+            redis:
+            - instance: naistest1
+              access: read
+            - instance: naistest2
+              access: write
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "deployment network policy selector label"
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  aiven: "enabled"
+              spec:
+                containers:
+                  - name: "myapplication"
+                    env:
+                      - name: REDIS_USERNAME_NAISTEST1
+                        valueFrom:
+                          secretKeyRef:
+                            key: REDIS_USERNAME_NAISTEST1
+                            name: ^aiven-myapplication-.{8}$
+                      - name: REDIS_PASSWORD_NAISTEST1
+                        valueFrom:
+                          secretKeyRef:
+                            key: REDIS_PASSWORD_NAISTEST1
+                            name: ^aiven-myapplication-.{8}$
+                      - name: REDIS_URI_NAISTEST1
+                        valueFrom:
+                          secretKeyRef:
+                            key: REDIS_URI_NAISTEST1
+                            name: ^aiven-myapplication-.{8}$

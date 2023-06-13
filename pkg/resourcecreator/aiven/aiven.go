@@ -24,6 +24,7 @@ type Source interface {
 	GetInflux() *nais_io_v1.Influx
 	GetKafka() *nais_io_v1.Kafka
 	GetOpenSearch() *nais_io_v1.OpenSearch
+	GetRedis() []nais_io_v1.Redis
 }
 
 type Config interface {
@@ -73,6 +74,11 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
+	redisEnabled, err := Redis(ast, source.GetRedis(), &aivenApp)
+	if err != nil {
+		return err
+	}
+
 	if len(kafkaKeyPaths) > 0 {
 		credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
 
@@ -80,8 +86,9 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
-	if len(kafkaKeyPaths) > 0 || openSearchEnabled {
+	if len(kafkaKeyPaths) > 0 || openSearchEnabled || redisEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
+		ast.Env = append(ast.Env, makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName))
 	}
 	return nil
 }
