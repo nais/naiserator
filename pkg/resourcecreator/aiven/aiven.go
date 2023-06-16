@@ -30,6 +30,7 @@ type Source interface {
 type Config interface {
 	IsKafkaratorEnabled() bool
 	IsAivenSharedSecretsEnabled() bool
+	GetAivenProject() string
 }
 
 func generateAivenSecretName(name string) string {
@@ -74,7 +75,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
-	redisEnabled, err := Redis(ast, source.GetRedis(), &aivenApp)
+	redisEnabled, err := Redis(ast, config, source, &aivenApp)
 	if err != nil {
 		return err
 	}

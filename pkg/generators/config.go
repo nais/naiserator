@@ -141,6 +141,10 @@ func (o *Options) GetNaisNamespace() string {
 	return o.Config.NaisNamespace
 }
 
+func (o *Options) GetAivenProject() string {
+	return o.Config.AivenProject
+}
+
 func (o *Options) GetAivenRange() string {
 	return o.Config.AivenRange
 }

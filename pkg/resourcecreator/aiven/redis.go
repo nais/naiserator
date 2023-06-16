@@ -6,16 +6,66 @@ import (
 	"strings"
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
+
+const DefaultPlan = "startup-4"
 
 var namePattern = regexp.MustCompile("[^a-z0-9]")
 
-func Redis(ast *resource.Ast, redises []nais_io_v1.Redis, aivenApp *aiven_nais_io_v1.AivenApplication) (bool, error) {
+// Simplified types because depending on aiven-operator induces dependency hell.
+// Should serialize to the real structs
+
+type AivenRedisSpec struct {
+	Project string `json:"project"`
+	Plan    string `json:"plan"`
+}
+
+func (in *AivenRedisSpec) DeepCopyInto(out *AivenRedisSpec) {
+	*out = *in
+}
+
+type AivenRedis struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec AivenRedisSpec `json:"spec,omitempty"`
+}
+
+func (in *AivenRedis) DeepCopyInto(out *AivenRedis) {
+	*out = *in
+	out.TypeMeta = in.TypeMeta
+	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	in.Spec.DeepCopyInto(&out.Spec)
+}
+
+func (in *AivenRedis) DeepCopy() *AivenRedis {
+	if in == nil {
+		return nil
+	}
+	out := new(AivenRedis)
+	in.DeepCopyInto(out)
+	return out
+}
+
+func (in *AivenRedis) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
+		return c
+	}
+	return nil
+}
+
+func Redis(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nais_io_v1.AivenApplication) (bool, error) {
+	redises := source.GetRedis()
 	if len(redises) == 0 {
 		return false, nil
+	}
+
+	if len(config.GetAivenProject()) == 0 {
+		return false, fmt.Errorf("aiven project not defined for this cluster; needed for Redis")
 	}
 
 	for _, redis := range redises {
@@ -28,10 +78,30 @@ func Redis(ast *resource.Ast, redises []nais_io_v1.Redis, aivenApp *aiven_nais_i
 			Instance: redis.Instance,
 			Access:   redis.Access,
 		})
+
+		addDefaultRedisIfNotExists(ast, source, config.GetAivenProject(), redis.Instance)
 	}
 	ast.Labels["aiven"] = "enabled"
 
 	return true, nil
+}
+
+func addDefaultRedisIfNotExists(ast *resource.Ast, source Source, aivenProject, instanceName string) {
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = fmt.Sprintf("redis-%s-%s", source.GetNamespace(), instanceName)
+
+	aivenRedis := &AivenRedis{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Redis",
+			APIVersion: "aiven.io/v1alpha1",
+		},
+		ObjectMeta: objectMeta,
+		Spec: AivenRedisSpec{
+			Project: aivenProject,
+			Plan:    DefaultPlan,
+		},
+	}
+	ast.AppendOperation(resource.OperationCreateIfNotExists, aivenRedis)
 }
 
 func addRedisEnvVariables(ast *resource.Ast, secretName, instanceName string) {

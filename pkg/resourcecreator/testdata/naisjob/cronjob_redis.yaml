@@ -5,6 +5,7 @@ config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
+  aiven-project: dev-project
 
 input:
   kind: Naisjob
@@ -43,10 +44,10 @@ tests:
                 access: read
               - instance: naistest2
                 access: write
-  - apiVersion: batch/v1beta1
+  - operation: CreateOrUpdate
+    apiVersion: batch/v1beta1
     kind: CronJob
     name: mynaisjob
-    operation: CreateOrUpdate
     match:
       - type: regex
         name: "cronjob network policy selector label"
@@ -77,3 +78,35 @@ tests:
                               secretKeyRef:
                                 key: REDIS_URI_NAISTEST1
                                 name: ^aiven-mynaisjob-.{8}$
+  - operation: CreateIfNotExists
+    apiVersion: aiven.io/v1alpha1
+    kind: Redis
+    name: redis-mynamespace-naistest1
+    match:
+      - type: subset
+        name: redis created
+        resource:
+          metadata:
+            name: redis-mynamespace-naistest1
+            namespace: mynamespace
+            labels:
+              app: mynaisjob
+          spec:
+            plan: startup-4
+            project: dev-project
+  - operation: CreateIfNotExists
+    apiVersion: aiven.io/v1alpha1
+    kind: Redis
+    name: redis-mynamespace-naistest2
+    match:
+      - type: subset
+        name: redis created
+        resource:
+          metadata:
+            name: redis-mynamespace-naistest2
+            namespace: mynamespace
+            labels:
+              app: mynaisjob
+          spec:
+            plan: startup-4
+            project: dev-project

@@ -142,11 +142,13 @@ type Config struct {
 	LeaderElection                    LeaderElection   `json:"leader-election"`
 	NaisNamespace                     string           `json:"nais-namespace"`
 	AivenRange                        string           `json:"aiven-range"`
+	AivenProject                      string           `json:"aiven-project"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
 	Frontend                          Frontend         `json:"frontend"`
 }
 
 const (
+	AivenProject                        = "aiven-project"
 	AivenRange                          = "aiven-range"
 	ApiServerIp                         = "api-server-ip"
 	Bind                                = "bind"
@@ -228,6 +230,7 @@ func init() {
 	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
 	flag.String(HealthProbeBindAddress, "127.0.0.1:8085", "ip:port where health probes are performed")
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
+	flag.String(AivenProject, "aiven-project", "main Aiven project for this cluster")
 	flag.String(AivenRange, "aiven-range", "range of IP addresses for Aiven services")
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
