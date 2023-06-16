@@ -5,58 +5,16 @@ import (
 	"regexp"
 	"strings"
 
+	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const DefaultPlan = "startup-4"
 
 var namePattern = regexp.MustCompile("[^a-z0-9]")
-
-// Simplified types because depending on aiven-operator induces dependency hell.
-// Should serialize to the real structs
-
-type AivenRedisSpec struct {
-	Project string `json:"project"`
-	Plan    string `json:"plan"`
-}
-
-func (in *AivenRedisSpec) DeepCopyInto(out *AivenRedisSpec) {
-	*out = *in
-}
-
-type AivenRedis struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec AivenRedisSpec `json:"spec,omitempty"`
-}
-
-func (in *AivenRedis) DeepCopyInto(out *AivenRedis) {
-	*out = *in
-	out.TypeMeta = in.TypeMeta
-	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	in.Spec.DeepCopyInto(&out.Spec)
-}
-
-func (in *AivenRedis) DeepCopy() *AivenRedis {
-	if in == nil {
-		return nil
-	}
-	out := new(AivenRedis)
-	in.DeepCopyInto(out)
-	return out
-}
-
-func (in *AivenRedis) DeepCopyObject() runtime.Object {
-	if c := in.DeepCopy(); c != nil {
-		return c
-	}
-	return nil
-}
 
 func Redis(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nais_io_v1.AivenApplication) (bool, error) {
 	redises := source.GetRedis()
@@ -90,15 +48,17 @@ func addDefaultRedisIfNotExists(ast *resource.Ast, source Source, aivenProject, 
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = fmt.Sprintf("redis-%s-%s", source.GetNamespace(), instanceName)
 
-	aivenRedis := &AivenRedis{
+	aivenRedis := &aiven_io_v1alpha1.Redis{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Redis",
 			APIVersion: "aiven.io/v1alpha1",
 		},
 		ObjectMeta: objectMeta,
-		Spec: AivenRedisSpec{
-			Project: aivenProject,
-			Plan:    DefaultPlan,
+		Spec: aiven_io_v1alpha1.RedisSpec{
+			ServiceCommonSpec: aiven_io_v1alpha1.ServiceCommonSpec{
+				Project: aivenProject,
+				Plan:    DefaultPlan,
+			},
 		},
 	}
 	ast.AppendOperation(resource.OperationCreateIfNotExists, aivenRedis)
