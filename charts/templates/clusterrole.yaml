@@ -33,6 +33,7 @@ rules:
       - 'networkpolicies'
       - 'poddisruptionbudgets'
       - 'podmonitors'
+      - 'redis'
       - 'rolebindings'
       - 'roles'
       - 'secrets'
