@@ -2,7 +2,7 @@ package poddisruptionbudget
 
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -23,13 +23,13 @@ func Create(source Source, ast *resource.Ast) {
 
 	maxUnavailable := intstr.FromInt(1)
 
-	podDisruptionBudget := &policyv1beta1.PodDisruptionBudget{
+	podDisruptionBudget := &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
-		Spec: policyv1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			MaxUnavailable: &maxUnavailable,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
