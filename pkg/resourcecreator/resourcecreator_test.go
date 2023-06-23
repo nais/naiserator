@@ -19,7 +19,7 @@ import (
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscaling "k8s.io/api/autoscaling/v2beta2"
+	autoscaling "k8s.io/api/autoscaling/v2"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	rbac "k8s.io/api/rbac/v1"
