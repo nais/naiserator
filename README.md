@@ -3,8 +3,6 @@
 [![Github Actions](https://github.com/nais/naiserator/workflows/Build%20and%20deploy/badge.svg)](https://github.com/nais/naiserator/actions?query=workflow%3A%22Build+and+deploy%22)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nais/naiserator)](https://goreportcard.com/report/github.com/nais/naiserator)
 
-tl;dr: _Naiserator is a fancy template engine that runs within Kubernetes_.
-
 Naiserator is a Kubernetes operator that handles the lifecycle of NAIS custom resources, currently `nais.io/Application` and `nais.io/NaisJob`.
 The main goal of Naiserator is to simplify application deployment by providing a high-level abstraction tailored for the [NAIS platform](https://nais.io).
 
