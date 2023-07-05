@@ -1,0 +1,216 @@
+dependencies:
+  - allOf:
+      - nais-crds
+      - cert-manager
+environmentKinds:
+  - tenant
+  - onprem
+  - legacy
+values:
+  imageTag:
+    displayName: Image tag
+    config:
+      type: string
+  mapping.external_hosts:
+    displayName: Extra external hosts
+    config:
+      type: string_array
+  mapping.internal_hosts:
+    displayName: Extra internal hosts
+    config:
+      type: string_array
+  naiserator.aiven-project:
+    displayName: Aiven project
+    computed:
+      template: '"{{.Env.aiven_project}}"'
+  naiserator.aiven-range:
+    displayName: Aiven VPC CIDR
+    computed:
+      template: '"{{.Env.aiven_vpc_cidr}}"'
+  naiserator.api-server-ip:
+    description: cidr address of the Kubernetes API server must be set for legacy GCP clusters
+    displayName: API server cidr
+    computed:
+      template: '"{{ .Env.apiserver_endpoint }}/32"'
+    config:
+      type: string
+  naiserator.cluster-name:
+    description: Override for equivalent mapping value
+    displayName: Cluster name
+    computed:
+      template: '"{{.Env.name}}"'
+    config:
+      type: string
+  naiserator.features.aiven-shared-secrets:
+    description: Every deploy of an application that uses Aiven will share a single secret per week, reusing service users etc.
+    displayName: Enable shared Aiven secrets
+    config:
+      type: bool
+  naiserator.features.azurerator:
+    displayName: Enable Azurerator
+    config:
+      type: bool
+  naiserator.features.cnrm:
+    displayName: Enable CNRM
+    computed:
+      template: '{{ne .Kind "onprem"}}'
+  naiserator.features.digdirator:
+    displayName: Enable Digdirator
+    config:
+      type: bool
+  naiserator.features.gar-toleration:
+    displayName: Enable GAR images
+    config:
+      type: bool
+    ignoreKind:
+      - onprem
+      - tenant
+      - management
+  naiserator.features.gcp:
+    displayName: Enable GCP
+    computed:
+      template: '{{ne .Kind "onprem"}}'
+  naiserator.features.jwker:
+    displayName: Enable Jwker
+    config:
+      type: bool
+  naiserator.features.kafkarator:
+    displayName: Enable Kafka for applications
+    computed:
+      template: '{{ne .Env.aiven_project ""}}'
+  naiserator.features.legacy-gcp:
+    description: Configure Naiserator to work with legacy GCP clusters (override mapping for migration)
+    displayName: Enable legacy GCP mode
+    computed:
+      template: '{{eq .Kind "legacy"}}'
+    config:
+      type: bool
+  naiserator.features.nav-ca-bundle:
+    displayName: Enable NAV CA bundle
+    config:
+      type: bool
+  naiserator.features.network-policy:
+    displayName: Enable Network Policy
+    computed:
+      template: '{{ne .Kind "onprem"}}'
+  naiserator.features.prometheus-operator:
+    description: Enable Prometheus Operator
+    displayName: Enable Prometheus Operator
+    config:
+      type: bool
+    ignoreKind:
+      - tenant
+      - management
+  naiserator.features.spot-toleration:
+    displayName: Enable spot toleration
+    config:
+      type: bool
+    ignoreKind:
+      - onprem
+      - management
+      - legacy
+  naiserator.features.vault:
+    displayName: Enable Vault
+    computed:
+      template: '{{eq .Kind "onprem"}}'
+  naiserator.features.wonderwall:
+    displayName: Enable Wonderwall
+    config:
+      type: bool
+    ignoreKind:
+      - onprem
+  naiserator.fqdn-policy.enabled:
+    displayName: Enable FQDN policy
+    config:
+      type: bool
+  naiserator.frontend.telemetry-url:
+    displayName: URL to public Grafana Agent collector endpoint
+    config:
+      type: string
+    ignoreKind:
+      - onprem
+      - management
+  naiserator.gateway-mappings:
+    displayName: Gateway mappings
+    computed:
+      template: |
+        - domainSuffix: "{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
+          ingressClass: "nais-ingress"
+        - domainSuffix: "external.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
+          ingressClass: "nais-ingress-external"
+        {{- range .Configs.mapping.internal_hosts }}
+        - domainSuffix: "{{ . }}"
+          ingressClass: "nais-ingress"
+        {{- end }}
+        {{- range .Configs.mapping.external_hosts }}
+        - domainSuffix: "{{ . }}"
+          ingressClass: "nais-ingress-external"
+        {{- end }}
+        {{ if eq .Kind "legacy" }}
+        - domainSuffix: .ekstern.dev.nav.no
+          ingressClass: nais-ingress-external
+        - domainSuffix: .very.intern.dev.nav.no
+          ingressClass: nais-ingress-very-internal
+        - domainSuffix: .dev-gcp.nais.io
+          ingressClass: gw-dev-gcp-nais-io
+        - domainSuffix: .dev.helserefusjon.no
+          ingressClass: nais-ingress
+        - domainSuffix: .intern.nav.no
+          ingressClass: gw-intern-nav-no
+        - domainSuffix: .nav.no
+          ingressClass: gw-nav-no
+        - domainSuffix: .prod-gcp.nais.io
+          ingressClass: gw-prod-gcp-nais-io
+        - domainSuffix: .nais.io
+          ingressClass: gw-nais-io
+        - domainSuffix: .helserefusjon.no
+          ingressClass: gw-helserefusjon-no
+        {{ end }}
+  naiserator.google-project-id:
+    displayName: Google project ID
+    computed:
+      template: '"{{.Env.project_id}}"'
+    ignoreKind:
+      - onprem
+  naiserator.kafka.enabled:
+    description: Enable Kafka topic for event relays
+    displayName: Enable Kafka
+    config:
+      type: bool
+  naiserator.leader-election.image:
+    displayName: Leader election image
+    config:
+      type: string
+  naiserator.vault.address:
+    required: true
+    config:
+      type: string
+    ignoreKind:
+      - tenant
+      - legacy
+  naiserator.vault.auth-path:
+    required: true
+    config:
+      type: string
+    ignoreKind:
+      - tenant
+      - legacy
+  naiserator.vault.init-container-image:
+    computed:
+      template: '"navikt/vault-sidekick:v0.3.10-26ad67d"'
+    ignoreKind:
+      - tenant
+      - legacy
+  naiserator.vault.kv-path:
+    required: true
+    config:
+      type: string
+    ignoreKind:
+      - tenant
+      - legacy
+  naiserator.wonderwall.image:
+    displayName: Wonderwall image
+    config:
+      type: string
+    ignoreKind:
+      - onprem

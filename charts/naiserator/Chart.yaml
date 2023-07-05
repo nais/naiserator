@@ -1,0 +1,7 @@
+apiVersion: v2
+type: application
+name: naiserator
+description: creates k8s resources based on application spec
+sources:
+  - https://github.com/nais/naiserator/tree/master/charts
+version: 2.0.0

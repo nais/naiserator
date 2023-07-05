@@ -4,6 +4,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  GOOGLE_REGISTRY: "europe-north1-docker.pkg.dev"
+  FEATURE_NAME: "naiserator"
+
 on:
   push:
     paths-ignore:
@@ -12,17 +16,20 @@ on:
       - "*.md"
 
 jobs:
-  build_push_sign:
-    runs-on: ubuntu-latest
+  build_and_push:
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3
+      - uses: actions/checkout@v3 # ratchet:exclude
       - name: Install cosign
         uses: sigstore/cosign-installer@204a51a57a74d190b284a0ce69b44bc37201f343 # ratchet:sigstore/cosign-installer@main
         with:
           cosign-release: 'v2.0.0'
+      - uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # ratchet:azure/setup-helm@v3
+        with:
+          version: "v3.11.1"
       - name: Verify builder image
         run: cosign verify --certificate-identity "https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main"  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" cgr.dev/chainguard/go:1.20
       - name: Verify runner image
@@ -35,21 +42,60 @@ jobs:
           google_service_account: gh-naiserator
           push: ${{ github.actor != 'dependabot[bot]' }}
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
+      - name: Package chart
+        id: package_chart
+        env:
+          CHART_PATH: ./charts/${{ env.FEATURE_NAME }}
+        run: |
+          base_version="$(yq '.version' < "${{ env.CHART_PATH }}/Chart.yaml")"
+          chart_version="${base_version}-${{ steps.build_push_sign.outputs.version }}"
+
+          yq eval \
+            '.version="'"$chart_version"'"' \
+            "${{ env.CHART_PATH }}/Chart.yaml" --inplace
+          yq eval \
+            '.image.tag="${{ steps.build_push_sign.outputs.version }}"' \
+            "${{ env.CHART_PATH }}/values.yaml" --inplace
+
+          # helm dependency update "${{ env.CHART_PATH }}"
+          helm package "${{ env.CHART_PATH }}" --destination .
+
+          name=$(yq '.name' < "${{ env.CHART_PATH }}/Chart.yaml")
+          echo "name=$name" >> $GITHUB_OUTPUT
+          echo "version=$chart_version" >> $GITHUB_OUTPUT
+          echo "archive=$name-$chart_version.tgz" >> $GITHUB_OUTPUT
+      - id: "auth"
+        if: github.ref == 'refs/heads/master'
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1" # ratchet:exclude
+        with:
+          workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: "gh-${{ env.FEATURE_NAME }}@nais-io.iam.gserviceaccount.com"
+          token_format: "access_token"
+      - name: "Log in to Google Artifact Registry"
+        if: github.ref == 'refs/heads/master'
+        run: |-
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GOOGLE_REGISTRY }}
+      - name: Push Chart
+        if: github.ref == 'refs/heads/master'
+        run: |-
+          chart="${{ steps.package_chart.outputs.archive }}"
+          echo "Pushing: $chart"
+          helm push "$chart" oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature
     outputs:
-        version: ${{ steps.build_push_sign.outputs.version }}
+      chart_name: ${{ steps.package_chart.outputs.name }}
+      chart_version: ${{ steps.package_chart.outputs.version }}
+      chart_archive: ${{ steps.package_chart.outputs.archive }}
 
   rollout:
+    runs-on: fasit-deploy
     permissions:
       id-token: write
     needs:
-      - build_push_sign
-    runs-on: fasit-deploy
-    if: github.ref == 'refs/heads/master'
+      - build_and_push
     steps:
-      - name: info
-        run: |
-          echo 'Rolling out: {"imageTag": "${{ needs.build_push_sign.outputs.version }}"}'
-      - uses: nais/fasit-deploy@main
+      - uses: nais/fasit-deploy@v2 # ratchet:exclude
+        if: github.ref == 'refs/heads/master'
         with:
-          json: '{"imageTag": "${{ needs.build_push_sign.outputs.version }}"}'
-          feature_name: naiserator
+          chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_name }}
+          version: ${{ needs.build_and_push.outputs.chart_version }}

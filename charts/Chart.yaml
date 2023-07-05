@@ -1,5 +1,0 @@
-apiVersion: v2
-name: naiserator
-description: naiserator helm chart
-type: application
-version: 1.4.3
