@@ -54,7 +54,7 @@ jobs:
             '.version="'"$chart_version"'"' \
             "${{ env.CHART_PATH }}/Chart.yaml" --inplace
           yq eval \
-            '.image.tag="${{ steps.build_push_sign.outputs.version }}"' \
+            '.imageTag="${{ steps.build_push_sign.outputs.version }}"' \
             "${{ env.CHART_PATH }}/values.yaml" --inplace
 
           # helm dependency update "${{ env.CHART_PATH }}"
