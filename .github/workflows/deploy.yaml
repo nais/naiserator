@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3 # ratchet:exclude
       - name: Install cosign
-        uses: sigstore/cosign-installer@204a51a57a74d190b284a0ce69b44bc37201f343 # ratchet:sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06 # ratchet:sigstore/cosign-installer@main
         with:
           cosign-release: 'v2.0.0'
       - uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # ratchet:azure/setup-helm@v3
