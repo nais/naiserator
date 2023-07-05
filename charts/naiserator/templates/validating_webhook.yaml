@@ -26,6 +26,7 @@ webhooks:
         apiVersions:
           - v1alpha1
         operations:
+          - CREATE
           - UPDATE
         resources:
           # Resource name is the path defined in +kubebuilder comment
