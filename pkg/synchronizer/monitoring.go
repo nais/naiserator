@@ -8,18 +8,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nais/liberator/pkg/events"
-	deployment "github.com/nais/naiserator/pkg/event"
-	"github.com/nais/naiserator/pkg/event/generator"
-	"github.com/nais/naiserator/pkg/metrics"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/api/batch/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	deployment "github.com/nais/naiserator/pkg/event"
+	"github.com/nais/naiserator/pkg/event/generator"
+	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 const (
@@ -154,7 +154,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 // monitorNaisjob will return false when the job has completed successfully or failed. We can then stop monitoring this
 // deployment. As long as we return true we should keep monitoring the deployment.
 func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
-	cronJob := v1beta1.CronJob{}
+	cronJob := batchv1.CronJob{}
 	err := n.Get(ctx, objectKey, &cronJob)
 	if err == nil {
 		// If we find a cronjob with the same name, it's most probably a Naisjob with schedule, and we can mark the rollout
