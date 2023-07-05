@@ -165,6 +165,8 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 			return true
 		}
 		return false
+	} else if !errors.IsNotFound(err) {
+		logger.Errorf("Monitor rollout: failed to query CronJob: %v", err)
 	}
 
 	job := &batchv1.Job{}
