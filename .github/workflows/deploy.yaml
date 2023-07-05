@@ -11,8 +11,6 @@ env:
 on:
   push:
     paths-ignore:
-      - "charts/**"
-      - ".github/workflows/chart.yaml"
       - "*.md"
 
 jobs:
