@@ -1,5 +1,5 @@
 testconfig:
-  description: egress rules will create network policies
+  description: existing naisjob with schedule removed should create job and delete cronjob
 
 config:
   features:
@@ -8,6 +8,38 @@ config:
     jwker: true
   google-project-id: google-project-id
   cluster-name: mycluster
+
+existing:
+  - kind: Naisjob
+    apiVersion: nais.io/v1
+    metadata:
+      name: mynaisjob
+      namespace: mynamespace
+      labels:
+        team: myteam
+    spec:
+      image: foo/bar
+      schedule: "* * * * *"
+
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: mynaisjob
+    spec:
+      schedule: "* * * * *"
+      jobTemplate:
+        spec:
+          template:
+            spec:
+              containers:
+                - name: hello
+                  image: busybox:1.28
+                  imagePullPolicy: IfNotPresent
+                  command:
+                    - /bin/sh
+                    - -c
+                    - date; echo Hello from the Kubernetes cluster
+              restartPolicy: OnFailure
 
 input:
   kind: Naisjob
@@ -19,30 +51,14 @@ input:
       team: myteam
   spec:
     image: foo/bar
-    accessPolicy:
-      outbound:
-        rules:
-          - application: foo
-            namespace: bar
-          - application: foo
-            namespace: bar
-            cluster: othercluster
 
 tests:
-  - apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
+  - operation: CreateDeleteIfExists
+    apiVersion: batch/v1
+    kind: CronJob
     name: mynaisjob
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "egress and ingress network policies"
-        resource:
-          spec:
-            egress:
-              - to:
-                  - namespaceSelector:
-                      matchLabels:
-                        name: bar
-                    podSelector:
-                      matchLabels:
-                        app: foo
+
+  - operation: CreateOrRecreate
+    apiVersion: batch/v1
+    kind: Job
+    name: mynaisjob
