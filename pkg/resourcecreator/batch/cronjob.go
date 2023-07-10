@@ -2,10 +2,11 @@ package batch
 
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	"k8s.io/api/batch/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
@@ -21,24 +22,40 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 		return err
 	}
 
-	cronJob := v1.CronJob{
+	cronJob := batchv1.CronJob{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "CronJob",
 			APIVersion: "batch/v1",
 		},
 		ObjectMeta: objectMeta,
-		Spec: v1.CronJobSpec{
+		Spec: batchv1.CronJobSpec{
 			Schedule: naisjob.Spec.Schedule,
-			JobTemplate: v1.JobTemplateSpec{
+			JobTemplate: batchv1.JobTemplateSpec{
 				ObjectMeta: resource.CreateObjectMeta(naisjob),
 				Spec:       jobSpec,
 			},
 			SuccessfulJobsHistoryLimit: util.Int32p(naisjob.Spec.SuccessfulJobsHistoryLimit),
 			FailedJobsHistoryLimit:     util.Int32p(naisjob.Spec.FailedJobsHistoryLimit),
-			ConcurrencyPolicy:          v1.ConcurrencyPolicy(naisjob.GetConcurrencyPolicy()),
+			ConcurrencyPolicy:          batchv1.ConcurrencyPolicy(naisjob.GetConcurrencyPolicy()),
 		},
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cronJob)
+	return nil
+}
+
+func DeleteCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) error {
+	objectMeta := resource.CreateObjectMeta(naisjob)
+
+	cronJob := batchv1.CronJob{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "CronJob",
+			APIVersion: "batch/v1",
+		},
+		ObjectMeta: objectMeta,
+	}
+
+	ast.AppendOperation(resource.OperationDeleteIfExists, &cronJob)
+
 	return nil
 }

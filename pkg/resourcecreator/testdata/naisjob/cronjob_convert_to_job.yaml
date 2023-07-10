@@ -1,0 +1,48 @@
+testconfig:
+  description: egress rules will create network policies
+
+config:
+  features:
+    linkerd: true
+    network-policy: true
+    jwker: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    image: foo/bar
+    accessPolicy:
+      outbound:
+        rules:
+          - application: foo
+            namespace: bar
+          - application: foo
+            namespace: bar
+            cluster: othercluster
+
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "egress and ingress network policies"
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        name: bar
+                    podSelector:
+                      matchLabels:
+                        app: foo

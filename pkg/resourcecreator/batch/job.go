@@ -63,22 +63,6 @@ func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error
 	return nil
 }
 
-func DeleteCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) error {
-	objectMeta := resource.CreateObjectMeta(naisjob)
-
-	cronJob := batchv1.CronJob{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Job",
-			APIVersion: "batch/v1",
-		},
-		ObjectMeta: objectMeta,
-	}
-
-	ast.AppendOperation(resource.OperationDeleteIfExists, &cronJob)
-
-	return nil
-}
-
 func DeleteJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast) error {
 	objectMeta := resource.CreateObjectMeta(naisjob)
 
