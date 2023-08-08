@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"fmt"
+	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -35,6 +36,7 @@ type Source interface {
 	GetStartup() *nais_io_v1.Probe
 	GetStrategy() *nais_io_v1.Strategy
 	GetTerminationGracePeriodSeconds() *int64
+	GetTTL() string
 }
 
 type Config interface {
@@ -54,6 +56,15 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	objectMeta.Annotations["reloader.stakater.com/search"] = "true"
+
+	if app.GetTTL() != "" {
+		d, err := time.ParseDuration(app.GetTTL())
+		if err != nil {
+			return fmt.Errorf("parsing TTL: %w", err)
+		}
+
+		objectMeta.Annotations["euthanaisa.nais.io/kill-after"] = time.Now().Add(d).Format(time.RFC3339)
+	}
 
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
