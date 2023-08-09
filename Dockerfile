@@ -1,4 +1,4 @@
-FROM cgr.dev/chainguard/go:1.20 as builder
+FROM golang:1.20 as builder
 ENV GOOS=linux
 ENV CGO_ENABLED=0
 WORKDIR /src

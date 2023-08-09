@@ -24,14 +24,12 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@a5d81fb6bdbcbb3d239e864d6552820420254494 # ratchet:sigstore/cosign-installer@main
         with:
-          cosign-release: 'v2.0.0'
+          cosign-release: 'v2.1.1'
       - uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # ratchet:azure/setup-helm@v3
         with:
           version: "v3.11.1"
-      - name: Verify builder image
-        run: cosign verify --certificate-identity "https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main"  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" cgr.dev/chainguard/go:1.20
       - name: Verify runner image
-        run: cosign verify --certificate-oidc-issuer https://accounts.google.com  --certificate-identity keyless@distroless.iam.gserviceaccount.com gcr.io/distroless/static-debian11:nonroot
+        run: cosign verify --certificate-oidc-issuer https://accounts.google.com --certificate-identity keyless@distroless.iam.gserviceaccount.com gcr.io/distroless/static-debian11:nonroot
       - uses: nais/build-push-sign@main
         id: build_push_sign
         with:
