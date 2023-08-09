@@ -157,10 +157,6 @@ func (o *Options) IsSpotTolerationEnabled() bool {
 	return o.Config.Features.SpotToleration
 }
 
-func (o *Options) IsAivenSharedSecretsEnabled() bool {
-	return o.Config.Features.AivenSharedSecrets
-}
-
 func (o *Options) IsInfluxCredentialsEnabled() bool {
 	return o.Config.Features.InfluxCredentials
 }

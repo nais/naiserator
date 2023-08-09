@@ -4,7 +4,6 @@ testconfig:
 config:
   features:
     kafkarator: true
-    aiven-shared-secrets: true
 
 input:
   kind: Application

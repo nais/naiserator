@@ -29,15 +29,8 @@ type Source interface {
 
 type Config interface {
 	IsKafkaratorEnabled() bool
-	IsAivenSharedSecretsEnabled() bool
 	IsInfluxCredentialsEnabled() bool
 	GetAivenProject() string
-}
-
-func generateAivenSecretName(name string) string {
-	secretName := namegen.RandShortName(fmt.Sprintf("aiven-%s", name), validation.DNS1035LabelMaxLength)
-
-	return secretName
 }
 
 func generateSharedAivenSecretName(name string) (string, error) {
@@ -50,15 +43,9 @@ func generateSharedAivenSecretName(name string) (string, error) {
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	var secretName string
-	if config.IsAivenSharedSecretsEnabled() {
-		var err error
-		secretName, err = generateSharedAivenSecretName(source.GetName())
-		if err != nil {
-			return err
-		}
-	} else {
-		secretName = generateAivenSecretName(source.GetName())
+	secretName, err := generateSharedAivenSecretName(source.GetName())
+	if err != nil {
+		return err
 	}
 
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
