@@ -30,6 +30,7 @@ type Source interface {
 type Config interface {
 	IsKafkaratorEnabled() bool
 	IsAivenSharedSecretsEnabled() bool
+	IsInfluxCredentialsEnabled() bool
 	GetAivenProject() string
 }
 
@@ -67,8 +68,12 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 
-	Influx(ast, source.GetInflux(), &aivenApp)
 	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
+
+	influxEnabled, err := Influx(ast, source.GetInflux(), &aivenApp, config.IsInfluxCredentialsEnabled())
+	if err != nil {
+		return err
+	}
 
 	openSearchEnabled, err := OpenSearch(ast, source.GetOpenSearch(), &aivenApp)
 	if err != nil {
@@ -87,7 +92,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
-	if len(kafkaKeyPaths) > 0 || openSearchEnabled || redisEnabled {
+	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || redisEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.Env = append(ast.Env, makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName))
 	}

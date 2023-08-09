@@ -29,6 +29,7 @@ naiserator:
     access-policy-not-allowed-cidrs: []
     network-policy: true
     vault: false
+    influx-credentials: false
     jwker: false
     cnrm: true
     azurerator: false
