@@ -9,7 +9,7 @@ input:
     labels:
       team: myteam
   spec:
-    ttl: 1hr
+    ttl: 1h
      
 tests:
   - operation: CreateOrUpdate
