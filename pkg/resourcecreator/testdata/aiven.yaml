@@ -117,3 +117,14 @@ tests:
                         value: /var/run/secrets/nais.io/kafka/client.keystore.p12
                       - name: KAFKA_TRUSTSTORE_PATH
                         value: /var/run/secrets/nais.io/kafka/client.truststore.jks
+                      - name: AIVEN_SECRET_UPDATED
+                        valueFrom:
+                          secretKeyRef:
+                            key: AIVEN_SECRET_UPDATED
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                      - name: AIVEN_CA
+                        valueFrom:
+                          secretKeyRef:
+                            key: AIVEN_CA
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                            optional: true
