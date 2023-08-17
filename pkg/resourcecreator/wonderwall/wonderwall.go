@@ -117,6 +117,11 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 		return fmt.Errorf("only one of Azure AD or ID-porten sidecars can be enabled, but not both")
 	}
 
+	port := source.GetPort()
+	if port == Port || port == MetricsPort {
+		return fmt.Errorf("cannot use port '%d'; conflicts with sidecar", port)
+	}
+
 	return nil
 }
 
