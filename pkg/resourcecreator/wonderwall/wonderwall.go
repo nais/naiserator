@@ -25,9 +25,7 @@ const (
 	MetricsPortName        = "ww-metrics"
 	Port                   = 7564
 	MetricsPort            = 7565
-	RedirectURIPath        = "/oauth2/callback"
 	FrontChannelLogoutPath = "/oauth2/logout/frontchannel"
-	LogoutCallbackPath     = "/oauth2/logout/callback"
 )
 
 type Configuration struct {
