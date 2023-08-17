@@ -209,9 +209,22 @@ func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 			Name:  "WONDERWALL_INGRESS",
 			Value: strings.Join(cfg.Ingresses, ","),
 		},
+		// TODO - remove once we verify that using pod IP works
 		{
 			Name:  "WONDERWALL_UPSTREAM_HOST",
 			Value: fmt.Sprintf("127.0.0.1:%d", source.GetPort()),
+		},
+		{
+			Name: "WONDERWALL_UPSTREAM_IP",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.podIP",
+				},
+			},
+		},
+		{
+			Name:  "WONDERWALL_UPSTREAM_PORT",
+			Value: fmt.Sprintf("%d", source.GetPort()),
 		},
 		{
 			Name:  "WONDERWALL_BIND_ADDRESS",
