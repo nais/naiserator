@@ -105,9 +105,7 @@ tests:
                   - namespaceSelector:
                       matchLabels:
                         name: nginx
-                    podSelector:
-                      matchLabels:
-                        app.kubernetes.io/instance: adeo-gateway
+                    podSelector: {}
               - from:
                   - namespaceSelector:
                       matchLabels:
@@ -119,9 +117,7 @@ tests:
                   - namespaceSelector:
                       matchLabels:
                         name: nginx
-                    podSelector:
-                      matchLabels:
-                        app.kubernetes.io/instance: domain-gateway
+                    podSelector: {}
               - from:
                   - namespaceSelector:
                       matchLabels:
