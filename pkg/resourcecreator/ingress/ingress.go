@@ -27,6 +27,7 @@ type Source interface {
 }
 
 type Config interface {
+	GetAdditionalGatewayMappings() []config.GatewayMapping
 	GetGatewayMappings() []config.GatewayMapping
 	IsLinkerdEnabled() bool
 }
@@ -150,6 +151,23 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	}
 
 	ingresses := make(map[string]*networkingv1.Ingress)
+
+	if cfg.GetAdditionalGatewayMappings() != nil {
+		for _, rule := range rules {
+			ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetAdditionalGatewayMappings())
+			if ingressClass != nil {
+				ingress := ingresses[*ingressClass]
+				if ingress == nil {
+					ingress, err = createIngressBaseNginx(source, *ingressClass)
+					if err != nil {
+						return nil, err
+					}
+					ingresses[*ingressClass] = ingress
+				}
+				ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
+			}
+		}
+	}
 
 	for _, rule := range rules {
 		var ingressClass *string

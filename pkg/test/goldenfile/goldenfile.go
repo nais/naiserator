@@ -20,9 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var (
-	defaultExclude = []string{".apiVersion", ".kind", ".metadata.name"}
-)
+var defaultExclude = []string{".apiVersion", ".kind", ".metadata.name"}
 
 type testCaseConfig struct {
 	Description string
@@ -157,6 +155,10 @@ func yamlRunner(t *testing.T, filename string, resources resource.Operations, te
 
 	if !matched {
 		t.Logf("No resources matching criteria '%s'", test)
+		t.Logf("These are the available resources:")
+		for _, rsce := range resources {
+			t.Log(resourcemeta(rsce))
+		}
 		t.Fail()
 	}
 }

@@ -203,7 +203,7 @@ func ingressRulesFromIngress(ingress []nais_io_v1.Ingress, cfg Config) []network
 					From: []networkingv1.NetworkPolicyPeer{
 						{
 							NamespaceSelector: labelSelector("name", "nginx"),
-							PodSelector:       labelSelector("app.kubernetes.io/instance", *ingressClass),
+							PodSelector:       &metav1.LabelSelector{},
 						},
 					},
 				})

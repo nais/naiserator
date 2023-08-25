@@ -138,6 +138,7 @@ type Config struct {
 	Kafka                             Kafka            `json:"kafka"`
 	HostAliases                       []HostAlias      `json:"host-aliases"`
 	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
+	AdditionalGatewayMappings         []GatewayMapping `json:"additional-gateway-mappings"`
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
 	NaisNamespace                     string           `json:"nais-namespace"`
