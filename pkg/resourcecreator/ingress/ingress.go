@@ -152,7 +152,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 	ingresses := make(map[string]*networkingv1.Ingress)
 
-	if cfg.GetAdditionalGatewayMappings() != nil {
+	if len(cfg.GetAdditionalGatewayMappings()) > 0 {
 		for _, rule := range rules {
 			ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetAdditionalGatewayMappings())
 			if ingressClass != nil {
