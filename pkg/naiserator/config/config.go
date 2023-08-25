@@ -45,12 +45,12 @@ type Synchronizer struct {
 
 type Features struct {
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
-	AivenSharedSecrets          bool     `json:"aiven-shared-secrets"`
 	Azurerator                  bool     `json:"azurerator"`
 	CNRM                        bool     `json:"cnrm"`
 	Digdirator                  bool     `json:"digdirator"`
 	GARToleration               bool     `json:"gar-toleration"`
 	GCP                         bool     `json:"gcp"`
+	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`

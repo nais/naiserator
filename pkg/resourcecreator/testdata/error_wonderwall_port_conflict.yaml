@@ -1,0 +1,25 @@
+testconfig:
+  description: applications cannot use ports occupied wonderwall
+config:
+  features:
+    digdirator: true
+    wonderwall: true
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: nav-no-gateway
+input:
+  kind: "Application"
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    labels:
+      team: myteam
+  spec:
+    idporten:
+      sidecar:
+        enabled: true
+    ingresses:
+      - "https://my-client.nav.no/"
+    port: 7564
+error: "cannot use port '7564'; conflicts with sidecar"

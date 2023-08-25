@@ -29,14 +29,8 @@ type Source interface {
 
 type Config interface {
 	IsKafkaratorEnabled() bool
-	IsAivenSharedSecretsEnabled() bool
+	IsInfluxCredentialsEnabled() bool
 	GetAivenProject() string
-}
-
-func generateAivenSecretName(name string) string {
-	secretName := namegen.RandShortName(fmt.Sprintf("aiven-%s", name), validation.DNS1035LabelMaxLength)
-
-	return secretName
 }
 
 func generateSharedAivenSecretName(name string) (string, error) {
@@ -49,15 +43,9 @@ func generateSharedAivenSecretName(name string) (string, error) {
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	var secretName string
-	if config.IsAivenSharedSecretsEnabled() {
-		var err error
-		secretName, err = generateSharedAivenSecretName(source.GetName())
-		if err != nil {
-			return err
-		}
-	} else {
-		secretName = generateAivenSecretName(source.GetName())
+	secretName, err := generateSharedAivenSecretName(source.GetName())
+	if err != nil {
+		return err
 	}
 
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
@@ -67,8 +55,12 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 
-	Influx(ast, source.GetInflux(), &aivenApp)
 	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
+
+	influxEnabled, err := Influx(ast, source.GetInflux(), &aivenApp, config.IsInfluxCredentialsEnabled())
+	if err != nil {
+		return err
+	}
 
 	openSearchEnabled, err := OpenSearch(ast, source.GetOpenSearch(), &aivenApp)
 	if err != nil {
@@ -87,9 +79,10 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
-	if len(kafkaKeyPaths) > 0 || openSearchEnabled || redisEnabled {
+	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || redisEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.Env = append(ast.Env, makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName))
+		ast.Env = append(ast.Env, makeOptionalSecretEnvVar("AIVEN_CA", aivenApp.Spec.SecretName))
 	}
 	return nil
 }
@@ -103,6 +96,22 @@ func makeSecretEnvVar(key, secretName string) v1.EnvVar {
 					Name: secretName,
 				},
 				Key: key,
+			},
+		},
+	}
+}
+
+func makeOptionalSecretEnvVar(key, secretName string) v1.EnvVar {
+	optional := true
+	return v1.EnvVar{
+		Name: key,
+		ValueFrom: &v1.EnvVarSource{
+			SecretKeyRef: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key:      key,
+				Optional: &optional,
 			},
 		},
 	}

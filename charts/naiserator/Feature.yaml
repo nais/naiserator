@@ -41,11 +41,6 @@ values:
       template: '"{{.Env.name}}"'
     config:
       type: string
-  naiserator.features.aiven-shared-secrets:
-    description: Every deploy of an application that uses Aiven will share a single secret per week, reusing service users etc.
-    displayName: Enable shared Aiven secrets
-    config:
-      type: bool
   naiserator.features.azurerator:
     displayName: Enable Azurerator
     config:
@@ -70,6 +65,10 @@ values:
     displayName: Enable GCP
     computed:
       template: '{{ne .Kind "onprem"}}'
+  naiserator.features.influx-credentials:
+    displayName: Enable provisioning of InfluxDB credentials
+    config:
+      type: bool
   naiserator.features.jwker:
     displayName: Enable Jwker
     config:
