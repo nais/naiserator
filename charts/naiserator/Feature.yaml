@@ -11,14 +11,9 @@ values:
     displayName: Image tag
     config:
       type: string
-  mapping.additional_external_gateway_mappings:
-    displayName: Additional external gateway mappings
-    description: Naiserator will create an additional ingress with nais-ingress-external ingressClass for each mapping
-    config:
-      type: string_array
-  mapping.additional_internal_gateway_mappings:
-    displayName: Additional internal gateway mappings
-    description: Naiserator will create an additional ingress with nais-ingress ingressClass for each mapping
+  mapping.additional_nav_no_mappings:
+    displayName: Additional gw-nav-no mappings
+    description: Naiserator will create an additional ingress with gw-nav-no ingressClass for each mapping
     config:
       type: string_array
   mapping.external_hosts:
@@ -143,13 +138,9 @@ values:
     displayName: Additional gateway mappings
     computed:
       template: |
-        {{- range .Configs.mapping.additional_external_gateway_mappings }}
+        {{- range .Configs.mapping.additional_nav_no_mappings }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "nais-ingress-external"
-        {{- end }}
-        {{- range .Configs.mapping.additional_internal_gateway_mappings }}
-        - domainSuffix: "{{ . }}"
-          ingressClass: "nais-ingress"
+          ingressClass: "gw-nav-no"
         {{- end }}
   naiserator.gateway-mappings:
     displayName: Gateway mappings
