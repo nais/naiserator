@@ -170,7 +170,7 @@ values:
         - domainSuffix: .intern.nav.no
           ingressClass: gw-intern-nav-no
         - domainSuffix: .nav.no
-          ingressClass: gw-nav-no
+          ingressClass: nais-ingress-external
         - domainSuffix: .prod-gcp.nais.io
           ingressClass: gw-prod-gcp-nais-io
         - domainSuffix: .nais.io
