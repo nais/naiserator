@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/imdario/mergo"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -48,6 +49,7 @@ type Source interface {
 	GetPort() int
 	GetPrometheus() *nais_io_v1.PrometheusConfig
 	GetReadiness() *nais_io_v1.Probe
+	GetTerminationGracePeriodSeconds() *int64
 }
 
 type Config interface {
@@ -200,6 +202,11 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 }
 
 func envVars(source Source, cfg Configuration) []corev1.EnvVar {
+	terminationGracePeriodSeconds := 30
+	if source.GetTerminationGracePeriodSeconds() != nil {
+		terminationGracePeriodSeconds = int(*source.GetTerminationGracePeriodSeconds())
+	}
+
 	result := []corev1.EnvVar{
 		{
 			Name:  "WONDERWALL_OPENID_PROVIDER",
@@ -233,6 +240,14 @@ func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 		{
 			Name:  "WONDERWALL_METRICS_BIND_ADDRESS",
 			Value: fmt.Sprintf("0.0.0.0:%d", MetricsPort),
+		},
+		{
+			Name:  "WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD",
+			Value: fmt.Sprintf("%s", time.Duration(terminationGracePeriodSeconds)*time.Second),
+		},
+		{
+			Name:  "WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD",
+			Value: "7s", // should be less than linkerd's sleep (10s) and greater than application's sleep (5s)
 		},
 	}
 

@@ -56,6 +56,7 @@ input:
       path: internal/liveness
     readiness:
       path: internal/readiness
+    terminationGracePeriodSeconds: 60
 
 tests:
   - operation: CreateOrUpdate
@@ -99,6 +100,10 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
+                      - name: WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD
+                        value: 1m0s
+                      - name: WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD
+                        value: 7s
                       - name: WONDERWALL_AUTO_LOGIN
                         value: ^true$
                       - name: WONDERWALL_OPENID_ACR_VALUES

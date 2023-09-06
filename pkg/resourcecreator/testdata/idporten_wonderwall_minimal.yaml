@@ -76,6 +76,10 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
+                      - name: WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD
+                        value: 30s
+                      - name: WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD
+                        value: 7s
                     envFrom:
                       - secretRef:
                           name: ^idporten-sso$
