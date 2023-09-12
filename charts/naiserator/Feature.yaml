@@ -11,9 +11,9 @@ values:
     displayName: Image tag
     config:
       type: string
-  mapping.additional_nav_no_mappings:
-    displayName: Additional gw-nav-no mappings
-    description: Naiserator will create an additional ingress with gw-nav-no ingressClass for each mapping
+  mapping.additional_intern_nav_no_mappings:
+    displayName: Additional gw-intern-nav-no mappings
+    description: Naiserator will create an additional ingress with gw-intern-nav-no ingressClass for each mapping
     config:
       type: string_array
   mapping.external_hosts:
@@ -138,9 +138,9 @@ values:
     displayName: Additional gateway mappings
     computed:
       template: |
-        {{- range .Configs.mapping.additional_nav_no_mappings }}
+        {{- range .Configs.mapping.additional_intern_nav_no_mappings }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "gw-nav-no"
+          ingressClass: "gw-intern-nav-no"
         {{- end }}
   naiserator.gateway-mappings:
     displayName: Gateway mappings
@@ -159,24 +159,16 @@ values:
           ingressClass: "nais-ingress-external"
         {{- end }}
         {{ if eq .Kind "legacy" }}
-        - domainSuffix: .ekstern.dev.nav.no
-          ingressClass: nais-ingress-external
         - domainSuffix: .very.intern.dev.nav.no
           ingressClass: nais-ingress-very-internal
         - domainSuffix: .dev-gcp.nais.io
           ingressClass: gw-dev-gcp-nais-io
-        - domainSuffix: .dev.helserefusjon.no
-          ingressClass: nais-ingress
         - domainSuffix: .intern.nav.no
           ingressClass: gw-intern-nav-no
-        - domainSuffix: .nav.no
-          ingressClass: nais-ingress-external
         - domainSuffix: .prod-gcp.nais.io
           ingressClass: gw-prod-gcp-nais-io
         - domainSuffix: .nais.io
           ingressClass: gw-nais-io
-        - domainSuffix: .helserefusjon.no
-          ingressClass: gw-helserefusjon-no
         {{ end }}
   naiserator.google-project-id:
     displayName: Google project ID
