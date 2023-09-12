@@ -7,10 +7,9 @@ import (
 	"os"
 	"time"
 
+	fqdn_scheme "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha3"
+	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/liberator/pkg/tlsutil"
-	"github.com/nais/naiserator/pkg/controllers"
-	"github.com/nais/naiserator/pkg/generators"
-	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -18,13 +17,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	fqdn_scheme "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha3"
-	liberator_scheme "github.com/nais/liberator/pkg/scheme"
-
+	"github.com/nais/naiserator/pkg/controllers"
+	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/readonly"
+	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 )
 
@@ -176,7 +175,11 @@ func run() error {
 		kscheme,
 	))
 
-	err = applicationReconciler.SetupWithManager(mgr)
+	opts := []controllers.Option{
+		controllers.WithMaxConcurrentReconciles(cfg.MaxConcurrentReconciles),
+	}
+
+	err = applicationReconciler.SetupWithManager(mgr, opts...)
 	if err != nil {
 		return err
 	}
@@ -193,7 +196,7 @@ func run() error {
 		kscheme,
 	))
 
-	err = naisjobReconciler.SetupWithManager(mgr)
+	err = naisjobReconciler.SetupWithManager(mgr, opts...)
 	if err != nil {
 		return err
 	}

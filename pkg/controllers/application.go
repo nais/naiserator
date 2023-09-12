@@ -25,8 +25,9 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return r.synchronizer.Reconcile(ctx, req, &nais_io_v1alpha1.Application{})
 }
 
-func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1alpha1.Application{}).
+		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }

@@ -146,6 +146,7 @@ type Config struct {
 	AivenProject                      string           `json:"aiven-project"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
 	Frontend                          Frontend         `json:"frontend"`
+	MaxConcurrentReconciles           int              `json:"max-concurrent-reconciles"`
 }
 
 const (
@@ -186,6 +187,7 @@ const (
 	KafkaTopic                          = "kafka.topic"
 	KubeConfig                          = "kubeconfig"
 	LeaderElectionImage                 = "leader-election.image"
+	MaxConcurrentReconciles             = "max-concurrent-reconciles"
 	ProxyAddress                        = "proxy.address"
 	ProxyExclude                        = "proxy.exclude"
 	RateLimitBurst                      = "ratelimit.burst"
@@ -260,6 +262,7 @@ func init() {
 		"how often to run a full synchronization of all applications",
 	)
 
+	flag.Int(MaxConcurrentReconciles, 1, "maximum number of concurrent Reconciles which can be run by the controller.")
 	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
 	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 

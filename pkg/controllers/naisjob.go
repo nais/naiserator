@@ -25,8 +25,9 @@ func (r *NaisjobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return r.synchronizer.Reconcile(ctx, req, &nais_io_v1.Naisjob{})
 }
 
-func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1.Naisjob{}).
+		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }
