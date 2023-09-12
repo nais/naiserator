@@ -5,7 +5,6 @@ import (
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
 type ApplicationReconciler struct {
@@ -26,9 +25,9 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return r.synchronizer.Reconcile(ctx, req, &nais_io_v1alpha1.Application{})
 }
 
-func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, opts ...func(*controller.Options)) error {
+func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1alpha1.Application{}).
-		WithOptions(options(opts)).
+		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }

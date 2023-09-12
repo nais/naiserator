@@ -15,7 +15,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	"github.com/nais/naiserator/pkg/controllers"
@@ -176,7 +175,7 @@ func run() error {
 		kscheme,
 	))
 
-	opts := []func(*controller.Options){
+	opts := []controllers.Option{
 		controllers.WithMaxConcurrentReconciles(cfg.MaxConcurrentReconciles),
 	}
 
