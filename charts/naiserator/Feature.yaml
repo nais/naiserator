@@ -163,8 +163,6 @@ values:
           ingressClass: nais-ingress-very-internal
         - domainSuffix: .dev-gcp.nais.io
           ingressClass: gw-dev-gcp-nais-io
-        - domainSuffix: .intern.nav.no
-          ingressClass: gw-intern-nav-no
         - domainSuffix: .prod-gcp.nais.io
           ingressClass: gw-prod-gcp-nais-io
         - domainSuffix: .nais.io
