@@ -5,6 +5,8 @@ import (
 	"time"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/metrics"
@@ -60,10 +62,14 @@ func run() error {
 
 	metrics.Register(kubemetrics.Registry)
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
-		Scheme:             kscheme,
-		MetricsBindAddress: cfg.Bind,
-		Host:               "0.0.0.0",
-		Port:               8443,
+		Scheme: kscheme,
+		Metrics: metricsserver.Options{
+			BindAddress: cfg.Bind,
+		},
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Host: "0.0.0.0",
+			Port: 8443,
+		}),
 	})
 	if err != nil {
 		return err

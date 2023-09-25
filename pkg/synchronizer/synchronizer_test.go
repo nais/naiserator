@@ -29,6 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/nais/naiserator/pkg/controllers"
@@ -92,8 +93,10 @@ func newTestRig(config config.Config) (*testRig, error) {
 	}
 
 	rig.manager, err = ctrl.NewManager(rig.kubernetes.Config, ctrl.Options{
-		Scheme:             rig.scheme,
-		MetricsBindAddress: "0",
+		Scheme: rig.scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: "0",
+		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize manager: %w", err)

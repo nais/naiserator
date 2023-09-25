@@ -14,8 +14,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/generators"
@@ -119,9 +121,13 @@ func run() error {
 
 	metrics.Register(kubemetrics.Registry)
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
-		SyncPeriod:             &cfg.Informer.FullSyncInterval,
-		Scheme:                 kscheme,
-		MetricsBindAddress:     cfg.Bind,
+		Cache: cache.Options{
+			SyncPeriod: &cfg.Informer.FullSyncInterval,
+		},
+		Scheme: kscheme,
+		Metrics: metricsserver.Options{
+			BindAddress: cfg.Bind,
+		},
 		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
 	})
 	if err != nil {
