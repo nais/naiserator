@@ -42,7 +42,7 @@ tests:
               - to:
                   - namespaceSelector:
                       matchLabels:
-                        name: bar
+                        kubernetes.io/metadata.name: bar
                     podSelector:
                       matchLabels:
                         app: foo

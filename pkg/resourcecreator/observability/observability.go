@@ -3,11 +3,12 @@ package observability
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 type Source interface {
@@ -67,7 +68,7 @@ func netpol(source Source) (*networkingv1.NetworkPolicy, error) {
 							},
 							NamespaceSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									"name": "nais-system",
+									"kubernetes.io/metadata.name": "nais-system",
 								},
 							},
 						},

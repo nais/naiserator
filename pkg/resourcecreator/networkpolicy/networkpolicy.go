@@ -108,7 +108,7 @@ func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) []
 		}
 
 		if rule.Namespace != "" {
-			peer.NamespaceSelector = labelSelector("name", rule.Namespace)
+			peer.NamespaceSelector = labelSelector("kubernetes.io/metadata.name", rule.Namespace)
 		}
 
 		peers = append(peers, peer)
@@ -202,7 +202,7 @@ func ingressRulesFromIngress(ingress []nais_io_v1.Ingress, cfg Config) []network
 				rules = append(rules, networkingv1.NetworkPolicyIngressRule{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							NamespaceSelector: labelSelector("name", "nginx"),
+							NamespaceSelector: labelSelector("kubernetes.io/metadata.name", "nginx"),
 							PodSelector:       &metav1.LabelSelector{},
 						},
 					},
@@ -212,7 +212,7 @@ func ingressRulesFromIngress(ingress []nais_io_v1.Ingress, cfg Config) []network
 			rules = append(rules, networkingv1.NetworkPolicyIngressRule{
 				From: []networkingv1.NetworkPolicyPeer{
 					{
-						NamespaceSelector: labelSelector("name", ns),
+						NamespaceSelector: labelSelector("kubernetes.io/metadata.name", ns),
 						PodSelector:       ls,
 					},
 				},
@@ -227,7 +227,7 @@ func defaultIngressRules(cfg Config) []networkingv1.NetworkPolicyIngressRule {
 		{
 			From: []networkingv1.NetworkPolicyPeer{
 				{
-					NamespaceSelector: labelSelector("name", cfg.GetNaisNamespace()),
+					NamespaceSelector: labelSelector("kubernetes.io/metadata.name", cfg.GetNaisNamespace()),
 					PodSelector:       labelSelector("app.kubernetes.io/name", "prometheus"),
 				},
 			},
@@ -283,7 +283,7 @@ func ingressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, options Confi
 		if rule.Namespace == "*" {
 			peer.NamespaceSelector = &metav1.LabelSelector{}
 		} else if rule.Namespace != "" {
-			peer.NamespaceSelector = labelSelector("name", rule.Namespace)
+			peer.NamespaceSelector = labelSelector("kubernetes.io/metadata.name", rule.Namespace)
 		}
 
 		peers = append(peers, peer)

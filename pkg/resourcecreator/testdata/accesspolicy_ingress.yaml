@@ -46,14 +46,14 @@ tests:
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: nais-system
+                        kubernetes.io/metadata.name: nais-system
                     podSelector:
                       matchLabels:
                         nais.io/ingressClass: nais-ingress
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: nais-system
+                        kubernetes.io/metadata.name: nais-system
                     podSelector:
                       matchLabels:
                         nais.io/ingressClass: nais-ingress-external

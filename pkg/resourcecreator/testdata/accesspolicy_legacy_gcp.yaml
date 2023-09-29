@@ -100,28 +100,28 @@ tests:
                         app.kubernetes.io/name: prometheus
                     namespaceSelector:
                       matchLabels:
-                        name: nais-system
+                        kubernetes.io/metadata.name: nais-system
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: nginx
+                        kubernetes.io/metadata.name: nginx
                     podSelector: {}
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: nais-system
+                        kubernetes.io/metadata.name: nais-system
                     podSelector:
                       matchLabels:
                         nais.io/ingressClass: adeo-gateway
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: nginx
+                        kubernetes.io/metadata.name: nginx
                     podSelector: {}
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        name: nais-system
+                        kubernetes.io/metadata.name: nais-system
                     podSelector:
                       matchLabels:
                         nais.io/ingressClass: domain-gateway
@@ -134,11 +134,11 @@ tests:
                         app: app2
                     namespaceSelector:
                       matchLabels:
-                        name: q1
+                        kubernetes.io/metadata.name: q1
                   - podSelector: { }
                     namespaceSelector:
                       matchLabels:
-                        name: t1
+                        kubernetes.io/metadata.name: t1
             egress:
               - to:
                   - podSelector:
@@ -154,7 +154,7 @@ tests:
                         app: app4
                     namespaceSelector:
                       matchLabels:
-                        name: q2
+                        kubernetes.io/metadata.name: q2
             policyTypes:
               - Ingress
               - Egress
