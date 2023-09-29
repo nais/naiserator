@@ -66,7 +66,7 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          name: nais-system
+          kubernetes.io/metadata.name: nais-system
       podSelector:
         matchLabels:
           app.kubernetes.io/name: prometheus

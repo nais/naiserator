@@ -50,7 +50,7 @@ tests:
                         app.kubernetes.io/name: prometheus
                     namespaceSelector:
                       matchLabels:
-                        name: nais-system
+                        kubernetes.io/metadata.name: nais-system
               - from:
                   - namespaceSelector: {}
                     podSelector: {}
