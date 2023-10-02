@@ -29,6 +29,7 @@ func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
 
 	meta := resource.CreateObjectMeta(source)
 	meta.SetName(source.GetName() + "-fqdn")
+	meta.SetAnnotations(map[string]string{"fqdnnetworkpolicies.networking.gke.io/aaaa-lookups": "skip"})
 	policy := &fqdn.FQDNNetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FQDNNetworkPolicy",

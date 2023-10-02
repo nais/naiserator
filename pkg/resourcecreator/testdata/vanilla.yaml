@@ -126,6 +126,8 @@ tests:
     apiVersion: networking.gke.io/v1alpha3
     kind: FQDNNetworkPolicy
     name: myapplication-fqdn
+    annotations:
+      fqdnnetworkpolicies.networking.gke.io/aaaa-lookups: skip
     match:
       - name: "FQDN policy created"
         type: exact
