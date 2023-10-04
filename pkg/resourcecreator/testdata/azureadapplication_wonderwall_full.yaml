@@ -26,9 +26,6 @@ input:
       application:
         allowAllUsers: true
         claims:
-          extra:
-            - NAVident
-            - azp_name
           groups:
             - id: 00000000-0000-0000-0000-000000000000
         enabled: true
@@ -149,9 +146,6 @@ tests:
           spec:
             allowAllUsers: true
             claims:
-              extra:
-                - NAVident
-                - azp_name
               groups:
                 - id: 00000000-0000-0000-0000-000000000000
             logoutUrl: "https://my-client.nav.no/oauth2/logout/frontchannel"

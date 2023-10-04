@@ -30,8 +30,8 @@ input:
         enabled: true
         tenant: nav.no
         claims:
-          extra:
-            - "NAVident"
+          groups:
+            - id: "some-group-id"
     accessPolicy:
       inbound:
         rules:
@@ -70,5 +70,5 @@ tests:
                 namespace: t1
             tenant: nav.no
             claims:
-              extra:
-                - "NAVident"
+              groups:
+                - id: "some-group-id"

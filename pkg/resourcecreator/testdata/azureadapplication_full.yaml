@@ -31,8 +31,8 @@ input:
         enabled: true
         tenant: nav.no
         claims:
-          extra:
-            - "NAVident"
+          groups:
+            - id: "some-group-id"
         singlePageApplication: true
         allowAllUsers: true
     accessPolicy:
@@ -127,7 +127,7 @@ tests:
               - url: "https://my.application.domain/foo/bar/baz/oauth2/callback"
             tenant: nav.no
             claims:
-              extra:
-                - "NAVident"
+              groups:
+                - id: "some-group-id"
             singlePageApplication: true
             allowAllUsers: true
