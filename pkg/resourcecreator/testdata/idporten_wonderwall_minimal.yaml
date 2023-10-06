@@ -4,7 +4,7 @@ testconfig:
 config:
   cluster-name: mycluster
   features:
-    digdirator: true
+    idporten: true
     wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no

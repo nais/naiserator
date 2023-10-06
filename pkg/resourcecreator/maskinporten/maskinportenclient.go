@@ -19,7 +19,7 @@ type Source interface {
 }
 
 type Config interface {
-	IsDigdiratorEnabled() bool
+	IsMaskinportenEnabled() bool
 }
 
 func secretName(name string) (string, error) {
@@ -51,8 +51,12 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinpor
 func Create(source Source, ast *resource.Ast, cfg Config) error {
 	maskinporten := source.GetMaskinporten()
 
-	if !cfg.IsDigdiratorEnabled() || maskinporten == nil || !maskinporten.Enabled {
+	if maskinporten == nil || !maskinporten.Enabled {
 		return nil
+	}
+
+	if !cfg.IsMaskinportenEnabled() {
+		return fmt.Errorf("maskinporten is not available in this cluster")
 	}
 
 	ast.Labels["maskinporten"] = "enabled"

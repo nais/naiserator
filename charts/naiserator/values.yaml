@@ -33,7 +33,8 @@ naiserator:
     cnrm: true
     azurerator: false
     kafkarator: false
-    digdirator: false
+    idporten: false
+    maskinporten: false
     prometheus-operator: false
     legacy-gcp: false
     gcp: true
@@ -70,7 +71,7 @@ naiserator:
     init-container-image: navikt/vault-sidekick:v0.3.10-26ad67d
     kv-path: /kv/default/default
   wonderwall:
-    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-03-21-bf964e4
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-09-06-152700-4a72a01
   leader-election:
     image: europe-north1-docker.pkg.dev/nais-io/nais/images/elector:20230309-041449-20c6f50
 

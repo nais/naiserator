@@ -3,8 +3,7 @@ testconfig:
 
 config:
   features:
-    linkerd: true
-    digdirator: true
+    idporten: true
   google-project-id: google-project-id
   cluster-name: mycluster
   gateway-mappings:

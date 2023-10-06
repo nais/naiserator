@@ -47,15 +47,15 @@ values:
     config:
       type: string
   naiserator.features.azurerator:
-    displayName: Enable Azurerator
+    displayName: Enable Azure AD for applications
     config:
       type: bool
   naiserator.features.cnrm:
     displayName: Enable CNRM
     computed:
       template: '{{ne .Kind "onprem"}}'
-  naiserator.features.digdirator:
-    displayName: Enable Digdirator
+  naiserator.features.idporten:
+    displayName: Enable ID-porten for applications
     config:
       type: bool
   naiserator.features.gar-toleration:
@@ -91,6 +91,10 @@ values:
       type: bool
   naiserator.features.nav-ca-bundle:
     displayName: Enable NAV CA bundle
+    config:
+      type: bool
+  naiserator.features.maskinporten:
+    displayName: Enable Maskinporten for applications
     config:
       type: bool
   naiserator.features.network-policy:

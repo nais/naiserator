@@ -47,13 +47,14 @@ type Features struct {
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	Azurerator                  bool     `json:"azurerator"`
 	CNRM                        bool     `json:"cnrm"`
-	Digdirator                  bool     `json:"digdirator"`
 	GARToleration               bool     `json:"gar-toleration"`
 	GCP                         bool     `json:"gcp"`
+	IDPorten                    bool     `json:"idporten"`
 	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`
+	Maskinporten                bool     `json:"maskinporten"`
 	NetworkPolicy               bool     `json:"network-policy"`
 	SpotToleration              bool     `json:"spot-toleration"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
@@ -160,12 +161,13 @@ const (
 	NaisNamespace                       = "nais-namespace"
 	FeaturesAccessPolicyNotAllowedCIDRs = "features.access-policy-not-allowed-cidrs"
 	FeaturesAzurerator                  = "features.azurerator"
-	FeaturesDigdirator                  = "features.digdirator"
 	FeaturesGCP                         = "features.gcp"
+	FeaturesIDPorten                    = "features.idporten"
 	FeaturesJwker                       = "features.jwker"
 	FeaturesCNRM                        = "features.cnrm"
 	FeaturesKafkarator                  = "features.kafkarator"
 	FeaturesLinkerd                     = "features.linkerd"
+	FeaturesMaskinporten                = "features.maskinporten"
 	FeaturesNetworkPolicy               = "features.network-policy"
 	FeaturesPrometheusOperator          = "features.prometheus-operator"
 	FeaturesVault                       = "features.vault"
@@ -251,7 +253,8 @@ func init() {
 	flag.Bool(FeaturesCNRM, false, "enable creation of CNRM resources")
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
-	flag.Bool(FeaturesDigdirator, false, "enable creation of IDPorten client resources and secret injection")
+	flag.Bool(FeaturesIDPorten, false, "enable creation of IDPorten client resources and secret injection")
+	flag.Bool(FeaturesMaskinporten, false, "enable creation of Maskinporten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")

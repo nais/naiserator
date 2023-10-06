@@ -1,8 +1,8 @@
 testconfig:
-  description: applications with idporten needs digdirator
+  description: applications with maskinporten needs maskinporten feature toggle
 config:
   features:
-    digdirator: false
+    maskinporten: false
 input:
   kind: "Application"
   apiVersion: nais.io/v1alpha1
@@ -12,6 +12,6 @@ input:
     labels:
       team: myteam
   spec:
-    idporten:
+    maskinporten:
       enabled: true
-error: "idporten is not available in this cluster"
+error: "maskinporten is not available in this cluster"

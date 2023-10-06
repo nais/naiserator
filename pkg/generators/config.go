@@ -57,8 +57,12 @@ func (o *Options) GetTeam() string {
 	return o.Team
 }
 
-func (o *Options) IsDigdiratorEnabled() bool {
-	return o.Config.Features.Digdirator
+func (o *Options) IsIDPortenEnabled() bool {
+	return o.Config.Features.IDPorten
+}
+
+func (o *Options) IsMaskinportenEnabled() bool {
+	return o.Config.Features.Maskinporten
 }
 
 func (o *Options) IsAzureratorEnabled() bool {

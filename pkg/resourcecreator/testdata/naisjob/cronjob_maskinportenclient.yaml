@@ -5,11 +5,7 @@ config:
   google-project-id: google-project-id
   cluster-name: mycluster
   features:
-    digdirator: true
-    linkerd: true
-  service-hosts:
-    digdirator:
-      - dev.maskinporten.test
+    maskinporten: true
 
 input:
   kind: Naisjob

@@ -32,7 +32,7 @@ type Source interface {
 type Config interface {
 	wonderwall.Config
 	IsWonderwallEnabled() bool
-	IsDigdiratorEnabled() bool
+	IsIDPortenEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
@@ -46,7 +46,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return nil
 	}
 
-	if !cfg.IsDigdiratorEnabled() {
+	if !cfg.IsIDPortenEnabled() {
 		return fmt.Errorf("idporten is not available in this cluster")
 	}
 

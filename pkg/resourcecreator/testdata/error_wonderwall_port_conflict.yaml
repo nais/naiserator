@@ -2,7 +2,7 @@ testconfig:
   description: applications cannot use ports occupied wonderwall
 config:
   features:
-    digdirator: true
+    azurerator: true
     wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no
@@ -16,7 +16,7 @@ input:
     labels:
       team: myteam
   spec:
-    idporten:
+    azure:
       sidecar:
         enabled: true
     ingresses:

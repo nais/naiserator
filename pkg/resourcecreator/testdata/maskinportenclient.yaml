@@ -3,13 +3,9 @@ testconfig:
 
 config:
   features:
-    linkerd: true
-    digdirator: true
+    maskinporten: true
   google-project-id: google-project-id
   cluster-name: mycluster
-  service-hosts:
-    digdirator:
-      - dev.maskinporten.test
 
 input:
   kind: Application

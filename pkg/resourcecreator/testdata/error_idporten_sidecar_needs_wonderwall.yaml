@@ -2,7 +2,7 @@ testconfig:
   description: applications with idporten sidecar needs wonderwall
 config:
   features:
-    digdirator: true
+    idporten: true
     wonderwall: false
   gateway-mappings:
     - domainSuffix: .nav.no

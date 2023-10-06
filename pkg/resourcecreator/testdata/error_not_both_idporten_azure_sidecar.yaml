@@ -6,7 +6,7 @@ config:
       ingressClass: very-nginx
   features:
     azurerator: true
-    digdirator: true
+    idporten: true
     wonderwall: true
 input:
   kind: Application
