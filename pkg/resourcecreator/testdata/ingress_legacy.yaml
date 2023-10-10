@@ -10,11 +10,6 @@ config:
       ingressClass: nais-ingress
     - domainSuffix: .nav.no
       ingressClass: nais-ingress-external
-  additional-gateway-mappings:
-    - domainSuffix: .nav.no
-      ingressClass: gw-nav-no
-    - domainSuffix: .intern.nav.no
-      ingressClass: gw-intern-nav-no
 
 input:
   kind: Application
@@ -50,48 +45,6 @@ tests:
             ingressClassName: "nais-ingress"
             rules:
               - host: banan.intern.nav.no
-                http:
-                  paths:
-                    - backend:
-                        service:
-                          name: myapplication
-                          port:
-                            number: 80
-                      path: /
-                      pathType: ImplementationSpecific
-  - apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    name: myapplication-gw-intern-nav-no-01173569
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "ingress with gw-intern-nav-no ingressClass"
-        resource:
-          spec:
-            ingressClassName: "gw-intern-nav-no"
-            rules:
-              - host: banan.intern.nav.no
-                http:
-                  paths:
-                    - backend:
-                        service:
-                          name: myapplication
-                          port:
-                            number: 80
-                      path: /
-                      pathType: ImplementationSpecific
-  - apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    name: myapplication-gw-nav-no-840772f5
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "ingress with gw-nav-no ingressClass"
-        resource:
-          spec:
-            ingressClassName: "gw-nav-no"
-            rules:
-              - host: banan.nav.no
                 http:
                   paths:
                     - backend:

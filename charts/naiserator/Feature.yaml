@@ -11,11 +11,6 @@ values:
     displayName: Image tag
     config:
       type: string
-  mapping.additional_intern_nav_no_mappings:
-    displayName: Additional gw-intern-nav-no mappings
-    description: Naiserator will create an additional ingress with gw-intern-nav-no ingressClass for each mapping
-    config:
-      type: string_array
   mapping.external_hosts:
     displayName: Extra external hosts
     config:
@@ -138,14 +133,6 @@ values:
     ignoreKind:
       - onprem
       - management
-  naiserator.additional-gateway-mappings:
-    displayName: Additional gateway mappings
-    computed:
-      template: |
-        {{- range .Configs.mapping.additional_intern_nav_no_mappings }}
-        - domainSuffix: "{{ . }}"
-          ingressClass: "gw-intern-nav-no"
-        {{- end }}
   naiserator.gateway-mappings:
     displayName: Gateway mappings
     computed:

@@ -33,10 +33,6 @@ func (o *Options) GetClusterName() string {
 	return o.Config.ClusterName
 }
 
-func (o *Options) GetAdditionalGatewayMappings() []config.GatewayMapping {
-	return o.Config.AdditionalGatewayMappings
-}
-
 func (o *Options) GetGatewayMappings() []config.GatewayMapping {
 	return o.Config.GatewayMappings
 }
