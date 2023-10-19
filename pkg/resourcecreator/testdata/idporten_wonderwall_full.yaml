@@ -88,8 +88,6 @@ tests:
                         value: ^idporten$
                       - name: WONDERWALL_INGRESS
                         value: ^https://my-client.nav.no/,https://my-client-2.nav.no/$
-                      - name: WONDERWALL_UPSTREAM_HOST
-                        value: ^127.0.0.1:1234$
                       - name: WONDERWALL_UPSTREAM_IP
                         valueFrom:
                           fieldRef:
