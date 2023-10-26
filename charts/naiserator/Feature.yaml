@@ -188,12 +188,6 @@ values:
     ignoreKind:
       - tenant
       - legacy
-  naiserator.vault.init-container-image:
-    computed:
-      template: '"navikt/vault-sidekick:v0.3.10-26ad67d"'
-    ignoreKind:
-      - tenant
-      - legacy
   naiserator.vault.kv-path:
     required: true
     config:
