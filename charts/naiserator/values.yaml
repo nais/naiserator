@@ -68,10 +68,10 @@ naiserator:
   vault:
     address: ""
     auth-path: /kubernetes/default/default
-    init-container-image: navikt/vault-sidekick:v0.3.10-26ad67d
+    init-container-image: europe-north1-docker.pkg.dev/nais-io/nais/images/vault-sidekick:v0.4.0-c3c10e1
     kv-path: /kv/default/default
   wonderwall:
-    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-09-06-152700-4a72a01
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-10-25-104738-d2d281f
   leader-election:
     image: europe-north1-docker.pkg.dev/nais-io/nais/images/elector:20230309-041449-20c6f50
 
