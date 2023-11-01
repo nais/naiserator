@@ -10,7 +10,6 @@ import (
 )
 
 func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
-
 	objectMeta := resource.CreateObjectMeta(naisjob)
 
 	if val, ok := naisjob.GetAnnotations()["kubernetes.io/change-cause"]; ok {
@@ -29,6 +28,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 		},
 		ObjectMeta: objectMeta,
 		Spec: batchv1.CronJobSpec{
+			TimeZone: naisjob.Spec.TimeZone,
 			Schedule: naisjob.Spec.Schedule,
 			JobTemplate: batchv1.JobTemplateSpec{
 				ObjectMeta: resource.CreateObjectMeta(naisjob),
