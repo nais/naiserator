@@ -1,5 +1,5 @@
 testconfig:
-  description: vanilla application gets a custom container command
+  description: cronjob timezone gets propagated
 
 config:
 
@@ -15,12 +15,7 @@ input:
   spec:
     schedule: "* 2 * * *"
     image: navikt/mynaisjob:1.2.3
-    command:
-      - thou
-      - shalt
-      - not
-      - make
-      - bugs
+    timeZone: Europe/Oslo
 
 tests:
   - apiVersion: batch/v1
@@ -32,15 +27,4 @@ tests:
         name: "container command"
         resource:
           spec:
-            jobTemplate:
-              spec:
-                template:
-                  spec:
-                    containers:
-                      - name: "mynaisjob"
-                        command:
-                          - thou
-                          - shalt
-                          - not
-                          - make
-                          - bugs
+            timeZone: Europe/Oslo
