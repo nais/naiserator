@@ -5,21 +5,14 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	"github.com/nais/liberator/pkg/namegen"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
-
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/wonderwall"
-	"github.com/nais/naiserator/pkg/util"
 )
 
 const (
-	clientDefaultCallbackPath = "/oauth2/callback"
-	clientDefaultLogoutPath   = "/oauth2/logout"
-	wonderwallSecretName      = "wonderwall-idporten-config"
-	idportenSsoSecretName     = "idporten-sso"
+	wonderwallSecretName  = "wonderwall-idporten-config"
+	idportenSsoSecretName = "idporten-sso"
 )
 
 type Source interface {
@@ -37,12 +30,7 @@ type Config interface {
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
 	idporten := source.GetIDPorten()
-	if idporten == nil {
-		return nil
-	}
-
-	sidecarEnabled := idporten.Sidecar != nil && idporten.Sidecar.Enabled
-	if !idporten.Enabled && !sidecarEnabled {
+	if idporten == nil || !idporten.Enabled {
 		return nil
 	}
 
@@ -50,146 +38,33 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return fmt.Errorf("idporten is not available in this cluster")
 	}
 
-	ast.Labels["idporten"] = "enabled"
-
-	if sidecarEnabled {
-		pod.WithAdditionalSecret(ast, idportenSsoSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
-		pod.WithAdditionalEnvFromSecret(ast, idportenSsoSecretName)
-		return sidecar(source, ast, cfg)
+	// TODO - automatically enable sidecar if just idporten is enabled when the grace period for migration ends.
+	if idporten.Sidecar == nil || !idporten.Sidecar.Enabled {
+		return fmt.Errorf("idporten sidecar must be enabled when idporten is enabled")
 	}
 
-	// if not using sidecar, create idporten client
-	idportenClient, err := client(source)
-	if err != nil {
-		return err
-	}
-
-	ast.AppendOperation(resource.OperationCreateOrUpdate, idportenClient)
-	pod.WithAdditionalSecret(ast, idportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
-	pod.WithAdditionalEnvFromSecret(ast, idportenClient.Spec.SecretName)
-	return nil
-}
-
-func client(source Source) (*nais_io_v1.IDPortenClient, error) {
-	objectMeta := resource.CreateObjectMeta(source)
-	idporten := source.GetIDPorten()
-	ingresses := source.GetIngress()
-
-	if err := validateIngresses(ingresses); err != nil {
-		return nil, err
-	}
-
-	name, err := secretName(objectMeta.Name)
-	if err != nil {
-		return nil, fmt.Errorf("generate secret name: %w", err)
-	}
-
-	return &nais_io_v1.IDPortenClient{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IDPortenClient",
-			APIVersion: "nais.io/v1",
-		},
-		ObjectMeta: objectMeta,
-		Spec: nais_io_v1.IDPortenClientSpec{
-			ClientURI:              idporten.ClientURI,
-			IntegrationType:        idporten.IntegrationType,
-			RedirectURIs:           redirectURIs(idporten, ingresses),
-			SecretName:             name,
-			FrontchannelLogoutURI:  frontchannelLogoutURI(idporten, ingresses),
-			PostLogoutRedirectURIs: postLogoutRedirectURIs(idporten),
-			SessionLifetime:        idporten.SessionLifetime,
-			AccessTokenLifetime:    idporten.AccessTokenLifetime,
-			Scopes:                 idporten.Scopes,
-		},
-	}, nil
-}
-
-func sidecar(source Source, ast *resource.Ast, cfg Config) error {
 	if !cfg.IsWonderwallEnabled() {
 		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
 	}
 
-	secrets := []string{idportenSsoSecretName, wonderwallSecretName}
-	wonderwallCfg := makeWonderwallConfig(source, secrets, false)
-	err := wonderwall.Create(source, ast, cfg, wonderwallCfg)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validateIngresses(ingresses []nais_io_v1.Ingress) error {
-	if len(ingresses) == 0 {
-		return fmt.Errorf("you must specify an ingress to be able to use the idporten integration")
-	}
-
-	return nil
-}
-
-func redirectURIs(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) []nais_io_v1.IDPortenURI {
-	if len(idPorten.RedirectPath) == 0 {
-		return idportenURIs(ingresses, clientDefaultCallbackPath)
-	}
-
-	return idportenURIs(ingresses, idPorten.RedirectPath)
-}
-
-func frontchannelLogoutURI(idPorten *nais_io_v1.IDPorten, ingresses []nais_io_v1.Ingress) nais_io_v1.IDPortenURI {
-	if len(idPorten.FrontchannelLogoutPath) == 0 {
-		return idportenURI(ingresses, clientDefaultLogoutPath)
-	}
-
-	return idportenURI(ingresses, idPorten.FrontchannelLogoutPath)
-}
-
-func postLogoutRedirectURIs(idPorten *nais_io_v1.IDPorten) (postLogoutRedirectURIs []nais_io_v1.IDPortenURI) {
-	postLogoutRedirectURIs = idPorten.PostLogoutRedirectURIs
-
-	if len(idPorten.PostLogoutRedirectURIs) == 0 {
-		postLogoutRedirectURIs = make([]nais_io_v1.IDPortenURI, 0)
-	}
-
-	return
-}
-
-func idportenURI(ingresses []nais_io_v1.Ingress, path string) nais_io_v1.IDPortenURI {
-	return nais_io_v1.IDPortenURI(util.AppendPathToIngress(ingresses[0], path))
-}
-
-func idportenURIs(ingresses []nais_io_v1.Ingress, path string) []nais_io_v1.IDPortenURI {
-	uris := make([]nais_io_v1.IDPortenURI, 0)
-	for _, ingress := range ingresses {
-		uris = append(uris, nais_io_v1.IDPortenURI(util.AppendPathToIngress(ingress, path)))
-	}
-
-	return uris
-}
-
-func secretName(name string) (string, error) {
-	return namegen.ShortName(fmt.Sprintf("idporten-%s", name), validation.DNS1035LabelMaxLength)
-}
-
-func makeWonderwallConfig(source Source, secretNames []string, needsEncryptionSecret bool) wonderwall.Configuration {
 	ingresses := source.GetIngress()
-	idporten := source.GetIDPorten()
-
-	ingressesStrings := make([]string, 0)
-	for _, i := range ingresses {
-		ingressesStrings = append(ingressesStrings, string(i))
+	if len(ingresses) == 0 {
+		return fmt.Errorf("idporten requires at least 1 ingress")
 	}
 
-	cfg := wonderwall.Configuration{
+	ast.Labels["idporten"] = "enabled"
+	pod.WithAdditionalSecret(ast, idportenSsoSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
+	pod.WithAdditionalEnvFromSecret(ast, idportenSsoSecretName)
+
+	return wonderwall.Create(source, ast, cfg, wonderwall.Configuration{
 		ACRValues:             idporten.Sidecar.Level,
 		AutoLogin:             idporten.Sidecar.AutoLogin,
 		AutoLoginIgnorePaths:  idporten.Sidecar.AutoLoginIgnorePaths,
-		Ingresses:             ingressesStrings,
-		NeedsEncryptionSecret: needsEncryptionSecret,
+		Ingresses:             ingresses,
+		NeedsEncryptionSecret: false,
 		Provider:              "idporten",
-		SecretNames:           secretNames,
+		SecretNames:           []string{idportenSsoSecretName, wonderwallSecretName},
 		Resources:             idporten.Sidecar.Resources,
 		UILocales:             idporten.Sidecar.Locale,
-	}
-
-	return cfg
+	})
 }

@@ -17,6 +17,7 @@ input:
       team: myteam
   spec:
     idporten:
+      enabled: true
       sidecar:
         enabled: true
     ingresses:

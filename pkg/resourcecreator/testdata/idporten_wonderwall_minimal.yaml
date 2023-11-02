@@ -23,6 +23,7 @@ input:
   spec:
     image: foo/bar
     idporten:
+      enabled: true
       sidecar:
         enabled: true
     ingresses:
