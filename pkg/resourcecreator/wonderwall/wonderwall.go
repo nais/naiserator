@@ -33,7 +33,7 @@ type Configuration struct {
 	ACRValues             string
 	AutoLogin             bool
 	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
-	Ingresses             []string
+	Ingresses             []nais_io_v1.Ingress
 	NeedsEncryptionSecret bool
 	Provider              string
 	Resources             *nais_io_v1.ResourceRequirements
@@ -214,7 +214,7 @@ func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 		},
 		{
 			Name:  "WONDERWALL_INGRESS",
-			Value: strings.Join(cfg.Ingresses, ","),
+			Value: ingressString(cfg.Ingresses),
 		},
 		{
 			Name: "WONDERWALL_UPSTREAM_IP",
@@ -342,4 +342,12 @@ func leadingSlash(s string) string {
 		return s
 	}
 	return "/" + s
+}
+
+func ingressString(ingresses []nais_io_v1.Ingress) string {
+	s := make([]string, len(ingresses))
+	for i, ingress := range ingresses {
+		s[i] = string(ingress)
+	}
+	return strings.Join(s, ",")
 }

@@ -114,16 +114,9 @@ func sidecar(source Source, ast *resource.Ast, config Config, azureApp *nais_io_
 		return fmt.Errorf("azure ad sidecar is not enabled for this cluster")
 	}
 
-	// configure sidecar
 	ingresses := source.GetIngress()
 	if len(ingresses) == 0 {
 		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
-	}
-
-	wonderwallCfg := makeWonderwallConfig(source, azureApp.Spec.SecretName, ingresses)
-	err := wonderwall.Create(source, ast, config, wonderwallCfg)
-	if err != nil {
-		return err
 	}
 
 	// ensure that the ingress is added to the configured Azure AD reply URLs
@@ -133,7 +126,16 @@ func sidecar(source Source, ast *resource.Ast, config Config, azureApp *nais_io_
 	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
 	azureApp.Spec.SinglePageApplication = pointer.Bool(false)
 
-	return nil
+	s := source.GetAzure().GetSidecar()
+	return wonderwall.Create(source, ast, config, wonderwall.Configuration{
+		AutoLogin:             s.AutoLogin,
+		AutoLoginIgnorePaths:  s.AutoLoginIgnorePaths,
+		Ingresses:             ingresses,
+		NeedsEncryptionSecret: true,
+		Provider:              "azure",
+		SecretNames:           []string{azureApp.Spec.SecretName, wonderwallSecretName},
+		Resources:             s.Resources,
+	})
 }
 
 func copyAzureAnnotations(src, dst map[string]string) {
@@ -171,23 +173,4 @@ func secretName(name string) (string, error) {
 
 func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAdReplyUrlString {
 	return (nais_io_v1.AzureAdReplyUrlString)(util.AppendPathToIngress(url, path))
-}
-
-func makeWonderwallConfig(source Source, providerSecretName string, ingresses []nais_io_v1.Ingress) wonderwall.Configuration {
-	sidecar := source.GetAzure().GetSidecar()
-
-	ingressesStrings := make([]string, 0)
-	for _, i := range ingresses {
-		ingressesStrings = append(ingressesStrings, string(i))
-	}
-
-	return wonderwall.Configuration{
-		AutoLogin:             sidecar.AutoLogin,
-		AutoLoginIgnorePaths:  sidecar.AutoLoginIgnorePaths,
-		Ingresses:             ingressesStrings,
-		NeedsEncryptionSecret: true,
-		Provider:              "azure",
-		SecretNames:           []string{providerSecretName, wonderwallSecretName},
-		Resources:             sidecar.Resources,
-	}
 }
