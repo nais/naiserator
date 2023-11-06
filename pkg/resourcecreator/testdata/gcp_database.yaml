@@ -224,6 +224,8 @@ tests:
                       - secretRef:
                           name: google-sql-myapplication
                     env:
+                      - name: GOOGLE_CLOUD_PROJECT
+                        value: team-project-id
                       - name: GCP_TEAM_PROJECT_ID
                         value: team-project-id
                   - name: cloudsql-proxy
