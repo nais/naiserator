@@ -1,6 +1,8 @@
 package observability
 
 import (
+	"fmt"
+
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
 	corev1 "k8s.io/api/core/v1"
@@ -18,13 +20,23 @@ type Source interface {
 
 // Standard environment variable names from https://opentelemetry.io/docs/specs/otel/protocol/exporter/
 // These are hard-coded because they are the same across installations, feel free to make them configurable.
+const otelServiceName = "OTEL_SERVICE_NAME"
+const otelResourceAttributes = "OTEL_RESOURCE_ATTRIBUTES"
 const otelExporterEndpoint = "OTEL_EXPORTER_OTLP_ENDPOINT"
 const collectorEndpoint = "http://tempo-distributor.nais-system:4317"
 const otelExporterProtocol = "OTEL_EXPORTER_OTLP_PROTOCOL"
 const collectorProtocol = "grpc"
 
-func envVars() []corev1.EnvVar {
+func envVars(source Source) []corev1.EnvVar {
 	return []corev1.EnvVar{
+		{
+			Name:  otelServiceName,
+			Value: source.GetName(),
+		},
+		{
+			Name:  otelResourceAttributes,
+			Value: fmt.Sprintf("service.name=%s,service.namespace=%s", source.GetName(), source.GetNamespace()),
+		},
 		{
 			Name:  otelExporterEndpoint,
 			Value: collectorEndpoint,
@@ -93,7 +105,7 @@ func Create(source Source, ast *resource.Ast, _ any) error {
 		return err
 	}
 
-	ast.Env = append(ast.Env, envVars()...)
+	ast.Env = append(ast.Env, envVars(source)...)
 	ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 
 	return nil

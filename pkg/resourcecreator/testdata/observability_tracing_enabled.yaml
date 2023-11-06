@@ -32,6 +32,10 @@ tests:
                   - image: navikt/myapplication:1.2.3
                     name: myapplication
                     env:
+                      - name: OTEL_SERVICE_NAME
+                        value: myapplication
+                      - name: OTEL_RESOURCE_ATTRIBUTES
+                        value: service.name=myapplication,service.namespace=mynamespace
                       - name: OTEL_EXPORTER_OTLP_ENDPOINT
                         value: http://tempo-distributor.nais-system:4317
                       - name: OTEL_EXPORTER_OTLP_PROTOCOL
