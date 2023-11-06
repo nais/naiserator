@@ -22,6 +22,7 @@ spec:
         prometheus.io/scrape: "true"
         kubectl.kubernetes.io/default-container: naiserator
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        reloader.stakater.com/search: "true"
       labels:
         app: {{ .Release.Name }}
         {{- toYaml .Values.labels | nindent 8 }}
@@ -30,6 +31,12 @@ spec:
       - env:
         - name: STAKATER_NAISERATOR_SECRET
           value: {{ .Values.stakaterSecret }}
+        - name: NAISERATOR_LEADER_ELECTION_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              key: elector_image
+              name: elector
+              optional: true
         {{ if .Values.naiserator.kafka.enabled }}
         - name: KAFKA_BROKERS
           valueFrom:

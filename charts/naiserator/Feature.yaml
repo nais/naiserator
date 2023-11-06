@@ -170,10 +170,6 @@ values:
     displayName: Enable Kafka
     config:
       type: bool
-  naiserator.leader-election.image:
-    displayName: Leader election image
-    config:
-      type: string
   naiserator.vault.address:
     required: true
     config:
