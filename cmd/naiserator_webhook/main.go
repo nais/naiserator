@@ -4,6 +4,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-logr/logr"
+	"github.com/nais/liberator/pkg/logrus2logr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -61,6 +63,7 @@ func run() error {
 	kconfig.Burst = cfg.Ratelimit.Burst
 
 	metrics.Register(kubemetrics.Registry)
+	logSink := &logrus2logr.Logrus2Logr{Logger: log.StandardLogger()}
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
 		Scheme: kscheme,
 		Metrics: metricsserver.Options{
@@ -70,6 +73,7 @@ func run() error {
 			Host: "0.0.0.0",
 			Port: 8443,
 		}),
+		Logger: logr.New(logSink),
 	})
 	if err != nil {
 		return err

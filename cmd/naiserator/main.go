@@ -8,6 +8,8 @@ import (
 	"time"
 
 	fqdn_scheme "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha3"
+	"github.com/go-logr/logr"
+	"github.com/nais/liberator/pkg/logrus2logr"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/liberator/pkg/tlsutil"
 	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -120,6 +122,7 @@ func run() error {
 	kconfig.Burst = cfg.Ratelimit.Burst
 
 	metrics.Register(kubemetrics.Registry)
+	logSink := &logrus2logr.Logrus2Logr{Logger: log.StandardLogger()}
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
 		Cache: cache.Options{
 			SyncPeriod: &cfg.Informer.FullSyncInterval,
@@ -129,6 +132,7 @@ func run() error {
 			BindAddress: cfg.Bind,
 		},
 		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
+		Logger:                 logr.New(logSink),
 	})
 	if err != nil {
 		return err

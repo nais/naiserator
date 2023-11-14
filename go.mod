@@ -13,7 +13,7 @@ require (
 	github.com/magiconair/properties v1.8.7
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nais/liberator v0.0.0-20231101124817-006c9baf23b0
+	github.com/nais/liberator v0.0.0-20231114130128-a3a9edbe0da1
 	github.com/novln/docker-parser v1.0.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/sirupsen/logrus v1.9.3
@@ -35,6 +35,7 @@ require (
 
 require (
 	github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang v0.0.0-20230601172828-5dd0a14ed3f3
+	github.com/go-logr/logr v1.2.4
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0
 )
 
@@ -49,7 +50,6 @@ require (
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
