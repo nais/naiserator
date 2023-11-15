@@ -119,6 +119,7 @@ tests:
                 name: myapplication
                 namespace: mynamespace
                 annotations:
+                  nais.io/deploymentCorrelationID: corr
                   kubectl.kubernetes.io/default-container: myapplication
                 labels:
                   team: myteam

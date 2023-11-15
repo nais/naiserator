@@ -372,6 +372,9 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 
 	objectMeta.Annotations = map[string]string{}
 
+	if len(app.CorrelationID()) > 0 {
+		objectMeta.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = app.CorrelationID()
+	}
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = app.GetName()
 
 	if len(cfg.GetGoogleProjectID()) > 0 {
