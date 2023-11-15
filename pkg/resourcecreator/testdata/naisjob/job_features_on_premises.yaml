@@ -84,6 +84,7 @@ tests:
               metadata:
                 annotations:
                   kubectl.kubernetes.io/default-container: mynaisjob
+                  nais.io/deploymentCorrelationID: corr
                 labels:
                   app: mynaisjob
                   team: myteam

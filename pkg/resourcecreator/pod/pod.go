@@ -409,6 +409,9 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg
 
 	objectMeta.Annotations = map[string]string{}
 
+	if len(naisjob.CorrelationID()) > 0 {
+		objectMeta.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = naisjob.CorrelationID()
+	}
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = naisjob.GetName()
 
 	// enables HAHAHA
