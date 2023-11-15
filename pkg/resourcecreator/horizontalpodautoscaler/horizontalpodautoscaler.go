@@ -24,6 +24,13 @@ func Create(source Source, ast *resource.Ast) {
 		return
 	}
 
+	cpuThreshold := replicas.CpuThresholdPercentage
+	if replicas.ScalingStrategy != nil {
+		if replicas.ScalingStrategy.Cpu != nil {
+			cpuThreshold = replicas.ScalingStrategy.Cpu.ThresholdPercentage
+		}
+	}
+
 	hpa := &v2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
@@ -43,7 +50,7 @@ func Create(source Source, ast *resource.Ast) {
 						Name: "cpu",
 						Target: v2.MetricTarget{
 							Type:               v2.UtilizationMetricType,
-							AverageUtilization: util.Int32p(int32(replicas.CpuThresholdPercentage)),
+							AverageUtilization: util.Int32p(int32(cpuThreshold)),
 						},
 					},
 				},
