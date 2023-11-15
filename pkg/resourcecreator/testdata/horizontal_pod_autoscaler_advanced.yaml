@@ -1,0 +1,61 @@
+testconfig:
+  description: horizontal pod autoscaler is set up with both cpu and kafka scaling
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    replicas:
+      min: 3
+      max: 6
+      scalingStrategy:
+        cpu:
+          thresholdPercentage: 75
+        kafka:
+          topic: myteam.mytopic
+          consumerGroup: myconsumergroup
+          threshold: 100
+
+tests:
+  - apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "horizontal pod autoscaler configured correctly"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            scaleTargetRef:
+              kind: Deployment
+              name: myapplication
+              apiVersion: apps/v1
+            minReplicas: 3
+            maxReplicas: 6
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 75
+              - type: External
+                external:
+                  metric:
+                    name: kafka_consumergroup_group_lag
+                    selector:
+                      matchLabels:
+                        topic: myteam.mytopic
+                        group: myconsumergroup
+                  target:
+                    type: AverageValue
+                    averageValue: "100"
