@@ -138,6 +138,17 @@ func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName 
 						"watch",
 					},
 				},
+				{
+					APIGroups: []string{
+						"",
+					},
+					Resources: []string{
+						"pods",
+					},
+					Verbs: []string{
+						"get",
+					},
+				},
 			},
 		}
 	}
