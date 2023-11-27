@@ -147,6 +147,7 @@ func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName 
 					},
 					Verbs: []string{
 						"get",
+						"list",
 					},
 				},
 			},
