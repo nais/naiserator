@@ -51,6 +51,9 @@ tests:
                     name: var-cache-memory
                   - emptyDir: {}
                     name: var-cache-disk
+                securityContext:
+                  fsGroup: 1069
+                  fsGroupChangePolicy: "OnRootMismatch"
                 containers:
                   - name: myapplication
                     volumeMounts:

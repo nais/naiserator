@@ -8,6 +8,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -110,6 +111,8 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		Affinity:                      affinity,
 		Tolerations:                   tolerations,
 		SecurityContext: &corev1.PodSecurityContext{
+			FSGroup:             ptr.To[int64](1069),
+			FSGroupChangePolicy: ptr.To[corev1.PodFSGroupChangePolicy](corev1.FSGroupChangeOnRootMismatch),
 			SeccompProfile: &corev1.SeccompProfile{
 				Type: corev1.SeccompProfileTypeRuntimeDefault,
 			},

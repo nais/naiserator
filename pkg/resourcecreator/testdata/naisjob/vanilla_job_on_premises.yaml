@@ -172,6 +172,8 @@ tests:
                   - name: gar-docker-credentials
                 restartPolicy: Never
                 securityContext:
+                  fsGroup: 1069
+                  fsGroupChangePolicy: OnRootMismatch
                   seccompProfile:
                     type: RuntimeDefault
                 serviceAccountName: mynaisjob

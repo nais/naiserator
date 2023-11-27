@@ -212,6 +212,8 @@ tests:
                     image: navikt/myapplication:1.2.3
                 restartPolicy: Always
                 securityContext:
+                  fsGroup: 1069
+                  fsGroupChangePolicy: OnRootMismatch
                   seccompProfile:
                     type: RuntimeDefault
                 dnsPolicy: ClusterFirst
