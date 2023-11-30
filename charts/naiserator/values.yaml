@@ -70,8 +70,6 @@ naiserator:
     auth-path: /kubernetes/default/default
     init-container-image: europe-north1-docker.pkg.dev/nais-io/nais/images/vault-sidekick:v0.4.0-c3c10e1
     kv-path: /kv/default/default
-  wonderwall:
-    image: europe-north1-docker.pkg.dev/nais-io/nais/images/wonderwall:2023-10-25-104738-d2d281f
 
   fqdn-policy:
     enabled: true

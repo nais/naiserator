@@ -37,6 +37,13 @@ spec:
               key: elector_image
               name: elector
               optional: true
+        {{ if .Values.naiserator.features.wonderwall }}
+        - name: NAISERATOR_WONDERWALL_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              key: wonderwall_image
+              name: wonderwall
+        {{ end }}
         {{ if .Values.naiserator.kafka.enabled }}
         - name: KAFKA_BROKERS
           valueFrom:
