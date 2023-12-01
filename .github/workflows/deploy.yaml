@@ -63,7 +63,7 @@ jobs:
       - id: "auth"
         if: github.ref == 'refs/heads/master'
         name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v1" # ratchet:exclude
+        uses: "google-github-actions/auth@v2" # ratchet:exclude
         with:
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: "gh-${{ env.FEATURE_NAME }}@nais-io.iam.gserviceaccount.com"
