@@ -80,14 +80,6 @@ naiserator:
         port: 443
       - host: login.microsoftonline.com
         port: 443
-      - host: oidc.difi.no
-        port: 443
-      - host: ver2.maskinporten.no
-        port: 443
-      - host: maskinporten.no
-        port: 443
-      - host: oidc-ver2.difi.no
-        port: 443
       - host: aivencloud.com
         port: 443
       - host: unleash.nais.io
