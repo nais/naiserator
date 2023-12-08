@@ -13,15 +13,6 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-type ElectionMode int
-
-const (
-	ModeEndpoint ElectionMode = iota
-	ModeLease
-)
-
-const endpointImage = "gcr.io/google_containers/leader-elector:0.5"
-
 type Source interface {
 	resource.Source
 	GetLeaderElection() bool
@@ -35,58 +26,38 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	if !source.GetLeaderElection() {
 		return nil
 	}
+	image := cfg.GetLeaderElectionImage()
+	if image == "" {
+		return fmt.Errorf("leader election image not configured")
+	}
 
-	electionMode := mode(cfg)
 	appObjectMeta := resource.CreateObjectMeta(source)
-	roleObjectMeta := resource.CreateObjectMeta(source)
-	if electionMode == ModeLease {
-		var err error
-		roleObjectMeta.Name, err = namegen.ShortName(fmt.Sprintf("elector-%s", roleObjectMeta.Name), validation.DNS1123LabelMaxLength)
-		if err != nil {
-			return fmt.Errorf("failed to build short name for role: %w", err)
-		}
+	roleBindingObjectMeta := resource.CreateObjectMeta(source)
+
+	var err error
+	roleBindingObjectMeta.Name, err = namegen.ShortName(fmt.Sprintf("elector-%s", roleBindingObjectMeta.Name), validation.DNS1123LabelMaxLength)
+	if err != nil {
+		return fmt.Errorf("failed to build short name for role binding: %w", err)
 	}
 
-	var image string
-	var roleRef *rbacv1.RoleRef
-	if electionMode == ModeLease {
-		image = cfg.GetLeaderElectionImage()
-		roleRef = &rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     "elector",
-		}
-	} else {
-		image = endpointImage
-		ast.AppendOperation(resource.OperationCreateOrUpdate, role(roleObjectMeta, electionMode, source.GetName()))
-		roleRef = &rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "Role",
-			Name:     roleObjectMeta.Name,
-		}
-	}
-
-	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleObjectMeta, roleRef))
+	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleBindingObjectMeta))
 	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
 	ast.Env = append(ast.Env, electorPathEnv())
 	return nil
 }
 
-func mode(cfg Config) ElectionMode {
-	if len(cfg.GetLeaderElectionImage()) != 0 {
-		return ModeLease
-	}
-	return ModeEndpoint
-}
-
-func roleBinding(appObjectMeta, roleObjectMeta metav1.ObjectMeta, roleRef *rbacv1.RoleRef) *rbacv1.RoleBinding {
+func roleBinding(appObjectMeta, roleObjectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
 			Kind:       "RoleBinding",
 		},
 		ObjectMeta: roleObjectMeta,
-		RoleRef:    *roleRef,
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     "elector",
+		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
@@ -95,36 +66,6 @@ func roleBinding(appObjectMeta, roleObjectMeta metav1.ObjectMeta, roleRef *rbacv
 			},
 		},
 	}
-}
-
-func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName string) *rbacv1.Role {
-	if electionMode == ModeEndpoint {
-		return &rbacv1.Role{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "rbac.authorization.k8s.io/v1",
-				Kind:       "Role",
-			},
-			ObjectMeta: objectMeta,
-			Rules: []rbacv1.PolicyRule{
-				{
-					ResourceNames: []string{
-						resourceName,
-					},
-					APIGroups: []string{
-						"",
-					},
-					Resources: []string{
-						"endpoints",
-					},
-					Verbs: []string{
-						"get",
-						"update",
-					},
-				},
-			},
-		}
-	}
-	return nil
 }
 
 func electorPathEnv() corev1.EnvVar {
