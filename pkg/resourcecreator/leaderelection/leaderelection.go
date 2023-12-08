@@ -48,14 +48,25 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	var image string
+	var roleRef *rbacv1.RoleRef
 	if electionMode == ModeLease {
 		image = cfg.GetLeaderElectionImage()
+		roleRef = &rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     "elector",
+		}
 	} else {
 		image = endpointImage
+		ast.AppendOperation(resource.OperationCreateOrUpdate, role(roleObjectMeta, electionMode, source.GetName()))
+		roleRef = &rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     roleObjectMeta.Name,
+		}
 	}
 
-	ast.AppendOperation(resource.OperationCreateOrUpdate, role(roleObjectMeta, electionMode, source.GetName()))
-	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleObjectMeta))
+	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleObjectMeta, roleRef))
 	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
 	ast.Env = append(ast.Env, electorPathEnv())
 	return nil
@@ -68,18 +79,14 @@ func mode(cfg Config) ElectionMode {
 	return ModeEndpoint
 }
 
-func roleBinding(appObjectMeta, roleObjectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
+func roleBinding(appObjectMeta, roleObjectMeta metav1.ObjectMeta, roleRef *rbacv1.RoleRef) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
 			Kind:       "RoleBinding",
 		},
 		ObjectMeta: roleObjectMeta,
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "Role",
-			Name:     roleObjectMeta.Name,
-		},
+		RoleRef:    *roleRef,
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
@@ -116,44 +123,8 @@ func role(objectMeta metav1.ObjectMeta, electionMode ElectionMode, resourceName 
 				},
 			},
 		}
-	} else {
-		return &rbacv1.Role{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "rbac.authorization.k8s.io/v1",
-				Kind:       "Role",
-			},
-			ObjectMeta: objectMeta,
-			Rules: []rbacv1.PolicyRule{
-				{
-					APIGroups: []string{
-						"coordination.k8s.io",
-					},
-					Resources: []string{
-						"leases",
-					},
-					Verbs: []string{
-						"get",
-						"create",
-						"list",
-						"watch",
-					},
-				},
-				{
-					APIGroups: []string{
-						"",
-					},
-					Resources: []string{
-						"pods",
-					},
-					Verbs: []string{
-						"get",
-						"list",
-						"watch",
-					},
-				},
-			},
-		}
 	}
+	return nil
 }
 
 func electorPathEnv() corev1.EnvVar {

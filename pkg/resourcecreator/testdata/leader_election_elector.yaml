@@ -1,5 +1,5 @@
 testconfig:
-  description: vanilla application running in GCP with default configuration and access policies
+  description: vanilla application running in GCP, using elector for leader election
 
 config:
   features:
@@ -51,35 +51,6 @@ tests:
                         cpu: "100m"
                     imagePullPolicy: "IfNotPresent"
   - apiVersion: rbac.authorization.k8s.io/v1
-    kind: Role
-    name: elector-myapplication-40c4e812
-    operation: CreateOrUpdate
-    match:
-      - type: subset
-        name: "Role created"
-        exclude:
-          - .metadata
-          - .status
-        resource:
-          rules:
-            - apiGroups:
-                - coordination.k8s.io
-              resources:
-                - leases
-              verbs:
-                - get
-                - create
-                - list
-                - watch
-            - apiGroups:
-                - ""
-              resources:
-                - pods
-              verbs:
-                - get
-                - list
-                - watch
-  - apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     name: elector-myapplication-40c4e812
     operation: CreateOrRecreate
@@ -92,8 +63,8 @@ tests:
         resource:
           roleRef:
             apiGroup: rbac.authorization.k8s.io
-            kind: Role
-            name: elector-myapplication-40c4e812
+            kind: ClusterRole
+            name: elector
           subjects:
             - kind: ServiceAccount
               name: myapplication
