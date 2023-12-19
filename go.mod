@@ -35,7 +35,7 @@ require (
 
 require (
 	github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang v0.0.0-20230601172828-5dd0a14ed3f3
-	github.com/go-logr/logr v1.2.4
+	github.com/go-logr/logr v1.3.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0
 )
 
