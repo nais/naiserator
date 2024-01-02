@@ -30,7 +30,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+            secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
       - name: "instance and access is propagated"
         type: subset
         resource:
@@ -59,14 +59,14 @@ tests:
                         valueFrom:
                           secretKeyRef:
                             key: OPEN_SEARCH_USERNAME
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
                       - name: OPEN_SEARCH_PASSWORD
                         valueFrom:
                           secretKeyRef:
                             key: OPEN_SEARCH_PASSWORD
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
                       - name: OPEN_SEARCH_URI
                         valueFrom:
                           secretKeyRef:
                             key: OPEN_SEARCH_URI
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$

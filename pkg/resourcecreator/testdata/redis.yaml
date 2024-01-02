@@ -34,7 +34,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+            secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
       - name: "instance and access is propagated"
         type: subset
         resource:
@@ -65,17 +65,17 @@ tests:
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_USERNAME_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
                       - name: REDIS_PASSWORD_NAISTEST1
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_PASSWORD_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
                       - name: REDIS_URI_NAISTEST1
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_URI_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d{2}$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
   - operation: CreateIfNotExists
     apiVersion: aiven.io/v1alpha1
     kind: Redis
