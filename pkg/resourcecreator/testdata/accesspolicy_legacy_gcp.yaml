@@ -104,20 +104,10 @@ tests:
               - from:
                   - namespaceSelector:
                       matchLabels:
-                        kubernetes.io/metadata.name: nginx
-                    podSelector: {}
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
                         kubernetes.io/metadata.name: nais-system
                     podSelector:
                       matchLabels:
                         nais.io/ingressClass: adeo-gateway
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: nginx
-                    podSelector: {}
               - from:
                   - namespaceSelector:
                       matchLabels:
