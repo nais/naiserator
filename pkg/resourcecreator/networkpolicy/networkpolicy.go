@@ -196,19 +196,6 @@ func ingressRulesFromIngress(ingress []nais_io_v1.Ingress, cfg Config) []network
 			ls := labelSelector("nais.io/ingressClass", *ingressClass)
 			ns := cfg.GetNaisNamespace()
 
-			// TODO: remove when loadbalancer features are installed in nais-system for legacy gcp
-			if cfg.IsLegacyGCP() {
-				// assumes that ingressClass equals instance name label
-				rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							NamespaceSelector: labelSelector("kubernetes.io/metadata.name", "nginx"),
-							PodSelector:       &metav1.LabelSelector{},
-						},
-					},
-				})
-			}
-
 			rules = append(rules, networkingv1.NetworkPolicyIngressRule{
 				From: []networkingv1.NetworkPolicyPeer{
 					{
