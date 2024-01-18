@@ -236,7 +236,12 @@ tests:
                     ports:
                       - containerPort: 5432
                         protocol: TCP
-                    resources: { }
+                    resources:
+                      limits:
+                        memory: 256Mi
+                      requests:
+                        cpu: 50m
+                        memory: 32Mi
                     imagePullPolicy: IfNotPresent
                     securityContext:
                       allowPrivilegeEscalation: false
