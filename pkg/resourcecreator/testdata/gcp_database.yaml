@@ -237,6 +237,8 @@ tests:
                       - containerPort: 5432
                         protocol: TCP
                     resources:
+                      limits:
+                        memory: 256Mi
                       requests:
                         cpu: 50m
                         memory: 32Mi

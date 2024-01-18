@@ -17,6 +17,9 @@ func GcpServiceAccountName(appNamespaceHash, projectId string) string {
 func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, projectId, instanceName string) corev1.Container {
 	connectionName := fmt.Sprintf("%s:%s:%s", projectId, Region, instanceName)
 	cloudSqlProxyContainerResourceSpec := nais_io_v1.ResourceRequirements{
+		Limits: &nais_io_v1.ResourceSpec{
+			Memory: "256Mi",
+		},
 		Requests: &nais_io_v1.ResourceSpec{
 			Cpu:    "50m",
 			Memory: "32Mi",
