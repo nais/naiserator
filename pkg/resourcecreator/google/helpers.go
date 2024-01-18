@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
+
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 )
 
 func GcpServiceAccountName(appNamespaceHash, projectId string) string {
@@ -16,12 +17,8 @@ func GcpServiceAccountName(appNamespaceHash, projectId string) string {
 func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, projectId, instanceName string) corev1.Container {
 	connectionName := fmt.Sprintf("%s:%s:%s", projectId, Region, instanceName)
 	cloudSqlProxyContainerResourceSpec := nais_io_v1.ResourceRequirements{
-		Limits: &nais_io_v1.ResourceSpec{
-			Cpu:    "250m",
-			Memory: "256Mi",
-		},
 		Requests: &nais_io_v1.ResourceSpec{
-			Cpu:    "20m",
+			Cpu:    "50m",
 			Memory: "32Mi",
 		},
 	}
