@@ -35,8 +35,9 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 			ContainerPort: port,
 			Protocol:      corev1.ProtocolTCP,
 		}},
+		// Needs version 2.x of Cloud SQL proxy
 		Command: []string{
-			"/cloud_sql_proxy",
+			"/cloud-sql-proxy",
 			"--max-sigterm-delay", CloudSQLProxyTermTimeout,
 			"--port", strconv.Itoa(int(port)),
 			connectionName,

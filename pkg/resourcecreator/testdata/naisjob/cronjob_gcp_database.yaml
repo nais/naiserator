@@ -222,7 +222,7 @@ tests:
                             value: team-project-id
                       - name: cloudsql-proxy
                         command:
-                          - /cloud_sql_proxy
+                          - /cloud-sql-proxy
                           - --max-sigterm-delay
                           - 30s
                           - --port
