@@ -16,8 +16,6 @@ import (
 	"github.com/nais/liberator/pkg/crd"
 	"github.com/nais/liberator/pkg/events"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
-	"github.com/nais/naiserator/pkg/generators"
-	resourcecreator_secret "github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -31,6 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/nais/naiserator/pkg/generators"
+	resourcecreator_secret "github.com/nais/naiserator/pkg/resourcecreator/secret"
 
 	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -494,8 +495,8 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	err = rig.client.Get(ctx, req.NamespacedName, deploy)
 	assert.NoError(t, err)
-	expectedInstanceName := fmt.Sprintf("-instances=%s:%s:%s=tcp:5432", testProjectId, google.Region, app.Name)
-	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[2])
+	expectedInstanceName := fmt.Sprintf("%s:%s:%s", testProjectId, google.Region, app.Name)
+	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[5])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqlinstance)
 	assert.NoError(t, err)
