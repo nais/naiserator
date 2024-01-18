@@ -230,9 +230,12 @@ tests:
                         value: team-project-id
                   - name: cloudsql-proxy
                     command:
-                      - /cloud_sql_proxy
-                      - -term_timeout=30s
-                      - -instances=team-project-id:europe-north1:myapplication=tcp:5432
+                      - /cloud-sql-proxy
+                      - --max-sigterm-delay
+                      - 30s
+                      - --port
+                      - "5432"
+                      - team-project-id:europe-north1:myapplication
                     ports:
                       - containerPort: 5432
                         protocol: TCP
