@@ -19,7 +19,7 @@ naiserator:
   bind: 0.0.0.0:8080
   cluster-name: ""
   google-project-id: ""
-  google-cloud-sql-proxy-container-image: "gcr.io/cloudsql-docker/gce-proxy:1.33.9-alpine"
+  google-cloud-sql-proxy-container-image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8-alpine"
   api-server-ip: ""
   host-aliases: ""
   nais-namespace: "nais-system"

@@ -2,6 +2,7 @@ package google
 
 import (
 	"fmt"
+	"strconv"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,8 +37,9 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 		}},
 		Command: []string{
 			"/cloud_sql_proxy",
-			fmt.Sprintf("-term_timeout=%s", CloudSQLProxyTermTimeout),
-			fmt.Sprintf("-instances=%s=tcp:%d", connectionName, port),
+			"--max-sigterm-delay", CloudSQLProxyTermTimeout,
+			"--port", strconv.Itoa(int(port)),
+			connectionName,
 		},
 		Resources: pod.ResourceLimits(cloudSqlProxyContainerResourceSpec),
 		SecurityContext: &corev1.SecurityContext{
