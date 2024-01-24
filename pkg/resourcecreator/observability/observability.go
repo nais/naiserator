@@ -124,7 +124,6 @@ func Create(source Source, ast *resource.Ast, _ any) error {
 			ast.Labels[logLabelDefault] = "false"
 
 			for _, destination := range obs.Logging.Destinations {
-				// validate destination
 				ast.Labels[logLabelPrefix+destination.ID] = "true"
 			}
 		}
