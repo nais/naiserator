@@ -164,3 +164,7 @@ func (o *Options) IsSpotTolerationEnabled() bool {
 func (o *Options) IsInfluxCredentialsEnabled() bool {
 	return o.Config.Features.InfluxCredentials
 }
+
+func (o *Options) GetObservability() config.Observability {
+	return o.Config.Observability
+}

@@ -1,6 +1,13 @@
 testconfig:
   description: set logging labels when logging is enabled
 
+config:
+  observability:
+    logging:
+      destinations:
+        - elastic
+        - loki
+
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

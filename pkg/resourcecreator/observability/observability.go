@@ -2,6 +2,7 @@ package observability
 
 import (
 	"fmt"
+	"slices"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -10,12 +11,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 type Source interface {
 	resource.Source
 	GetObservability() *nais_io_v1.Observability
+}
+
+type Config interface {
+	GetObservability() config.Observability
 }
 
 // Standard environment variable names from https://opentelemetry.io/docs/specs/otel/protocol/exporter/
@@ -97,8 +103,9 @@ func tracingNetpol(source Source) (*networkingv1.NetworkPolicy, error) {
 	}, nil
 }
 
-func Create(source Source, ast *resource.Ast, _ any) error {
+func Create(source Source, ast *resource.Ast, config Config) error {
 	obs := source.GetObservability()
+	cfg := config.GetObservability()
 
 	if obs == nil {
 		return nil
@@ -124,6 +131,10 @@ func Create(source Source, ast *resource.Ast, _ any) error {
 			ast.Labels[logLabelDefault] = "false"
 
 			for _, destination := range obs.Logging.Destinations {
+				if !slices.Contains(cfg.Logging.Destinations, destination.ID) {
+					return fmt.Errorf("logging destination %q does not exist in cluster", destination.ID)
+				}
+
 				ast.Labels[logLabelPrefix+destination.ID] = "true"
 			}
 		}
