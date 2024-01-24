@@ -1,5 +1,5 @@
 testconfig:
-  description: set logging labels when logging is enabled
+  description: set logging labels when logging is disabled
 
 input:
   kind: Application
