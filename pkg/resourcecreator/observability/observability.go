@@ -27,7 +27,10 @@ const collectorEndpoint = "http://tempo-distributor.nais-system:4317"
 const otelExporterProtocol = "OTEL_EXPORTER_OTLP_PROTOCOL"
 const collectorProtocol = "grpc"
 
-func envVars(source Source) []corev1.EnvVar {
+const logLabelDefault = "logs.nais.io/flow-default"
+const logLabelPrefix = "logs.nais.io/flow-"
+
+func tracingEnvVars(source Source) []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{
 			Name:  otelServiceName,
@@ -48,7 +51,7 @@ func envVars(source Source) []corev1.EnvVar {
 	}
 }
 
-func netpol(source Source) (*networkingv1.NetworkPolicy, error) {
+func tracingNetpol(source Source) (*networkingv1.NetworkPolicy, error) {
 	name, err := namegen.ShortName(source.GetName()+"-"+"tracing", validation.DNS1035LabelMaxLength)
 	if err != nil {
 		return nil, err
@@ -96,17 +99,36 @@ func netpol(source Source) (*networkingv1.NetworkPolicy, error) {
 
 func Create(source Source, ast *resource.Ast, _ any) error {
 	obs := source.GetObservability()
-	if obs == nil || obs.Tracing == nil || !obs.Tracing.Enabled {
+
+	if obs == nil {
 		return nil
 	}
 
-	np, err := netpol(source)
-	if err != nil {
-		return err
+	if obs.Tracing != nil && obs.Tracing.Enabled {
+		np, err := tracingNetpol(source)
+		if err != nil {
+			return err
+		}
+
+		ast.Env = append(ast.Env, tracingEnvVars(source)...)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 	}
 
-	ast.Env = append(ast.Env, envVars(source)...)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, np)
+	if obs.Logging != nil {
+		if !obs.Logging.Enabled {
+			ast.Labels[logLabelDefault] = "false"
+			return nil
+		}
+
+		if len(obs.Logging.Destinations) > 0 {
+			ast.Labels[logLabelDefault] = "false"
+
+			for _, destination := range obs.Logging.Destinations {
+				// validate destination
+				ast.Labels[logLabelPrefix+destination.ID] = "true"
+			}
+		}
+	}
 
 	return nil
 }
