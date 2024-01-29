@@ -1,0 +1,46 @@
+testconfig:
+  description: set logging labels when logging is enabled
+
+config:
+  observability:
+    logging:
+      destinations:
+        - elastic
+        - loki
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    observability:
+      logging:
+        enabled: true
+        destinations:
+          - id: elastic
+          - id: loki
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "set log labels when logging is enabled and using custom destinations"
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  app: myapplication
+                  team: myteam
+                  logs.nais.io/flow-default: "false"
+                  logs.nais.io/flow-elastic: "true"
+                  logs.nais.io/flow-loki: "true"

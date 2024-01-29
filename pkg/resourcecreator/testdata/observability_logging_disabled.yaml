@@ -1,0 +1,34 @@
+testconfig:
+  description: set logging labels when logging is disabled
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    observability:
+      logging:
+        enabled: false
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "set default logging label to false when logging is disabled"
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  app: myapplication
+                  team: myteam
+                  logs.nais.io/flow-default: "false"

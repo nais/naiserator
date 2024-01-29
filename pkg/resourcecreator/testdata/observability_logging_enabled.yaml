@@ -1,0 +1,33 @@
+testconfig:
+  description: set logging labels when logging is enabled
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    observability:
+      logging:
+        enabled: true
+
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "no logging labels when logging is enabled and using default destinations"
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  app: myapplication
+                  team: myteam

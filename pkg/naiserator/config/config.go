@@ -65,6 +65,14 @@ type Features struct {
 	Wonderwall                  bool     `json:"wonderwall"`
 }
 
+type Observability struct {
+	Logging Logging `json:"logging"`
+}
+
+type Logging struct {
+	Destinations []string `json:"destinations"`
+}
+
 type Securelogs struct {
 	FluentdImage         string `json:"fluentd-image"`
 	ConfigMapReloadImage string `json:"configmap-reload-image"`
@@ -142,6 +150,7 @@ type Config struct {
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
 	NaisNamespace                     string           `json:"nais-namespace"`
+	Observability                     Observability    `json:"observability"`
 	AivenRange                        string           `json:"aiven-range"`
 	AivenProject                      string           `json:"aiven-project"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
@@ -189,6 +198,7 @@ const (
 	KubeConfig                          = "kubeconfig"
 	LeaderElectionImage                 = "leader-election.image"
 	MaxConcurrentReconciles             = "max-concurrent-reconciles"
+	ObservabilityLoggingDestinations    = "observability.logging.destinations"
 	ProxyAddress                        = "proxy.address"
 	ProxyExclude                        = "proxy.exclude"
 	RateLimitBurst                      = "ratelimit.burst"
@@ -266,6 +276,7 @@ func init() {
 
 	flag.String(LeaderElectionImage, "", "image to use for leader election in deployed applications")
 	flag.Int(MaxConcurrentReconciles, 1, "maximum number of concurrent Reconciles which can be run by the controller.")
+	flag.StringArray(ObservabilityLoggingDestinations, []string{}, "list of valid logging destinations")
 	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
 	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 

@@ -4,4 +4,4 @@ name: naiserator
 description: creates k8s resources based on application spec
 sources:
   - https://github.com/nais/naiserator/tree/master/charts
-version: 2.1.0
+version: 2.2.0

@@ -2,6 +2,7 @@ package observability
 
 import (
 	"fmt"
+	"slices"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -10,12 +11,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 type Source interface {
 	resource.Source
 	GetObservability() *nais_io_v1.Observability
+}
+
+type Config interface {
+	GetObservability() config.Observability
 }
 
 // Standard environment variable names from https://opentelemetry.io/docs/specs/otel/protocol/exporter/
@@ -27,7 +33,10 @@ const collectorEndpoint = "http://tempo-distributor.nais-system:4317"
 const otelExporterProtocol = "OTEL_EXPORTER_OTLP_PROTOCOL"
 const collectorProtocol = "grpc"
 
-func envVars(source Source) []corev1.EnvVar {
+const logLabelDefault = "logs.nais.io/flow-default"
+const logLabelPrefix = "logs.nais.io/flow-"
+
+func tracingEnvVars(source Source) []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{
 			Name:  otelServiceName,
@@ -48,7 +57,7 @@ func envVars(source Source) []corev1.EnvVar {
 	}
 }
 
-func netpol(source Source) (*networkingv1.NetworkPolicy, error) {
+func tracingNetpol(source Source) (*networkingv1.NetworkPolicy, error) {
 	name, err := namegen.ShortName(source.GetName()+"-"+"tracing", validation.DNS1035LabelMaxLength)
 	if err != nil {
 		return nil, err
@@ -94,19 +103,42 @@ func netpol(source Source) (*networkingv1.NetworkPolicy, error) {
 	}, nil
 }
 
-func Create(source Source, ast *resource.Ast, _ any) error {
+func Create(source Source, ast *resource.Ast, config Config) error {
 	obs := source.GetObservability()
-	if obs == nil || obs.Tracing == nil || !obs.Tracing.Enabled {
+	cfg := config.GetObservability()
+
+	if obs == nil {
 		return nil
 	}
 
-	np, err := netpol(source)
-	if err != nil {
-		return err
+	if obs.Tracing != nil && obs.Tracing.Enabled {
+		np, err := tracingNetpol(source)
+		if err != nil {
+			return err
+		}
+
+		ast.Env = append(ast.Env, tracingEnvVars(source)...)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 	}
 
-	ast.Env = append(ast.Env, envVars(source)...)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, np)
+	if obs.Logging != nil {
+		if !obs.Logging.Enabled {
+			ast.Labels[logLabelDefault] = "false"
+			return nil
+		}
+
+		if len(obs.Logging.Destinations) > 0 {
+			ast.Labels[logLabelDefault] = "false"
+
+			for _, destination := range obs.Logging.Destinations {
+				if !slices.Contains(cfg.Logging.Destinations, destination.ID) {
+					return fmt.Errorf("logging destination %q does not exist in cluster", destination.ID)
+				}
+
+				ast.Labels[logLabelPrefix+destination.ID] = "true"
+			}
+		}
+	}
 
 	return nil
 }
