@@ -176,6 +176,7 @@ values:
       type: bool
   naiserator.observability.logging.destinations:
     computed:
+      # Find all logging_*_default_flow environment variables and use for configuration of available log destinations
       template: |
         {{ range $k,$v := .Env }}
         {{ if eq (printf "%.8s" $k) "logging_" }}
