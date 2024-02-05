@@ -7,12 +7,13 @@ import (
 	"strings"
 	"time"
 
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/stringutil"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/stringutil"
 )
 
 type Source interface {
@@ -28,7 +29,6 @@ type Source interface {
 	LogFields() log.Fields
 	ApplyDefaults() error
 	Hash() (string, error)
-	SetStatusConditions()
 }
 
 func CreateObjectMeta(source Source) metav1.ObjectMeta {

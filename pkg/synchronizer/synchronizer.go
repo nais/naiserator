@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	"github.com/nais/liberator/pkg/events"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -22,6 +20,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/liberator/pkg/events"
 
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/kafka"
@@ -142,6 +143,10 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// We have some old, fun data in the conditions array from before. Zero them out for now to avoid confusion.
+	// fixme: can be removed when we don't have garbage data anymore. Late 2024?
+	app.GetStatus().Conditions = nil
+
 	kind := app.GetObjectKind().GroupVersionKind().Kind
 	changed := true
 
@@ -154,7 +159,6 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		}
 		metrics.Synchronizations.WithLabelValues(kind, app.GetStatus().SynchronizationState).Inc()
 		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
-			app.SetStatusConditions()
 			existing.SetStatus(app.GetStatus())
 			return n.Update(ctx, existing) // was app
 		})
@@ -194,7 +198,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
-		app.GetStatus().SynchronizationState = events.FailedPrepare
+		app.GetStatus().SetSynchronizationStateWithCondition(events.FailedPrepare, err.Error())
 		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		return ctrl.Result{RequeueAfter: prepareRetryInterval}, nil
 	}
@@ -222,10 +226,10 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	retry, err := n.Sync(ctx, *rollout)
 	if err != nil {
 		if retry {
-			app.GetStatus().SynchronizationState = events.Retrying
+			app.GetStatus().SetSynchronizationStateWithCondition(events.Retrying, err.Error())
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		} else {
-			app.GetStatus().SynchronizationState = events.FailedSynchronization
+			app.GetStatus().SetSynchronizationStateWithCondition(events.FailedSynchronization, err.Error())
 			app.GetStatus().SynchronizationHash = rollout.SynchronizationHash // permanent failure
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 			err = nil
@@ -234,12 +238,13 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	}
 
 	// Synchronization OK
+	syncMsg := "Deployment has been processed; waiting for completion..."
 	logger.Debugf("Successful synchronization")
-	app.GetStatus().SynchronizationState = events.Synchronized
+	app.GetStatus().SetSynchronizationStateWithCondition(events.Synchronized, syncMsg)
 	app.GetStatus().SynchronizationHash = rollout.SynchronizationHash
 	app.GetStatus().SynchronizationTime = time.Now().UnixNano()
 
-	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.GetStatus().SynchronizationState, "Successfully synchronized all application resources", "Normal"))
+	_, err = n.reportEvent(ctx, resource.CreateEvent(app, app.GetStatus().SynchronizationState, syncMsg, "Normal"))
 	if err != nil {
 		log.Errorf("While creating an event for this rollout, an error occurred: %s", err)
 	}

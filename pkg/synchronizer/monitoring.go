@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nais/liberator/pkg/events"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -15,6 +14,8 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/nais/liberator/pkg/events"
 
 	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
@@ -289,10 +290,9 @@ func applicationDeploymentComplete(deployment *appsv1.Deployment) bool {
 }
 
 func setSyncStatus(app resource.Source, synchronizationState string, event *deployment.Event) resource.Source {
-	app.GetStatus().SynchronizationState = synchronizationState
+	app.GetStatus().SetSynchronizationStateWithCondition(synchronizationState, "Successfully deployed.")
 	app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
 	app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
-	app.SetStatusConditions()
 	metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
 	return app
 }
