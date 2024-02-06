@@ -496,7 +496,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	err = rig.client.Get(ctx, req.NamespacedName, deploy)
 	assert.NoError(t, err)
 	expectedInstanceName := fmt.Sprintf("%s:%s:%s", testProjectId, google.Region, app.Name)
-	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[5])
+	assert.Equal(t, expectedInstanceName, deploy.Spec.Template.Spec.Containers[1].Command[6])
 
 	err = rig.client.Get(ctx, req.NamespacedName, sqlinstance)
 	assert.NoError(t, err)
