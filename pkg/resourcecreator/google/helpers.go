@@ -40,6 +40,7 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 			"/cloud-sql-proxy",
 			"--max-sigterm-delay", CloudSQLProxyTermTimeout,
 			"--port", strconv.Itoa(int(port)),
+			"--quitquitquit",
 			connectionName,
 		},
 		Resources: pod.ResourceLimits(cloudSqlProxyContainerResourceSpec),
