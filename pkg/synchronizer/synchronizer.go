@@ -196,6 +196,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		}
 	}
 
+	// Prepare configuration
 	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
 		app.GetStatus().SetSynchronizationStateWithCondition(events.FailedPrepare, err.Error())
@@ -216,6 +217,14 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		}
 
 		return ctrl.Result{}, nil
+	}
+
+	// Generate the actual Kubernetes resources that are going out into the cluster
+	rollout.ResourceOperations, err = n.generator.Generate(rollout.Source, rollout.Options)
+	if err != nil {
+		app.GetStatus().SetSynchronizationStateWithCondition(events.FailedGenerate, err.Error())
+		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
+		return ctrl.Result{}, err
 	}
 
 	logger = *log.WithFields(app.LogFields())
@@ -434,11 +443,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 	}
 
 	rollout.CorrelationID = source.CorrelationID()
-	rollout.ResourceOperations, err = n.generator.Generate(source, opts)
-
-	if err != nil {
-		return nil, fmt.Errorf("creating cluster resource operations: %w", err)
-	}
+	rollout.Options = opts
 
 	return rollout, nil
 }
