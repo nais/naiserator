@@ -1,0 +1,49 @@
+testconfig:
+  description: set logging labels when logging is enabled
+
+config:
+  observability:
+    logging:
+      destinations:
+        - elastic
+        - loki
+
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/mynaisjob:1.2.3
+    schedule: "* 2 * * *"
+    observability:
+      logging:
+        enabled: true
+        destinations:
+          - id: elastic
+          - id: loki
+
+tests:
+  - apiVersion: batch/v1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "set log labels when logging is enabled and using custom destinations"
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  metadata:
+                    labels:
+                      app: mynaisjob
+                      team: myteam
+                      logs.nais.io/flow-default: "false"
+                      logs.nais.io/flow-elastic: "true"
+                      logs.nais.io/flow-loki: "true"
