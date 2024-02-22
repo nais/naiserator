@@ -10,7 +10,7 @@ config:
           - key1=value1
           - key2=value2
           - key3=value3
-        namespace: "my-system"
+        namespace: "system-namespace"
         port: 4317
         service: "my-collector"
         tls: false
@@ -52,7 +52,7 @@ tests:
                       - name: OTEL_RESOURCE_ATTRIBUTES
                         value: service.name=myapplication,service.namespace=mynamespace
                       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-                        value: http://my-collector.my-system:4317
+                        value: http://my-collector.system-namespace:4317
                       - name: OTEL_EXPORTER_OTLP_PROTOCOL
                         value: grpc
                       - name: OTEL_EXPORTER_OTLP_INSECURE
@@ -71,7 +71,7 @@ tests:
               - to:
                   - namespaceSelector:
                       matchLabels:
-                        kubernetes.io/metadata.name: my-system
+                        kubernetes.io/metadata.name: system-namespace
                     podSelector:
                       matchLabels:
                         key1: value1
