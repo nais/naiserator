@@ -147,7 +147,11 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return nil
 	}
 
-	if cfg.Otel.Enabled && obs.Tracing != nil && obs.Tracing.Enabled {
+	if obs.Tracing != nil && obs.Tracing.Enabled {
+		if !cfg.Otel.Enabled {
+			return fmt.Errorf("tracing is not supported in this cluster configuration")
+		}
+
 		netpol, err := tracingNetpol(source, cfg.Otel)
 		if err != nil {
 			return err
