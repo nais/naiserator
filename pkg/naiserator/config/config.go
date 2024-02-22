@@ -67,6 +67,21 @@ type Features struct {
 
 type Observability struct {
 	Logging Logging `json:"logging"`
+	Otel    Otel    `json:"otel"`
+}
+
+type Otel struct {
+	Enabled   bool          `json:"enabled"`
+	Collector OtelCollector `json:"collector"`
+}
+
+type OtelCollector struct {
+	Labels    []string `json:"labels"`
+	Namespace string   `json:"namespace"`
+	Port      int      `json:"port"`
+	Protocol  string   `json:"protocol"`
+	Service   string   `json:"service"`
+	Tls       bool     `json:"tls"`
 }
 
 type Logging struct {
@@ -199,6 +214,13 @@ const (
 	LeaderElectionImage                 = "leader-election.image"
 	MaxConcurrentReconciles             = "max-concurrent-reconciles"
 	ObservabilityLoggingDestinations    = "observability.logging.destinations"
+	ObservabilityOtelCollectorLabels    = "observability.otel.collector.labels"
+	ObservabilityOtelCollectorNamespace = "observability.otel.collector.namespace"
+	ObservabilityOtelCollectorPort      = "observability.otel.collector.port"
+	ObservabilityOtelCollectorProtocol  = "observability.otel.collector.protocol"
+	ObservabilityOtelCollectorService   = "observability.otel.collector.service"
+	ObservabilityOtelCollectorTLS       = "observability.otel.collector.tls"
+	ObservabilityOtelEnabled            = "observability.otel.enabled"
 	ProxyAddress                        = "proxy.address"
 	ProxyExclude                        = "proxy.exclude"
 	RateLimitBurst                      = "ratelimit.burst"
@@ -277,6 +299,13 @@ func init() {
 	flag.String(LeaderElectionImage, "", "image to use for leader election in deployed applications")
 	flag.Int(MaxConcurrentReconciles, 1, "maximum number of concurrent Reconciles which can be run by the controller.")
 	flag.StringArray(ObservabilityLoggingDestinations, []string{}, "list of valid logging destinations")
+	flag.Bool(ObservabilityOtelEnabled, false, "enable OpenTelemetry")
+	flag.String(ObservabilityOtelCollectorNamespace, "nais-system", "namespace of the OpenTelemetry collector")
+	flag.String(ObservabilityOtelCollectorService, "opentelmetry-collector", "service name of the OpenTelemetry collector")
+	flag.String(ObservabilityOtelCollectorProtocol, "grpc", "protocol used by the OpenTelemetry collector")
+	flag.Int(ObservabilityOtelCollectorPort, 4317, "port used by the OpenTelemetry collector")
+	flag.Bool(ObservabilityOtelCollectorTLS, false, "use TLS for the OpenTelemetry collector")
+	flag.StringArray(ObservabilityOtelCollectorLabels, []string{}, "list of labels to be used by the OpenTelemetry collector")
 	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
 	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 
