@@ -56,6 +56,18 @@ naiserator:
       insecure: false
     topic: aura.dev-rapid
   max-concurrent-reconciles: 20
+  observability:
+    otel:
+      enabled: false
+      collector:
+        labels:
+          - "app.kubernetes.io/name=opentelemetry-collector"
+          - "app.kubernetes.io/instance=nais-system.opentelemetry"
+        namespace: "nais-system"
+        port: 4317
+        service: "opentelemetry-collector"
+        tls: false
+        protocol: "grpc"
   proxy:
     address: ""
     exclude: ""

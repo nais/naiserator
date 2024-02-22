@@ -1,6 +1,21 @@
 testconfig:
   description: inject opentelemetry tracing environment variable and network policy
 
+config:
+  observability:
+    otel:
+      enabled: true
+      collector:
+        labels:
+          - key1=value1
+          - key2=value2
+          - key3=value3
+        namespace: "my-system"
+        port: 4317
+        service: "my-collector"
+        tls: false
+        protocol: "grpc"
+
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -37,9 +52,11 @@ tests:
                       - name: OTEL_RESOURCE_ATTRIBUTES
                         value: service.name=myapplication,service.namespace=mynamespace
                       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-                        value: http://tempo-distributor.nais-system:4317
+                        value: http://my-collector.my-system:4317
                       - name: OTEL_EXPORTER_OTLP_PROTOCOL
                         value: grpc
+                      - name: OTEL_EXPORTER_OTLP_INSECURE
+                        value: "true"
 
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
@@ -52,9 +69,11 @@ tests:
           spec:
             egress:
               - to:
-                - namespaceSelector:
-                    matchLabels:
-                      kubernetes.io/metadata.name: nais-system
-                  podSelector:
-                    matchLabels:
-                      app.kubernetes.io/instance: tempo
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: my-system
+                    podSelector:
+                      matchLabels:
+                        key1: value1
+                        key2: value2
+                        key3: value3
