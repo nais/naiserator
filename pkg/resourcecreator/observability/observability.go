@@ -37,6 +37,9 @@ const otelExporterInsecure = "OTEL_EXPORTER_OTLP_INSECURE"
 const logLabelDefault = "logs.nais.io/flow-default"
 const logLabelPrefix = "logs.nais.io/flow-"
 
+const autoInstrumentationInjectAnnotationPrefix = "instrumentation.opentelemetry.io/inject-"
+const autoInstrumentationContainerNamesAnnotation = "instrumentation.opentelemetry.io/container-names"
+
 func otelEndpointFromConfig(collector config.OtelCollector) string {
 	schema := "http"
 	if collector.Tls {
@@ -70,6 +73,16 @@ func otelEnvVars(source Source, otel config.Otel) []corev1.EnvVar {
 			Name:  otelExporterInsecure,
 			Value: fmt.Sprintf("%t", !otel.Collector.Tls),
 		},
+	}
+}
+
+func otelAutoInstrumentAnnotations(source Source, otel config.Otel) map[string]string {
+	runtime := source.GetObservability().AutoInstrumentation.Runtime
+	autoInstrumentationInjectAnnotation := autoInstrumentationInjectAnnotationPrefix + runtime
+
+	return map[string]string{
+		autoInstrumentationInjectAnnotation:         otel.AutoInstrumentation.AppConfig,
+		autoInstrumentationContainerNamesAnnotation: source.GetName(),
 	}
 }
 
@@ -147,14 +160,24 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return nil
 	}
 
-	if obs.Tracing != nil && obs.Tracing.Enabled {
+	if obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled && obs.Tracing != nil && obs.Tracing.Enabled {
+		return fmt.Errorf("auto-instrumentation and tracing cannot be enabled at the same time")
+	}
+
+	if (obs.Tracing != nil && obs.Tracing.Enabled) || (obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled) {
 		if !cfg.Otel.Enabled {
-			return fmt.Errorf("tracing is not supported in this cluster configuration")
+			return fmt.Errorf("tracing and auto-instrumentation are not supported in this cluster")
 		}
 
 		netpol, err := tracingNetpol(source, cfg.Otel)
 		if err != nil {
 			return err
+		}
+
+		if obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled {
+			for k, v := range otelAutoInstrumentAnnotations(source, cfg.Otel) {
+				ast.Annotations[k] = v
+			}
 		}
 
 		ast.Env = append(ast.Env, otelEnvVars(source, cfg.Otel)...)

@@ -21,4 +21,4 @@ input:
       tracing:
         enabled: true
 
-error: "tracing is not supported in this cluster configuration"
+error: "tracing and auto-instrumentation are not supported in this cluster"

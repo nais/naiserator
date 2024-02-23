@@ -373,7 +373,7 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 		port = strconv.Itoa(app.GetPort())
 	}
 
-	objectMeta.Annotations = map[string]string{}
+	//objectMeta.Annotations = map[string]string{}
 
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = app.GetName()
 
