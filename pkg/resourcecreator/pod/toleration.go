@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	GKESpotTolerationKey   = "cloud.google.com/gke-spot"
 	NaisGarTolerationKey   = "nais.io/gar"
 	NaisGarNodeSelectorKey = "nais.io/gar-node-pool"
 	GarImagePrefix         = "europe-north1-docker.pkg.dev/"
@@ -16,15 +15,6 @@ const (
 
 func SetupTolerations(cfg Config, image string) []corev1.Toleration {
 	var tolerations []corev1.Toleration
-
-	if cfg.IsSpotTolerationEnabled() {
-		tolerations = append(tolerations, corev1.Toleration{
-			Key:      GKESpotTolerationKey,
-			Operator: corev1.TolerationOpEqual,
-			Value:    "true",
-			Effect:   corev1.TaintEffectNoSchedule,
-		})
-	}
 
 	if cfg.IsGARTolerationEnabled() && strings.HasPrefix(image, GarImagePrefix) {
 		tolerations = append(tolerations, corev1.Toleration{
@@ -46,8 +36,6 @@ func ConfigureAffinity(appName string, tolerations []corev1.Toleration) *corev1.
 
 	for _, toleration := range tolerations {
 		switch toleration.Key {
-		case GKESpotTolerationKey:
-			nodeSelectorTerms = append(nodeSelectorTerms, nodeSelectorTerm(toleration.Key, toleration.Value))
 		case NaisGarTolerationKey:
 			nodeSelectorTerms = append(nodeSelectorTerms, nodeSelectorTerm(NaisGarNodeSelectorKey, toleration.Value))
 		}
