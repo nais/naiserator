@@ -86,7 +86,7 @@ func otelAutoInstrumentAnnotations(source Source, otel config.Otel) map[string]s
 	}
 }
 
-func labelsFromCollectorConfig(collector config.OtelCollector) map[string]string {
+func netpolLabelsFromCollectorConfig(collector config.OtelCollector) map[string]string {
 	labels := collector.Labels
 	labelMap := make(map[string]string, len(labels))
 	for _, label := range labels {
@@ -99,7 +99,29 @@ func labelsFromCollectorConfig(collector config.OtelCollector) map[string]string
 	return labelMap
 }
 
-func tracingNetpol(source Source, otel config.Otel) (*networkingv1.NetworkPolicy, error) {
+func logLabels(obs *nais_io_v1.Observability, cfg config.Logging) (map[string]string, error) {
+	if !obs.Logging.Enabled {
+		return map[string]string{logLabelDefault: "false"}, nil
+	}
+
+	labels := map[string]string{}
+
+	if len(obs.Logging.Destinations) > 0 {
+		labels[logLabelDefault] = "false"
+
+		for _, destination := range obs.Logging.Destinations {
+			if !slices.Contains(cfg.Destinations, destination.ID) {
+				return nil, fmt.Errorf("logging destination %q does not exist in cluster", destination.ID)
+			}
+
+			labels[logLabelPrefix+destination.ID] = "true"
+		}
+	}
+
+	return labels, nil
+}
+
+func otelNetpol(source Source, otel config.Otel) (*networkingv1.NetworkPolicy, error) {
 	name, err := namegen.ShortName(source.GetName()+"-"+"tracing", validation.DNS1035LabelMaxLength)
 	if err != nil {
 		return nil, err
@@ -109,7 +131,7 @@ func tracingNetpol(source Source, otel config.Otel) (*networkingv1.NetworkPolicy
 	objectMeta.Name = name
 
 	protocolTCP := corev1.ProtocolTCP
-	collectorLabels := labelsFromCollectorConfig(otel.Collector)
+	collectorLabels := netpolLabelsFromCollectorConfig(otel.Collector)
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: objectMeta,
@@ -166,10 +188,14 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 
 	if (obs.Tracing != nil && obs.Tracing.Enabled) || (obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled) {
 		if !cfg.Otel.Enabled {
-			return fmt.Errorf("tracing and auto-instrumentation are not supported in this cluster")
+			return fmt.Errorf("opentelemetry is not supported for this cluster")
 		}
 
-		netpol, err := tracingNetpol(source, cfg.Otel)
+		if !cfg.Otel.AutoInstrumentation.Enabled && obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled {
+			return fmt.Errorf("auto-instrumentation is not supported for this cluster")
+		}
+
+		netpol, err := otelNetpol(source, cfg.Otel)
 		if err != nil {
 			return err
 		}
@@ -185,21 +211,13 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	}
 
 	if obs.Logging != nil {
-		if !obs.Logging.Enabled {
-			ast.Labels[logLabelDefault] = "false"
-			return nil
+		logLabels, err := logLabels(obs, cfg.Logging)
+		if err != nil {
+			return err
 		}
 
-		if len(obs.Logging.Destinations) > 0 {
-			ast.Labels[logLabelDefault] = "false"
-
-			for _, destination := range obs.Logging.Destinations {
-				if !slices.Contains(cfg.Logging.Destinations, destination.ID) {
-					return fmt.Errorf("logging destination %q does not exist in cluster", destination.ID)
-				}
-
-				ast.Labels[logLabelPrefix+destination.ID] = "true"
-			}
+		for k, v := range logLabels {
+			ast.Labels[k] = v
 		}
 	}
 
