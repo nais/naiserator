@@ -157,10 +157,6 @@ func (o *Options) IsGARTolerationEnabled() bool {
 	return o.Config.Features.GARToleration
 }
 
-func (o *Options) IsSpotTolerationEnabled() bool {
-	return o.Config.Features.SpotToleration
-}
-
 func (o *Options) IsInfluxCredentialsEnabled() bool {
 	return o.Config.Features.InfluxCredentials
 }

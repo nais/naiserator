@@ -55,7 +55,6 @@ type Config interface {
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsGARTolerationEnabled() bool
-	IsSpotTolerationEnabled() bool
 }
 
 func reorderContainers(appName string, containers []corev1.Container) []corev1.Container {

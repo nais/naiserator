@@ -56,7 +56,6 @@ type Features struct {
 	Linkerd                     bool     `json:"linkerd"`
 	Maskinporten                bool     `json:"maskinporten"`
 	NetworkPolicy               bool     `json:"network-policy"`
-	SpotToleration              bool     `json:"spot-toleration"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`

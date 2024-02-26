@@ -1,9 +1,8 @@
 testconfig:
-  description: application configured with gke spot toleration and gar toleration
+  description: application configured with gar toleration
 
 config:
   features:
-    spot-toleration: true
     gar-toleration: true
 
 input:
@@ -30,10 +29,6 @@ tests:
             template:
               spec:
                 tolerations:
-                  - key: "cloud.google.com/gke-spot"
-                    operator: "Equal"
-                    value: "true"
-                    effect: "NoSchedule"
                   - key: "nais.io/gar"
                     operator: "Equal"
                     value: "true"
@@ -42,11 +37,6 @@ tests:
                   nodeAffinity:
                     requiredDuringSchedulingIgnoredDuringExecution:
                       nodeSelectorTerms:
-                        - matchExpressions:
-                            - key: cloud.google.com/gke-spot
-                              operator: In
-                              values:
-                                - "true"
                         - matchExpressions:
                             - key: nais.io/gar-node-pool
                               operator: In
