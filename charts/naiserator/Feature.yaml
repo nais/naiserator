@@ -177,7 +177,7 @@ values:
   naiserator.observability.otel.enabled:
     computed:
       template: '{{ne .Kind "onprem"}}'
-  naiserator.observability.auto-instrumentation.enabled:
+  naiserator.observability.otel.auto-instrumentation.enabled:
     config:
       type: bool
     ignoreKind:
