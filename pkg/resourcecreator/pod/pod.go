@@ -372,8 +372,6 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 		port = strconv.Itoa(app.GetPort())
 	}
 
-	objectMeta.Annotations = map[string]string{}
-
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = app.GetName()
 
 	if len(cfg.GetGoogleProjectID()) > 0 {
@@ -405,8 +403,6 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg
 	objectMeta := resource.CreateObjectMeta(naisjob)
 	objectMeta.Annotations = ast.Annotations
 	mapMerge(objectMeta.Labels, ast.Labels)
-
-	objectMeta.Annotations = map[string]string{}
 
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = naisjob.GetName()
 

@@ -70,8 +70,14 @@ type Observability struct {
 }
 
 type Otel struct {
-	Enabled   bool          `json:"enabled"`
-	Collector OtelCollector `json:"collector"`
+	Enabled             bool                `json:"enabled"`
+	Collector           OtelCollector       `json:"collector"`
+	AutoInstrumentation AutoInstrumentation `json:"auto-instrumentation"`
+}
+
+type AutoInstrumentation struct {
+	Enabled   bool   `json:"enabled"`
+	AppConfig string `json:"app-config"`
 }
 
 type OtelCollector struct {
@@ -173,67 +179,69 @@ type Config struct {
 }
 
 const (
-	AivenProject                        = "aiven-project"
-	AivenRange                          = "aiven-range"
-	ApiServerIp                         = "api-server-ip"
-	Bind                                = "bind"
-	HealthProbeBindAddress              = "health-probe-bind-address"
-	ClusterName                         = "cluster-name"
-	DryRun                              = "dry-run"
-	NaisNamespace                       = "nais-namespace"
-	FeaturesAccessPolicyNotAllowedCIDRs = "features.access-policy-not-allowed-cidrs"
-	FeaturesAzurerator                  = "features.azurerator"
-	FeaturesGCP                         = "features.gcp"
-	FeaturesIDPorten                    = "features.idporten"
-	FeaturesJwker                       = "features.jwker"
-	FeaturesCNRM                        = "features.cnrm"
-	FeaturesKafkarator                  = "features.kafkarator"
-	FeaturesLinkerd                     = "features.linkerd"
-	FeaturesMaskinporten                = "features.maskinporten"
-	FeaturesNetworkPolicy               = "features.network-policy"
-	FeaturesPrometheusOperator          = "features.prometheus-operator"
-	FeaturesVault                       = "features.vault"
-	FeaturesWebhook                     = "features.webhook"
-	FeaturesWonderwall                  = "features.wonderwall"
-	FeaturesLegacyGCP                   = "features.legacy-gcp"
-	FQDNPolicyEnabled                   = "fqdn-policy.enabled"
-	GoogleCloudSQLProxyContainerImage   = "google-cloud-sql-proxy-container-image"
-	GoogleProjectId                     = "google-project-id"
-	InformerFullSynchronizationInterval = "informer.full-sync-interval"
-	KafkaBrokers                        = "kafka.brokers"
-	KafkaEnabled                        = "kafka.enabled"
-	KafkaLogVerbosity                   = "kafka.log-verbosity"
-	KafkaTLSCAPath                      = "kafka.tls.ca-path"
-	KafkaTLSCertificatePath             = "kafka.tls.certificate-path"
-	KafkaTLSEnabled                     = "kafka.tls.enabled"
-	KafkaTLSInsecure                    = "kafka.tls.insecure"
-	KafkaTLSPrivateKeyPath              = "kafka.tls.private-key-path"
-	KafkaTopic                          = "kafka.topic"
-	KubeConfig                          = "kubeconfig"
-	LeaderElectionImage                 = "leader-election.image"
-	MaxConcurrentReconciles             = "max-concurrent-reconciles"
-	ObservabilityLoggingDestinations    = "observability.logging.destinations"
-	ObservabilityOtelCollectorLabels    = "observability.otel.collector.labels"
-	ObservabilityOtelCollectorNamespace = "observability.otel.collector.namespace"
-	ObservabilityOtelCollectorPort      = "observability.otel.collector.port"
-	ObservabilityOtelCollectorProtocol  = "observability.otel.collector.protocol"
-	ObservabilityOtelCollectorService   = "observability.otel.collector.service"
-	ObservabilityOtelCollectorTLS       = "observability.otel.collector.tls"
-	ObservabilityOtelEnabled            = "observability.otel.enabled"
-	ProxyAddress                        = "proxy.address"
-	ProxyExclude                        = "proxy.exclude"
-	RateLimitBurst                      = "ratelimit.burst"
-	RateLimitQPS                        = "ratelimit.qps"
-	SecurelogsConfigMapReloadImage      = "securelogs.configmap-reload-image"
-	SecurelogsFluentdImage              = "securelogs.fluentd-image"
-	SynchronizerRolloutCheckInterval    = "synchronizer.rollout-check-interval"
-	SynchronizerRolloutTimeout          = "synchronizer.rollout-timeout"
-	SynchronizerSynchronizationTimeout  = "synchronizer.synchronization-timeout"
-	VaultAddress                        = "vault.address"
-	VaultAuthPath                       = "vault.auth-path"
-	VaultInitContainerImage             = "vault.init-container-image"
-	VaultKvPath                         = "vault.kv-path"
-	WonderwallImage                     = "wonderwall.image"
+	AivenProject                                  = "aiven-project"
+	AivenRange                                    = "aiven-range"
+	ApiServerIp                                   = "api-server-ip"
+	Bind                                          = "bind"
+	HealthProbeBindAddress                        = "health-probe-bind-address"
+	ClusterName                                   = "cluster-name"
+	DryRun                                        = "dry-run"
+	NaisNamespace                                 = "nais-namespace"
+	FeaturesAccessPolicyNotAllowedCIDRs           = "features.access-policy-not-allowed-cidrs"
+	FeaturesAzurerator                            = "features.azurerator"
+	FeaturesGCP                                   = "features.gcp"
+	FeaturesIDPorten                              = "features.idporten"
+	FeaturesJwker                                 = "features.jwker"
+	FeaturesCNRM                                  = "features.cnrm"
+	FeaturesKafkarator                            = "features.kafkarator"
+	FeaturesLinkerd                               = "features.linkerd"
+	FeaturesMaskinporten                          = "features.maskinporten"
+	FeaturesNetworkPolicy                         = "features.network-policy"
+	FeaturesPrometheusOperator                    = "features.prometheus-operator"
+	FeaturesVault                                 = "features.vault"
+	FeaturesWebhook                               = "features.webhook"
+	FeaturesWonderwall                            = "features.wonderwall"
+	FeaturesLegacyGCP                             = "features.legacy-gcp"
+	FQDNPolicyEnabled                             = "fqdn-policy.enabled"
+	GoogleCloudSQLProxyContainerImage             = "google-cloud-sql-proxy-container-image"
+	GoogleProjectId                               = "google-project-id"
+	InformerFullSynchronizationInterval           = "informer.full-sync-interval"
+	KafkaBrokers                                  = "kafka.brokers"
+	KafkaEnabled                                  = "kafka.enabled"
+	KafkaLogVerbosity                             = "kafka.log-verbosity"
+	KafkaTLSCAPath                                = "kafka.tls.ca-path"
+	KafkaTLSCertificatePath                       = "kafka.tls.certificate-path"
+	KafkaTLSEnabled                               = "kafka.tls.enabled"
+	KafkaTLSInsecure                              = "kafka.tls.insecure"
+	KafkaTLSPrivateKeyPath                        = "kafka.tls.private-key-path"
+	KafkaTopic                                    = "kafka.topic"
+	KubeConfig                                    = "kubeconfig"
+	LeaderElectionImage                           = "leader-election.image"
+	MaxConcurrentReconciles                       = "max-concurrent-reconciles"
+	ObservabilityLoggingDestinations              = "observability.logging.destinations"
+	ObservabilityOtelCollectorLabels              = "observability.otel.collector.labels"
+	ObservabilityOtelCollectorNamespace           = "observability.otel.collector.namespace"
+	ObservabilityOtelCollectorPort                = "observability.otel.collector.port"
+	ObservabilityOtelCollectorProtocol            = "observability.otel.collector.protocol"
+	ObservabilityOtelCollectorService             = "observability.otel.collector.service"
+	ObservabilityOtelCollectorTLS                 = "observability.otel.collector.tls"
+	ObservabilityOtelEnabled                      = "observability.otel.enabled"
+	ObservabilityOtelAutoInstrumentationAppConfig = "observability.otel.auto-instrumentation.app-config"
+	ObservabilityOtelAutoInstrumentationEnabled   = "observability.otel.auto-instrumentation.enabled"
+	ProxyAddress                                  = "proxy.address"
+	ProxyExclude                                  = "proxy.exclude"
+	RateLimitBurst                                = "ratelimit.burst"
+	RateLimitQPS                                  = "ratelimit.qps"
+	SecurelogsConfigMapReloadImage                = "securelogs.configmap-reload-image"
+	SecurelogsFluentdImage                        = "securelogs.fluentd-image"
+	SynchronizerRolloutCheckInterval              = "synchronizer.rollout-check-interval"
+	SynchronizerRolloutTimeout                    = "synchronizer.rollout-timeout"
+	SynchronizerSynchronizationTimeout            = "synchronizer.synchronization-timeout"
+	VaultAddress                                  = "vault.address"
+	VaultAuthPath                                 = "vault.auth-path"
+	VaultInitContainerImage                       = "vault.init-container-image"
+	VaultKvPath                                   = "vault.kv-path"
+	WonderwallImage                               = "wonderwall.image"
 )
 
 func bindNAIS() {
@@ -302,6 +310,8 @@ func init() {
 	flag.String(ObservabilityOtelCollectorNamespace, "nais-system", "namespace of the OpenTelemetry collector")
 	flag.String(ObservabilityOtelCollectorService, "opentelmetry-collector", "service name of the OpenTelemetry collector")
 	flag.String(ObservabilityOtelCollectorProtocol, "grpc", "protocol used by the OpenTelemetry collector")
+	flag.Bool(ObservabilityOtelAutoInstrumentationEnabled, false, "enable OpenTelemetry auto-instrumentation")
+	flag.String(ObservabilityOtelAutoInstrumentationAppConfig, "nais-system/apps", "path to OpenTelemetry auto-instrumentation config")
 	flag.Int(ObservabilityOtelCollectorPort, 4317, "port used by the OpenTelemetry collector")
 	flag.Bool(ObservabilityOtelCollectorTLS, false, "use TLS for the OpenTelemetry collector")
 	flag.StringArray(ObservabilityOtelCollectorLabels, []string{}, "list of labels to be used by the OpenTelemetry collector")

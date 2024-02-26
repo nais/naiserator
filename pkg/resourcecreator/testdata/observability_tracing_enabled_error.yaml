@@ -21,4 +21,4 @@ input:
       tracing:
         enabled: true
 
-error: "tracing is not supported in this cluster configuration"
+error: "opentelemetry is not supported for this cluster"

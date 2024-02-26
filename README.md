@@ -89,7 +89,7 @@ can be sent to a Kafka topic. There's a few prerequisites to develop with this e
 #### Update and compile Protobuf definition
 
 Whenever the Protobuf definition is updated you can update using `make proto`. It will download the definitions, compile
-and place them in the correct packages. 
+and place them in the correct packages.
 
 ### Code generation
 
