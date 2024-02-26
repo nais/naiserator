@@ -59,6 +59,9 @@ naiserator:
   observability:
     otel:
       enabled: false
+      auto-instrumentation:
+        enabled: false
+        app-config: "nais-system/apps"
       collector:
         labels:
           - "app.kubernetes.io/name=opentelemetry-collector"

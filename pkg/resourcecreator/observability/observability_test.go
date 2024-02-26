@@ -1,6 +1,7 @@
 package observability
 
 import (
+	"fmt"
 	"testing"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -141,7 +142,7 @@ func TestLabelsFromCollectorConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actualLabels := labelsFromCollectorConfig(tc.collector)
+			actualLabels := netpolLabelsFromCollectorConfig(tc.collector)
 			assert.Equal(t, tc.expectedLabels, actualLabels)
 		})
 	}
@@ -225,7 +226,116 @@ func TestTracingNetpol(t *testing.T) {
 		},
 	}
 
-	actualNetworkPolicy, err := tracingNetpol(&app, otel)
+	actualNetworkPolicy, err := otelNetpol(&app, otel)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedNetworkPolicy, actualNetworkPolicy)
+}
+func TestLogLabels(t *testing.T) {
+	tests := []struct {
+		name           string
+		obs            *nais_io_v1.Observability
+		cfg            config.Logging
+		expectedLabels map[string]string
+		expectedError  error
+	}{
+		{
+			name: "Enabled with multiple destinations",
+			obs: &nais_io_v1.Observability{
+				Logging: &nais_io_v1.Logging{
+					Enabled: true,
+					Destinations: []nais_io_v1.LogDestination{
+						{
+							ID: "destination1",
+						},
+						{
+							ID: "destination2",
+						},
+					},
+				},
+			},
+			cfg: config.Logging{
+				Destinations: []string{"destination1", "destination2"},
+			},
+			expectedLabels: map[string]string{
+				"logs.nais.io/flow-default":      "false",
+				"logs.nais.io/flow-destination1": "true",
+				"logs.nais.io/flow-destination2": "true",
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Disabled",
+			obs: &nais_io_v1.Observability{
+				Logging: &nais_io_v1.Logging{
+					Enabled: false,
+				},
+			},
+			cfg: config.Logging{
+				Destinations: []string{"destination1", "destination2"},
+			},
+			expectedLabels: map[string]string{
+				"logs.nais.io/flow-default": "false",
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Invalid destination",
+			obs: &nais_io_v1.Observability{
+				Logging: &nais_io_v1.Logging{
+					Enabled: true,
+					Destinations: []nais_io_v1.LogDestination{
+						{
+							ID: "destination1",
+						},
+					},
+				},
+			},
+			cfg: config.Logging{
+				Destinations: []string{"destination2"},
+			},
+			expectedLabels: nil,
+			expectedError:  fmt.Errorf("logging destination %q does not exist in cluster", "destination1"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualLabels, err := logLabels(tt.obs, tt.cfg)
+
+			assert.Equal(t, tt.expectedError, err)
+			assert.Equal(t, tt.expectedLabels, actualLabels)
+		})
+	}
+}
+
+func TestOtelAutoInstrumentAnnotations(t *testing.T) {
+	app := nais_io_v1alpha1.Application{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-app",
+			Namespace: "my-namespace",
+		},
+		Spec: nais_io_v1alpha1.ApplicationSpec{
+			Observability: &nais_io_v1.Observability{
+				AutoInstrumentation: &nais_io_v1.AutoInstrumentation{
+					Enabled: true,
+					Runtime: "java",
+				},
+			},
+		},
+	}
+
+	otel := config.Otel{
+		AutoInstrumentation: config.AutoInstrumentation{
+			AppConfig: "system-namespace/my-config",
+		},
+	}
+
+	expectedAnnotations := map[string]string{
+		"instrumentation.opentelemetry.io/inject-java":     "system-namespace/my-config",
+		"instrumentation.opentelemetry.io/container-names": "my-app",
+	}
+
+	actualAnnotations := otelAutoInstrumentAnnotations(&app, otel)
+
+	assert.Equal(t, expectedAnnotations, actualAnnotations)
 }
