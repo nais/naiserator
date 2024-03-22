@@ -42,6 +42,7 @@ naiserator:
     nav-ca-bundle: false
     wonderwall: false
     gar-toleration: false
+    sql-instance-in-shared-vpc: false
   frontend:
     telemetry-url: http://localhost:12347/collect
   informer:

@@ -62,6 +62,7 @@ type Features struct {
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	LegacyGCP                   bool     `json:"legacy-gcp"`
 	Wonderwall                  bool     `json:"wonderwall"`
+	SqlInstanceInSharedVpc      bool     `json:"sql-instance-in-shared-vpc"`
 }
 
 type Observability struct {

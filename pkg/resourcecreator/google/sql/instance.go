@@ -37,6 +37,7 @@ type Config interface {
 	GetGoogleProjectID() string
 	GetGoogleTeamProjectID() string
 	GetGoogleCloudSQLProxyContainerImage() string
+	ShouldCreateSqlInstanceInSharedVpc() bool
 }
 
 func availabilityType(highAvailability bool) string {
@@ -47,7 +48,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSqlInstance, projectId string) *google_sql_crd.SQLInstance {
+func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSqlInstance, projectId string, cfg Config) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
@@ -73,6 +74,13 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 		flags = append(flags, google_sql_crd.SQLDatabaseFlag{Name: flag.Name, Value: flag.Value})
 	}
 
+	var privateNetworkRef *google_sql_crd.PrivateNetworkRef
+	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
+		privateNetworkRef = &google_sql_crd.PrivateNetworkRef{
+			External: "projects/" + projectId + "/global/networks/nais-vpc",
+		}
+	}
+
 	sqlInstance := &google_sql_crd.SQLInstance{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SQLInstance",
@@ -91,7 +99,8 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 					BackupRetentionSettings:    backupSettings,
 				},
 				IpConfiguration: google_sql_crd.SQLInstanceIpConfiguration{
-					RequireSsl: true,
+					RequireSsl:        true,
+					PrivateNetworkRef: privateNetworkRef,
 				},
 				DiskAutoresize: instance.DiskAutoresize,
 				DiskSize:       instance.DiskSize,
@@ -231,7 +240,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		objectMeta := resource.CreateObjectMeta(source)
 		googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
-		googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId)
+		googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId, cfg)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
 		iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)

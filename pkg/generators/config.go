@@ -164,3 +164,7 @@ func (o *Options) IsInfluxCredentialsEnabled() bool {
 func (o *Options) GetObservability() config.Observability {
 	return o.Config.Observability
 }
+
+func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {
+	return o.Config.Features.SqlInstanceInSharedVpc
+}

@@ -118,6 +118,10 @@ values:
       type: bool
     ignoreKind:
       - onprem
+  naiserator.features.sql-instance-in-shared-vpc:
+    displayName: Create SQL Instance in Shared VPC
+    config:
+      type: bool
   naiserator.fqdn-policy.enabled:
     displayName: Enable FQDN policy
     config:
