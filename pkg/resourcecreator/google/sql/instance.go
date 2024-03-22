@@ -77,7 +77,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 	var privateNetworkRef *google_sql_crd.PrivateNetworkRef
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		privateNetworkRef = &google_sql_crd.PrivateNetworkRef{
-			External: "projects/" + projectId + "/global/networks/nais-vpc",
+			External: "projects/" + cfg.GetGoogleProjectID() + "/global/networks/nais-vpc",
 		}
 	}
 
