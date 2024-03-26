@@ -48,9 +48,9 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSqlInstance, projectId string, cfg Config) *google_sql_crd.SQLInstance {
+func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSqlInstance, cfg Config) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
-	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
+	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
 
 	if !instance.CascadingDelete {
@@ -240,7 +240,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		objectMeta := resource.CreateObjectMeta(source)
 		googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
-		googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, googleTeamProjectId, cfg)
+		googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, cfg)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
 		iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)

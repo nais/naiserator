@@ -13,10 +13,38 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type MockConfig struct {
+	GoogleProjectID                   string
+	GoogleTeamProjectID               string
+	GoogleCloudSQLProxyContainerImage string
+	CreateSqlInstanceInSharedVpc      bool
+}
+
+func (m *MockConfig) GetGoogleProjectID() string {
+	return m.GoogleProjectID
+}
+
+func (m *MockConfig) GetGoogleTeamProjectID() string {
+	return m.GoogleTeamProjectID
+}
+
+func (m *MockConfig) GetGoogleCloudSQLProxyContainerImage() string {
+	return m.GoogleCloudSQLProxyContainerImage
+}
+
+func (m *MockConfig) ShouldCreateSqlInstanceInSharedVpc() bool {
+	return m.CreateSqlInstanceInSharedVpc
+}
+
 func TestGoogleSqlInstance(t *testing.T) {
 	app := fixtures.MinimalApplication()
 
-	var cfg google_sql.Config
+	cfg := &MockConfig{
+		GoogleProjectID:                   "clusterProjectId",
+		GoogleTeamProjectID:               "teamProjectId",
+		GoogleCloudSQLProxyContainerImage: "cloudsql/image:latest",
+		CreateSqlInstanceInSharedVpc:      true,
+	}
 
 	spec := nais.CloudSqlInstance{
 		Name: app.Name,
@@ -25,13 +53,12 @@ func TestGoogleSqlInstance(t *testing.T) {
 	spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 	assert.NoError(t, err)
 
-	projectId := "projectid"
-	googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, projectId, cfg)
+	googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
 	assert.Equal(t, app.Name, googleSqlInstance.Name)
 	assert.Equal(t, fmt.Sprintf("PD_%s", google_sql.DefaultSqlInstanceDiskType), googleSqlInstance.Spec.Settings.DiskType)
 	assert.Equal(t, google_sql.DefaultSqlInstanceDiskSize, googleSqlInstance.Spec.Settings.DiskSize)
 	assert.Equal(t, google_sql.DefaultSqlInstanceTier, googleSqlInstance.Spec.Settings.Tier)
-	assert.Equal(t, projectId, googleSqlInstance.Annotations[google.ProjectIdAnnotation])
+	assert.Equal(t, cfg.GoogleTeamProjectID, googleSqlInstance.Annotations[google.ProjectIdAnnotation])
 	assert.Equal(t, "02:00", googleSqlInstance.Spec.Settings.BackupConfiguration.StartTime)
 	assert.True(t, googleSqlInstance.Spec.Settings.BackupConfiguration.Enabled)
 	assert.True(t, googleSqlInstance.Spec.Settings.IpConfiguration.RequireSsl)
@@ -54,7 +81,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		}
 		spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, projectId, cfg)
+		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.Equal(t, "00:00", googleSqlInstance.Spec.Settings.BackupConfiguration.StartTime, "setting backup hour to 0 yields 00:00 as start time")
 		assert.Equal(t, maintenanceHour, googleSqlInstance.Spec.Settings.MaintenanceWindow.Hour)
 		assert.Equal(t, maintenanceDay, googleSqlInstance.Spec.Settings.MaintenanceWindow.Day)
@@ -98,7 +125,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, projectId, cfg)
+		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.Equal(t, googleSqlInstance.Spec.Settings.DiskSize, alternateDiskSize)
 	})
 }
