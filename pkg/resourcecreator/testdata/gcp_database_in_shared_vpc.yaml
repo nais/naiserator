@@ -1,0 +1,71 @@
+testconfig:
+  description: google cloud sql instances provisioned with databases in shared vpc
+
+config:
+  features:
+    cnrm: true
+    linkerd: true
+    sql-instance-in-shared-vpc: true
+  google-project-id: google-project-id
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    gcp:
+      sqlInstances:
+        - databases:
+            - name: mydb
+          type: POSTGRES_11
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
+
+tests:
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLInstance
+    operation: CreateOrUpdate
+    name: myapplication
+    match:
+      - type: subset
+        name: "SQLInstance created in team namespace"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+              cnrm.cloud.google.com/state-into-spec: merge
+            name: myapplication
+            namespace: mynamespace
+          spec:
+            databaseVersion: POSTGRES_11
+            region: europe-north1
+            settings:
+              availabilityType: ZONAL
+              backupConfiguration:
+                enabled: true
+                startTime: "02:00"
+              ipConfiguration:
+                requireSsl: true
+                privateNetworkRef:
+                  external: projects/google-project-id/global/networks/nais-vpc
+              diskAutoresize: false
+              diskSize: 10
+              diskType: PD_SSD
+              tier: db-f1-micro
+              insightsConfig:
+                queryInsightsEnabled: true
+                recordApplicationTags: false
+                recordClientAddress: false
