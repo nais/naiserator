@@ -64,6 +64,10 @@ spec:
         image: europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: naiserator
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8085
         securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
         volumeMounts:
