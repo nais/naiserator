@@ -11,6 +11,10 @@ values:
     displayName: Image tag
     config:
       type: string
+  mapping.fa_hosts:
+    displayName: Extra forward auth hosts
+    config:
+      type: string_array
   mapping.external_hosts:
     displayName: Extra external hosts
     config:
@@ -141,6 +145,8 @@ values:
           ingressClass: "nais-ingress"
         - domainSuffix: "external.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
           ingressClass: "nais-ingress-external"
+        - domainSuffix: "authenticated.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
+          ingressClass: "nais-ingress-fa"
         {{- range .Configs.mapping.internal_hosts }}
         - domainSuffix: "{{ . }}"
           ingressClass: "nais-ingress"
@@ -148,6 +154,10 @@ values:
         {{- range .Configs.mapping.external_hosts }}
         - domainSuffix: "{{ . }}"
           ingressClass: "nais-ingress-external"
+        {{- end }}
+        {{- range .Configs.mapping.fa_hosts }}
+        - domainSuffix: "{{ . }}"
+          ingressClass: "nais-ingress-fa"
         {{- end }}
         {{ if eq .Kind "legacy" }}
         - domainSuffix: .very.intern.dev.nav.no
