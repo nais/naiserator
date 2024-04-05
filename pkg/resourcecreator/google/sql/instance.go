@@ -38,8 +38,6 @@ type Config interface {
 	GetGoogleTeamProjectID() string
 	GetGoogleCloudSQLProxyContainerImage() string
 	ShouldCreateSqlInstanceInSharedVpc() bool
-	SqlInstanceExists() bool
-	SqlInstanceHasPrivateIp() bool
 }
 
 func availabilityType(highAvailability bool) string {
@@ -78,10 +76,8 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 
 	var privateNetworkRef *google_sql_crd.PrivateNetworkRef
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
-		if cfg.SqlInstanceHasPrivateIp() || !cfg.SqlInstanceExists() {
-			privateNetworkRef = &google_sql_crd.PrivateNetworkRef{
-				External: "projects/" + cfg.GetGoogleProjectID() + "/global/networks/nais-vpc",
-			}
+		privateNetworkRef = &google_sql_crd.PrivateNetworkRef{
+			External: "projects/" + cfg.GetGoogleProjectID() + "/global/networks/nais-vpc",
 		}
 	}
 

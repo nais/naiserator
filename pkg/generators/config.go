@@ -4,11 +4,6 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 )
 
-type SqlInstance struct {
-	exists       bool
-	hasPrivateIp bool
-}
-
 // Options defines customizations for resource objects.
 // These parameters are set during the Prepare() stage of the generator,
 // and then passed to the different resource generators.
@@ -19,15 +14,6 @@ type Options struct {
 	Linkerd             bool
 	NumReplicas         int32
 	Team                string
-	SqlInstance         SqlInstance
-}
-
-func (o *Options) SqlInstanceExists() bool {
-	return o.SqlInstance.exists
-}
-
-func (o *Options) SqlInstanceHasPrivateIp() bool {
-	return o.SqlInstance.hasPrivateIp
 }
 
 func (o *Options) IsLinkerdEnabled() bool {

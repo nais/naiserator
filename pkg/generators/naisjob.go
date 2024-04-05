@@ -47,20 +47,10 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 
 	o.NumReplicas = 1
 
-	key := client.ObjectKey{
-		Name:      source.GetName(),
-		Namespace: source.GetNamespace(),
-	}
-
-	err := prepareSqlInstance(ctx, kube, key, o)
-	if err != nil {
-		return nil, err
-	}
-
 	// Retrieve current namespace to check for labels and annotations
-	key = client.ObjectKey{Name: source.GetNamespace()}
+	key := client.ObjectKey{Name: source.GetNamespace()}
 	namespace := &corev1.Namespace{}
-	err = kube.Get(ctx, key, namespace)
+	err := kube.Get(ctx, key, namespace)
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
