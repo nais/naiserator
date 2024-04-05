@@ -71,6 +71,11 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 
 	o.NumReplicas = numReplicas(deploy, app.GetReplicas().Min, app.GetReplicas().Max)
 
+	err = prepareSqlInstance(ctx, kube, key, o)
+	if err != nil {
+		return nil, err
+	}
+
 	// Retrieve current namespace to check for labels and annotations
 	key = client.ObjectKey{Name: source.GetNamespace()}
 	namespace := &corev1.Namespace{}
