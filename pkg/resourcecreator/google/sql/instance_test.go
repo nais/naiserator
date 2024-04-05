@@ -18,6 +18,8 @@ type MockConfig struct {
 	GoogleTeamProjectID               string
 	GoogleCloudSQLProxyContainerImage string
 	CreateSqlInstanceInSharedVpc      bool
+	sqlInstanceExists                 bool
+	sqlInstanceHasPrivateIp           bool
 }
 
 func (m *MockConfig) GetGoogleProjectID() string {
@@ -36,6 +38,14 @@ func (m *MockConfig) ShouldCreateSqlInstanceInSharedVpc() bool {
 	return m.CreateSqlInstanceInSharedVpc
 }
 
+func (m *MockConfig) SqlInstanceExists() bool {
+	return m.sqlInstanceExists
+}
+
+func (m *MockConfig) SqlInstanceHasPrivateIp() bool {
+	return m.sqlInstanceHasPrivateIp
+}
+
 func TestGoogleSqlInstance(t *testing.T) {
 	app := fixtures.MinimalApplication()
 
@@ -44,6 +54,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		GoogleTeamProjectID:               "teamProjectId",
 		GoogleCloudSQLProxyContainerImage: "cloudsql/image:latest",
 		CreateSqlInstanceInSharedVpc:      true,
+		sqlInstanceExists:                 false,
 	}
 
 	spec := nais.CloudSqlInstance{
@@ -127,5 +138,33 @@ func TestGoogleSqlInstance(t *testing.T) {
 		assert.NoError(t, err)
 		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.Equal(t, googleSqlInstance.Spec.Settings.DiskSize, alternateDiskSize)
+	})
+
+	t.Run("private ip not applied when sqlinstance exists", func(t *testing.T) {
+		cfg.sqlInstanceExists = true
+		cfg.sqlInstanceHasPrivateIp = false
+
+		app := fixtures.MinimalApplication()
+
+		spec := nais.CloudSqlInstance{}
+
+		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
+		assert.NoError(t, err)
+		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		assert.Nil(t, googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef)
+	})
+
+	t.Run("private ip is applied when sqlinstance exists and already has private ip", func(t *testing.T) {
+		cfg.sqlInstanceExists = true
+		cfg.sqlInstanceHasPrivateIp = true
+
+		app := fixtures.MinimalApplication()
+
+		spec := nais.CloudSqlInstance{}
+
+		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
+		assert.NoError(t, err)
+		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		assert.NotNil(t, googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef)
 	})
 }
