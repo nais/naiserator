@@ -62,7 +62,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
-	openSearchEnabled, err := OpenSearch(ast, source.GetOpenSearch(), &aivenApp)
+	openSearchEnabled, err := OpenSearch(ast, config, source, &aivenApp)
 	if err != nil {
 		return err
 	}
