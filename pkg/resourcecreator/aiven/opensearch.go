@@ -39,7 +39,7 @@ func addDefaultOpenSearchIfNotExists(ast *resource.Ast, source Source, aivenProj
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = fmt.Sprintf("opensearch-%s-%s", source.GetNamespace(), instanceName)
 
-	aivenRedis := &aiven_io_v1alpha1.OpenSearch{
+	aivenOpenSearch := &aiven_io_v1alpha1.OpenSearch{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "OpenSearch",
 			APIVersion: "aiven.io/v1alpha",
@@ -53,7 +53,7 @@ func addDefaultOpenSearchIfNotExists(ast *resource.Ast, source Source, aivenProj
 		},
 	}
 
-	ast.AppendOperation(resource.OperationCreateIfNotExists, aivenRedis)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, aivenOpenSearch)
 }
 
 func addOpenSearchEnvVariables(ast *resource.Ast, secretName string) {

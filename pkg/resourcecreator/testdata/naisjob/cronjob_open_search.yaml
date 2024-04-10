@@ -5,6 +5,7 @@ config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
+  aiven-project: dev-project
 
 input:
   kind: Naisjob

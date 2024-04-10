@@ -1,10 +1,11 @@
 testconfig:
-  description: OpenSearch labling and access policy
+  description: Opensearch labeling and access policy
 
 config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
+  aiven-project: dev-project
 
 input:
   kind: Application
@@ -36,12 +37,12 @@ tests:
         resource:
           spec:
             openSearch:
-              instance: opensearch-mynamespace-naistest
+              instance: naistest
               access: read
-  - apiVersion: apps/v1
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
     kind: Deployment
     name: myapplication
-    operation: CreateOrUpdate
     match:
       - type: regex
         name: "deployment network policy selector label"
@@ -55,18 +56,35 @@ tests:
                 containers:
                   - name: "myapplication"
                     env:
-                      - name: OPEN_SEARCH_USERNAME
+                      - name: OPEN_SEARCH_USERNAME_NAISTEST
                         valueFrom:
                           secretKeyRef:
-                            key: OPEN_SEARCH_USERNAME
+                            key: OPEN_SEARCH_USERNAME_NAISTEST
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: OPEN_SEARCH_PASSWORD
+                      - name: OPEN_SEARCH_PASSWORD_NAISTEST1
                         valueFrom:
                           secretKeyRef:
-                            key: OPEN_SEARCH_PASSWORD
+                            key: OPEN_SEARCH_PASSWORD_NAISTEST
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: OPEN_SEARCH_URI
+                      - name: OPEN_SEARCH_URI_NAISTEST1
                         valueFrom:
                           secretKeyRef:
-                            key: OPEN_SEARCH_URI
+                            key: OPEN_SEARCH_URI_NAISTEST
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+
+  - operation: CreateIfNotExists
+    apiVersion: aiven.io/v1alpha1
+    kind: Opensearch
+    name: opensearch-mynamespace-naistest
+    match:
+      - type: subset
+        name: opensearch created
+        resource:
+          metadata:
+            name: opensearch-mynamespace-naistest
+            namespace: mynamespace
+            labels:
+              app: myapplication
+          spec:
+            plan: startup-4
+            project: dev-project
