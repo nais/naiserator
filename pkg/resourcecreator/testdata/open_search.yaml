@@ -56,20 +56,20 @@ tests:
                 containers:
                   - name: "myapplication"
                     env:
-                      - name: OPEN_SEARCH_USERNAME_NAISTEST
+                      - name: OPEN_SEARCH_USERNAME
                         valueFrom:
                           secretKeyRef:
-                            key: OPEN_SEARCH_USERNAME_NAISTEST
+                            key: OPEN_SEARCH_USERNAME
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: OPEN_SEARCH_PASSWORD_NAISTEST1
+                      - name: OPEN_SEARCH_PASSWORD
                         valueFrom:
                           secretKeyRef:
-                            key: OPEN_SEARCH_PASSWORD_NAISTEST
+                            key: OPEN_SEARCH_PASSWORD
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: OPEN_SEARCH_URI_NAISTEST1
+                      - name: OPEN_SEARCH_URI
                         valueFrom:
                           secretKeyRef:
-                            key: OPEN_SEARCH_URI_NAISTEST
+                            key: OPEN_SEARCH_URI
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
 
   - operation: CreateIfNotExists

@@ -26,7 +26,7 @@ func OpenSearch(ast *resource.Ast, config Config, source Source, aivenApp *aiven
 
 	addOpenSearchEnvVariables(ast, aivenApp.Spec.SecretName)
 	aivenApp.Spec.OpenSearch = &aiven_nais_io_v1.OpenSearchSpec{
-		Instance: fmt.Sprintf("opensearch-%s-%s", aivenApp.GetNamespace(), openSearch.Instance),
+		Instance: openSearch.Instance,
 		Access:   openSearch.Access,
 	}
 	addDefaultOpenSearchIfNotExists(ast, source, config.GetAivenProject(), openSearch.Instance)
@@ -57,7 +57,7 @@ func addDefaultOpenSearchIfNotExists(ast *resource.Ast, source Source, aivenProj
 }
 
 func addOpenSearchEnvVariables(ast *resource.Ast, secretName string) {
-	// Add environment variables for string data
+	// Add environment variables for string data, there's only one opensearch instance per project
 	ast.Env = append(ast.Env, []corev1.EnvVar{
 		makeSecretEnvVar("OPEN_SEARCH_USERNAME", secretName),
 		makeSecretEnvVar("OPEN_SEARCH_PASSWORD", secretName),
