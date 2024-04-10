@@ -37,7 +37,7 @@ tests:
         resource:
           spec:
             openSearch:
-              instance: naistest
+              instance: opensearch-mynamespace-naistest
               access: read
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -74,7 +74,7 @@ tests:
 
   - operation: CreateIfNotExists
     apiVersion: aiven.io/v1alpha1
-    kind: Opensearch
+    kind: OpenSearch
     name: opensearch-mynamespace-naistest
     match:
       - type: subset
