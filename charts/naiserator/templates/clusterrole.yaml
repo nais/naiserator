@@ -43,6 +43,7 @@ rules:
       - 'sqldatabases'
       - 'sqlinstances'
       - 'sqlusers'
+      - 'sqlsslcerts'
       - 'storagebucketaccesscontrols'
       - 'storagebuckets'
       - 'streams'
