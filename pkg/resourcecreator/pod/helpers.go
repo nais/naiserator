@@ -11,12 +11,17 @@ import (
 )
 
 func FromFilesSecretVolume(volumeName, secretName string, items []corev1.KeyToPath) corev1.Volume {
+	return FromFilesSecretVolumeWithMode(volumeName, secretName, items, nil)
+}
+
+func FromFilesSecretVolumeWithMode(volumeName, secretName string, items []corev1.KeyToPath, mode *int32) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName: secretName,
-				Items:      items,
+				SecretName:  secretName,
+				Items:       items,
+				DefaultMode: mode,
 			},
 		},
 	}

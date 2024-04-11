@@ -13,6 +13,7 @@ import (
 	"github.com/nais/naiserator/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -327,7 +328,7 @@ func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 	util.SetAnnotation(sqlSSLCert, google.ProjectIdAnnotation, googleTeamProjectId)
 	util.SetAnnotation(sqlSSLCert, "sqeletor.nais.io/secret-name", secretName)
 
-	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolume(sqeletorVolumeName, secretName, nil))
+	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(sqeletorVolumeName, secretName, nil, ptr.To(int32(0640))))
 	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(sqeletorVolumeName, nais_io_v1alpha1.DefaultSqeletorMountPath, "", true))
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlSSLCert)

@@ -235,6 +235,7 @@ tests:
                       - name: sqeletor-sql-ssl-cert
                         secret:
                           secretName: sqeletor-mynaisjob-380f7c17
+                          defaultMode: 0640
                     containers:
                       - name: mynaisjob
                         image: navikt/mynaisjob:1.2.3
