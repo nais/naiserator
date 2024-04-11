@@ -5,6 +5,7 @@ cmd/naiserator_webhook/naiserator_webhook
 vendor/
 cover.out
 ./naiserator
+/result
 /bin/
 *.proto
 /.testbin/
