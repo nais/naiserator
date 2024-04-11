@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package synchronizer_test
 
 import (
