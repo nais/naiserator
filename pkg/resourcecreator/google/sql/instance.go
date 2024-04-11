@@ -3,14 +3,16 @@ package google_sql
 import (
 	"fmt"
 
+	"github.com/imdario/mergo"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/pointer"
-
-	"github.com/imdario/mergo"
 
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -26,6 +28,8 @@ const (
 	DefaultSqlInstanceTier           = "db-f1-micro"
 	DefaultSqlInstanceDiskSize       = 10
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
+
+	sqeletorVolumeName = "sqeletor-sql-ssl-cert"
 )
 
 type Source interface {
@@ -230,63 +234,102 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 
 	sourceName := source.GetName()
 
-	for i, sqlInstance := range gcp.SqlInstances {
-		// This could potentially be removed to add possibility for several instances.
-		if i > 0 {
-			return fmt.Errorf("only one sql instance is supported")
-		}
+	if len(gcp.SqlInstances) == 0 {
+		return nil
+	}
 
-		sqlInstance, err := CloudSqlInstanceWithDefaults(sqlInstance, sourceName)
+	if len(gcp.SqlInstances) > 1 {
+		return fmt.Errorf("only one sql instance is supported")
+	}
+
+	sqlInstance, err := CloudSqlInstanceWithDefaults(gcp.SqlInstances[0], sourceName)
+	if err != nil {
+		return err
+	}
+
+	objectMeta := resource.CreateObjectMeta(source)
+	googleTeamProjectId := cfg.GetGoogleTeamProjectID()
+
+	googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, cfg)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
+
+	iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
+
+	for dbNum, db := range sqlInstance.Databases {
+
+		googledb := GoogleSQLDatabase(
+			objectMeta, googleSqlInstance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
+		)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
+
+		sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, googleSqlInstance.Name, dbNum)
 		if err != nil {
 			return err
 		}
 
-		objectMeta := resource.CreateObjectMeta(source)
-		googleTeamProjectId := cfg.GetGoogleTeamProjectID()
-
-		googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, cfg)
-		ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
-
-		iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
-		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
-
-		for dbNum, db := range sqlInstance.Databases {
-
-			googledb := GoogleSQLDatabase(
-				objectMeta, googleSqlInstance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
-			)
-			ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
-
-			sqlUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, googleSqlInstance.Name, dbNum)
-			if err != nil {
+		for _, user := range sqlUsers {
+			googleSqlUser := SetupGoogleSqlUser(user.Name, &db, googleSqlInstance)
+			if err = createSqlUserDBResources(
+				objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId,
+			); err != nil {
 				return err
 			}
+		}
+	}
 
-			for _, user := range sqlUsers {
-				googleSqlUser := SetupGoogleSqlUser(user.Name, &db, googleSqlInstance)
-				if err = createSqlUserDBResources(
-					objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId,
-				); err != nil {
-					return err
-				}
+	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
+		if usingPrivateIP(googleSqlInstance) {
+			err = createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectId)
+			if err != nil {
+				return fmt.Errorf("unable to create sql ssl cert resource: %s", err)
 			}
 		}
-
-		if defaultNameNotSetInManifest(gcp.SqlInstances[i]) {
-			gcp.SqlInstances[i].Name = sqlInstance.Name
-		}
-
-		err = AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName)
-		if err != nil {
-			return fmt.Errorf("unable to append sql user secret envs: %s", err)
-		}
-		ast.Containers = append(
-			ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
-		)
 	}
+
+	err = AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName)
+	if err != nil {
+		return fmt.Errorf("unable to append sql user secret envs: %s", err)
+	}
+	ast.Containers = append(
+		ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
+	)
+
 	return nil
 }
 
-func defaultNameNotSetInManifest(instance nais_io_v1.CloudSqlInstance) bool {
-	return instance.Name == ""
+func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
+	return googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef != nil
+}
+
+func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) error {
+	objectMeta := resource.CreateObjectMeta(source)
+	secretName, err := namegen.ShortName(fmt.Sprintf("sqeletor-%s", instanceName), 63)
+	if err != nil {
+		return err
+	}
+
+	sqlSSLCert := &google_sql_crd.SQLSSLCert{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "SQLSSLCert",
+			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
+		},
+		ObjectMeta: objectMeta,
+		Spec: google_sql_crd.SQLSSLCertSpec{
+			CommonName: source.GetName(),
+			InstanceRef: google_sql_crd.InstanceRef{
+				Name:      instanceName,
+				Namespace: source.GetNamespace(),
+			},
+		},
+	}
+
+	util.SetAnnotation(sqlSSLCert, google.ProjectIdAnnotation, googleTeamProjectId)
+	util.SetAnnotation(sqlSSLCert, "sqeletor.nais.io/secret-name", secretName)
+
+	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolume(sqeletorVolumeName, secretName, nil))
+	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(sqeletorVolumeName, nais_io_v1alpha1.DefaultSqeletorMountPath, "", true))
+
+	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlSSLCert)
+	return nil
 }

@@ -1,0 +1,263 @@
+testconfig:
+  description: google cloud sql instances provisioned with databases and automatic configuration
+
+config:
+  features:
+    cnrm: true
+    linkerd: true
+    sql-instance-in-shared-vpc: true
+  google-project-id: google-project-id
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    schedule: "* 2 * * *"
+    image: navikt/mynaisjob:1.2.3
+    gcp:
+      sqlInstances:
+        - databases:
+            - name: mydb
+          type: POSTGRES_11
+
+tests:
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMServiceAccount
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "IAMServiceAccount created in namespace serviceaccounts"
+        exclude:
+          - .metadata.creationTimestamp
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+              nais.io/team: mynamespace
+            name: mynaisjob-mynamespac-uih2v7i
+            namespace: serviceaccounts
+          spec:
+            displayName: mynaisjob
+
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicy
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "IAMPolicy created in namespace serviceaccounts"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+            name: mynaisjob-mynamespac-uih2v7i
+            namespace: serviceaccounts
+          spec:
+            bindings:
+              - members:
+                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/mynaisjob]
+                role: roles/iam.workloadIdentityUser
+            resourceRef:
+              apiVersion: iam.cnrm.cloud.google.com/v1beta1
+              kind: IAMServiceAccount
+              name: mynaisjob-mynamespac-uih2v7i
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLInstance
+    operation: CreateOrUpdate
+    name: mynaisjob
+    match:
+      - type: subset
+        name: "SQLInstance created in team namespace"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: mynaisjob
+            namespace: mynamespace
+          spec:
+            databaseVersion: POSTGRES_11
+            region: europe-north1
+            settings:
+              availabilityType: ZONAL
+              backupConfiguration:
+                enabled: true
+                startTime: "02:00"
+              ipConfiguration:
+                requireSsl: true
+                privateNetworkRef:
+                  external: projects/google-project-id/global/networks/nais-vpc
+              diskAutoresize: false
+              diskSize: 10
+              diskType: PD_SSD
+              tier: db-f1-micro
+
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicyMember
+    operation: CreateIfNotExists
+    name: mynaisjob
+    match:
+      - type: subset
+        name: "iam policy member created"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: mynaisjob
+            namespace: mynamespace
+          spec:
+            role: roles/cloudsql.client
+            resourceRef:
+              apiVersion: ""
+              kind: Project
+              name: ""
+            member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SqlDatabase
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "sql database created"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+            name: mydb
+            namespace: mynamespace
+          spec:
+            instanceRef:
+              name: mynaisjob
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    match:
+      - type: regex
+        name: "secret"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: google-sql-mynaisjob
+            namespace: mynamespace
+            labels:
+              app: mynaisjob
+              team: myteam
+            ownerReferences:
+              - apiVersion: nais.io/v1
+                kind: Naisjob
+                name: mynaisjob
+                uid: "123456"
+          stringData:
+            NAIS_DATABASE_MYNAISJOB_MYDB_DATABASE: mydb
+            NAIS_DATABASE_MYNAISJOB_MYDB_HOST: 127.0.0.1
+            NAIS_DATABASE_MYNAISJOB_MYDB_PASSWORD: ".{43}"
+            NAIS_DATABASE_MYNAISJOB_MYDB_PORT: "5432"
+            NAIS_DATABASE_MYNAISJOB_MYDB_URL: postgres://mynaisjob:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_MYNAISJOB_MYDB_USERNAME: mynaisjob
+          type: Opaque
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "sql user"
+        resource:
+          metadata:
+            name: mynaisjob
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/deletion-policy: abandon
+              cnrm.cloud.google.com/project-id: team-project-id
+          spec:
+            instanceRef:
+              name: mynaisjob
+            host: ""
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: google-sql-mynaisjob
+                  key: NAIS_DATABASE_MYNAISJOB_MYDB_PASSWORD
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLSSLCert
+    operation: CreateIfNotExists
+    match:
+      - type: subset
+        name: "sql ssl cert"
+        resource:
+          metadata:
+            name: mynaisjob
+            namespace: mynamespace
+            annotations:
+              cnrm.cloud.google.com/project-id: team-project-id
+              sqeletor.nais.io/secret-name: sqeletor-mynaisjob-380f7c17
+          spec:
+            commonName: mynaisjob
+            instanceRef:
+              name: mynaisjob
+              namespace: mynamespace
+
+  - apiVersion: batch/v1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "deployment created"
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    volumes:
+                      - name: sqeletor-sql-ssl-cert
+                        secret:
+                          secretName: sqeletor-mynaisjob-380f7c17
+                    containers:
+                      - name: mynaisjob
+                        image: navikt/mynaisjob:1.2.3
+                        envFrom:
+                          - secretRef:
+                              name: google-sql-mynaisjob
+                        env:
+                          - name: GOOGLE_CLOUD_PROJECT
+                            value: team-project-id
+                          - name: GCP_TEAM_PROJECT_ID
+                            value: team-project-id
+                        volumeMounts:
+                          - mountPath: /var/run/secrets/nais.io/sqlcertificate
+                            name: sqeletor-sql-ssl-cert
+                            readOnly: true
+                      - name: cloudsql-proxy
+                        command:
+                          - /cloud-sql-proxy
+                          - --max-sigterm-delay
+                          - 30s
+                          - --port
+                          - "5432"
+                          - team-project-id:europe-north1:mynaisjob
+                        ports:
+                          - containerPort: 5432
+                            protocol: TCP
