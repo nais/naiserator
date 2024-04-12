@@ -52,6 +52,7 @@ type Config interface {
 	GetGoogleProjectID() string
 	GetHostAliases() []config.HostAlias
 	GetAllowedKernelCapabilities() []string
+	GetImagePullSecrets() []string
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsGARTolerationEnabled() bool
@@ -96,16 +97,13 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	affinity := ConfigureAffinity(appName, tolerations)
 
 	podSpec := &corev1.PodSpec{
-		InitContainers:     ast.InitContainers,
-		Containers:         containers,
-		ServiceAccountName: appName,
-		RestartPolicy:      restartPolicy,
-		DNSPolicy:          corev1.DNSClusterFirst,
-		Volumes:            volumes,
-		ImagePullSecrets: []corev1.LocalObjectReference{
-			{Name: "gh-docker-credentials"},
-			{Name: "gar-docker-credentials"},
-		},
+		InitContainers:                ast.InitContainers,
+		Containers:                    containers,
+		ServiceAccountName:            appName,
+		RestartPolicy:                 restartPolicy,
+		DNSPolicy:                     corev1.DNSClusterFirst,
+		Volumes:                       volumes,
+		ImagePullSecrets:              imagePullSecrets(cfg),
 		TerminationGracePeriodSeconds: terminationGracePeriodSeconds,
 		Affinity:                      affinity,
 		Tolerations:                   tolerations,
@@ -255,6 +253,14 @@ func fromFilesConfigmapVolume(name string) corev1.Volume {
 			},
 		},
 	}
+}
+
+func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
+	var secrets []corev1.LocalObjectReference
+	for _, secret := range cfg.GetImagePullSecrets() {
+		secrets = append(secrets, corev1.LocalObjectReference{Name: secret})
+	}
+	return secrets
 }
 
 func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
