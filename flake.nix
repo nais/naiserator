@@ -17,36 +17,63 @@
         "aarch64-darwin" # 64-bit ARM macOS
       ];
 
-			naiseratorPackage = pkgs: pkgs.buildGoModule {
-				pname = "naiserator";
-				version = "0.0.0";
-				src = pkgs.lib.sources.cleanSource ./.;
-				# Hash is a product of the contents of all dependencies, aka Go modules
-				vendorHash = "sha256-OkSvMBo+TSRTIaPF6+wCOQ7YiaAoa+eU2ft5Z4E7Fpw=";
+      naiseratorPackage = pkgs:
+        pkgs.buildGoModule {
+          pname = "naiserator";
+          version = "0.0.0";
+          src = pkgs.lib.sources.cleanSource ./.;
+          # Hash is a product of the contents of all dependencies, aka Go modules
+          vendorHash = "sha256-O33xQfgpVjYOCBF65Hi9W04NbdUE1vkGLfaD3WG98fI=";
 
-				meta = with pkgs.lib; {
-					description = "Naiserator creates a full set of Kubernetes application infrastructure based on a single application spec.";
-					homepage = "https://github.com/nais/naiserator";
-					license = licenses.mit;
-					maintainers = ["kimtore"];
-				};
-			};
+          meta = with pkgs.lib; {
+            description =
+              "Naiserator creates a full set of Kubernetes application infrastructure based on a single application spec.";
+            homepage = "https://github.com/nais/naiserator";
+            license = licenses.mit;
+            maintainers = [ "kimtore" ];
+          };
+        };
 
       # Lambda helper to provide system-specific attributes
-      forAllSystems = f: nixpkgs.lib.genAttrs allSystems (system: f {
-        pkgs = import nixpkgs { inherit system; };
-      });
+      forAllSystems = f:
+        nixpkgs.lib.genAttrs allSystems (system:
+          f {
+            pkgs = import nixpkgs {
+              inherit system;
+              # crossSystem = { config = "aarch64-unknown-linux-gnu"; };
+            };
+          });
 
-    # Development environment output
-    in
-    {
+      naiseratorLinuxPackage = pkgs:
+        (pkgs.buildGoModule {
+          pname = "naiserator";
+          version = "0.0.0";
+          src = pkgs.lib.sources.cleanSource ./.;
+          # Hash is a product of the contents of all dependencies, aka Go modules
+          vendorHash = "sha256-O33xQfgpVjYOCBF65Hi9W04NbdUE1vkGLfaD3WG98fI=";
+          CGO_ENABLED = 0;
+          doCheck = false;
+          meta = with pkgs.lib; {
+            description =
+              "Naiserator creates a full set of Kubernetes application infrastructure based on a single application spec.";
+            homepage = "https://github.com/nais/naiserator";
+            license = licenses.mit;
+            maintainers = [ "kimtore" ];
+          };
+        }).overrideAttrs (old:
+          old // {
+            GOOS = "linux";
+            GOARCH = "amd64";
+          });
+
+    in {
       packages = forAllSystems ({ pkgs }: {
         # Build binaries for your system
-				default = naiseratorPackage pkgs;
+        default = naiseratorLinuxPackage pkgs;
 
         # Build a docker image for your system
-				docker = pkgs.dockerTools.buildImage {
-					name = "naiserator";
+        docker = pkgs.dockerTools.buildImage {
+          name = "naiserator";
           created = "now";
           copyToRoot = with pkgs.dockerTools; [
             usrBinEnv
@@ -55,10 +82,11 @@
             fakeNss
           ];
 
-					config = {
-						Cmd = [ "${naiseratorPackage pkgs}/bin/naiserator" ];
-					};
-				};
+          config = {
+            Cmd =
+              [ "${naiseratorLinuxPackage pkgs}/bin/linux_amd64/naiserator" ];
+          };
+        };
       });
 
       devShells = forAllSystems ({ pkgs }: {
