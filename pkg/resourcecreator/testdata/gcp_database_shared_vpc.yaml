@@ -162,6 +162,7 @@ tests:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
               sqeletor.nais.io/env-var-prefix: NAIS_DATABASE_MYAPPLICATION_MYDB
+              sqeletor.nais.io/database-name: mydb
           spec:
             instanceRef:
               name: myapplication
