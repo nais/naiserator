@@ -143,35 +143,6 @@ tests:
             instanceRef:
               name: mynaisjob
 
-  - apiVersion: v1
-    kind: Secret
-    operation: CreateIfNotExists
-    match:
-      - type: regex
-        name: "secret"
-        exclude:
-          - metadata.creationTimestamp
-        resource:
-          metadata:
-            name: google-sql-mynaisjob
-            namespace: mynamespace
-            labels:
-              app: mynaisjob
-              team: myteam
-            ownerReferences:
-              - apiVersion: nais.io/v1
-                kind: Naisjob
-                name: mynaisjob
-                uid: "123456"
-          stringData:
-            NAIS_DATABASE_MYNAISJOB_MYDB_DATABASE: mydb
-            NAIS_DATABASE_MYNAISJOB_MYDB_HOST: 127.0.0.1
-            NAIS_DATABASE_MYNAISJOB_MYDB_PASSWORD: ".{43}"
-            NAIS_DATABASE_MYNAISJOB_MYDB_PORT: "5432"
-            NAIS_DATABASE_MYNAISJOB_MYDB_URL: postgres://mynaisjob:.{43}@127.0.0.1:5432/mydb
-            NAIS_DATABASE_MYNAISJOB_MYDB_USERNAME: mynaisjob
-          type: Opaque
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -185,6 +156,7 @@ tests:
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
+              sqeletor.nais.io/env-var-prefix: NAIS_DATABASE_MYNAISJOB_MYDB
           spec:
             instanceRef:
               name: mynaisjob
