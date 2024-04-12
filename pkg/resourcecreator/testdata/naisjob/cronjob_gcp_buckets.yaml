@@ -148,6 +148,4 @@ tests:
                           - name: GCP_TEAM_PROJECT_ID
                             value: team-project-id
                     dnsPolicy: ClusterFirst
-                    imagePullSecrets:
-                      - name: gh-docker-credentials
                     serviceAccountName: mynaisjob

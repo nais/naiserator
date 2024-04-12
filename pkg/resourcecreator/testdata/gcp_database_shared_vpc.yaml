@@ -235,8 +235,6 @@ tests:
             template:
               spec:
                 dnsPolicy: ClusterFirst
-                imagePullSecrets:
-                  - name: gh-docker-credentials
                 restartPolicy: Always
                 serviceAccountName: myapplication
                 volumes:
