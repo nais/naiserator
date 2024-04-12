@@ -40,6 +40,20 @@
           f {
             pkgs = import nixpkgs {
               inherit system;
+              overlays = [
+                (final: prev: {
+                  go = prev.go_1_22.overrideAttrs (old:
+                    old // {
+                      version = "1.22.2";
+                      src = prev.fetchurl {
+                        url = "https://go.dev/dl/go1.22.2.src.tar.gz";
+                        hash =
+                          "sha256-N06oKyiexzjpaCZ8rFnH1f8YD5SSJQJUeEsgROkN9ak=";
+                      };
+                    });
+
+                })
+              ];
               # crossSystem = { config = "aarch64-unknown-linux-gnu"; };
             };
           });
@@ -100,7 +114,7 @@
         default = pkgs.mkShell {
           # The Nix packages provided in the environment
           packages = with pkgs; [
-            go_1_22 # Go 1.22
+            go
             gotools # Go tools like goimports, godoc, and others
           ];
         };
