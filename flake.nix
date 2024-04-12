@@ -72,6 +72,17 @@
         default = naiseratorLinuxPackage pkgs;
 
         # Build a docker image for your system
+        dockerDarwin = pkgs.dockerTools.buildImage {
+          name = "naiserator";
+          created = "now";
+          copyToRoot = with pkgs.dockerTools; [ ];
+
+          config = {
+            Cmd =
+              [ "${naiseratorLinuxPackage pkgs}/bin/linux_amd64/naiserator" ];
+          };
+        };
+
         docker = pkgs.dockerTools.buildImage {
           name = "naiserator";
           created = "now";
@@ -82,13 +93,9 @@
             fakeNss
           ];
 
-          config = {
-            Cmd =
-              [ "${naiseratorLinuxPackage pkgs}/bin/linux_amd64/naiserator" ];
-          };
+          config = { Cmd = [ "${naiseratorPackage pkgs}/bin/naiserator" ]; };
         };
       });
-
       devShells = forAllSystems ({ pkgs }: {
         default = pkgs.mkShell {
           # The Nix packages provided in the environment
