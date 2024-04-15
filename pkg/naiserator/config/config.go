@@ -177,6 +177,7 @@ type Config struct {
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
 	Frontend                          Frontend         `json:"frontend"`
 	MaxConcurrentReconciles           int              `json:"max-concurrent-reconciles"`
+	ImagePullSecrets                  []string         `json:"image-pull-secrets"`
 }
 
 const (
@@ -206,6 +207,7 @@ const (
 	FQDNPolicyEnabled                             = "fqdn-policy.enabled"
 	GoogleCloudSQLProxyContainerImage             = "google-cloud-sql-proxy-container-image"
 	GoogleProjectId                               = "google-project-id"
+	ImagePullSecrets                              = "image-pull-secrets"
 	InformerFullSynchronizationInterval           = "informer.full-sync-interval"
 	KafkaBrokers                                  = "kafka.brokers"
 	KafkaEnabled                                  = "kafka.enabled"
@@ -356,6 +358,8 @@ func init() {
 	flag.StringSlice(KafkaBrokers, []string{"localhost:9092"}, "Comma-separated list of Kafka brokers, HOST:PORT.")
 
 	flag.String(WonderwallImage, "", "Docker image used for Wonderwall.")
+
+	flag.StringArray(ImagePullSecrets, nil, "List of image pull secrets to use for pulling images")
 }
 
 // Print out all configuration options except secret stuff.

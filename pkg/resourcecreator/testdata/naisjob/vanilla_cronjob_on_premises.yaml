@@ -170,9 +170,6 @@ tests:
                           - mountPath: /tmp
                             name: writable-tmp
                     dnsPolicy: ClusterFirst
-                    imagePullSecrets:
-                      - name: gh-docker-credentials
-                      - name: gar-docker-credentials
                     restartPolicy: Never
                     securityContext:
                       fsGroup: 1069
@@ -198,7 +195,7 @@ tests:
                                   - key: app
                                     operator: In
                                     values:
-                                    - mynaisjob
+                                      - mynaisjob
                               topologyKey: kubernetes.io/hostname
                             weight: 10
             schedule: "* 2 * * *"

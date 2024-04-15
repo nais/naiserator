@@ -135,6 +135,10 @@ func (o *Options) GetAllowedKernelCapabilities() []string {
 	return []string{"NET_RAW", "NET_BIND_SERVICE"}
 }
 
+func (o *Options) GetImagePullSecrets() []string {
+	return o.Config.ImagePullSecrets
+}
+
 func (o *Options) GetNumReplicas() int32 {
 	return o.NumReplicas
 }

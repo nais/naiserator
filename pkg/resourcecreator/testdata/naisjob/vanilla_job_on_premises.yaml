@@ -123,7 +123,7 @@ tests:
                       capabilities:
                         drop: ["ALL"]
                       seccompProfile:
-                          type: RuntimeDefault
+                        type: RuntimeDefault
                     imagePullPolicy: IfNotPresent
                     lifecycle:
                       preStop:
@@ -167,9 +167,6 @@ tests:
                       - mountPath: /tmp
                         name: writable-tmp
                 dnsPolicy: ClusterFirst
-                imagePullSecrets:
-                  - name: gh-docker-credentials
-                  - name: gar-docker-credentials
                 restartPolicy: Never
                 securityContext:
                   fsGroup: 1069

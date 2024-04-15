@@ -24,6 +24,9 @@ naiserator:
   api-server-ip: ""
   host-aliases: ""
   nais-namespace: "nais-system"
+  image-pull-secrets:
+    - gh-docker-credentials
+    - gar-docker-credentials
   features:
     linkerd: false
     access-policy-not-allowed-cidrs: []

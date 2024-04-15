@@ -232,3 +232,7 @@ values:
     ignoreKind:
       - tenant
       - legacy
+  naiserator.image-pull-secrets:
+    description: List of image pull secrets to use for pulling images
+    config:
+      type: string_array

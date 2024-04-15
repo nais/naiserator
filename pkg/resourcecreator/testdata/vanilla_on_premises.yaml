@@ -148,7 +148,7 @@ tests:
                       capabilities:
                         drop: ["ALL"]
                       seccompProfile:
-                          type: RuntimeDefault
+                        type: RuntimeDefault
                     env:
                       - name: NAV_TRUSTSTORE_PATH
                         value: /etc/ssl/certs/java/cacerts
@@ -218,9 +218,6 @@ tests:
                     type: RuntimeDefault
                 dnsPolicy: ClusterFirst
                 serviceAccountName: myapplication
-                imagePullSecrets:
-                  - name: gh-docker-credentials
-                  - name: gar-docker-credentials
                 affinity:
                   podAntiAffinity:
                     preferredDuringSchedulingIgnoredDuringExecution:
