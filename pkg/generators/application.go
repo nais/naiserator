@@ -82,8 +82,17 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 	// Auto-detect Google Team Project ID
 	o.GoogleTeamProjectID = namespace.Annotations["cnrm.cloud.google.com/project-id"]
 
-	if len(o.GetGoogleTeamProjectID()) > 0 && o.Config.Features.SqlInstanceInSharedVpc {
-		err = prepareSqlInstance(ctx, kube, key, o)
+	gcpSpec := source.GetGCP()
+	if gcpSpec != nil && len(gcpSpec.SqlInstances) == 1 && len(o.GetGoogleTeamProjectID()) > 0 && o.Config.Features.SqlInstanceInSharedVpc {
+		instanceName := source.GetName()
+		if len(gcpSpec.SqlInstances[0].Name) > 0 {
+			instanceName = gcpSpec.SqlInstances[0].Name
+		}
+		sqlInstanceKey := client.ObjectKey{
+			Name:      instanceName,
+			Namespace: source.GetNamespace(),
+		}
+		err = prepareSqlInstance(ctx, kube, sqlInstanceKey, o)
 		if err != nil {
 			return nil, err
 		}
