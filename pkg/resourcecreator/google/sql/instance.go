@@ -250,6 +250,10 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
+	if len(sqlInstance.Databases) > 1 {
+		return fmt.Errorf("only one sql database is supported")
+	}
+
 	googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
 	googleSqlInstance := GoogleSqlInstance(resource.CreateObjectMeta(source), sqlInstance, cfg)
