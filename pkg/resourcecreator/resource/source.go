@@ -24,6 +24,7 @@ type Source interface {
 	GetStatus() *nais_io_v1.Status
 	GetObjectReference() corev1.ObjectReference
 	GetOwnerReference() metav1.OwnerReference
+	GetGCP() *nais_io_v1.GCP
 	CorrelationID() string
 	SkipDeploymentMessage() bool
 	LogFields() log.Fields

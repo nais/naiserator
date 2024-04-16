@@ -47,26 +47,32 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 
 	o.NumReplicas = 1
 
-	key := client.ObjectKey{
-		Name:      source.GetName(),
-		Namespace: source.GetNamespace(),
-	}
-
-	err := prepareSqlInstance(ctx, kube, key, o)
-	if err != nil {
-		return nil, err
-	}
-
 	// Retrieve current namespace to check for labels and annotations
-	key = client.ObjectKey{Name: source.GetNamespace()}
+	namespaceKey := client.ObjectKey{Name: source.GetNamespace()}
 	namespace := &corev1.Namespace{}
-	err = kube.Get(ctx, key, namespace)
+	err := kube.Get(ctx, namespaceKey, namespace)
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
 	// Auto-detect Google Team Project ID
 	o.GoogleTeamProjectID = namespace.Annotations["cnrm.cloud.google.com/project-id"]
+
+	gcpSpec := source.GetGCP()
+	if gcpSpec != nil && len(gcpSpec.SqlInstances) == 1 && len(o.GetGoogleTeamProjectID()) > 0 && o.Config.Features.SqlInstanceInSharedVpc {
+		instanceName := source.GetName()
+		if len(gcpSpec.SqlInstances[0].Name) > 0 {
+			instanceName = gcpSpec.SqlInstances[0].Name
+		}
+		sqlInstanceKey := client.ObjectKey{
+			Name:      instanceName,
+			Namespace: source.GetNamespace(),
+		}
+		err = prepareSqlInstance(ctx, kube, sqlInstanceKey, o)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
 	if g.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
