@@ -49,6 +49,7 @@ func GCPListers() []client.ObjectList {
 		&sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLInstanceList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLUserList{},
+		&sql_cnrm_cloud_google_com_v1beta1.SQLSSLCertList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControlList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
 	}
