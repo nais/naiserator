@@ -250,10 +250,9 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
-	objectMeta := resource.CreateObjectMeta(source)
 	googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
-	googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, cfg)
+	googleSqlInstance := GoogleSqlInstance(resource.CreateObjectMeta(source), sqlInstance, cfg)
 	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
 	iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
@@ -262,7 +261,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	for dbNum, db := range sqlInstance.Databases {
 
 		googledb := GoogleSQLDatabase(
-			objectMeta, googleSqlInstance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
+			resource.CreateObjectMeta(source), googleSqlInstance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
 		)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
@@ -274,7 +273,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		for _, user := range sqlUsers {
 			googleSqlUser := SetupGoogleSqlUser(user.Name, &db, googleSqlInstance)
 			if err = createSqlUserDBResources(
-				objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
+				resource.CreateObjectMeta(source), ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
 			); err != nil {
 				return err
 			}
