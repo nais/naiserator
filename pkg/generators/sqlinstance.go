@@ -10,18 +10,16 @@ import (
 )
 
 func prepareSqlInstance(ctx context.Context, kube client.Client, key client.ObjectKey, o *Options) error {
-	if len(o.GetGoogleTeamProjectID()) > 0 && o.Config.Features.SqlInstanceInSharedVpc {
-		sqlinstance := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}
-		err := kube.Get(ctx, key, sqlinstance)
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return fmt.Errorf("query existing sqlinstance: %s", err)
-			}
-			o.SqlInstance.exists = false
-		} else {
-			o.SqlInstance.exists = true
-			o.SqlInstance.hasPrivateIp = sqlinstance.Spec.Settings.IpConfiguration.PrivateNetworkRef != nil
+	sqlinstance := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}
+	err := kube.Get(ctx, key, sqlinstance)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return fmt.Errorf("query existing sqlinstance: %s", err)
 		}
+		o.SqlInstance.exists = false
+	} else {
+		o.SqlInstance.exists = true
+		o.SqlInstance.hasPrivateIp = sqlinstance.Spec.Settings.IpConfiguration.PrivateNetworkRef != nil
 	}
 	return nil
 }
