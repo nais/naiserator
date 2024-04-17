@@ -72,10 +72,6 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 		}
 	}
 
-	if instance.TransactionLogRetentionDays != nil {
-		backupSettings.TransactionLogRetentionDays = *instance.TransactionLogRetentionDays
-	}
-
 	flags := []google_sql_crd.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}}
 	for _, flag := range instance.Flags {
 		err := ValidateFlag(flag.Name, flag.Value)
@@ -115,11 +111,12 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 					RequireSsl:        true,
 					PrivateNetworkRef: privateNetworkRef,
 				},
-				DiskAutoresize: instance.DiskAutoresize,
-				DiskSize:       instance.DiskSize,
-				DiskType:       instance.DiskType.GoogleType(),
-				Tier:           instance.Tier,
-				DatabaseFlags:  flags,
+				DiskAutoresize:      instance.DiskAutoresize,
+				DiskAutoresizeLimit: instance.DiskAutoresizeLimit,
+				DiskSize:            instance.DiskSize,
+				DiskType:            instance.DiskType.GoogleType(),
+				Tier:                instance.Tier,
+				DatabaseFlags:       flags,
 				InsightsConfig: google_sql_crd.SQLInstanceInsightsConfiguration{
 					QueryInsightsEnabled: instance.Insights.IsEnabled(),
 				},

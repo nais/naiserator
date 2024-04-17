@@ -139,6 +139,8 @@ github.com/nais/liberator v0.0.0-20240412093323-c3d6aeb3b6d3 h1:7MP0yYPgNv40K08+
 github.com/nais/liberator v0.0.0-20240412093323-c3d6aeb3b6d3/go.mod h1:nicVzoCtO4JpW73Vo6/HWRWOLI09EcgoPk4ixei6tfI=
 github.com/nais/liberator v0.0.0-20240415084948-be85428b1007 h1:wQYYeibgkzu/8iloJpWmrX3H4OyaVghgumAz1hNWHXY=
 github.com/nais/liberator v0.0.0-20240415084948-be85428b1007/go.mod h1:nicVzoCtO4JpW73Vo6/HWRWOLI09EcgoPk4ixei6tfI=
+github.com/nais/liberator v0.0.0-20240417080159-7f08ccf3ff09 h1:xq/NLtkhO/91XhAyBjTT5HY7i/dEq9aVk7HQ9sk5Cwk=
+github.com/nais/liberator v0.0.0-20240417080159-7f08ccf3ff09/go.mod h1:nicVzoCtO4JpW73Vo6/HWRWOLI09EcgoPk4ixei6tfI=
 github.com/novln/docker-parser v1.0.0 h1:PjEBd9QnKixcWczNGyEdfUrP6GR0YUilAqG7Wksg3uc=
 github.com/novln/docker-parser v1.0.0/go.mod h1:oCeM32fsoUwkwByB5wVjsrsVQySzPWkl3JdlTn1txpE=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
