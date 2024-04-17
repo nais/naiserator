@@ -258,24 +258,3 @@ tests:
                       - mountPath: /var/run/secrets/nais.io/sqlcertificate
                         name: sqeletor-sql-ssl-cert
                         readOnly: true
-                  - name: cloudsql-proxy
-                    command:
-                      - /cloud-sql-proxy
-                      - --max-sigterm-delay
-                      - 30s
-                      - --port
-                      - "5432"
-                      - team-project-id:europe-north1:myapplication
-                    ports:
-                      - containerPort: 5432
-                        protocol: TCP
-                    resources:
-                      limits:
-                        memory: 256Mi
-                      requests:
-                        cpu: 50m
-                        memory: 32Mi
-                    imagePullPolicy: IfNotPresent
-                    securityContext:
-                      allowPrivilegeEscalation: false
-                      runAsUser: 2

@@ -284,8 +284,10 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		}
 	}
 
+	needsProxy := true
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
+			needsProxy = false
 			err = createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectId)
 			if err != nil {
 				return fmt.Errorf("unable to create sql ssl cert resource: %s", err)
@@ -297,9 +299,12 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	if err != nil {
 		return fmt.Errorf("unable to append sql user secret envs: %s", err)
 	}
-	ast.Containers = append(
-		ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
-	)
+
+	if needsProxy {
+		ast.Containers = append(
+			ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
+		)
+	}
 
 	return nil
 }
