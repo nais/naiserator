@@ -42,7 +42,7 @@ func (m *MockConfig) SqlInstanceExists() bool {
 	return m.sqlInstanceExists
 }
 
-func (m *MockConfig) SqlInstanceHasPrivateIp() bool {
+func (m *MockConfig) SqlInstanceHasPrivateIpInSharedVpc() bool {
 	return m.sqlInstanceHasPrivateIp
 }
 

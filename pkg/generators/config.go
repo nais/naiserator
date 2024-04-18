@@ -5,8 +5,8 @@ import (
 )
 
 type SqlInstance struct {
-	exists       bool
-	hasPrivateIp bool
+	exists                  bool
+	hasPrivateIpInSharedVpc bool
 }
 
 // Options defines customizations for resource objects.
@@ -26,8 +26,8 @@ func (o *Options) SqlInstanceExists() bool {
 	return o.SqlInstance.exists
 }
 
-func (o *Options) SqlInstanceHasPrivateIp() bool {
-	return o.SqlInstance.hasPrivateIp
+func (o *Options) SqlInstanceHasPrivateIpInSharedVpc() bool {
+	return o.SqlInstance.hasPrivateIpInSharedVpc
 }
 
 func (o *Options) IsLinkerdEnabled() bool {
