@@ -26,6 +26,7 @@ input:
               users:
                 - name: extra
           type: POSTGRES_11
+          name: myinstance
 
 existing:
   - kind: Namespace
@@ -79,7 +80,7 @@ tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
     operation: CreateOrUpdate
-    name: myapplication
+    name: myinstance
     match:
       - type: subset
         name: "SQLInstance created in team namespace"
@@ -89,7 +90,7 @@ tests:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
               cnrm.cloud.google.com/state-into-spec: merge
-            name: myapplication
+            name: myinstance
             namespace: mynamespace
           spec:
             databaseVersion: POSTGRES_11
@@ -115,7 +116,7 @@ tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
-    name: myapplication
+    name: myinstance
     match:
       - type: subset
         name: "iam policy member created"
@@ -148,33 +149,33 @@ tests:
             namespace: mynamespace
           spec:
             instanceRef:
-              name: myapplication
+              name: myinstance
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myapplication
+    name: myinstance
     match:
       - type: subset
         name: "sql user"
         resource:
           metadata:
-            name: myapplication
+            name: myinstance
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
-              sqeletor.nais.io/env-var-prefix: NAIS_DATABASE_MYAPPLICATION_MYDB
+              sqeletor.nais.io/env-var-prefix: NAIS_DATABASE_MYINSTANCE_MYDB
               sqeletor.nais.io/database-name: mydb
           spec:
             instanceRef:
-              name: myapplication
+              name: myinstance
             host: ""
             password:
               valueFrom:
                 secretKeyRef:
                   name: google-sql-myapplication
-                  key: NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD
+                  key: NAIS_DATABASE_MYINSTANCE_MYDB_PASSWORD
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
@@ -194,7 +195,7 @@ tests:
               sqeletor.nais.io/database-name: mydb
           spec:
             instanceRef:
-              name: myapplication
+              name: myinstance
             host: ""
             password:
               valueFrom:
@@ -210,15 +211,15 @@ tests:
         name: "sql ssl cert"
         resource:
           metadata:
-            name: myapplication
+            name: myapplication-myinstance
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/project-id: team-project-id
-              sqeletor.nais.io/secret-name: sqeletor-myapplication-0a291087
+              sqeletor.nais.io/secret-name: sqeletor-myinstance-4f09a88b
           spec:
             commonName: myapplication
             instanceRef:
-              name: myapplication
+              name: myinstance
               namespace: mynamespace
 
   - apiVersion: apps/v1
@@ -242,7 +243,7 @@ tests:
                 volumes:
                   - name: sqeletor-sql-ssl-cert
                     secret:
-                      secretName: sqeletor-myapplication-0a291087
+                      secretName: sqeletor-myinstance-4f09a88b
                 containers:
                   - name: myapplication
                     image: navikt/myapplication:1.2.3

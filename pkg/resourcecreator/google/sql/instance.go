@@ -314,7 +314,13 @@ func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
 }
 
 func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) error {
+	var err error
 	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name, err = namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), 63)
+	if err != nil {
+		return err
+	}
+
 	secretName, err := namegen.ShortName(fmt.Sprintf("sqeletor-%s", instanceName), 63)
 	if err != nil {
 		return err
