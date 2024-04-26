@@ -42,7 +42,7 @@ func (m *MockConfig) SqlInstanceExists() bool {
 	return m.sqlInstanceExists
 }
 
-func (m *MockConfig) SqlInstanceHasPrivateIp() bool {
+func (m *MockConfig) SqlInstanceHasPrivateIpInSharedVpc() bool {
 	return m.sqlInstanceHasPrivateIp
 }
 
@@ -166,5 +166,57 @@ func TestGoogleSqlInstance(t *testing.T) {
 		assert.NoError(t, err)
 		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.NotNil(t, googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef)
+	})
+
+	t.Run("rollout refused when more than one sql instance requested", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.GCP = &nais.GCP{
+			SqlInstances: []nais.CloudSqlInstance{
+				{
+					Type: "POSTGRES_11",
+					Name: "postgres-11",
+				},
+				{
+					Type: "POSTGRES_12",
+					Name: "postgres-12",
+				},
+			},
+		}
+
+		ast := resource.NewAst()
+		err := google_sql.CreateInstance(app, ast, cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "only one sql instance is supported")
+	})
+
+	t.Run("rollout refused when more than one sql database requested", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.GCP = &nais.GCP{
+			SqlInstances: []nais.CloudSqlInstance{
+				{
+					Type: "POSTGRES_15",
+					Name: "postgres-15",
+					Databases: []nais.CloudSqlDatabase{
+						{
+							Name: "db1",
+							Users: []nais.CloudSqlDatabaseUser{
+								{Name: "user1"},
+							},
+						},
+						{
+							Name: "db2",
+							Users: []nais.CloudSqlDatabaseUser{
+								{Name: "user2"},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		ast := resource.NewAst()
+		err := google_sql.CreateInstance(app, ast, cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "only one sql database is supported")
 	})
 }

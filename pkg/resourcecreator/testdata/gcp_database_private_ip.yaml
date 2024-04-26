@@ -1,5 +1,5 @@
 testconfig:
-  description: google cloud sql instances provisioned with databases and automatic configuration in a shared vpc
+  description: google cloud sql instances provisioned with databases and automatic configuration with pre-existing private ip
 
 config:
   features:
@@ -26,7 +26,6 @@ input:
               users:
                 - name: extra
           type: POSTGRES_11
-          name: myinstance
 
 existing:
   - kind: Namespace
@@ -36,51 +35,41 @@ existing:
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
 
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLInstance
+    metadata:
+      annotations:
+        cnrm.cloud.google.com/deletion-policy: abandon
+        cnrm.cloud.google.com/project-id: team-project-id
+        cnrm.cloud.google.com/state-into-spec: merge
+      name: myapplication
+      namespace: mynamespace
+    spec:
+      databaseVersion: POSTGRES_11
+      region: europe-north1
+      settings:
+        availabilityType: ZONAL
+        backupConfiguration:
+          enabled: true
+          startTime: "02:00"
+        ipConfiguration:
+          requireSsl: true
+          privateNetworkRef:
+            external: projects/some-other-project-id/global/networks/nais-vpc
+        diskAutoresize: false
+        diskSize: 10
+        diskType: PD_SSD
+        tier: db-f1-micro
+        insightsConfig:
+          queryInsightsEnabled: true
+          recordApplicationTags: false
+          recordClientAddress: false
+
 tests:
-  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
-    kind: IAMServiceAccount
-    operation: CreateIfNotExists
-    match:
-      - type: subset
-        name: "IAMServiceAccount created in namespace serviceaccounts"
-        exclude:
-          - .metadata.creationTimestamp
-        resource:
-          metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-              nais.io/team: mynamespace
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
-          spec:
-            displayName: myapplication
-
-  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
-    kind: IAMPolicy
-    operation: CreateIfNotExists
-    match:
-      - type: subset
-        name: "IAMPolicy created in namespace serviceaccounts"
-        resource:
-          metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-            name: myapplicati-mynamespac-w4o5cwa
-            namespace: serviceaccounts
-          spec:
-            bindings:
-              - members:
-                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
-                role: roles/iam.workloadIdentityUser
-            resourceRef:
-              apiVersion: iam.cnrm.cloud.google.com/v1beta1
-              kind: IAMServiceAccount
-              name: myapplicati-mynamespac-w4o5cwa
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
     operation: CreateOrUpdate
-    name: myinstance
+    name: myapplication
     match:
       - type: subset
         name: "SQLInstance created in team namespace"
@@ -90,7 +79,7 @@ tests:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
               cnrm.cloud.google.com/state-into-spec: merge
-            name: myinstance
+            name: myapplication
             namespace: mynamespace
           spec:
             databaseVersion: POSTGRES_11
@@ -102,8 +91,6 @@ tests:
                 startTime: "02:00"
               ipConfiguration:
                 requireSsl: true
-                privateNetworkRef:
-                  external: projects/google-project-id/global/networks/nais-vpc
               diskAutoresize: false
               diskSize: 10
               diskType: PD_SSD
@@ -112,27 +99,6 @@ tests:
                 queryInsightsEnabled: true
                 recordApplicationTags: false
                 recordClientAddress: false
-
-  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
-    kind: IAMPolicyMember
-    operation: CreateIfNotExists
-    name: myinstance
-    match:
-      - type: subset
-        name: "iam policy member created"
-        resource:
-          metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: team-project-id
-            name: myapplication
-            namespace: mynamespace
-          spec:
-            role: roles/cloudsql.client
-            resourceRef:
-              apiVersion: ""
-              kind: Project
-              name: ""
-            member: serviceAccount:myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SqlDatabase
@@ -149,33 +115,31 @@ tests:
             namespace: mynamespace
           spec:
             instanceRef:
-              name: myinstance
+              name: myapplication
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
-    name: myinstance
+    name: myapplication
     match:
       - type: subset
         name: "sql user"
         resource:
           metadata:
-            name: myinstance
+            name: myapplication
             namespace: mynamespace
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
-              sqeletor.nais.io/env-var-prefix: NAIS_DATABASE_MYINSTANCE_MYDB
-              sqeletor.nais.io/database-name: mydb
           spec:
             instanceRef:
-              name: myinstance
+              name: myapplication
             host: ""
             password:
               valueFrom:
                 secretKeyRef:
                   name: google-sql-myapplication
-                  key: NAIS_DATABASE_MYINSTANCE_MYDB_PASSWORD
+                  key: NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
@@ -191,36 +155,15 @@ tests:
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
-              sqeletor.nais.io/env-var-prefix: NAIS_DATABASE_EXTRA_MYDB
-              sqeletor.nais.io/database-name: mydb
           spec:
             instanceRef:
-              name: myinstance
+              name: myapplication
             host: ""
             password:
               valueFrom:
                 secretKeyRef:
                   name: google-sql-myapplication-mydb-extra-4d7c8582
                   key: NAIS_DATABASE_EXTRA_MYDB_PASSWORD
-
-  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
-    kind: SQLSSLCert
-    operation: CreateIfNotExists
-    match:
-      - type: subset
-        name: "sql ssl cert"
-        resource:
-          metadata:
-            name: myapplication-myinstance
-            namespace: mynamespace
-            annotations:
-              cnrm.cloud.google.com/project-id: team-project-id
-              sqeletor.nais.io/secret-name: sqeletor-myinstance-4f09a88b
-          spec:
-            commonName: myapplication
-            instanceRef:
-              name: myinstance
-              namespace: mynamespace
 
   - apiVersion: apps/v1
     kind: Deployment
@@ -240,10 +183,6 @@ tests:
                 dnsPolicy: ClusterFirst
                 restartPolicy: Always
                 serviceAccountName: myapplication
-                volumes:
-                  - name: sqeletor-sql-ssl-cert
-                    secret:
-                      secretName: sqeletor-myinstance-4f09a88b
                 containers:
                   - name: myapplication
                     image: navikt/myapplication:1.2.3
@@ -255,7 +194,24 @@ tests:
                         value: team-project-id
                       - name: GCP_TEAM_PROJECT_ID
                         value: team-project-id
-                    volumeMounts:
-                      - mountPath: /var/run/secrets/nais.io/sqlcertificate
-                        name: sqeletor-sql-ssl-cert
-                        readOnly: true
+                  - name: cloudsql-proxy
+                    command:
+                      - /cloud-sql-proxy
+                      - --max-sigterm-delay
+                      - 30s
+                      - --port
+                      - "5432"
+                      - team-project-id:europe-north1:myapplication
+                    ports:
+                      - containerPort: 5432
+                        protocol: TCP
+                    resources:
+                      limits:
+                        memory: 256Mi
+                      requests:
+                        cpu: 50m
+                        memory: 32Mi
+                    imagePullPolicy: IfNotPresent
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      runAsUser: 2
