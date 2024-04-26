@@ -44,7 +44,7 @@ type Config interface {
 	GetGoogleCloudSQLProxyContainerImage() string
 	ShouldCreateSqlInstanceInSharedVpc() bool
 	SqlInstanceExists() bool
-	SqlInstanceHasPrivateIp() bool
+	SqlInstanceHasPrivateIpInSharedVpc() bool
 }
 
 func availabilityType(highAvailability bool) string {
@@ -87,7 +87,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 
 	var privateNetworkRef *google_sql_crd.PrivateNetworkRef
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
-		if cfg.SqlInstanceHasPrivateIp() || !cfg.SqlInstanceExists() {
+		if cfg.SqlInstanceHasPrivateIpInSharedVpc() || !cfg.SqlInstanceExists() {
 			privateNetworkRef = &google_sql_crd.PrivateNetworkRef{
 				External: "projects/" + cfg.GetGoogleProjectID() + "/global/networks/nais-vpc",
 			}
@@ -115,11 +115,12 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance nais_io_v1.CloudSq
 					RequireSsl:        true,
 					PrivateNetworkRef: privateNetworkRef,
 				},
-				DiskAutoresize: instance.DiskAutoresize,
-				DiskSize:       instance.DiskSize,
-				DiskType:       instance.DiskType.GoogleType(),
-				Tier:           instance.Tier,
-				DatabaseFlags:  flags,
+				DiskAutoresize:      instance.DiskAutoresize,
+				DiskAutoresizeLimit: instance.DiskAutoresizeLimit,
+				DiskSize:            instance.DiskSize,
+				DiskType:            instance.DiskType.GoogleType(),
+				Tier:                instance.Tier,
+				DatabaseFlags:       flags,
 				InsightsConfig: google_sql_crd.SQLInstanceInsightsConfiguration{
 					QueryInsightsEnabled: instance.Insights.IsEnabled(),
 				},
@@ -254,10 +255,13 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
-	objectMeta := resource.CreateObjectMeta(source)
+	if len(sqlInstance.Databases) > 1 {
+		return fmt.Errorf("only one sql database is supported")
+	}
+
 	googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
-	googleSqlInstance := GoogleSqlInstance(objectMeta, sqlInstance, cfg)
+	googleSqlInstance := GoogleSqlInstance(resource.CreateObjectMeta(source), sqlInstance, cfg)
 	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
 	iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
@@ -266,7 +270,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	for dbNum, db := range sqlInstance.Databases {
 
 		googledb := GoogleSQLDatabase(
-			objectMeta, googleSqlInstance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
+			resource.CreateObjectMeta(source), googleSqlInstance.Name, db.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
 		)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
 
@@ -278,15 +282,17 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		for _, user := range sqlUsers {
 			googleSqlUser := SetupGoogleSqlUser(user.Name, &db, googleSqlInstance)
 			if err = createSqlUserDBResources(
-				objectMeta, ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
+				resource.CreateObjectMeta(source), ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
 			); err != nil {
 				return err
 			}
 		}
 	}
 
+	needsProxy := true
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
+			needsProxy = false
 			err = createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectId)
 			if err != nil {
 				return fmt.Errorf("unable to create sql ssl cert resource: %s", err)
@@ -298,9 +304,12 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	if err != nil {
 		return fmt.Errorf("unable to append sql user secret envs: %s", err)
 	}
-	ast.Containers = append(
-		ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
-	)
+
+	if needsProxy {
+		ast.Containers = append(
+			ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
+		)
+	}
 
 	return nil
 }
@@ -310,7 +319,13 @@ func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
 }
 
 func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) error {
+	var err error
 	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name, err = namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), 63)
+	if err != nil {
+		return err
+	}
+
 	secretName, err := namegen.ShortName(fmt.Sprintf("sqeletor-%s", instanceName), 63)
 	if err != nil {
 		return err

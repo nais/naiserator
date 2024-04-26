@@ -314,6 +314,14 @@ func CopyImmutable(dst, src runtime.Object) error {
 		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
 
+	case *sql_cnrm_cloud_google_com_v1beta1.SQLSSLCert:
+		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLSSLCert)
+		if !ok {
+			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+		}
+		CopyCNRM(dstTyped, srcTyped)
+		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
+
 	case *storage_cnrm_cloud_google_com_v1beta1.StorageBucket:
 		dstTyped, ok := dst.(*storage_cnrm_cloud_google_com_v1beta1.StorageBucket)
 		if !ok {
