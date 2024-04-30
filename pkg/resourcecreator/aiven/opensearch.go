@@ -42,7 +42,7 @@ func addDefaultOpenSearchIfNotExists(ast *resource.Ast, source Source, aivenProj
 	aivenOpenSearch := &aiven_io_v1alpha1.OpenSearch{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "OpenSearch",
-			APIVersion: "aiven.io/v1alpha",
+			APIVersion: "aiven.io/v1alpha1",
 		},
 		ObjectMeta: objectMeta,
 		Spec: aiven_io_v1alpha1.OpenSearchSpec{
