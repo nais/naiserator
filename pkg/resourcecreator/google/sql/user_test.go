@@ -19,6 +19,7 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 		"NAIS_DATABASE_FOO_BAR_USERNAME": "foo",
 		"NAIS_DATABASE_FOO_BAR_PASSWORD": "password",
 		"NAIS_DATABASE_FOO_BAR_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
+		"NAIS_DATABASE_FOO_BAR_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
 	}
 
 	instance := &googlesqlcrd.SQLInstance{
@@ -61,6 +62,7 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 	expectedDefault := map[string]string{
 		"YOLO_PASSWORD": "password",
 		"YOLO_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
+		"YOLO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
 		"YOLO_USERNAME": "foo",
 		"YOLO_HOST":     "127.0.0.1",
 		"YOLO_PORT":     "5432",
@@ -78,6 +80,7 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 		"YOLO_USER_TWO_USERNAME": "user-two",
 		"YOLO_USER_TWO_PASSWORD": "password",
 		"YOLO_USER_TWO_URL":      "postgres://user-two:password@127.0.0.1:5432/bar",
+		"YOLO_USER_TWO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=user-two&password=password",
 		"YOLO_USER_TWO_HOST":     "127.0.0.1",
 		"YOLO_USER_TWO_PORT":     "5432",
 		"YOLO_USER_TWO_DATABASE": "bar",
@@ -119,6 +122,7 @@ func TestKeyWithSuffixMatchingUser(t *testing.T) {
 		"YOLO_ADDITIONAL_PASSWORD": "password",
 		"YOLO_PASSWORD":            "password",
 		"YOLO_ADDITIONAL_URL":      "postgres://additional:password@127.0.0.1:5432/bar",
+		"YOLO_ADDITIONAL_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=additional&password=password",
 	}
 
 	googleSqlUser := google_sql.SetupGoogleSqlUser(sqlUsers[0].Name, db, instance)

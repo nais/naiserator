@@ -171,6 +171,7 @@ tests:
             NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD: ".{43}"
             NAIS_DATABASE_MYAPPLICATION_MYDB_PORT: "5432"
             NAIS_DATABASE_MYAPPLICATION_MYDB_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
+            NAIS_DATABASE_MYAPPLICATION_MYDB_JDBC_URL: jdbc:postgres://127.0.0.1:5432/mydb\?user=myapplication&password=.{43}
             NAIS_DATABASE_MYAPPLICATION_MYDB_USERNAME: myapplication
           type: Opaque
 

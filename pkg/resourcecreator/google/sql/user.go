@@ -16,10 +16,12 @@ const (
 	GoogleSQLPasswordSuffix = "_PASSWORD"
 	googleSQLDatabaseSuffix = "_DATABASE"
 	googleSQLURLSuffix      = "_URL"
+	googleSQLJDBCURLSuffix  = "_JDBC_URL"
 
-	googleSQLPostgresHost = "127.0.0.1"
-	googleSQLPostgresPort = "5432"
-	googleSQLPostgresURL  = "postgres://%s:%s@%s:%s/%s"
+	googleSQLPostgresHost    = "127.0.0.1"
+	googleSQLPostgresPort    = "5432"
+	googleSQLPostgresURL     = "postgres://%s:%s@%s:%s/%s"
+	googleSQLPostgresJDBCURL = "jdbc:postgres://%s:%s/%s?user=%s&password=%s"
 )
 
 type GoogleSqlUser struct {
@@ -95,6 +97,7 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 		prefix + googleSQLUsernameSuffix: in.Name,
 		prefix + GoogleSQLPasswordSuffix: password,
 		prefix + googleSQLURLSuffix:      fmt.Sprintf(googleSQLPostgresURL, in.Name, password, googleSQLPostgresHost, googleSQLPostgresPort, in.DB.Name),
+		prefix + googleSQLJDBCURLSuffix:  fmt.Sprintf(googleSQLPostgresJDBCURL, googleSQLPostgresHost, googleSQLPostgresPort, in.DB.Name, in.Name, password),
 	}
 }
 
