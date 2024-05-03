@@ -40,7 +40,14 @@
       devShells = forAllSystems ({ pkgs }: {
         default = pkgs.mkShell {
           # The Nix packages provided in the environment
-          packages = with pkgs; [ go_1_21 gotools gopls go-mockery kubetools ];
+          packages = with pkgs; [
+            go_1_21
+            gotools
+            gopls
+            go-mockery
+            kubetools
+            wget
+          ];
         };
       });
     };
