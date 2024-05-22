@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
+
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectId string) {
@@ -47,16 +48,8 @@ func trimPrefix(x string) string {
 	return strings.TrimPrefix(x, "_")
 }
 
-func MergeAndFilterDatabaseSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string, dbNum int) ([]nais.CloudSqlDatabaseUser, error) {
+func MergeAndFilterDatabaseSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) ([]nais.CloudSqlDatabaseUser, error) {
 	defaultUser := nais.CloudSqlDatabaseUser{Name: instanceName}
-
-	if dbNum != 0 {
-		if dbUsers != nil {
-			return removeDuplicates(dbUsers), nil
-		} else {
-			return nil, fmt.Errorf("must to specify users for extra databases, can not have multiple databases with default user")
-		}
-	}
 
 	if dbUsers == nil {
 		return []nais.CloudSqlDatabaseUser{defaultUser}, nil
@@ -90,21 +83,21 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 	return vars
 }
 
-func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstance nais.CloudSqlInstance, sourceName string) error {
-	for dbNum, db := range naisSqlInstance.Databases {
+func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstance *nais.CloudSqlInstance, sourceName string) error {
+	db := naisSqlInstance.Database()
 
-		googleSQLUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, naisSqlInstance.Name, dbNum)
+	googleSQLUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, naisSqlInstance.Name)
+	if err != nil {
+		return err
+	}
+
+	for _, user := range googleSQLUsers {
+		secretName, err := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
 		if err != nil {
 			return err
 		}
-
-		for _, user := range googleSQLUsers {
-			secretName, err := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
-			if err != nil {
-				return err
-			}
-			ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
-		}
+		ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
 	}
+
 	return nil
 }

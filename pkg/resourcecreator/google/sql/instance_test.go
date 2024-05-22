@@ -57,7 +57,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		sqlInstanceExists:                 false,
 	}
 
-	spec := nais.CloudSqlInstance{
+	spec := &nais.CloudSqlInstance{
 		Name: app.Name,
 		Type: "POSTGRES_11",
 	}
@@ -81,7 +81,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		const maintenanceHour = 9
 
 		app := fixtures.MinimalApplication()
-		spec := nais.CloudSqlInstance{
+		spec := &nais.CloudSqlInstance{
 			Name:           app.Name,
 			Type:           nais.CloudSqlInstanceTypePostgres12,
 			AutoBackupHour: util.Intp(backupHour),
@@ -103,7 +103,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		spec := nais.CloudSqlInstance{
+		spec := &nais.CloudSqlInstance{
 			Name: naisSpecConfiguredInstanceName,
 			Type: nais.CloudSqlInstanceTypePostgres12,
 		}
@@ -116,7 +116,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 	t.Run("instance name is not setInstanceName, defaults should be used for instance name", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 
-		spec := nais.CloudSqlInstance{
+		spec := &nais.CloudSqlInstance{
 			Type: nais.CloudSqlInstanceTypePostgres12,
 		}
 
@@ -130,7 +130,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		spec := nais.CloudSqlInstance{
+		spec := &nais.CloudSqlInstance{
 			DiskSize: alternateDiskSize,
 		}
 
@@ -146,7 +146,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		spec := nais.CloudSqlInstance{}
+		spec := &nais.CloudSqlInstance{}
 
 		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
@@ -160,7 +160,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		spec := nais.CloudSqlInstance{}
+		spec := &nais.CloudSqlInstance{}
 
 		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)

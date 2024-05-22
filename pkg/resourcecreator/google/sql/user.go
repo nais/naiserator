@@ -30,7 +30,7 @@ type GoogleSqlUser struct {
 	Instance *googlesqlcrd.SQLInstance
 }
 
-func SetupGoogleSqlUser(name string, db *nais.CloudSqlDatabase, instance *googlesqlcrd.SQLInstance) GoogleSqlUser {
+func NewGoogleSqlUser(name string, db *nais.CloudSqlDatabase, instance *googlesqlcrd.SQLInstance) GoogleSqlUser {
 	return GoogleSqlUser{
 		Name:     name,
 		DB:       db,
