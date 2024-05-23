@@ -65,21 +65,6 @@ func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
 	return ""
 }
 
-func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix string) (string, error) {
-	for k := range vars {
-		if strings.HasSuffix(k, suffix) {
-			toUpperName := googleSQLDatabaseCase(trimPrefix(in.Name))
-			key := in.filterDefaultUserKey(k, suffix)
-			if len(key) > 0 {
-				return key, nil
-			} else if strings.Contains(k, toUpperName) {
-				return k, nil
-			}
-		}
-	}
-	return "", fmt.Errorf("no variable found matching suffix %s", suffix)
-}
-
 func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
@@ -101,7 +86,7 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 	}
 }
 
-func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName string) (*googlesqlcrd.SQLUser, error) {
+func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, appName string) (*googlesqlcrd.SQLUser, error) {
 	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, in.DB.Name, in.Name)
 	if err != nil {
 		return nil, err
@@ -118,7 +103,7 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 			Password: googlesqlcrd.SqlUserPasswordValue{
 				ValueFrom: googlesqlcrd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: googlesqlcrd.SecretRef{
-						Key:  secretKeyRefEnvName,
+						Key:  in.googleSqlUserPrefix() + GoogleSQLPasswordSuffix,
 						Name: secretName,
 					},
 				},
@@ -128,7 +113,7 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 	}, nil
 }
 
-func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, secretKeyRefEnvName, appName, projectId string) (*googlesqlcrd.SQLUser, error) {
+func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, appName, projectId string) (*googlesqlcrd.SQLUser, error) {
 	if in.isDefault() {
 		objectMeta.Name = in.Instance.Name
 	} else {
@@ -136,7 +121,7 @@ func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete boo
 	}
 	setAnnotations(objectMeta, cascadingDelete, projectId)
 
-	sqlUser, err := in.create(objectMeta, secretKeyRefEnvName, appName)
+	sqlUser, err := in.create(objectMeta, appName)
 	if err != nil {
 		return nil, err
 	}

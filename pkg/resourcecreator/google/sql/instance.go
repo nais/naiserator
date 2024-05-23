@@ -284,18 +284,6 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Co
 }
 
 func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, googleSqlUser GoogleSqlUser, cascadingDelete bool, appName, googleTeamProjectId string, cfg Config) error {
-	password, err := util.GeneratePassword()
-	if err != nil {
-		return err
-	}
-
-	vars := googleSqlUser.CreateUserEnvVars(password)
-
-	secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
-	if err != nil {
-		return fmt.Errorf("unable to assign sql password: %s", err)
-	}
-
 	secretName, err := GoogleSQLSecretName(
 		appName, googleSqlUser.Instance.Name, googleSqlUser.DB.Name, googleSqlUser.Name,
 	)
@@ -303,7 +291,7 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 		return fmt.Errorf("unable to create sql secret name: %s", err)
 	}
 
-	sqlUser, err := googleSqlUser.Create(objectMeta, cascadingDelete, secretKeyRefEnvName, appName, googleTeamProjectId)
+	sqlUser, err := googleSqlUser.Create(objectMeta, cascadingDelete, appName, googleTeamProjectId)
 	if err != nil {
 		return fmt.Errorf("unable to create sql user: %s", err)
 	}
@@ -312,6 +300,12 @@ func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, g
 		util.SetAnnotation(sqlUser, "sqeletor.nais.io/env-var-prefix", googleSqlUser.googleSqlUserPrefix())
 		util.SetAnnotation(sqlUser, "sqeletor.nais.io/database-name", googleSqlUser.DB.Name)
 	} else {
+		password, err := util.GeneratePassword()
+		if err != nil {
+			return err
+		}
+
+		vars := googleSqlUser.CreateUserEnvVars(password)
 		ast.AppendOperation(resource.OperationCreateIfNotExists, secret.OpaqueSecret(objectMeta, secretName, vars))
 	}
 
