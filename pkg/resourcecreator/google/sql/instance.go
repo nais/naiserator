@@ -355,7 +355,7 @@ func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 	util.SetAnnotation(sqlSSLCert, google.ProjectIdAnnotation, googleTeamProjectId)
 	util.SetAnnotation(sqlSSLCert, "sqeletor.nais.io/secret-name", secretName)
 
-	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(sqeletorVolumeName, secretName, nil, ptr.To(int32(640))))
+	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(sqeletorVolumeName, secretName, nil, ptr.To(int32(0640))))
 	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(sqeletorVolumeName, nais_io_v1alpha1.DefaultSqeletorMountPath, "", true))
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlSSLCert)
