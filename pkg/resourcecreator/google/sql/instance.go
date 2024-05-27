@@ -12,7 +12,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/util"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,8 +95,8 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 
 	for _, user := range sqlUsers {
 		googleSqlUser := NewGoogleSqlUser(user.Name, cloudSqlDatabase, googleSqlInstance)
-		if err = createSqlUserDBResources(
-			resource.CreateObjectMeta(source), ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
+		if err = googleSqlUser.createSqlUserDBResources(
+			resource.CreateObjectMeta(source), ast, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
 		); err != nil {
 			return err
 		}
@@ -283,37 +282,6 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Co
 	return policy
 }
 
-func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, googleSqlUser GoogleSqlUser, cascadingDelete bool, appName, googleTeamProjectId string, cfg Config) error {
-	secretName, err := GoogleSQLSecretName(
-		appName, googleSqlUser.Instance.Name, googleSqlUser.DB.Name, googleSqlUser.Name,
-	)
-	if err != nil {
-		return fmt.Errorf("unable to create sql secret name: %s", err)
-	}
-
-	sqlUser, err := googleSqlUser.Create(objectMeta, cascadingDelete, appName, googleTeamProjectId)
-	if err != nil {
-		return fmt.Errorf("unable to create sql user: %s", err)
-	}
-
-	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() && usingPrivateIP(googleSqlUser.Instance) {
-		util.SetAnnotation(sqlUser, "sqeletor.nais.io/env-var-prefix", googleSqlUser.googleSqlUserPrefix())
-		util.SetAnnotation(sqlUser, "sqeletor.nais.io/database-name", googleSqlUser.DB.Name)
-	} else {
-		password, err := util.GeneratePassword()
-		if err != nil {
-			return err
-		}
-
-		vars := googleSqlUser.CreateUserEnvVars(password)
-		ast.AppendOperation(resource.OperationCreateIfNotExists, secret.OpaqueSecret(objectMeta, secretName, vars))
-	}
-
-	ast.AppendOperation(resource.AnnotateIfExists, secret.OpaqueSecret(objectMeta, secretName, nil))
-	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
-	return nil
-}
-
 func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
 	return googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef != nil
 }
@@ -349,7 +317,7 @@ func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 	util.SetAnnotation(sqlSSLCert, google.ProjectIdAnnotation, googleTeamProjectId)
 	util.SetAnnotation(sqlSSLCert, "sqeletor.nais.io/secret-name", secretName)
 
-	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(sqeletorVolumeName, secretName, nil, ptr.To(int32(0640))))
+	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(sqeletorVolumeName, secretName, nil, ptr.To(int32(0o640))))
 	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(sqeletorVolumeName, nais_io_v1alpha1.DefaultSqeletorMountPath, "", true))
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlSSLCert)
