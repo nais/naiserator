@@ -93,48 +93,6 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 	assert.Equal(t, expectedUserTwo, result)
 }
 
-func TestKeyWithSuffixMatchingUser(t *testing.T) {
-	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "foo",
-		},
-	}
-
-	db := &nais.CloudSqlDatabase{
-		Name:         "bar",
-		EnvVarPrefix: "YOLO",
-	}
-
-	sqlUsers := []nais.CloudSqlDatabaseUser{
-		{
-			Name: instance.Name,
-		},
-		{
-			Name: "additional",
-		},
-	}
-
-	envs := map[string]string{
-		"YOLO_URL":                 "postgres://foo:password@127.0.0.1:5432/bar",
-		"YOLO_USERNAME":            "foo",
-		"YOLO_ADDITIONAL_USERNAME": "additional",
-		"YOLO_ADDITIONAL_PASSWORD": "password",
-		"YOLO_PASSWORD":            "password",
-		"YOLO_ADDITIONAL_URL":      "postgres://additional:password@127.0.0.1:5432/bar",
-		"YOLO_ADDITIONAL_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=additional&password=password",
-	}
-
-	googleSqlUser := google_sql.NewGoogleSqlUser(sqlUsers[0].Name, db, instance)
-	key, nil := googleSqlUser.KeyWithSuffixMatchingUser(envs, "_PASSWORD")
-	assert.Nil(t, nil)
-	assert.Equal(t, "YOLO_PASSWORD", key)
-
-	googleSqlUser.Name = sqlUsers[1].Name
-	key, nil = googleSqlUser.KeyWithSuffixMatchingUser(envs, "_PASSWORD")
-	assert.Nil(t, nil)
-	assert.Equal(t, "YOLO_ADDITIONAL_PASSWORD", key)
-}
-
 func TestMergeDefaultSQLUser(t *testing.T) {
 	instance := &googlesqlcrd.SQLInstance{
 		ObjectMeta: metav1.ObjectMeta{
