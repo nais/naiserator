@@ -6,6 +6,9 @@ import (
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/resourcecreator/secret"
+	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -65,21 +68,6 @@ func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
 	return ""
 }
 
-func (in GoogleSqlUser) KeyWithSuffixMatchingUser(vars map[string]string, suffix string) (string, error) {
-	for k := range vars {
-		if strings.HasSuffix(k, suffix) {
-			toUpperName := googleSQLDatabaseCase(trimPrefix(in.Name))
-			key := in.filterDefaultUserKey(k, suffix)
-			if len(key) > 0 {
-				return key, nil
-			} else if strings.Contains(k, toUpperName) {
-				return k, nil
-			}
-		}
-	}
-	return "", fmt.Errorf("no variable found matching suffix %s", suffix)
-}
-
 func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
@@ -101,7 +89,7 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 	}
 }
 
-func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName, appName string) (*googlesqlcrd.SQLUser, error) {
+func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, appName string) (*googlesqlcrd.SQLUser, error) {
 	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, in.DB.Name, in.Name)
 	if err != nil {
 		return nil, err
@@ -118,7 +106,7 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 			Password: googlesqlcrd.SqlUserPasswordValue{
 				ValueFrom: googlesqlcrd.SqlUserPasswordSecretKeyRef{
 					SecretKeyRef: googlesqlcrd.SecretRef{
-						Key:  secretKeyRefEnvName,
+						Key:  in.googleSqlUserPrefix() + GoogleSQLPasswordSuffix,
 						Name: secretName,
 					},
 				},
@@ -128,7 +116,7 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, secretKeyRefEnvName
 	}, nil
 }
 
-func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, secretKeyRefEnvName, appName, projectId string) (*googlesqlcrd.SQLUser, error) {
+func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, appName, projectId string) (*googlesqlcrd.SQLUser, error) {
 	if in.isDefault() {
 		objectMeta.Name = in.Instance.Name
 	} else {
@@ -136,10 +124,40 @@ func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete boo
 	}
 	setAnnotations(objectMeta, cascadingDelete, projectId)
 
-	sqlUser, err := in.create(objectMeta, secretKeyRefEnvName, appName)
+	sqlUser, err := in.create(objectMeta, appName)
 	if err != nil {
 		return nil, err
 	}
 
 	return sqlUser, nil
+}
+
+func (in GoogleSqlUser) CreateSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, cascadingDelete bool, appName, googleTeamProjectId string, cfg Config) error {
+	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, in.DB.Name, in.Name)
+	if err != nil {
+		return fmt.Errorf("unable to create sql secret name: %s", err)
+	}
+
+	sqlUser, err := in.Create(objectMeta, cascadingDelete, appName, googleTeamProjectId)
+	if err != nil {
+		return fmt.Errorf("unable to create sql user: %s", err)
+	}
+
+	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() && usingPrivateIP(in.Instance) {
+		util.SetAnnotation(sqlUser, "sqeletor.nais.io/env-var-prefix", in.googleSqlUserPrefix())
+		util.SetAnnotation(sqlUser, "sqeletor.nais.io/database-name", in.DB.Name)
+	} else {
+		password, err := util.GeneratePassword()
+		if err != nil {
+			return err
+		}
+
+		vars := in.CreateUserEnvVars(password)
+
+		ast.AppendOperation(resource.OperationCreateIfNotExists, secret.OpaqueSecret(objectMeta, secretName, vars))
+	}
+
+	ast.AppendOperation(resource.AnnotateIfExists, secret.OpaqueSecret(objectMeta, secretName, nil))
+	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
+	return nil
 }

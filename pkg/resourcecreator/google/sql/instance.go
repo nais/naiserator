@@ -95,10 +95,15 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	for _, user := range sqlUsers {
-		googleSqlUser := NewGoogleSqlUser(user.Name, cloudSqlDatabase, googleSqlInstance)
-		if err = createSqlUserDBResources(
-			resource.CreateObjectMeta(source), ast, googleSqlUser, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
-		); err != nil {
+		googleSqlUser := NewGoogleSqlUser(user.Name, manifestSQLDatabase, googleSQLInstance)
+		if err = googleSqlUser.CreateSqlUserDBResources(
+			objectMeta,
+			ast,
+			googleSqlUser,
+			manifestSQLInstance.CascadingDelete,
+			sourceName,
+			googleTeamProjectID,
+			cfg); err != nil {
 			return err
 		}
 	}
@@ -281,42 +286,6 @@ func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Co
 	util.SetAnnotation(policy, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
 
 	return policy
-}
-
-func createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, googleSqlUser GoogleSqlUser, cascadingDelete bool, appName, googleTeamProjectId string, cfg Config) error {
-	password, err := util.GeneratePassword()
-	if err != nil {
-		return err
-	}
-
-	vars := googleSqlUser.CreateUserEnvVars(password)
-
-	secretKeyRefEnvName, err := googleSqlUser.KeyWithSuffixMatchingUser(vars, GoogleSQLPasswordSuffix)
-	if err != nil {
-		return fmt.Errorf("unable to assign sql password: %s", err)
-	}
-
-	secretName, err := GoogleSQLSecretName(
-		appName, googleSqlUser.Instance.Name, googleSqlUser.DB.Name, googleSqlUser.Name,
-	)
-	if err != nil {
-		return fmt.Errorf("unable to create sql secret name: %s", err)
-	}
-
-	sqlUser, err := googleSqlUser.Create(objectMeta, cascadingDelete, secretKeyRefEnvName, appName, googleTeamProjectId)
-	if err != nil {
-		return fmt.Errorf("unable to create sql user: %s", err)
-	}
-
-	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() && usingPrivateIP(googleSqlUser.Instance) {
-		util.SetAnnotation(sqlUser, "sqeletor.nais.io/env-var-prefix", googleSqlUser.googleSqlUserPrefix())
-		util.SetAnnotation(sqlUser, "sqeletor.nais.io/database-name", googleSqlUser.DB.Name)
-	} else {
-		ast.AppendOperation(resource.OperationCreateIfNotExists, secret.OpaqueSecret(objectMeta, secretName, vars))
-		ast.AppendOperation(resource.AnnotateIfExists, secret.OpaqueSecret(objectMeta, secretName, nil))
-	}
-	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
-	return nil
 }
 
 func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
