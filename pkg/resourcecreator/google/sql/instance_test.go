@@ -64,7 +64,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 	spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 	assert.NoError(t, err)
 
-	googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+	googleSqlInstance := google_sql.GoogleSQLInstance(resource.CreateObjectMeta(app), spec, cfg)
 	assert.Equal(t, app.Name, googleSqlInstance.Name)
 	assert.Equal(t, fmt.Sprintf("PD_%s", google_sql.DefaultSqlInstanceDiskType), googleSqlInstance.Spec.Settings.DiskType)
 	assert.Equal(t, google_sql.DefaultSqlInstanceDiskSize, googleSqlInstance.Spec.Settings.DiskSize)
@@ -92,7 +92,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		}
 		spec, err := google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance := google_sql.GoogleSQLInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.Equal(t, "00:00", googleSqlInstance.Spec.Settings.BackupConfiguration.StartTime, "setting backup hour to 0 yields 00:00 as start time")
 		assert.Equal(t, maintenanceHour, googleSqlInstance.Spec.Settings.MaintenanceWindow.Hour)
 		assert.Equal(t, maintenanceDay, googleSqlInstance.Spec.Settings.MaintenanceWindow.Day)
@@ -136,7 +136,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance := google_sql.GoogleSQLInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.Equal(t, googleSqlInstance.Spec.Settings.DiskSize, alternateDiskSize)
 	})
 
@@ -150,7 +150,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance := google_sql.GoogleSQLInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.Nil(t, googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef)
 	})
 
@@ -164,7 +164,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		spec, err = google_sql.CloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.GoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance := google_sql.GoogleSQLInstance(resource.CreateObjectMeta(app), spec, cfg)
 		assert.NotNil(t, googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef)
 	})
 

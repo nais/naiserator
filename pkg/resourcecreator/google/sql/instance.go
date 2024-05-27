@@ -12,7 +12,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/util"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,47 +48,50 @@ type Config interface {
 }
 
 func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
-	gcp := source.GetGCP()
-	if gcp == nil {
+	manifestGCP := source.GetGCP()
+	if manifestGCP == nil {
 		return nil
 	}
 
 	sourceName := source.GetName()
 
 	// Short-circuit into NOOP
-	if len(gcp.SqlInstances) == 0 {
+	if len(manifestGCP.SqlInstances) == 0 {
 		return nil
 	}
 
-	if len(gcp.SqlInstances) > 1 {
+	if len(manifestGCP.SqlInstances) > 1 {
 		return fmt.Errorf("only one sql instance is supported even though the spec indicates otherwise")
 	}
 
-	sqlInstance, err := CloudSqlInstanceWithDefaults(gcp.Instance(), sourceName)
+	manifestSQLInstance, err := CloudSqlInstanceWithDefaults(manifestGCP.Instance(), sourceName)
 	if err != nil {
 		return err
 	}
 
-	if len(sqlInstance.Databases) > 1 {
+	if len(manifestSQLInstance.Databases) > 1 {
 		return fmt.Errorf("only one sql database is supported even though the spec indicates otherwise")
 	}
 
-	cloudSqlDatabase := sqlInstance.Database()
+	manifestSQLDatabase := &manifestSQLInstance.Databases[0]
+	googleTeamProjectID := cfg.GetGoogleTeamProjectID()
+	objectMeta := resource.CreateObjectMeta(source)
 
-	googleTeamProjectId := cfg.GetGoogleTeamProjectID()
+	googleSQLInstance := GoogleSQLInstance(objectMeta, manifestSQLInstance, cfg)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSQLInstance)
 
-	googleSqlInstance := GoogleSqlInstance(resource.CreateObjectMeta(source), sqlInstance, cfg)
-	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
+	googleIAMPolicyMember := sqlInstanceIAMPolicyMember(source, googleSQLInstance.Name, cfg)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, googleIAMPolicyMember)
 
-	iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
+	googleSQLDatabase := GoogleSQLDatabase(
+		objectMeta,
+		googleSQLInstance.Name,
+		manifestSQLDatabase.Name,
+		googleTeamProjectID,
+		manifestSQLInstance.CascadingDelete)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSQLDatabase)
 
-	googledb := GoogleSQLDatabase(
-		resource.CreateObjectMeta(source), googleSqlInstance.Name, cloudSqlDatabase.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
-	)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
-
-	sqlUsers, err := MergeAndFilterDatabaseSQLUsers(cloudSqlDatabase.Users, googleSqlInstance.Name)
+	sqlUsers, err := MergeAndFilterDatabaseSQLUsers(manifestSQLDatabase.Users, googleSQLInstance.Name)
 	if err != nil {
 		return err
 	}
@@ -99,7 +101,6 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		if err = googleSqlUser.CreateSqlUserDBResources(
 			objectMeta,
 			ast,
-			googleSqlUser,
 			manifestSQLInstance.CascadingDelete,
 			sourceName,
 			googleTeamProjectID,
@@ -110,23 +111,21 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 
 	needsProxy := true
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
-		if usingPrivateIP(googleSqlInstance) {
+		if usingPrivateIP(googleSQLInstance) {
 			needsProxy = false
-			err = createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectId)
-			if err != nil {
+			if err = createSqlSSLCertResource(ast, googleSQLInstance.Name, source, googleTeamProjectID); err != nil {
 				return fmt.Errorf("unable to create sql ssl cert resource: %s", err)
 			}
 		}
 	}
 
-	err = AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName)
-	if err != nil {
+	if err = AppendGoogleSQLUserSecretEnvs(ast, manifestSQLInstance, sourceName); err != nil {
 		return fmt.Errorf("unable to append sql user secret envs: %s", err)
 	}
 
 	if needsProxy {
 		ast.Containers = append(
-			ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
+			ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSQLInstance.Name),
 		)
 	}
 
@@ -141,7 +140,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudSqlInstance, cfg Config) *google_sql_crd.SQLInstance {
+func GoogleSQLInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudSqlInstance, cfg Config) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
@@ -261,7 +260,7 @@ func CloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, appName
 	return instance, nil
 }
 
-func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Config) *google_iam_crd.IAMPolicyMember {
+func sqlInstanceIAMPolicyMember(source resource.Source, resourceName string, cfg Config) *google_iam_crd.IAMPolicyMember {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
@@ -323,7 +322,7 @@ func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 	util.SetAnnotation(sqlSSLCert, google.ProjectIdAnnotation, googleTeamProjectId)
 	util.SetAnnotation(sqlSSLCert, "sqeletor.nais.io/secret-name", secretName)
 
-	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(sqeletorVolumeName, secretName, nil, ptr.To(int32(0640))))
+	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(sqeletorVolumeName, secretName, nil, ptr.To(int32(0o640))))
 	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(sqeletorVolumeName, nais_io_v1alpha1.DefaultSqeletorMountPath, "", true))
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlSSLCert)
