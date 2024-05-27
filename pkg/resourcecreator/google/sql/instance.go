@@ -95,9 +95,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 
 	for _, user := range sqlUsers {
 		googleSqlUser := NewGoogleSqlUser(user.Name, cloudSqlDatabase, googleSqlInstance)
-		if err = googleSqlUser.createSqlUserDBResources(
-			resource.CreateObjectMeta(source), ast, sqlInstance.CascadingDelete, sourceName, googleTeamProjectId, cfg,
-		); err != nil {
+		if err = googleSqlUser.createSqlUserDBResources(resource.CreateObjectMeta(source), ast, sqlInstance.CascadingDelete, sourceName, cfg); err != nil {
 			return err
 		}
 	}

@@ -57,7 +57,7 @@ func (in GoogleSqlUser) googleSqlUserPrefix() string {
 	return prefix
 }
 
-func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, cascadingDelete bool, appName, googleTeamProjectId string, cfg Config) error {
+func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, cascadingDelete bool, appName string, cfg Config) error {
 	secretName, err := GoogleSQLSecretName(
 		appName, in.Instance.Name, in.DB.Name, in.Name,
 	)
@@ -65,7 +65,7 @@ func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, a
 		return fmt.Errorf("unable to create sql secret name: %s", err)
 	}
 
-	sqlUser, err := in.Create(objectMeta, cascadingDelete, appName, googleTeamProjectId)
+	sqlUser, err := in.Create(objectMeta, cascadingDelete, appName, cfg.GetGoogleTeamProjectID())
 	if err != nil {
 		return fmt.Errorf("unable to create sql user: %s", err)
 	}
