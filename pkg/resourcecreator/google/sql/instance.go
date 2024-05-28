@@ -85,9 +85,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	googleSqlDatabase := GoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectId, naisSqlInstance.CascadingDelete)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlDatabase)
 
-	if err := CreateGoogleSQLUsers(source, ast, cfg, naisSqlDatabase, naisSqlInstance, googleSqlInstance); err != nil {
-		return err
-	}
+	CreateGoogleSQLUsers(source, ast, cfg, naisSqlDatabase, naisSqlInstance, googleSqlInstance)
 
 	needsProxy := true
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {

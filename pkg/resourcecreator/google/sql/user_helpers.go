@@ -31,14 +31,14 @@ func trimLeadingUnderscore(x string) string {
 	return strings.TrimPrefix(x, "_")
 }
 
-func MergeAndFilterDatabaseSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) ([]nais.CloudSqlDatabaseUser, error) {
+func MergeAndFilterDatabaseSQLUsers(dbUsers []nais.CloudSqlDatabaseUser, instanceName string) []nais.CloudSqlDatabaseUser {
 	defaultUser := nais.CloudSqlDatabaseUser{Name: instanceName}
 
 	if dbUsers == nil {
-		return []nais.CloudSqlDatabaseUser{defaultUser}, nil
+		return []nais.CloudSqlDatabaseUser{defaultUser}
 	}
 
-	return removeDuplicates(append(dbUsers, defaultUser)), nil
+	return removeDuplicates(append(dbUsers, defaultUser))
 }
 
 func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDatabaseUser {

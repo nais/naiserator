@@ -38,11 +38,8 @@ type GoogleSqlUser struct {
 	Instance *googlesqlcrd.SQLInstance
 }
 
-func CreateGoogleSQLUsers(source Source, ast *resource.Ast, cfg Config, naisSqlDatabase *nais_io_v1.CloudSqlDatabase, naisSqlInstance *nais_io_v1.CloudSqlInstance, googleSqlInstance *googlesqlcrd.SQLInstance) error {
-	sqlUsers, err := MergeAndFilterDatabaseSQLUsers(naisSqlDatabase.Users, googleSqlInstance.Name)
-	if err != nil {
-		return err
-	}
+func CreateGoogleSQLUsers(source Source, ast *resource.Ast, cfg Config, naisSqlDatabase *nais_io_v1.CloudSqlDatabase, naisSqlInstance *nais_io_v1.CloudSqlInstance, googleSqlInstance *googlesqlcrd.SQLInstance) {
+	sqlUsers := MergeAndFilterDatabaseSQLUsers(naisSqlDatabase.Users, googleSqlInstance.Name)
 
 	for _, user := range sqlUsers {
 		googleSqlUser := GoogleSqlUser{
@@ -52,16 +49,19 @@ func CreateGoogleSQLUsers(source Source, ast *resource.Ast, cfg Config, naisSqlD
 			Instance: googleSqlInstance,
 		}
 
-		err := googleSqlUser.createSqlUserDBResources(resource.CreateObjectMeta(source), ast, naisSqlInstance.CascadingDelete, source.GetName(), cfg)
-		if err != nil {
-			return err
-		}
+		// Populate AST with Secret and SQLUser resources.
+		googleSqlUser.createSqlUserDBResources(
+			resource.CreateObjectMeta(source),
+			ast,
+			naisSqlInstance.CascadingDelete,
+			source.GetName(),
+			cfg,
+		)
 
+		// Inject a reference to the SQL user secret into the pod.
 		secretName := googleSqlUser.googleSQLSecretName()
 		ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
 	}
-
-	return nil
 }
 
 func (in GoogleSqlUser) isDefault() bool {
@@ -80,7 +80,7 @@ func (in GoogleSqlUser) googleSqlUserPrefix() string {
 	return prefix
 }
 
-func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, cascadingDelete bool, appName string, cfg Config) error {
+func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, cascadingDelete bool, appName string, cfg Config) {
 	secretName := in.googleSQLSecretName()
 	googleSqlUser := in.Create(objectMeta, cascadingDelete, appName, cfg.GetGoogleTeamProjectID())
 
@@ -90,7 +90,8 @@ func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, a
 	} else {
 		password, err := util.GeneratePassword()
 		if err != nil {
-			return err
+			// Will never happen
+			panic(err)
 		}
 
 		vars := in.CreateUserEnvVars(password)
@@ -99,7 +100,6 @@ func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, a
 
 	ast.AppendOperation(resource.AnnotateIfExists, secret.OpaqueSecret(objectMeta, secretName, nil))
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlUser)
-	return nil
 }
 
 func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
