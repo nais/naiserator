@@ -153,6 +153,7 @@ tests:
             resourceID: mydb
             instanceRef:
               name: myapplication
+            resourceID: mydb
 
   - apiVersion: v1
     kind: Secret
