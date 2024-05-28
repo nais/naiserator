@@ -13,15 +13,25 @@ import (
 
 func TestGoogleSqlDatabase(t *testing.T) {
 	app := fixtures.MinimalApplication()
-	objectMeta := resource.CreateObjectMeta(app)
-	instanceName := "instance-0"
-	instance := nais.CloudSqlInstance{Name: instanceName, Type: "POSTGRES_11"}
-	database := nais.CloudSqlDatabase{Name: "db1"}
-	projectId := "projectid"
-	sqlDatabase := google_sql.GoogleSQLDatabase(objectMeta, instance.Name, database.Name, projectId, instance.CascadingDelete)
+	projectID := "projectid"
+	instance := nais.CloudSqlInstance{
+		Name: "instance-0",
+		Type: "POSTGRES_11",
+	}
+	database := nais.CloudSqlDatabase{
+		Name: "db1",
+	}
+	sqlDatabase := google_sql.GoogleSQLDatabase(
+		resource.CreateObjectMeta(app),
+		instance.Name,
+		database.Name,
+		projectID,
+		instance.CascadingDelete,
+	)
+
 	assert.Equal(t, database.Name, sqlDatabase.Name)
 	assert.Equal(t, database.Name, sqlDatabase.Name)
-	assert.Equal(t, instanceName, sqlDatabase.Spec.InstanceRef.Name)
+	assert.Equal(t, instance.Name, sqlDatabase.Spec.InstanceRef.Name)
 	assert.Equal(t, google.DeletionPolicyAbandon, sqlDatabase.ObjectMeta.Annotations[google.DeletionPolicyAnnotation])
-	assert.Equal(t, projectId, sqlDatabase.ObjectMeta.Annotations[google.ProjectIdAnnotation])
+	assert.Equal(t, projectID, sqlDatabase.ObjectMeta.Annotations[google.ProjectIdAnnotation])
 }
