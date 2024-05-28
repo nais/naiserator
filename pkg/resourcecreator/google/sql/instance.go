@@ -74,7 +74,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	naisSqlDatabase := naisSqlInstance.Database()
-	googleTeamProjectId := cfg.GetGoogleTeamProjectID()
+	googleTeamProjectID := cfg.GetGoogleTeamProjectID()
 
 	googleSqlInstance := CreateGoogleSqlInstance(resource.CreateObjectMeta(source), naisSqlInstance, cfg)
 	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
@@ -82,7 +82,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
-	googleSqlDatabase := GoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectId, naisSqlInstance.CascadingDelete)
+	googleSqlDatabase := GoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectID, naisSqlInstance.CascadingDelete)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlDatabase)
 
 	CreateGoogleSQLUsers(source, ast, cfg, naisSqlDatabase, naisSqlInstance, googleSqlInstance)
@@ -99,9 +99,8 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	if needsProxy {
-		ast.Containers = append(
-			ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),
-		)
+		cloudSqlProxyContainer := google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), googleTeamProjectID, googleSqlInstance.Name)
+		ast.Containers = append(ast.Containers, cloudSqlProxyContainer)
 	}
 
 	return nil
