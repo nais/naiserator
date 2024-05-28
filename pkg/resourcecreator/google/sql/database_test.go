@@ -21,7 +21,7 @@ func TestGoogleSqlDatabase(t *testing.T) {
 	database := nais.CloudSqlDatabase{
 		Name: "db1",
 	}
-	sqlDatabase := google_sql.GoogleSQLDatabase(
+	sqlDatabase := google_sql.CreateGoogleSQLDatabase(
 		resource.CreateObjectMeta(app),
 		instance.Name,
 		database.Name,

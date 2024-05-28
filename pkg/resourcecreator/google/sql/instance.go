@@ -82,7 +82,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	googleIAMPolicyMember := CreateIAMPolicyMemberForInstance(source, googleSqlInstance.Name, cfg)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleIAMPolicyMember)
 
-	googleSqlDatabase := GoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectID, naisSqlInstance.CascadingDelete)
+	googleSqlDatabase := CreateGoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectID, naisSqlInstance.CascadingDelete)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlDatabase)
 
 	CreateGoogleSQLUsers(source, ast, cfg, naisSqlDatabase, naisSqlInstance, googleSqlInstance)
@@ -91,7 +91,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
 			needsCloudSqlProxyContainer = false
-			createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID)
+			CreateSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID)
 		}
 	}
 
@@ -262,7 +262,7 @@ func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
 	return googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef != nil
 }
 
-func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) {
+func CreateSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) {
 	objectMeta := resource.CreateObjectMeta(source)
 	shortName, err := namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), 63)
 	if err != nil {

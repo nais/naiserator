@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GoogleSQLDatabase(objectMeta metav1.ObjectMeta, instanceName, dbName, projectId string, cascadingDelete bool) *google_sql_crd.SQLDatabase {
+func CreateGoogleSQLDatabase(objectMeta metav1.ObjectMeta, instanceName, dbName, projectId string, cascadingDelete bool) *google_sql_crd.SQLDatabase {
 	// Spec for CloudSqlDatabase states that Name is required
 	objectMeta.Name = dbName
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
