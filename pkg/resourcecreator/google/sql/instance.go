@@ -87,16 +87,15 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 
 	CreateGoogleSQLUsers(source, ast, cfg, naisSqlDatabase, naisSqlInstance, googleSqlInstance)
 
-	needsProxy := true
+	needsCloudSqlProxyContainer := true
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
-			needsProxy = false
 			needsCloudSqlProxyContainer = false
 			createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID)
 		}
 	}
 
-	if needsProxy {
+	if needsCloudSqlProxyContainer {
 		cloudSqlProxyContainer := google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), googleTeamProjectID, googleSqlInstance.Name)
 		ast.Containers = append(ast.Containers, cloudSqlProxyContainer)
 	}
