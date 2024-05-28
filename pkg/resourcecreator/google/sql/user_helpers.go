@@ -58,10 +58,3 @@ func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDataba
 func ignoreCase(x string) string {
 	return strings.ToLower(x)
 }
-
-func MapEnvToVars(env map[string]string, vars map[string]string) map[string]string {
-	for k, v := range env {
-		vars[k] = v
-	}
-	return vars
-}

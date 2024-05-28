@@ -55,12 +55,8 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 	}
 
 	sqlUsers := []nais.CloudSqlDatabaseUser{
-		{
-			Name: instance.Name,
-		},
-		{
-			Name: "user-two",
-		},
+		{Name: instance.Name},
+		{Name: "user-two"},
 	}
 
 	expectedDefault := map[string]string{
@@ -73,7 +69,6 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 		"YOLO_DATABASE": "bar",
 	}
 
-	result := make(map[string]string)
 	defaultUser := google_sql.GoogleSqlUser{
 		AppName:  "foo",
 		Username: sqlUsers[0].Name,
@@ -81,9 +76,8 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 		Instance: instance,
 	}
 	vars := defaultUser.CreateUserEnvVars("password")
-	result = google_sql.MapEnvToVars(vars, result)
 
-	assert.Equal(t, expectedDefault, result)
+	assert.Equal(t, expectedDefault, vars)
 
 	expectedUserTwo := map[string]string{
 		"YOLO_USER_TWO_USERNAME": "user-two",
@@ -95,7 +89,6 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 		"YOLO_USER_TWO_DATABASE": "bar",
 	}
 
-	result = make(map[string]string)
 	userTwo := google_sql.GoogleSqlUser{
 		AppName:  "foo",
 		Username: sqlUsers[1].Name,
@@ -103,9 +96,8 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 		Instance: instance,
 	}
 	vars = userTwo.CreateUserEnvVars("password")
-	result = google_sql.MapEnvToVars(vars, result)
 
-	assert.Equal(t, expectedUserTwo, result)
+	assert.Equal(t, expectedUserTwo, vars)
 }
 
 func TestMergeDefaultSQLUser(t *testing.T) {
