@@ -91,7 +91,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
 			needsProxy = false
-			err = createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectId)
+			err = createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID)
 			if err != nil {
 				return fmt.Errorf("unable to create sql ssl cert resource: %s", err)
 			}
