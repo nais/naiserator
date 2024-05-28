@@ -124,8 +124,9 @@ tests:
             member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
-    kind: SqlDatabase
+    kind: SQLDatabase
     operation: CreateIfNotExists
+    name: mydb
     match:
       - type: subset
         name: "sql database created"

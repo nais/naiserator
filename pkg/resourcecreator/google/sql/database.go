@@ -19,7 +19,7 @@ func GoogleSQLDatabase(objectMeta metav1.ObjectMeta, instanceName, dbName, proje
 
 	return &google_sql_crd.SQLDatabase{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "SqlDatabase",
+			Kind:       "SQLDatabase",
 			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
 		ObjectMeta: objectMeta,
