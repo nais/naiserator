@@ -91,10 +91,8 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
 			needsProxy = false
-			err = createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID)
-			if err != nil {
-				return fmt.Errorf("unable to create sql ssl cert resource: %s", err)
-			}
+			needsCloudSqlProxyContainer = false
+			createSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID)
 		}
 	}
 
@@ -265,17 +263,17 @@ func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
 	return googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef != nil
 }
 
-func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) error {
-	var err error
+func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) {
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name, err = namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), 63)
+	shortName, err := namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), 63)
 	if err != nil {
-		return err
+		panic(err) // Will never happen
 	}
+	objectMeta.Name = shortName
 
 	secretName, err := namegen.ShortName(fmt.Sprintf("sqeletor-%s", instanceName), 63)
 	if err != nil {
-		return err
+		panic(err) // Will never happen
 	}
 
 	sqlSSLCert := &google_sql_crd.SQLSSLCert{
@@ -300,5 +298,4 @@ func createSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(sqeletorVolumeName, nais_io_v1alpha1.DefaultSqeletorMountPath, "", true))
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlSSLCert)
-	return nil
 }
