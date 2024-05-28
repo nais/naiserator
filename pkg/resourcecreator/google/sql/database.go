@@ -12,19 +12,27 @@ func GoogleSQLDatabase(objectMeta metav1.ObjectMeta, instanceName, dbName, proje
 	objectMeta.Name = dbName
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 
+	// This is an annotation, but also a spec field.
+	// Which one has presedence? We set both to be certain.
+	var deletionPolicy string
 	if !cascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
 		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
+		deletionPolicy = google_sql_crd.DeletionPolicyAbandon
+	} else {
+		deletionPolicy = google_sql_crd.DeletionPolicyDelete
 	}
 
 	return &google_sql_crd.SQLDatabase{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "SqlDatabase",
+			Kind:       "SQLDatabase",
 			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLDatabaseSpec{
-			InstanceRef: google_sql_crd.InstanceRef{Name: instanceName},
+			InstanceRef:    google_sql_crd.InstanceRef{Name: instanceName},
+			ResourceID:     dbName,
+			DeletionPolicy: deletionPolicy,
 		},
 	}
 }
