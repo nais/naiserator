@@ -79,8 +79,8 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	googleSqlInstance := CreateGoogleSqlInstance(resource.CreateObjectMeta(source), naisSqlInstance, cfg)
 	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
-	iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
+	googleIAMPolicyMember := CreateIAMPolicyMemberForInstance(source, googleSqlInstance.Name, cfg)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, googleIAMPolicyMember)
 
 	googleSqlDatabase := GoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectID, naisSqlInstance.CascadingDelete)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlDatabase)
@@ -234,7 +234,7 @@ func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, app
 	return instance, nil
 }
 
-func instanceIamPolicyMember(source resource.Source, resourceName string, cfg Config) *google_iam_crd.IAMPolicyMember {
+func CreateIAMPolicyMemberForInstance(source resource.Source, resourceName string, cfg Config) *google_iam_crd.IAMPolicyMember {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
