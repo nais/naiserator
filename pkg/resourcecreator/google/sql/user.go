@@ -75,7 +75,7 @@ func (in GoogleSqlUser) prefixIsSet() bool {
 func (in GoogleSqlUser) googleSqlUserPrefix() string {
 	prefix := in.sqlUserEnvPrefix()
 	if in.prefixIsSet() && !in.isDefault() {
-		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trimPrefix(in.Username)))
+		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trimLeadingUnderscore(in.Username)))
 	}
 	return prefix
 }
@@ -117,7 +117,7 @@ func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
 	}
-	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trimPrefix(in.Username)), googleSQLDatabaseCase(in.DB.Name))
+	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trimLeadingUnderscore(in.Username)), googleSQLDatabaseCase(in.DB.Name))
 }
 
 func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {

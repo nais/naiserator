@@ -23,11 +23,11 @@ func googleSQLDatabaseCase(x string) string {
 }
 
 func replaceToLowerWithNoPrefix(x string) string {
-	noPrefixX := trimPrefix(x)
+	noPrefixX := trimLeadingUnderscore(x)
 	return strings.ToLower(strings.ReplaceAll(noPrefixX, "_", "-"))
 }
 
-func trimPrefix(x string) string {
+func trimLeadingUnderscore(x string) string {
 	return strings.TrimPrefix(x, "_")
 }
 
@@ -46,15 +46,11 @@ func removeDuplicates(dbUsers []nais.CloudSqlDatabaseUser) []nais.CloudSqlDataba
 	var set []nais.CloudSqlDatabaseUser
 
 	for _, user := range dbUsers {
-		ignoreCaseUser := ignoreCase(user.Name)
+		ignoreCaseUser := strings.ToLower(user.Name)
 		if _, value := keys[ignoreCaseUser]; !value {
 			keys[user.Name] = true
 			set = append(set, user)
 		}
 	}
 	return set
-}
-
-func ignoreCase(x string) string {
-	return strings.ToLower(x)
 }
