@@ -31,7 +31,11 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 		Name: "bar",
 	}
 
-	sqlUser := google_sql.NewGoogleSqlUser(instance.Name, db, instance)
+	sqlUser := google_sql.GoogleSqlUser{
+		Name:     instance.Name,
+		DB:       db,
+		Instance: instance,
+	}
 	vars := sqlUser.CreateUserEnvVars("password")
 
 	assert.Equal(t, expected, vars)
@@ -69,7 +73,11 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 	}
 
 	result := make(map[string]string)
-	defaultUser := google_sql.NewGoogleSqlUser(sqlUsers[0].Name, db, instance)
+	defaultUser := google_sql.GoogleSqlUser{
+		Name:     sqlUsers[0].Name,
+		DB:       db,
+		Instance: instance,
+	}
 	vars := defaultUser.CreateUserEnvVars("password")
 	result = google_sql.MapEnvToVars(vars, result)
 
@@ -86,7 +94,11 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 	}
 
 	result = make(map[string]string)
-	userTwo := google_sql.NewGoogleSqlUser(sqlUsers[1].Name, db, instance)
+	userTwo := google_sql.GoogleSqlUser{
+		Name:     sqlUsers[1].Name,
+		DB:       db,
+		Instance: instance,
+	}
 	vars = userTwo.CreateUserEnvVars("password")
 	result = google_sql.MapEnvToVars(vars, result)
 

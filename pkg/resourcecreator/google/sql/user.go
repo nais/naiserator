@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
@@ -33,12 +34,26 @@ type GoogleSqlUser struct {
 	Instance *googlesqlcrd.SQLInstance
 }
 
-func NewGoogleSqlUser(name string, db *nais.CloudSqlDatabase, instance *googlesqlcrd.SQLInstance) GoogleSqlUser {
-	return GoogleSqlUser{
-		Name:     name,
-		DB:       db,
-		Instance: instance,
+func CreateGoogleSQLUsers(source Source, ast *resource.Ast, cfg Config, naisSqlDatabase *nais_io_v1.CloudSqlDatabase, naisSqlInstance *nais_io_v1.CloudSqlInstance, googleSqlInstance *googlesqlcrd.SQLInstance) error {
+	sqlUsers, err := MergeAndFilterDatabaseSQLUsers(naisSqlDatabase.Users, googleSqlInstance.Name)
+	if err != nil {
+		return err
 	}
+
+	for _, user := range sqlUsers {
+		googleSqlUser := GoogleSqlUser{
+			Name:     user.Name,
+			DB:       naisSqlDatabase,
+			Instance: googleSqlInstance,
+		}
+
+		err := googleSqlUser.createSqlUserDBResources(resource.CreateObjectMeta(source), ast, naisSqlInstance.CascadingDelete, source.GetName(), cfg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (in GoogleSqlUser) isDefault() bool {

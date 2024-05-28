@@ -48,56 +48,45 @@ type Config interface {
 }
 
 func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
-	gcp := source.GetGCP()
-	if gcp == nil {
+	manifestGCP := source.GetGCP()
+	if manifestGCP == nil {
 		return nil
 	}
 
 	sourceName := source.GetName()
 
 	// Short-circuit into NOOP
-	if len(gcp.SqlInstances) == 0 {
+	if len(manifestGCP.SqlInstances) == 0 {
 		return nil
 	}
 
-	if len(gcp.SqlInstances) > 1 {
+	if len(manifestGCP.SqlInstances) > 1 {
 		return fmt.Errorf("only one sql instance is supported even though the spec indicates otherwise")
 	}
 
-	sqlInstance, err := CloudSqlInstanceWithDefaults(gcp.Instance(), sourceName)
+	naisSqlInstance, err := NaisCloudSqlInstanceWithDefaults(manifestGCP.Instance(), sourceName)
 	if err != nil {
 		return err
 	}
 
-	if len(sqlInstance.Databases) > 1 {
+	if len(naisSqlInstance.Databases) > 1 {
 		return fmt.Errorf("only one sql database is supported even though the spec indicates otherwise")
 	}
 
-	cloudSqlDatabase := sqlInstance.Database()
-
+	naisSqlDatabase := naisSqlInstance.Database()
 	googleTeamProjectId := cfg.GetGoogleTeamProjectID()
 
-	googleSqlInstance := GoogleSqlInstance(resource.CreateObjectMeta(source), sqlInstance, cfg)
+	googleSqlInstance := CreateGoogleSqlInstance(resource.CreateObjectMeta(source), naisSqlInstance, cfg)
 	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
 	iamPolicyMember := instanceIamPolicyMember(source, googleSqlInstance.Name, cfg)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
 
-	googledb := GoogleSQLDatabase(
-		resource.CreateObjectMeta(source), googleSqlInstance.Name, cloudSqlDatabase.Name, googleTeamProjectId, sqlInstance.CascadingDelete,
-	)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, googledb)
+	googleSqlDatabase := GoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectId, naisSqlInstance.CascadingDelete)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlDatabase)
 
-	sqlUsers, err := MergeAndFilterDatabaseSQLUsers(cloudSqlDatabase.Users, googleSqlInstance.Name)
-	if err != nil {
+	if err := CreateGoogleSQLUsers(source, ast, cfg, naisSqlDatabase, naisSqlInstance, googleSqlInstance); err != nil {
 		return err
-	}
-
-	for _, user := range sqlUsers {
-		googleSqlUser := NewGoogleSqlUser(user.Name, cloudSqlDatabase, googleSqlInstance)
-		if err = googleSqlUser.createSqlUserDBResources(resource.CreateObjectMeta(source), ast, sqlInstance.CascadingDelete, sourceName, cfg); err != nil {
-			return err
-		}
 	}
 
 	needsProxy := true
@@ -111,7 +100,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		}
 	}
 
-	err = AppendGoogleSQLUserSecretEnvs(ast, sqlInstance, sourceName)
+	err = AppendGoogleSQLUserSecretEnvs(ast, naisSqlInstance, sourceName)
 	if err != nil {
 		return fmt.Errorf("unable to append sql user secret envs: %s", err)
 	}
@@ -133,7 +122,7 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudSqlInstance, cfg Config) *google_sql_crd.SQLInstance {
+func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudSqlInstance, cfg Config) *google_sql_crd.SQLInstance {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
@@ -222,7 +211,7 @@ func GoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudS
 	return sqlInstance
 }
 
-func CloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, appName string) (*nais_io_v1.CloudSqlInstance, error) {
+func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, appName string) (*nais_io_v1.CloudSqlInstance, error) {
 	if instance == nil {
 		return nil, fmt.Errorf("sql instance not defined")
 	}
