@@ -133,16 +133,25 @@ tests:
     operation: CreateIfNotExists
     name: mydb
     match:
-      - type: subset
+      - type: exact
+        exclude:
+          - .metadata.creationTimestamp
+          - .metadata.ownerReferences
         name: "sql database created"
         resource:
           metadata:
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
+              nais.io/deploymentCorrelationID: ""
             name: mydb
             namespace: mynamespace
+            labels:
+              app: myapplication
+              team: myteam
           spec:
+            resourceID: mydb
+            deletionPolicy: ABANDON
             instanceRef:
               name: myapplication
 
