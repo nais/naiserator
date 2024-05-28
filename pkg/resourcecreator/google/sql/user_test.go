@@ -32,7 +32,8 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 	}
 
 	sqlUser := google_sql.GoogleSqlUser{
-		Name:     instance.Name,
+		Username: instance.Name,
+		AppName:  "foo",
 		DB:       db,
 		Instance: instance,
 	}
@@ -74,7 +75,8 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 
 	result := make(map[string]string)
 	defaultUser := google_sql.GoogleSqlUser{
-		Name:     sqlUsers[0].Name,
+		AppName:  "foo",
+		Username: sqlUsers[0].Name,
 		DB:       db,
 		Instance: instance,
 	}
@@ -95,7 +97,8 @@ func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
 
 	result = make(map[string]string)
 	userTwo := google_sql.GoogleSqlUser{
-		Name:     sqlUsers[1].Name,
+		AppName:  "foo",
+		Username: sqlUsers[1].Name,
 		DB:       db,
 		Instance: instance,
 	}

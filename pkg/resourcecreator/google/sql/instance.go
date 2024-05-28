@@ -100,11 +100,6 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 		}
 	}
 
-	err = AppendGoogleSQLUserSecretEnvs(ast, naisSqlInstance, sourceName)
-	if err != nil {
-		return fmt.Errorf("unable to append sql user secret envs: %s", err)
-	}
-
 	if needsProxy {
 		ast.Containers = append(
 			ast.Containers, google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), cfg.GetGoogleTeamProjectID(), googleSqlInstance.Name),

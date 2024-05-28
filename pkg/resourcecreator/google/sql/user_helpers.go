@@ -1,17 +1,12 @@
 package google_sql
 
 import (
-	"fmt"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 )
 
@@ -21,18 +16,6 @@ func setAnnotations(objectMeta metav1.ObjectMeta, cascadingDelete bool, projectI
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
 		util.SetAnnotation(&objectMeta, google.DeletionPolicyAnnotation, google.DeletionPolicyAbandon)
 	}
-}
-
-func GoogleSQLSecretName(appName, instanceName, dbName, sqlUserName string) (string, error) {
-	if isDefault(instanceName, sqlUserName) {
-		return fmt.Sprintf("google-sql-%s", appName), nil
-	}
-	return namegen.ShortName(fmt.Sprintf("google-sql-%s-%s-%s", appName, dbName, replaceToLowerWithNoPrefix(sqlUserName)), validation.DNS1035LabelMaxLength)
-}
-
-// isDefault is a legacy compatibility function
-func isDefault(instanceName string, sqlUserName string) bool {
-	return instanceName == sqlUserName
 }
 
 func googleSQLDatabaseCase(x string) string {
@@ -81,23 +64,4 @@ func MapEnvToVars(env map[string]string, vars map[string]string) map[string]stri
 		vars[k] = v
 	}
 	return vars
-}
-
-func AppendGoogleSQLUserSecretEnvs(ast *resource.Ast, naisSqlInstance *nais.CloudSqlInstance, sourceName string) error {
-	db := naisSqlInstance.Database()
-
-	googleSQLUsers, err := MergeAndFilterDatabaseSQLUsers(db.Users, naisSqlInstance.Name)
-	if err != nil {
-		return err
-	}
-
-	for _, user := range googleSQLUsers {
-		secretName, err := GoogleSQLSecretName(sourceName, naisSqlInstance.Name, db.Name, user.Name)
-		if err != nil {
-			return err
-		}
-		ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
-	}
-
-	return nil
 }

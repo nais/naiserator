@@ -7,10 +7,13 @@ import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/liberator/pkg/namegen"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -29,7 +32,8 @@ const (
 )
 
 type GoogleSqlUser struct {
-	Name     string
+	Username string
+	AppName  string
 	DB       *nais.CloudSqlDatabase
 	Instance *googlesqlcrd.SQLInstance
 }
@@ -42,7 +46,8 @@ func CreateGoogleSQLUsers(source Source, ast *resource.Ast, cfg Config, naisSqlD
 
 	for _, user := range sqlUsers {
 		googleSqlUser := GoogleSqlUser{
-			Name:     user.Name,
+			Username: user.Name,
+			AppName:  source.GetName(),
 			DB:       naisSqlDatabase,
 			Instance: googleSqlInstance,
 		}
@@ -51,13 +56,16 @@ func CreateGoogleSQLUsers(source Source, ast *resource.Ast, cfg Config, naisSqlD
 		if err != nil {
 			return err
 		}
+
+		secretName := googleSqlUser.googleSQLSecretName()
+		ast.EnvFrom = append(ast.EnvFrom, pod.EnvFromSecret(secretName))
 	}
 
 	return nil
 }
 
 func (in GoogleSqlUser) isDefault() bool {
-	return in.Instance.Name == in.Name
+	return in.Instance.Name == in.Username
 }
 
 func (in GoogleSqlUser) prefixIsSet() bool {
@@ -67,27 +75,18 @@ func (in GoogleSqlUser) prefixIsSet() bool {
 func (in GoogleSqlUser) googleSqlUserPrefix() string {
 	prefix := in.sqlUserEnvPrefix()
 	if in.prefixIsSet() && !in.isDefault() {
-		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trimPrefix(in.Name)))
+		prefix = fmt.Sprintf("%s_%s", prefix, googleSQLDatabaseCase(trimPrefix(in.Username)))
 	}
 	return prefix
 }
 
 func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, ast *resource.Ast, cascadingDelete bool, appName string, cfg Config) error {
-	secretName, err := GoogleSQLSecretName(
-		appName, in.Instance.Name, in.DB.Name, in.Name,
-	)
-	if err != nil {
-		return fmt.Errorf("unable to create sql secret name: %s", err)
-	}
-
-	sqlUser, err := in.Create(objectMeta, cascadingDelete, appName, cfg.GetGoogleTeamProjectID())
-	if err != nil {
-		return fmt.Errorf("unable to create sql user: %s", err)
-	}
+	secretName := in.googleSQLSecretName()
+	googleSqlUser := in.Create(objectMeta, cascadingDelete, appName, cfg.GetGoogleTeamProjectID())
 
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() && usingPrivateIP(in.Instance) {
-		util.SetAnnotation(sqlUser, "sqeletor.nais.io/env-var-prefix", in.googleSqlUserPrefix())
-		util.SetAnnotation(sqlUser, "sqeletor.nais.io/database-name", in.DB.Name)
+		util.SetAnnotation(googleSqlUser, "sqeletor.nais.io/env-var-prefix", in.googleSqlUserPrefix())
+		util.SetAnnotation(googleSqlUser, "sqeletor.nais.io/database-name", in.DB.Name)
 	} else {
 		password, err := util.GeneratePassword()
 		if err != nil {
@@ -99,7 +98,7 @@ func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, a
 	}
 
 	ast.AppendOperation(resource.AnnotateIfExists, secret.OpaqueSecret(objectMeta, secretName, nil))
-	ast.AppendOperation(resource.OperationCreateIfNotExists, sqlUser)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlUser)
 	return nil
 }
 
@@ -118,7 +117,7 @@ func (in GoogleSqlUser) sqlUserEnvPrefix() string {
 	if in.prefixIsSet() {
 		return strings.TrimSuffix(in.DB.EnvVarPrefix, "_")
 	}
-	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trimPrefix(in.Name)), googleSQLDatabaseCase(in.DB.Name))
+	return fmt.Sprintf("NAIS_DATABASE_%s_%s", googleSQLDatabaseCase(trimPrefix(in.Username)), googleSQLDatabaseCase(in.DB.Name))
 }
 
 func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
@@ -128,18 +127,42 @@ func (in GoogleSqlUser) CreateUserEnvVars(password string) map[string]string {
 		prefix + googleSQLHostSuffix:     googleSQLPostgresHost,
 		prefix + googleSQLPortSuffix:     googleSQLPostgresPort,
 		prefix + googleSQLDatabaseSuffix: in.DB.Name,
-		prefix + googleSQLUsernameSuffix: in.Name,
+		prefix + googleSQLUsernameSuffix: in.Username,
 		prefix + GoogleSQLPasswordSuffix: password,
-		prefix + googleSQLURLSuffix:      fmt.Sprintf(googleSQLPostgresURL, in.Name, password, googleSQLPostgresHost, googleSQLPostgresPort, in.DB.Name),
-		prefix + googleSQLJDBCURLSuffix:  fmt.Sprintf(googleSQLPostgresJDBCURL, googleSQLPostgresHost, googleSQLPostgresPort, in.DB.Name, in.Name, password),
+		prefix + googleSQLURLSuffix:      fmt.Sprintf(googleSQLPostgresURL, in.Username, password, googleSQLPostgresHost, googleSQLPostgresPort, in.DB.Name),
+		prefix + googleSQLJDBCURLSuffix:  fmt.Sprintf(googleSQLPostgresJDBCURL, googleSQLPostgresHost, googleSQLPostgresPort, in.DB.Name, in.Username, password),
 	}
 }
 
-func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, appName string) (*googlesqlcrd.SQLUser, error) {
-	secretName, err := GoogleSQLSecretName(appName, in.Instance.Name, in.DB.Name, in.Name)
-	if err != nil {
-		return nil, err
+func (in GoogleSqlUser) googleSQLSecretName() string {
+	if in.Instance.Name == in.Username {
+		return fmt.Sprintf("google-sql-%s", in.AppName)
 	}
+
+	shortName, err := namegen.ShortName(
+		fmt.Sprintf(
+			"google-sql-%s-%s-%s",
+			in.AppName,
+			in.DB.Name,
+			replaceToLowerWithNoPrefix(in.Username),
+		),
+		validation.DNS1035LabelMaxLength)
+	if err != nil {
+		panic(err) // happens when Naiserator is out of memory
+	}
+
+	return shortName
+}
+
+func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, appName, projectId string) *googlesqlcrd.SQLUser {
+	if in.isDefault() {
+		objectMeta.Name = in.Instance.Name
+	} else {
+		objectMeta.Name = fmt.Sprintf("%s-%s-%s", appName, in.DB.Name, replaceToLowerWithNoPrefix(in.Username))
+	}
+	setAnnotations(objectMeta, cascadingDelete, projectId)
+
+	secretName := in.googleSQLSecretName()
 
 	return &googlesqlcrd.SQLUser{
 		TypeMeta: metav1.TypeMeta{
@@ -157,23 +180,7 @@ func (in GoogleSqlUser) create(objectMeta metav1.ObjectMeta, appName string) (*g
 					},
 				},
 			},
-			ResourceID: in.Name,
+			ResourceID: in.Username,
 		},
-	}, nil
-}
-
-func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete bool, appName, projectId string) (*googlesqlcrd.SQLUser, error) {
-	if in.isDefault() {
-		objectMeta.Name = in.Instance.Name
-	} else {
-		objectMeta.Name = fmt.Sprintf("%s-%s-%s", appName, in.DB.Name, replaceToLowerWithNoPrefix(in.Name))
 	}
-	setAnnotations(objectMeta, cascadingDelete, projectId)
-
-	sqlUser, err := in.create(objectMeta, appName)
-	if err != nil {
-		return nil, err
-	}
-
-	return sqlUser, nil
 }
