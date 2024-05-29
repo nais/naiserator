@@ -151,7 +151,6 @@ tests:
               team: myteam
           spec:
             resourceID: mydb
-            deletionPolicy: ""
             instanceRef:
               name: myapplication
 
