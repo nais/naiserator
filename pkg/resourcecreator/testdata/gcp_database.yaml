@@ -150,7 +150,6 @@ tests:
               app: myapplication
               team: myteam
           spec:
-            resourceID: mydb
             instanceRef:
               name: myapplication
             resourceID: mydb
