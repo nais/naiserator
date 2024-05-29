@@ -2,14 +2,21 @@ package google_sql
 
 import (
 	google_sql_crd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func CreateGoogleSQLDatabase(objectMeta metav1.ObjectMeta, instanceName, dbName, projectId string, cascadingDelete bool) *google_sql_crd.SQLDatabase {
 	// Spec for CloudSqlDatabase states that Name is required
-	objectMeta.Name = dbName
+	var err error
+
+	objectMeta.Name, err = namegen.ShortName(objectMeta.GetName()+"-"+dbName, validation.DNS1035LabelMaxLength)
+	if err != nil {
+		panic(err) // never happens
+	}
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 
 	// This is an annotation, but also a spec field.
