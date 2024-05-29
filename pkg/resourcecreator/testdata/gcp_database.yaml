@@ -151,7 +151,7 @@ tests:
               team: myteam
           spec:
             resourceID: mydb
-            deletionPolicy: ABANDON
+            deletionPolicy: ""
             instanceRef:
               name: myapplication
 
