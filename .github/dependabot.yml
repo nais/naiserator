@@ -6,15 +6,27 @@ updates:
       interval: "monthly"
     reviewers:
       - "nais/features-dependabot-reviewer"
+    groups:
+      gh:
+        patterns:
+          - '*'
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "monthly"
     reviewers:
       - "nais/features-dependabot-reviewer"
+    groups:
+      docker:
+        patterns:
+          - '*'
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "monthly"
     reviewers:
       - "nais/features-dependabot-reviewer"
+    groups:
+      gomod:
+        patterns:
+          - '*'
