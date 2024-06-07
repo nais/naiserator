@@ -83,7 +83,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleIAMPolicyMember)
 
 	googleSqlDatabase := CreateGoogleSQLDatabase(resource.CreateObjectMeta(source), googleSqlInstance.Name, naisSqlDatabase.Name, googleTeamProjectID, naisSqlInstance.CascadingDelete)
-	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlDatabase)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlDatabase)
 
 	CreateGoogleSQLUsers(source, ast, cfg, naisSqlDatabase, naisSqlInstance, googleSqlInstance)
 

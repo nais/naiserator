@@ -136,7 +136,7 @@ tests:
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLDatabase
-    operation: CreateIfNotExists
+    operation: CreateOrUpdate
     name: myapplication-mydb-ff391fe0
     match:
       - type: subset

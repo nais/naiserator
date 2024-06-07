@@ -128,7 +128,7 @@ tests:
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLDatabase
-    operation: CreateIfNotExists
+    operation: CreateOrUpdate
     name: mynaisjob-mydb-13e1c1d0
     match:
       - type: subset
