@@ -1,5 +1,5 @@
 testconfig:
-  description: vanilla application running in GCP with default configuration and access policies
+  description: vanilla application running in NAAS with default configuration and access policies
 
 config:
   features:
@@ -15,8 +15,9 @@ input:
     namespace: mynamespace
     uid: "123456"
     annotations:
-      nais.io/add-kernel-capability: "NET_RAW,net_bInd_sErvIcE,NET_ADMIN"
       nais.io/run-as-user: "6969"
+      nais.io/run-as-group: "69"
+      nais.io/read-only-file-system: "false"
     labels:
       team: myteam
   spec:
@@ -29,18 +30,23 @@ tests:
     name: myapplication
     match:
       - type: subset
-        name: "restricted securitycontext with additional capabilities"
+        name: "restricted securitycontext"
         resource:
           spec:
             template:
               spec:
+                securityContext:
+                  seccompProfile:
+                    type: RuntimeDefault
                 containers:
                   - securityContext:
                       runAsUser: 6969
-                      runAsGroup: 6969
+                      runAsGroup: 69
                       allowPrivilegeEscalation: false
                       runAsNonRoot: true
+                      readOnlyRootFilesystem: false
                       privileged: false
                       capabilities:
                         drop: ["ALL"]
-                        add: ["NET_RAW", "NET_BIND_SERVICE"]
+                      seccompProfile:
+                        type: RuntimeDefault
