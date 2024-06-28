@@ -129,6 +129,9 @@ func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.
 	}
 
 	if instance.TransactionLogRetentionDays != nil {
+		if backupSettings == nil {
+			backupSettings = &google_sql_crd.SQLInstanceBackupRetentionSetting{}
+		}
 		backupSettings.TransactionLogRetentionDays = *instance.TransactionLogRetentionDays
 	}
 
