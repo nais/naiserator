@@ -258,8 +258,8 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 }
 
 func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
-	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...) // add the workloads own env vars added first, as they will take precendence
 	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
+	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
 	filesFrom(ast, app.GetFilesFrom())
 	envFrom(ast, app.GetEnvFrom())
 	lifecycle, err := lifecycle(app.GetPreStopHookPath(), app.GetPreStopHook())
@@ -320,7 +320,7 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 
 func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
 	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
-	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...)
+	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...) // add user-specified envs last to allow overriding
 	filesFrom(ast, naisjob.Spec.FilesFrom)
 	envFrom(ast, naisjob.Spec.EnvFrom)
 	lifecycle, err := lifecycle("", naisjob.Spec.PreStopHook)
