@@ -319,8 +319,8 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 }
 
 func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
-	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
-	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...) // add user-specified envs last to allow overriding
+	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...)
+	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...) // add user-specified envs last to allow overriding
 	filesFrom(ast, naisjob.Spec.FilesFrom)
 	envFrom(ast, naisjob.Spec.EnvFrom)
 	lifecycle, err := lifecycle("", naisjob.Spec.PreStopHook)
