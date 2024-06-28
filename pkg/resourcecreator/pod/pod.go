@@ -20,11 +20,12 @@ import (
 )
 
 const (
-	naisAppNameEnv     = "NAIS_APP_NAME"
-	naisNamespaceEnv   = "NAIS_NAMESPACE"
 	naisAppImageEnv    = "NAIS_APP_IMAGE"
-	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
+	naisAppNameEnv     = "NAIS_APP_NAME"
 	naisClientId       = "NAIS_CLIENT_ID"
+	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
+	naisNamespaceEnv   = "NAIS_NAMESPACE"
+	defaultPort        = "8080"
 )
 
 type Source interface {
@@ -257,7 +258,7 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 }
 
 func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
-	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
+	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...) // add the workloads own env vars added first, as they will take precendence
 	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
 	filesFrom(ast, app.GetFilesFrom())
 	envFrom(ast, app.GetEnvFrom())
@@ -345,6 +346,13 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg 
 }
 
 func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
+	var port string
+	if source.GetPort() == 0 {
+		port = defaultPort
+	} else {
+		port = strconv.Itoa(source.GetPort())
+	}
+
 	return []corev1.EnvVar{
 		{Name: naisAppNameEnv, Value: source.GetName()},
 		{Name: naisNamespaceEnv, Value: source.GetNamespace()},
@@ -352,6 +360,8 @@ func defaultEnvVars(source resource.Source, clusterName, appImage string) []core
 		{Name: naisClusterNameEnv, Value: clusterName},
 		{Name: naisClientId, Value: AppClientID(source, clusterName)},
 		{Name: "LOG4J_FORMAT_MSG_NO_LOOKUPS", Value: "true"},
+		{Name: "PORT", Value: port},
+		{Name: "BIND_ADDRESS", Value: fmt.Sprintf("0.0.0.0:%s", port)},
 	}
 }
 
