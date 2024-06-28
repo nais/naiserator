@@ -64,6 +64,10 @@ tests:
                         value: :mynamespace:myapplication
                       - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
                         value: "true"
+                      - name: PORT
+                        value: "8080"
+                      - name: BIND_ADDRESS
+                        value: "0.0.0.0:8080"
                     image: ghcr.io/nais/testapp:latest
                     imagePullPolicy: IfNotPresent
                     lifecycle:
