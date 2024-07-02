@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/frontend"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
@@ -67,6 +68,13 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 	err := kube.Get(ctx, key, deploy)
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("query existing deployment: %s", err)
+	}
+
+	// Disallow creating application resources if there is a Naisjob with the same name.
+	job := &nais_io_v1.Naisjob{}
+	err = kube.Get(ctx, key, job)
+	if err == nil {
+		return nil, fmt.Errorf("cannot create an Application with name '%s' because a Naisjob with that name exists", source.GetName())
 	}
 
 	o.NumReplicas = numReplicas(deploy, app.GetReplicas().Min, app.GetReplicas().Max)
