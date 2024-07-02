@@ -212,8 +212,8 @@ func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, app
 		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
 		DiskSize: DefaultSqlInstanceDiskSize,
-		// This default will always be overridden by GoogleSQLDatabase(), need to be set, as databases.Name can not be nil.
-		Databases: []nais_io_v1.CloudSqlDatabase{{Name: "dummy-name"}},
+		// This default will be further formatted by CreateGoogleSQLDatabase().
+		Databases: []nais_io_v1.CloudSqlDatabase{{Name: appName}},
 		Collation: DefaultSqlInstanceCollation,
 	}
 
