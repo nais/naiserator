@@ -67,8 +67,9 @@ tests:
               tier: db-f1-micro
 
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
-    kind: SqlDatabase
-    operation: CreateIfNotExists
+    kind: SQLDatabase
+    operation: CreateOrUpdate
+    name: myapplication-mydb-ff391fe0
     match:
       - type: subset
         name: "sql database created"

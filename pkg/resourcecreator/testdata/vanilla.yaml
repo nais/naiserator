@@ -234,7 +234,8 @@ tests:
             template:
               spec:
                 containers:
-                  - securityContext:
+                  - name: myapplication
+                    securityContext:
                       runAsUser: 1069
                       runAsGroup: 1069
                       allowPrivilegeEscalation: false

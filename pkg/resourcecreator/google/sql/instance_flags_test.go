@@ -2,104 +2,99 @@ package google_sql
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
-func TestBoolTrue(t *testing.T) {
-	flagName := "auto_explain.log_analyze"
-	flagValue := "on"
-	err := ValidateFlag(flagName, flagValue)
-	assert.NoError(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestBoolFalse(t *testing.T) {
-	flagName := "auto_explain.log_analyze"
-	flagValue := "off"
-	err := ValidateFlag(flagName, flagValue)
-	assert.NoError(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestBoolBogus(t *testing.T) {
-	flagName := "auto_explain.log_analyze"
-	flagValue := "bogus"
-	err := ValidateFlag(flagName, flagValue)
-	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestSingleValueWithinEnum(t *testing.T) {
-	flagName := "auto_explain.log_format"
-	flagValue := "json"
-	err := ValidateFlag(flagName, flagValue)
-	assert.NoError(t, err)
-}
-
-func TestMultipleValuesAllWithinEnum(t *testing.T) {
-	flagName := "auto_explain.log_format"
-	flagValue := "json,xml"
-	err := ValidateFlag(flagName, flagValue)
-	assert.NoError(t, err)
-}
-
-func TestMultipleValuesOnlySomeWithinEnum(t *testing.T) {
-	flagName := "auto_explain.log_format"
-	flagValue := "json,xml, bogus"
-	err := ValidateFlag(flagName, flagValue)
-	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestStringNotWithinEnum(t *testing.T) {
-	flagName := "auto_explain.log_format"
-	flagValue := "bogus"
-	err := ValidateFlag(flagName, flagValue)
-	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestIntWithinRange(t *testing.T) {
-	flagName := "commit_siblings"
-	flagValue := "2"
-	err := ValidateFlag(flagName, flagValue)
-	assert.NoError(t, err)
-}
-
-func TestIntNotWithinRange(t *testing.T) {
-	flagName := "commit_siblings"
-	flagValue := "1001"
-	err := ValidateFlag(flagName, flagValue)
-	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestFloatWithinRange(t *testing.T) {
-	flagName := "autovacuum_vacuum_scale_factor"
-	flagValue := "10"
-	err := ValidateFlag(flagName, flagValue)
-	assert.NoError(t, err)
-}
-
-func TestFloatNotWithinRange(t *testing.T) {
-	flagName := "autovacuum_vacuum_scale_factor"
-	flagValue := "-1"
-	err := ValidateFlag(flagName, flagValue)
-	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestIsUnitOf(t *testing.T) {
-	flagName := "effective_cache_size"
-	flagValue := "24576"
-	err := ValidateFlag(flagName, flagValue)
-	assert.NoError(t, err)
-}
-
-func TestIsNotUnitOf(t *testing.T) {
-	flagName := "effective_cache_size"
-	flagValue := "24277"
-	err := ValidateFlag(flagName, flagValue)
-	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
-}
-
-func TestIsNotEmpty(t *testing.T) {
-	flagName := "pglogical.conflict_log_level"
-	flagValue := ""
-	err := ValidateFlag(flagName, flagValue)
-	assert.Errorf(t, err, "'%s' is not within spec", flagValue)
+func TestValidateFlag(t *testing.T) {
+	tests := []struct {
+		name      string
+		flagName  string
+		flagValue string
+		wantError bool
+	}{
+		{
+			name:      "bool true",
+			flagName:  "auto_explain.log_analyze",
+			flagValue: "on",
+		},
+		{
+			name:      "bool false",
+			flagName:  "auto_explain.log_analyze",
+			flagValue: "off",
+		},
+		{
+			name:      "bool bogus",
+			flagName:  "auto_explain.log_analyze",
+			flagValue: "bogus",
+			wantError: true,
+		},
+		{
+			name:      "single value within enum",
+			flagName:  "auto_explain.log_format",
+			flagValue: "json",
+		},
+		{
+			name:      "multiple values all within enum",
+			flagName:  "auto_explain.log_format",
+			flagValue: "json,xml",
+		},
+		{
+			name:      "multiple values only some within enum",
+			flagName:  "auto_explain.log_format",
+			flagValue: "json,xml, bogus",
+			wantError: true,
+		},
+		{
+			name:      "string not within enum",
+			flagName:  "auto_explain.log_format",
+			flagValue: "bogus",
+			wantError: true,
+		},
+		{
+			name:      "int within range",
+			flagName:  "commit_siblings",
+			flagValue: "2",
+		},
+		{
+			name:      "int not within range",
+			flagName:  "commit_siblings",
+			flagValue: "1001",
+			wantError: true,
+		},
+		{
+			name:      "float within range",
+			flagName:  "autovacuum_vacuum_scale_factor",
+			flagValue: "10",
+		},
+		{
+			name:      "float not within range",
+			flagName:  "autovacuum_vacuum_scale_factor",
+			flagValue: "-1",
+			wantError: true,
+		},
+		{
+			name:      "is unit of",
+			flagName:  "effective_cache_size",
+			flagValue: "24576",
+		},
+		{
+			name:      "is not unit of",
+			flagName:  "effective_cache_size",
+			flagValue: "24277",
+			wantError: true,
+		},
+		{
+			name:      "is not empty",
+			flagName:  "pglogical.conflict_log_level",
+			flagValue: "",
+			wantError: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateFlag(tt.flagName, tt.flagValue)
+			if tt.wantError && err == nil {
+				t.Errorf("expected error, got nil")
+			}
+		})
+	}
 }

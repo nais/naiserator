@@ -116,6 +116,10 @@ tests:
                         value: test-cluster:mynamespace:mynaisjob
                       - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
                         value: "true"
+                      - name: PORT
+                        value: "8080"
+                      - name: BIND_ADDRESS
+                        value: "0.0.0.0:8080"
                     image: navikt/mynaisjob:1.2.3
                     securityContext:
                       runAsUser: 1069

@@ -6,7 +6,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 )
@@ -45,12 +45,12 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 		},
 		Resources: pod.ResourceLimits(cloudSqlProxyContainerResourceSpec),
 		SecurityContext: &corev1.SecurityContext{
-			RunAsUser:                pointer.Int64(2),
-			RunAsGroup:               pointer.Int64(2),
-			RunAsNonRoot:             pointer.Bool(true),
-			Privileged:               pointer.Bool(false),
-			AllowPrivilegeEscalation: pointer.Bool(false),
-			ReadOnlyRootFilesystem:   pointer.Bool(true),
+			RunAsUser:                ptr.To(int64(2)),
+			RunAsGroup:               ptr.To(int64(2)),
+			RunAsNonRoot:             ptr.To(bool(true)),
+			Privileged:               ptr.To(bool(false)),
+			AllowPrivilegeEscalation: ptr.To(bool(false)),
+			ReadOnlyRootFilesystem:   ptr.To(bool(true)),
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},

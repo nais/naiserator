@@ -1,139 +1,91 @@
 package google_sql_test
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	google_sql "github.com/nais/naiserator/pkg/resourcecreator/google/sql"
-	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGoogleSQLUserEnvVars(t *testing.T) {
-	expected := map[string]string{
-		"NAIS_DATABASE_FOO_BAR_HOST":     "127.0.0.1",
-		"NAIS_DATABASE_FOO_BAR_PORT":     "5432",
-		"NAIS_DATABASE_FOO_BAR_DATABASE": "bar",
-		"NAIS_DATABASE_FOO_BAR_USERNAME": "foo",
-		"NAIS_DATABASE_FOO_BAR_PASSWORD": "password",
-		"NAIS_DATABASE_FOO_BAR_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
-		"NAIS_DATABASE_FOO_BAR_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
-	}
-
 	instance := &googlesqlcrd.SQLInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 		},
 	}
 
-	db := &nais.CloudSqlDatabase{
-		Name: "bar",
-	}
-
-	sqlUser := google_sql.SetupGoogleSqlUser(instance.Name, db, instance)
-	vars := sqlUser.CreateUserEnvVars("password")
-
-	assert.Equal(t, expected, vars)
-}
-
-func TestGoogleSQLSecretEnvVarsWithAdditionalSqlUsers(t *testing.T) {
-	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "foo",
-		},
-	}
-
-	db := &nais.CloudSqlDatabase{
-		Name:         "bar",
-		EnvVarPrefix: "YOLO",
-	}
-
-	sqlUsers := []nais.CloudSqlDatabaseUser{
+	tests := []struct {
+		name    string
+		sqlUser google_sql.GoogleSqlUser
+		want    map[string]string
+	}{
 		{
-			Name: instance.Name,
+			name: "default user",
+			sqlUser: google_sql.GoogleSqlUser{
+				Username: instance.Name,
+				AppName:  instance.Name,
+				DB:       &nais.CloudSqlDatabase{Name: "bar"},
+				Instance: instance,
+			},
+			want: map[string]string{
+				"NAIS_DATABASE_FOO_BAR_HOST":     "127.0.0.1",
+				"NAIS_DATABASE_FOO_BAR_PORT":     "5432",
+				"NAIS_DATABASE_FOO_BAR_DATABASE": "bar",
+				"NAIS_DATABASE_FOO_BAR_USERNAME": "foo",
+				"NAIS_DATABASE_FOO_BAR_PASSWORD": "password",
+				"NAIS_DATABASE_FOO_BAR_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
+				"NAIS_DATABASE_FOO_BAR_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
+			},
 		},
 		{
-			Name: "user-two",
-		},
-	}
-
-	expectedDefault := map[string]string{
-		"YOLO_PASSWORD": "password",
-		"YOLO_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
-		"YOLO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
-		"YOLO_USERNAME": "foo",
-		"YOLO_HOST":     "127.0.0.1",
-		"YOLO_PORT":     "5432",
-		"YOLO_DATABASE": "bar",
-	}
-
-	result := make(map[string]string)
-	defaultUser := google_sql.SetupGoogleSqlUser(sqlUsers[0].Name, db, instance)
-	vars := defaultUser.CreateUserEnvVars("password")
-	result = google_sql.MapEnvToVars(vars, result)
-
-	assert.Equal(t, expectedDefault, result)
-
-	expectedUserTwo := map[string]string{
-		"YOLO_USER_TWO_USERNAME": "user-two",
-		"YOLO_USER_TWO_PASSWORD": "password",
-		"YOLO_USER_TWO_URL":      "postgres://user-two:password@127.0.0.1:5432/bar",
-		"YOLO_USER_TWO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=user-two&password=password",
-		"YOLO_USER_TWO_HOST":     "127.0.0.1",
-		"YOLO_USER_TWO_PORT":     "5432",
-		"YOLO_USER_TWO_DATABASE": "bar",
-	}
-
-	result = make(map[string]string)
-	userTwo := google_sql.SetupGoogleSqlUser(sqlUsers[1].Name, db, instance)
-	vars = userTwo.CreateUserEnvVars("password")
-	result = google_sql.MapEnvToVars(vars, result)
-
-	assert.Equal(t, expectedUserTwo, result)
-}
-
-func TestKeyWithSuffixMatchingUser(t *testing.T) {
-	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "foo",
-		},
-	}
-
-	db := &nais.CloudSqlDatabase{
-		Name:         "bar",
-		EnvVarPrefix: "YOLO",
-	}
-
-	sqlUsers := []nais.CloudSqlDatabaseUser{
-		{
-			Name: instance.Name,
+			name: "with env var prefix",
+			sqlUser: google_sql.GoogleSqlUser{
+				Username: instance.Name,
+				AppName:  instance.Name,
+				DB:       &nais.CloudSqlDatabase{Name: "bar", EnvVarPrefix: "YOLO"},
+				Instance: instance,
+			},
+			want: map[string]string{
+				"YOLO_PASSWORD": "password",
+				"YOLO_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
+				"YOLO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
+				"YOLO_USERNAME": "foo",
+				"YOLO_HOST":     "127.0.0.1",
+				"YOLO_PORT":     "5432",
+				"YOLO_DATABASE": "bar",
+			},
 		},
 		{
-			Name: "additional",
+			name: "with env var prefix and non-instance username",
+			sqlUser: google_sql.GoogleSqlUser{
+				Username: "user-two",
+				AppName:  instance.Name,
+				DB:       &nais.CloudSqlDatabase{Name: "bar", EnvVarPrefix: "YOLO"},
+				Instance: instance,
+			},
+			want: map[string]string{
+				"YOLO_USER_TWO_PASSWORD": "password",
+				"YOLO_USER_TWO_URL":      "postgres://user-two:password@127.0.0.1:5432/bar",
+				"YOLO_USER_TWO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=user-two&password=password",
+				"YOLO_USER_TWO_USERNAME": "user-two",
+				"YOLO_USER_TWO_HOST":     "127.0.0.1",
+				"YOLO_USER_TWO_PORT":     "5432",
+				"YOLO_USER_TWO_DATABASE": "bar",
+			},
 		},
 	}
 
-	envs := map[string]string{
-		"YOLO_URL":                 "postgres://foo:password@127.0.0.1:5432/bar",
-		"YOLO_USERNAME":            "foo",
-		"YOLO_ADDITIONAL_USERNAME": "additional",
-		"YOLO_ADDITIONAL_PASSWORD": "password",
-		"YOLO_PASSWORD":            "password",
-		"YOLO_ADDITIONAL_URL":      "postgres://additional:password@127.0.0.1:5432/bar",
-		"YOLO_ADDITIONAL_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=additional&password=password",
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.sqlUser.CreateUserEnvVars("password")
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("CreateUserEnvVars() mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
-
-	googleSqlUser := google_sql.SetupGoogleSqlUser(sqlUsers[0].Name, db, instance)
-	key, nil := googleSqlUser.KeyWithSuffixMatchingUser(envs, "_PASSWORD")
-	assert.Nil(t, nil)
-	assert.Equal(t, "YOLO_PASSWORD", key)
-
-	googleSqlUser.Name = sqlUsers[1].Name
-	key, nil = googleSqlUser.KeyWithSuffixMatchingUser(envs, "_PASSWORD")
-	assert.Nil(t, nil)
-	assert.Equal(t, "YOLO_ADDITIONAL_PASSWORD", key)
 }
 
 func TestMergeDefaultSQLUser(t *testing.T) {
@@ -143,44 +95,42 @@ func TestMergeDefaultSQLUser(t *testing.T) {
 		},
 	}
 
-	dbUsers := []nais.CloudSqlDatabaseUser{
+	tests := []struct {
+		name    string
+		dbUsers []nais.CloudSqlDatabaseUser
+		want    []nais.CloudSqlDatabaseUser
+	}{
 		{
-			Name: "user-two",
+			name:    "nil users",
+			dbUsers: nil,
+			want: []nais.CloudSqlDatabaseUser{
+				{Name: instance.Name},
+			},
 		},
 		{
-			Name: "user_three",
-		},
-		{
-			Name: "user_three",
-		},
-		{
-			Name: instance.Name,
-		},
-		{
-			Name: instance.Name,
+			name: "no users",
+			dbUsers: []nais.CloudSqlDatabaseUser{
+				{Name: "user-two"},
+				{Name: "user_three"},
+				{Name: "user_three"},
+				{Name: instance.Name},
+				{Name: instance.Name},
+			},
+
+			want: []nais.CloudSqlDatabaseUser{
+				{Name: "user-two"},
+				{Name: "user_three"},
+				{Name: instance.Name},
+			},
 		},
 	}
 
-	expected := []nais.CloudSqlDatabaseUser{
-		{
-			Name: "user-two",
-		},
-		{
-			Name: "user_three",
-		},
-		{
-			Name: instance.Name,
-		},
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := google_sql.MergeAndFilterDatabaseSQLUsers(tt.dbUsers, instance.Name)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("MergeAndFilterDatabaseSQLUsers() mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
-
-	mergedUsers, err := google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 0)
-	assert.NoError(t, err)
-	assert.Equal(t, []nais.CloudSqlDatabaseUser{{Name: instance.Name}}, mergedUsers)
-
-	mergedUsers, err = google_sql.MergeAndFilterDatabaseSQLUsers(dbUsers, instance.Name, 0)
-	assert.NoError(t, err)
-	assert.Equal(t, expected, mergedUsers)
-
-	mergedUsers, err = google_sql.MergeAndFilterDatabaseSQLUsers(nil, instance.Name, 1)
-	assert.Error(t, err, fmt.Errorf("must specify users for each extra databases, can not have several databases with the default user"))
 }

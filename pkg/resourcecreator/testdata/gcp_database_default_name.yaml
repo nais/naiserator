@@ -1,0 +1,43 @@
+testconfig:
+  description: google cloud sql database name defaults to application name if not set
+
+config:
+  features:
+    cnrm: true
+    linkerd: true
+  google-project-id: google-project-id
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+    gcp:
+      sqlInstances:
+        - databases:
+          type: POSTGRES_14
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+      annotations:
+        cnrm.cloud.google.com/project-id: team-project-id
+
+tests:
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLInstance
+    operation: CreateOrUpdate
+    name: myapplication
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLDatabase
+    operation: CreateOrUpdate
+    name: myapplication-myapplication-5a58a055

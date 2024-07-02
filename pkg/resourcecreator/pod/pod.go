@@ -7,25 +7,25 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/pointer"
-	"k8s.io/utils/ptr"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 const (
-	naisAppNameEnv     = "NAIS_APP_NAME"
-	naisNamespaceEnv   = "NAIS_NAMESPACE"
 	naisAppImageEnv    = "NAIS_APP_IMAGE"
-	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
+	naisAppNameEnv     = "NAIS_APP_NAME"
 	naisClientId       = "NAIS_CLIENT_ID"
+	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
+	naisNamespaceEnv   = "NAIS_NAMESPACE"
+	defaultPort        = "8080"
 )
 
 type Source interface {
@@ -51,7 +51,6 @@ type Config interface {
 	GetClusterName() string
 	GetGoogleProjectID() string
 	GetHostAliases() []config.HostAlias
-	GetAllowedKernelCapabilities() []string
 	GetImagePullSecrets() []string
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
@@ -109,14 +108,14 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		Tolerations:                   tolerations,
 		SecurityContext: &corev1.PodSecurityContext{
 			FSGroup:             ptr.To[int64](1069),
-			FSGroupChangePolicy: ptr.To[corev1.PodFSGroupChangePolicy](corev1.FSGroupChangeOnRootMismatch),
+			FSGroupChangePolicy: ptr.To(corev1.FSGroupChangeOnRootMismatch),
 			SeccompProfile: &corev1.SeccompProfile{
 				Type: corev1.SeccompProfileTypeRuntimeDefault,
 			},
 		},
 	}
 
-	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations, cfg)
+	podSpec.Containers[0].SecurityContext = configureSecurityContext(annotations)
 
 	if len(cfg.GetHostAliases()) > 0 {
 		podSpec.HostAliases = hostAliases(cfg)
@@ -125,25 +124,20 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	return podSpec, nil
 }
 
-func configureSecurityContext(annotations map[string]string, cfg Config) *corev1.SecurityContext {
+func configureSecurityContext(annotations map[string]string) *corev1.SecurityContext {
 	ctx := &corev1.SecurityContext{
-		RunAsUser:                pointer.Int64(runAsUser(annotations)),
-		RunAsGroup:               pointer.Int64(runAsGroup(annotations)),
-		RunAsNonRoot:             pointer.Bool(true),
-		Privileged:               pointer.Bool(false),
-		AllowPrivilegeEscalation: pointer.Bool(false),
-		ReadOnlyRootFilesystem:   pointer.Bool(readOnlyFileSystem(annotations)),
+		RunAsUser:                ptr.To(runAsUser(annotations)),
+		RunAsGroup:               ptr.To(runAsGroup(annotations)),
+		RunAsNonRoot:             ptr.To(true),
+		Privileged:               ptr.To(false),
+		AllowPrivilegeEscalation: ptr.To(false),
+		ReadOnlyRootFilesystem:   ptr.To(readOnlyFileSystem(annotations)),
 		SeccompProfile: &corev1.SeccompProfile{
 			Type: corev1.SeccompProfileTypeRuntimeDefault,
 		},
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{"ALL"},
 		},
-	}
-
-	additionalCapabilities := sanitizeCapabilities(annotations, cfg.GetAllowedKernelCapabilities())
-	if len(additionalCapabilities) > 0 {
-		ctx.Capabilities.Add = additionalCapabilities
 	}
 
 	return ctx
@@ -264,8 +258,8 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 }
 
 func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
-	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
 	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
+	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
 	filesFrom(ast, app.GetFilesFrom())
 	envFrom(ast, app.GetEnvFrom())
 	lifecycle, err := lifecycle(app.GetPreStopHookPath(), app.GetPreStopHook())
@@ -325,8 +319,8 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 }
 
 func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
-	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...)
 	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...)
+	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...) // add user-specified envs last to allow overriding
 	filesFrom(ast, naisjob.Spec.FilesFrom)
 	envFrom(ast, naisjob.Spec.EnvFrom)
 	lifecycle, err := lifecycle("", naisjob.Spec.PreStopHook)
@@ -352,6 +346,13 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg 
 }
 
 func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
+	var port string
+	if source.GetPort() == 0 {
+		port = defaultPort
+	} else {
+		port = strconv.Itoa(source.GetPort())
+	}
+
 	return []corev1.EnvVar{
 		{Name: naisAppNameEnv, Value: source.GetName()},
 		{Name: naisNamespaceEnv, Value: source.GetNamespace()},
@@ -359,6 +360,8 @@ func defaultEnvVars(source resource.Source, clusterName, appImage string) []core
 		{Name: naisClusterNameEnv, Value: clusterName},
 		{Name: naisClientId, Value: AppClientID(source, clusterName)},
 		{Name: "LOG4J_FORMAT_MSG_NO_LOOKUPS", Value: "true"},
+		{Name: "PORT", Value: port},
+		{Name: "BIND_ADDRESS", Value: fmt.Sprintf("0.0.0.0:%s", port)},
 	}
 }
 
@@ -520,7 +523,7 @@ func probe(appPort int, probe nais_io_v1.Probe) *corev1.Probe {
 	}
 
 	if probe.Port != 0 {
-		k8sprobe.ProbeHandler.HTTPGet.Port = intstr.FromInt(probe.Port)
+		k8sprobe.HTTPGet.Port = intstr.FromInt(probe.Port)
 	}
 
 	return k8sprobe
@@ -540,30 +543,4 @@ func readOnlyFileSystem(annotations map[string]string) bool {
 	}
 
 	return strings.ToLower(val) != "false"
-}
-
-func sanitizeCapabilities(annotations map[string]string, allowedCapabilites []string) []corev1.Capability {
-	val, found := annotations["nais.io/add-kernel-capability"]
-	if !found {
-		return nil
-	}
-
-	capabilities := make([]corev1.Capability, 0)
-	desiredCapabilites := strings.Split(val, ",")
-	for _, desiredCapability := range desiredCapabilites {
-		if allowed(desiredCapability, allowedCapabilites) {
-			capabilities = append(capabilities, corev1.Capability(strings.ToUpper(desiredCapability)))
-		}
-	}
-
-	return capabilities
-}
-
-func allowed(capability string, allowedCapabilites []string) bool {
-	for _, allowedCapability := range allowedCapabilites {
-		if strings.ToLower(capability) == strings.ToLower(allowedCapability) {
-			return true
-		}
-	}
-	return false
 }
