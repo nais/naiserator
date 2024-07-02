@@ -1,10 +1,11 @@
 testconfig:
-  description: OpenSearch labling and access policy
+  description: Opensearch labeling and access policy
 
 config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
+  aiven-project: dev-project
 
 input:
   kind: Application
@@ -38,10 +39,10 @@ tests:
             openSearch:
               instance: opensearch-mynamespace-naistest
               access: read
-  - apiVersion: apps/v1
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
     kind: Deployment
     name: myapplication
-    operation: CreateOrUpdate
     match:
       - type: regex
         name: "deployment network policy selector label"
@@ -70,3 +71,20 @@ tests:
                           secretKeyRef:
                             key: OPEN_SEARCH_URI
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+
+  - operation: CreateIfNotExists
+    apiVersion: aiven.io/v1alpha1
+    kind: OpenSearch
+    name: opensearch-mynamespace-naistest
+    match:
+      - type: subset
+        name: opensearch created
+        resource:
+          metadata:
+            name: opensearch-mynamespace-naistest
+            namespace: mynamespace
+            labels:
+              app: myapplication
+          spec:
+            plan: startup-4
+            project: dev-project
