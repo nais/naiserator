@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
@@ -59,6 +61,7 @@ type Synchronizer struct {
 	rolloutMonitor map[client.ObjectKey]RolloutMonitor
 	scheme         *runtime.Scheme
 	simpleClient   client.Client
+	listableCache  map[schema.GroupVersionKind]bool
 }
 
 func NewSynchronizer(
@@ -81,6 +84,7 @@ func NewSynchronizer(
 		rolloutMonitor: rolloutMonitor,
 		scheme:         scheme,
 		simpleClient:   simpleClient,
+		listableCache:  make(map[schema.GroupVersionKind]bool),
 	}
 }
 
@@ -465,6 +469,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		c := commit{
 			groupVersionKind: getGroupVersionKind(rop.Resource),
 		}
+		n.checkListable(c.groupVersionKind)
 		switch rop.Operation {
 		case resource.OperationCreateOrUpdate:
 			c.fn = updater.CreateOrUpdate(ctx, n.Client, n.scheme, rop.Resource)
@@ -522,4 +527,32 @@ func (n *Synchronizer) UpdateResource(ctx context.Context, source resource.Sourc
 	}
 
 	return updateFunc(existing)
+}
+
+func (n *Synchronizer) checkListable(kind schema.GroupVersionKind) {
+	if !n.isListable(kind) {
+		log.Warnf("Resource %s is not listable by any registered Listers", kind.String())
+	}
+}
+
+func (n *Synchronizer) isListable(objGvk schema.GroupVersionKind) bool {
+	if listable, ok := n.listableCache[objGvk]; ok {
+		return listable
+	}
+	for _, lister := range n.listers {
+		listGvk, err := apiutil.GVKForObject(lister, n.scheme)
+		if err != nil {
+			log.Warnf("Error looking up GVK for lister %s: %s", lister, err)
+			continue
+		}
+		if listGvk.GroupVersion() != objGvk.GroupVersion() {
+			continue
+		}
+		if strings.TrimSuffix(listGvk.Kind, "List") == objGvk.Kind {
+			n.listableCache[objGvk] = true
+			return true
+		}
+	}
+	n.listableCache[objGvk] = false
+	return false
 }
