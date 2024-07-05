@@ -166,7 +166,7 @@ func TestSynchronizer(t *testing.T) {
 	listers = append(listers, naiserator_scheme.GCPListers()...)
 	for _, list := range listers {
 		err = rig.client.List(ctx, list)
-		assert.NoError(t, err)
+		assert.NoError(t, err, "Unable to list resource, are the CRDs installed?")
 	}
 
 	// Create Application fixture
