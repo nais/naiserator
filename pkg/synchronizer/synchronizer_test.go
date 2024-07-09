@@ -103,9 +103,11 @@ func newTestRig(config config.Config) (*testRig, error) {
 		return nil, fmt.Errorf("initialize manager: %w", err)
 	}
 
-	listers := naiserator_scheme.GenericListers()
+	aivenEnabled := len(rig.config.AivenProject) > 0
+
+	listers := naiserator_scheme.GenericListers(aivenEnabled)
 	if len(rig.config.GoogleProjectId) > 0 {
-		listers = append(listers, naiserator_scheme.GCPListers()...)
+		listers = append(listers, naiserator_scheme.GCPListers(aivenEnabled)...)
 	}
 
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
