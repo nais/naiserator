@@ -2,10 +2,8 @@ package naiserator_scheme
 
 import (
 	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
-	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	google_nais_io_v1 "github.com/nais/liberator/pkg/apis/google.nais.io/v1"
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	kafka_nais_io_v1 "github.com/nais/liberator/pkg/apis/kafka.nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
@@ -64,8 +62,6 @@ func GCPListers() []client.ObjectList {
 // AivenListers returns resources that exist only in a Aiven supported clusters
 func AivenListers() []client.ObjectList {
 	return []client.ObjectList{
-		&aiven_nais_io_v1.AivenApplicationList{},
-		&kafka_nais_io_v1.StreamList{},
 		&aiven_io_v1alpha1.RedisList{},
 		&aiven_io_v1alpha1.OpenSearchList{},
 	}

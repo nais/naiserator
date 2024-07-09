@@ -106,6 +106,10 @@ func newTestRig(config config.Config) (*testRig, error) {
 	listers := naiserator_scheme.GenericListers()
 	if len(rig.config.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
+
+		if len(rig.config.AivenProject) > 0 {
+			listers = append(listers, naiserator_scheme.AivenListers()...)
+		}
 	}
 	if len(rig.config.AivenProject) > 0 {
 		listers = append(listers, naiserator_scheme.AivenListers()...)
