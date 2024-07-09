@@ -159,6 +159,9 @@ func run() error {
 	if len(cfg.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 	}
+	if len(cfg.AivenProject) > 0 {
+		listers = append(listers, naiserator_scheme.AivenListers()...)
+	}
 
 	mgrClient := mgr.GetClient()
 	simpleClient, err := client.New(kconfig, client.Options{
