@@ -22,9 +22,9 @@ import (
 // It is too expensive to list all known Kubernetes types, so we need to have some knowledge of which types to care about.
 // These are usually the types we persist to the cluster with names different than the application name.
 
-// Resources that can be queried in all clusters
-func GenericListers(aivenEnabled bool) []client.ObjectList {
-	listers := []client.ObjectList{
+// GenericListers returns resources that can be queried in all clusters
+func GenericListers() []client.ObjectList {
+	return []client.ObjectList{
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
 		&autoscalev2.HorizontalPodAutoscalerList{},
@@ -41,19 +41,12 @@ func GenericListers(aivenEnabled bool) []client.ObjectList {
 		&nais_io_v1.IDPortenClientList{},
 		&nais_io_v1.JwkerList{},
 		&nais_io_v1.MaskinportenClientList{},
-		&aiven_nais_io_v1.AivenApplicationList{},
 	}
-
-	if aivenEnabled {
-		listers = append(listers, &kafka_nais_io_v1.StreamList{})
-	}
-
-	return listers
 }
 
-// Resources that exist only in GCP clusters
-func GCPListers(aivenEnabled bool) []client.ObjectList {
-	listers := []client.ObjectList{
+// GCPListers returns resources that exist only in a GCP clusters
+func GCPListers() []client.ObjectList {
+	return []client.ObjectList{
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{},
@@ -66,10 +59,14 @@ func GCPListers(aivenEnabled bool) []client.ObjectList {
 
 		&google_nais_io_v1.BigQueryDatasetList{},
 	}
+}
 
-	if aivenEnabled {
-		listers = append(listers, &aiven_io_v1alpha1.RedisList{}, &aiven_io_v1alpha1.OpenSearchList{})
+// AivenListers returns resources that exist only in a Aiven supported clusters
+func AivenListers() []client.ObjectList {
+	return []client.ObjectList{
+		&aiven_nais_io_v1.AivenApplicationList{},
+		&kafka_nais_io_v1.StreamList{},
+		&aiven_io_v1alpha1.RedisList{},
+		&aiven_io_v1alpha1.OpenSearchList{},
 	}
-
-	return listers
 }

@@ -155,11 +155,12 @@ func run() error {
 		return fmt.Errorf("no gateway mappings defined. Will not be able to set the right gateway on the ingress")
 	}
 
-	aivenEnabled := len(cfg.AivenProject) > 0
-
-	listers := naiserator_scheme.GenericListers(aivenEnabled)
+	listers := naiserator_scheme.GenericListers()
 	if len(cfg.GoogleProjectId) > 0 {
-		listers = append(listers, naiserator_scheme.GCPListers(aivenEnabled)...)
+		listers = append(listers, naiserator_scheme.GCPListers()...)
+	}
+	if len(cfg.AivenProject) > 0 {
+		listers = append(listers, naiserator_scheme.AivenListers()...)
 	}
 
 	mgrClient := mgr.GetClient()
