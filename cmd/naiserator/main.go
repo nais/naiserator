@@ -158,6 +158,13 @@ func run() error {
 	listers := naiserator_scheme.GenericListers()
 	if len(cfg.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
+
+		if len(cfg.AivenProject) > 0 {
+			listers = append(listers, naiserator_scheme.AivenListers()...)
+		}
+	}
+	if len(cfg.AivenProject) > 0 {
+		listers = append(listers, naiserator_scheme.AivenListers()...)
 	}
 
 	mgrClient := mgr.GetClient()

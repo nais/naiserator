@@ -106,6 +106,13 @@ func newTestRig(config config.Config) (*testRig, error) {
 	listers := naiserator_scheme.GenericListers()
 	if len(rig.config.GoogleProjectId) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
+
+		if len(rig.config.AivenProject) > 0 {
+			listers = append(listers, naiserator_scheme.AivenListers()...)
+		}
+	}
+	if len(rig.config.AivenProject) > 0 {
+		listers = append(listers, naiserator_scheme.AivenListers()...)
 	}
 
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
@@ -164,6 +171,7 @@ func TestSynchronizer(t *testing.T) {
 	// If this test fails, it might mean CRDs are not registered in the test rig.
 	listers := naiserator_scheme.GenericListers()
 	listers = append(listers, naiserator_scheme.GCPListers()...)
+	listers = append(listers, naiserator_scheme.AivenListers()...)
 	for _, list := range listers {
 		err = rig.client.List(ctx, list)
 		assert.NoError(t, err, "Unable to list resource, are the CRDs installed?")
