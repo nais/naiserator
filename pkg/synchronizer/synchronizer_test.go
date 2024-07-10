@@ -111,9 +111,6 @@ func newTestRig(config config.Config) (*testRig, error) {
 			listers = append(listers, naiserator_scheme.AivenListers()...)
 		}
 	}
-	if len(rig.config.AivenProject) > 0 {
-		listers = append(listers, naiserator_scheme.AivenListers()...)
-	}
 
 	applicationReconciler := controllers.NewAppReconciler(synchronizer.NewSynchronizer(
 		rig.client,

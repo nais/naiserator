@@ -163,9 +163,6 @@ func run() error {
 			listers = append(listers, naiserator_scheme.AivenListers()...)
 		}
 	}
-	if len(cfg.AivenProject) > 0 {
-		listers = append(listers, naiserator_scheme.AivenListers()...)
-	}
 
 	mgrClient := mgr.GetClient()
 	simpleClient, err := client.New(kconfig, client.Options{
