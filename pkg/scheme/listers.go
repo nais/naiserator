@@ -22,7 +22,7 @@ import (
 // It is too expensive to list all known Kubernetes types, so we need to have some knowledge of which types to care about.
 // These are usually the types we persist to the cluster with names different than the application name.
 
-// Resources that can be queried in all clusters
+// GenericListers returns resources that can be queried in all clusters
 func GenericListers() []client.ObjectList {
 	return []client.ObjectList{
 		// Kubernetes internals
@@ -46,7 +46,7 @@ func GenericListers() []client.ObjectList {
 	}
 }
 
-// Resources that exist only in GCP clusters
+// GCPListers returns resources that exist only in a GCP clusters
 func GCPListers() []client.ObjectList {
 	return []client.ObjectList{
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
@@ -60,7 +60,12 @@ func GCPListers() []client.ObjectList {
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
 
 		&google_nais_io_v1.BigQueryDatasetList{},
+	}
+}
 
+// AivenListers returns resources that exist only in a Aiven supported clusters
+func AivenListers() []client.ObjectList {
+	return []client.ObjectList{
 		&aiven_io_v1alpha1.RedisList{},
 		&aiven_io_v1alpha1.OpenSearchList{},
 	}

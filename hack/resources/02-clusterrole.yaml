@@ -29,6 +29,8 @@ rules:
       - 'naisjobs'
       - 'namespaces'
       - 'networkpolicies'
+      - 'opensearches'
+      - 'redis'
       - 'rolebindings'
       - 'roles'
       - 'secrets'

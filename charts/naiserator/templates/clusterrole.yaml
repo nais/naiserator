@@ -31,6 +31,7 @@ rules:
       - 'naisjobs'
       - 'namespaces'
       - 'networkpolicies'
+      - 'opensearches'
       - 'pods'
       - 'poddisruptionbudgets'
       - 'podmonitors'
