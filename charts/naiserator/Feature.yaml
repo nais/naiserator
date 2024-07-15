@@ -26,7 +26,7 @@ values:
   naiserator.aiven-project:
     displayName: Aiven project
     computed:
-      template: '"{{.Env.aiven_project}}"'
+      template: '"{{ if .Env.aiven_project }}{{ .Env.aiven_project }}{{ end }}"'
   naiserator.aiven-range:
     displayName: Aiven VPC CIDR
     computed:

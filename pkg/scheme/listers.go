@@ -1,7 +1,11 @@
 package naiserator_scheme
 
 import (
+	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
+	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
+	google_nais_io_v1 "github.com/nais/liberator/pkg/apis/google.nais.io/v1"
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	kafka_nais_io_v1 "github.com/nais/liberator/pkg/apis/kafka.nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
@@ -18,7 +22,7 @@ import (
 // It is too expensive to list all known Kubernetes types, so we need to have some knowledge of which types to care about.
 // These are usually the types we persist to the cluster with names different than the application name.
 
-// Resources that can be queried in all clusters
+// GenericListers returns resources that can be queried in all clusters
 func GenericListers() []client.ObjectList {
 	return []client.ObjectList{
 		// Kubernetes internals
@@ -37,10 +41,12 @@ func GenericListers() []client.ObjectList {
 		&nais_io_v1.IDPortenClientList{},
 		&nais_io_v1.JwkerList{},
 		&nais_io_v1.MaskinportenClientList{},
+		&aiven_nais_io_v1.AivenApplicationList{},
+		&kafka_nais_io_v1.StreamList{},
 	}
 }
 
-// Resources that exist only in GCP clusters
+// GCPListers returns resources that exist only in a GCP clusters
 func GCPListers() []client.ObjectList {
 	return []client.ObjectList{
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
@@ -52,5 +58,15 @@ func GCPListers() []client.ObjectList {
 		&sql_cnrm_cloud_google_com_v1beta1.SQLSSLCertList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControlList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
+
+		&google_nais_io_v1.BigQueryDatasetList{},
+	}
+}
+
+// AivenListers returns resources that exist only in a Aiven supported clusters
+func AivenListers() []client.ObjectList {
+	return []client.ObjectList{
+		&aiven_io_v1alpha1.RedisList{},
+		&aiven_io_v1alpha1.OpenSearchList{},
 	}
 }

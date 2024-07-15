@@ -219,7 +219,7 @@ func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
 
 	// Resources with no ownerReference will not be touched, in case it was created manually.
 	//
-	// Iterate through all combinations, and if resource is owned by the same Application/NaisJob that triggered
+	// Iterate through all combinations, and if resource is owned by the same Application/Naisjob that triggered
 	// the creation, it should be allowed. Otherwise, reject it.
 	for _, dstRef := range newReferences {
 		for _, srcRef := range existingReferences {

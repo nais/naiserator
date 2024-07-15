@@ -1,0 +1,29 @@
+testconfig:
+  description: Application and Naisjob cannot share the same name
+
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    labels:
+      team: myteam
+  spec:
+    image: navikt/myapplication:1.2.3
+
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+
+  - kind: Naisjob
+    apiVersion: nais.io/v1
+    metadata:
+      name: myapplication
+      namespace: mynamespace
+
+
+error: "failed preparing options for resource generation: cannot create an Application with name 'myapplication' because a Naisjob with that name exists"

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/aiven"
 	"github.com/nais/naiserator/pkg/resourcecreator/azure"
@@ -53,6 +54,17 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 	err := kube.Get(ctx, namespaceKey, namespace)
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("query existing namespace: %s", err)
+	}
+
+	// Disallow creating Naisjob resources if there is an Application with the same name.
+	key := client.ObjectKey{
+		Name:      source.GetName(),
+		Namespace: source.GetNamespace(),
+	}
+	app := &nais_io_v1alpha1.Application{}
+	err = kube.Get(ctx, key, app)
+	if err == nil {
+		return nil, fmt.Errorf("cannot create a Naisjob with name '%s' because an Application with that name exists", source.GetName())
 	}
 
 	// Auto-detect Google Team Project ID
