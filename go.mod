@@ -24,7 +24,7 @@ require (
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.29.5
 	k8s.io/apimachinery v0.29.5
