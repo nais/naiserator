@@ -199,6 +199,7 @@ tests:
             selector:
               matchLabels:
                 app: myapplication
+            unhealthyPodEvictionPolicy: AlwaysAllow
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment
