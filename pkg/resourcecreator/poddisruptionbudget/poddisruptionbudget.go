@@ -5,6 +5,7 @@ import (
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
@@ -21,8 +22,6 @@ func Create(source Source, ast *resource.Ast) {
 		return
 	}
 
-	maxUnavailable := intstr.FromInt(1)
-
 	podDisruptionBudget := &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
@@ -30,12 +29,13 @@ func Create(source Source, ast *resource.Ast) {
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: policyv1.PodDisruptionBudgetSpec{
-			MaxUnavailable: &maxUnavailable,
+			MaxUnavailable: ptr.To(intstr.FromInt32(1)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": source.GetName(),
 				},
 			},
+			UnhealthyPodEvictionPolicy: ptr.To(policyv1.AlwaysAllow),
 		},
 	}
 

@@ -258,3 +258,4 @@ tests:
             selector:
               matchLabels:
                 app: myapplication
+            unhealthyPodEvictionPolicy: AlwaysAllow
