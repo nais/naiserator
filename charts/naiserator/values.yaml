@@ -83,8 +83,7 @@ naiserator:
     qps: 250
     burst: 500
   securelogs:
-    configmap-reload-image: ghcr.io/nais/configmap-reload/configmap-reload@sha256:3f30687b1200754924484a12124f7be58a55816661d864f6d1bf44e1131b6de6
-    fluentd-image: europe-north1-docker.pkg.dev/nais-io/nais/images/nais-logd:107
+    log-shipper-image: docker.io/fluent/fluent-bit:3.1.4
   vault:
     address: ""
     auth-path: /kubernetes/default/default
