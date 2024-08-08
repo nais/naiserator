@@ -3,8 +3,7 @@ testconfig:
 
 config:
   Securelogs:
-    fluentd-image: fluentd-image
-    configmap-reload-image: configmap-reload-image
+    log-shipper-image: fluentbit-image
 
 input:
   kind: Naisjob
@@ -27,7 +26,7 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: subset
-        name: "securelogs configuration injected as sidecars and volume mount"
+        name: "securelogs configuration injected as sidecar and volume mounts"
         resource:
           spec:
             jobTemplate:
@@ -39,52 +38,67 @@ tests:
                         volumeMounts:
                           - mountPath: /secure-logs
                             name: secure-logs
-                      - name: "secure-logs-fluentd"
+                    initContainers:
+                      - name: secure-logs-fluentbit
+                        restartPolicy: Always
+                        command:
+                          - /fluent-bit/bin/fluent-bit
+                          - -c
+                          - /fluent-bit/etc-operator/fluent-bit.conf
+                        image: fluentbit-image
+                        imagePullPolicy: IfNotPresent
                         env:
-                          - name: NAIS_APP
+                          - name: NAIS_NODE_NAME
                             valueFrom:
                               fieldRef:
-                                fieldPath: metadata.labels['app']
+                                fieldPath: spec.nodeName
                           - name: NAIS_NAMESPACE
                             valueFrom:
                               fieldRef:
                                 fieldPath: metadata.namespace
-                          - name: NAIS_TEAM
+                          - name: NAIS_APP_NAME
                             valueFrom:
                               fieldRef:
-                                fieldPath: metadata.labels['team']
-                          - name: NAIS_HOST
-                            valueFrom:
-                              fieldRef:
-                                fieldPath: spec.nodeName
-                        imagePullPolicy: IfNotPresent
-                        image: fluentd-image
+                                fieldPath: metadata.labels['app']
                         resources:
+                          limits:
+                            memory: 30M
                           requests:
                             cpu: 10m
-                            memory: 200M
+                            memory: 15M
+                        securityContext:
+                          privileged: false
+                          allowPrivilegeEscalation: false
+                          capabilities:
+                            drop:
+                            - ALL
+                          readOnlyRootFilesystem: true
+                          runAsNonRoot: true
+                          runAsUser: 1065
+                          runAsGroup: 1065
+                          seccompProfile:
+                            type: RuntimeDefault
                         volumeMounts:
-                          - mountPath: /secure-logs
-                            name: secure-logs
-                          - mountPath: /fluentd/etc
-                            name: secure-logs-config
+                          - name: secure-logs
+                            mountPath: /secure-logs
+                          - name: secure-logs-config
+                            mountPath: /fluent-bit/etc-operator
                             readOnly: true
-                          - mountPath: /etc/pki/tls/certs/ca-bundle.crt
-                            name: ca-bundle-pem
-                            readOnly: true
-                            subPath: ca-bundle.pem
-                      - name: "secure-logs-configmap-reload"
-                        args:
-                          - --volume-dir=/config
-                          - --webhook-url=http://localhost:24444/api/config.reload
-                          - --webhook-method=GET
-                        imagePullPolicy: IfNotPresent
-                        image: configmap-reload-image
-                        resources:
-                          requests:
-                            cpu: 10m
-                            memory: 50M
-                        volumeMounts:
-                          - mountPath: /config
-                            name: secure-logs-config
-                            readOnly: true
+                          - name: secure-logs-positiondb
+                            mountPath: /tail-db
+                          - name: secure-logs-buffers
+                            mountPath: /buffers
+                    volumes:
+                      - name: secure-logs
+                        emptyDir:
+                          sizeLimit: 128M
+                      - name: secure-logs-config
+                        configMap:
+                          defaultMode: 420
+                          name: secure-logs-fluentbit
+                      - name: secure-logs-positiondb
+                        emptyDir: {}
+                      - name: secure-logs-buffers
+                        emptyDir: {}
+                      - name: writable-tmp
+                        emptyDir: {}

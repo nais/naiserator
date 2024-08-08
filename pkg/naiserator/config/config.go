@@ -95,8 +95,7 @@ type Logging struct {
 }
 
 type Securelogs struct {
-	FluentdImage         string `json:"fluentd-image"`
-	ConfigMapReloadImage string `json:"configmap-reload-image"`
+	LogShipperImage string `json:"log-shipper-image"`
 }
 
 type Proxy struct {
@@ -235,8 +234,7 @@ const (
 	ProxyExclude                                  = "proxy.exclude"
 	RateLimitBurst                                = "ratelimit.burst"
 	RateLimitQPS                                  = "ratelimit.qps"
-	SecurelogsConfigMapReloadImage                = "securelogs.configmap-reload-image"
-	SecurelogsFluentdImage                        = "securelogs.fluentd-image"
+	SecurelogsLogShipperImage                     = "securelogs.log-shipper-image"
 	SynchronizerRolloutCheckInterval              = "synchronizer.rollout-check-interval"
 	SynchronizerRolloutTimeout                    = "synchronizer.rollout-timeout"
 	SynchronizerSynchronizationTimeout            = "synchronizer.synchronization-timeout"
@@ -334,8 +332,7 @@ func init() {
 		"how long to keep checking for a successful deployment rollout",
 	)
 
-	flag.String(SecurelogsFluentdImage, "", "Docker image used for secure log fluentd sidecar")
-	flag.String(SecurelogsConfigMapReloadImage, "", "Docker image used for secure log configmap reload sidecar")
+	flag.String(SecurelogsLogShipperImage, "", "Docker image used for shipping secure logs")
 
 	flag.String(ProxyAddress, "", "HTTPS?_PROXY environment variable injected into containers")
 	flag.StringSlice(
