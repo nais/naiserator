@@ -46,10 +46,10 @@ func fluentdSidecar(cfg Config) corev1.Container {
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
 				corev1.ResourceCPU:    k8sResource.MustParse("10m"),
-				corev1.ResourceMemory: k8sResource.MustParse("15M"),
+				corev1.ResourceMemory: k8sResource.MustParse("50M"),
 			},
 			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: k8sResource.MustParse("30M"),
+				corev1.ResourceMemory: k8sResource.MustParse("100M"),
 			},
 		},
 
