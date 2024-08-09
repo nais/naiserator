@@ -62,10 +62,10 @@ tests:
                                 fieldPath: metadata.labels['app']
                         resources:
                           limits:
-                            memory: 30M
+                            memory: 100M
                           requests:
                             cpu: 10m
-                            memory: 15M
+                            memory: 50M
                         securityContext:
                           privileged: false
                           allowPrivilegeEscalation: false
