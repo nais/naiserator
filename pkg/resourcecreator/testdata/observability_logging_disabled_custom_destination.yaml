@@ -8,6 +8,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     observability:
@@ -29,5 +31,7 @@ tests:
           spec:
             template:
               metadata:
+                labels:
                   app: myapplication
+                  team: myteam
                   logs.nais.io/flow-default: "false"

@@ -8,6 +8,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     replicas:
       min: 3
@@ -16,7 +18,7 @@ input:
         cpu:
           thresholdPercentage: 75
         kafka:
-          topic: mynamespace.mytopic
+          topic: myteam.mytopic
           consumerGroup: myconsumergroup
           threshold: 100
 
@@ -52,7 +54,7 @@ tests:
                     name: kafka_consumergroup_group_lag
                     selector:
                       matchLabels:
-                        topic: mynamespace.mytopic
+                        topic: myteam.mytopic
                         group: myconsumergroup
                   target:
                     type: AverageValue

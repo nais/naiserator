@@ -8,6 +8,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     port: 11335
     prometheus:

@@ -18,6 +18,8 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
+    labels:
+      team: myteam
   spec:
     image: foo/bar
     azure:
@@ -38,8 +40,10 @@ tests:
           spec:
             template:
               metadata:
+                labels:
                   aiven: enabled
                   azure: enabled
+                  team: myteam
                   wonderwall: enabled
               spec:
                 containers:
@@ -140,7 +144,9 @@ tests:
           metadata:
             name: ^azure-wonderwall-myapplication-02bb4643$
             namespace: mynamespace
+            labels:
               app: myapplication
+              team: myteam
             ownerReferences:
               - kind: Application
                 name: myapplication

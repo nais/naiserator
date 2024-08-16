@@ -13,6 +13,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     securelogs:
       enabled: true
@@ -29,6 +31,7 @@ tests:
           spec:
             template:
               metadata:
+                labels:
                   secure-logs: enabled
               spec:
                 containers:

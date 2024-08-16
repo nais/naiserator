@@ -15,6 +15,8 @@ input:
     uid: "123456"
     annotations:
       nais.io/deploymentCorrelationID: corr
+    labels:
+      team: myteam
   spec:
     image: navikt/mynaisjob:1.2.3
     schedule: "* 2 * * *"
@@ -29,7 +31,9 @@ tests:
           metadata:
             annotations:
               nais.io/deploymentCorrelationID: corr
+            labels:
               app: mynaisjob
+              team: myteam
             ownerReferences:
               - apiVersion: nais.io/v1
                 kind: Naisjob
@@ -65,7 +69,9 @@ tests:
               metadata:
                 annotations:
                   nais.io/deploymentCorrelationID: corr
+                labels:
                   app: mynaisjob
+                  team: myteam
                 name: mynaisjob
                 namespace: mynamespace
                 ownerReferences:
@@ -79,7 +85,9 @@ tests:
                   metadata:
                     annotations:
                       kubectl.kubernetes.io/default-container: mynaisjob
+                    labels:
                       app: mynaisjob
+                      team: myteam
                       nais.io/naisjob: "true"
                     name: mynaisjob
                     namespace: mynamespace

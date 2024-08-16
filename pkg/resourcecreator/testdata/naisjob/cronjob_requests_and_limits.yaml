@@ -8,6 +8,8 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     schedule: "* 2 * * *"
     resources:

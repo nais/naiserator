@@ -17,6 +17,8 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
+    labels:
+      team: myteam
   spec:
     ingresses:
       - https://banan.nav.no

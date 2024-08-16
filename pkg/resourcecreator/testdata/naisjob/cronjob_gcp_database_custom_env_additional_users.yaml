@@ -22,6 +22,8 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     image: navikt/mynaisjob:1.2.3
     gcp:
@@ -47,7 +49,9 @@ tests:
           metadata:
             name: google-sql-mynaisjob
             namespace: mynamespace
+            labels:
               app: mynaisjob
+              team: myteam
             ownerReferences:
               - apiVersion: nais.io/v1
                 kind: Naisjob
@@ -75,7 +79,9 @@ tests:
           metadata:
             name: google-sql-mynaisjob-mydb-user-two-4c6e7100
             namespace: mynamespace
+            labels:
               app: mynaisjob
+              team: myteam
             ownerReferences:
               - apiVersion: nais.io/v1
                 kind: Naisjob

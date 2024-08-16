@@ -6,6 +6,8 @@ input:
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
+    labels:
+      team: myteam
   spec:
     ttl: 1h
      

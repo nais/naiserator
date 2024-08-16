@@ -16,6 +16,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     webproxy: true
 

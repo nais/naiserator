@@ -18,6 +18,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     accessPolicy:

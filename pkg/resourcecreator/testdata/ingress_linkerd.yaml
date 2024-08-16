@@ -20,6 +20,8 @@ input:
       nginx.ingress.kubernetes.io/foo: bar
       whatever.ingress.kubernetes.io/test: foo
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     ingresses:
       - https://baz.bar

@@ -18,6 +18,8 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
+    labels:
+      team: myteam
   spec:
     image: foo/bar
     idporten:
@@ -39,8 +41,10 @@ tests:
           spec:
             template:
               metadata:
+                labels:
                   aiven: enabled
                   idporten: enabled
+                  team: myteam
                   wonderwall: enabled
               spec:
                 volumes:

@@ -15,6 +15,8 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     image: navikt/mynaisjob:1.2.3
     schedule: "* 2 * * *"
@@ -39,7 +41,9 @@ tests:
               spec:
                 template:
                   metadata:
+                    labels:
                       app: mynaisjob
+                      team: myteam
                       logs.nais.io/flow-default: "false"
                       logs.nais.io/flow-elastic: "true"
                       logs.nais.io/flow-loki: "true"

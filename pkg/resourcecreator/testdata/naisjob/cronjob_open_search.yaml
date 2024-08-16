@@ -13,6 +13,8 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
+    labels:
+      team: myteam
   spec:
     schedule: "* 2 * * *"
     openSearch:
@@ -50,6 +52,7 @@ tests:
               spec:
                 template:
                   metadata:
+                    labels:
                       aiven: "enabled"
                   spec:
                     containers:

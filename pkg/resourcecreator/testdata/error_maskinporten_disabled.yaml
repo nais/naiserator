@@ -9,6 +9,8 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
+    labels:
+      team: myteam
   spec:
     maskinporten:
       enabled: true
