@@ -68,7 +68,7 @@ tests:
             namespace: mynamespace
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Naisjob
                 name: mynaisjob
@@ -98,7 +98,7 @@ tests:
             namespace: mynamespace
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Naisjob
                 name: mynaisjob
@@ -128,7 +128,7 @@ tests:
             namespace: mynamespace
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Naisjob
                 name: mynaisjob

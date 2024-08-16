@@ -146,7 +146,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
           spec:
             resourceID: mydb
             instanceRef:
@@ -166,7 +166,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Application
                 name: myapplication

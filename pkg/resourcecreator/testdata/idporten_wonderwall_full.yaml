@@ -70,7 +70,7 @@ tests:
               metadata:
                 labels:
                   aiven: enabled
-                  team: myteam
+                  team: mynamespace
                   wonderwall: enabled
               spec:
                 containers:

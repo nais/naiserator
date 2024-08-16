@@ -24,7 +24,7 @@ input:
     namespace: mynamespace
     uid: "123456"
     labels:
-      team: myteam
+      team: mynamespace
   spec:
     image: navikt/myapplication:1.2.3
     observability:

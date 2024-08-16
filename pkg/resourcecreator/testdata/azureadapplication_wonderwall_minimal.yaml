@@ -41,7 +41,7 @@ tests:
                 labels:
                   aiven: enabled
                   azure: enabled
-                  team: myteam
+                  team: mynamespace
                   wonderwall: enabled
               spec:
                 containers:
@@ -144,7 +144,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Application
                 name: myapplication

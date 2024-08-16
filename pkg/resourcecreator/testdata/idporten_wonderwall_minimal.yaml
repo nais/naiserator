@@ -42,7 +42,7 @@ tests:
                 labels:
                   aiven: enabled
                   idporten: enabled
-                  team: myteam
+                  team: mynamespace
                   wonderwall: enabled
               spec:
                 volumes:

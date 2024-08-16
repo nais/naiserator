@@ -38,7 +38,7 @@ tests:
               metadata:
                 labels:
                   app: myapplication
-                  team: myteam
+                  team: mynamespace
                   logs.nais.io/flow-default: "false"
                   logs.nais.io/flow-elastic: "true"
                   logs.nais.io/flow-loki: "true"

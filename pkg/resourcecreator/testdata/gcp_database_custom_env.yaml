@@ -46,7 +46,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Application
                 name: myapplication

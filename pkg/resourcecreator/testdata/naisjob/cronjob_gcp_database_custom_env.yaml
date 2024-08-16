@@ -48,7 +48,7 @@ tests:
             namespace: mynamespace
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - apiVersion: nais.io/v1
                 kind: Naisjob

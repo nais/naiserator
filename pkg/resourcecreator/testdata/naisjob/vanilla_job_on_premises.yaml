@@ -28,7 +28,7 @@ tests:
               nais.io/deploymentCorrelationID: corr
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - apiVersion: nais.io/v1
                 kind: Naisjob
@@ -64,7 +64,7 @@ tests:
               nais.io/deploymentCorrelationID: corr
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             name: mynaisjob
             namespace: mynamespace
             ownerReferences:
@@ -80,7 +80,7 @@ tests:
                   kubectl.kubernetes.io/default-container: mynaisjob
                 labels:
                   app: mynaisjob
-                  team: myteam
+                  team: mynamespace
                   nais.io/naisjob: "true"
                 name: mynaisjob
                 namespace: mynamespace

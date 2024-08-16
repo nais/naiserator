@@ -14,7 +14,7 @@ input:
       max: 6
       scalingStrategy:
         kafka:
-          topic: myteam.mytopic
+          topic: mynamespace.mytopic
           consumerGroup: myconsumergroup
           threshold: 100
 
@@ -44,7 +44,7 @@ tests:
                     name: kafka_consumergroup_group_lag
                     selector:
                       matchLabels:
-                        topic: myteam.mytopic
+                        topic: mynamespace.mytopic
                         group: myconsumergroup
                   target:
                     type: AverageValue
