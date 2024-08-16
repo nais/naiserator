@@ -12,8 +12,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: europe-north1-docker.pkg.dev/nais-io/nais/images/testapp:latest
 

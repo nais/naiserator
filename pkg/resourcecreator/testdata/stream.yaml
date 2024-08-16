@@ -11,8 +11,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     kafka:
@@ -36,9 +34,7 @@ tests:
           metadata:
             name: myapplication
             namespace: mynamespace
-            labels:
               app: myapplication
-              team: myteam
           spec:
             pool: some-kafka-pool
   - operation: CreateOrUpdate

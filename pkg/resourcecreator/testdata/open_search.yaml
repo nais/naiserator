@@ -13,8 +13,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     openSearch:
       instance: naistest
@@ -49,7 +47,6 @@ tests:
           spec:
             template:
               metadata:
-                labels:
                   aiven: "enabled"
               spec:
                 containers:

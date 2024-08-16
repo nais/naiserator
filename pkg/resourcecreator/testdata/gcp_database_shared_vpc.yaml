@@ -15,8 +15,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     gcp:
@@ -49,7 +47,6 @@ tests:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: google-project-id
-              nais.io/team: mynamespace
             name: myapplicati-mynamespac-w4o5cwa
             namespace: serviceaccounts
           spec:

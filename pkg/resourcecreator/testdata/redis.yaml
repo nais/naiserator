@@ -14,8 +14,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     redis:
     - instance: naistest1
@@ -55,7 +53,6 @@ tests:
           spec:
             template:
               metadata:
-                labels:
                   aiven: "enabled"
               spec:
                 containers:
@@ -87,7 +84,6 @@ tests:
           metadata:
             name: redis-mynamespace-naistest1
             namespace: mynamespace
-            labels:
               app: myapplication
           spec:
             plan: startup-4
@@ -103,7 +99,6 @@ tests:
           metadata:
             name: redis-mynamespace-naistest2
             namespace: mynamespace
-            labels:
               app: myapplication
           spec:
             plan: startup-4

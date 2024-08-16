@@ -14,8 +14,6 @@ input:
     uid: "123456"
     annotations:
       nais.io/deploymentCorrelationID: corr
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
 

@@ -14,8 +14,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     gcp:
@@ -46,9 +44,7 @@ tests:
           metadata:
             name: google-sql-myapplication
             namespace: mynamespace
-            labels:
               app: myapplication
-              team: myteam
             ownerReferences:
               - kind: Application
                 name: myapplication

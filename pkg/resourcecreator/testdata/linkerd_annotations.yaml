@@ -18,8 +18,6 @@ input:
       config.linkerd.io/some-config: some-value
       config.alpha.linkerd.io/some-config: some-value
       linkerd.io/inject: false
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
 

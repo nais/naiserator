@@ -7,8 +7,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     preStopHook:
       exec:

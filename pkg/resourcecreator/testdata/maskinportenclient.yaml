@@ -13,8 +13,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     maskinporten:
@@ -73,7 +71,6 @@ tests:
           spec:
             template:
               metadata:
-                labels:
                   maskinporten: enabled
               spec:
                 volumes:

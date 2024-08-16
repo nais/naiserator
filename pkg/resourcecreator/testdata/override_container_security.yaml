@@ -18,8 +18,6 @@ input:
       nais.io/run-as-user: "6969"
       nais.io/run-as-group: "69"
       nais.io/read-only-file-system: "false"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
 

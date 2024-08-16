@@ -12,8 +12,6 @@ input:
   metadata:
     name: mynaisjob
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     image: foo/bar
@@ -34,5 +32,4 @@ tests:
               spec:
                 template:
                   metadata:
-                    labels:
                       aiven: "enabled"

@@ -18,8 +18,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     azure:
@@ -64,7 +62,6 @@ tests:
           spec:
             template:
               metadata:
-                labels:
                   azure: enabled
               spec:
                 volumes:

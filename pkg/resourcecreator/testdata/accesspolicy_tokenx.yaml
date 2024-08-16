@@ -15,8 +15,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     accessPolicy:
@@ -92,7 +90,6 @@ tests:
           spec:
             template:
               metadata:
-                labels:
                   tokenx: enabled
               spec:
                 volumes:

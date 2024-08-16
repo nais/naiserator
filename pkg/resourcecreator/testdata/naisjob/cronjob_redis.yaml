@@ -14,8 +14,6 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     redis:
@@ -57,7 +55,6 @@ tests:
               spec:
                 template:
                   metadata:
-                    labels:
                       aiven: "enabled"
                   spec:
                     containers:
@@ -89,7 +86,6 @@ tests:
           metadata:
             name: redis-mynamespace-naistest1
             namespace: mynamespace
-            labels:
               app: mynaisjob
           spec:
             plan: startup-4
@@ -105,7 +101,6 @@ tests:
           metadata:
             name: redis-mynamespace-naistest2
             namespace: mynamespace
-            labels:
               app: mynaisjob
           spec:
             plan: startup-4

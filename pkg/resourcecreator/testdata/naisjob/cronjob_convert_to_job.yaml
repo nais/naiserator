@@ -15,8 +15,6 @@ existing:
     metadata:
       name: mynaisjob
       namespace: mynamespace
-      labels:
-        team: myteam
     spec:
       image: foo/bar
       schedule: "* * * * *"
@@ -47,8 +45,6 @@ input:
   metadata:
     name: mynaisjob
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
 

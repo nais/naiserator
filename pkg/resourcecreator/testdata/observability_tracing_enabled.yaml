@@ -6,7 +6,6 @@ config:
     otel:
       enabled: true
       collector:
-        labels:
           - key1=value1
           - key2=value2
           - key3=value3
@@ -23,8 +22,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     observability:
