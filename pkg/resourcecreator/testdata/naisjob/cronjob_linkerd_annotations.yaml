@@ -25,8 +25,6 @@ input:
     annotations:
       config.linkerd.io/some-config: some-value
       linkerd.io/inject: false
-    labels:
-      team: myteam
   spec:
     image: navikt/mynaisjob:1.2.3
     schedule: "* 2 * * *"

@@ -11,8 +11,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     kafka:

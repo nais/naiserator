@@ -13,8 +13,6 @@ input:
   metadata:
     name: mynaisjob
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     image: foo/bar

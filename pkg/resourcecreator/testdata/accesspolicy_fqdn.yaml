@@ -19,8 +19,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     accessPolicy:
