@@ -151,19 +151,6 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	// fixme: can be removed when we don't have garbage data anymore. Late 2024?
 	app.GetStatus().Conditions = nil
 
-	// The team name was previously required as `.metadata.labels.team`.
-	// Teams have had their own namespace many years now, but this team label
-	// have persisted still. When this requirement was removed as of this patch,
-	// users may deploy resources where the team label is not set.
-	//
-	// This function adds the team label to the resource again, in case there
-	// are systems that use the label, especially the ones we don't control.
-	labels := app.GetLabels()
-	if labels == nil {
-		labels = make(map[string]string)
-	}
-	labels["team"] = app.GetNamespace()
-
 	kind := app.GetObjectKind().GroupVersionKind().Kind
 	changed := true
 
@@ -177,6 +164,21 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		metrics.Synchronizations.WithLabelValues(kind, app.GetStatus().SynchronizationState).Inc()
 		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
 			existing.SetStatus(app.GetStatus())
+
+			// The team name was previously required as `.metadata.labels.team`.
+			// Teams have had their own namespace many years now, but this team label
+			// have persisted still. When this requirement was removed as of this patch,
+			// users may deploy resources where the team label is not set.
+			//
+			// This function adds the team label to the resource again, in case there
+			// are systems that use the label, especially the ones we don't control.
+			labels := existing.GetLabels()
+			if labels == nil {
+				labels = make(map[string]string)
+			}
+			labels["team"] = existing.GetNamespace()
+			existing.SetLabels(labels)
+
 			return n.Update(ctx, existing) // was app
 		})
 		if err != nil {
