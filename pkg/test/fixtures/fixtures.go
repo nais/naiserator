@@ -9,7 +9,6 @@ import (
 const (
 	ApplicationName      = "myapplication"
 	ApplicationNamespace = "mynamespace"
-	ApplicationTeam      = "myteam"
 )
 
 // MinimalApplication returns the absolute minimum application that might live in a Kubernetes cluster.
@@ -41,9 +40,6 @@ func MinimalApplication() *nais.Application {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ApplicationName,
 			Namespace: ApplicationNamespace,
-			Labels: map[string]string{
-				"team": ApplicationTeam,
-			},
 		},
 		Spec: nais.ApplicationSpec{
 			Image: "example",

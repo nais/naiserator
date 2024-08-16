@@ -28,7 +28,7 @@ func NewDeploymentEvent(source MonitorSource) *deployment.Event {
 		},
 		Source:          deployment.System_naiserator,
 		Deployer:        nil,
-		Team:            source.GetLabels()["team"],
+		Team:            source.GetNamespace(),
 		RolloutStatus:   deployment.RolloutStatus_initialized,
 		Environment:     environment(),
 		SkyaEnvironment: "",

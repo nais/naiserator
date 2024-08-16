@@ -279,11 +279,12 @@ func TestSynchronizer(t *testing.T) {
 	assert.Equal(t, ctrl.Result{}, result)
 
 	// Test that the Application was updated successfully after processing,
-	// and that the hash is present.
+	// that the team label is set, and that the hash is present.
 	persistedApp = &nais_io_v1alpha1.Application{}
 	err = rig.client.Get(ctx, objectKey, persistedApp)
 	hash, _ := app.Hash()
 	assert.NotNil(t, persistedApp)
+	assert.Equal(t, app.Namespace, persistedApp.GetLabels()["team"])
 	assert.NoError(t, err)
 	assert.Equalf(t, hash, persistedApp.Status.SynchronizationHash, "Application resource hash in Kubernetes matches local version")
 
@@ -357,17 +358,19 @@ func TestSynchronizer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
-	var iamPList iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList
-	err = rig.client.List(ctx, &iamPList)
+	var iam_policies iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList
+	err = rig.client.List(ctx, &iam_policies)
 	assert.NoError(t, err)
-	assert.Len(t, iamPList.Items, 2)
+	assert.Len(t, iam_policies.Items, 2)
 
-	var iamSAlist iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList
-	err = rig.client.List(ctx, &iamSAlist)
+	var iam_service_accounts iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList
+	err = rig.client.List(ctx, &iam_service_accounts)
 	assert.NoError(t, err)
-	assert.Len(t, iamSAlist.Items, 2)
-	assert.Equal(t, iamSAlist.Items[0].Labels["app"], app2.GetName())
+	assert.Len(t, iam_service_accounts.Items, 2)
+	assert.Equal(t, iam_service_accounts.Items[0].Labels["app"], app2.GetName())
 
+	// Now, delete the application.
+	// The application's children should disappear from the cluster.
 	err = rig.client.Delete(ctx, app2)
 	assert.NoError(t, err)
 
@@ -381,14 +384,14 @@ func TestSynchronizer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
-	err = rig.client.List(ctx, &iamPList)
+	err = rig.client.List(ctx, &iam_policies)
 	assert.NoError(t, err)
-	assert.Len(t, iamPList.Items, 1)
+	assert.Len(t, iam_policies.Items, 1)
 
-	err = rig.client.List(ctx, &iamSAlist)
+	err = rig.client.List(ctx, &iam_service_accounts)
 	assert.NoError(t, err)
-	assert.Len(t, iamSAlist.Items, 1)
-	assert.Equal(t, app.GetName(), iamSAlist.Items[0].Labels["app"])
+	assert.Len(t, iam_service_accounts.Items, 1)
+	assert.Equal(t, app.GetName(), iam_service_accounts.Items[0].Labels["app"])
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {

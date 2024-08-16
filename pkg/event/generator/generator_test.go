@@ -97,7 +97,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		assert.Empty(t, event.GetPlatform().GetVariant())
 		assert.Equal(t, deployment.System_naiserator, event.GetSource())
 		assert.Nil(t, event.GetDeployer())
-		assert.Equal(t, fixtures.ApplicationTeam, event.GetTeam())
+		assert.Equal(t, fixtures.ApplicationNamespace, event.GetTeam())
 		assert.Equal(t, deployment.RolloutStatus_initialized, event.GetRolloutStatus())
 		assert.Equal(t, deployment.Environment_development, event.GetEnvironment())
 		assert.Equal(t, fixtures.ApplicationNamespace, event.GetNamespace())
@@ -139,15 +139,12 @@ func TestNewDeploymentEvent(t *testing.T) {
 		assert.Equal(t, correlationID, event.CorrelationID)
 	})
 
-	t.Run("Get team-name from app labels", func(t *testing.T) {
+	t.Run("Get team-name from app namespace", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-
-		team := "team"
-		app.Labels["team"] = team
 
 		event := generator.NewDeploymentEvent(app)
 
-		assert.Equal(t, team, event.Team)
+		assert.Equal(t, "mynamespace", event.Team)
 	})
 
 }

@@ -151,6 +151,19 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	// fixme: can be removed when we don't have garbage data anymore. Late 2024?
 	app.GetStatus().Conditions = nil
 
+	// The team name was previously required as `.metadata.labels.team`.
+	// Teams have had their own namespace many years now, but this team label
+	// have persisted still. When this requirement was removed as of this patch,
+	// users may deploy resources where the team label is not set.
+	//
+	// This function adds the team label to the resource again, in case there
+	// are systems that use the label, especially the ones we don't control.
+	labels := app.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels["team"] = app.GetNamespace()
+
 	kind := app.GetObjectKind().GroupVersionKind().Kind
 	changed := true
 
@@ -304,7 +317,7 @@ func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Sou
 		return err
 	}
 	labelSelector = labelSelector.Add(*appLabelreq)
-	teamLabelreq, err := labels.NewRequirement("team", selection.Equals, []string{app.GetLabels()["team"]})
+	teamLabelreq, err := labels.NewRequirement("team", selection.Equals, []string{app.GetNamespace()})
 	if err != nil {
 		return err
 	}
