@@ -39,7 +39,7 @@ func TestApplication_CreateAppNamespaceHash(t *testing.T) {
 }
 
 func TestApplication_CreateObjectMeta(t *testing.T) {
-	const app, namespace, team, key, value = "myapp", "mynamespace", "myteam", "key", "value"
+	const app, namespace, key, value = "myapp", "mynamespace", "key", "value"
 
 	tests := []struct {
 		name string
@@ -53,13 +53,13 @@ func TestApplication_CreateObjectMeta(t *testing.T) {
 					Name:      app,
 					Namespace: namespace,
 					Labels: map[string]string{
-						"team": team,
+						"team": namespace,
 					},
 				},
 			},
 			map[string]string{
 				"app":  app,
-				"team": team,
+				"team": namespace,
 			},
 		},
 		{
@@ -69,14 +69,14 @@ func TestApplication_CreateObjectMeta(t *testing.T) {
 					Name:      app,
 					Namespace: namespace,
 					Labels: map[string]string{
-						"team": team,
+						"team": namespace,
 						key:    value,
 					},
 				},
 			},
 			map[string]string{
 				"app":  app,
-				"team": team,
+				"team": namespace,
 				key:    value,
 			},
 		},
@@ -87,14 +87,14 @@ func TestApplication_CreateObjectMeta(t *testing.T) {
 					Name:      app,
 					Namespace: namespace,
 					Labels: map[string]string{
-						"team": team,
+						"team": namespace,
 						"app":  "ignored",
 					},
 				},
 			},
 			map[string]string{
 				"app":  app,
-				"team": team,
+				"team": namespace,
 			},
 		},
 	}
