@@ -1,6 +1,5 @@
 testconfig:
   description: azure application with access policies
-
 config:
   features:
     linkerd: true
@@ -12,8 +11,6 @@ config:
       ingressClass: adeo-gateway
     - domainSuffix: .domain
       ingressClass: domain-gateway
-
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -39,7 +36,6 @@ input:
           - application: app3
             namespace: t1
             cluster: other-cluster
-
 tests:
   - apiVersion: nais.io/v1
     kind: AzureAdApplication

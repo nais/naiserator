@@ -1,6 +1,5 @@
 testconfig:
   description: enable opentelemetry auto-instrumentation
-
 config:
   observability:
     otel:
@@ -18,7 +17,6 @@ config:
         service: "my-collector"
         tls: false
         protocol: "grpc"
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -34,7 +32,6 @@ input:
       autoInstrumentation:
         enabled: true
         runtime: "java"
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment
@@ -70,7 +67,6 @@ tests:
                         value: grpc
                       - name: OTEL_EXPORTER_OTLP_INSECURE
                         value: "true"
-
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     name: myapplication-tracing-438f0c6d

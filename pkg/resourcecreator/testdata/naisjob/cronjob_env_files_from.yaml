@@ -1,9 +1,7 @@
 testconfig:
   description: file injection
-
 config:
   features: {}
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -25,7 +23,6 @@ input:
     filesFrom:
       - configmap: mycm
       - secret: mysecret
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob

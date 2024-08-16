@@ -1,12 +1,10 @@
 testconfig:
   description: disk size on google sqlinstance is updated after a change
-
 config:
   features:
     cnrm: true
     linkerd: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -22,7 +20,6 @@ input:
             - name: mydb
           type: POSTGRES_11
           diskSize: 20
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -58,7 +55,6 @@ existing:
           queryStringLength: 4500
           recordApplicationTags: true
           recordClientAddress: true
-
 tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance

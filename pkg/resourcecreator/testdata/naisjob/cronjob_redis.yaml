@@ -1,12 +1,10 @@
 testconfig:
   description: Redis labeling and access policy
-
 config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
   aiven-project: dev-project
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -21,7 +19,6 @@ input:
         access: read
       - instance: naistest2
         access: write
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: aiven.nais.io/v1

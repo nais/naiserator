@@ -1,6 +1,5 @@
 testconfig:
   description: inject opentelemetry tracing environment variable and network policy
-
 config:
   observability:
     otel:
@@ -15,7 +14,6 @@ config:
         service: "my-collector"
         tls: false
         protocol: "grpc"
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -30,7 +28,6 @@ input:
     observability:
       tracing:
         enabled: true
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment
@@ -57,7 +54,6 @@ tests:
                         value: grpc
                       - name: OTEL_EXPORTER_OTLP_INSECURE
                         value: "true"
-
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     name: myapplication-tracing-438f0c6d

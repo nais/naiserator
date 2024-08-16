@@ -1,12 +1,10 @@
 testconfig:
   description: gcp naisjob with overriden linkerd annotations
-
 config:
   features:
     linkerd: true
     network-policy: true
   google-project-id: google-project-id
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -14,7 +12,6 @@ existing:
       name: mynamespace
       annotations:
         linkerd.io/inject: enabled
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -28,7 +25,6 @@ input:
   spec:
     image: navikt/mynaisjob:1.2.3
     schedule: "* 2 * * *"
-
 tests:
   - operation: CreateOrUpdate
     kind: CronJob

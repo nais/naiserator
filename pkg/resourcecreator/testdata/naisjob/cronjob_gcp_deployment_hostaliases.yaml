@@ -1,6 +1,5 @@
 testconfig:
   description: specifying custom port and protocol for mesh-external services in gcp
-
 config:
   linkerd: true
   cnrm: true
@@ -22,7 +21,6 @@ input:
   spec:
     schedule: "* 2 * * *"
     image: navikt/mynaisjob:1.2.3
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: batch/v1

@@ -1,13 +1,11 @@
 testconfig:
   description: ingress resource is created on-premises
-
 config:
   features:
     linkerd: true
   gateway-mappings:
     - domainSuffix: .bar
       ingressClass: very-nginx
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -20,7 +18,6 @@ input:
       - https://foo.bar
     service:
       protocol: grpc
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -28,7 +25,6 @@ existing:
       name: mynamespace
       annotations:
         linkerd.io/inject: enabled
-
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
@@ -54,7 +50,6 @@ tests:
                           port:
                             number: 80
                       path: /
-
   - apiVersion: v1
     kind: Service
     name: myapplication

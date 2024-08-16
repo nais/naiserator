@@ -1,9 +1,7 @@
 testconfig:
   description: file injection
-
 config:
   features: {}
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -21,7 +19,6 @@ input:
       - emptydir:
           medium: Disk
         mountPath: /var/cache/disk
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

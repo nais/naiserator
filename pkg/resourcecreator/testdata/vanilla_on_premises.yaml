@@ -1,11 +1,9 @@
 testconfig:
   description: vanilla minimal application running on-premises with default configuration
-
 config:
   cluster-name: test-cluster
   features:
     nav-ca-bundle: true
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -17,7 +15,6 @@ input:
       nais.io/deploymentCorrelationID: corr
   spec:
     image: navikt/myapplication:1.2.3
-
 tests:
   - match:
       - type: subset
@@ -34,7 +31,6 @@ tests:
                 kind: Application
                 name: myapplication
                 uid: "123456"
-
   - apiVersion: v1
     kind: Service
     name: myapplication
@@ -55,7 +51,6 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
-
   - operation: CreateIfNotExists
     apiVersion: v1
     kind: ServiceAccount
@@ -64,7 +59,6 @@ tests:
       - type: subset
         name: "service account created"
         resource: {}
-
   - operation: CreateOrUpdate
     apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
@@ -89,7 +83,6 @@ tests:
                   target:
                     type: Utilization
                     averageUtilization: 50
-
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment
@@ -239,7 +232,6 @@ tests:
                 maxSurge: "25%"
             revisionHistoryLimit: 3
             progressDeadlineSeconds: 300
-
   - operation: CreateOrUpdate
     apiVersion: policy/v1
     kind: PodDisruptionBudget

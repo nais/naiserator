@@ -1,6 +1,5 @@
 testconfig:
   description: maxSurge and maxUnavailable configuration for rollingUpdate
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,7 +13,6 @@ input:
       rollingUpdate:
         maxSurge: 99%
         maxUnavailable: 5
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

@@ -1,11 +1,9 @@
 testconfig:
   description: OpenSearch labling and access policy
-
 config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -18,7 +16,6 @@ input:
     openSearch:
       instance: naistest
       access: read
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: aiven.nais.io/v1

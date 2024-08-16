@@ -1,13 +1,11 @@
 testconfig:
   description: set logging labels when logging is enabled
-
 config:
   observability:
     logging:
       destinations:
         - elastic
         - loki
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -24,7 +22,6 @@ input:
         destinations:
           - id: elastic
           - id: loki
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob

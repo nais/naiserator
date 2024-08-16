@@ -1,6 +1,5 @@
 testconfig:
   description: vanilla application gets a custom container command
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -16,7 +15,6 @@ input:
       - not
       - make
       - bugs
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

@@ -1,10 +1,8 @@
 testconfig:
   description: application with frontend configuration in a file
-
 config:
   frontend:
     telemetry-url: http://telemetry-collector
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -17,7 +15,6 @@ input:
     frontend:
       generatedConfig:
         mountPath: /path/to/nais.js
-
 tests:
   - apiVersion: v1
     kind: ConfigMap
@@ -29,7 +26,6 @@ tests:
         resource:
           data:
             nais.js: "\nexport default {\n\ttelemetryCollectorURL: 'http://telemetry-collector',\n\tapp: {\n\t\tname: 'myapplication',\n\t\tversion: '1.2.3'\n\t}\n};\n"
-
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication

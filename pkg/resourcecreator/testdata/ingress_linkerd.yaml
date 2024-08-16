@@ -1,6 +1,5 @@
 testconfig:
   description: ingress resource is created on-premises
-
 config:
   features:
     linkerd: true
@@ -9,7 +8,6 @@ config:
       ingressClass: very-nginx
     - domainSuffix: .baz
       ingressClass: something-else
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -28,7 +26,6 @@ input:
       - https://bar.baz/
       - https://bar.baz/foo
       - https://bar.baz/trailingslash/
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -36,7 +33,6 @@ existing:
       name: mynamespace
       annotations:
         linkerd.io/inject: enabled
-
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
@@ -94,7 +90,6 @@ tests:
                             number: 80
                       path: /baz(/.*)?
                       pathType: ImplementationSpecific
-
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
     name: myapplication-something-else-f697018e

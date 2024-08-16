@@ -1,6 +1,5 @@
 testconfig:
   description: horizontal pod autoscaler is set up with both cpu and kafka scaling
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -19,7 +18,6 @@ input:
           topic: mynamespace.mytopic
           consumerGroup: myconsumergroup
           threshold: 100
-
 tests:
   - apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler

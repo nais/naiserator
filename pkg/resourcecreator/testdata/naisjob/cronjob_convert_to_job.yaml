@@ -1,6 +1,5 @@
 testconfig:
   description: existing naisjob with schedule removed should create job and delete cronjob
-
 config:
   features:
     linkerd: true
@@ -8,7 +7,6 @@ config:
     jwker: true
   google-project-id: google-project-id
   cluster-name: mycluster
-
 existing:
   - kind: Naisjob
     apiVersion: nais.io/v1
@@ -18,7 +16,6 @@ existing:
     spec:
       image: foo/bar
       schedule: "* * * * *"
-
   - apiVersion: batch/v1
     kind: CronJob
     metadata:
@@ -38,7 +35,6 @@ existing:
                     - -c
                     - date; echo Hello from the Kubernetes cluster
               restartPolicy: OnFailure
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -47,13 +43,11 @@ input:
     namespace: mynamespace
   spec:
     image: foo/bar
-
 tests:
   - operation: CreateDeleteIfExists
     apiVersion: batch/v1
     kind: CronJob
     name: mynaisjob
-
   - operation: CreateOrRecreate
     apiVersion: batch/v1
     kind: Job

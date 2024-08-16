@@ -1,6 +1,5 @@
 testconfig:
   description: prometheus port is set in deployment and annotations
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -11,7 +10,6 @@ input:
     port: 11335
     prometheus:
       path: "/scrape/path"
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

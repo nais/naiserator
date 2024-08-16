@@ -1,10 +1,8 @@
 testconfig:
   description: secure logging volume
-
 config:
   Securelogs:
     log-shipper-image: fluentbit-image
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -16,7 +14,6 @@ input:
     schedule: "* 2 * * *"
     securelogs:
       enabled: true
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob
@@ -69,7 +66,7 @@ tests:
                           allowPrivilegeEscalation: false
                           capabilities:
                             drop:
-                            - ALL
+                              - ALL
                           readOnlyRootFilesystem: true
                           runAsNonRoot: true
                           runAsUser: 1065

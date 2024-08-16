@@ -1,6 +1,5 @@
 testconfig:
   description: TTL duration converted to deployment annotations
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -8,7 +7,6 @@ input:
     name: myapplication
   spec:
     ttl: 1h
-     
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1

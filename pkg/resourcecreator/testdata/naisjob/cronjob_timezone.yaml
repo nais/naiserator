@@ -1,8 +1,6 @@
 testconfig:
   description: cronjob timezone gets propagated
-
 config:
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -14,7 +12,6 @@ input:
     schedule: "* 2 * * *"
     image: navikt/mynaisjob:1.2.3
     timeZone: Europe/Oslo
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob

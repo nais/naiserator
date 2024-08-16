@@ -1,12 +1,10 @@
 testconfig:
   description: google storage bucket with retention period
-
 config:
   features:
     access-policy: false
     cnrm: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -25,7 +23,6 @@ input:
             createdBefore: 2019-01-01
             numNewerVersions: 2
             withState: ANY
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -33,7 +30,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount

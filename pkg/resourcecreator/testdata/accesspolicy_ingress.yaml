@@ -1,6 +1,5 @@
 testconfig:
   description: vanilla application running with nais-system, default configuration and network policies
-
 config:
   features:
     network-policy: true
@@ -12,8 +11,6 @@ config:
     - domainSuffix: .domain
       ingressClass: nais-ingress-external
   nais-namespace: nais-system
-
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -26,7 +23,6 @@ input:
     ingresses:
       - 'https://myapplication.dev.nais.io'
       - 'https://myapplication.other.domain'
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1

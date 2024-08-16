@@ -1,6 +1,5 @@
 testconfig:
   description: egress rules with tokenx enabled will create network policies and jwker resources
-
 config:
   features:
     linkerd: true
@@ -8,7 +7,6 @@ config:
     jwker: true
   google-project-id: google-project-id
   cluster-name: mycluster
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -29,7 +27,6 @@ input:
             cluster: othercluster
     tokenx:
       enabled: true
-
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
@@ -48,7 +45,6 @@ tests:
                     podSelector:
                       matchLabels:
                         app: foo
-
   - apiVersion: nais.io/v1
     kind: Jwker
     name: myapplication
@@ -67,7 +63,6 @@ tests:
                   - application: foo
                     cluster: othercluster
                     namespace: bar
-
   - apiVersion: nais.io/v1
     kind: Jwker
     name: myapplication
@@ -78,7 +73,6 @@ tests:
         resource:
           spec:
             secretName: ^tokenx-myapplication-.+$
-
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment

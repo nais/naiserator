@@ -1,6 +1,5 @@
 testconfig:
   description: azure config with sidecar should result in wonderwall sidecar injected to pod
-
 config:
   features:
     azurerator: true
@@ -11,7 +10,6 @@ config:
   cluster-name: mycluster
   wonderwall:
     image: nais/wonderwall
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -56,7 +54,6 @@ input:
     readiness:
       path: internal/readiness
     terminationGracePeriodSeconds: 60
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -112,7 +109,6 @@ tests:
                       requests:
                         cpu: 100m
                         memory: 64Mi
-
   - apiVersion: nais.io/v1
     kind: AzureAdApplication
     name: myapplication

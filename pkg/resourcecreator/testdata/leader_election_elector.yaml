@@ -1,6 +1,5 @@
 testconfig:
   description: vanilla application running in GCP, using elector for leader election
-
 config:
   features:
     network-policy: true
@@ -9,7 +8,6 @@ config:
   api-server-ip: "172.16.0.2/32"
   leader-election:
     image: "nais/elector:latest"
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -20,7 +18,6 @@ input:
   spec:
     leaderElection: true
     image: navikt/myapplication:1.2.3
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

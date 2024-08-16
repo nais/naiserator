@@ -1,6 +1,5 @@
 testconfig:
   description: vanilla application running with nais-system, default configuration and network policies
-
 config:
   features:
     network-policy: true
@@ -19,7 +18,6 @@ config:
         port: 80
       - host: "google.com"
         port: 443
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -52,7 +50,6 @@ input:
               - port: 8443
           - host: https://www.withprotocol.com
           - host: http://www.anotherprotocol.com
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
@@ -84,7 +81,7 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: q1
-                  - podSelector: { }
+                  - podSelector: {}
                     namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: t1
@@ -93,7 +90,7 @@ tests:
                   - podSelector:
                       matchLabels:
                         k8s-app: kube-dns
-                    namespaceSelector: { }
+                    namespaceSelector: {}
               - to:
                   - podSelector:
                       matchLabels:
@@ -110,7 +107,6 @@ tests:
             podSelector:
               matchLabels:
                 app: myapplication
-
   - operation: CreateOrUpdate
     apiVersion: networking.gke.io/v1alpha3
     kind: FQDNNetworkPolicy

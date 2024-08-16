@@ -1,12 +1,10 @@
 testconfig:
   description: autoresize and autoresize limit on google sqlinstance is updated after a change
-
 config:
   features:
     cnrm: true
     linkerd: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -23,7 +21,6 @@ input:
           type: POSTGRES_11
           diskAutoresize: true
           diskAutoresizeLimit: 20
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -45,7 +42,6 @@ existing:
       settings:
         diskAutoresize: true
         diskAutoresizeLimit: 20
-
 tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance

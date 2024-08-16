@@ -1,6 +1,5 @@
 testconfig:
   description: minimal azure config with sidecar should result in wonderwall sidecar injected to pod
-
 config:
   features:
     azurerator: true
@@ -11,7 +10,6 @@ config:
   cluster-name: mycluster
   wonderwall:
     image: nais/wonderwall
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -25,7 +23,6 @@ input:
         enabled: true
     ingresses:
       - "https://my-client.nav.no/"
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -97,7 +94,6 @@ tests:
                       runAsGroup: 1069
                       runAsNonRoot: true
                       runAsUser: 1069
-
   - apiVersion: v1
     kind: Service
     name: myapplication
@@ -118,7 +114,6 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
-
   - apiVersion: nais.io/v1
     kind: AzureAdApplication
     name: myapplication
@@ -129,7 +124,6 @@ tests:
         resource:
           spec:
             secretName: ^azure-myapplication-4190a8ca-.{6,7}$
-
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists

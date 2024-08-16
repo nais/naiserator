@@ -1,12 +1,10 @@
 testconfig:
   description: network policy that allows ingress traffic for all pods in all namespaces
-
 config:
   features:
     network-policy: true
   cluster-name: mycluster
   nais-namespace: nais-system
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -21,7 +19,6 @@ input:
         rules:
           - application: '*'
             namespace: '*'
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1

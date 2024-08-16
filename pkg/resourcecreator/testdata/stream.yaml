@@ -1,10 +1,8 @@
 testconfig:
   description: if Kafkarator is enabled and streams in set to true, create Stream resource
-
 config:
   features:
     kafkarator: true
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -16,7 +14,6 @@ input:
     kafka:
       pool: some-kafka-pool
       streams: true
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: kafka.nais.io/v1

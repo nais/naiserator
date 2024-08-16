@@ -1,6 +1,5 @@
 testconfig:
   description: set logging labels when logging is enabled
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -10,7 +9,6 @@ input:
     uid: "123456"
   spec:
     image: navikt/myapplication:1.2.3
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

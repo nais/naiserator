@@ -1,6 +1,5 @@
 testconfig:
   description: PreStopHook.exec is properly added
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -13,7 +12,6 @@ input:
         command:
           - ./hello
           - world
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

@@ -1,6 +1,5 @@
 testconfig:
   description: accesspolicy containing rules for only other clusters should not add empty ingress and egress rules
-
 config:
   features:
     linkerd: false
@@ -8,7 +7,6 @@ config:
   google-project-id: google-project-id
   cluster-name: mycluster
   nais-namespace: nais-system
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -28,7 +26,6 @@ input:
           - application: foo
             namespace: bar
             cluster: othercluster
-
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
@@ -52,10 +49,10 @@ tests:
                         kubernetes.io/metadata.name: nais-system
             egress:
               - to:
-                - podSelector:
-                    matchLabels:
-                      k8s-app: kube-dns
-                  namespaceSelector: { }
+                  - podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+                    namespaceSelector: {}
             policyTypes:
               - Ingress
               - Egress

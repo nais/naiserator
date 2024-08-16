@@ -1,12 +1,10 @@
 testconfig:
   description: custom environment variable name on cloud sql databases
-
 config:
   features:
     linkerd: true
     cnrm: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -22,7 +20,6 @@ input:
             - name: mydb
               envVarPrefix: "PWNED"
           type: POSTGRES_11
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -30,7 +27,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: v1
     kind: Secret

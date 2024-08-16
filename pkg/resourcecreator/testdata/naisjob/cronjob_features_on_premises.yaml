@@ -1,11 +1,9 @@
 testconfig:
   description: vanilla minimal naisjob with schedule running on-premises with default configuration
-
 config:
   cluster-name: test-cluster
   features:
     nav-ca-bundle: true
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -20,7 +18,6 @@ input:
     schedule: "* 2 * * *"
     successfulJobsHistoryLimit: 4
     failedJobsHistoryLimit: 2
-
 tests:
   - match:
       - type: subset
@@ -37,7 +34,6 @@ tests:
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-
   - operation: CreateIfNotExists
     apiVersion: v1
     kind: ServiceAccount
@@ -46,7 +42,6 @@ tests:
       - type: subset
         name: "service account created"
         resource: {}
-
   - operation: CreateOrUpdate
     apiVersion: batch/v1
     kind: CronJob

@@ -1,6 +1,5 @@
 testconfig:
   description: PreStopHook.http is properly added
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -11,7 +10,6 @@ input:
     preStopHook:
       http:
         path: /leet
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

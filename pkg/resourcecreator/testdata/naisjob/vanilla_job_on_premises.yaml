@@ -1,11 +1,9 @@
 testconfig:
   description: vanilla minimal naisjob with schedule running on-premises with default configuration
-
 config:
   cluster-name: test-cluster
   features:
     nav-ca-bundle: true
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -17,7 +15,6 @@ input:
       nais.io/deploymentCorrelationID: corr
   spec:
     image: navikt/mynaisjob:1.2.3
-
 tests:
   - match:
       - type: subset
@@ -34,7 +31,6 @@ tests:
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-
   - operation: CreateIfNotExists
     apiVersion: v1
     kind: ServiceAccount
@@ -43,7 +39,6 @@ tests:
       - type: subset
         name: "service account created"
         resource: {}
-
   - operation: CreateOrRecreate
     apiVersion: batch/v1
     kind: Job

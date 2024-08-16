@@ -1,6 +1,5 @@
 testconfig:
   description: startup probes are added
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -11,7 +10,6 @@ input:
   spec:
     startup:
       path: "liveness"
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

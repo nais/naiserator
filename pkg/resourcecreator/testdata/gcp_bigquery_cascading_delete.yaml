@@ -1,12 +1,10 @@
 testconfig:
   description: Google BigQuery dataset instance
-
 config:
   features:
     access-policy: false
     cnrm: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -22,7 +20,6 @@ input:
           description: tralalalala
           cascadingDelete: true
           permission: READ
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -30,7 +27,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: google.nais.io/v1
     kind: BigQueryDataset
@@ -51,7 +47,6 @@ tests:
             name: my_big_query_instance
             description: tralalalala
             location: europe-north1
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
@@ -69,7 +64,6 @@ tests:
             role: roles/bigquery.jobUser
             resourceRef:
               kind: Project
-
   - apiVersion: apps/v1
     kind: Deployment
     operation: CreateOrUpdate

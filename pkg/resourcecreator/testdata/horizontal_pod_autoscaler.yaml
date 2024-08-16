@@ -1,6 +1,5 @@
 testconfig:
   description: horizontal pod autoscaler is set up
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -13,7 +12,6 @@ input:
       min: 3
       max: 6
       cpuThresholdPercentage: 37
-
 tests:
   - apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler

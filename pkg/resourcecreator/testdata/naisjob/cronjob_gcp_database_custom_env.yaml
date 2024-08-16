@@ -1,13 +1,10 @@
 testconfig:
   description: custom environment variable name on cloud sql databases
-
 config:
   features:
     cnrm: true
     linkerd: true
   google-project-id: google-project-id
-
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -15,7 +12,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -31,7 +27,6 @@ input:
             - name: mydb
               envVarPrefix: "PWNED"
           type: POSTGRES_11
-
 tests:
   - apiVersion: v1
     kind: Secret
@@ -62,7 +57,6 @@ tests:
             PWNED_URL: postgres://mynaisjob:.{43}@127.0.0.1:5432/mydb
             PWNED_USERNAME: mynaisjob
           type: Opaque
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists

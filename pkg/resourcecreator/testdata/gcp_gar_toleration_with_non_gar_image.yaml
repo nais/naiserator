@@ -1,10 +1,8 @@
 testconfig:
   description: gar-toleration enabled with image not from gar
-
 config:
   features:
     gar-toleration: true
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,7 +12,6 @@ input:
     uid: "123456"
   spec:
     image: ghcr.io/nais/testapp:latest
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

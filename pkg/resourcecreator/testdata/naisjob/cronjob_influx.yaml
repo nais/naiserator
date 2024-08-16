@@ -1,11 +1,9 @@
 testconfig:
   description: Influxdb labling and access policy
-
 config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -17,7 +15,6 @@ input:
     image: foo/bar
     influx:
       instance: influx-naisteam
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob

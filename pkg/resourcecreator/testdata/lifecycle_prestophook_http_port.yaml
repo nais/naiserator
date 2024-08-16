@@ -1,6 +1,5 @@
 testconfig:
   description: PreStopHook.http with port is properly added
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -12,7 +11,6 @@ input:
       http:
         path: /leet
         port: 1337
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

@@ -1,12 +1,10 @@
 testconfig:
   description: additional cloudsql users with custom env for each user
-
 config:
   features:
     linkerd: true
     cnrm: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -24,7 +22,6 @@ input:
                 - name: user-two
               envVarPrefix: "PWNED"
           type: POSTGRES_11
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -32,7 +29,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: v1
     kind: Secret
@@ -63,7 +59,6 @@ tests:
             PWNED_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
             PWNED_USERNAME: myapplication
           type: Opaque
-
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
@@ -93,7 +88,6 @@ tests:
             PWNED_USER_TWO_USERNAME: user-two
             PWNED_USER_TWO_URL: postgres://user-two:.{43}@127.0.0.1:5432/mydb
           type: Opaque
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists

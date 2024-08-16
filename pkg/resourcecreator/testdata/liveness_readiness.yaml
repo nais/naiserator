@@ -1,6 +1,5 @@
 testconfig:
   description: liveness and readiness checks are added
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -13,7 +12,6 @@ input:
       path: "liveness"
     readiness:
       path: "readiness"
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

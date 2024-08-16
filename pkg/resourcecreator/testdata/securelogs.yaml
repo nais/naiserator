@@ -1,11 +1,9 @@
 testconfig:
   description: secure logging volume
-
 config:
   features:
   Securelogs:
     log-shipper-image: fluentbit-image
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -16,7 +14,6 @@ input:
   spec:
     securelogs:
       enabled: true
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment
@@ -70,7 +67,7 @@ tests:
                       allowPrivilegeEscalation: false
                       capabilities:
                         drop:
-                        - ALL
+                          - ALL
                       readOnlyRootFilesystem: true
                       runAsNonRoot: true
                       runAsUser: 1065

@@ -1,6 +1,5 @@
 testconfig:
   description: set logging labels when logging is enabled
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -13,7 +12,6 @@ input:
     observability:
       logging:
         enabled: true
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

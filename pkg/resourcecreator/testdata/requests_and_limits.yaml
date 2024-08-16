@@ -1,6 +1,5 @@
 testconfig:
   description: requests and limits are copied into deployment resource
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -16,7 +15,6 @@ input:
       limits:
         cpu: 150m
         memory: 2G
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment
