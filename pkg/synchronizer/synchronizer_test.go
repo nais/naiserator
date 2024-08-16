@@ -284,7 +284,7 @@ func TestSynchronizer(t *testing.T) {
 	err = rig.client.Get(ctx, objectKey, persistedApp)
 	hash, _ := app.Hash()
 	assert.NotNil(t, persistedApp)
-	assert.Equal(t, app.Namespace, persistedApp.GetLabels()["team"])
+	assert.Equal(t, app.Namespace, persistedApp.GetLabels()["team"], "Team label was added to the Application resource metadata")
 	assert.NoError(t, err)
 	assert.Equalf(t, hash, persistedApp.Status.SynchronizationHash, "Application resource hash in Kubernetes matches local version")
 
