@@ -21,6 +21,7 @@ input:
           type: POSTGRES_11
           diskAutoresize: true
           diskAutoresizeLimit: 20
+          tier: db-f1-micro
 existing:
   - kind: Namespace
     apiVersion: v1

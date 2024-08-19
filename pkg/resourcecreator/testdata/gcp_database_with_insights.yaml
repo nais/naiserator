@@ -19,6 +19,7 @@ input:
         - databases:
             - name: mydb
           type: POSTGRES_11
+          tier: db-f1-micro
           pointInTimeRecovery: true
           insights:
             queryStringLength: 4500

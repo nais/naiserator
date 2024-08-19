@@ -22,6 +22,7 @@ input:
           retainedBackups: 3
           # transactionLogRetentionDays <= retainedBackups
           transactionLogRetentionDays: 3
+          tier: db-f1-micro
 existing:
   - kind: Namespace
     apiVersion: v1

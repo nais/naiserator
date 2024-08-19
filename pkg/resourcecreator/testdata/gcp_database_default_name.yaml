@@ -18,6 +18,7 @@ input:
       sqlInstances:
         - databases:
           type: POSTGRES_14
+          tier: db-f1-micro
 existing:
   - kind: Namespace
     apiVersion: v1
