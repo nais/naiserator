@@ -1,11 +1,9 @@
 testconfig:
   description: Influxdb labling and access policy  (remove this file when influx-credentials flag is removed and always enabled)
-
 config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -13,12 +11,9 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     influx:
       instance: influx-naisteam
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

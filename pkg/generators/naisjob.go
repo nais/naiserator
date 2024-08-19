@@ -91,7 +91,7 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 		o.Linkerd = true
 	}
 
-	o.Team = job.Labels["team"]
+	o.Team = job.GetNamespace()
 
 	return o, nil
 }
@@ -107,11 +107,6 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	cfg, ok := config.(*Options)
 	if !ok {
 		return nil, fmt.Errorf("BUG: Application generator called without correct configuration object; fix your code")
-	}
-
-	team, ok := naisjob.Labels["team"]
-	if !ok || len(team) == 0 {
-		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
 	ast := resource.NewAst()

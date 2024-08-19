@@ -1,6 +1,5 @@
 testconfig:
   description: webproxy configuration is injected into the container env
-
 config:
   Proxy:
     address: http://foo.bar:5224
@@ -8,7 +7,6 @@ config:
       - foo
       - bar
       - baz
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -16,12 +14,9 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     webproxy: true
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob

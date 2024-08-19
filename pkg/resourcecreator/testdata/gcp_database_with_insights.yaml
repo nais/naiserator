@@ -1,12 +1,10 @@
 testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
-
 config:
   features:
     cnrm: true
     linkerd: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,8 +12,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     gcp:
@@ -28,7 +24,6 @@ input:
             queryStringLength: 4500
             recordApplicationTags: true
             recordClientAddress: true
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -36,7 +31,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
@@ -161,7 +155,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Application
                 name: myapplication

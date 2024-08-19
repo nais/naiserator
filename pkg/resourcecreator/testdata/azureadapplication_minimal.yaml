@@ -1,6 +1,5 @@
 testconfig:
   description: spec feature flag enabled will result in an AzureAdApplication resource
-
 config:
   features:
     linkerd: true
@@ -11,21 +10,17 @@ config:
     azurerator:
       - login.azure-ad.test
       - graph.microsoft.test
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     azure:
       application:
         enabled: true
-
 tests:
   - apiVersion: nais.io/v1
     kind: AzureAdApplication
@@ -41,7 +36,6 @@ tests:
         resource:
           spec:
             secretName:
-
   - apiVersion: nais.io/v1
     kind: AzureAdApplication
     name: myapplication
@@ -52,7 +46,6 @@ tests:
         resource:
           spec:
             secretName: ^azure-myapplication-4190a8ca-.{6,7}$
-
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment

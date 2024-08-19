@@ -1,6 +1,5 @@
 testconfig:
   description: vault enabled with default configuration
-
 config:
   features:
     vault: true
@@ -9,7 +8,6 @@ config:
     kv-path: /kv/preprod/fss
     auth-path: auth/kubernetes/preprod/fss/login
     init-container-image: navikt/vault-sidekick:v0.3.10-d122b16
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -17,12 +15,9 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     vault:
       enabled: true
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

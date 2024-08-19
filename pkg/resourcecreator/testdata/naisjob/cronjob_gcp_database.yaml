@@ -1,12 +1,10 @@
 testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
-
 config:
   features:
     cnrm: true
     linkerd: true
   google-project-id: google-project-id
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -21,8 +19,6 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     image: navikt/mynaisjob:1.2.3
@@ -31,7 +27,6 @@ input:
         - databases:
             - name: mydb
           type: POSTGRES_11
-
 tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
@@ -50,7 +45,6 @@ tests:
             namespace: serviceaccounts
           spec:
             displayName: mynaisjob
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
     operation: CreateIfNotExists
@@ -72,7 +66,6 @@ tests:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
               name: mynaisjob-mynamespac-uih2v7i
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
     operation: CreateOrUpdate
@@ -101,7 +94,6 @@ tests:
               diskSize: 10
               diskType: PD_SSD
               tier: db-f1-micro
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
@@ -122,7 +114,6 @@ tests:
               kind: Project
               name: ""
             member: serviceAccount:mynaisjob-mynamespac-uih2v7i@google-project-id.iam.gserviceaccount.com
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLDatabase
     operation: CreateOrUpdate
@@ -140,7 +131,6 @@ tests:
           spec:
             instanceRef:
               name: mynaisjob
-
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
@@ -155,7 +145,7 @@ tests:
             namespace: mynamespace
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - apiVersion: nais.io/v1
                 kind: Naisjob
@@ -169,7 +159,6 @@ tests:
             NAIS_DATABASE_MYNAISJOB_MYDB_URL: postgres://mynaisjob:.{43}@127.0.0.1:5432/mydb
             NAIS_DATABASE_MYNAISJOB_MYDB_USERNAME: mynaisjob
           type: Opaque
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -192,7 +181,6 @@ tests:
                 secretKeyRef:
                   name: google-sql-mynaisjob
                   key: NAIS_DATABASE_MYNAISJOB_MYDB_PASSWORD
-
   - apiVersion: batch/v1
     kind: CronJob
     name: mynaisjob

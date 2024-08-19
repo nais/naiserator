@@ -1,21 +1,16 @@
 testconfig:
   description: application configured with gar toleration
-
 config:
   features:
     gar-toleration: true
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: europe-north1-docker.pkg.dev/nais-io/nais/images/testapp:latest
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

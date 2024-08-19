@@ -1,10 +1,8 @@
 testconfig:
   description: applications without idporten/azure sidecar should not have service overridden by wonderwall
-
 config:
   features:
     wonderwall: true
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,11 +12,8 @@ input:
     uid: "123456"
     annotations:
       nais.io/deploymentCorrelationID: corr
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
-
 tests:
   - apiVersion: v1
     kind: Service

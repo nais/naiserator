@@ -1,6 +1,5 @@
 testconfig:
   description: vanilla application running with outbound hosts configured
-
 config:
   features:
     network-policy: true
@@ -12,15 +11,12 @@ config:
         port: 80
       - host: "google.com"
         port: 443
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     accessPolicy:
@@ -33,7 +29,6 @@ input:
               - port: 8443
           - host: https://www.withprotocol.com
           - host: http://www.anotherprotocol.com
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.gke.io/v1alpha3

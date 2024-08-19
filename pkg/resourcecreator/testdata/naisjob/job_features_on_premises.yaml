@@ -1,11 +1,9 @@
 testconfig:
   description: vanilla minimal naisjob with schedule running on-premises with default configuration
-
 config:
   cluster-name: test-cluster
   features:
     nav-ca-bundle: true
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -15,14 +13,11 @@ input:
     uid: "123456"
     annotations:
       nais.io/deploymentCorrelationID: corr
-    labels:
-      team: myteam
   spec:
     image: navikt/mynaisjob:1.2.3
     activeDeadlineSeconds: 13
     ttlSecondsAfterFinished: 3
     backoffLimit: 7
-
 tests:
   - match:
       - type: subset
@@ -33,13 +28,12 @@ tests:
               nais.io/deploymentCorrelationID: corr
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - apiVersion: nais.io/v1
                 kind: Naisjob
                 name: mynaisjob
                 uid: "123456"
-
   - operation: CreateIfNotExists
     apiVersion: v1
     kind: ServiceAccount
@@ -48,7 +42,6 @@ tests:
       - type: subset
         name: "service account created"
         resource: {}
-
   - operation: CreateOrRecreate
     apiVersion: batch/v1
     kind: Job
@@ -69,7 +62,7 @@ tests:
               nais.io/deploymentCorrelationID: corr
             labels:
               app: mynaisjob
-              team: myteam
+              team: mynamespace
             name: mynaisjob
             namespace: mynamespace
             ownerReferences:
@@ -86,7 +79,7 @@ tests:
                   kubectl.kubernetes.io/default-container: mynaisjob
                 labels:
                   app: mynaisjob
-                  team: myteam
+                  team: mynamespace
                   nais.io/naisjob: "true"
                 name: mynaisjob
                 namespace: mynamespace

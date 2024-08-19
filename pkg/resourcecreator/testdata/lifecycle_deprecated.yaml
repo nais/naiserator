@@ -1,17 +1,13 @@
 testconfig:
   description: PreStopHookPath is properly added
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     preStopHookPath: /stop
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

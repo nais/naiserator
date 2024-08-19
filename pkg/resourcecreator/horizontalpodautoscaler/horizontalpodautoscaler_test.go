@@ -102,7 +102,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 
 	t.Run("should add kafka scale metric when scalingStrategy.Kafka is set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		topic := fmt.Sprintf("%s.mytopic", fixtures.ApplicationTeam)
+		topic := fmt.Sprintf("%s.mytopic", fixtures.ApplicationNamespace)
 		app.Spec.Replicas = &nais_io_v1.Replicas{
 			Min:                util.Intp(1),
 			Max:                util.Intp(10),
@@ -134,7 +134,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 
 	t.Run("should add both cpu and kafka metric when both are set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		topic := fmt.Sprintf("%s.mytopic", fixtures.ApplicationTeam)
+		topic := fmt.Sprintf("%s.mytopic", fixtures.ApplicationNamespace)
 		app.Spec.Replicas = &nais_io_v1.Replicas{
 			Min:                util.Intp(1),
 			Max:                util.Intp(10),

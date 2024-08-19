@@ -1,6 +1,5 @@
 testconfig:
   description: minimal idporten config with sidecar should result in wonderwall sidecar injected to pod
-
 config:
   cluster-name: mycluster
   features:
@@ -11,15 +10,12 @@ config:
       ingressClass: very-nginx
   wonderwall:
     image: nais/wonderwall
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     idporten:
@@ -28,7 +24,6 @@ input:
         enabled: true
     ingresses:
       - "https://my-client.nav.no/"
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -44,7 +39,7 @@ tests:
                 labels:
                   aiven: enabled
                   idporten: enabled
-                  team: myteam
+                  team: mynamespace
                   wonderwall: enabled
               spec:
                 volumes:
@@ -110,7 +105,6 @@ tests:
                       runAsGroup: 1069
                       runAsNonRoot: true
                       runAsUser: 1069
-
   - apiVersion: v1
     kind: Service
     name: myapplication

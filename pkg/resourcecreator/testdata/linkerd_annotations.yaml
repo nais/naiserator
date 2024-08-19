@@ -1,12 +1,10 @@
 testconfig:
   description: gcp application with overriden linkerd annotations
-
 config:
   features:
     linkerd: true
     network-policy: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -18,11 +16,8 @@ input:
       config.linkerd.io/some-config: some-value
       config.alpha.linkerd.io/some-config: some-value
       linkerd.io/inject: false
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -30,7 +25,6 @@ existing:
       name: mynamespace
       annotations:
         linkerd.io/inject: enabled
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1

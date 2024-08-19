@@ -1,12 +1,10 @@
 testconfig:
   description: Redis labeling and access policy
-
 config:
   linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
   aiven-project: dev-project
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,16 +12,12 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     redis:
-    - instance: naistest1
-      access: read
-    - instance: naistest2
-      access: write
-
-
+      - instance: naistest1
+        access: read
+      - instance: naistest2
+        access: write
 tests:
   - operation: CreateOrUpdate
     apiVersion: aiven.nais.io/v1
@@ -40,10 +34,10 @@ tests:
         resource:
           spec:
             redis:
-            - instance: naistest1
-              access: read
-            - instance: naistest2
-              access: write
+              - instance: naistest1
+                access: read
+              - instance: naistest2
+                access: write
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment

@@ -1,17 +1,13 @@
 testconfig:
   description: file injection
-
 config:
   features: {}
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
   metadata:
     name: mynaisjob
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     env:
@@ -27,7 +23,6 @@ input:
     filesFrom:
       - configmap: mycm
       - secret: mysecret
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob

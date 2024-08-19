@@ -1,24 +1,19 @@
 testconfig:
   description: if Kafkarator is enabled and pool name is specified, create AivenApplication resource and mount requested secret
-
 config:
   features:
     kafkarator: true
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
   metadata:
     name: mynaisjob
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     image: foo/bar
     kafka:
       pool: some-kafka-pool
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: aiven.nais.io/v1
@@ -36,7 +31,6 @@ tests:
           spec:
             kafka:
               pool: some-kafka-pool
-
   - apiVersion: batch/v1
     kind: CronJob
     name: mynaisjob

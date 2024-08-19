@@ -1,6 +1,5 @@
 testconfig:
   description: webproxy configuration is injected into the container env
-
 config:
   proxy:
     address: http://foo.bar:5224
@@ -8,7 +7,6 @@ config:
       - foo
       - bar
       - baz
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -16,11 +14,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     webproxy: true
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

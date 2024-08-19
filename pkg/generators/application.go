@@ -111,7 +111,7 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 		o.Linkerd = true
 	}
 
-	o.Team = app.Labels["team"]
+	o.Team = app.GetNamespace()
 
 	return o, nil
 }
@@ -129,10 +129,6 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	cfg, ok := config.(*Options)
 	if !ok {
 		return nil, fmt.Errorf("BUG: Application generator called without correct configuration object; fix your code")
-	}
-
-	if len(cfg.GetTeam()) == 0 {
-		return nil, fmt.Errorf("the 'team' label needs to be set in the application metadata")
 	}
 
 	ast := resource.NewAst()

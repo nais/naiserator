@@ -1,6 +1,5 @@
 testconfig:
   description: horizontal pod autoscaler is set up
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -8,14 +7,11 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     replicas:
       min: 3
       max: 6
       cpuThresholdPercentage: 37
-
 tests:
   - apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler

@@ -1,6 +1,5 @@
 testconfig:
   description: idporten config with sidecar should result in wonderwall sidecar injected to pod
-
 config:
   cluster-name: mycluster
   features:
@@ -11,15 +10,12 @@ config:
       ingressClass: very-nginx
   wonderwall:
     image: nais/wonderwall
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     idporten:
@@ -57,7 +53,6 @@ input:
     readiness:
       path: internal/readiness
     terminationGracePeriodSeconds: 60
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -72,7 +67,7 @@ tests:
               metadata:
                 labels:
                   aiven: enabled
-                  team: myteam
+                  team: mynamespace
                   wonderwall: enabled
               spec:
                 containers:

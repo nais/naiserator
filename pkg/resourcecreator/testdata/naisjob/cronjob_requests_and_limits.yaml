@@ -1,6 +1,5 @@
 testconfig:
   description: requests and limits are copied into cronjob resource
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -8,8 +7,6 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     resources:
@@ -19,7 +16,6 @@ input:
       limits:
         cpu: 150m
         memory: 2G
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob

@@ -1,12 +1,10 @@
 testconfig:
   description: additional cloudsql databases and users
-
 config:
   features:
     linkerd: true
     cnrm: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,8 +12,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     gcp:
@@ -27,7 +23,6 @@ input:
                 - name: user-three3
           type: POSTGRES_12
           name: myinstance
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -35,7 +30,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
@@ -65,7 +59,6 @@ tests:
               diskSize: 10
               diskType: PD_SSD
               tier: db-f1-micro
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLDatabase
     operation: CreateOrUpdate
@@ -83,7 +76,6 @@ tests:
           spec:
             instanceRef:
               name: myinstance
-
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
@@ -99,7 +91,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Application
                 name: myapplication
@@ -113,7 +105,6 @@ tests:
             NAIS_DATABASE_MYINSTANCE_MYDB_URL: postgres://myinstance:.{43}@127.0.0.1:5432/mydb
             NAIS_DATABASE_MYINSTANCE_MYDB_USERNAME: myinstance
           type: Opaque
-
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
@@ -129,7 +120,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Application
                 name: myapplication
@@ -143,7 +134,6 @@ tests:
             NAIS_DATABASE_USER_TWO_MYDB_USERNAME: user-two
             NAIS_DATABASE_USER_TWO_MYDB_URL: postgres://user-two:.{43}@127.0.0.1:5432/mydb
           type: Opaque
-
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists
@@ -159,7 +149,7 @@ tests:
             namespace: mynamespace
             labels:
               app: myapplication
-              team: myteam
+              team: mynamespace
             ownerReferences:
               - kind: Application
                 name: myapplication
@@ -173,7 +163,6 @@ tests:
             NAIS_DATABASE_USER_THREE3_MYDB_USERNAME: user-three3
             NAIS_DATABASE_USER_THREE3_MYDB_URL: postgres://user-three3:.{43}@127.0.0.1:5432/mydb
           type: Opaque
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists

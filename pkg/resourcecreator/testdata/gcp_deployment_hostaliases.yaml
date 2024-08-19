@@ -1,6 +1,5 @@
 testconfig:
   description: specifying custom port and protocol for mesh-external services in gcp
-
 config:
   features:
     linkerd: true
@@ -13,7 +12,6 @@ config:
       address: 10.183.32.47
     - host: b27apvl00047.preprod.local
       address: 10.183.32.48
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -21,11 +19,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -33,7 +28,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1

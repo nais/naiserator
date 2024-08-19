@@ -1,6 +1,5 @@
 testconfig:
-    description: vanilla application running with linkerd, default configuration and network policies
-
+  description: vanilla application running with linkerd, default configuration and network policies
 config:
   features:
     linkerd: true
@@ -9,8 +8,6 @@ config:
   google-project-id: google-project-id
   cluster-name: mycluster
   nais-namespace: nais-system
-
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -18,41 +15,38 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     accessPolicy:
-        outbound:
-            external:
-                - ipv4: 1.2.3.4
-                  ports:
-                      - port: 1111
-
+      outbound:
+        external:
+          - ipv4: 1.2.3.4
+            ports:
+              - port: 1111
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     name: myapplication
     operation: CreateOrUpdate
     match:
-      -   type: exact
-          name: "outbound ips are turned into ipBlocks"
-          exclude:
-            - '.spec.ingress'
-            - .metadata
-            - .status
-            - '.spec.policyTypes'
-            - '.spec.podSelector'
-          resource:
-            spec:
-              egress:
-                - to:
+      - type: exact
+        name: "outbound ips are turned into ipBlocks"
+        exclude:
+          - '.spec.ingress'
+          - .metadata
+          - .status
+          - '.spec.policyTypes'
+          - '.spec.podSelector'
+        resource:
+          spec:
+            egress:
+              - to:
                   - namespaceSelector: {}
                     podSelector:
-                        matchLabels:
-                            k8s-app: kube-dns
-                - to:
-                    - ipBlock:
-                        cidr: 1.2.3.4/32
-                  ports:
-                      - port: 1111
+                      matchLabels:
+                        k8s-app: kube-dns
+              - to:
+                  - ipBlock:
+                      cidr: 1.2.3.4/32
+                ports:
+                  - port: 1111

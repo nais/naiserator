@@ -1,6 +1,5 @@
 testconfig:
   description: egress rules will create network policies
-
 config:
   features:
     linkerd: true
@@ -8,15 +7,12 @@ config:
     jwker: true
   google-project-id: google-project-id
   cluster-name: mycluster
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
   metadata:
     name: mynaisjob
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     accessPolicy:
@@ -27,7 +23,6 @@ input:
           - application: foo
             namespace: bar
             cluster: othercluster
-
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy

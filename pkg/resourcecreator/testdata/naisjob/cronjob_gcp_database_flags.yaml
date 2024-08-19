@@ -1,12 +1,10 @@
 testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration
-
 config:
   features:
     cnrm: true
     linkerd: true
   google-project-id: google-project-id
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -21,8 +19,6 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     image: navikt/mynaisjob:1.2.3
@@ -34,7 +30,6 @@ input:
           flags:
             - name: max_connections
               value: "142"
-
 tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance

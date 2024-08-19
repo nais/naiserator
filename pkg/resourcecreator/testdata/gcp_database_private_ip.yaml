@@ -1,13 +1,11 @@
 testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration with pre-existing private ip
-
 config:
   features:
     cnrm: true
     linkerd: true
     sql-instance-in-shared-vpc: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -15,8 +13,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     gcp:
@@ -26,7 +22,6 @@ input:
               users:
                 - name: extra
           type: POSTGRES_11
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -34,7 +29,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
     metadata:
@@ -64,7 +58,6 @@ existing:
           queryInsightsEnabled: true
           recordApplicationTags: false
           recordClientAddress: false
-
 tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
@@ -99,7 +92,6 @@ tests:
                 queryInsightsEnabled: true
                 recordApplicationTags: false
                 recordClientAddress: false
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLDatabase
     operation: CreateOrUpdate
@@ -117,7 +109,6 @@ tests:
           spec:
             instanceRef:
               name: myapplication
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -141,7 +132,6 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication
                   key: NAIS_DATABASE_MYAPPLICATION_MYDB_PASSWORD
-
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLUser
     operation: CreateIfNotExists
@@ -165,7 +155,6 @@ tests:
                 secretKeyRef:
                   name: google-sql-myapplication-mydb-extra-4d7c8582
                   key: NAIS_DATABASE_EXTRA_MYDB_PASSWORD
-
   - apiVersion: apps/v1
     kind: Deployment
     operation: CreateOrUpdate

@@ -1,12 +1,10 @@
 testconfig:
   description: google storage bucket with retention period
-
 config:
   features:
     access-policy: false
     cnrm: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,15 +12,12 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     gcp:
       buckets:
         - name: myapplication
           uniformBucketLevelAccess: true
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -30,7 +25,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
@@ -49,7 +43,6 @@ tests:
             namespace: serviceaccounts
           spec:
             displayName: myapplication
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
     operation: CreateIfNotExists
@@ -71,7 +64,6 @@ tests:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
               name: myapplicati-mynamespac-w4o5cwa
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
@@ -91,7 +83,6 @@ tests:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
               kind: StorageBucket
               name: myapplication
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
@@ -130,7 +121,6 @@ tests:
               apiVersion: storage.cnrm.cloud.google.com/v1beta1
               kind: StorageBucket
               name: myapplication
-
   - apiVersion: storage.cnrm.cloud.google.com/v1beta1
     kind: StorageBucket
     operation: CreateOrUpdate
@@ -148,7 +138,6 @@ tests:
           spec:
             location: europe-north1
             uniformBucketLevelAccess: true
-
   - apiVersion: apps/v1
     kind: Deployment
     operation: CreateOrUpdate

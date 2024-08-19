@@ -1,6 +1,5 @@
 testconfig:
   description: when in legacy environment, and we have additionalIngressMappings, we should create ingress for each mapping
-
 config:
   features:
     linkerd: true
@@ -10,20 +9,16 @@ config:
       ingressClass: nais-ingress
     - domainSuffix: .nav.no
       ingressClass: nais-ingress-external
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     ingresses:
       - https://banan.nav.no
       - https://banan.intern.nav.no
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -31,7 +26,6 @@ existing:
       name: mynamespace
       annotations:
         linkerd.io/inject: enabled
-
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: Ingress

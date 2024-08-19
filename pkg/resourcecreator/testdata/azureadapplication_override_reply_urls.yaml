@@ -1,6 +1,5 @@
 testconfig:
   description: azure application with reply urls
-
 config:
   features:
     linkerd: true
@@ -12,15 +11,12 @@ config:
       ingressClass: adeo-gateway
     - domainSuffix: .domain
       ingressClass: domain-gateway
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     azure:
@@ -40,7 +36,6 @@ input:
     ingresses:
       - https://my.application.adeo.no/foo/bar
       - https://my.application.domain/foo/bar/baz
-
 tests:
   - apiVersion: nais.io/v1
     kind: AzureAdApplication

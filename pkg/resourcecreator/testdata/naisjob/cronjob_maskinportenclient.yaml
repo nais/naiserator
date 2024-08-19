@@ -1,20 +1,16 @@
 testconfig:
   description: minimal maskinporten config in naisjob spec should result in MaskinportenClient
-
 config:
   google-project-id: google-project-id
   cluster-name: mycluster
   features:
     maskinporten: true
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
   metadata:
     name: mynaisjob
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     image: foo/bar
@@ -28,7 +24,6 @@ input:
             enabled: true
             product: "arbeid"
             atMaxAge: 30
-
 tests:
   - apiVersion: nais.io/v1
     kind: MaskinportenClient
@@ -51,7 +46,6 @@ tests:
                   enabled: true
                   product: "arbeid"
                   atMaxAge: 30
-
   - apiVersion: nais.io/v1
     kind: MaskinportenClient
     name: mynaisjob
@@ -62,7 +56,6 @@ tests:
         resource:
           spec:
             secretName: ^maskinporten-mynaisjob-.{8}$
-
   - apiVersion: batch/v1
     kind: CronJob
     name: mynaisjob

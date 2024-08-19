@@ -41,6 +41,7 @@ func CreateObjectMeta(source Source) metav1.ObjectMeta {
 	}
 
 	labels["app"] = source.GetName()
+	labels["team"] = source.GetNamespace()
 
 	return metav1.ObjectMeta{
 		Name:      source.GetName(),

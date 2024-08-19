@@ -1,6 +1,5 @@
 testconfig:
   description: azure application with access policies
-
 config:
   features:
     linkerd: true
@@ -12,15 +11,12 @@ config:
       ingressClass: adeo-gateway
     - domainSuffix: .domain
       ingressClass: domain-gateway
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
     annotations:
       azure.nais.io/preserve: true
       not-azure.nais.io/something: true
@@ -45,19 +41,19 @@ input:
             namespace: t1
             cluster: other-cluster
           - application: app4
-            namespace: myteam
+            namespace: mynamespace
             cluster: other-cluster
             permissions:
               roles:
                 - some-role
           - application: app5
-            namespace: myteam
+            namespace: mynamespace
             cluster: other-cluster
             permissions:
               scopes:
                 - some-scope
           - application: app6
-            namespace: myteam
+            namespace: mynamespace
             cluster: other-cluster
             permissions:
               roles:
@@ -67,7 +63,6 @@ input:
     ingresses:
       - https://my.application.adeo.no/foo/bar
       - https://my.application.domain/foo/bar/baz
-
 tests:
   - apiVersion: nais.io/v1
     kind: AzureAdApplication
@@ -103,19 +98,19 @@ tests:
                 cluster: other-cluster
                 namespace: t1
               - application: app4
-                namespace: myteam
+                namespace: mynamespace
                 cluster: other-cluster
                 permissions:
                   roles:
                     - some-role
               - application: app5
-                namespace: myteam
+                namespace: mynamespace
                 cluster: other-cluster
                 permissions:
                   scopes:
                     - some-scope
               - application: app6
-                namespace: myteam
+                namespace: mynamespace
                 cluster: other-cluster
                 permissions:
                   roles:

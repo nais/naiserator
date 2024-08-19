@@ -1,12 +1,10 @@
 testconfig:
   description: vanilla application running in NAAS with default configuration and access policies
-
 config:
   features:
     linkerd: true
     network-policy: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -18,11 +16,8 @@ input:
       nais.io/run-as-user: "6969"
       nais.io/run-as-group: "69"
       nais.io/read-only-file-system: "false"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1

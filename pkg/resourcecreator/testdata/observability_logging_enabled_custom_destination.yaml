@@ -1,13 +1,11 @@
 testconfig:
   description: set logging labels when logging is enabled
-
 config:
   observability:
     logging:
       destinations:
         - elastic
         - loki
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -15,8 +13,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     observability:
@@ -25,7 +21,6 @@ input:
         destinations:
           - id: elastic
           - id: loki
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment
@@ -40,7 +35,7 @@ tests:
               metadata:
                 labels:
                   app: myapplication
-                  team: myteam
+                  team: mynamespace
                   logs.nais.io/flow-default: "false"
                   logs.nais.io/flow-elastic: "true"
                   logs.nais.io/flow-loki: "true"

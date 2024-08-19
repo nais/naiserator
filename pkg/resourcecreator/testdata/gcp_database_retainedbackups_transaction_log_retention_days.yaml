@@ -1,12 +1,10 @@
 testconfig:
   description: google cloud sql instances provisioned with databases have the correct retained backups and transaction log retention days
-
 config:
   features:
     cnrm: true
     linkerd: true
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,8 +12,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     gcp:
@@ -26,7 +22,6 @@ input:
           retainedBackups: 3
           # transactionLogRetentionDays <= retainedBackups
           transactionLogRetentionDays: 3
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -34,7 +29,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 tests:
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1
     kind: SQLInstance
@@ -48,6 +42,6 @@ tests:
             settings:
               backupConfiguration:
                 enabled: true
-                backupRetentionSettings: 
+                backupRetentionSettings:
                   retainedBackups: 3
                   transactionLogRetentionDays: 3

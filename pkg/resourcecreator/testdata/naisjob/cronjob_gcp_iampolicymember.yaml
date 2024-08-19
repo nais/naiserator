@@ -1,11 +1,9 @@
 testconfig:
   description: specifying custom port and protocol for mesh-external services in gcp
-
 config:
   features:
     cnrm: true
   google-project-id: google-project-id
-
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -13,7 +11,6 @@ existing:
       name: mynamespace
       annotations:
         cnrm.cloud.google.com/project-id: team-project-id
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -21,8 +18,6 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     image: navikt/mynaisjob:1.2.3
@@ -33,7 +28,6 @@ input:
             apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
             kind: PubSubSubscription
             name: subscriptions/my-subscription
-
 tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
@@ -52,7 +46,6 @@ tests:
             namespace: serviceaccounts
           spec:
             displayName: mynaisjob
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
     operation: CreateIfNotExists
@@ -74,7 +67,6 @@ tests:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
               name: mynaisjob-mynamespac-uih2v7i
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists

@@ -1,6 +1,5 @@
 testconfig:
   description: vanilla application running in legacy GCP with default configuration and access policies
-
 config:
   features:
     linkerd: true
@@ -9,7 +8,6 @@ config:
   nais-namespace: nais-system
   google-project-id: google-project-id
   cluster-name: prod-gcp
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -17,11 +15,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
-
 tests:
   - apiVersion: v1
     kind: Service
@@ -43,7 +38,6 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
-
   - operation: CreateIfNotExists
     apiVersion: v1
     kind: ServiceAccount
@@ -55,7 +49,6 @@ tests:
           metadata:
             annotations:
               iam.gke.io/gcp-service-account: myapplicati-mynamespac-w4o5cwa@google-project-id.iam.gserviceaccount.com
-
   - operation: CreateOrUpdate
     apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
@@ -80,7 +73,6 @@ tests:
                   target:
                     type: Utilization
                     averageUtilization: 50
-
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
@@ -109,7 +101,6 @@ tests:
             policyTypes:
               - Ingress
               - Egress
-
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
@@ -142,7 +133,6 @@ tests:
             policyTypes:
               - Ingress
               - Egress
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
     operation: CreateIfNotExists
@@ -160,7 +150,6 @@ tests:
             namespace: serviceaccounts
           spec:
             displayName: myapplication
-
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicy
     operation: CreateIfNotExists
@@ -182,7 +171,6 @@ tests:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
               name: myapplicati-mynamespac-w4o5cwa
-
   - operation: CreateOrUpdate
     apiVersion: policy/v1
     kind: PodDisruptionBudget

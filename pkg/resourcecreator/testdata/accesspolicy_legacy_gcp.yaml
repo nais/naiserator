@@ -1,6 +1,5 @@
 testconfig:
   description: vanilla application running with linkerd, default configuration and network policies
-
 config:
   features:
     linkerd: true
@@ -15,8 +14,6 @@ config:
     - domainSuffix: .domain
       ingressClass: domain-gateway
   nais-namespace: nais-system
-
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -24,8 +21,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     ingresses:
@@ -50,7 +45,6 @@ input:
           - host: www.external-application.com
           - host: https://www.another-external-application.com
           - host: http://www.yet-another-external-application.com
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
@@ -80,7 +74,6 @@ tests:
             podSelector:
               matchLabels:
                 app: myapplication
-
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
@@ -125,7 +118,7 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: q1
-                  - podSelector: { }
+                  - podSelector: {}
                     namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: t1
@@ -134,7 +127,7 @@ tests:
                   - podSelector:
                       matchLabels:
                         k8s-app: kube-dns
-                    namespaceSelector: { }
+                    namespaceSelector: {}
               - to:
                   - podSelector:
                       matchLabels:

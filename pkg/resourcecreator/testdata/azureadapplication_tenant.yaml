@@ -1,28 +1,23 @@
 testconfig:
   description: azure application with explicitly targeted tenant
-
 config:
   features:
     linkerd: true
     azurerator: true
   google-project-id: google-project-id
   cluster-name: mycluster
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     azure:
       application:
         enabled: true
         tenant: trygdeetaten.no
-
 tests:
   - apiVersion: nais.io/v1
     kind: AzureAdApplication

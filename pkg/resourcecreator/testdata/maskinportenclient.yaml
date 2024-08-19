@@ -1,20 +1,16 @@
 testconfig:
   description: minimal maskinporten config in application spec should result in MaskinportenClient
-
 config:
   features:
     maskinporten: true
   google-project-id: google-project-id
   cluster-name: mycluster
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     maskinporten:
@@ -27,7 +23,6 @@ input:
             enabled: true
             product: "arbeid"
             atMaxAge: 30
-
 tests:
   - apiVersion: nais.io/v1
     kind: MaskinportenClient
@@ -50,7 +45,6 @@ tests:
                   enabled: true
                   product: "arbeid"
                   atMaxAge: 30
-
   - apiVersion: nais.io/v1
     kind: MaskinportenClient
     name: myapplication
@@ -61,7 +55,6 @@ tests:
         resource:
           spec:
             secretName: ^maskinporten-myapplication-9561321b$
-
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment

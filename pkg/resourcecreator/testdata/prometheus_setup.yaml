@@ -1,6 +1,5 @@
 testconfig:
   description: prometheus is enabled with unique scrape port and custom scrape path
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -8,15 +7,12 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     port: 11335
     prometheus:
       enabled: true
       path: "/scrape/path"
       port: "22222"
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment
@@ -37,6 +33,3 @@ tests:
                 containers:
                   - ports:
                       - containerPort: 11335
-
-
-

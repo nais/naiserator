@@ -1,10 +1,8 @@
 testconfig:
   description: leader election container injection
-
 config:
   leader-election:
     image: "nais/elector:latest"
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -12,11 +10,8 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     leaderElection: true
-
 tests:
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
@@ -37,7 +32,6 @@ tests:
             - kind: ServiceAccount
               name: myapplication
               namespace: mynamespace
-
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication

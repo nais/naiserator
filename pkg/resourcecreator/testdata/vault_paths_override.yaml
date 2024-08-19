@@ -1,6 +1,5 @@
 testconfig:
   description: vault enabled with user specified path for default app secrets
-
 config:
   features:
     vault: true
@@ -9,7 +8,6 @@ config:
     kv-path: /kv/preprod/fss
     auth-path: auth/kubernetes/preprod/fss/login
     init-container-image: navikt/vault-sidekick:v0.3.10-d122b16
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -17,15 +15,12 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     vault:
       enabled: true
       paths:
         - kvPath: "/kv/preprod/fss/myapplication/mynamespace"
           mountPath: "/var/run/secrets/nais.io/vault"
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

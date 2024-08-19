@@ -1,19 +1,15 @@
 testconfig:
   description: prometheus port is set in deployment and annotations
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     port: 11335
     prometheus:
       path: "/scrape/path"
-
 tests:
   - apiVersion: apps/v1
     kind: Deployment

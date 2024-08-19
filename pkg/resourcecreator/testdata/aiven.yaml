@@ -1,23 +1,18 @@
 testconfig:
   description: if Kafkarator is enabled and pool name is specified, create AivenApplication resource and mount requested secret
-
 config:
   features:
     kafkarator: true
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
-    labels:
-      team: myteam
   spec:
     image: foo/bar
     kafka:
       pool: some-kafka-pool
-
 tests:
   - operation: CreateOrUpdate
     apiVersion: aiven.nais.io/v1

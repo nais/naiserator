@@ -1,12 +1,10 @@
 testconfig:
   description: set logging labels when logging is enabled
-
 config:
   observability:
     logging:
       destinations:
         - elastic
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -14,8 +12,6 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     observability:
@@ -24,5 +20,4 @@ input:
         destinations:
           - id: elastic
           - id: loki
-
 error: 'logging destination "loki" does not exist in cluster'

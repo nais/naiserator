@@ -1,9 +1,7 @@
 testconfig:
   description: override service name and port
-
 config:
   google-project-id: google-project-id
-
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -11,15 +9,12 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/myapplication:1.2.3
     port: 1234
     service:
       port: 2345
       protocol: nais
-
 tests:
   - apiVersion: v1
     kind: Service
@@ -41,7 +36,6 @@ tests:
             selector:
               app: myapplication
             type: ClusterIP
-
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment

@@ -1,13 +1,11 @@
 testconfig:
   description: set logging labels when logging is enabled
-
 config:
   observability:
     logging:
       destinations:
         - elastic
         - loki
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -15,8 +13,6 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     image: navikt/mynaisjob:1.2.3
     schedule: "* 2 * * *"
@@ -26,7 +22,6 @@ input:
         destinations:
           - id: elastic
           - id: loki
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob
@@ -43,7 +38,7 @@ tests:
                   metadata:
                     labels:
                       app: mynaisjob
-                      team: myteam
+                      team: mynamespace
                       logs.nais.io/flow-default: "false"
                       logs.nais.io/flow-elastic: "true"
                       logs.nais.io/flow-loki: "true"

@@ -1,6 +1,5 @@
 testconfig:
   description: vault enabled with sidecar enabled and user specified path for default app secrets
-
 config:
   features:
     vault: true
@@ -9,7 +8,6 @@ config:
     kv-path: /kv/preprod/fss
     auth-path: auth/kubernetes/preprod/fss/login
     init-container-image: navikt/vault-sidekick:v0.3.10-d122b16
-
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -17,8 +15,6 @@ input:
     name: mynaisjob
     namespace: mynamespace
     uid: "123456"
-    labels:
-      team: myteam
   spec:
     schedule: "* 2 * * *"
     vault:
@@ -27,7 +23,6 @@ input:
       paths:
         - kvPath: /kv/preprod/fss/mynaisjob/mynamespace
           mountPath: /var/run/secrets/nais.io/vault
-
 tests:
   - apiVersion: batch/v1
     kind: CronJob
