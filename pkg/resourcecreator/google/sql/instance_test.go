@@ -47,6 +47,8 @@ func (m *MockConfig) SqlInstanceHasPrivateIpInSharedVpc() bool {
 }
 
 func TestGoogleSqlInstance(t *testing.T) {
+	const tier = "db-custom-1-3840"
+
 	app := fixtures.MinimalApplication()
 
 	cfg := &MockConfig{
@@ -60,15 +62,17 @@ func TestGoogleSqlInstance(t *testing.T) {
 	spec := &nais.CloudSqlInstance{
 		Name: app.Name,
 		Type: "POSTGRES_11",
+		Tier: tier,
 	}
 	spec, err := google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
 	assert.NoError(t, err)
 
-	googleSqlInstance := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+	googleSqlInstance, err := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+	assert.NoError(t, err)
 	assert.Equal(t, app.Name, googleSqlInstance.Name)
 	assert.Equal(t, fmt.Sprintf("PD_%s", google_sql.DefaultSqlInstanceDiskType), googleSqlInstance.Spec.Settings.DiskType)
 	assert.Equal(t, google_sql.DefaultSqlInstanceDiskSize, googleSqlInstance.Spec.Settings.DiskSize)
-	assert.Equal(t, google_sql.DefaultSqlInstanceTier, googleSqlInstance.Spec.Settings.Tier)
+	assert.Equal(t, tier, googleSqlInstance.Spec.Settings.Tier)
 	assert.Equal(t, cfg.GoogleTeamProjectID, googleSqlInstance.Annotations[google.ProjectIdAnnotation])
 	assert.Equal(t, "02:00", googleSqlInstance.Spec.Settings.BackupConfiguration.StartTime)
 	assert.True(t, googleSqlInstance.Spec.Settings.BackupConfiguration.Enabled)
@@ -85,6 +89,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 			Name:           app.Name,
 			Type:           nais.CloudSqlInstanceTypePostgres12,
 			AutoBackupHour: util.Intp(backupHour),
+			Tier:           tier,
 			Maintenance: &nais.Maintenance{
 				Day:  maintenanceDay,
 				Hour: util.Intp(maintenanceHour),
@@ -92,7 +97,8 @@ func TestGoogleSqlInstance(t *testing.T) {
 		}
 		spec, err := google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance, err := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		assert.NoError(t, err)
 		assert.Equal(t, "00:00", googleSqlInstance.Spec.Settings.BackupConfiguration.StartTime, "setting backup hour to 0 yields 00:00 as start time")
 		assert.Equal(t, maintenanceHour, googleSqlInstance.Spec.Settings.MaintenanceWindow.Hour)
 		assert.Equal(t, maintenanceDay, googleSqlInstance.Spec.Settings.MaintenanceWindow.Day)
@@ -106,6 +112,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 		spec := &nais.CloudSqlInstance{
 			Name: naisSpecConfiguredInstanceName,
 			Type: nais.CloudSqlInstanceTypePostgres12,
+			Tier: tier,
 		}
 
 		spec, err = google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
@@ -118,6 +125,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		spec := &nais.CloudSqlInstance{
 			Type: nais.CloudSqlInstanceTypePostgres12,
+			Tier: tier,
 		}
 
 		spec, err = google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
@@ -132,11 +140,13 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		spec := &nais.CloudSqlInstance{
 			DiskSize: alternateDiskSize,
+			Tier:     tier,
 		}
 
 		spec, err = google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance, err := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		assert.NoError(t, err)
 		assert.Equal(t, googleSqlInstance.Spec.Settings.DiskSize, alternateDiskSize)
 	})
 
@@ -146,11 +156,14 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		spec := &nais.CloudSqlInstance{}
+		spec := &nais.CloudSqlInstance{
+			Tier: tier,
+		}
 
 		spec, err = google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance, err := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		assert.NoError(t, err)
 		assert.Nil(t, googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef)
 	})
 
@@ -160,11 +173,14 @@ func TestGoogleSqlInstance(t *testing.T) {
 
 		app := fixtures.MinimalApplication()
 
-		spec := &nais.CloudSqlInstance{}
+		spec := &nais.CloudSqlInstance{
+			Tier: tier,
+		}
 
 		spec, err = google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
 		assert.NoError(t, err)
-		googleSqlInstance := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		googleSqlInstance, err := google_sql.CreateGoogleSqlInstance(resource.CreateObjectMeta(app), spec, cfg)
+		assert.NoError(t, err)
 		assert.NotNil(t, googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef)
 	})
 
@@ -175,10 +191,12 @@ func TestGoogleSqlInstance(t *testing.T) {
 				{
 					Type: "POSTGRES_11",
 					Name: "postgres-11",
+					Tier: tier,
 				},
 				{
 					Type: "POSTGRES_12",
 					Name: "postgres-12",
+					Tier: tier,
 				},
 			},
 		}
@@ -196,6 +214,7 @@ func TestGoogleSqlInstance(t *testing.T) {
 				{
 					Type: "POSTGRES_15",
 					Name: "postgres-15",
+					Tier: tier,
 					Databases: []nais.CloudSqlDatabase{
 						{
 							Name: "db1",

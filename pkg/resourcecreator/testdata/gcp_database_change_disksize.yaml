@@ -20,6 +20,7 @@ input:
             - name: mydb
           type: POSTGRES_11
           diskSize: 20
+          tier: db-f1-micro
 existing:
   - kind: Namespace
     apiVersion: v1

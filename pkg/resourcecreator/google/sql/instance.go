@@ -26,7 +26,6 @@ const (
 	AvailabilityTypeZonal            = "ZONAL"
 	DefaultSqlInstanceDiskType       = nais_io_v1.CloudSqlInstanceDiskTypeSSD
 	DefaultSqlInstanceAutoBackupHour = 2
-	DefaultSqlInstanceTier           = "db-f1-micro"
 	DefaultSqlInstanceDiskSize       = 10
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
 
@@ -76,7 +75,10 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	naisSqlDatabase := naisSqlInstance.Database()
 	googleTeamProjectID := cfg.GetGoogleTeamProjectID()
 
-	googleSqlInstance := CreateGoogleSqlInstance(resource.CreateObjectMeta(source), naisSqlInstance, cfg)
+	googleSqlInstance, err := CreateGoogleSqlInstance(resource.CreateObjectMeta(source), naisSqlInstance, cfg)
+	if err != nil {
+		return err
+	}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, googleSqlInstance)
 
 	googleIAMPolicyMember := CreateIAMPolicyMemberForInstance(source, googleSqlInstance.Name, cfg)
@@ -111,10 +113,14 @@ func availabilityType(highAvailability bool) string {
 	}
 }
 
-func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudSqlInstance, cfg Config) *google_sql_crd.SQLInstance {
+func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudSqlInstance, cfg Config) (*google_sql_crd.SQLInstance, error) {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
+
+	if len(instance.Tier) == 0 {
+		return nil, fmt.Errorf("DB instance tier missing. Previous default value was `db-f1-micro` (recommended only for development); closest recommended value for production use is `db-custom-1-3840`")
+	}
 
 	if !instance.CascadingDelete {
 		// Prevent out-of-band objects from being deleted when the Kubernetes resource is deleted.
@@ -200,7 +206,7 @@ func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.
 		}
 	}
 
-	return sqlInstance
+	return sqlInstance, nil
 }
 
 func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, appName string) (*nais_io_v1.CloudSqlInstance, error) {
@@ -209,7 +215,6 @@ func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, app
 	}
 
 	defaultInstance := nais_io_v1.CloudSqlInstance{
-		Tier:     DefaultSqlInstanceTier,
 		DiskType: DefaultSqlInstanceDiskType,
 		DiskSize: DefaultSqlInstanceDiskSize,
 		// This default will be further formatted by CreateGoogleSQLDatabase().

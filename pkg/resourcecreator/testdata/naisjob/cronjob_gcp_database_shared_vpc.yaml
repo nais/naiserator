@@ -28,6 +28,7 @@ input:
         - databases:
             - name: mydb
           type: POSTGRES_11
+          tier: db-f1-micro
 tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
