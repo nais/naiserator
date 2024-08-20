@@ -429,6 +429,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		SqlInstances: []nais_io_v1.CloudSqlInstance{
 			{
 				Type: nais_io_v1.CloudSqlInstanceTypePostgres11,
+				Tier: "db-f1-micro",
 				Databases: []nais_io_v1.CloudSqlDatabase{
 					{
 						Name: app.Name,
