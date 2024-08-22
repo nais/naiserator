@@ -42,7 +42,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleBindingObjectMeta))
 	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
-	ast.Env = append(ast.Env, electorPathEnv())
+	ast.Env = append(ast.Env, electorEnv()...)
 	return nil
 }
 
@@ -68,10 +68,20 @@ func roleBinding(appObjectMeta, roleObjectMeta metav1.ObjectMeta) *rbacv1.RoleBi
 	}
 }
 
-func electorPathEnv() corev1.EnvVar {
-	return corev1.EnvVar{
-		Name:  "ELECTOR_PATH",
-		Value: "localhost:4040",
+func electorEnv() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{
+			Name:  "ELECTOR_PATH",
+			Value: "localhost:4040",
+		},
+		{
+			Name:  "ELECTOR_GET_URL",
+			Value: "http://localhost:4040/",
+		},
+		{
+			Name:  "ELECTOR_SSE_URL",
+			Value: "http://localhost:4040/sse",
+		},
 	}
 }
 
