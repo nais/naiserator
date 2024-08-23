@@ -138,6 +138,24 @@ func backendProtocol(portName string) string {
 	}
 }
 
+func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
+	domains := make([]string, len(gatewayMappings))
+
+	for _, v := range gatewayMappings {
+		domains = append(domains, v.DomainSuffix)
+	}
+	return domains
+}
+
+func domain(host string) string {
+	a := strings.Split(host, ".")
+	if len(a) < 2 {
+		return host
+	}
+	return strings.Join(a[1:], ".")
+
+}
+
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
 	if err != nil {
@@ -155,7 +173,11 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 
 		if ingressClass == nil {
-			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
+			return nil,
+				fmt.Errorf("domain '%s' is not supported in this cluster. Your domain is '.%s', try one of these '%v'",
+					rule.Host,
+					domain(rule.Host),
+					supportedDomains(cfg.GetGatewayMappings()))
 		}
 
 		ingress := ingresses[*ingressClass]
