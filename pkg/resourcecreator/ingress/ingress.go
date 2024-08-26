@@ -153,7 +153,6 @@ func domain(host string) string {
 		return host
 	}
 	return strings.Join(a[1:], ".")
-
 }
 
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
