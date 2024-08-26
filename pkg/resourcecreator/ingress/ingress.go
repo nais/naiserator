@@ -8,18 +8,16 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
-	networkingv1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
-
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
 	regexSuffix = "(/.*)?"
-	domainDocs  = "https://docs.%s.cloud.nais.io/workloads/reference/environments/#ingress-domains"
 )
 
 type Source interface {
@@ -32,6 +30,7 @@ type Source interface {
 type Config interface {
 	GetGatewayMappings() []config.GatewayMapping
 	IsLinkerdEnabled() bool
+	GetDocUrl() string
 	GetConfig() config.Config
 }
 
@@ -151,8 +150,17 @@ func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
 	return domains
 }
 
+func domain(host string) string {
+	a := strings.Split(host, ".")
+	if len(a) < 2 {
+		return host
+	}
+	return strings.Join(a[1:], ".")
+}
+
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
+
 	if err != nil {
 		return nil, err
 	}
@@ -164,20 +172,17 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 	ingresses := make(map[string]*networkingv1.Ingress)
 
-	clusterConfig := cfg.GetConfig()
-	clusterName := clusterConfig.ClusterName
-	gatewayMappings := cfg.GetGatewayMappings()
-	tenant := clusterConfig.Tenant.Name
 	for _, rule := range rules {
 		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 
 		if ingressClass == nil {
 			return nil,
-				fmt.Errorf("domain '%s' is not supported in %s. Supported domains: '%v'. See documentation at: %s",
+				fmt.Errorf("domain '%s' is not supported in '%s'. You are attempting to add your ingress to '.%s', try one of these '%v' or see the docs at: '%s/workloads/reference/environments/#ingress-domains'",
 					rule.Host,
-					clusterName,
-					supportedDomains(gatewayMappings),
-					fmt.Sprintf(domainDocs, tenant),
+					cfg.GetConfig().ClusterName,
+					domain(rule.Host),
+					supportedDomains(cfg.GetGatewayMappings()),
+					cfg.GetDocUrl(),
 				)
 		}
 

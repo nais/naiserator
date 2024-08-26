@@ -157,7 +157,7 @@ type Config struct {
 	ApiServerIp                       string           `json:"api-server-ip"`
 	Bind                              string           `json:"bind"`
 	ClusterName                       string           `json:"cluster-name"`
-	Tenant                            Tenant           `json:"tenant"`
+	DocUrl                            string           `json:"doc-url"`
 	DryRun                            bool             `json:"dry-run"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
 	Features                          Features         `json:"features"`

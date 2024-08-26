@@ -53,6 +53,10 @@ values:
     displayName: Enable Linkerd annotations
     config:
       type: bool
+  naiserator.doc-url:
+    computed:
+      template: |
+        "docs.{{ .Tenant.Name }}.cloud.nais.io"
   naiserator.features.cnrm:
     displayName: Enable CNRM
     computed:
