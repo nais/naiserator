@@ -22,6 +22,9 @@ type Options struct {
 	SqlInstance         SqlInstance
 }
 
+func (o *Options) GetConfig() config.Config {
+	return o.Config
+}
 func (o *Options) SqlInstanceExists() bool {
 	return o.SqlInstance.exists
 }
