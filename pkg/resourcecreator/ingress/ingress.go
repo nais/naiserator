@@ -11,14 +11,16 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 )
 
-const regexSuffix = "(/.*)?"
+const (
+	regexSuffix = "(/.*)?"
+	domainDocs  = "https://docs.%s.cloud.nais.io/workloads/reference/environments/#ingress-domains"
+)
 
 type Source interface {
 	resource.Source
@@ -149,27 +151,6 @@ func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
 	return domains
 }
 
-func domain(host string) string {
-	a := strings.Split(host, ".")
-	if len(a) < 2 {
-		return host
-	}
-	return strings.Join(a[1:], ".")
-}
-
-func docs(tenant string) string {
-	tenantDocs := map[string]string{
-		"nav": "https://docs.nais.io/workloads/reference/environments/#ingress-domains",
-		"ssb": "https://docs.ssb.cloud.nais.io/workloads/reference/environments/#ingress-domains",
-	}
-
-	if link, exists := tenantDocs[tenant]; exists {
-		return link
-	}
-
-	return "Error: Documentation link not found for the specified cluster"
-}
-
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
 	cluster := cfg.GetConfig().ClusterName
@@ -190,12 +171,11 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 		if ingressClass == nil {
 			return nil,
-				fmt.Errorf("domain '%s' is not supported in %s. You are attempting to add your ingress to '.%s', try one of these '%v' or see the docs at: %s",
+				fmt.Errorf("domain '%s' is not supported in %s. Supported domains: '%v'. See documentation at: %s.",
 					rule.Host,
 					cluster,
-					domain(rule.Host),
 					supportedDomains(cfg.GetGatewayMappings()),
-					docs(cfg.GetConfig().Tenant.Name),
+					fmt.Sprintf(domainDocs, cfg.GetConfig().Tenant.Name),
 				)
 		}
 
