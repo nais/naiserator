@@ -153,8 +153,6 @@ func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
 
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
-	cluster := cfg.GetConfig().ClusterName
-
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +164,10 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 	ingresses := make(map[string]*networkingv1.Ingress)
 
+	clusterConfig := cfg.GetConfig()
+	clusterName := clusterConfig.ClusterName
+	gatewayMappings := cfg.GetGatewayMappings()
+	tenant := clusterConfig.Tenant.Name
 	for _, rule := range rules {
 		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 
@@ -173,9 +175,9 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 			return nil,
 				fmt.Errorf("domain '%s' is not supported in %s. Supported domains: '%v'. See documentation at: %s",
 					rule.Host,
-					cluster,
-					supportedDomains(cfg.GetGatewayMappings()),
-					fmt.Sprintf(domainDocs, cfg.GetConfig().Tenant.Name),
+					clusterName,
+					supportedDomains(gatewayMappings),
+					fmt.Sprintf(domainDocs, tenant),
 				)
 		}
 
