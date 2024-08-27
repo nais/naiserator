@@ -160,7 +160,6 @@ func domain(host string) string {
 
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
-
 	if err != nil {
 		return nil, err
 	}
@@ -177,10 +176,9 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 		if ingressClass == nil {
 			return nil,
-				fmt.Errorf("domain '%s' is not supported in '%s'. You are attempting to add your ingress to '.%s', try one of these '%v' or see the docs at: '%s/workloads/reference/environments/#ingress-domains'",
+				fmt.Errorf("%q has a unsupported domain in cluster %q. Supported domains: '%v'. Read the full domain reference at: '%s/workloads/reference/environments/#ingress-domains'",
 					rule.Host,
 					cfg.GetConfig().ClusterName,
-					domain(rule.Host),
 					supportedDomains(cfg.GetGatewayMappings()),
 					cfg.GetDocUrl(),
 				)
