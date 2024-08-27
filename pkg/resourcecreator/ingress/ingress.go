@@ -171,7 +171,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 		if ingressClass == nil {
 			return nil,
-				fmt.Errorf("domain '%s' is not supported in %s. Supported domains: '%v'. See documentation at: %s.",
+				fmt.Errorf("domain '%s' is not supported in %s. Supported domains: '%v'. See documentation at: %s",
 					rule.Host,
 					cluster,
 					supportedDomains(cfg.GetGatewayMappings()),
