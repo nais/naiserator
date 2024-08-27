@@ -190,8 +190,9 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 		if ingressClass == nil {
 			return nil,
-				fmt.Errorf("domain '%s' is not supported in this cluster. You are attempting to add your ingress to '.%s', try one of these '%v' or see the docs at: '%s'",
+				fmt.Errorf("domain '%s' is not supported in %s. You are attempting to add your ingress to '.%s', try one of these '%v' or see the docs at: %s",
 					rule.Host,
+					cluster,
 					domain(rule.Host),
 					supportedDomains(cfg.GetGatewayMappings()),
 					docs(cfg.GetConfig().Tenant.Name),
