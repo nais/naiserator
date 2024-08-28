@@ -148,35 +148,36 @@ type Frontend struct {
 }
 
 type Config struct {
-	DryRun                            bool             `json:"dry-run"`
-	Bind                              string           `json:"bind"`
-	HealthProbeBindAddress            string           `json:"health-probe-bind-address"`
-	Informer                          Informer         `json:"informer"`
-	Synchronizer                      Synchronizer     `json:"synchronizer"`
-	Kubeconfig                        string           `json:"kubeconfig"`
-	ClusterName                       string           `json:"cluster-name"`
-	GoogleProjectId                   string           `json:"google-project-id"`
-	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
+	AivenProject                      string           `json:"aiven-project"`
+	AivenRange                        string           `json:"aiven-range"`
 	ApiServerIp                       string           `json:"api-server-ip"`
-	Ratelimit                         Ratelimit        `json:"ratelimit"`
-	Log                               Log              `json:"log"`
+	Bind                              string           `json:"bind"`
+	ClusterName                       string           `json:"cluster-name"`
+	DocUrl                            string           `json:"doc-url"`
+	DryRun                            bool             `json:"dry-run"`
+	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
 	Features                          Features         `json:"features"`
-	Securelogs                        Securelogs       `json:"securelogs"`
-	Proxy                             Proxy            `json:"proxy"`
-	Vault                             Vault            `json:"vault"`
-	Kafka                             Kafka            `json:"kafka"`
-	HostAliases                       []HostAlias      `json:"host-aliases"`
+	Frontend                          Frontend         `json:"frontend"`
 	GatewayMappings                   []GatewayMapping `json:"gateway-mappings"`
-	Wonderwall                        Wonderwall       `json:"wonderwall"`
+	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
+	GoogleProjectId                   string           `json:"google-project-id"`
+	HealthProbeBindAddress            string           `json:"health-probe-bind-address"`
+	HostAliases                       []HostAlias      `json:"host-aliases"`
+	ImagePullSecrets                  []string         `json:"image-pull-secrets"`
+	Informer                          Informer         `json:"informer"`
+	Kafka                             Kafka            `json:"kafka"`
+	Kubeconfig                        string           `json:"kubeconfig"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
+	Log                               Log              `json:"log"`
+	MaxConcurrentReconciles           int              `json:"max-concurrent-reconciles"`
 	NaisNamespace                     string           `json:"nais-namespace"`
 	Observability                     Observability    `json:"observability"`
-	AivenRange                        string           `json:"aiven-range"`
-	AivenProject                      string           `json:"aiven-project"`
-	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
-	Frontend                          Frontend         `json:"frontend"`
-	MaxConcurrentReconciles           int              `json:"max-concurrent-reconciles"`
-	ImagePullSecrets                  []string         `json:"image-pull-secrets"`
+	Proxy                             Proxy            `json:"proxy"`
+	Ratelimit                         Ratelimit        `json:"ratelimit"`
+	Securelogs                        Securelogs       `json:"securelogs"`
+	Synchronizer                      Synchronizer     `json:"synchronizer"`
+	Vault                             Vault            `json:"vault"`
+	Wonderwall                        Wonderwall       `json:"wonderwall"`
 }
 
 const (

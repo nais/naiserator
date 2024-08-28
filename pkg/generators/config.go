@@ -22,6 +22,10 @@ type Options struct {
 	SqlInstance         SqlInstance
 }
 
+func (o *Options) GetDocUrl() string {
+	return o.Config.DocUrl
+}
+
 func (o *Options) SqlInstanceExists() bool {
 	return o.SqlInstance.exists
 }

@@ -8,16 +8,17 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
-	networkingv1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
-
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-const regexSuffix = "(/.*)?"
+const (
+	regexSuffix = "(/.*)?"
+)
 
 type Source interface {
 	resource.Source
@@ -29,6 +30,8 @@ type Source interface {
 type Config interface {
 	GetGatewayMappings() []config.GatewayMapping
 	IsLinkerdEnabled() bool
+	GetDocUrl() string
+	GetClusterName() string
 }
 
 func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
@@ -138,6 +141,15 @@ func backendProtocol(portName string) string {
 	}
 }
 
+func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
+	domains := make([]string, 0, len(gatewayMappings))
+
+	for _, v := range gatewayMappings {
+		domains = append(domains, v.DomainSuffix)
+	}
+	return domains
+}
+
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
 	if err != nil {
@@ -154,8 +166,15 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	for _, rule := range rules {
 		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 
+		// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
+		// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
 		if ingressClass == nil {
-			return nil, fmt.Errorf("domain '%s' is not supported", rule.Host)
+			return nil,
+				fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
+					rule.Host,
+					cfg.GetClusterName(),
+					strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
+				)
 		}
 
 		ingress := ingresses[*ingressClass]
