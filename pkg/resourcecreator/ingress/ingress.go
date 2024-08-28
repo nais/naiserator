@@ -142,7 +142,7 @@ func backendProtocol(portName string) string {
 }
 
 func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
-	domains := make([]string, len(gatewayMappings))
+	domains := make([]string, 0, len(gatewayMappings))
 
 	for _, v := range gatewayMappings {
 		domains = append(domains, v.DomainSuffix)

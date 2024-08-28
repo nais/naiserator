@@ -1,0 +1,21 @@
+testconfig:
+  description: Can only use supported base domains
+config:
+  cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .test.no
+      ingressClass: very-nginx
+    - domainSuffix: .test.nav.no
+      ingressClass: weary-nginx
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    ingresses:
+      - https://bar.ansatt.nav.no
+error: "the domain \"bar.ansatt.nav.no\" cannot be used in cluster \"mycluster\"; use one of .test.no, .test.nav.no"
