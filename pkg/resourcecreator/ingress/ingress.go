@@ -31,7 +31,7 @@ type Config interface {
 	GetGatewayMappings() []config.GatewayMapping
 	IsLinkerdEnabled() bool
 	GetDocUrl() string
-	GetConfig() config.Config
+	GetClusterName() string
 }
 
 func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
@@ -172,7 +172,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 			return nil,
 				fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
 					rule.Host,
-					cfg.GetConfig().ClusterName,
+					cfg.GetClusterName(),
 					strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
 				)
 		}

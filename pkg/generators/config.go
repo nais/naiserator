@@ -26,10 +26,6 @@ func (o *Options) GetDocUrl() string {
 	return o.Config.DocUrl
 }
 
-func (o *Options) GetConfig() config.Config {
-	return o.Config
-}
-
 func (o *Options) SqlInstanceExists() bool {
 	return o.SqlInstance.exists
 }
