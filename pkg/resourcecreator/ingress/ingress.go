@@ -150,14 +150,6 @@ func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
 	return domains
 }
 
-func domain(host string) string {
-	a := strings.Split(host, ".")
-	if len(a) < 2 {
-		return host
-	}
-	return strings.Join(a[1:], ".")
-}
-
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
 	if err != nil {
@@ -174,13 +166,14 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	for _, rule := range rules {
 		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
 
+		// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
+		// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
 		if ingressClass == nil {
 			return nil,
-				fmt.Errorf("%q has a unsupported domain in cluster %q. Supported domains: '%v'. Read the full domain reference at: '%s/workloads/reference/environments/#ingress-domains'",
+				fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
 					rule.Host,
 					cfg.GetConfig().ClusterName,
-					supportedDomains(cfg.GetGatewayMappings()),
-					cfg.GetDocUrl(),
+					strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
 				)
 		}
 
