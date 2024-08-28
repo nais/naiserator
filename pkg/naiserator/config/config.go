@@ -110,10 +110,6 @@ type Vault struct {
 	KeyValuePath       string `json:"kv-path"`
 }
 
-type Tenant struct {
-	Name string `json:"name"`
-}
-
 type GatewayMapping struct {
 	DomainSuffix string `json:"domainSuffix"`
 	IngressClass string `json:"ingressClass"` // Nginx
