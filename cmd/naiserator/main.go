@@ -7,12 +7,10 @@ import (
 	"os"
 	"time"
 
-	fqdn_scheme "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha3"
 	"github.com/go-logr/logr"
 	"github.com/nais/liberator/pkg/logrus2logr"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/liberator/pkg/tlsutil"
-	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -94,24 +92,19 @@ func run() error {
 		}
 	}
 
-	// Register CRDs with controller-tools
+	// Register CRDs with controller-tools so they can be listed (and cleaned up).
+	//
+	// CAUTION:
+	// DO NOT IMPORT THIRD PARTY LIBRARIES DIRECTLY!
+	//
+	// Add third party libraries to Liberator.
+	//
+	// If CRD's are feature toggled, group them in liberator_scheme
+	// So they can be added indivindually or as a feature group.
+	// e.g. how GCP is handled.
 	kscheme, err := liberator_scheme.All()
 	if err != nil {
 		return err
-	}
-
-	if cfg.FQDNPolicy.Enabled {
-		err := fqdn_scheme.AddToScheme(kscheme)
-		if err != nil {
-			return err
-		}
-	}
-
-	if cfg.Features.PrometheusOperator {
-		err = pov1.AddToScheme(kscheme)
-		if err != nil {
-			return err
-		}
 	}
 
 	kconfig, err := ctrl.GetConfig()
