@@ -197,8 +197,6 @@ values:
   naiserator.observability.otel.auto-instrumentation.enabled:
     config:
       type: bool
-    ignoreKind:
-      - onprem
   naiserator.observability.logging.destinations:
     computed:
       # Find all logging_*_default_flow environment variables and use for configuration of available log destinations
