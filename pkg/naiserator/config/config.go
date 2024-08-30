@@ -74,6 +74,7 @@ type Otel struct {
 	Enabled             bool                `json:"enabled"`
 	Collector           OtelCollector       `json:"collector"`
 	AutoInstrumentation AutoInstrumentation `json:"auto-instrumentation"`
+	Destinations        []string            `json:"destinations"`
 }
 
 type AutoInstrumentation struct {
@@ -229,6 +230,7 @@ const (
 	ObservabilityOtelCollectorService             = "observability.otel.collector.service"
 	ObservabilityOtelCollectorTLS                 = "observability.otel.collector.tls"
 	ObservabilityOtelEnabled                      = "observability.otel.enabled"
+	ObservabilityOtelDestinations                 = "observability.otel.destinations"
 	ObservabilityOtelAutoInstrumentationAppConfig = "observability.otel.auto-instrumentation.app-config"
 	ObservabilityOtelAutoInstrumentationEnabled   = "observability.otel.auto-instrumentation.enabled"
 	ProxyAddress                                  = "proxy.address"
@@ -309,6 +311,7 @@ func init() {
 	flag.Int(MaxConcurrentReconciles, 1, "maximum number of concurrent Reconciles which can be run by the controller.")
 	flag.StringArray(ObservabilityLoggingDestinations, []string{}, "list of valid logging destinations")
 	flag.Bool(ObservabilityOtelEnabled, false, "enable OpenTelemetry")
+	flag.StringArray(ObservabilityOtelDestinations, []string{}, "list of valid otel storage destinations")
 	flag.String(ObservabilityOtelCollectorNamespace, "nais-system", "namespace of the OpenTelemetry collector")
 	flag.String(ObservabilityOtelCollectorService, "opentelmetry-collector", "service name of the OpenTelemetry collector")
 	flag.String(ObservabilityOtelCollectorProtocol, "grpc", "protocol used by the OpenTelemetry collector")
