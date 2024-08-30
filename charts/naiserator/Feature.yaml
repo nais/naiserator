@@ -186,7 +186,7 @@ values:
       type: bool
   naiserator.observability.otel.enabled:
     computed:
-      template: '{{ne .Kind "onprem"}}'
+      template: "true"
   naiserator.observability.otel.destinations:
     computed:
       template: |
