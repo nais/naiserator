@@ -67,8 +67,8 @@ naiserator:
       auto-instrumentation:
         enabled: false
         app-config: "nais-system/apps"
-        destinations:
-          - "grafana-lgtm"
+      destinations:
+        - "grafana-lgtm"
       collector:
         labels:
           - "app.kubernetes.io/name=opentelemetry-collector"
