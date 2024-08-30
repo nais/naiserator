@@ -48,9 +48,21 @@ func otelEndpointFromConfig(collector config.OtelCollector) string {
 	return fmt.Sprintf("%s://%s.%s:%d", schema, collector.Service, collector.Namespace, collector.Port)
 }
 
-func otelEnvVars(source Source, otel config.Otel) []corev1.EnvVar {
+func otelEnvVars(source Source, destinations []string, otel config.Otel) []corev1.EnvVar {
+	// TODO: allo for user-defined resource attributes, currently we overwrite any user-defined attributes
+
 	collectorEndpoint := otelEndpointFromConfig(otel.Collector)
 	collectorProtocol := otel.Collector.Protocol
+
+	attributes := []string{
+		fmt.Sprintf("service.name=%s", source.GetName()),
+		fmt.Sprintf("service.namespace=%s", source.GetNamespace()),
+	}
+
+	if len(destinations) > 0 {
+		slices.Sort(destinations)
+		attributes = append(attributes, fmt.Sprintf("nais.backend=%s", strings.Join(destinations, ";")))
+	}
 
 	return []corev1.EnvVar{
 		{
@@ -59,7 +71,7 @@ func otelEnvVars(source Source, otel config.Otel) []corev1.EnvVar {
 		},
 		{
 			Name:  otelResourceAttributes,
-			Value: fmt.Sprintf("service.name=%s,service.namespace=%s", source.GetName(), source.GetNamespace()),
+			Value: strings.Join(attributes, ","),
 		},
 		{
 			Name:  otelExporterEndpoint,
@@ -74,6 +86,20 @@ func otelEnvVars(source Source, otel config.Otel) []corev1.EnvVar {
 			Value: fmt.Sprintf("%t", !otel.Collector.Tls),
 		},
 	}
+}
+
+func otelAutoInstrumentationDestinations(source Source, otel config.Otel) ([]string, error) {
+	destinations := source.GetObservability().AutoInstrumentation.Destinations
+	destinationIDs := make([]string, len(destinations))
+
+	for i, destination := range destinations {
+		destinationIDs[i] = destination.ID
+		if !slices.Contains(otel.AutoInstrumentation.Destinations, destination.ID) {
+			return nil, fmt.Errorf("auto-instrumentation destination %q does not exist in cluster", destination.ID)
+		}
+	}
+
+	return destinationIDs, nil
 }
 
 func otelAutoInstrumentAnnotations(source Source, otel config.Otel) map[string]string {
@@ -195,6 +221,11 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 			return fmt.Errorf("auto-instrumentation is not supported for this cluster")
 		}
 
+		destinations, err := otelAutoInstrumentationDestinations(source, cfg.Otel)
+		if err != nil {
+			return err
+		}
+
 		netpol, err := otelNetpol(source, cfg.Otel)
 		if err != nil {
 			return err
@@ -206,7 +237,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 			}
 		}
 
-		ast.Env = append(ast.Env, otelEnvVars(source, cfg.Otel)...)
+		ast.Env = append(ast.Env, otelEnvVars(source, destinations, cfg.Otel)...)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, netpol)
 	}
 
