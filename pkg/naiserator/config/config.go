@@ -74,12 +74,12 @@ type Otel struct {
 	Enabled             bool                `json:"enabled"`
 	Collector           OtelCollector       `json:"collector"`
 	AutoInstrumentation AutoInstrumentation `json:"auto-instrumentation"`
+	Destinations        []string            `json:"destinations"`
 }
 
 type AutoInstrumentation struct {
-	Enabled      bool     `json:"enabled"`
-	AppConfig    string   `json:"app-config"`
-	Destinations []string `json:"destinations"`
+	Enabled   bool   `json:"enabled"`
+	AppConfig string `json:"app-config"`
 }
 
 type OtelCollector struct {
@@ -182,70 +182,70 @@ type Config struct {
 }
 
 const (
-	AivenProject                                     = "aiven-project"
-	AivenRange                                       = "aiven-range"
-	ApiServerIp                                      = "api-server-ip"
-	Bind                                             = "bind"
-	HealthProbeBindAddress                           = "health-probe-bind-address"
-	ClusterName                                      = "cluster-name"
-	DryRun                                           = "dry-run"
-	NaisNamespace                                    = "nais-namespace"
-	FeaturesAccessPolicyNotAllowedCIDRs              = "features.access-policy-not-allowed-cidrs"
-	FeaturesAzurerator                               = "features.azurerator"
-	FeaturesGCP                                      = "features.gcp"
-	FeaturesIDPorten                                 = "features.idporten"
-	FeaturesJwker                                    = "features.jwker"
-	FeaturesCNRM                                     = "features.cnrm"
-	FeaturesKafkarator                               = "features.kafkarator"
-	FeaturesLinkerd                                  = "features.linkerd"
-	FeaturesMaskinporten                             = "features.maskinporten"
-	FeaturesNetworkPolicy                            = "features.network-policy"
-	FeaturesPrometheusOperator                       = "features.prometheus-operator"
-	FeaturesVault                                    = "features.vault"
-	FeaturesWebhook                                  = "features.webhook"
-	FeaturesWonderwall                               = "features.wonderwall"
-	FeaturesLegacyGCP                                = "features.legacy-gcp"
-	FQDNPolicyEnabled                                = "fqdn-policy.enabled"
-	GoogleCloudSQLProxyContainerImage                = "google-cloud-sql-proxy-container-image"
-	GoogleProjectId                                  = "google-project-id"
-	ImagePullSecrets                                 = "image-pull-secrets"
-	InformerFullSynchronizationInterval              = "informer.full-sync-interval"
-	KafkaBrokers                                     = "kafka.brokers"
-	KafkaEnabled                                     = "kafka.enabled"
-	KafkaLogVerbosity                                = "kafka.log-verbosity"
-	KafkaTLSCAPath                                   = "kafka.tls.ca-path"
-	KafkaTLSCertificatePath                          = "kafka.tls.certificate-path"
-	KafkaTLSEnabled                                  = "kafka.tls.enabled"
-	KafkaTLSInsecure                                 = "kafka.tls.insecure"
-	KafkaTLSPrivateKeyPath                           = "kafka.tls.private-key-path"
-	KafkaTopic                                       = "kafka.topic"
-	KubeConfig                                       = "kubeconfig"
-	LeaderElectionImage                              = "leader-election.image"
-	MaxConcurrentReconciles                          = "max-concurrent-reconciles"
-	ObservabilityLoggingDestinations                 = "observability.logging.destinations"
-	ObservabilityOtelCollectorLabels                 = "observability.otel.collector.labels"
-	ObservabilityOtelCollectorNamespace              = "observability.otel.collector.namespace"
-	ObservabilityOtelCollectorPort                   = "observability.otel.collector.port"
-	ObservabilityOtelCollectorProtocol               = "observability.otel.collector.protocol"
-	ObservabilityOtelCollectorService                = "observability.otel.collector.service"
-	ObservabilityOtelCollectorTLS                    = "observability.otel.collector.tls"
-	ObservabilityOtelEnabled                         = "observability.otel.enabled"
-	ObservabilityOtelAutoInstrumentationAppConfig    = "observability.otel.auto-instrumentation.app-config"
-	ObservabilityOtelAutoInstrumentationEnabled      = "observability.otel.auto-instrumentation.enabled"
-	ObservabilityOtelAutoInstrumentationDestinations = "observability.otel.auto-instrumentation.destinations"
-	ProxyAddress                                     = "proxy.address"
-	ProxyExclude                                     = "proxy.exclude"
-	RateLimitBurst                                   = "ratelimit.burst"
-	RateLimitQPS                                     = "ratelimit.qps"
-	SecurelogsLogShipperImage                        = "securelogs.log-shipper-image"
-	SynchronizerRolloutCheckInterval                 = "synchronizer.rollout-check-interval"
-	SynchronizerRolloutTimeout                       = "synchronizer.rollout-timeout"
-	SynchronizerSynchronizationTimeout               = "synchronizer.synchronization-timeout"
-	VaultAddress                                     = "vault.address"
-	VaultAuthPath                                    = "vault.auth-path"
-	VaultInitContainerImage                          = "vault.init-container-image"
-	VaultKvPath                                      = "vault.kv-path"
-	WonderwallImage                                  = "wonderwall.image"
+	AivenProject                                  = "aiven-project"
+	AivenRange                                    = "aiven-range"
+	ApiServerIp                                   = "api-server-ip"
+	Bind                                          = "bind"
+	HealthProbeBindAddress                        = "health-probe-bind-address"
+	ClusterName                                   = "cluster-name"
+	DryRun                                        = "dry-run"
+	NaisNamespace                                 = "nais-namespace"
+	FeaturesAccessPolicyNotAllowedCIDRs           = "features.access-policy-not-allowed-cidrs"
+	FeaturesAzurerator                            = "features.azurerator"
+	FeaturesGCP                                   = "features.gcp"
+	FeaturesIDPorten                              = "features.idporten"
+	FeaturesJwker                                 = "features.jwker"
+	FeaturesCNRM                                  = "features.cnrm"
+	FeaturesKafkarator                            = "features.kafkarator"
+	FeaturesLinkerd                               = "features.linkerd"
+	FeaturesMaskinporten                          = "features.maskinporten"
+	FeaturesNetworkPolicy                         = "features.network-policy"
+	FeaturesPrometheusOperator                    = "features.prometheus-operator"
+	FeaturesVault                                 = "features.vault"
+	FeaturesWebhook                               = "features.webhook"
+	FeaturesWonderwall                            = "features.wonderwall"
+	FeaturesLegacyGCP                             = "features.legacy-gcp"
+	FQDNPolicyEnabled                             = "fqdn-policy.enabled"
+	GoogleCloudSQLProxyContainerImage             = "google-cloud-sql-proxy-container-image"
+	GoogleProjectId                               = "google-project-id"
+	ImagePullSecrets                              = "image-pull-secrets"
+	InformerFullSynchronizationInterval           = "informer.full-sync-interval"
+	KafkaBrokers                                  = "kafka.brokers"
+	KafkaEnabled                                  = "kafka.enabled"
+	KafkaLogVerbosity                             = "kafka.log-verbosity"
+	KafkaTLSCAPath                                = "kafka.tls.ca-path"
+	KafkaTLSCertificatePath                       = "kafka.tls.certificate-path"
+	KafkaTLSEnabled                               = "kafka.tls.enabled"
+	KafkaTLSInsecure                              = "kafka.tls.insecure"
+	KafkaTLSPrivateKeyPath                        = "kafka.tls.private-key-path"
+	KafkaTopic                                    = "kafka.topic"
+	KubeConfig                                    = "kubeconfig"
+	LeaderElectionImage                           = "leader-election.image"
+	MaxConcurrentReconciles                       = "max-concurrent-reconciles"
+	ObservabilityLoggingDestinations              = "observability.logging.destinations"
+	ObservabilityOtelCollectorLabels              = "observability.otel.collector.labels"
+	ObservabilityOtelCollectorNamespace           = "observability.otel.collector.namespace"
+	ObservabilityOtelCollectorPort                = "observability.otel.collector.port"
+	ObservabilityOtelCollectorProtocol            = "observability.otel.collector.protocol"
+	ObservabilityOtelCollectorService             = "observability.otel.collector.service"
+	ObservabilityOtelCollectorTLS                 = "observability.otel.collector.tls"
+	ObservabilityOtelEnabled                      = "observability.otel.enabled"
+	ObservabilityOtelDestinations                 = "observability.otel.destinations"
+	ObservabilityOtelAutoInstrumentationAppConfig = "observability.otel.auto-instrumentation.app-config"
+	ObservabilityOtelAutoInstrumentationEnabled   = "observability.otel.auto-instrumentation.enabled"
+	ProxyAddress                                  = "proxy.address"
+	ProxyExclude                                  = "proxy.exclude"
+	RateLimitBurst                                = "ratelimit.burst"
+	RateLimitQPS                                  = "ratelimit.qps"
+	SecurelogsLogShipperImage                     = "securelogs.log-shipper-image"
+	SynchronizerRolloutCheckInterval              = "synchronizer.rollout-check-interval"
+	SynchronizerRolloutTimeout                    = "synchronizer.rollout-timeout"
+	SynchronizerSynchronizationTimeout            = "synchronizer.synchronization-timeout"
+	VaultAddress                                  = "vault.address"
+	VaultAuthPath                                 = "vault.auth-path"
+	VaultInitContainerImage                       = "vault.init-container-image"
+	VaultKvPath                                   = "vault.kv-path"
+	WonderwallImage                               = "wonderwall.image"
 )
 
 func bindNAIS() {
@@ -311,7 +311,7 @@ func init() {
 	flag.Int(MaxConcurrentReconciles, 1, "maximum number of concurrent Reconciles which can be run by the controller.")
 	flag.StringArray(ObservabilityLoggingDestinations, []string{}, "list of valid logging destinations")
 	flag.Bool(ObservabilityOtelEnabled, false, "enable OpenTelemetry")
-	flag.StringArray(ObservabilityOtelAutoInstrumentationDestinations, []string{}, "list of valid auto-instrumentation destinations")
+	flag.StringArray(ObservabilityOtelDestinations, []string{}, "list of valid otel storage destinations")
 	flag.String(ObservabilityOtelCollectorNamespace, "nais-system", "namespace of the OpenTelemetry collector")
 	flag.String(ObservabilityOtelCollectorService, "opentelmetry-collector", "service name of the OpenTelemetry collector")
 	flag.String(ObservabilityOtelCollectorProtocol, "grpc", "protocol used by the OpenTelemetry collector")

@@ -94,7 +94,7 @@ func otelAutoInstrumentationDestinations(source Source, otel config.Otel) ([]str
 
 	for i, destination := range destinations {
 		destinationIDs[i] = destination.ID
-		if !slices.Contains(otel.AutoInstrumentation.Destinations, destination.ID) {
+		if !slices.Contains(otel.Destinations, destination.ID) {
 			return nil, fmt.Errorf("auto-instrumentation destination %q does not exist in cluster", destination.ID)
 		}
 	}
@@ -221,17 +221,18 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 			return fmt.Errorf("auto-instrumentation is not supported for this cluster")
 		}
 
-		destinations, err := otelAutoInstrumentationDestinations(source, cfg.Otel)
-		if err != nil {
-			return err
-		}
-
 		netpol, err := otelNetpol(source, cfg.Otel)
 		if err != nil {
 			return err
 		}
 
+		destinations := []string{}
 		if obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled {
+			destinations, err = otelAutoInstrumentationDestinations(source, cfg.Otel)
+			if err != nil {
+				return err
+			}
+
 			for k, v := range otelAutoInstrumentAnnotations(source, cfg.Otel) {
 				ast.Annotations[k] = v
 			}

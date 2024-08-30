@@ -187,18 +187,18 @@ values:
   naiserator.observability.otel.enabled:
     computed:
       template: '{{ne .Kind "onprem"}}'
-  naiserator.observability.otel.auto-instrumentation.enabled:
-    config:
-      type: bool
-    ignoreKind:
-      - onprem
-  naiserator.observability.otel.auto-instrumentation.destinations:
+  naiserator.observability.otel.destinations:
     computed:
       template: |
         - grafana-lgtm
         {{- if eq .Kind "onprem" }}
         - elastic-apm
         {{- end }}
+  naiserator.observability.otel.auto-instrumentation.enabled:
+    config:
+      type: bool
+    ignoreKind:
+      - onprem
   naiserator.observability.logging.destinations:
     computed:
       # Find all logging_*_default_flow environment variables and use for configuration of available log destinations

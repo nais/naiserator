@@ -77,6 +77,11 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 	}
 
+	destinations := []string{
+		"destination1",
+		"destination2",
+	}
+
 	expectedEnvVars := []corev1.EnvVar{
 		{
 			Name:  "OTEL_SERVICE_NAME",
@@ -84,7 +89,7 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 		{
 			Name:  "OTEL_RESOURCE_ATTRIBUTES",
-			Value: "service.name=my-app,service.namespace=my-namespace",
+			Value: "service.name=my-app,service.namespace=my-namespace,nais.backend=destination1;destination2",
 		},
 		{
 			Name:  "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -100,7 +105,7 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 	}
 
-	actualEnvVars := otelEnvVars(&app, otel)
+	actualEnvVars := otelEnvVars(&app, destinations, otel)
 
 	assert.Equal(t, expectedEnvVars, actualEnvVars)
 }
