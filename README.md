@@ -77,6 +77,9 @@ make build
 make local
 ```
 
+If you need an error code, you can generate that using e.g `shuf -i 0-9999 -n 1` and pad with zeroes.
+Error codes are chosen by random, uniform sampling on that interval. Pick any number, make sure its not a duplicate.
+
 ### Kafka & Protobuf
 
 Whenever an Application is synchronized, a [deployment event message](https://github.com/navikt/protos/blob/master/deployment/deployment.proto)
