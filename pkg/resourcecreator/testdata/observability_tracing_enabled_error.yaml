@@ -16,4 +16,4 @@ input:
     observability:
       tracing:
         enabled: true
-error: "opentelemetry is not supported for this cluster"
+error: "NAISERATOR-5771: opentelemetry is not supported for this cluster"

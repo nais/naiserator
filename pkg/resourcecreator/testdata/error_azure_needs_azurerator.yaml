@@ -13,4 +13,4 @@ input:
     azure:
       application:
         enabled: true
-error: "azure ad is not available in this cluster"
+error: "NAISERATOR-8848: azure ad is not available in this cluster"

@@ -50,7 +50,7 @@ var _ synchronizer.Generator = &Application{}
 func (g *Application) Prepare(ctx context.Context, source resource.Source, kube client.Client) (interface{}, error) {
 	app, ok := source.(*nais_io_v1alpha1.Application)
 	if !ok {
-		return nil, fmt.Errorf("BUG: this generator accepts only nais_io_v1alpha1.Application objects")
+		return nil, fmt.Errorf("NAISERATOR-3237: BUG: this generator accepts only nais_io_v1alpha1.Application objects")
 	}
 
 	o := &Options{
@@ -67,14 +67,14 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 	deploy := &appsv1.Deployment{}
 	err := kube.Get(ctx, key, deploy)
 	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing deployment: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-2760: query existing deployment: %s", err)
 	}
 
 	// Disallow creating application resources if there is a Naisjob with the same name.
 	job := &nais_io_v1.Naisjob{}
 	err = kube.Get(ctx, key, job)
 	if err == nil {
-		return nil, fmt.Errorf("cannot create an Application with name '%s' because a Naisjob with that name exists", source.GetName())
+		return nil, fmt.Errorf("NAISERATOR-0916: cannot create an Application with name '%s' because a Naisjob with that name exists", source.GetName())
 	}
 
 	o.NumReplicas = numReplicas(deploy, app.GetReplicas().Min, app.GetReplicas().Max)
@@ -84,7 +84,7 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 	namespace := &corev1.Namespace{}
 	err = kube.Get(ctx, namespaceKey, namespace)
 	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing namespace: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-7805: query existing namespace: %s", err)
 	}
 
 	// Auto-detect Google Team Project ID
@@ -123,12 +123,12 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 
 	app, ok := source.(*nais_io_v1alpha1.Application)
 	if !ok {
-		return nil, fmt.Errorf("BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects; fix your code")
+		return nil, fmt.Errorf("NAISERATOR-7774: BUG: CreateApplication only accepts nais_io_v1alpha1.Application objects; fix your code")
 	}
 
 	cfg, ok := config.(*Options)
 	if !ok {
-		return nil, fmt.Errorf("BUG: Application generator called without correct configuration object; fix your code")
+		return nil, fmt.Errorf("NAISERATOR-0175: BUG: Application generator called without correct configuration object; fix your code")
 	}
 
 	ast := resource.NewAst()

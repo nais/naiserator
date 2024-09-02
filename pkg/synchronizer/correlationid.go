@@ -22,7 +22,7 @@ func ensureCorrelationID(source resource.Source) error {
 
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return fmt.Errorf("generate deployment correlation ID: %s", err)
+		return fmt.Errorf("NAISERATOR-3893: generate deployment correlation ID: %s", err)
 	}
 
 	anno[nais_io_v1.DeploymentCorrelationIDAnnotation] = id.String()

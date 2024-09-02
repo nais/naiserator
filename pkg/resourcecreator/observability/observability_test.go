@@ -299,7 +299,7 @@ func TestLogLabels(t *testing.T) {
 				Destinations: []string{"destination2"},
 			},
 			expectedLabels: nil,
-			expectedError:  fmt.Errorf("logging destination %q does not exist in cluster", "destination1"),
+			expectedError:  fmt.Errorf("NAISERATOR-9370: logging destination %q does not exist in cluster", "destination1"),
 		},
 	}
 

@@ -16,7 +16,7 @@ func Influx(ast *resource.Ast, influx *nais_io_v1.Influx, aivenApp *aiven_nais_i
 
 	if credentialsEnabled {
 		if influx.Instance == "" {
-			return false, fmt.Errorf("Influx enabled, but no instance specified")
+			return false, fmt.Errorf("NAISERATOR-1578: Influx enabled, but no instance specified")
 		}
 
 		addInfluxEnvVariables(ast, aivenApp.Spec.SecretName)

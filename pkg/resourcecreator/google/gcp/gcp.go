@@ -32,7 +32,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	if gcp != nil && len(teamProjectID) == 0 {
 		// We're not currently in a team namespace with corresponding GCP team project
-		return fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", source.GetNamespace())
+		return fmt.Errorf("NAISERATOR-9843: GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", source.GetNamespace())
 	}
 
 	if !cfg.IsCNRMEnabled() && len(projectID) == 0 {

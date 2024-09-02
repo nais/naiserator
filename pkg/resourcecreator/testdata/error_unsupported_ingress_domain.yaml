@@ -18,4 +18,4 @@ input:
     image: navikt/myapplication:1.2.3
     ingresses:
       - https://bar.ansatt.nav.no
-error: "the domain \"bar.ansatt.nav.no\" cannot be used in cluster \"mycluster\"; use one of .test.no, .test.nav.no"
+error: 'NAISERATOR-7972: the domain "bar.ansatt.nav.no" cannot be used in cluster "mycluster"; use one of .test.no, .test.nav.no'

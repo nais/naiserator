@@ -12,4 +12,4 @@ input:
   spec:
     idporten:
       enabled: true
-error: "idporten sidecar must be enabled when idporten is enabled"
+error: "NAISERATOR-2052: idporten sidecar must be enabled when idporten is enabled"

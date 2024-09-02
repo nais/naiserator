@@ -60,11 +60,11 @@ func (s completionState) setSynchronizationState() bool {
 func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
 	an, err := anypb.New(event)
 	if err != nil {
-		return 0, fmt.Errorf("wrap Protobuf.Any: %w", err)
+		return 0, fmt.Errorf("NAISERATOR-4231: wrap Protobuf.Any: %w", err)
 	}
 	payload, err := proto.Marshal(an)
 	if err != nil {
-		return 0, fmt.Errorf("encode Protobuf: %w", err)
+		return 0, fmt.Errorf("NAISERATOR-2469: encode Protobuf: %w", err)
 	}
 	return n.kafka.Produce(payload)
 }
@@ -240,7 +240,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 		completion.eventReported = err == nil
 
 		if err != nil {
-			return fmt.Errorf("unable to report rollout complete event: %v", err)
+			return fmt.Errorf("NAISERATOR-1666: unable to report rollout complete event: %v", err)
 		}
 	}
 
@@ -250,7 +250,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 		offset, err := n.produceDeploymentEvent(completion.event)
 		completion.kafkaProduced = err == nil
 		if err != nil {
-			return fmt.Errorf("failed to produce deployment message: %v", err)
+			return fmt.Errorf("NAISERATOR-8603: failed to produce deployment message: %v", err)
 		}
 		logger.WithFields(log.Fields{
 			"kafka_offset": offset,
@@ -269,7 +269,7 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 		completion.applicationUpdated = err == nil
 
 		if err != nil {
-			return fmt.Errorf("store application sync status: %v", err)
+			return fmt.Errorf("NAISERATOR-0065: store application sync status: %v", err)
 		}
 	}
 

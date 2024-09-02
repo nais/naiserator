@@ -12,4 +12,4 @@ input:
   spec:
     idporten:
       enabled: true
-error: "idporten is not available in this cluster"
+error: "NAISERATOR-9643: idporten is not available in this cluster"

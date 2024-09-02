@@ -18,7 +18,7 @@ const eightk = 8192
 func ValidateFlag(key string, value string) error {
 	validatorFunc := validators[key]
 	if validatorFunc == nil {
-		return fmt.Errorf("couldn't find validator for instance flag '%s'", key)
+		return fmt.Errorf("NAISERATOR-9097: couldn't find validator for instance flag '%s'", key)
 	}
 	return validatorFunc(value)
 }
@@ -215,7 +215,7 @@ func intWithinRange(min int, max int) func(n string) error {
 			return err
 		}
 		if i < min || i > max {
-			return fmt.Errorf("%d is not between %d and %d", i, min, max)
+			return fmt.Errorf("NAISERATOR-6177: %d is not between %d and %d", i, min, max)
 		}
 		return nil
 	}
@@ -228,7 +228,7 @@ func floatWithinRange(min float64, max float64) func(n string) error {
 			return err
 		}
 		if f < min || f > max {
-			return fmt.Errorf("%f is not between %f and %f", f, min, max)
+			return fmt.Errorf("NAISERATOR-9076: %f is not between %f and %f", f, min, max)
 		}
 		return nil
 	}
@@ -239,7 +239,7 @@ func inEnum(allowedVals []string) func(val string) error {
 		parts := strings.Split(commaSeparatedSuppliedVals, ",")
 		for _, v := range parts {
 			if !slices.Contains(allowedVals, v) {
-				return fmt.Errorf("%s is not in %v", commaSeparatedSuppliedVals, allowedVals)
+				return fmt.Errorf("NAISERATOR-1428: %s is not in %v", commaSeparatedSuppliedVals, allowedVals)
 			}
 		}
 		return nil
@@ -253,7 +253,7 @@ func unit(unitSize int) func(n string) error {
 			return err
 		}
 		if i%unitSize != 0 {
-			return fmt.Errorf("%d is not a unit of %d", i, unitSize)
+			return fmt.Errorf("NAISERATOR-5189: %d is not a unit of %d", i, unitSize)
 		}
 		return nil
 	}
@@ -270,13 +270,13 @@ func toBool(str string) error {
 	if str == "on" || str == "off" {
 		return nil
 	}
-	return fmt.Errorf("expected 'on|off' int, got '%s'", str)
+	return fmt.Errorf("NAISERATOR-6766: expected 'on|off' int, got '%s'", str)
 }
 
 func toInt(str string) (int, error) {
 	i, err := strconv.Atoi(str)
 	if err != nil {
-		return 0, fmt.Errorf("expected an int, got '%s'", str)
+		return 0, fmt.Errorf("NAISERATOR-7760: expected an int, got '%s'", str)
 	}
 	return i, nil
 }
@@ -284,7 +284,7 @@ func toInt(str string) (int, error) {
 func toFloat(str string) (float64, error) {
 	f, err := strconv.ParseFloat(str, 64)
 	if err != nil {
-		return 0, fmt.Errorf("expected a float, got '%s'", str)
+		return 0, fmt.Errorf("NAISERATOR-0265: expected a float, got '%s'", str)
 	}
 	return f, nil
 }

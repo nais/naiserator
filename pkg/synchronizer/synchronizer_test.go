@@ -66,7 +66,7 @@ func newTestRig(config config.Config) (*testRig, error) {
 
 	err := os.Setenv("KUBEBUILDER_ASSETS", testBinDirectory())
 	if err != nil {
-		return nil, fmt.Errorf("failed to set environment variable: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-5205: failed to set environment variable: %w", err)
 	}
 
 	crdPath := crd.YamlDirectory()
@@ -78,19 +78,19 @@ func newTestRig(config config.Config) (*testRig, error) {
 
 	cfg, err := rig.kubernetes.Start()
 	if err != nil {
-		return nil, fmt.Errorf("setup Kubernetes test environment: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-4607: setup Kubernetes test environment: %w", err)
 	}
 
 	rig.scheme, err = liberator_scheme.All()
 	if err != nil {
-		return nil, fmt.Errorf("setup scheme: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-3216: setup scheme: %w", err)
 	}
 
 	rig.client, err = client.New(cfg, client.Options{
 		Scheme: rig.scheme,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("initialize Kubernetes client: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-7553: initialize Kubernetes client: %w", err)
 	}
 
 	rig.manager, err = ctrl.NewManager(rig.kubernetes.Config, ctrl.Options{
@@ -100,7 +100,7 @@ func newTestRig(config config.Config) (*testRig, error) {
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("initialize manager: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-0109: initialize manager: %w", err)
 	}
 
 	listers := naiserator_scheme.GenericListers()
@@ -126,7 +126,7 @@ func newTestRig(config config.Config) (*testRig, error) {
 
 	err = applicationReconciler.SetupWithManager(rig.manager)
 	if err != nil {
-		return nil, fmt.Errorf("setup synchronizer with manager: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-2092: setup synchronizer with manager: %w", err)
 	}
 	rig.synchronizer = applicationReconciler
 

@@ -98,14 +98,14 @@ type commit struct {
 func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Event) (*corev1.Event, error) {
 	selector, err := fields.ParseSelector(fmt.Sprintf("involvedObject.name=%s,involvedObject.uid=%s", reportedEvent.InvolvedObject.Name, reportedEvent.InvolvedObject.UID))
 	if err != nil {
-		return nil, fmt.Errorf("internal error: unable to parse query: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-4853: internal error: unable to parse query: %s", err)
 	}
 	events := &corev1.EventList{}
 	err = n.simpleClient.List(ctx, events, &client.ListOptions{
 		FieldSelector: selector,
 	})
 	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("get events for app '%s': %s", reportedEvent.InvolvedObject.Name, err)
+		return nil, fmt.Errorf("NAISERATOR-4579: get events for app '%s': %s", reportedEvent.InvolvedObject.Name, err)
 	}
 
 	for _, event := range events.Items {
@@ -387,7 +387,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 
 	resources, err := updater.FindAll(ctx, n.Client, n.scheme, n.listers, rollout.Source)
 	if err != nil {
-		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-1384: discovering unreferenced resources: %s", err)
 	}
 
 	unreferenced := make([]runtime.Object, 0, len(resources))
@@ -412,7 +412,7 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []commit) (bool, error
 			if reason == metav1.StatusReasonUnknown {
 				reason = "validation error"
 			}
-			return retry, fmt.Errorf("persisting %s to Kubernetes: %s: %s", commit.groupVersionKind.Kind, reason, err)
+			return retry, fmt.Errorf("NAISERATOR-9398: persisting %s to Kubernetes: %s: %s", commit.groupVersionKind.Kind, reason, err)
 		}
 		metrics.ResourcesGenerated.WithLabelValues(commit.groupVersionKind.Kind).Inc()
 	}
@@ -436,12 +436,12 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 
 	err = source.ApplyDefaults()
 	if err != nil {
-		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-5706: BUG: merge default values into application: %s", err)
 	}
 
 	rollout.SynchronizationHash, err = source.Hash()
 	if err != nil {
-		return nil, fmt.Errorf("BUG: create application hash: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-6753: BUG: create application hash: %s", err)
 	}
 
 	// Skip processing if application didn't change since last synchronization.
@@ -458,7 +458,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 	// For this operation, make sure that write operations are disabled.
 	opts, err := n.generator.Prepare(ctx, source, readonly.NewClient(n.Client))
 	if err != nil {
-		return nil, fmt.Errorf("preparing rollout configuration: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-1215: preparing rollout configuration: %w", err)
 	}
 
 	rollout.CorrelationID = source.CorrelationID()
@@ -500,7 +500,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 			return []commit{
 				{
 					fn: func() error {
-						return fmt.Errorf("BUG: no such operation %s", rop.Operation)
+						return fmt.Errorf("NAISERATOR-0465: BUG: no such operation %s", rop.Operation)
 					},
 				},
 			}
@@ -513,7 +513,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 	unreferenced, err := n.Unreferenced(ctx, rollout)
 	if err != nil {
 		deletes = append(deletes, commit{fn: func() error {
-			return fmt.Errorf("unable to clean up obsolete resources: %s", err)
+			return fmt.Errorf("NAISERATOR-7364: unable to clean up obsolete resources: %s", err)
 		}})
 	} else {
 		for _, rsrc := range unreferenced {
@@ -538,7 +538,7 @@ func (n *Synchronizer) UpdateResource(ctx context.Context, source resource.Sourc
 	existing := source.DeepCopyObject().(resource.Source)
 	err := n.Get(ctx, client.ObjectKey{Namespace: source.GetNamespace(), Name: source.GetName()}, existing)
 	if err != nil {
-		return fmt.Errorf("get newest version of %T: %s", existing, err)
+		return fmt.Errorf("NAISERATOR-0421: get newest version of %T: %s", existing, err)
 	}
 
 	return updateFunc(existing)

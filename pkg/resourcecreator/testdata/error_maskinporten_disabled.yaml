@@ -12,4 +12,4 @@ input:
   spec:
     maskinporten:
       enabled: true
-error: "maskinporten is not available in this cluster"
+error: "NAISERATOR-4387: maskinporten is not available in this cluster"

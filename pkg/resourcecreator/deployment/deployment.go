@@ -48,7 +48,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	objectMeta := resource.CreateObjectMeta(app)
 	spec, err := deploymentSpec(app, ast, cfg)
 	if err != nil {
-		return fmt.Errorf("create deployment: %w", err)
+		return fmt.Errorf("NAISERATOR-4662: create deployment: %w", err)
 	}
 
 	if val, ok := app.GetAnnotations()["kubernetes.io/change-cause"]; ok {
@@ -60,7 +60,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	if app.GetTTL() != "" {
 		d, err := time.ParseDuration(app.GetTTL())
 		if err != nil {
-			return fmt.Errorf("parsing TTL: %w", err)
+			return fmt.Errorf("NAISERATOR-4232: parsing TTL: %w", err)
 		}
 
 		objectMeta.Annotations["euthanaisa.nais.io/kill-after"] = time.Now().Add(d).Format(time.RFC3339)

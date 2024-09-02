@@ -28,7 +28,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 	image := cfg.GetLeaderElectionImage()
 	if image == "" {
-		return fmt.Errorf("leader election image not configured")
+		return fmt.Errorf("NAISERATOR-1563: leader election image not configured")
 	}
 
 	appObjectMeta := resource.CreateObjectMeta(source)
@@ -37,7 +37,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	var err error
 	roleBindingObjectMeta.Name, err = namegen.ShortName(fmt.Sprintf("elector-%s", roleBindingObjectMeta.Name), validation.DNS1123LabelMaxLength)
 	if err != nil {
-		return fmt.Errorf("failed to build short name for role binding: %w", err)
+		return fmt.Errorf("NAISERATOR-1735: failed to build short name for role binding: %w", err)
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleBindingObjectMeta))

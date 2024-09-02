@@ -20,7 +20,7 @@ func validateSecretPaths(paths []nais_io_v1.SecretPath) error {
 	m := make(map[string]string, len(paths))
 	for _, s := range paths {
 		if old, exists := m[s.MountPath]; exists {
-			return fmt.Errorf("illegal to mount multiple Vault secrets: %s and %s to the same path: %s", s.KvPath, old, s.MountPath)
+			return fmt.Errorf("NAISERATOR-4492: illegal to mount multiple Vault secrets: %s and %s to the same path: %s", s.KvPath, old, s.MountPath)
 		}
 		m[s.MountPath] = s.KvPath
 	}

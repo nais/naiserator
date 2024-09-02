@@ -35,21 +35,21 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	if !cfg.IsIDPortenEnabled() {
-		return fmt.Errorf("idporten is not available in this cluster")
+		return fmt.Errorf("NAISERATOR-9643: idporten is not available in this cluster")
 	}
 
 	// TODO - automatically enable sidecar if just idporten is enabled when the grace period for migration ends.
 	if idporten.Sidecar == nil || !idporten.Sidecar.Enabled {
-		return fmt.Errorf("idporten sidecar must be enabled when idporten is enabled")
+		return fmt.Errorf("NAISERATOR-2052: idporten sidecar must be enabled when idporten is enabled")
 	}
 
 	if !cfg.IsWonderwallEnabled() {
-		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
+		return fmt.Errorf("NAISERATOR-7581: idporten sidecar is not enabled for this cluster")
 	}
 
 	ingresses := source.GetIngress()
 	if len(ingresses) == 0 {
-		return fmt.Errorf("idporten requires at least 1 ingress")
+		return fmt.Errorf("NAISERATOR-7816: idporten requires at least 1 ingress")
 	}
 
 	ast.Labels["idporten"] = "enabled"

@@ -20,4 +20,4 @@ input:
     ingresses:
       - "https://my-client.nav.no/"
     port: 7564
-error: "cannot use port '7564'; conflicts with sidecar"
+error: "NAISERATOR-7360: cannot use port '7564'; conflicts with sidecar"

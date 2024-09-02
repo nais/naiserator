@@ -61,7 +61,7 @@ func EnvironmentVariables(cfg Config) ([]corev1.EnvVar, error) {
 	} else {
 		// A failure state here means that there is something wrong with the syntax
 		// of our proxy config. This situation should be made clearly visible.
-		return nil, fmt.Errorf("convert webproxy settings to Java format: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-6924: convert webproxy settings to Java format: %w", err)
 	}
 
 	return envVars, nil
@@ -88,7 +88,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	envs, err := EnvironmentVariables(cfg)
 	if err != nil {
-		return fmt.Errorf("generate proxy environment variables: %w", err)
+		return fmt.Errorf("NAISERATOR-2112: generate proxy environment variables: %w", err)
 	}
 
 	ast.Env = append(ast.Env, envs...)

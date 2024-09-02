@@ -15,14 +15,14 @@ var kubernetesFQDNValidation = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])
 
 func ValidateUrl(u *url.URL) error {
 	if len(u.Host) == 0 {
-		return fmt.Errorf("URL '%s' is missing a hostname", u)
+		return fmt.Errorf("NAISERATOR-7092: URL '%s' is missing a hostname", u)
 	}
 	if u.Scheme != "https" {
-		return fmt.Errorf("URL '%s' does not start with 'https://'", u)
+		return fmt.Errorf("NAISERATOR-9098: URL '%s' does not start with 'https://'", u)
 	}
 
 	if !kubernetesFQDNValidation.MatchString(u.Host) {
-		return fmt.Errorf("URL '%s' does not match regular expression '%s'", u, kubernetesFQDNValidation.String())
+		return fmt.Errorf("NAISERATOR-3996: URL '%s' does not match regular expression '%s'", u, kubernetesFQDNValidation.String())
 	}
 
 	return nil

@@ -13,4 +13,4 @@ input:
         command:
           - ./hello
           - world
-error: "can only use one of spec.preStopHookPath or spec.preStopHook"
+error: "NAISERATOR-8273: can only use one of spec.preStopHookPath or spec.preStopHook"
