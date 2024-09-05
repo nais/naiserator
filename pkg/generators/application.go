@@ -133,6 +133,9 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 
 	ast := resource.NewAst()
 
+	// This should be first so that other generators can manipulate environment variables without being overwritten.
+	pod.CreateContainerEnvVars(app, ast, cfg)
+
 	service.Create(app, ast, cfg)
 	serviceaccount.Create(app, ast, cfg)
 	horizontalpodautoscaler.Create(app, ast)

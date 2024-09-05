@@ -54,24 +54,11 @@ func TestOtelEndpointFromConfig(t *testing.T) {
 }
 
 func TestOtelEnvVars(t *testing.T) {
-	app := nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-app",
-			Namespace: "my-namespace",
-		},
-		Spec: nais_io_v1alpha1.ApplicationSpec{
-			Observability: &nais_io_v1.Observability{
-				Tracing: &nais_io_v1.Tracing{
-					Enabled: true,
-				},
-			},
-		},
-	}
 	otel := config.Otel{
 		Collector: config.OtelCollector{
 			Tls:       false,
-			Service:   "my-service",
-			Namespace: "my-namespace",
+			Service:   "otelcol",
+			Namespace: "system",
 			Port:      8080,
 			Protocol:  "grcp",
 		},
@@ -82,18 +69,49 @@ func TestOtelEnvVars(t *testing.T) {
 		"destination2",
 	}
 
+	existingEnvVars := []corev1.EnvVar{
+		{
+			Name:  "NAIS_APP_NAME",
+			Value: "my-app",
+		},
+		{
+			Name:  "NAIS_NAMESPACE",
+			Value: "my-team",
+		},
+		{
+			Name:  "OTEL_RESOURCE_ATTRIBUTES",
+			Value: "service.name=foo,deployment.environment=production",
+		},
+		{
+			Name:  "OTEL_OTHER_VAR",
+			Value: "value",
+		},
+	}
+
 	expectedEnvVars := []corev1.EnvVar{
+		{
+			Name:  "NAIS_APP_NAME",
+			Value: "my-app",
+		},
+		{
+			Name:  "NAIS_NAMESPACE",
+			Value: "my-team",
+		},
+		{
+			Name:  "OTEL_OTHER_VAR",
+			Value: "value",
+		},
 		{
 			Name:  "OTEL_SERVICE_NAME",
 			Value: "my-app",
 		},
 		{
 			Name:  "OTEL_RESOURCE_ATTRIBUTES",
-			Value: "service.name=my-app,service.namespace=my-namespace,nais.backend=destination1;destination2",
+			Value: "service.name=my-app,service.namespace=my-team,nais.backend=destination1;destination2,deployment.environment=production",
 		},
 		{
 			Name:  "OTEL_EXPORTER_OTLP_ENDPOINT",
-			Value: "http://my-service.my-namespace:8080",
+			Value: "http://otelcol.system:8080",
 		},
 		{
 			Name:  "OTEL_EXPORTER_OTLP_PROTOCOL",
@@ -105,7 +123,7 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 	}
 
-	actualEnvVars := otelEnvVars(&app, destinations, otel)
+	actualEnvVars := otelEnvVars("my-app", "my-team", existingEnvVars, destinations, otel)
 
 	assert.Equal(t, expectedEnvVars, actualEnvVars)
 }
@@ -343,4 +361,79 @@ func TestOtelAutoInstrumentAnnotations(t *testing.T) {
 	actualAnnotations := otelAutoInstrumentAnnotations(&app, otel)
 
 	assert.Equal(t, expectedAnnotations, actualAnnotations)
+}
+func TestOtelAutoInstrumentationDestinations(t *testing.T) {
+	tests := []struct {
+		name          string
+		source        Source
+		otel          config.Otel
+		expectedDest  []string
+		expectedError error
+	}{
+		{
+			name: "Valid destinations",
+			source: &nais_io_v1alpha1.Application{
+				Spec: nais_io_v1alpha1.ApplicationSpec{
+					Observability: &nais_io_v1.Observability{
+						AutoInstrumentation: &nais_io_v1.AutoInstrumentation{
+							Destinations: []nais_io_v1.AutoInstrumentationDestination{
+								{ID: "destination1"},
+								{ID: "destination2"},
+							},
+						},
+					},
+				},
+			},
+			otel: config.Otel{
+				Destinations: []string{"destination1", "destination2"},
+			},
+			expectedDest:  []string{"destination1", "destination2"},
+			expectedError: nil,
+		},
+		{
+			name: "Invalid destination",
+			source: &nais_io_v1alpha1.Application{
+				Spec: nais_io_v1alpha1.ApplicationSpec{
+					Observability: &nais_io_v1.Observability{
+						AutoInstrumentation: &nais_io_v1.AutoInstrumentation{
+							Destinations: []nais_io_v1.AutoInstrumentationDestination{
+								{ID: "destination1"},
+							},
+						},
+					},
+				},
+			},
+			otel: config.Otel{
+				Destinations: []string{"destination2"},
+			},
+			expectedDest:  nil,
+			expectedError: fmt.Errorf("auto-instrumentation destination %q does not exist in cluster", "destination1"),
+		},
+		{
+			name: "No destinations",
+			source: &nais_io_v1alpha1.Application{
+				Spec: nais_io_v1alpha1.ApplicationSpec{
+					Observability: &nais_io_v1.Observability{
+						AutoInstrumentation: &nais_io_v1.AutoInstrumentation{
+							Destinations: []nais_io_v1.AutoInstrumentationDestination{},
+						},
+					},
+				},
+			},
+			otel: config.Otel{
+				Destinations: []string{},
+			},
+			expectedDest:  []string{},
+			expectedError: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualDest, err := otelAutoInstrumentationDestinations(tt.source, tt.otel)
+
+			assert.Equal(t, tt.expectedError, err)
+			assert.Equal(t, tt.expectedDest, actualDest)
+		})
+	}
 }

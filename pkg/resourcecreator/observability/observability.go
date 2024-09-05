@@ -48,44 +48,72 @@ func otelEndpointFromConfig(collector config.OtelCollector) string {
 	return fmt.Sprintf("%s://%s.%s:%d", schema, collector.Service, collector.Namespace, collector.Port)
 }
 
-func otelEnvVars(source Source, destinations []string, otel config.Otel) []corev1.EnvVar {
-	// TODO: allo for user-defined resource attributes, currently we overwrite any user-defined attributes
-
-	collectorEndpoint := otelEndpointFromConfig(otel.Collector)
-	collectorProtocol := otel.Collector.Protocol
-
-	attributes := []string{
-		fmt.Sprintf("service.name=%s", source.GetName()),
-		fmt.Sprintf("service.namespace=%s", source.GetNamespace()),
+func otelAttributes(name, namesspace string, env []corev1.EnvVar, destinations []string) string {
+	reservedAttributes := map[string]bool{
+		"service.name":      true,
+		"service.namespace": true,
+		"nais.backend":      true,
 	}
+
+	attributes := fmt.Sprintf("service.name=%s,service.namespace=%s", name, namesspace)
 
 	if len(destinations) > 0 {
 		slices.Sort(destinations)
-		attributes = append(attributes, fmt.Sprintf("nais.backend=%s", strings.Join(destinations, ";")))
+		attributes = fmt.Sprintf("%s,nais.backend=%s", attributes, strings.Join(destinations, ";"))
 	}
 
-	return []corev1.EnvVar{
+	// Set user-defined attributes without overwriting default attributes
+	for _, e := range env {
+		if e.Name == otelResourceAttributes {
+			for _, kv := range strings.Split(e.Value, ",") {
+				parts := strings.Split(kv, "=")
+				if len(parts) == 2 && !reservedAttributes[parts[0]] {
+					attributes = fmt.Sprintf("%s,%s", attributes, kv)
+				}
+			}
+		}
+	}
+
+	return attributes
+}
+
+func otelFilterEnvVars(env []corev1.EnvVar) []corev1.EnvVar {
+	filtered := []corev1.EnvVar{}
+	for _, e := range env {
+		if e.Name != otelServiceName &&
+			e.Name != otelResourceAttributes &&
+			e.Name != otelExporterEndpoint &&
+			e.Name != otelExporterProtocol &&
+			e.Name != otelExporterInsecure {
+			filtered = append(filtered, e)
+		}
+	}
+	return filtered
+}
+
+func otelEnvVars(name, namespace string, env []corev1.EnvVar, destinations []string, otel config.Otel) []corev1.EnvVar {
+	return append(otelFilterEnvVars(env), []corev1.EnvVar{
 		{
 			Name:  otelServiceName,
-			Value: source.GetName(),
+			Value: name,
 		},
 		{
 			Name:  otelResourceAttributes,
-			Value: strings.Join(attributes, ","),
+			Value: otelAttributes(name, namespace, env, destinations),
 		},
 		{
 			Name:  otelExporterEndpoint,
-			Value: collectorEndpoint,
+			Value: otelEndpointFromConfig(otel.Collector),
 		},
 		{
 			Name:  otelExporterProtocol,
-			Value: collectorProtocol,
+			Value: otel.Collector.Protocol,
 		},
 		{
 			Name:  otelExporterInsecure,
 			Value: fmt.Sprintf("%t", !otel.Collector.Tls),
 		},
-	}
+	}...)
 }
 
 func otelAutoInstrumentationDestinations(source Source, otel config.Otel) ([]string, error) {
@@ -238,7 +266,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 			}
 		}
 
-		ast.Env = append(ast.Env, otelEnvVars(source, destinations, cfg.Otel)...)
+		ast.Env = otelEnvVars(source.GetName(), source.GetNamespace(), ast.Env, destinations, cfg.Otel)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, netpol)
 	}
 
