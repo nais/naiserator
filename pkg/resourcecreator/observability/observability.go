@@ -48,14 +48,14 @@ func otelEndpointFromConfig(collector config.OtelCollector) string {
 	return fmt.Sprintf("%s://%s.%s:%d", schema, collector.Service, collector.Namespace, collector.Port)
 }
 
-func otelAttributes(env []corev1.EnvVar, source Source, destinations []string) string {
+func otelAttributes(name, namesspace string, env []corev1.EnvVar, destinations []string) string {
 	reservedAttributes := map[string]bool{
 		"service.name":      true,
 		"service.namespace": true,
 		"nais.backend":      true,
 	}
 
-	attributes := fmt.Sprintf("service.name=%s,service.namespace=%s", source.GetName(), source.GetNamespace())
+	attributes := fmt.Sprintf("service.name=%s,service.namespace=%s", name, namesspace)
 
 	if len(destinations) > 0 {
 		slices.Sort(destinations)
@@ -77,15 +77,29 @@ func otelAttributes(env []corev1.EnvVar, source Source, destinations []string) s
 	return attributes
 }
 
-func otelEnvVars(env []corev1.EnvVar, source Source, destinations []string, otel config.Otel) []corev1.EnvVar {
-	return append(env, []corev1.EnvVar{
+func otelFilterEnvVars(env []corev1.EnvVar) []corev1.EnvVar {
+	filtered := []corev1.EnvVar{}
+	for _, e := range env {
+		if e.Name != otelServiceName &&
+			e.Name != otelResourceAttributes &&
+			e.Name != otelExporterEndpoint &&
+			e.Name != otelExporterProtocol &&
+			e.Name != otelExporterInsecure {
+			filtered = append(filtered, e)
+		}
+	}
+	return filtered
+}
+
+func otelEnvVars(name, namespace string, env []corev1.EnvVar, destinations []string, otel config.Otel) []corev1.EnvVar {
+	return append(otelFilterEnvVars(env), []corev1.EnvVar{
 		{
 			Name:  otelServiceName,
-			Value: source.GetName(),
+			Value: name,
 		},
 		{
 			Name:  otelResourceAttributes,
-			Value: otelAttributes(env, source, destinations),
+			Value: otelAttributes(name, namespace, env, destinations),
 		},
 		{
 			Name:  otelExporterEndpoint,
@@ -252,7 +266,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 			}
 		}
 
-		ast.Env = otelEnvVars(ast.Env, source, destinations, cfg.Otel)
+		ast.Env = otelEnvVars(source.GetName(), source.GetNamespace(), ast.Env, destinations, cfg.Otel)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, netpol)
 	}
 
