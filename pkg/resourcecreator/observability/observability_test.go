@@ -84,12 +84,32 @@ func TestOtelEnvVars(t *testing.T) {
 
 	existingEnvVars := []corev1.EnvVar{
 		{
+			Name:  "NAIS_APP_NAME",
+			Value: "my-app",
+		},
+		{
+			Name:  "NAIS_NAMESPACE",
+			Value: "my-namespace",
+		},
+		{
 			Name:  "OTEL_RESOURCE_ATTRIBUTES",
 			Value: "service.name=foo,deployment.environment=production",
 		},
 	}
 
 	expectedEnvVars := []corev1.EnvVar{
+		{
+			Name:  "NAIS_APP_NAME",
+			Value: "my-app",
+		},
+		{
+			Name:  "NAIS_NAMESPACE",
+			Value: "my-namespace",
+		},
+		{
+			Name:  "OTEL_RESOURCE_ATTRIBUTES",
+			Value: "service.name=foo,deployment.environment=production",
+		},
 		{
 			Name:  "OTEL_SERVICE_NAME",
 			Value: "my-app",

@@ -78,7 +78,7 @@ func otelAttributes(env []corev1.EnvVar, source Source, destinations []string) s
 }
 
 func otelEnvVars(env []corev1.EnvVar, source Source, destinations []string, otel config.Otel) []corev1.EnvVar {
-	return []corev1.EnvVar{
+	return append(env, []corev1.EnvVar{
 		{
 			Name:  otelServiceName,
 			Value: source.GetName(),
@@ -99,7 +99,7 @@ func otelEnvVars(env []corev1.EnvVar, source Source, destinations []string, otel
 			Name:  otelExporterInsecure,
 			Value: fmt.Sprintf("%t", !otel.Collector.Tls),
 		},
-	}
+	}...)
 }
 
 func otelAutoInstrumentationDestinations(source Source, otel config.Otel) ([]string, error) {
