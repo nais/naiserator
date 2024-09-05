@@ -28,6 +28,12 @@ const (
 	defaultPort        = "8080"
 )
 
+type EnvSource interface {
+	resource.Source
+	GetEnv() nais_io_v1.EnvVars
+	GetImage() string
+}
+
 type Source interface {
 	resource.Source
 	GetCommand() []string
@@ -257,9 +263,12 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 	return secrets
 }
 
-func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
+func CreateContainerEnvVars(app EnvSource, ast *resource.Ast, cfg Config) {
 	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
 	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
+}
+
+func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 	filesFrom(ast, app.GetFilesFrom())
 	envFrom(ast, app.GetEnvFrom())
 	lifecycle, err := lifecycle(app.GetPreStopHookPath(), app.GetPreStopHook())
@@ -319,8 +328,6 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 }
 
 func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
-	ast.Env = append(ast.Env, defaultEnvVars(naisjob, cfg.GetClusterName(), naisjob.Spec.Image)...)
-	ast.Env = append(ast.Env, naisjob.Spec.Env.ToKubernetes()...) // add user-specified envs last to allow overriding
 	filesFrom(ast, naisjob.Spec.FilesFrom)
 	envFrom(ast, naisjob.Spec.EnvFrom)
 	lifecycle, err := lifecycle("", naisjob.Spec.PreStopHook)

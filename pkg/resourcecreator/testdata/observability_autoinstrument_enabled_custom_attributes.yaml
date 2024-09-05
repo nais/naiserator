@@ -1,0 +1,96 @@
+testconfig:
+  description: enable opentelemetry auto-instrumentation
+config:
+  observability:
+    otel:
+      enabled: true
+      #destinations:
+      #  - "destination1"
+      #  - "destination2"
+      #  - "destination3"
+      auto-instrumentation:
+        enabled: true
+        app-config: "system-namespace/app-config"
+      collector:
+        labels:
+          - key1=value1
+          - key2=value2
+          - key3=value3
+        namespace: "system-namespace"
+        port: 4317
+        service: "my-collector"
+        tls: false
+        protocol: "grpc"
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    env:
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: deployment.environment=foo,deployment.zone=bar
+    observability:
+      autoInstrumentation:
+        enabled: true
+        runtime: "java"
+        #destinations:
+        #  - id: "destination1"
+        #  - id: "destination3"
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "otel annotation config set in pod"
+        resource:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  "instrumentation.opentelemetry.io/inject-java": "system-namespace/app-config"
+                  "instrumentation.opentelemetry.io/container-names": "myapplication"
+      - type: subset
+        name: "otel environment variables set in pod"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - image: navikt/myapplication:1.2.3
+                    name: myapplication
+                    env:
+                      - name: OTEL_SERVICE_NAME
+                        value: myapplication
+                      - name: OTEL_RESOURCE_ATTRIBUTES
+                        value: service.name=myapplication,service.namespace=mynamespace,deployment.environment=foo,deployment.zone=bar
+                      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                        value: http://my-collector.system-namespace:4317
+                      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+                        value: grpc
+                      - name: OTEL_EXPORTER_OTLP_INSECURE
+                        value: "true"
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication-tracing-438f0c6d
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "network policy allows traffic to data collector"
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: system-namespace
+                    podSelector:
+                      matchLabels:
+                        key1: value1
+                        key2: value2
+                        key3: value3

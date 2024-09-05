@@ -110,6 +110,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	}
 
 	ast := resource.NewAst()
+	pod.CreateContainerEnvVars(naisjob, ast, cfg)
 
 	serviceaccount.Create(naisjob, ast, cfg)
 	networkpolicy.Create(naisjob, ast, cfg)

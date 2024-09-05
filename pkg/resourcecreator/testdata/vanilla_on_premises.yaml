@@ -141,12 +141,6 @@ tests:
                       seccompProfile:
                         type: RuntimeDefault
                     env:
-                      - name: NAV_TRUSTSTORE_PATH
-                        value: /etc/ssl/certs/java/cacerts
-                      - name: NAV_TRUSTSTORE_PASSWORD
-                        value: changeme
-                      - name: NODE_EXTRA_CA_CERTS
-                        value: /etc/pki/tls/certs/ca-bundle.crt
                       - name: NAIS_APP_NAME
                         value: myapplication
                       - name: NAIS_NAMESPACE
@@ -163,6 +157,12 @@ tests:
                         value: "8080"
                       - name: BIND_ADDRESS
                         value: "0.0.0.0:8080"
+                      - name: NAV_TRUSTSTORE_PATH
+                        value: /etc/ssl/certs/java/cacerts
+                      - name: NAV_TRUSTSTORE_PASSWORD
+                        value: changeme
+                      - name: NODE_EXTRA_CA_CERTS
+                        value: /etc/pki/tls/certs/ca-bundle.crt
                     resources:
                       limits:
                         memory: 512Mi
