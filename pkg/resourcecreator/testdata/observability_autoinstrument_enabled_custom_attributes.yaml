@@ -4,10 +4,10 @@ config:
   observability:
     otel:
       enabled: true
-      #destinations:
-      #  - "destination1"
-      #  - "destination2"
-      #  - "destination3"
+      destinations:
+        - "destination1"
+        - "destination2"
+        - "destination3"
       auto-instrumentation:
         enabled: true
         app-config: "system-namespace/app-config"
@@ -32,14 +32,14 @@ input:
     image: navikt/myapplication:1.2.3
     env:
       - name: OTEL_RESOURCE_ATTRIBUTES
-        value: deployment.environment=foo,deployment.zone=bar
+        value: service.name=fake-name,deployment.environment=foo,deployment.zone=bar
     observability:
       autoInstrumentation:
         enabled: true
         runtime: "java"
-        #destinations:
-        #  - id: "destination1"
-        #  - id: "destination3"
+        destinations:
+          - id: "destination1"
+          - id: "destination3"
 tests:
   - apiVersion: apps/v1
     kind: Deployment
@@ -68,7 +68,7 @@ tests:
                       - name: OTEL_SERVICE_NAME
                         value: myapplication
                       - name: OTEL_RESOURCE_ATTRIBUTES
-                        value: service.name=myapplication,service.namespace=mynamespace,deployment.environment=foo,deployment.zone=bar
+                        value: service.name=myapplication,service.namespace=mynamespace,nais.backend=destination1;destination3,deployment.environment=foo,deployment.zone=bar
                       - name: OTEL_EXPORTER_OTLP_ENDPOINT
                         value: http://my-collector.system-namespace:4317
                       - name: OTEL_EXPORTER_OTLP_PROTOCOL
