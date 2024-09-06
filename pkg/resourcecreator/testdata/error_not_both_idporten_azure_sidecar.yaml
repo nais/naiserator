@@ -26,4 +26,4 @@ input:
         enabled: true
     ingresses:
       - "https://app.nav.no/"
-error: "only one of Azure AD or ID-porten sidecars can be enabled, but not both"
+error: "NAISERATOR-1511: only one of Azure AD or ID-porten sidecars can be enabled, but not both"

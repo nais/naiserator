@@ -15,7 +15,7 @@ func OpenSearch(ast *resource.Ast, openSearch *nais_io_v1.OpenSearch, aivenApp *
 	}
 
 	if openSearch.Instance == "" {
-		return false, fmt.Errorf("OpenSearch enabled, but no instance specified")
+		return false, fmt.Errorf("NAISERATOR-7091: OpenSearch enabled, but no instance specified")
 	}
 
 	addOpenSearchEnvVariables(ast, aivenApp.Spec.SecretName)

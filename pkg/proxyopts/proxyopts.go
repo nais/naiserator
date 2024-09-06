@@ -43,7 +43,7 @@ func httpOpts(flags javaOptions, proxyURL string) (javaOptions, error) {
 	}
 
 	if len(u.Hostname()) == 0 || len(u.Port()) == 0 {
-		return flags, fmt.Errorf("if specifying a proxy URL, both hostname and port is required")
+		return flags, fmt.Errorf("NAISERATOR-7260: if specifying a proxy URL, both hostname and port is required")
 	}
 
 	flags = append(flags, newJavaOption("http.proxyHost", u.Hostname()))
@@ -85,7 +85,7 @@ func JavaProxyOptions(proxyURL, noProxy string) (s string, err error) {
 
 	flags, err = httpOpts(flags, proxyURL)
 	if err != nil {
-		err = fmt.Errorf("error in parsing proxy URL: %s", err)
+		err = fmt.Errorf("NAISERATOR-4196: error in parsing proxy URL: %s", err)
 		return
 	}
 

@@ -23,12 +23,12 @@ func Redis(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nais
 	}
 
 	if len(config.GetAivenProject()) == 0 {
-		return false, fmt.Errorf("aiven project not defined for this cluster; needed for Redis")
+		return false, fmt.Errorf("NAISERATOR-6450: aiven project not defined for this cluster; needed for Redis")
 	}
 
 	for _, redis := range redises {
 		if redis.Instance == "" {
-			return false, fmt.Errorf("Redis requires instance name")
+			return false, fmt.Errorf("NAISERATOR-1564: Redis requires instance name")
 		}
 
 		addRedisEnvVariables(ast, aivenApp.Spec.SecretName, redis.Instance)

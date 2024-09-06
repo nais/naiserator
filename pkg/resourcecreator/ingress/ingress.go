@@ -66,7 +66,7 @@ func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
 	for _, ingress := range source.GetIngress() {
 		parsedUrl, err := url.Parse(string(ingress))
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+			return nil, fmt.Errorf("NAISERATOR-2863: failed to parse URL '%s': %s", ingress, err)
 		}
 
 		if len(parsedUrl.Path) > 1 {
@@ -170,7 +170,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 		// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
 		if ingressClass == nil {
 			return nil,
-				fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
+				fmt.Errorf("NAISERATOR-7972: the domain %q cannot be used in cluster %q; use one of %v",
 					rule.Host,
 					cfg.GetClusterName(),
 					strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),

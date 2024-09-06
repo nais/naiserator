@@ -39,7 +39,7 @@ var _ synchronizer.Generator = &Naisjob{}
 func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube client.Client) (interface{}, error) {
 	job, ok := source.(*nais_io_v1.Naisjob)
 	if !ok {
-		return nil, fmt.Errorf("BUG: this generator accepts only nais_io_v1.Naisjob objects")
+		return nil, fmt.Errorf("NAISERATOR-9325: BUG: this generator accepts only nais_io_v1.Naisjob objects")
 	}
 
 	o := &Options{
@@ -53,7 +53,7 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 	namespace := &corev1.Namespace{}
 	err := kube.Get(ctx, namespaceKey, namespace)
 	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("query existing namespace: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-9777: query existing namespace: %s", err)
 	}
 
 	// Disallow creating Naisjob resources if there is an Application with the same name.
@@ -64,7 +64,7 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 	app := &nais_io_v1alpha1.Application{}
 	err = kube.Get(ctx, key, app)
 	if err == nil {
-		return nil, fmt.Errorf("cannot create a Naisjob with name '%s' because an Application with that name exists", source.GetName())
+		return nil, fmt.Errorf("NAISERATOR-2468: cannot create a Naisjob with name '%s' because an Application with that name exists", source.GetName())
 	}
 
 	// Auto-detect Google Team Project ID
@@ -101,12 +101,12 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource.Operations, error) {
 	naisjob, ok := source.(*nais_io_v1.Naisjob)
 	if !ok {
-		return nil, fmt.Errorf("BUG: generator only accepts nais_io_v1.Naisjob objects, fix your caller")
+		return nil, fmt.Errorf("NAISERATOR-6589: BUG: generator only accepts nais_io_v1.Naisjob objects, fix your caller")
 	}
 
 	cfg, ok := config.(*Options)
 	if !ok {
-		return nil, fmt.Errorf("BUG: Application generator called without correct configuration object; fix your code")
+		return nil, fmt.Errorf("NAISERATOR-0404: BUG: Application generator called without correct configuration object; fix your code")
 	}
 
 	ast := resource.NewAst()
@@ -155,14 +155,14 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 
 	if naisjob.Spec.Schedule == "" {
 		if err := batch.DeleteCronJob(naisjob, ast); err != nil {
-			return nil, fmt.Errorf("convert to job: %w", err)
+			return nil, fmt.Errorf("NAISERATOR-9392: convert to job: %w", err)
 		}
 		if err := batch.CreateJob(naisjob, ast, cfg); err != nil {
 			return nil, err
 		}
 	} else {
 		if err := batch.DeleteJob(naisjob, ast); err != nil {
-			return nil, fmt.Errorf("convert to cronjob: %w", err)
+			return nil, fmt.Errorf("NAISERATOR-4499: convert to cronjob: %w", err)
 		}
 		if err := batch.CreateCronJob(naisjob, ast, cfg); err != nil {
 			return nil, err

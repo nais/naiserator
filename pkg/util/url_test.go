@@ -27,7 +27,7 @@ func TestValidateUrl(t *testing.T) {
 	for _, s := range validURLs {
 		u, err := url.Parse(s)
 		if err != nil {
-			panic(fmt.Errorf("invalid test: unparseable URL '%s'", s))
+			panic(fmt.Errorf("NAISERATOR-9566: invalid test: unparseable URL '%s'", s))
 		}
 		assert.NoError(t, util.ValidateUrl(u))
 	}
@@ -35,7 +35,7 @@ func TestValidateUrl(t *testing.T) {
 	for _, s := range invalidURLs {
 		u, err := url.Parse(s)
 		if err != nil {
-			panic(fmt.Errorf("invalid test: unparseable URL '%s'", s))
+			panic(fmt.Errorf("NAISERATOR-9644: invalid test: unparseable URL '%s'", s))
 		}
 		assert.Error(t, util.ValidateUrl(u), "expected URL '%s' to fail validation", s)
 	}

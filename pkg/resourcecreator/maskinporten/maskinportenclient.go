@@ -29,7 +29,7 @@ func secretName(name string) (string, error) {
 func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinporten) (*nais_io_v1.MaskinportenClient, error) {
 	name, err := secretName(objectMeta.Name)
 	if err != nil {
-		return nil, fmt.Errorf("generate secret name: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-7968: generate secret name: %w", err)
 	}
 
 	return &nais_io_v1.MaskinportenClient{
@@ -56,7 +56,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	if !cfg.IsMaskinportenEnabled() {
-		return fmt.Errorf("maskinporten is not available in this cluster")
+		return fmt.Errorf("NAISERATOR-4387: maskinporten is not available in this cluster")
 	}
 
 	ast.Labels["maskinporten"] = "enabled"

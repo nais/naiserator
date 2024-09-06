@@ -20,4 +20,4 @@ input:
         enabled: true
     ingresses:
       - "https://my-client.nav.no/"
-error: "idporten sidecar is not enabled for this cluster"
+error: "NAISERATOR-7581: idporten sidecar is not enabled for this cluster"

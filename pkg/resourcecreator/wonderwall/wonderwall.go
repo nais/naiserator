@@ -68,7 +68,7 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 
 	container, err := sidecarContainer(source, naisCfg, wonderwallCfg)
 	if err != nil {
-		return fmt.Errorf("creating wonderwall container spec: %w", err)
+		return fmt.Errorf("NAISERATOR-5263: creating wonderwall container spec: %w", err)
 	}
 
 	if wonderwallCfg.NeedsEncryptionSecret {
@@ -88,24 +88,24 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 
 func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error {
 	if !naisCfg.IsWonderwallEnabled() {
-		return fmt.Errorf("wonderwall is not enabled for this cluster")
+		return fmt.Errorf("NAISERATOR-2114: wonderwall is not enabled for this cluster")
 	}
 
 	if len(wonderwallCfg.Provider) == 0 {
-		return fmt.Errorf("configuration has empty provider")
+		return fmt.Errorf("NAISERATOR-0820: configuration has empty provider")
 	}
 
 	if len(wonderwallCfg.SecretNames) == 0 {
-		return fmt.Errorf("configuration has no secret names")
+		return fmt.Errorf("NAISERATOR-2265: configuration has no secret names")
 	}
 
 	if len(wonderwallCfg.Ingresses) == 0 {
-		return fmt.Errorf("configuration has no ingresses")
+		return fmt.Errorf("NAISERATOR-0110: configuration has no ingresses")
 	}
 
 	for _, name := range wonderwallCfg.SecretNames {
 		if len(name) == 0 {
-			return fmt.Errorf("configuration contains empty secret names")
+			return fmt.Errorf("NAISERATOR-4599: configuration contains empty secret names")
 		}
 	}
 
@@ -116,12 +116,12 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
 
 	if idPortenEnabled && azureEnabled {
-		return fmt.Errorf("only one of Azure AD or ID-porten sidecars can be enabled, but not both")
+		return fmt.Errorf("NAISERATOR-1511: only one of Azure AD or ID-porten sidecars can be enabled, but not both")
 	}
 
 	port := source.GetPort()
 	if port == Port || port == MetricsPort {
-		return fmt.Errorf("cannot use port '%d'; conflicts with sidecar", port)
+		return fmt.Errorf("NAISERATOR-7360: cannot use port '%d'; conflicts with sidecar", port)
 	}
 
 	return nil
@@ -195,7 +195,7 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 
 	err := mergo.Merge(reqs, defaultReqs)
 	if err != nil {
-		return nil, fmt.Errorf("merging default resource requirements: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-1549: merging default resource requirements: %w", err)
 	}
 
 	return reqs, nil
@@ -266,7 +266,7 @@ func makeEncryptionKeySecret(source Source, cfg Configuration) (*corev1.Secret, 
 
 	key, err := keygen.Keygen(32)
 	if err != nil {
-		return nil, fmt.Errorf("generating secret key: %w", err)
+		return nil, fmt.Errorf("NAISERATOR-7195: generating secret key: %w", err)
 	}
 
 	secrets := map[string]string{

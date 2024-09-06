@@ -52,7 +52,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	}
 
 	if !config.IsAzureratorEnabled() {
-		return fmt.Errorf("azure ad is not available in this cluster")
+		return fmt.Errorf("NAISERATOR-8848: azure ad is not available in this cluster")
 	}
 
 	azureAdApplication, err := application(source, config)
@@ -111,12 +111,12 @@ func application(source Source, config Config) (*nais_io_v1.AzureAdApplication, 
 
 func sidecar(source Source, ast *resource.Ast, config Config, azureApp *nais_io_v1.AzureAdApplication) error {
 	if !config.IsWonderwallEnabled() {
-		return fmt.Errorf("azure ad sidecar is not enabled for this cluster")
+		return fmt.Errorf("NAISERATOR-8373: azure ad sidecar is not enabled for this cluster")
 	}
 
 	ingresses := source.GetIngress()
 	if len(ingresses) == 0 {
-		return fmt.Errorf("must have at least 1 ingress to use Azure AD sidecar")
+		return fmt.Errorf("NAISERATOR-1512: must have at least 1 ingress to use Azure AD sidecar")
 	}
 
 	// ensure that the ingress is added to the configured Azure AD reply URLs

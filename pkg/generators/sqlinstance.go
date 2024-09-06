@@ -15,7 +15,7 @@ func prepareSqlInstance(ctx context.Context, kube client.Client, key client.Obje
 	err := kube.Get(ctx, key, sqlinstance)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			return fmt.Errorf("query existing sqlinstance: %s", err)
+			return fmt.Errorf("NAISERATOR-7093: query existing sqlinstance: %s", err)
 		}
 		o.SqlInstance.exists = false
 	} else {

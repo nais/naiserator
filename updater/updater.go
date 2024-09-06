@@ -27,7 +27,7 @@ func AnnotateIfExists(ctx context.Context, cli client.Client, scheme *runtime.Sc
 		log.Infof("AnnotateIfExists %s", liberator_scheme.TypeName(resource))
 		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
 		if err != nil {
-			return fmt.Errorf("internal error: %w", err)
+			return fmt.Errorf("NAISERATOR-9565: internal error: %w", err)
 		}
 		objectKey := client.ObjectKeyFromObject(resource)
 
@@ -53,7 +53,7 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 		log.Infof("CreateOrUpdate %s", liberator_scheme.TypeName(resource))
 		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
 		if err != nil {
-			return fmt.Errorf("internal error: %w", err)
+			return fmt.Errorf("NAISERATOR-9776: internal error: %w", err)
 		}
 		objectKey := client.ObjectKeyFromObject(resource)
 
@@ -100,7 +100,7 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, scheme *runtime.Sc
 
 		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
 		if err != nil {
-			return fmt.Errorf("internal error: %w", err)
+			return fmt.Errorf("NAISERATOR-0111: internal error: %w", err)
 		}
 		objectKey := client.ObjectKeyFromObject(resource)
 		timedOut := time.Now().Add(time.Minute + time.Duration(5))
@@ -111,10 +111,10 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, scheme *runtime.Sc
 				break
 			}
 			if err != nil {
-				return fmt.Errorf("internal error: %v", err)
+				return fmt.Errorf("NAISERATOR-4373: internal error: %v", err)
 			}
 			if time.Now().After(timedOut) {
-				return fmt.Errorf("timed out waiting for deletion of %v/%v", resource.GetObjectKind(), resource.GetName())
+				return fmt.Errorf("NAISERATOR-4333: timed out waiting for deletion of %v/%v", resource.GetObjectKind(), resource.GetName())
 			}
 			time.Sleep(1 * time.Second)
 		}
@@ -163,7 +163,7 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 	for _, obj := range types {
 		err = cli.List(ctx, obj, listopt)
 		if err != nil {
-			return nil, fmt.Errorf("list %T: %w", obj, err)
+			return nil, fmt.Errorf("NAISERATOR-3321: list %T: %w", obj, err)
 		}
 
 		_ = meta.EachListItem(obj, func(item runtime.Object) error {
@@ -229,7 +229,7 @@ func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
 		}
 	}
 
-	return fmt.Errorf("refusing to overwrite manually edited resource; please add the correct ownerReference in order to continue")
+	return fmt.Errorf("NAISERATOR-1794: refusing to overwrite manually edited resource; please add the correct ownerReference in order to continue")
 }
 
 // CopyMeta copies resource metadata from one resource to another.
@@ -286,14 +286,14 @@ func CopyImmutable(dst, src runtime.Object) error {
 		// ClusterIP must be retained as the field is immutable.
 		dstTyped, ok := dst.(*corev1.Service)
 		if !ok {
-			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+			return fmt.Errorf("NAISERATOR-2099: source and destination types differ (%T != %T)", src, dst)
 		}
 		dstTyped.Spec.ClusterIP = srcTyped.Spec.ClusterIP
 
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLInstance:
 		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLInstance)
 		if !ok {
-			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+			return fmt.Errorf("NAISERATOR-1961: source and destination types differ (%T != %T)", src, dst)
 		}
 		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
@@ -301,7 +301,7 @@ func CopyImmutable(dst, src runtime.Object) error {
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLDatabase:
 		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLDatabase)
 		if !ok {
-			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+			return fmt.Errorf("NAISERATOR-6343: source and destination types differ (%T != %T)", src, dst)
 		}
 		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
@@ -309,7 +309,7 @@ func CopyImmutable(dst, src runtime.Object) error {
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLUser:
 		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLUser)
 		if !ok {
-			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+			return fmt.Errorf("NAISERATOR-5526: source and destination types differ (%T != %T)", src, dst)
 		}
 		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
@@ -317,7 +317,7 @@ func CopyImmutable(dst, src runtime.Object) error {
 	case *sql_cnrm_cloud_google_com_v1beta1.SQLSSLCert:
 		dstTyped, ok := dst.(*sql_cnrm_cloud_google_com_v1beta1.SQLSSLCert)
 		if !ok {
-			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+			return fmt.Errorf("NAISERATOR-4979: source and destination types differ (%T != %T)", src, dst)
 		}
 		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID
@@ -325,7 +325,7 @@ func CopyImmutable(dst, src runtime.Object) error {
 	case *storage_cnrm_cloud_google_com_v1beta1.StorageBucket:
 		dstTyped, ok := dst.(*storage_cnrm_cloud_google_com_v1beta1.StorageBucket)
 		if !ok {
-			return fmt.Errorf("source and destination types differ (%T != %T)", src, dst)
+			return fmt.Errorf("NAISERATOR-0777: source and destination types differ (%T != %T)", src, dst)
 		}
 		CopyCNRM(dstTyped, srcTyped)
 		dstTyped.Spec.ResourceID = srcTyped.Spec.ResourceID

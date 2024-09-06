@@ -60,7 +60,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	if len(manifestGCP.SqlInstances) > 1 {
-		return fmt.Errorf("only one sql instance is supported even though the spec indicates otherwise")
+		return fmt.Errorf("NAISERATOR-8231: only one sql instance is supported even though the spec indicates otherwise")
 	}
 
 	naisSqlInstance, err := NaisCloudSqlInstanceWithDefaults(manifestGCP.Instance(), sourceName)
@@ -69,7 +69,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	if len(naisSqlInstance.Databases) > 1 {
-		return fmt.Errorf("only one sql database is supported even though the spec indicates otherwise")
+		return fmt.Errorf("NAISERATOR-5338: only one sql database is supported even though the spec indicates otherwise")
 	}
 
 	naisSqlDatabase := naisSqlInstance.Database()
@@ -119,7 +119,7 @@ func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.
 	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
 
 	if len(instance.Tier) == 0 {
-		return nil, fmt.Errorf("DB instance tier missing. Previous default value was `db-f1-micro` (recommended only for development); closest recommended value for production use is `db-custom-1-3840`")
+		return nil, fmt.Errorf("NAISERATOR-5213: DB instance tier missing. Previous default value was `db-f1-micro` (recommended only for development); closest recommended value for production use is `db-custom-1-3840`")
 	}
 
 	if !instance.CascadingDelete {
@@ -211,7 +211,7 @@ func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.
 
 func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, appName string) (*nais_io_v1.CloudSqlInstance, error) {
 	if instance == nil {
-		return nil, fmt.Errorf("sql instance not defined")
+		return nil, fmt.Errorf("NAISERATOR-1856: sql instance not defined")
 	}
 
 	defaultInstance := nais_io_v1.CloudSqlInstance{
@@ -224,7 +224,7 @@ func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, app
 
 	err := mergo.Merge(instance, defaultInstance)
 	if err != nil {
-		return nil, fmt.Errorf("unable to merge default sqlinstance values: %s", err)
+		return nil, fmt.Errorf("NAISERATOR-6817: unable to merge default sqlinstance values: %s", err)
 	}
 
 	// Have to do this check explicitly as mergo is not able to distinguish between nil pointer and 0.

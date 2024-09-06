@@ -33,7 +33,7 @@ func StrTrimMiddle(s string, maxlen int) string {
 func GeneratePassword() (string, error) {
 	key, err := keygen.Keygen(32)
 	if err != nil {
-		return "", fmt.Errorf("unable to generate secret for sql user: %s", err)
+		return "", fmt.Errorf("NAISERATOR-8230: unable to generate secret for sql user: %s", err)
 	}
 	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(key), nil
 }

@@ -34,7 +34,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	for i, p := range paths {
 		if len(p.MountPath) == 0 {
-			return fmt.Errorf("vault config #%d: mount path not specified", i)
+			return fmt.Errorf("NAISERATOR-4229: vault config #%d: mount path not specified", i)
 		}
 	}
 

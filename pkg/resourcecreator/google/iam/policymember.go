@@ -60,7 +60,7 @@ func policyMember(source resource.Source, policy nais_io_v1.CloudIAMPermission, 
 func createName(appName string, policy nais_io_v1.CloudIAMPermission) (string, error) {
 	hash, err := hashstructure.Hash(policy, nil)
 	if err != nil {
-		return "", fmt.Errorf("while calculating hash from policy: %w", err)
+		return "", fmt.Errorf("NAISERATOR-4331: while calculating hash from policy: %w", err)
 	}
 	basename := fmt.Sprintf("%s-%s-%x", appName, strings.ToLower(policy.Resource.Kind), hash)
 	return namegen.ShortName(basename, validation.DNS1035LabelMaxLength)
@@ -88,7 +88,7 @@ func CreatePolicyMember(source Source, ast *resource.Ast, cfg Config) error {
 	for _, p := range gcp.Permissions {
 		policyMember, err := policyMember(source, p, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID())
 		if err != nil {
-			return fmt.Errorf("unable to create iampolicymember: %w", err)
+			return fmt.Errorf("NAISERATOR-2113: unable to create iampolicymember: %w", err)
 		}
 		ast.AppendOperation(resource.OperationCreateIfNotExists, policyMember)
 	}

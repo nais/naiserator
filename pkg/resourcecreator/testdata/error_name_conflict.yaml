@@ -19,4 +19,4 @@ existing:
     metadata:
       name: myapplication
       namespace: mynamespace
-error: "failed preparing options for resource generation: cannot create an Application with name 'myapplication' because a Naisjob with that name exists"
+error: "NAISERATOR-0325: failed preparing options for resource generation: NAISERATOR-0916: cannot create an Application with name 'myapplication' because a Naisjob with that name exists"

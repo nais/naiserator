@@ -18,7 +18,7 @@ func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 	case MatchAbsent:
 		return Absent(expected, actual, matchType)
 	default:
-		panic(fmt.Errorf("unhandled type %v", matchType))
+		panic(fmt.Errorf("NAISERATOR-9996: unhandled type %v", matchType))
 	}
 }
 

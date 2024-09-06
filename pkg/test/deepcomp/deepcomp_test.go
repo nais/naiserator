@@ -295,7 +295,7 @@ func decode(data string) interface{} {
 	i := new(interface{})
 	err := json.Unmarshal([]byte(data), &i)
 	if err != nil {
-		panic(fmt.Errorf("error in test fixture: %s", err))
+		panic(fmt.Errorf("NAISERATOR-4872: error in test fixture: %s", err))
 	}
 	return i
 }

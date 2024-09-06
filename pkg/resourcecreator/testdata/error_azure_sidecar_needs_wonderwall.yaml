@@ -14,4 +14,4 @@ input:
     azure:
       sidecar:
         enabled: true
-error: "azure ad sidecar is not enabled for this cluster"
+error: "NAISERATOR-8373: azure ad sidecar is not enabled for this cluster"

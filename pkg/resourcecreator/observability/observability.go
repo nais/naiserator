@@ -165,7 +165,7 @@ func logLabels(obs *nais_io_v1.Observability, cfg config.Logging) (map[string]st
 
 		for _, destination := range obs.Logging.Destinations {
 			if !slices.Contains(cfg.Destinations, destination.ID) {
-				return nil, fmt.Errorf("logging destination %q does not exist in cluster", destination.ID)
+				return nil, fmt.Errorf("NAISERATOR-9370: logging destination %q does not exist in cluster", destination.ID)
 			}
 
 			labels[logLabelPrefix+destination.ID] = "true"
@@ -237,16 +237,16 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	}
 
 	if obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled && obs.Tracing != nil && obs.Tracing.Enabled {
-		return fmt.Errorf("auto-instrumentation and tracing cannot be enabled at the same time")
+		return fmt.Errorf("NAISERATOR-3128: auto-instrumentation and tracing cannot be enabled at the same time")
 	}
 
 	if (obs.Tracing != nil && obs.Tracing.Enabled) || (obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled) {
 		if !cfg.Otel.Enabled {
-			return fmt.Errorf("opentelemetry is not supported for this cluster")
+			return fmt.Errorf("NAISERATOR-5771: opentelemetry is not supported for this cluster")
 		}
 
 		if !cfg.Otel.AutoInstrumentation.Enabled && obs.AutoInstrumentation != nil && obs.AutoInstrumentation.Enabled {
-			return fmt.Errorf("auto-instrumentation is not supported for this cluster")
+			return fmt.Errorf("NAISERATOR-0183: auto-instrumentation is not supported for this cluster")
 		}
 
 		netpol, err := otelNetpol(source, cfg.Otel)

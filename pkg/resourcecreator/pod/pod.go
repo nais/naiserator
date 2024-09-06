@@ -284,7 +284,7 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 		if app.GetPrometheus().Port != "" {
 			promPort, err := strconv.ParseInt(app.GetPrometheus().Port, 10, 32)
 			if err != nil {
-				return fmt.Errorf("invalid port provided, unable to convert to int32")
+				return fmt.Errorf("NAISERATOR-2254: invalid port provided, unable to convert to int32")
 			}
 
 			if promPort != 0 && int(promPort) != app.GetPort() {
@@ -454,7 +454,7 @@ func copyLinkerdAnnotations(src, dst map[string]string) {
 // This function handles both of them.
 func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*corev1.Lifecycle, error) {
 	if len(preStopHookPath) > 0 && preStopHook != nil {
-		return nil, fmt.Errorf("can only use one of spec.preStopHookPath or spec.preStopHook")
+		return nil, fmt.Errorf("NAISERATOR-8273: can only use one of spec.preStopHookPath or spec.preStopHook")
 	}
 
 	// Legacy behavior.
@@ -480,7 +480,7 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 	}
 
 	if preStopHook.Exec != nil && preStopHook.Http != nil {
-		return nil, fmt.Errorf("can only use one type of preStopHook, either exec or http")
+		return nil, fmt.Errorf("NAISERATOR-9791: can only use one type of preStopHook, either exec or http")
 	}
 
 	if preStopHook.Exec != nil {

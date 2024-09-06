@@ -53,14 +53,14 @@ func TestApplicationGoldenFile(t *testing.T) {
 		for i, data := range test.Existing {
 			object, _, err := decoder.Decode(data, nil, nil)
 			if err != nil {
-				return nil, fmt.Errorf("decoding kubernetes resource %d: %w", i+1, err)
+				return nil, fmt.Errorf("NAISERATOR-9776: decoding kubernetes resource %d: %w", i+1, err)
 			}
 			existing = append(existing, object)
 		}
 
 		err = test.Input.ApplyDefaults()
 		if err != nil {
-			return nil, fmt.Errorf("apply default values to Application object: %s", err)
+			return nil, fmt.Errorf("NAISERATOR-4281: apply default values to Application object: %s", err)
 		}
 
 		gen := &generators.Application{
@@ -73,7 +73,7 @@ func TestApplicationGoldenFile(t *testing.T) {
 		mockClient := fake.NewClientBuilder().WithRuntimeObjects(existing...).Build()
 		opts, err := gen.Prepare(ctx, &test.Input, mockClient)
 		if err != nil {
-			return nil, fmt.Errorf("failed preparing options for resource generation: %w", err)
+			return nil, fmt.Errorf("NAISERATOR-0325: failed preparing options for resource generation: %w", err)
 		}
 
 		return gen.Generate(&test.Input, opts)
@@ -98,14 +98,14 @@ func TestNaisjobGoldenFile(t *testing.T) {
 		for i, data := range test.Existing {
 			object, _, err := decoder.Decode(data, nil, nil)
 			if err != nil {
-				return nil, fmt.Errorf("decoding kubernetes resource %d: %w", i+1, err)
+				return nil, fmt.Errorf("NAISERATOR-4453: decoding kubernetes resource %d: %w", i+1, err)
 			}
 			existing = append(existing, object)
 		}
 
 		err = test.Input.ApplyDefaults()
 		if err != nil {
-			return nil, fmt.Errorf("apply default values to Naisjob object: %s", err)
+			return nil, fmt.Errorf("NAISERATOR-8579: apply default values to Naisjob object: %s", err)
 		}
 
 		gen := &generators.Naisjob{
@@ -117,7 +117,7 @@ func TestNaisjobGoldenFile(t *testing.T) {
 		mockClient := fake.NewClientBuilder().WithRuntimeObjects(existing...).Build()
 		opts, err := gen.Prepare(ctx, &test.Input, mockClient)
 		if err != nil {
-			return nil, fmt.Errorf("failed preparing options for resource generation: %w", err)
+			return nil, fmt.Errorf("NAISERATOR-0655: failed preparing options for resource generation: %w", err)
 		}
 
 		return gen.Generate(&test.Input, opts)
