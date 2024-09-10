@@ -67,11 +67,11 @@ func addDefaultRedisIfNotExists(ast *resource.Ast, source Source, aivenProject, 
 func addRedisEnvVariables(ast *resource.Ast, secretName, instanceName string) {
 	// Add environment variables for string data
 	suffix := envVarSuffix(instanceName)
-	ast.Env = append([]corev1.EnvVar{
+	ast.PrependEnv([]corev1.EnvVar{
 		makeSecretEnvVar(fmt.Sprintf("REDIS_USERNAME_%s", suffix), secretName),
 		makeSecretEnvVar(fmt.Sprintf("REDIS_PASSWORD_%s", suffix), secretName),
 		makeSecretEnvVar(fmt.Sprintf("REDIS_URI_%s", suffix), secretName),
-	}, ast.Env...)
+	}...)
 }
 
 func envVarSuffix(instanceName string) string {

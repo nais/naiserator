@@ -32,10 +32,10 @@ func Influx(ast *resource.Ast, influx *nais_io_v1.Influx, aivenApp *aiven_nais_i
 
 func addInfluxEnvVariables(ast *resource.Ast, secretName string) {
 	// Add environment variables for string data
-	ast.Env = append([]corev1.EnvVar{
+	ast.PrependEnv([]corev1.EnvVar{
 		makeSecretEnvVar("INFLUXDB_USERNAME", secretName),
 		makeSecretEnvVar("INFLUXDB_PASSWORD", secretName),
 		makeSecretEnvVar("INFLUXDB_URI", secretName),
 		makeSecretEnvVar("INFLUXDB_NAME", secretName),
-	}, ast.Env...)
+	}...)
 }

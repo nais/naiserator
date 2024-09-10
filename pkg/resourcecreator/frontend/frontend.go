@@ -108,7 +108,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	cm := naisJsConfigMap(source, configMapName, naisJsContents)
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cm)
-	ast.Env = append(envVars(cfg.GetFrontendOptions().TelemetryURL), ast.Env...)
+	ast.PrependEnv(envVars(cfg.GetFrontendOptions().TelemetryURL)...)
 	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(frontendSpec.GeneratedConfig.MountPath))
 	ast.Volumes = append(ast.Volumes, volume(configMapName))
 

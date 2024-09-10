@@ -38,3 +38,13 @@ func NewAst() *Ast {
 		VolumeMounts: []corev1.VolumeMount{},
 	}
 }
+
+// Use AppendEnv for adding environment variables that depend on other environment variables, or to ensure that they can not be overridden by the user.
+func (a *Ast) AppendEnv(vars ...corev1.EnvVar) {
+	a.Env = append(a.Env, vars...)
+}
+
+// Use PrependEnv for adding environment variables that can be referenced by other environment variables or allowed to be overriden by the user.
+func (a *Ast) PrependEnv(vars ...corev1.EnvVar) {
+	a.Env = append(vars, a.Env...)
+}

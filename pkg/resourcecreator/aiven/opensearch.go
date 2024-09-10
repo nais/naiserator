@@ -30,9 +30,9 @@ func OpenSearch(ast *resource.Ast, openSearch *nais_io_v1.OpenSearch, aivenApp *
 
 func addOpenSearchEnvVariables(ast *resource.Ast, secretName string) {
 	// Add environment variables for string data
-	ast.Env = append([]corev1.EnvVar{
+	ast.PrependEnv([]corev1.EnvVar{
 		makeSecretEnvVar("OPEN_SEARCH_USERNAME", secretName),
 		makeSecretEnvVar("OPEN_SEARCH_PASSWORD", secretName),
 		makeSecretEnvVar("OPEN_SEARCH_URI", secretName),
-	}, ast.Env...)
+	}...)
 }

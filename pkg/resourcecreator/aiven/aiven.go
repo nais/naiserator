@@ -81,10 +81,10 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 
 	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || redisEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
-		ast.Env = append([]v1.EnvVar{
+		ast.PrependEnv([]v1.EnvVar{
 			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),
 			makeOptionalSecretEnvVar("AIVEN_CA", aivenApp.Spec.SecretName),
-		}, ast.Env...)
+		}...)
 	}
 	return nil
 }

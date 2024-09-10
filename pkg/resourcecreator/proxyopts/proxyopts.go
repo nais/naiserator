@@ -91,7 +91,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return fmt.Errorf("generate proxy environment variables: %w", err)
 	}
 
-	ast.Env = append(envs, ast.Env...)
+	ast.PrependEnv(envs...)
 
 	return nil
 }
