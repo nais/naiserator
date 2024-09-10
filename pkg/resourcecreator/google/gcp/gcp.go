@@ -42,17 +42,18 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	googleServiceAccount := google_iam.CreateServiceAccount(source, projectID)
 	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, projectID)
 
-	// Standard environment variable name in Google SDKs
-	ast.Env = append(ast.Env, v1.EnvVar{
-		Name:  "GOOGLE_CLOUD_PROJECT",
-		Value: teamProjectID,
-	})
-
-	// Legacy environment variable for backwards compability
-	ast.Env = append(ast.Env, v1.EnvVar{
-		Name:  "GCP_TEAM_PROJECT_ID",
-		Value: teamProjectID,
-	})
+	ast.Env = append([]v1.EnvVar{
+		// Standard environment variable name in Google SDKs
+		{
+			Name:  "GOOGLE_CLOUD_PROJECT",
+			Value: teamProjectID,
+		},
+		// Legacy environment variable for backwards compability
+		{
+			Name:  "GCP_TEAM_PROJECT_ID",
+			Value: teamProjectID,
+		},
+	}, ast.Env...)
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, &googleServiceAccount)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, &googleServiceAccountBinding)

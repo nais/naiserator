@@ -42,7 +42,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleBindingObjectMeta))
 	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
-	ast.Env = append(ast.Env, electorEnv()...)
+	ast.Env = append(electorEnv(), ast.Env...)
 	return nil
 }
 
