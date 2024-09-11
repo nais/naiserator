@@ -86,6 +86,16 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 	return nil
 }
 
+func IsEnabled(source Source, config Config) bool {
+	idporten := source.GetIDPorten()
+	idPortenEnabled := idporten != nil && idporten.Sidecar != nil && idporten.Sidecar.Enabled
+
+	azure := source.GetAzure()
+	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
+
+	return config.IsWonderwallEnabled() && (idPortenEnabled || azureEnabled)
+}
+
 func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error {
 	if !naisCfg.IsWonderwallEnabled() {
 		return fmt.Errorf("wonderwall is not enabled for this cluster")
