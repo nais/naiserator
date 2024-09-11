@@ -83,6 +83,10 @@ func (o *Options) IsAzureratorEnabled() bool {
 	return o.Config.Features.Azurerator
 }
 
+func (o *Options) IsLoginProxyEnabled() bool {
+	return o.Config.Features.LoginProxy
+}
+
 func (o *Options) IsWonderwallEnabled() bool {
 	return o.Config.Features.Wonderwall
 }

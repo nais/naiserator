@@ -54,6 +54,7 @@ type Features struct {
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Linkerd                     bool     `json:"linkerd"`
+	LoginProxy                  bool     `json:"login-proxy"`
 	Maskinporten                bool     `json:"maskinporten"`
 	NetworkPolicy               bool     `json:"network-policy"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
@@ -198,6 +199,7 @@ const (
 	FeaturesCNRM                                  = "features.cnrm"
 	FeaturesKafkarator                            = "features.kafkarator"
 	FeaturesLinkerd                               = "features.linkerd"
+	FeaturesLoginProxy                            = "features.login-proxy"
 	FeaturesMaskinporten                          = "features.maskinporten"
 	FeaturesNetworkPolicy                         = "features.network-policy"
 	FeaturesPrometheusOperator                    = "features.prometheus-operator"
@@ -296,6 +298,7 @@ func init() {
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")
 	flag.Bool(FeaturesKafkarator, false, "enable Kafkarator secret injection")
 	flag.Bool(FeaturesIDPorten, false, "enable creation of IDPorten client resources and secret injection")
+	flag.Bool(FeaturesLoginProxy, false, "enable injection of login proxy sidecar for applications using .spec.login")
 	flag.Bool(FeaturesMaskinporten, false, "enable creation of Maskinporten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")

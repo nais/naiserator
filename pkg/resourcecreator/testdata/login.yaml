@@ -1,0 +1,139 @@
+testconfig:
+  description: minimal login proxy config should result in wonderwall sidecar injected to pod
+config:
+  cluster-name: mycluster
+  features:
+    login-proxy: true
+    wonderwall: true
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: very-nginx
+  wonderwall:
+    image: nais/wonderwall
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+  spec:
+    image: foo/bar
+    login:
+      provider: openid
+    ingresses:
+      - "https://my-client.nav.no/"
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains desired configuration"
+        type: regex
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  aiven: enabled
+                  login-proxy: enabled
+                  team: mynamespace
+                  wonderwall: enabled
+              spec:
+                containers:
+                  - name: myapplication
+                  - env:
+                      - name: WONDERWALL_OPENID_PROVIDER
+                        value: ^openid$
+                      - name: WONDERWALL_INGRESS
+                        value: ^https://my-client.nav.no/$
+                      - name: WONDERWALL_UPSTREAM_IP
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: status.podIP
+                      - name: WONDERWALL_UPSTREAM_PORT
+                        value: "8080"
+                      - name: WONDERWALL_BIND_ADDRESS
+                        value: ^0.0.0.0:7564$
+                      - name: WONDERWALL_METRICS_BIND_ADDRESS
+                        value: ^0.0.0.0:7565$
+                      - name: WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD
+                        value: 30s
+                      - name: WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD
+                        value: 7s
+                    envFrom:
+                      - secretRef:
+                          name: ^login-config-myapplication$
+                      - secretRef:
+                          name: ^login-global-config$
+                      - secretRef:
+                          name: ^openid-wonderwall-myapplication-76057ade$
+                    image: nais/wonderwall
+                    name: wonderwall
+                    ports:
+                      - containerPort: 7564
+                        name: wonderwall
+                        protocol: TCP
+                      - containerPort: 7565
+                        name: ww-metrics
+                        protocol: TCP
+                    resources:
+                      limits:
+                        cpu: "2"
+                        memory: 256Mi
+                      requests:
+                        cpu: 20m
+                        memory: 32Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+                      privileged: false
+                      readOnlyRootFilesystem: true
+                      runAsGroup: 1069
+                      runAsNonRoot: true
+                      runAsUser: 1069
+  - apiVersion: v1
+    kind: Service
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "service created with wonderwall port"
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            ports:
+              - port: 80
+                targetPort: wonderwall
+                name: http
+                protocol: TCP
+            selector:
+              app: myapplication
+            type: ClusterIP
+
+  - apiVersion: v1
+    kind: Secret
+    operation: CreateIfNotExists
+    match:
+      - type: regex
+        name: "encryption secret for wonderwall created"
+        exclude:
+          - metadata.creationTimestamp
+        resource:
+          metadata:
+            name: ^openid-wonderwall-myapplication-76057ade$
+            namespace: mynamespace
+            labels:
+              app: myapplication
+              team: mynamespace
+            ownerReferences:
+              - kind: Application
+                name: myapplication
+                apiVersion: nais.io/v1alpha1
+          stringData:
+            WONDERWALL_ENCRYPTION_KEY: ".{44}"
+          type: Opaque

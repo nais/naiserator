@@ -34,9 +34,9 @@ type Configuration struct {
 	AutoLogin             bool
 	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
 	NeedsEncryptionSecret bool
-	Provider              string
+	Provider              string // should match values found in https://github.com/nais/wonderwall/blob/a5d98c746a4065b138bc01cf76005be0b6e1a5bb/pkg/config/openid.go#L10-L16
 	Resources             *nais_io_v1.ResourceRequirements
-	SecretNames           []string
+	SecretNames           []string // secret name references to be mounted as env vars
 	UILocales             string
 }
 
@@ -45,6 +45,7 @@ type Source interface {
 	GetAzure() nais_io_v1.AzureInterface
 	GetIDPorten() *nais_io_v1.IDPorten
 	GetIngress() []nais_io_v1.Ingress
+	GetLogin() *nais_io_v1.Login
 	GetLiveness() *nais_io_v1.Probe
 	GetPort() int
 	GetPrometheus() *nais_io_v1.PrometheusConfig
@@ -93,7 +94,10 @@ func IsEnabled(source Source, config Config) bool {
 	azure := source.GetAzure()
 	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
 
-	return config.IsWonderwallEnabled() && (idPortenEnabled || azureEnabled)
+	login := source.GetLogin()
+	loginEnabled := login != nil
+
+	return config.IsWonderwallEnabled() && (idPortenEnabled || azureEnabled || loginEnabled)
 }
 
 func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error {
@@ -125,8 +129,11 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 	azure := source.GetAzure()
 	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
 
-	if idPortenEnabled && azureEnabled {
-		return fmt.Errorf("only one of Azure AD or ID-porten sidecars can be enabled, but not both")
+	login := source.GetLogin()
+	loginEnabled := login != nil
+
+	if idPortenEnabled && azureEnabled || idPortenEnabled && loginEnabled || azureEnabled && loginEnabled {
+		return fmt.Errorf("only one of Azure AD, ID-porten or login sidecars can be enabled")
 	}
 
 	port := source.GetPort()
