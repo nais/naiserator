@@ -96,6 +96,13 @@ values:
       template: '{{eq .Kind "legacy"}}'
     config:
       type: bool
+  naiserator.features.login-proxy:
+    description: Enable new spec for login proxy
+    config:
+      type: bool
+    ignoreKind:
+      - onprem
+      - legacy
   naiserator.features.nav-ca-bundle:
     displayName: Enable NAV CA bundle
     config:
