@@ -21,10 +21,8 @@ input:
         enabled: true
       sidecar:
         enabled: true
-    idporten:
-      enabled: true
-      sidecar:
-        enabled: true
+    login:
+      provider: openid
     ingresses:
       - "https://app.nav.no/"
 error: "only one of Azure AD, ID-porten or login sidecars can be enabled"

@@ -33,11 +33,10 @@ type Configuration struct {
 	ACRValues             string
 	AutoLogin             bool
 	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
-	Ingresses             []nais_io_v1.Ingress
 	NeedsEncryptionSecret bool
-	Provider              string
+	Provider              string // should match values found in https://github.com/nais/wonderwall/blob/a5d98c746a4065b138bc01cf76005be0b6e1a5bb/pkg/config/openid.go#L10-L16
 	Resources             *nais_io_v1.ResourceRequirements
-	SecretNames           []string
+	SecretNames           []string // secret name references to be mounted as env vars
 	UILocales             string
 }
 
@@ -45,6 +44,8 @@ type Source interface {
 	resource.Source
 	GetAzure() nais_io_v1.AzureInterface
 	GetIDPorten() *nais_io_v1.IDPorten
+	GetIngress() []nais_io_v1.Ingress
+	GetLogin() *nais_io_v1.Login
 	GetLiveness() *nais_io_v1.Probe
 	GetPort() int
 	GetPrometheus() *nais_io_v1.PrometheusConfig
@@ -86,6 +87,19 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 	return nil
 }
 
+func IsEnabled(source Source, config Config) bool {
+	idporten := source.GetIDPorten()
+	idPortenEnabled := idporten != nil && idporten.Sidecar != nil && idporten.Sidecar.Enabled
+
+	azure := source.GetAzure()
+	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
+
+	login := source.GetLogin()
+	loginEnabled := login != nil
+
+	return config.IsWonderwallEnabled() && (idPortenEnabled || azureEnabled || loginEnabled)
+}
+
 func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error {
 	if !naisCfg.IsWonderwallEnabled() {
 		return fmt.Errorf("wonderwall is not enabled for this cluster")
@@ -99,8 +113,8 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 		return fmt.Errorf("configuration has no secret names")
 	}
 
-	if len(wonderwallCfg.Ingresses) == 0 {
-		return fmt.Errorf("configuration has no ingresses")
+	if len(source.GetIngress()) == 0 {
+		return fmt.Errorf("source has no ingresses")
 	}
 
 	for _, name := range wonderwallCfg.SecretNames {
@@ -115,8 +129,11 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 	azure := source.GetAzure()
 	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
 
-	if idPortenEnabled && azureEnabled {
-		return fmt.Errorf("only one of Azure AD or ID-porten sidecars can be enabled, but not both")
+	login := source.GetLogin()
+	loginEnabled := login != nil
+
+	if idPortenEnabled && azureEnabled || idPortenEnabled && loginEnabled || azureEnabled && loginEnabled {
+		return fmt.Errorf("only one of Azure AD, ID-porten or login sidecars can be enabled")
 	}
 
 	port := source.GetPort()
@@ -214,7 +231,7 @@ func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 		},
 		{
 			Name:  "WONDERWALL_INGRESS",
-			Value: ingressString(cfg.Ingresses),
+			Value: ingressString(source.GetIngress()),
 		},
 		{
 			Name: "WONDERWALL_UPSTREAM_IP",

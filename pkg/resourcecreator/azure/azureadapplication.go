@@ -130,7 +130,6 @@ func sidecar(source Source, ast *resource.Ast, config Config, azureApp *nais_io_
 	return wonderwall.Create(source, ast, config, wonderwall.Configuration{
 		AutoLogin:             s.AutoLogin,
 		AutoLoginIgnorePaths:  s.AutoLoginIgnorePaths,
-		Ingresses:             ingresses,
 		NeedsEncryptionSecret: true,
 		Provider:              "azure",
 		SecretNames:           []string{azureApp.Spec.SecretName, wonderwallSecretName},
