@@ -33,7 +33,6 @@ type Configuration struct {
 	ACRValues             string
 	AutoLogin             bool
 	AutoLoginIgnorePaths  []nais_io_v1.WonderwallIgnorePaths
-	Ingresses             []nais_io_v1.Ingress
 	NeedsEncryptionSecret bool
 	Provider              string
 	Resources             *nais_io_v1.ResourceRequirements
@@ -45,6 +44,7 @@ type Source interface {
 	resource.Source
 	GetAzure() nais_io_v1.AzureInterface
 	GetIDPorten() *nais_io_v1.IDPorten
+	GetIngress() []nais_io_v1.Ingress
 	GetLiveness() *nais_io_v1.Probe
 	GetPort() int
 	GetPrometheus() *nais_io_v1.PrometheusConfig
@@ -109,8 +109,8 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 		return fmt.Errorf("configuration has no secret names")
 	}
 
-	if len(wonderwallCfg.Ingresses) == 0 {
-		return fmt.Errorf("configuration has no ingresses")
+	if len(source.GetIngress()) == 0 {
+		return fmt.Errorf("source has no ingresses")
 	}
 
 	for _, name := range wonderwallCfg.SecretNames {
@@ -224,7 +224,7 @@ func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 		},
 		{
 			Name:  "WONDERWALL_INGRESS",
-			Value: ingressString(cfg.Ingresses),
+			Value: ingressString(source.GetIngress()),
 		},
 		{
 			Name: "WONDERWALL_UPSTREAM_IP",
