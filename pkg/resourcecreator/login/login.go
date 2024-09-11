@@ -22,7 +22,6 @@ type Source interface {
 type Config interface {
 	wonderwall.Config
 	IsLoginProxyEnabled() bool
-	IsWonderwallEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
