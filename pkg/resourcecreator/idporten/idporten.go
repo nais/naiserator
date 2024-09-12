@@ -60,7 +60,6 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		ACRValues:             idporten.Sidecar.Level,
 		AutoLogin:             idporten.Sidecar.AutoLogin,
 		AutoLoginIgnorePaths:  idporten.Sidecar.AutoLoginIgnorePaths,
-		Ingresses:             ingresses,
 		NeedsEncryptionSecret: false,
 		Provider:              "idporten",
 		SecretNames:           []string{idportenSsoSecretName, wonderwallSecretName},

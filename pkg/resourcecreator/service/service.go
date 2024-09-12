@@ -20,7 +20,7 @@ type Source interface {
 }
 
 type Config interface {
-	IsWonderwallEnabled() bool
+	wonderwall.Config
 }
 
 func Create(source Source, ast *resource.Ast, config Config) {
@@ -48,7 +48,7 @@ func Create(source Source, ast *resource.Ast, config Config) {
 		},
 	}
 
-	if useWonderwallTarget(source, config) {
+	if wonderwall.IsEnabled(source, config) {
 		service.Spec.Ports[0].TargetPort = intstr.IntOrString{
 			Type:   intstr.String,
 			StrVal: wonderwall.PortName,
@@ -56,14 +56,4 @@ func Create(source Source, ast *resource.Ast, config Config) {
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, service)
-}
-
-func useWonderwallTarget(source Source, config Config) bool {
-	idporten := source.GetIDPorten()
-	idPortenEnabled := idporten != nil && idporten.Sidecar != nil && idporten.Sidecar.Enabled
-
-	azure := source.GetAzure()
-	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
-
-	return config.IsWonderwallEnabled() && (idPortenEnabled || azureEnabled)
 }
