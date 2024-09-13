@@ -3,7 +3,6 @@ package aiven
 import (
 	"fmt"
 	"regexp"
-	"strings"
 
 	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
@@ -31,7 +30,13 @@ func Redis(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nais
 			return false, fmt.Errorf("Redis requires instance name")
 		}
 
-		addRedisEnvVariables(ast, aivenApp.Spec.SecretName, redis.Instance)
+		ast.EnvFrom = append(ast.EnvFrom, corev1.EnvFromSource{
+			SecretRef: &corev1.SecretEnvSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: aivenApp.Spec.SecretName,
+				},
+			},
+		})
 		aivenApp.Spec.Redis = append(aivenApp.Spec.Redis, &aiven_nais_io_v1.RedisSpec{
 			Instance: redis.Instance,
 			Access:   redis.Access,
@@ -62,20 +67,4 @@ func addDefaultRedisIfNotExists(ast *resource.Ast, source Source, aivenProject, 
 		},
 	}
 	ast.AppendOperation(resource.OperationCreateIfNotExists, aivenRedis)
-}
-
-func addRedisEnvVariables(ast *resource.Ast, secretName, instanceName string) {
-	// Add environment variables for string data
-	suffix := envVarSuffix(instanceName)
-	ast.PrependEnv([]corev1.EnvVar{
-		makeSecretEnvVar(fmt.Sprintf("REDIS_USERNAME_%s", suffix), secretName),
-		makeSecretEnvVar(fmt.Sprintf("REDIS_PASSWORD_%s", suffix), secretName),
-		makeSecretEnvVar(fmt.Sprintf("REDIS_URI_%s", suffix), secretName),
-		makeSecretEnvVar(fmt.Sprintf("REDIS_HOST_%s", suffix), secretName),
-		makeSecretEnvVar(fmt.Sprintf("REDIS_PORT_%s", suffix), secretName),
-	}...)
-}
-
-func envVarSuffix(instanceName string) string {
-	return strings.ToUpper(namePattern.ReplaceAllString(instanceName, "_"))
 }

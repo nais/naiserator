@@ -61,58 +61,10 @@ tests:
                       - name: aiven-credentials
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/kafka
+                    envFrom:
+                      - secretRef:
+                          name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
                     env:
-                      - name: AIVEN_SECRET_UPDATED
-                        valueFrom:
-                          secretKeyRef:
-                            key: AIVEN_SECRET_UPDATED
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: AIVEN_CA
-                        valueFrom:
-                          secretKeyRef:
-                            key: AIVEN_CA
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                            optional: true
-                      - name: KAFKA_CERTIFICATE
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_CERTIFICATE
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: KAFKA_PRIVATE_KEY
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_PRIVATE_KEY
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: KAFKA_BROKERS
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_BROKERS
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: KAFKA_SCHEMA_REGISTRY
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_SCHEMA_REGISTRY
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: KAFKA_SCHEMA_REGISTRY_USER
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_SCHEMA_REGISTRY_USER
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: KAFKA_SCHEMA_REGISTRY_PASSWORD
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_SCHEMA_REGISTRY_PASSWORD
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: KAFKA_CA
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_CA
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
-                      - name: KAFKA_CREDSTORE_PASSWORD
-                        valueFrom:
-                          secretKeyRef:
-                            key: KAFKA_CREDSTORE_PASSWORD
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
                       - name: KAFKA_CERTIFICATE_PATH
                         value: /var/run/secrets/nais.io/kafka/kafka.crt
                       - name: KAFKA_PRIVATE_KEY_PATH

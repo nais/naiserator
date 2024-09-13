@@ -37,14 +37,6 @@ const (
 func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
 	ast.PrependEnv([]corev1.EnvVar{
 		// Add environment variables for string data
-		makeSecretEnvVar(kafkaCertificateKey, secretName),
-		makeSecretEnvVar(kafkaPrivateKeyKey, secretName),
-		makeSecretEnvVar(kafkaBrokersKey, secretName),
-		makeSecretEnvVar(kafkaSchemaRegistryKey, secretName),
-		makeSecretEnvVar(kafkaSchemaRegistryUserKey, secretName),
-		makeSecretEnvVar(kafkaSchemaRegistryPasswordKey, secretName),
-		makeSecretEnvVar(kafkaCAKey, secretName),
-		makeSecretEnvVar(kafkaCredStorePasswordKey, secretName),
 		// Inject path environment variables to refer to mounted secrets
 		{
 			Name:  kafkaCertificatePathKey,
