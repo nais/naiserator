@@ -75,11 +75,13 @@ tests:
                           secretKeyRef:
                             key: REDIS_HOST_NAISTEST1
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                            optional: true
                       - name: REDIS_PORT_NAISTEST1
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_PORT_NAISTEST1
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                            optional: true
   - operation: CreateIfNotExists
     apiVersion: aiven.io/v1alpha1
     kind: Redis

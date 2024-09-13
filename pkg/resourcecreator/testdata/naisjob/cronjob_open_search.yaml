@@ -73,8 +73,10 @@ tests:
                               secretKeyRef:
                                 key: OPEN_SEARCH_HOST
                                 name: ^aiven-mynaisjob-.{8}-\d{4}-\d\d?$
+                                optional: true
                           - name: OPEN_SEARCH_PORT
                             valueFrom:
                               secretKeyRef:
                                 key: OPEN_SEARCH_PORT
                                 name: ^aiven-mynaisjob-.{8}-\d{4}-\d\d?$
+                                optional: true
