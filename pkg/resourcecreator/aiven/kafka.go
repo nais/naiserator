@@ -35,8 +35,8 @@ const (
 )
 
 func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
-	// Add environment variables for string data
-	ast.Env = append(ast.Env, []corev1.EnvVar{
+	ast.PrependEnv([]corev1.EnvVar{
+		// Add environment variables for string data
 		makeSecretEnvVar(kafkaCertificateKey, secretName),
 		makeSecretEnvVar(kafkaPrivateKeyKey, secretName),
 		makeSecretEnvVar(kafkaBrokersKey, secretName),
@@ -45,10 +45,7 @@ func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
 		makeSecretEnvVar(kafkaSchemaRegistryPasswordKey, secretName),
 		makeSecretEnvVar(kafkaCAKey, secretName),
 		makeSecretEnvVar(kafkaCredStorePasswordKey, secretName),
-	}...)
-
-	// Inject path environment variables to refer to mounted secrets
-	ast.Env = append(ast.Env, []corev1.EnvVar{
+		// Inject path environment variables to refer to mounted secrets
 		{
 			Name:  kafkaCertificatePathKey,
 			Value: filepath.Join(nais_io_v1alpha1.DefaultKafkaratorMountPath, kafkaCertificateFilename),
@@ -109,10 +106,10 @@ func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *
 		if naisKafka.Streams {
 			stream := CreateStream(source, naisKafka)
 			ast.AppendOperation(resource.OperationCreateOrUpdate, stream)
-			ast.Env = append(ast.Env, corev1.EnvVar{
+			ast.PrependEnv([]corev1.EnvVar{{
 				Name:  "KAFKA_STREAMS_APPLICATION_ID",
 				Value: stream.TopicPrefix(),
-			})
+			}}...)
 		}
 
 		return createKafkaKeyToPaths()

@@ -94,7 +94,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 		return
 	}
 
-	ast.Env = append(envs, ast.Env...)
+	ast.PrependEnv(envs...)
 	ast.VolumeMounts = append(ast.VolumeMounts, certificateAuthorityVolumeMounts()...)
 	ast.Volumes = append(ast.Volumes, certificateAuthorityVolume(CA_BUNDLE_JKS_CONFIGMAP_NAME), certificateAuthorityVolume(CA_BUNDLE_PEM_CONFIGMAP_NAME))
 }
