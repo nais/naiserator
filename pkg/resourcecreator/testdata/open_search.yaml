@@ -49,6 +49,29 @@ tests:
               spec:
                 containers:
                   - name: "myapplication"
-                    envFrom:
-                      - secretRef:
-                          name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                    env:
+                      - name: OPEN_SEARCH_USERNAME
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_USERNAME
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                      - name: OPEN_SEARCH_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_PASSWORD
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                      - name: OPEN_SEARCH_URI
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_URI
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                      - name: OPEN_SEARCH_HOST
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_HOST
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                      - name: OPEN_SEARCH_PORT
+                        valueFrom:
+                          secretKeyRef:
+                            key: OPEN_SEARCH_PORT
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$

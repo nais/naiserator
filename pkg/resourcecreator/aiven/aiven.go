@@ -81,13 +81,40 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 
 	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || redisEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
-		ast.EnvFrom = append(ast.EnvFrom, v1.EnvFromSource{
-			SecretRef: &v1.SecretEnvSource{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: aivenApp.Spec.SecretName,
-				},
-			},
-		})
+		ast.PrependEnv([]v1.EnvVar{
+			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),
+			makeOptionalSecretEnvVar("AIVEN_CA", aivenApp.Spec.SecretName),
+		}...)
 	}
 	return nil
+}
+
+func makeSecretEnvVar(key, secretName string) v1.EnvVar {
+	return v1.EnvVar{
+		Name: key,
+		ValueFrom: &v1.EnvVarSource{
+			SecretKeyRef: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: key,
+			},
+		},
+	}
+}
+
+func makeOptionalSecretEnvVar(key, secretName string) v1.EnvVar {
+	optional := true
+	return v1.EnvVar{
+		Name: key,
+		ValueFrom: &v1.EnvVarSource{
+			SecretKeyRef: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key:      key,
+				Optional: &optional,
+			},
+		},
+	}
 }
