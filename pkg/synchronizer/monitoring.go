@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -293,6 +294,14 @@ func setSyncStatus(app resource.Source, synchronizationState string, event *depl
 	app.GetStatus().SetSynchronizationStateWithCondition(synchronizationState, "Successfully deployed.")
 	app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
 	app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
-	metrics.Synchronizations.WithLabelValues(app.GetObjectKind().GroupVersionKind().Kind, app.GetStatus().SynchronizationState).Inc()
+
+	metrics.Synchronizations.With(
+		prometheus.Labels{
+			"kind":   app.GetObjectKind().GroupVersionKind().Kind,
+			"status": app.GetStatus().SynchronizationState,
+			"team":   app.GetNamespace(),
+		},
+	).Inc()
+
 	return app
 }
