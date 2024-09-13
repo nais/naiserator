@@ -71,6 +71,8 @@ func addRedisEnvVariables(ast *resource.Ast, secretName, instanceName string) {
 		makeSecretEnvVar(fmt.Sprintf("REDIS_USERNAME_%s", suffix), secretName),
 		makeSecretEnvVar(fmt.Sprintf("REDIS_PASSWORD_%s", suffix), secretName),
 		makeSecretEnvVar(fmt.Sprintf("REDIS_URI_%s", suffix), secretName),
+		makeSecretEnvVar(fmt.Sprintf("REDIS_HOST_%s", suffix), secretName),
+		makeSecretEnvVar(fmt.Sprintf("REDIS_PORT_%s", suffix), secretName),
 	}...)
 }
 

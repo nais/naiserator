@@ -34,5 +34,7 @@ func addOpenSearchEnvVariables(ast *resource.Ast, secretName string) {
 		makeSecretEnvVar("OPEN_SEARCH_USERNAME", secretName),
 		makeSecretEnvVar("OPEN_SEARCH_PASSWORD", secretName),
 		makeSecretEnvVar("OPEN_SEARCH_URI", secretName),
+		makeSecretEnvVar("OPEN_SEARCH_HOST", secretName),
+		makeSecretEnvVar("OPEN_SEARCH_PORT", secretName),
 	}...)
 }

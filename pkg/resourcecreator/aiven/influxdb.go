@@ -36,6 +36,8 @@ func addInfluxEnvVariables(ast *resource.Ast, secretName string) {
 		makeSecretEnvVar("INFLUXDB_USERNAME", secretName),
 		makeSecretEnvVar("INFLUXDB_PASSWORD", secretName),
 		makeSecretEnvVar("INFLUXDB_URI", secretName),
+		makeSecretEnvVar("INFLUXDB_HOST", secretName),
+		makeSecretEnvVar("INFLUXDB_PORT", secretName),
 		makeSecretEnvVar("INFLUXDB_NAME", secretName),
 	}...)
 }
