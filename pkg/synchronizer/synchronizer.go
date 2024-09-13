@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -161,7 +162,11 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		if !changed {
 			return
 		}
-		metrics.Synchronizations.WithLabelValues(kind, app.GetStatus().SynchronizationState).Inc()
+		metrics.Synchronizations.With(prometheus.Labels{
+			"kind":   kind,
+			"status": app.GetStatus().SynchronizationState,
+			"team":   app.GetNamespace(),
+		}).Inc()
 		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
 			existing.SetStatus(app.GetStatus())
 

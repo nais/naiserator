@@ -33,8 +33,8 @@ var (
 	Synchronizations = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name:      "synchronizations",
 		Namespace: "naiserator",
-		Help:      "resources processed, with kind and status",
-	}, []string{"kind", "status"})
+		Help:      "resources processed, with kind, team, and status",
+	}, []string{"kind", "team", "status"})
 )
 
 func Register(registry prometheus.Registerer) {
