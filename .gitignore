@@ -9,3 +9,4 @@ cover.out
 *.proto
 /.testbin/
 *.DS_Store
+.direnv
