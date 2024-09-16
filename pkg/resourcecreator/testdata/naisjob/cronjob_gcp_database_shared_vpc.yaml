@@ -6,6 +6,7 @@ config:
     linkerd: true
     sql-instance-in-shared-vpc: true
   google-project-id: google-project-id
+  cluster-name: test-cluster
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -173,7 +174,7 @@ tests:
               cnrm.cloud.google.com/project-id: team-project-id
               sqeletor.nais.io/secret-name: sqeletor-mynaisjob-380f7c17
           spec:
-            commonName: mynaisjob
+            commonName: mynaisjob.test-cluster
             instanceRef:
               name: mynaisjob
               namespace: mynamespace

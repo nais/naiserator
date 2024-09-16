@@ -44,6 +44,7 @@ type Config interface {
 	ShouldCreateSqlInstanceInSharedVpc() bool
 	SqlInstanceExists() bool
 	SqlInstanceHasPrivateIpInSharedVpc() bool
+	GetClusterName() string
 }
 
 func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
@@ -93,7 +94,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
 			needsCloudSqlProxyContainer = false
-			CreateSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID)
+			CreateSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID,cfg.GetClusterName())
 		}
 	}
 
@@ -270,7 +271,7 @@ func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
 	return googleSqlInstance.Spec.Settings.IpConfiguration.PrivateNetworkRef != nil
 }
 
-func CreateSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string) {
+func CreateSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string, clusterName string) {
 	objectMeta := resource.CreateObjectMeta(source)
 	shortName, err := namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), 63)
 	if err != nil {
@@ -290,7 +291,7 @@ func CreateSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLSSLCertSpec{
-			CommonName: source.GetName(),
+			CommonName: source.GetName()+"."+clusterName,
 			InstanceRef: google_sql_crd.InstanceRef{
 				Name:      instanceName,
 				Namespace: source.GetNamespace(),
