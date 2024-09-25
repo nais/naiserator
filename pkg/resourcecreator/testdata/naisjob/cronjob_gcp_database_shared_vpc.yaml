@@ -164,7 +164,7 @@ tests:
     kind: SQLSSLCert
     operation: CreateIfNotExists
     match:
-      - type: subset
+      - type: regex
         name: "sql ssl cert"
         resource:
           metadata:
@@ -174,7 +174,7 @@ tests:
               cnrm.cloud.google.com/project-id: team-project-id
               sqeletor.nais.io/secret-name: sqeletor-mynaisjob-380f7c17
           spec:
-            commonName: mynaisjob.test-cluster
+            commonName: mynaisjob.test-cluster-.{8}
             instanceRef:
               name: mynaisjob
               namespace: mynamespace
