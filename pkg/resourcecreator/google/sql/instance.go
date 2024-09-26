@@ -30,6 +30,8 @@ const (
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
 
 	sqeletorVolumeName = "sqeletor-sql-ssl-cert"
+
+	maxLengthName = 63
 )
 
 type Source interface {
@@ -94,7 +96,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 	if cfg != nil && cfg.ShouldCreateSqlInstanceInSharedVpc() {
 		if usingPrivateIP(googleSqlInstance) {
 			needsCloudSqlProxyContainer = false
-			CreateSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID,cfg.GetClusterName())
+			CreateSqlSSLCertResource(ast, googleSqlInstance.Name, source, googleTeamProjectID, cfg.GetClusterName())
 		}
 	}
 
@@ -273,16 +275,18 @@ func usingPrivateIP(googleSqlInstance *google_sql_crd.SQLInstance) bool {
 
 func CreateSqlSSLCertResource(ast *resource.Ast, instanceName string, source Source, googleTeamProjectId string, clusterName string) {
 	objectMeta := resource.CreateObjectMeta(source)
-	shortName, err := namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), 63)
+	shortName, err := namegen.ShortName(fmt.Sprintf("%s-%s", source.GetName(), instanceName), maxLengthName)
 	if err != nil {
 		panic(err) // Will never happen
 	}
 	objectMeta.Name = shortName
 
-	secretName, err := namegen.ShortName(fmt.Sprintf("sqeletor-%s", instanceName), 63)
+	secretName, err := namegen.ShortName(fmt.Sprintf("sqeletor-%s", instanceName), maxLengthName)
 	if err != nil {
 		panic(err) // Will never happen
 	}
+
+	commonName := namegen.RandShortName(fmt.Sprintf("%s.%s", source.GetName(), clusterName), maxLengthName)
 
 	sqlSSLCert := &google_sql_crd.SQLSSLCert{
 		TypeMeta: metav1.TypeMeta{
@@ -291,7 +295,7 @@ func CreateSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 		},
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLSSLCertSpec{
-			CommonName: source.GetName()+"."+clusterName,
+			CommonName: commonName,
 			InstanceRef: google_sql_crd.InstanceRef{
 				Name:      instanceName,
 				Namespace: source.GetNamespace(),
