@@ -99,7 +99,10 @@ func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, a
 	}
 
 	ast.AppendOperation(resource.AnnotateIfExists, secret.OpaqueSecret(objectMeta, secretName, nil))
-	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlUser)
+
+	// client.Create mangles the resource, making the annotate operation to fail. Deep copy the resource to avoid this.
+	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlUser.DeepCopy())
+	ast.AppendOperation(resource.AnnotateIfExists, googleSqlUser)
 }
 
 func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
