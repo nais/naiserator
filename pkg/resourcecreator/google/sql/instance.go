@@ -24,10 +24,11 @@ import (
 const (
 	AvailabilityTypeRegional         = "REGIONAL"
 	AvailabilityTypeZonal            = "ZONAL"
-	DefaultSqlInstanceDiskType       = nais_io_v1.CloudSqlInstanceDiskTypeSSD
 	DefaultSqlInstanceAutoBackupHour = 2
-	DefaultSqlInstanceDiskSize       = 10
 	DefaultSqlInstanceCollation      = "en_US.UTF8"
+	DefaultSqlInstanceDiskSize       = 10
+	DefaultSqlInstanceDiskType       = nais_io_v1.CloudSqlInstanceDiskTypeSSD
+	DefaultSqlInstanceEdition        = google_sql_crd.SQLInstanceEditionEnterprise
 
 	sqeletorVolumeName = "sqeletor-sql-ssl-cert"
 
@@ -179,6 +180,7 @@ func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.
 					PointInTimeRecoveryEnabled: instance.PointInTimeRecovery,
 					BackupRetentionSettings:    backupSettings,
 				},
+				Edition: DefaultSqlInstanceEdition,
 				IpConfiguration: google_sql_crd.SQLInstanceIpConfiguration{
 					RequireSsl:        true,
 					PrivateNetworkRef: privateNetworkRef,
