@@ -22,14 +22,14 @@ import (
 
 // AnnotateIfExists copies annotations of the given resource into the existing resource.
 // No other parts of the existing resource is touched.
-func AnnotateIfExists(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource client.Object) func() error {
+func AnnotateIfExists(ctx context.Context, cli client.Client, scheme *runtime.Scheme, annotationSource client.Object) func() error {
 	return func() error {
-		log.Infof("AnnotateIfExists %s", liberator_scheme.TypeName(resource))
-		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
+		log.Infof("AnnotateIfExists %s", liberator_scheme.TypeName(annotationSource))
+		existing, err := scheme.New(annotationSource.GetObjectKind().GroupVersionKind())
 		if err != nil {
 			return fmt.Errorf("internal error: %w", err)
 		}
-		objectKey := client.ObjectKeyFromObject(resource)
+		objectKey := client.ObjectKeyFromObject(annotationSource)
 
 		err = cli.Get(ctx, objectKey, existing.(client.Object))
 
@@ -41,10 +41,13 @@ func AnnotateIfExists(ctx context.Context, cli client.Client, scheme *runtime.Sc
 			}
 		}
 
-		obj := existing.(client.Object)
-		CopyAnnotations(obj, resource)
+		original := existing.DeepCopyObject().(client.Object)
+		patchSource := client.MergeFrom(original)
 
-		return cli.Update(ctx, obj)
+		modified := existing.(client.Object)
+		CopyAnnotations(modified, annotationSource)
+
+		return cli.Patch(ctx, modified, patchSource)
 	}
 }
 
