@@ -17,6 +17,7 @@ import (
 	"github.com/nais/liberator/pkg/events"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -529,4 +530,33 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	}, secret)
 	assert.NoError(t, err)
 	assert.Equal(t, correlationId, secret.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+
+	// Simulate an Update event
+	err = rig.client.Get(ctx, req.NamespacedName, app)
+	require.NoError(t, err)
+
+	newCorrelationId := "some-other-correlation-id"
+	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = newCorrelationId
+	err = rig.client.Update(ctx, app)
+	if err != nil {
+		t.Fatalf("Persisting updated Application resource to fake Kubernetes: %s", err)
+	}
+
+	// We need to run another reconcile to simulate an Update event
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	assert.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	updatedSqlUser := &sql_cnrm_cloud_google_com_v1beta1.SQLUser{}
+	err = rig.client.Get(ctx, req.NamespacedName, updatedSqlUser)
+	assert.NoError(t, err)
+	assert.Equal(t, newCorrelationId, updatedSqlUser.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+
+	updatedSecret := &corev1.Secret{}
+	err = rig.client.Get(ctx, types.NamespacedName{
+		Namespace: req.Namespace,
+		Name:      googleSqlSecretName,
+	}, updatedSecret)
+	assert.NoError(t, err)
+	assert.Equal(t, newCorrelationId, updatedSecret.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 }

@@ -1,5 +1,5 @@
 testconfig:
-  description: disk size on google sqlinstance is updated after a change
+  description: correlation id annotation should be added to existing resources
 config:
   features:
     cnrm: true
@@ -40,6 +40,18 @@ tests:
     kind: Secret
     operation: AnnotateIfExists
     name: google-sql-myapplication
+    match:
+      - type: regex
+        name: "Annotation added"
+        resource:
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: corr
+
+  - apiVersion: sql.cnrm.cloud.google.com/v1beta1
+    kind: SQLUser
+    operation: AnnotateIfExists
+    name: myapplication
     match:
       - type: regex
         name: "Annotation added"

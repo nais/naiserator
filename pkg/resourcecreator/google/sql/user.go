@@ -99,6 +99,8 @@ func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, a
 	}
 
 	ast.AppendOperation(resource.AnnotateIfExists, secret.OpaqueSecret(objectMeta, secretName, nil))
+
+	ast.AppendOperation(resource.AnnotateIfExists, googleSqlUser)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlUser)
 }
 
