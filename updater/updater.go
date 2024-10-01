@@ -32,12 +32,11 @@ func AnnotateIfExists(ctx context.Context, cli client.Client, scheme *runtime.Sc
 		objectKey := client.ObjectKeyFromObject(annotationSource)
 
 		err = cli.Get(ctx, objectKey, existing.(client.Object))
-
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return nil
 			} else {
-				return err
+				return fmt.Errorf("get for AnnotateIfExists: %w", err)
 			}
 		}
 
@@ -47,7 +46,14 @@ func AnnotateIfExists(ctx context.Context, cli client.Client, scheme *runtime.Sc
 		modified := existing.(client.Object)
 		CopyAnnotations(modified, annotationSource)
 
-		return cli.Patch(ctx, modified, patchSource)
+		err = cli.Patch(ctx, modified, patchSource)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			}
+			return fmt.Errorf("patch for AnnotateIfExists: %w", err)
+		}
+		return nil
 	}
 }
 
