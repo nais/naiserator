@@ -8,7 +8,6 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
-	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/pointer"
 )
 
@@ -102,39 +101,6 @@ func createSecurityContext() *corev1.SecurityContext {
 		SeccompProfile: &corev1.SeccompProfile{
 			Type: corev1.SeccompProfileTypeRuntimeDefault,
 		},
-	}
-}
-
-func createSideCarContainer(options config.Vault) corev1.Container {
-	args := []string{
-		"-v=10",
-		"-logtostderr",
-		"-renew-token",
-		fmt.Sprintf("-vault=%s", options.Address),
-	}
-
-	return corev1.Container{
-		Name:         "vks-sidecar",
-		VolumeMounts: []corev1.VolumeMount{createDefaultMount()},
-		Args:         args,
-		Image:        options.InitContainerImage,
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU: k8sResource.MustParse("10m"),
-			},
-		},
-		Env: []corev1.EnvVar{
-			{
-				Name:  "VAULT_AUTH_METHOD",
-				Value: "token",
-			},
-
-			{
-				Name:  "VAULT_TOKEN_FILE",
-				Value: defaultVaultTokenFileName(),
-			},
-		},
-		SecurityContext: createSecurityContext(),
 	}
 }
 
