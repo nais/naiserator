@@ -47,11 +47,6 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	ast.InitContainers = append(ast.InitContainers, createInitContainer(source, vaultCfg, paths))
-
-	if naisVault.Sidecar {
-		ast.Containers = append(ast.Containers, createSideCarContainer(vaultCfg))
-	}
-
 	ast.Volumes = append(ast.Volumes, corev1.Volume{
 		Name: "vault-volume",
 		VolumeSource: corev1.VolumeSource{
@@ -60,7 +55,6 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 			},
 		},
 	})
-
 	ast.VolumeMounts = append(ast.VolumeMounts, createInitContainerMounts(paths)...)
 
 	return nil
