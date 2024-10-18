@@ -63,9 +63,9 @@ tests:
                         value: 7s
                     envFrom:
                       - secretRef:
-                          name: ^login-config-myapplication$
-                      - secretRef:
                           name: ^login-global-config$
+                      - secretRef:
+                          name: ^login-config-myapplication$
                       - secretRef:
                           name: ^openid-wonderwall-myapplication-76057ade$
                     image: nais/wonderwall
