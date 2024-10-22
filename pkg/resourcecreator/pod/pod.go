@@ -470,7 +470,7 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 	}
 
 	// Default pre stop hook will sleep for five seconds before killing pods.
-	// See https://github.com/nais/naiserator/issues/538.
+	// Earlier, this function was solved by "sleep 5" inside the container.
 	if preStopHook == nil {
 		return &corev1.Lifecycle{
 			PreStop: &corev1.LifecycleHandler{
