@@ -60,7 +60,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		}(),
 		NeedsEncryptionSecret: true,
 		Provider:              login.Provider,
-		SecretNames:           []string{applicationSecretName, globalSecretName},
+		SecretNames:           []string{globalSecretName, applicationSecretName},
 	})
 }
 
