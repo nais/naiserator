@@ -204,6 +204,18 @@ tests:
     name: myapplication
     match:
       - type: subset
+        name: "prestophook set"
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: myapplication
+                    lifecycle:
+                      preStop:
+                        sleep:
+                          seconds: 5
+      - type: subset
         name: "replicas set to 2"
         resource:
           spec:

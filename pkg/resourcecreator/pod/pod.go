@@ -448,6 +448,18 @@ func copyLinkerdAnnotations(src, dst map[string]string) {
 	}
 }
 
+// The default PreStopHook will wait for five seconds before killing pods.
+// Earlier, this function was solved by "sleep 5" inside the container.
+func defaultPreStopHook() *corev1.Lifecycle {
+	return &corev1.Lifecycle{
+		PreStop: &corev1.LifecycleHandler{
+			Sleep: &corev1.SleepAction{
+				Seconds: 5,
+			},
+		},
+	}
+}
+
 // lifecycle creates lifecycle definitions, right now adding only PreStop handlers.
 //
 // preStopHookPath is the old, deprecated way of adding preStopHook definitions.
@@ -470,13 +482,7 @@ func lifecycle(preStopHookPath string, preStopHook *nais_io_v1.PreStopHook) (*co
 	}
 
 	if preStopHook == nil {
-		return &corev1.Lifecycle{
-			PreStop: &corev1.LifecycleHandler{
-				Exec: &corev1.ExecAction{
-					Command: []string{"sleep", "5"},
-				},
-			},
-		}, nil
+		return defaultPreStopHook(), nil
 	}
 
 	if preStopHook.Exec != nil && preStopHook.Http != nil {
