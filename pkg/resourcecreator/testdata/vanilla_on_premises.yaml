@@ -198,10 +198,8 @@ tests:
                         name: writable-tmp
                     lifecycle:
                       preStop:
-                        exec:
-                          command:
-                            - sleep
-                            - "5"
+                        sleep:
+                          seconds: 5
                     imagePullPolicy: IfNotPresent
                     name: myapplication
                     image: navikt/myapplication:1.2.3

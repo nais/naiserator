@@ -124,10 +124,8 @@ tests:
                     imagePullPolicy: IfNotPresent
                     lifecycle:
                       preStop:
-                        exec:
-                          command:
-                            - sleep
-                            - "5"
+                        sleep:
+                          seconds: 5
                     name: mynaisjob
                     resources:
                       limits:
