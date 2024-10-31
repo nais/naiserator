@@ -1,0 +1,84 @@
+testconfig:
+  description: enabled texas feature toggle should not affect maskinportenclient
+config:
+  features:
+    maskinporten: true
+    texas: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+  spec:
+    image: foo/bar
+    maskinporten:
+      enabled: true
+      scopes:
+        consumes:
+          - name: "org:some/scope"
+        exposes:
+          - name: some.scope
+            enabled: true
+            product: "arbeid"
+            atMaxAge: 30
+tests:
+  - apiVersion: nais.io/v1
+    kind: MaskinportenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "spec contains expected fields with defaults and nothing else"
+        exclude:
+          - .status
+          - .metadata
+          - .spec.secretName
+        resource:
+          spec:
+            scopes:
+              consumes:
+                - name: "org:some/scope"
+              exposes:
+                - name: some.scope
+                  enabled: true
+                  product: "arbeid"
+                  atMaxAge: 30
+  - apiVersion: nais.io/v1
+    kind: MaskinportenClient
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^maskinporten-myapplication-9561321b$
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains maskinporten secrets"
+        type: regex
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  maskinporten: enabled
+              spec:
+                volumes:
+                  - name: ^maskinporten-myapplication-9561321b$
+                    secret:
+                      secretName: ^maskinporten-myapplication-9561321b$
+                containers:
+                  - envFrom:
+                      - secretRef:
+                          name: ^maskinporten-myapplication-9561321b$
+                    volumeMounts:
+                      - name: ^maskinporten-myapplication-9561321b$
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/maskinporten

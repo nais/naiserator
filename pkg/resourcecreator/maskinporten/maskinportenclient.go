@@ -7,11 +7,11 @@ import (
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
@@ -73,10 +73,10 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, maskinportenClient)
 
-	if cfg.IsTexasEnabled() {
-		texas := source.GetTexas()
-		if texas == nil || !texas.Maskinporten {
-			return nil
+	texas := source.GetTexas()
+	if texas != nil && texas.Maskinporten {
+		if !cfg.IsTexasEnabled() {
+			return fmt.Errorf("texas is not available in this cluster")
 		}
 		// FIXME: only do this once
 		{
@@ -93,10 +93,10 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		}
 
 		ast.InitContainers = append(ast.InitContainers, texasSidecar(cfg, []string{maskinportenClient.Spec.SecretName}))
-	} else {
-		pod.WithAdditionalSecret(ast, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
-		pod.WithAdditionalEnvFromSecret(ast, maskinportenClient.Spec.SecretName)
+		return nil
 	}
 
+	pod.WithAdditionalSecret(ast, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)
+	pod.WithAdditionalEnvFromSecret(ast, maskinportenClient.Spec.SecretName)
 	return nil
 }
