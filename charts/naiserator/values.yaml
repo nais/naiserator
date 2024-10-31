@@ -28,26 +28,29 @@ naiserator:
     - gh-docker-credentials
     - gar-docker-credentials
   features:
-    linkerd: false
     access-policy-not-allowed-cidrs: []
-    network-policy: true
-    vault: false
+    azurerator: false
+    cnrm: true
+    gar-toleration: false
+    gcp: true
+    idporten: false
     influx-credentials: false
     jwker: false
-    cnrm: true
-    azurerator: false
     kafkarator: false
-    idporten: false
-    maskinporten: false
-    prometheus-operator: false
     legacy-gcp: false
-    gcp: true
-    webhook: true
-    nav-ca-bundle: false
-    wonderwall: false
-    gar-toleration: false
-    sql-instance-in-shared-vpc: false
+    linkerd: false
     login-proxy: false
+    maskinporten: false
+    nav-ca-bundle: false
+    network-policy: true
+    prometheus-operator: false
+    sql-instance-in-shared-vpc: false
+    texas: false
+    vault: false
+    webhook: true
+    wonderwall: false
+  texas:
+    image: europe-north1-docker.pkg.dev/nais-io/nais/images/texas:latest
   frontend:
     telemetry-url: http://localhost:12347/collect
   informer:

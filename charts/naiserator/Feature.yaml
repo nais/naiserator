@@ -123,6 +123,18 @@ values:
     ignoreKind:
       - tenant
       - management
+  naiserator.features.sql-instance-in-shared-vpc:
+    displayName: Create SQL Instance in Shared VPC
+    config:
+      type: bool
+  naiserator.features.texas:
+    displayName: Enable Token Exchange as a Service
+    config:
+      type: bool
+  naiserator.texas.image:
+    displayName: Image name and tag for Texas
+    config:
+      type: string
   naiserator.features.vault:
     displayName: Enable Vault
     computed:
@@ -133,10 +145,6 @@ values:
       type: bool
     ignoreKind:
       - onprem
-  naiserator.features.sql-instance-in-shared-vpc:
-    displayName: Create SQL Instance in Shared VPC
-    config:
-      type: bool
   naiserator.fqdn-policy.enabled:
     displayName: Enable FQDN policy
     config:
