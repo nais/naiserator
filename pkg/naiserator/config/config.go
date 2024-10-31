@@ -28,6 +28,10 @@ type Kafka struct {
 	Topic        string   `json:"topic"`
 }
 
+type Texas struct {
+	Image string `json:"image"`
+}
+
 type Log struct {
 	Format string `json:"format"`
 	Level  string `json:"level"`
@@ -43,6 +47,7 @@ type Synchronizer struct {
 	RolloutCheckInterval   time.Duration `json:"rollout-check-interval"`
 }
 
+// Keep this list sorted!
 type Features struct {
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	Azurerator                  bool     `json:"azurerator"`
@@ -53,17 +58,18 @@ type Features struct {
 	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
+	LegacyGCP                   bool     `json:"legacy-gcp"`
 	Linkerd                     bool     `json:"linkerd"`
 	LoginProxy                  bool     `json:"login-proxy"`
 	Maskinporten                bool     `json:"maskinporten"`
+	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	NetworkPolicy               bool     `json:"network-policy"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
+	SqlInstanceInSharedVpc      bool     `json:"sql-instance-in-shared-vpc"`
+	Texas                       bool     `json:"texas"`
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`
-	NAVCABundle                 bool     `json:"nav-ca-bundle"`
-	LegacyGCP                   bool     `json:"legacy-gcp"`
 	Wonderwall                  bool     `json:"wonderwall"`
-	SqlInstanceInSharedVpc      bool     `json:"sql-instance-in-shared-vpc"`
 }
 
 type Observability struct {
@@ -178,6 +184,7 @@ type Config struct {
 	Ratelimit                         Ratelimit        `json:"ratelimit"`
 	Securelogs                        Securelogs       `json:"securelogs"`
 	Synchronizer                      Synchronizer     `json:"synchronizer"`
+	Texas                             Texas            `json:"texas"`
 	Vault                             Vault            `json:"vault"`
 	Wonderwall                        Wonderwall       `json:"wonderwall"`
 }
@@ -203,6 +210,7 @@ const (
 	FeaturesMaskinporten                          = "features.maskinporten"
 	FeaturesNetworkPolicy                         = "features.network-policy"
 	FeaturesPrometheusOperator                    = "features.prometheus-operator"
+	FeaturesTexas                                 = "features.texas"
 	FeaturesVault                                 = "features.vault"
 	FeaturesWebhook                               = "features.webhook"
 	FeaturesWonderwall                            = "features.wonderwall"
@@ -304,6 +312,7 @@ func init() {
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
 	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
+	flag.Bool(FeaturesTexas, false, "enable token exchange as a sidecar/service")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),

@@ -79,6 +79,10 @@ func (o *Options) IsMaskinportenEnabled() bool {
 	return o.Config.Features.Maskinporten
 }
 
+func (o *Options) IsTexasEnabled() bool {
+	return o.Config.Features.Texas
+}
+
 func (o *Options) IsAzureratorEnabled() bool {
 	return o.Config.Features.Azurerator
 }
@@ -97,6 +101,10 @@ func (o *Options) GetGoogleProjectID() string {
 
 func (o *Options) GetGoogleTeamProjectID() string {
 	return o.GoogleTeamProjectID
+}
+
+func (o *Options) GetTexasOptions() config.Texas {
+	return o.Config.Texas
 }
 
 func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
