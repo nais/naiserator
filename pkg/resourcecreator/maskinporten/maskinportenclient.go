@@ -86,7 +86,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 					Value: "http://127.0.0.1:1337/token",
 				}, corev1.EnvVar{
 					Name:  "TEXAS_INTROSPECTION_ENDPOINT",
-					Value: "http://127.0.0.1:1337/introspection",
+					Value: "http://127.0.0.1:1337/introspect",
 				},
 			)
 			ast.Labels["texas"] = "enabled"

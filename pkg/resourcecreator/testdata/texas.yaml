@@ -41,7 +41,7 @@ tests:
                       - name: TEXAS_TOKEN_ENDPOINT
                         value: http://127.0.0.1:1337/token
                       - name: TEXAS_INTROSPECTION_ENDPOINT
-                        value: http://127.0.0.1:1337/introspection
+                        value: http://127.0.0.1:1337/introspect
                 initContainers:
                   - restartPolicy: Always
                     env:
