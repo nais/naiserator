@@ -23,6 +23,7 @@ const (
 type Source interface {
 	resource.Source
 	GetIngress() []nais_io_v1.Ingress
+	GetRedirects() []nais_io_v1.Redirect
 	GetLiveness() *nais_io_v1.Probe
 	GetService() *nais_io_v1.Service
 }
@@ -60,13 +61,16 @@ func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 	}
 }
 
-func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
+func ingressRules(source Source) ([]networkingv1.IngressRule, []networkingv1.IngressRule, error) {
 	var rules []networkingv1.IngressRule
+	var redirectRules []networkingv1.IngressRule
+	redirects := source.GetRedirects()
+	ingresses := source.GetIngress()
 
-	for _, ingress := range source.GetIngress() {
-		parsedUrl, err := url.Parse(string(ingress))
+	for _, redirect := range redirects {
+		parsedUrl, err := url.Parse(string(redirect.To))
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+			return nil, nil, fmt.Errorf("failed to parse URL '%s': %s", redirect.To, err)
 		}
 
 		if len(parsedUrl.Path) > 1 {
@@ -77,13 +81,33 @@ func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
 
 		err = util.ValidateUrl(parsedUrl)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
+		}
+
+		redirectRules = append(redirectRules, ingressRule(source.GetName(), parsedUrl))
+	}
+
+	for _, ingress := range ingresses {
+		parsedUrl, err := url.Parse(string(ingress))
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+		}
+
+		if len(parsedUrl.Path) > 1 {
+			parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
+		} else {
+			parsedUrl.Path = "/"
+		}
+
+		err = util.ValidateUrl(parsedUrl)
+		if err != nil {
+			return nil, nil, err
 		}
 
 		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
 	}
 
-	return rules, nil
+	return rules, redirectRules, nil
 }
 
 func copyNginxAnnotations(dst, src map[string]string) {
@@ -125,6 +149,7 @@ func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.I
 
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
+
 	return ingress, nil
 }
 
@@ -151,7 +176,7 @@ func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
 }
 
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
-	rules, err := ingressRules(source)
+	rules, redirectRules, err := ingressRules(source)
 	if err != nil {
 		return nil, err
 	}
@@ -192,6 +217,14 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	for _, ingress := range ingresses {
 		ingressList = append(ingressList, ingress)
 	}
+
+	// redirects := source.GetRedirects()
+
+	// for _, redirect := range redirects {
+
+	// 	ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+	// }
+
 	return ingressList, nil
 }
 
