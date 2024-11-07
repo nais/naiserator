@@ -1,0 +1,60 @@
+testconfig:
+  description: vanilla application running with nais-system with an ingress and a redirect
+config:
+  features:
+    network-policy: true
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .nais.io
+      ingressClass: nais-ingress
+    - domainSuffix: .domain
+      ingressClass: nais-ingress-external
+  nais-namespace: nais-system
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    ingresses:
+      - 'https://myapplication.dev.nais.io'
+      - 'https://myapplication.other.domain'
+    redirects:
+     - from: "myapplication.old.dev.nais.io"
+       to: "myapplicaiton.dev.nais.io"
+
+  tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created"
+        type: subset
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        nais.io/ingressClass: nais-ingress
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        nais.io/ingressClass: nais-ingress-external
+            podSelector:
+              matchLabels:
+                app: myapplication
