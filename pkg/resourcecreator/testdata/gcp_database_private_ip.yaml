@@ -36,7 +36,7 @@ existing:
       annotations:
         cnrm.cloud.google.com/deletion-policy: abandon
         cnrm.cloud.google.com/project-id: team-project-id
-        cnrm.cloud.google.com/state-into-spec: merge
+        cnrm.cloud.google.com/state-into-spec: absent
       name: myapplication
       namespace: mynamespace
     spec:
@@ -72,7 +72,7 @@ tests:
             annotations:
               cnrm.cloud.google.com/deletion-policy: abandon
               cnrm.cloud.google.com/project-id: team-project-id
-              cnrm.cloud.google.com/state-into-spec: merge
+              cnrm.cloud.google.com/state-into-spec: absent
             name: myapplication
             namespace: mynamespace
           spec:
