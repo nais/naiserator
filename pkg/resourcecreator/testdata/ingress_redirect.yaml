@@ -1,8 +1,6 @@
 testconfig:
   description: vanilla application running with nais-system with an ingress and a redirect
 config:
-  features:
-    network-policy: true
   google-project-id: google-project-id
   cluster-name: mycluster
   gateway-mappings:
@@ -21,40 +19,81 @@ input:
   spec:
     image: navikt/myapplication:1.2.3
     ingresses:
-      - 'https://myapplication.dev.nais.io'
-      - 'https://myapplication.other.domain'
+      - "https://myapplication.dev.nais.io"
+      - "https://myapplication-other.domain"
     redirects:
-     - from: "myapplication.old.dev.nais.io"
-       to: "myapplicaiton.dev.nais.io"
+     - from: "https://myapplication.old.dev.nais.io"
+       to: "https://myapplicaiton.dev.nais.domain"
 
-  tests:
+tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    name: myapplication
+    kind: Ingress
+    name: myapplication-nais-ingress-941e7d93
     match:
-      - name: "network policy created"
-        type: subset
-        exclude:
-          - .metadata
-          - .status
+      - type: subset
+        name: "ingress for myapp with a normal ingress and a redirect ingress"
         resource:
+          metadata:
+            annotations:
+              nginx.ingress.kubernetes.io/use-regex: "true"
           spec:
-            ingress:
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: nais-system
-                    podSelector:
-                      matchLabels:
-                        nais.io/ingressClass: nais-ingress
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: nais-system
-                    podSelector:
-                      matchLabels:
-                        nais.io/ingressClass: nais-ingress-external
-            podSelector:
-              matchLabels:
-                app: myapplication
+            ingressClassName: "nais-ingress"
+            rules:
+              - host: "myapplication.dev.nais.io"
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
+                      path: /
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-nais-ingress-external-dd9c46f7
+    match:
+      - type: subset
+        name: "ingress for myapp with a normal ingress and a redirect ingress"
+        resource:
+          metadata:
+            annotations:
+              nginx.ingress.kubernetes.io/use-regex: "true"
+          spec:
+            ingressClassName: "nais-ingress-external"
+            rules:
+              - host: "myapplication-other.domain"
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
+                      path: /
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-nais-ingress-941e7d93-THIS-ONE-FAILS-ON-PURPOSE-SHOULD-BE-THE-REDIRECT-INGRESS
+    match:
+      - type: subset
+        name: "redirect ingress for myapp"
+        resource:
+          metadata:
+            annotations:
+              nginx.ingress.kubernetes.io/rewrite-target: "https://johnny.ansatt.dev.nav.no/$1"
+              nginx.ingress.kubernetes.io/use-regex: "true"
+          spec:
+            ingressClassName: "nais-ingress"
+            rules:
+              - host: "myapplication-other.dev.nais.io"
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
+                      path: /
