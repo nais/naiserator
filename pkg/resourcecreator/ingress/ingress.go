@@ -224,22 +224,29 @@ func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule, r
 
 	for _, rule := range rules {
 		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+		if ingressClass == nil {
+			return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
+				rule.Host,
+				cfg.GetClusterName(),
+				strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
+			)
+		}
 		ingress := ingresses[*ingressClass]
 		if ingress == nil {
 			ing, err := getIngress(source, cfg, rule, ingressClass, redirect)
-
+			ingress = ing
 			if err != nil {
 				return nil, err
 			}
-			ingresses[*ingressClass] = ing
+			ingresses[*ingressClass] = ingress
 		}
 		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
+
 	}
 	return ingresses, nil
 }
 
 func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string, redirect string) (*networkingv1.Ingress, error) {
-
 	// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
 	// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
 	if ingressClass == nil {
