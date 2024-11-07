@@ -61,53 +61,39 @@ func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 	}
 }
 
-func ingressRules(source Source) ([]networkingv1.IngressRule, []networkingv1.IngressRule, error) {
+func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
 	var rules []networkingv1.IngressRule
-	var redirectRules []networkingv1.IngressRule
-	redirects := source.GetRedirects()
 	ingresses := source.GetIngress()
 
-	for _, redirect := range redirects {
-		parsedUrl, err := url.Parse(string(redirect.To))
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to parse URL '%s': %s", redirect.To, err)
-		}
-
-		if len(parsedUrl.Path) > 1 {
-			parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
-		} else {
-			parsedUrl.Path = "/"
-		}
-
-		err = util.ValidateUrl(parsedUrl)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		redirectRules = append(redirectRules, ingressRule(source.GetName(), parsedUrl))
-	}
-
 	for _, ingress := range ingresses {
-		parsedUrl, err := url.Parse(string(ingress))
+		parsedUrl, err := parseIngress(string(ingress))
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
-		}
-
-		if len(parsedUrl.Path) > 1 {
-			parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
-		} else {
-			parsedUrl.Path = "/"
-		}
-
-		err = util.ValidateUrl(parsedUrl)
-		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
 	}
 
-	return rules, redirectRules, nil
+	return rules, nil
+}
+
+func parseIngress(ingress string) (*url.URL, error) {
+	parsedUrl, err := url.Parse(ingress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
+	}
+
+	if len(parsedUrl.Path) > 1 {
+		parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
+	} else {
+		parsedUrl.Path = "/"
+	}
+
+	err = util.ValidateUrl(parsedUrl)
+	if err != nil {
+		return nil, err
+	}
+	return parsedUrl, nil
 }
 
 func copyNginxAnnotations(dst, src map[string]string) {
@@ -135,7 +121,7 @@ func createIngressBase(source Source, rules []networkingv1.IngressRule) *network
 	}
 }
 
-func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.Ingress, error) {
+func createIngressBaseNginx(source Source, ingressClass string, redirect string) (*networkingv1.Ingress, error) {
 	var err error
 	ingress := createIngressBase(source, []networkingv1.IngressRule{})
 	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
@@ -149,6 +135,10 @@ func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.I
 
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
+
+	if redirect != "" {
+		ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect + "/$1"
+	}
 
 	return ingress, nil
 }
@@ -176,11 +166,55 @@ func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
 }
 
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
-	rules, redirectRules, err := ingressRules(source)
+	rules, err := ingressRules(source)
 	if err != nil {
 		return nil, err
 	}
 
+	ingresses, err := getIngresses(source, cfg, rules, "")
+	if err != nil {
+		return nil, err
+	}
+
+	redirects := source.GetRedirects()
+	var redirectIngresses map[string]*networkingv1.Ingress
+
+	if redirects != nil && len(redirects) > 0 {
+		for _, redirect := range redirects {
+			parsedUrl, err := parseIngress(string(redirect.To))
+			if err != nil {
+				return nil, err
+			}
+			for _, ing := range ingresses {
+				for _, rule := range ing.Spec.Rules {
+					// found the ingress that matches the redirect
+					if rule.Host == parsedUrl.Host {
+						r := ingressRule(source.GetName(), parsedUrl)
+						ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+						rdIngresses, err := getIngress(source, cfg, r, ingressClass, string(redirect.From))
+						if err != nil {
+							return nil, err
+						}
+						redirectIngresses[*ingressClass] = rdIngresses
+					}
+				}
+			}
+		}
+	}
+
+	ingressList := make([]*networkingv1.Ingress, 0, len(ingresses)+len(redirectIngresses))
+	for _, ingress := range ingresses {
+		ingressList = append(ingressList, ingress)
+	}
+
+	for _, ingress := range redirectIngresses {
+		ingressList = append(ingressList, ingress)
+	}
+
+	return ingressList, nil
+}
+
+func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule, redirect string) (map[string]*networkingv1.Ingress, error) {
 	// Ingress objects must have at least one path rule to be valid.
 	if len(rules) == 0 {
 		return nil, nil
@@ -190,42 +224,37 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 	for _, rule := range rules {
 		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-
-		// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
-		// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
-		if ingressClass == nil {
-			return nil,
-				fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
-					rule.Host,
-					cfg.GetClusterName(),
-					strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
-				)
-		}
-
 		ingress := ingresses[*ingressClass]
 		if ingress == nil {
-			ingress, err = createIngressBaseNginx(source, *ingressClass)
+			ing, err := getIngress(source, cfg, rule, ingressClass, redirect)
+
 			if err != nil {
 				return nil, err
 			}
-			ingresses[*ingressClass] = ingress
+			ingresses[*ingressClass] = ing
 		}
 		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 	}
+	return ingresses, nil
+}
 
-	ingressList := make([]*networkingv1.Ingress, 0, len(ingresses))
-	for _, ingress := range ingresses {
-		ingressList = append(ingressList, ingress)
+func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string, redirect string) (*networkingv1.Ingress, error) {
+
+	// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
+	// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
+	if ingressClass == nil {
+		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
+			rule.Host,
+			cfg.GetClusterName(),
+			strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
+		)
 	}
 
-	// redirects := source.GetRedirects()
-
-	// for _, redirect := range redirects {
-
-	// 	ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-	// }
-
-	return ingressList, nil
+	ingress, err := createIngressBaseNginx(source, *ingressClass, redirect)
+	if err != nil {
+		return nil, err
+	}
+	return ingress, nil
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
