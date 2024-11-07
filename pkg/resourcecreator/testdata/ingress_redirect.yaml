@@ -13,7 +13,7 @@ input:
   kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
-    name: myapplication
+    name: myapplicationredirect
     namespace: mynamespace
     uid: "123456"
   spec:
@@ -45,7 +45,7 @@ tests:
                   paths:
                     - backend:
                         service:
-                          name: myapplication
+                          name: myapplicationredirect
                           port:
                             number: 80
                       path: /
@@ -76,7 +76,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: myapplication-nais-ingress-941e7d93-THIS-ONE-FAILS-ON-PURPOSE-SHOULD-BE-THE-REDIRECT-INGRESS
+    name: foo
     match:
       - type: subset
         name: "redirect ingress for myapp"

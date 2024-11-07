@@ -181,21 +181,22 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 	if redirects != nil && len(redirects) > 0 {
 		for _, redirect := range redirects {
-			parsedUrl, err := parseIngress(string(redirect.To))
+			parsedRedirectUrl, err := parseIngress(string(redirect.To))
 			if err != nil {
 				return nil, err
 			}
 			for _, ing := range ingresses {
 				for _, rule := range ing.Spec.Rules {
 					// found the ingress that matches the redirect
-					if rule.Host == parsedUrl.Host {
-						r := ingressRule(source.GetName(), parsedUrl)
+					if rule.Host == parsedRedirectUrl.Host {
+						r := ingressRule(source.GetName(), parsedRedirectUrl)
 						ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-						rdIngresses, err := getIngress(source, cfg, r, ingressClass, string(redirect.From))
+						rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.From))
 						if err != nil {
 							return nil, err
 						}
-						redirectIngresses[*ingressClass] = rdIngresses
+						rdIngress.Name = "foo"
+						redirectIngresses[*ingressClass] = rdIngress
 					}
 				}
 			}
