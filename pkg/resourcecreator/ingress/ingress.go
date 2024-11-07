@@ -177,7 +177,8 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	}
 
 	redirects := source.GetRedirects()
-	var redirectIngresses map[string]*networkingv1.Ingress
+
+	redirectIngresses := make(map[string]*networkingv1.Ingress)
 
 	if redirects != nil && len(redirects) > 0 {
 		for _, redirect := range redirects {
@@ -188,6 +189,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 			for _, ing := range ingresses {
 				for _, rule := range ing.Spec.Rules {
 					// found the ingress that matches the redirect
+					fmt.Printf("\n\n%v  ->  %v\n\n", rule.Host, parsedRedirectUrl.Host)
 					if rule.Host == parsedRedirectUrl.Host {
 						r := ingressRule(source.GetName(), parsedRedirectUrl)
 						ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
@@ -197,6 +199,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 						}
 						rdIngress.Name = "foo"
 						redirectIngresses[*ingressClass] = rdIngress
+
 					}
 				}
 			}

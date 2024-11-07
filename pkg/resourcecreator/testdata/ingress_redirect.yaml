@@ -19,11 +19,11 @@ input:
   spec:
     image: navikt/myapplication:1.2.3
     ingresses:
-      - "https://myapplication.dev.nais.io"
-      - "https://myapplication-other.domain"
+      -      "https://myapplication.dev.nais.io"
+      -      "https://myapplication-other.domain"
     redirects:
-     - from: "https://myapplication.old.dev.nais.io"
-       to: "https://myapplicaiton.dev.nais.domain"
+     - from: "https://myapplication.from.redirect.old.dev.nais.io"
+       to:   "https://myapplication.dev.nais.io"
 
 tests:
   - operation: CreateOrUpdate
