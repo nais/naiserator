@@ -191,7 +191,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 					if rule.Host == parsedRedirectUrl.Host {
 						r := ingressRule(source.GetName(), parsedRedirectUrl)
 						ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-						rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.From))
+						rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
 						if err != nil {
 							return nil, err
 						}
