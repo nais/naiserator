@@ -19,11 +19,10 @@ input:
   spec:
     image: navikt/myapplication:1.2.3
     ingresses:
-      -      "https://myapplication.dev.nais.io"
-      -      "https://myapplication-other.domain"
+      - "https://myapplication.dev.nais.io"
     redirects:
-     - from: "https://myapplication.from.redirect.old.dev.nais.io"
-       to:   "https://myapplication.dev.nais.io"
+      - from: "https://myapplication.from.redirect.old.dev.nais.io"
+        to: "https://myapplication.dev.nais.io"
 
 tests:
   - operation: CreateOrUpdate
@@ -53,31 +52,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: myapplicationredirect-nais-ingress-external-0b3cf169
-    match:
-      - type: subset
-        name: "ingress for myapp with a normal ingress and a redirect ingress"
-        resource:
-          metadata:
-            annotations:
-              nginx.ingress.kubernetes.io/use-regex: "true"
-          spec:
-            ingressClassName: "nais-ingress-external"
-            rules:
-              - host: "myapplication-other.domain"
-                http:
-                  paths:
-                    - backend:
-                        service:
-                          name: myapplicationredirect
-                          port:
-                            number: 80
-                      path: /
-
-  - operation: CreateOrUpdate
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    name:  myapplicationredirect-nais-ingress-redirect-9062cefa
+    name: myapplicationredirect-nais-ingress-redirect-9062cefa
     match:
       - type: subset
         name: "redirect ingress for myapp"
@@ -89,7 +64,7 @@ tests:
           spec:
             ingressClassName: "nais-ingress"
             rules:
-              - host: "myapplication.dev.nais.io"
+              - host: "myapplication-other.domain"
                 http:
                   paths:
                     - backend:

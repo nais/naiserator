@@ -1,0 +1,26 @@
+testconfig:
+  description: vanilla application running with nais-system with a unsupported redirect
+config:
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .nais.io
+      ingressClass: nais-ingress
+    - domainSuffix: .domain
+      ingressClass: nais-ingress-external
+  nais-namespace: nais-system
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplicationredirect
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    ingresses:
+      - "https://myapplication-other.domain"
+    redirects:
+      - from: "https://myapplication.from.redirect.old.dev.nais.io"
+        to: "https://myapplication.dev.nais.io"
+error: "no matching ingress found for redirect"

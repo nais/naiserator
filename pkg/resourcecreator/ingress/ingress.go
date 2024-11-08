@@ -181,9 +181,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	}
 
 	redirects := source.GetRedirects()
-
 	redirectIngresses := make(map[string]*networkingv1.Ingress)
-
 	if redirects != nil && len(redirects) > 0 {
 		err = createRedirectIngresses(source, cfg, redirects, ingresses, redirectIngresses)
 		if err != nil {
@@ -204,30 +202,39 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 }
 
 func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.Redirect, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
-
-	for _, redirect := range redirects {
-		parsedRedirectUrl, err := parseIngress(string(redirect.To))
-		if err != nil {
-			return err
-		}
-		for _, ing := range ingresses {
+	for _, ing := range ingresses {
+		for _, redirect := range redirects {
 			for _, rule := range ing.Spec.Rules {
+				parsedToRedirectUrl, err := parseIngress(string(redirect.To))
+				if err != nil {
+					return err
+				}
+
 				// found the ingress that matches the redirect
-				fmt.Printf("\n\n%v  ->  %v\n\n", rule.Host, parsedRedirectUrl.Host)
-				if rule.Host == parsedRedirectUrl.Host {
-					r := ingressRule(source.GetName(), parsedRedirectUrl)
-					ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+				if rule.Host == parsedToRedirectUrl.Host {
+					r := ingressRule(source.GetName(), parsedToRedirectUrl)
+					parsedFromUrl, err := parseIngress(string(redirect.From))
+					if err != nil {
+						return err
+					}
+					ingressClass := util.ResolveIngressClass(parsedFromUrl.Host, cfg.GetGatewayMappings())
+					fmt.Println("ingressClass", *ingressClass)
+					fmt.Println("redirectTo", string(redirect.To))
 					rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
 					if err != nil {
 						return err
 					}
 					redirectIngresses[*ingressClass] = rdIngress
-					rdIngress.Spec.Rules = append(rdIngress.Spec.Rules, rule)
+					rdIngress.Spec.Rules = append(rdIngress.Spec.Rules, r)
 				}
 			}
 		}
-
 	}
+
+	if len(redirectIngresses) == 0 {
+		return fmt.Errorf("no matching ingress found for redirect")
+	}
+
 	return nil
 }
 
