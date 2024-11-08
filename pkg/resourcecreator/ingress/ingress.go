@@ -37,7 +37,6 @@ type Config interface {
 
 func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 	pathType := networkingv1.PathTypeImplementationSpecific
-
 	return networkingv1.IngressRule{
 		Host: u.Host,
 		IngressRuleValue: networkingv1.IngressRuleValue{
@@ -67,6 +66,7 @@ func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
 
 	for _, ingress := range ingresses {
 		parsedUrl, err := parseIngress(string(ingress))
+		fmt.Println("parsedUrl", parsedUrl)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func copyNginxAnnotations(dst, src map[string]string) {
 	}
 }
 
-func createIngressBase(source Source, rules []networkingv1.IngressRule) *networkingv1.Ingress {
+func createIngressBase(source Source) *networkingv1.Ingress {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = source.GetLiveness().Path
@@ -116,14 +116,14 @@ func createIngressBase(source Source, rules []networkingv1.IngressRule) *network
 		},
 		ObjectMeta: objectMeta,
 		Spec: networkingv1.IngressSpec{
-			Rules: rules,
+			Rules: []networkingv1.IngressRule{},
 		},
 	}
 }
 
 func createIngressBaseNginx(source Source, ingressClass string, redirect string) (*networkingv1.Ingress, error) {
 	var err error
-	ingress := createIngressBase(source, []networkingv1.IngressRule{})
+	ingress := createIngressBase(source)
 	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
 	ingress.Name, err = namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
 	if err != nil {
@@ -205,6 +205,10 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 	for _, ing := range ingresses {
 		for _, redirect := range redirects {
 			for _, rule := range ing.Spec.Rules {
+				parsedFromRedirectUrl, err := parseIngress(string(redirect.From))
+				if err != nil {
+					return err
+				}
 				parsedToRedirectUrl, err := parseIngress(string(redirect.To))
 				if err != nil {
 					return err
@@ -212,14 +216,17 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 
 				// found the ingress that matches the redirect
 				if rule.Host == parsedToRedirectUrl.Host {
-					r := ingressRule(source.GetName(), parsedToRedirectUrl)
+					urlPath, err := url.Parse(strings.TrimRight(parsedFromRedirectUrl.String(), "/"))
+					if err != nil {
+						return err
+					}
+					urlPath.Path = urlPath.Path + regexSuffix
+					r := ingressRule(source.GetName(), urlPath)
 					parsedFromUrl, err := parseIngress(string(redirect.From))
 					if err != nil {
 						return err
 					}
 					ingressClass := util.ResolveIngressClass(parsedFromUrl.Host, cfg.GetGatewayMappings())
-					fmt.Println("ingressClass", *ingressClass)
-					fmt.Println("redirectTo", string(redirect.To))
 					rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
 					if err != nil {
 						return err

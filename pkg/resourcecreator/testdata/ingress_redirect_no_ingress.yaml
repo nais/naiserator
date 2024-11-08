@@ -19,7 +19,7 @@ input:
   spec:
     image: navikt/myapplication:1.2.3
     ingresses:
-      - "https://myapplication-other.domain"
+      - "https://notspecinredirects.to.domain"
     redirects:
       - from: "https://myapplication.from.redirect.old.dev.nais.io"
         to: "https://myapplication.dev.nais.io"
