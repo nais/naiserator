@@ -77,24 +77,24 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: foo
+    name:  myapplicationredirect-nais-ingress-redirect-9062cefa
     match:
       - type: subset
         name: "redirect ingress for myapp"
         resource:
           metadata:
             annotations:
-              nginx.ingress.kubernetes.io/rewrite-target: "https://johnny.ansatt.dev.nav.no/$1"
+              nginx.ingress.kubernetes.io/rewrite-target: "https://myapplication.dev.nais.io/$1"
               nginx.ingress.kubernetes.io/use-regex: "true"
           spec:
             ingressClassName: "nais-ingress"
             rules:
-              - host: "myapplication-other.dev.nais.io"
+              - host: "myapplication.dev.nais.io"
                 http:
                   paths:
                     - backend:
                         service:
-                          name: myapplication
+                          name: myapplicationredirect
                           port:
                             number: 80
                       path: /

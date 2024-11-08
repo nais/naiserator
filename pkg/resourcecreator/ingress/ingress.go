@@ -138,6 +138,10 @@ func createIngressBaseNginx(source Source, ingressClass string, redirect string)
 
 	if redirect != "" {
 		ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect + "/$1"
+		ingress.Name, err = namegen.ShortName(baseName+"-redirect", validation.DNS1035LabelMaxLength)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return ingress, nil
@@ -181,28 +185,9 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	redirectIngresses := make(map[string]*networkingv1.Ingress)
 
 	if redirects != nil && len(redirects) > 0 {
-		for _, redirect := range redirects {
-			parsedRedirectUrl, err := parseIngress(string(redirect.To))
-			if err != nil {
-				return nil, err
-			}
-			for _, ing := range ingresses {
-				for _, rule := range ing.Spec.Rules {
-					// found the ingress that matches the redirect
-					fmt.Printf("\n\n%v  ->  %v\n\n", rule.Host, parsedRedirectUrl.Host)
-					if rule.Host == parsedRedirectUrl.Host {
-						r := ingressRule(source.GetName(), parsedRedirectUrl)
-						ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-						rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
-						if err != nil {
-							return nil, err
-						}
-						rdIngress.Name = "foo"
-						redirectIngresses[*ingressClass] = rdIngress
-
-					}
-				}
-			}
+		err = createRedirectIngresses(source, cfg, redirects, ingresses, redirectIngresses)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -216,6 +201,34 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	}
 
 	return ingressList, nil
+}
+
+func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.Redirect, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
+
+	for _, redirect := range redirects {
+		parsedRedirectUrl, err := parseIngress(string(redirect.To))
+		if err != nil {
+			return err
+		}
+		for _, ing := range ingresses {
+			for _, rule := range ing.Spec.Rules {
+				// found the ingress that matches the redirect
+				fmt.Printf("\n\n%v  ->  %v\n\n", rule.Host, parsedRedirectUrl.Host)
+				if rule.Host == parsedRedirectUrl.Host {
+					r := ingressRule(source.GetName(), parsedRedirectUrl)
+					ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
+					rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
+					if err != nil {
+						return err
+					}
+					redirectIngresses[*ingressClass] = rdIngress
+					rdIngress.Spec.Rules = append(rdIngress.Spec.Rules, rule)
+				}
+			}
+		}
+
+	}
+	return nil
 }
 
 func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule, redirect string) (map[string]*networkingv1.Ingress, error) {
