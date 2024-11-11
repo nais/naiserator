@@ -13,7 +13,7 @@ require (
 	github.com/magiconair/properties v1.8.7
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nais/liberator v0.0.0-20241031092506-e3e66af336e7
+	github.com/nais/liberator v0.0.0-20241111090932-2cfd10dc89a5
 	github.com/novln/docker-parser v1.0.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.74.0
 	github.com/prometheus/client_golang v1.20.5
@@ -103,5 +103,3 @@ require (
 go 1.22.0
 
 toolchain go1.22.6
-
-replace github.com/nais/liberator => ../liberator
