@@ -216,12 +216,13 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 
 				// found the ingress that matches the redirect
 				if rule.Host == parsedToRedirectUrl.Host {
-					urlPath, err := url.Parse(strings.TrimRight(parsedFromRedirectUrl.String(), "/"))
+					url, err := url.Parse(strings.TrimRight(parsedFromRedirectUrl.String(), "/"))
 					if err != nil {
 						return err
 					}
-					urlPath.Path = urlPath.Path + regexSuffix
-					r := ingressRule(source.GetName(), urlPath)
+					url.Path = url.Path + regexSuffix
+					fmt.Println("URL PATH FOR REDIRECT INGRESS: %v", url)
+					r := ingressRule(source.GetName(), url)
 					parsedFromUrl, err := parseIngress(string(redirect.From))
 					if err != nil {
 						return err
