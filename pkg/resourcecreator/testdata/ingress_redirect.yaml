@@ -73,5 +73,5 @@ tests:
                           name: myapplicationredirect
                           port:
                             number: 80
-                      path: (/.*)?
+                      path: /(/.*)?
                       pathType: ImplementationSpecific

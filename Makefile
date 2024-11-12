@@ -1,6 +1,6 @@
 NAME        := naiserator
 TAG         := europe-north1-docker.pkg.dev/nais-io/nais/feature/${NAME}
-LATEST      := ${TAG}:work-in-progress
+LATEST      := ${TAG}:latest
 ROOT_DIR    := $(shell git rev-parse --show-toplevel)
 K8S_VERSION := 1.30.0
 arch        := $(shell uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
@@ -17,7 +17,7 @@ build:
 	go build -o cmd/naiserator_webhook/naiserator_webhook ./cmd/naiserator_webhook
 
 docker:
-	docker buildx build --platform linux/amd64 -t ${TAG}:$(shell ./version.sh) -t ${TAG} -t ${NAME} -t ${LATEST} -f Dockerfile .
+	docker image build -t ${TAG}:$(shell ./version.sh) -t ${TAG} -t ${NAME} -t ${LATEST} -f Dockerfile .
 
 docker-push:
 	docker image push ${TAG}:$(shell /bin/cat ./version)

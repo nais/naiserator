@@ -220,9 +220,33 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 					if err != nil {
 						return err
 					}
-					url.Path = url.Path + regexSuffix
-					fmt.Println("URL PATH FOR REDIRECT INGRESS: %v", url)
-					r := ingressRule(source.GetName(), url)
+					url.Path = "/(/.*)"
+
+					fmt.Printf("URL PATH FOR REDIRECT INGRESS: %v, %v", url, url.Path)
+					implementationSpecific := networkingv1.PathTypeImplementationSpecific
+					// -V This is an inlined ingressRule call, for readability or something
+					r := networkingv1.IngressRule{
+						Host: url.Host,
+						IngressRuleValue: networkingv1.IngressRuleValue{
+							HTTP: &networkingv1.HTTPIngressRuleValue{
+								Paths: []networkingv1.HTTPIngressPath{
+									{
+										Path:     "/(/.*)?",
+										PathType: &implementationSpecific,
+										Backend: networkingv1.IngressBackend{
+											Service: &networkingv1.IngressServiceBackend{
+												Name: source.GetName(),
+												Port: networkingv1.ServiceBackendPort{
+													Number: int32(nais_io_v1alpha1.DefaultServicePort),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					}
+
 					parsedFromUrl, err := parseIngress(string(redirect.From))
 					if err != nil {
 						return err
