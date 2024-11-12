@@ -215,7 +215,7 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 
 				// found the ingress that matches the redirect
 				if rule.Host == parsedToRedirectUrl.Host {
-					url, err := url.Parse(strings.TrimRight(parsedFromRedirectUrl.String(), "/"))
+					u, err := url.Parse(strings.TrimRight(parsedFromRedirectUrl.String(), "/"))
 					if err != nil {
 						return err
 					}
@@ -223,12 +223,12 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 					implementationSpecific := networkingv1.PathTypeImplementationSpecific
 					// -V This is an inlined ingressRule call, for readability or something
 					r := networkingv1.IngressRule{
-						Host: url.Host,
+						Host: u.Host,
 						IngressRuleValue: networkingv1.IngressRuleValue{
 							HTTP: &networkingv1.HTTPIngressRuleValue{
 								Paths: []networkingv1.HTTPIngressPath{
 									{
-										Path:     "/(/.*)?",
+										Path:     "/(.*)?",
 										PathType: &implementationSpecific,
 										Backend: networkingv1.IngressBackend{
 											Service: &networkingv1.IngressServiceBackend{
@@ -244,11 +244,7 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 						},
 					}
 
-					parsedFromUrl, err := parseIngress(string(redirect.From))
-					if err != nil {
-						return err
-					}
-					ingressClass := util.ResolveIngressClass(parsedFromUrl.Host, cfg.GetGatewayMappings())
+					ingressClass := util.ResolveIngressClass(parsedFromRedirectUrl.Host, cfg.GetGatewayMappings())
 					rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
 					if err != nil {
 						return err
