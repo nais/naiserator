@@ -15,10 +15,15 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
+const (
+	// TexasEnableAnnotation is an opt-in annotation key used to enable Texas sidecar
+	// FIXME: remove when Texas is considered stable enough to be enabled by default
+	TexasEnableAnnotation = "texas.nais.io/enabled"
+)
+
 type Source interface {
 	resource.Source
 	GetMaskinporten() *nais_io_v1.Maskinporten
-	GetTexas() *nais_io_v1.Texas
 }
 
 type Config interface {
@@ -73,27 +78,31 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, maskinportenClient)
 
-	texas := source.GetTexas()
-	if texas != nil && texas.Maskinporten {
+	enableTexas, ok := source.GetAnnotations()[TexasEnableAnnotation]
+	if ok && enableTexas == "true" {
 		if !cfg.IsTexasEnabled() {
 			return fmt.Errorf("texas is not available in this cluster")
 		}
-		// FIXME: only do this once
+		// FIXME: extract to common texas module
 		{
 			ast.AppendEnv(
 				corev1.EnvVar{
 					Name:  "TEXAS_TOKEN_ENDPOINT",
-					Value: "http://127.0.0.1:1337/token",
-				}, corev1.EnvVar{
+					Value: "http://127.0.0.1:1337/api/v1/token",
+				},
+				corev1.EnvVar{
+					Name:  "TEXAS_TOKEN_EXCHANGE_ENDPOINT",
+					Value: "http://127.0.0.1:1337/api/v1/token/exchange",
+				},
+				corev1.EnvVar{
 					Name:  "TEXAS_INTROSPECTION_ENDPOINT",
-					Value: "http://127.0.0.1:1337/introspect",
+					Value: "http://127.0.0.1:1337/api/v1/introspect",
 				},
 			)
 			ast.Labels["texas"] = "enabled"
 		}
 
-		ast.InitContainers = append(ast.InitContainers, texasSidecar(cfg, []string{maskinportenClient.Spec.SecretName}))
-		return nil
+		ast.InitContainers = append(ast.InitContainers, texasSidecar(cfg, []string{maskinportenClient.Spec.SecretName}, []string{"maskinporten"}))
 	}
 
 	pod.WithAdditionalSecret(ast, maskinportenClient.Spec.SecretName, nais_io_v1alpha1.DefaultDigdiratorMaskinportenMountPath)

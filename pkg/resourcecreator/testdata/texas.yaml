@@ -13,6 +13,8 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
+    annotations:
+      texas.nais.io/enabled: "true"
   spec:
     image: foo/bar
     texas:
@@ -34,19 +36,29 @@ tests:
                 labels:
                   maskinporten: enabled
                   texas: enabled
+              metadata:
+                labels:
+                  maskinporten: enabled
               spec:
                 containers:
                   - name: myapplication
                     env:
                       - name: TEXAS_TOKEN_ENDPOINT
-                        value: http://127.0.0.1:1337/token
+                        value: http://127.0.0.1:1337/api/v1/token
+                      - name: TEXAS_TOKEN_EXCHANGE_ENDPOINT
+                        value: http://127.0.0.1:1337/api/v1/token
                       - name: TEXAS_INTROSPECTION_ENDPOINT
-                        value: http://127.0.0.1:1337/introspect
+                        value: http://127.0.0.1:1337/api/v1/introspect
+                    envFrom:
+                      - secretRef:
+                          name: ^maskinporten-myapplication-9561321b$
                 initContainers:
                   - restartPolicy: Always
                     env:
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:1337$
+                      - name: MASKINPORTEN_ENABLED
+                        value: ^true$
                     envFrom:
                       - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
