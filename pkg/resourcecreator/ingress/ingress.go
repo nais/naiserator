@@ -66,7 +66,6 @@ func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
 
 	for _, ingress := range ingresses {
 		parsedUrl, err := parseIngress(string(ingress))
-		fmt.Println("parsedUrl", parsedUrl)
 		if err != nil {
 			return nil, err
 		}
@@ -220,9 +219,7 @@ func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.R
 					if err != nil {
 						return err
 					}
-					url.Path = "/(/.*)"
 
-					fmt.Printf("URL PATH FOR REDIRECT INGRESS: %v, %v", url, url.Path)
 					implementationSpecific := networkingv1.PathTypeImplementationSpecific
 					// -V This is an inlined ingressRule call, for readability or something
 					r := networkingv1.IngressRule{

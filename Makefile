@@ -1,5 +1,5 @@
 NAME        := naiserator
-TAG         := europe-north1-docker.pkg.dev/nais-io/nais/feature/${NAME}
+TAG         := navikt/${NAME}
 LATEST      := ${TAG}:latest
 ROOT_DIR    := $(shell git rev-parse --show-toplevel)
 K8S_VERSION := 1.30.0
