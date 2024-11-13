@@ -108,5 +108,5 @@ spec:
               path: kafka.key
             - key: KAFKA_CA
               path: ca.crt
-          secretName: aiven-{{ .Release.Name }}
+          secretName: aiven-{{ .Release.Name }}-{{ now | date "2006-01" }}
       {{ end }}
