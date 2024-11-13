@@ -6,6 +6,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/naiserator/pkg/redirect"
 	"github.com/nais/naiserator/pkg/resourcecreator/frontend"
 	"github.com/nais/naiserator/pkg/resourcecreator/login"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
@@ -86,6 +87,11 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 	err = kube.Get(ctx, namespaceKey, namespace)
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("query existing namespace: %s", err)
+	}
+
+	// Check if the application is allowed to redirect to another host
+	if err = redirect.Allowed(ctx, app, kube); err != nil {
+		return nil, err
 	}
 
 	// Auto-detect Google Team Project ID

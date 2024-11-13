@@ -1,0 +1,59 @@
+testconfig:
+  description: application with an ingress and a redirect, with a redirect to a ingress in another namespace with no annotation matching the redirect
+config:
+  google-project-id: google-project-id
+  cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .nais.io
+      ingressClass: nais-ingress
+    - domainSuffix: .domain
+      ingressClass: nais-ingress-external
+  nais-namespace: nais-system
+existing:
+  - kind: Application
+    apiVersion: nais.io/v1alpha1
+    metadata:
+      name: myapplicationredirect-preexisting-app
+      namespace: my-other-namespace
+      uid: "123456"
+    spec:
+      image: navikt/myapplication:1.2.3
+      ingresses:
+        - "myapplication.from.redirect.old.dev.nais.io"
+  - kind: Ingress
+    apiVersion: networking.k8s.io/v1
+    name: myapplicationredirect-preexisting-ingress
+    metadata:
+      namespace: my-other-namespace
+      labels:
+        app: myapplicationredirect-preexisting-app
+      annotations:
+        nginx.ingress.kubernetes.io/use-regex: "true"
+    spec:
+      ingressClassName: "nais-ingress"
+      rules:
+        - host: "myapplication.from.redirect.old.dev.nais.io"
+          http:
+            paths:
+              - backend:
+                  service:
+                    name: myapplicationredirect
+                    port:
+                      number: 80
+                  path: /
+                  pathType: ImplementationSpecific
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplicationredirect
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    ingresses:
+      - "https://myapplication.dev.nais.io"
+    redirects:
+      - from: "https://myapplication.from.redirect.old.dev.nais.io"
+        to: "https://myapplication.dev.nais.io"
+error: "failed preparing options for resource generation: cross-namespace redirect not allowed from app 'myapplicationredirect-preexisting-app' without annotation 'nais.io/allow-redirect: true' in namespace 'my-other-namespace'"

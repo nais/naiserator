@@ -23,4 +23,4 @@ input:
     redirects:
       - from: "https://myapplication.from.redirect.old.dev.nais.io"
         to: "https://myapplication.dev.nais.io"
-error: "no matching ingress found for redirect"
+error: "failed preparing options for resource generation: no ingress found with host matching redirect from URL: https://myapplication.from.redirect.old.dev.nais.io"

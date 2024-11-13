@@ -1,5 +1,5 @@
 testconfig:
-  description: application with an ingress and a redirect, with a redirect to a existing ingress in the same namespace
+  description: application  with an ingress and a redirect, with a redirect to a existing ingress another namespace with the right annotation
 config:
   google-project-id: google-project-id
   cluster-name: mycluster
@@ -10,11 +10,23 @@ config:
       ingressClass: nais-ingress-external
   nais-namespace: nais-system
 existing:
+  - kind: Application
+    apiVersion: nais.io/v1alpha1
+    metadata:
+      annotations:
+        "nais.io/allow-redirect": "true"
+      name: myapplicationredirect-preexisting-app
+      namespace: my-other-namespace
+      uid: "123456"
+    spec:
+      image: navikt/myapplication:1.2.3
+      ingresses:
+        - "myapplication.from.redirect.old.dev.nais.io"
   - kind: Ingress
     apiVersion: networking.k8s.io/v1
     name: myapplicationredirect-preexisting-ingress
     metadata:
-      namespace: mynamespace
+      namespace: my-other-namespace
       labels:
         app: myapplicationredirect-preexisting-app
       annotations:
