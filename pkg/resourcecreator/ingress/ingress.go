@@ -181,8 +181,8 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 	redirects := source.GetRedirects()
 	redirectIngresses := make(map[string]*networkingv1.Ingress)
-	if redirects != nil && len(redirects) > 0 {
-		err = createRedirectIngresses(source, cfg, redirects, ingresses, redirectIngresses)
+	if hasRedirect(source) {
+		err = CreateRedirectIngresses(source, cfg, redirects, ingresses, redirectIngresses)
 		if err != nil {
 			return nil, err
 		}
@@ -200,67 +200,22 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func createRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.Redirect, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
-	for _, ing := range ingresses {
-		for _, redirect := range redirects {
-			for _, rule := range ing.Spec.Rules {
-				parsedFromRedirectUrl, err := parseIngress(string(redirect.From))
-				if err != nil {
-					return err
-				}
-				parsedToRedirectUrl, err := parseIngress(string(redirect.To))
-				if err != nil {
-					return err
-				}
-
-				// found the ingress that matches the redirect
-				if rule.Host == parsedToRedirectUrl.Host {
-					u, err := url.Parse(strings.TrimRight(parsedFromRedirectUrl.String(), "/"))
-					if err != nil {
-						return err
-					}
-
-					implementationSpecific := networkingv1.PathTypeImplementationSpecific
-					// -V This is an inlined ingressRule call, for readability or something
-					r := networkingv1.IngressRule{
-						Host: u.Host,
-						IngressRuleValue: networkingv1.IngressRuleValue{
-							HTTP: &networkingv1.HTTPIngressRuleValue{
-								Paths: []networkingv1.HTTPIngressPath{
-									{
-										Path:     "/(.*)?",
-										PathType: &implementationSpecific,
-										Backend: networkingv1.IngressBackend{
-											Service: &networkingv1.IngressServiceBackend{
-												Name: source.GetName(),
-												Port: networkingv1.ServiceBackendPort{
-													Number: int32(nais_io_v1alpha1.DefaultServicePort),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					}
-
-					ingressClass := util.ResolveIngressClass(parsedFromRedirectUrl.Host, cfg.GetGatewayMappings())
-					rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
-					if err != nil {
-						return err
-					}
-					redirectIngresses[*ingressClass] = rdIngress
-					rdIngress.Spec.Rules = append(rdIngress.Spec.Rules, r)
-				}
-			}
-		}
+func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string, redirect string) (*networkingv1.Ingress, error) {
+	// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
+	// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
+	if ingressClass == nil {
+		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
+			rule.Host,
+			cfg.GetClusterName(),
+			strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
+		)
 	}
 
-	if len(redirectIngresses) == 0 {
-		return fmt.Errorf("no matching ingress found for redirect")
+	ingress, err := createIngressBaseNginx(source, *ingressClass, redirect)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil
+	return ingress, nil
 }
 
 func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule, redirect string) (map[string]*networkingv1.Ingress, error) {
@@ -293,24 +248,6 @@ func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule, r
 
 	}
 	return ingresses, nil
-}
-
-func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string, redirect string) (*networkingv1.Ingress, error) {
-	// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
-	// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
-	if ingressClass == nil {
-		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
-			rule.Host,
-			cfg.GetClusterName(),
-			strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
-		)
-	}
-
-	ingress, err := createIngressBaseNginx(source, *ingressClass, redirect)
-	if err != nil {
-		return nil, err
-	}
-	return ingress, nil
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
