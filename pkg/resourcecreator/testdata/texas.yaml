@@ -36,18 +36,15 @@ tests:
                 labels:
                   maskinporten: enabled
                   texas: enabled
-              metadata:
-                labels:
-                  maskinporten: enabled
               spec:
                 containers:
                   - name: myapplication
                     env:
-                      - name: TEXAS_TOKEN_ENDPOINT
+                      - name: AUTH_TOKEN_ENDPOINT
                         value: http://127.0.0.1:1337/api/v1/token
-                      - name: TEXAS_TOKEN_EXCHANGE_ENDPOINT
+                      - name: AUTH_TOKEN_EXCHANGE_ENDPOINT
                         value: http://127.0.0.1:1337/api/v1/token
-                      - name: TEXAS_INTROSPECTION_ENDPOINT
+                      - name: AUTH_INTROSPECTION_ENDPOINT
                         value: http://127.0.0.1:1337/api/v1/introspect
                     envFrom:
                       - secretRef:
