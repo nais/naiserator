@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -17,11 +16,22 @@ const (
 	AllowedRedirectAnnotation = "nais.io/allow-redirect"
 )
 
-func hasRedirect(source Source) bool {
+func hasRedirects(source Source) bool {
 	return source.GetRedirects() != nil && len(source.GetRedirects()) > 0
 }
 
-func checkAppForAllowedRedirectAnnotation(ctx context.Context, kube client.Client, matchedIngress *networkingv1.Ingress) error {
+func findMatch(ingresses []networkingv1.Ingress, redirectFromHost string) *networkingv1.Ingress {
+	for _, ing := range ingresses {
+		for _, rule := range ing.Spec.Rules {
+			if rule.Host == redirectFromHost {
+				return &ing
+			}
+		}
+	}
+	return nil
+}
+
+func allowedRedirectAnnotation(ctx context.Context, kube client.Client, matchedIngress *networkingv1.Ingress) error {
 	appName := matchedIngress.Labels["app"]
 	if len(appName) == 0 {
 		return fmt.Errorf("no 'app' label found in the ingress in namespace %s", matchedIngress.Namespace)
@@ -42,19 +52,8 @@ func checkAppForAllowedRedirectAnnotation(ctx context.Context, kube client.Clien
 	return nil
 }
 
-func findMatch(ingresses []networkingv1.Ingress, redirectFromHost string) *networkingv1.Ingress {
-	for _, ing := range ingresses {
-		for _, rule := range ing.Spec.Rules {
-			if rule.Host == redirectFromHost {
-				return &ing
-			}
-		}
-	}
-	return nil
-}
-
 func RedirectAllowed(ctx context.Context, source Source, kube client.Client) error {
-	if !hasRedirect(source) {
+	if !hasRedirects(source) {
 		return nil
 	}
 
@@ -89,7 +88,7 @@ func RedirectAllowed(ctx context.Context, source Source, kube client.Client) err
 
 			// If the ingress is in a different namespace, check for the required annotation
 			if matchedIngress.Namespace != source.GetNamespace() {
-				if err = checkAppForAllowedRedirectAnnotation(ctx, kube, matchedIngress); err != nil {
+				if err = allowedRedirectAnnotation(ctx, kube, matchedIngress); err != nil {
 					return err
 				}
 			}
@@ -129,7 +128,8 @@ func createIngressRule(source Source, redirectUrl string) (networkingv1.IngressR
 	}, nil
 }
 
-func CreateRedirectIngresses(source Source, cfg Config, redirects []nais_io_v1.Redirect, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
+func CreateRedirectIngresses(source Source, cfg Config, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
+	redirects := source.GetRedirects()
 	for _, ing := range ingresses {
 		for _, redirect := range redirects {
 			for _, rule := range ing.Spec.Rules {

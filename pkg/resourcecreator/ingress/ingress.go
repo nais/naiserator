@@ -179,10 +179,9 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 		return nil, err
 	}
 
-	redirects := source.GetRedirects()
 	redirectIngresses := make(map[string]*networkingv1.Ingress)
-	if hasRedirect(source) {
-		err = CreateRedirectIngresses(source, cfg, redirects, ingresses, redirectIngresses)
+	if hasRedirects(source) {
+		err = CreateRedirectIngresses(source, cfg, ingresses, redirectIngresses)
 		if err != nil {
 			return nil, err
 		}
