@@ -28,7 +28,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+            secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
       - name: "instance and access is propagated"
         type: subset
         resource:
@@ -59,28 +59,28 @@ tests:
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_USERNAME_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: REDIS_PASSWORD_NAISTEST1
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_PASSWORD_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: REDIS_URI_NAISTEST1
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_URI_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: REDIS_HOST_NAISTEST1
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_HOST_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
                             optional: true
                       - name: REDIS_PORT_NAISTEST1
                         valueFrom:
                           secretKeyRef:
                             key: REDIS_PORT_NAISTEST1
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?$
+                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
                             optional: true
   - operation: CreateIfNotExists
     apiVersion: aiven.io/v1alpha1
