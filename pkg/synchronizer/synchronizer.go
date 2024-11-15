@@ -444,7 +444,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 		return nil, fmt.Errorf("BUG: merge default values into application: %s", err)
 	}
 
-	rollout.SynchronizationHash, err = source.Hash()
+	rollout.SynchronizationHash, err = source.Hash(n.config.AivenGeneration)
 	if err != nil {
 		return nil, fmt.Errorf("BUG: create application hash: %s", err)
 	}
