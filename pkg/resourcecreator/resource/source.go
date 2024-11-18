@@ -30,7 +30,7 @@ type Source interface {
 	SkipDeploymentMessage() bool
 	LogFields() log.Fields
 	ApplyDefaults() error
-	Hash() (string, error)
+	Hash(aivenGeneration int) (string, error)
 }
 
 func CreateObjectMeta(source Source) metav1.ObjectMeta {

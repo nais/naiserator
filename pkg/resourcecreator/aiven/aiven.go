@@ -2,6 +2,7 @@ package aiven
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
@@ -31,19 +32,20 @@ type Config interface {
 	IsKafkaratorEnabled() bool
 	IsInfluxCredentialsEnabled() bool
 	GetAivenProject() string
+	GetAivenGeneration() int
 }
 
-func generateSharedAivenSecretName(name string) (string, error) {
+func generateSharedAivenSecretName(name string, generation int) (string, error) {
 	prefixedName := fmt.Sprintf("aiven-%s", name)
 	year, week := time.Now().ISOWeek()
-	suffix := fmt.Sprintf("%d-%d", year, week)
+	suffix := fmt.Sprintf("%d-%d-%d", year, week, generation%10)
 	maxLen := validation.DNS1035LabelMaxLength
 
 	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	secretName, err := generateSharedAivenSecretName(source.GetName())
+	secretName, err := generateSharedAivenSecretName(source.GetName(), config.GetAivenGeneration())
 	if err != nil {
 		return err
 	}
@@ -54,6 +56,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		}).
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
+	aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
 
 	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
 

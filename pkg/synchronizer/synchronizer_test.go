@@ -141,6 +141,7 @@ func newTestRig(config config.Config) (*testRig, error) {
 // This test includes some GCP features suchs as CNRM
 func TestSynchronizer(t *testing.T) {
 	cfg := config.Config{
+		AivenGeneration: 0,
 		Synchronizer: config.Synchronizer{
 			SynchronizationTimeout: 2 * time.Second,
 			RolloutCheckInterval:   5 * time.Second,
@@ -283,7 +284,7 @@ func TestSynchronizer(t *testing.T) {
 	// that the team label is set, and that the hash is present.
 	persistedApp = &nais_io_v1alpha1.Application{}
 	err = rig.client.Get(ctx, objectKey, persistedApp)
-	hash, _ := app.Hash()
+	hash, _ := app.Hash(cfg.AivenGeneration)
 	assert.NotNil(t, persistedApp)
 	assert.Equal(t, app.Namespace, persistedApp.GetLabels()["team"], "Team label was added to the Application resource metadata")
 	assert.NoError(t, err)

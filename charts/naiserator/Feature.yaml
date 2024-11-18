@@ -23,6 +23,10 @@ values:
     displayName: Extra internal hosts
     config:
       type: string_array
+  naiserator.aiven-generation:
+    displayName: The generation of Aiven secrets in this cluster
+    config:
+      type: int
   naiserator.aiven-project:
     displayName: Aiven project
     computed:

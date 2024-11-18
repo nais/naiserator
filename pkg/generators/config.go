@@ -175,6 +175,10 @@ func (o *Options) GetNaisNamespace() string {
 	return o.Config.NaisNamespace
 }
 
+func (o *Options) GetAivenGeneration() int {
+	return o.Config.AivenGeneration
+}
+
 func (o *Options) GetAivenProject() string {
 	return o.Config.AivenProject
 }

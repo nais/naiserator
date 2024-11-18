@@ -156,6 +156,7 @@ type Frontend struct {
 }
 
 type Config struct {
+	AivenGeneration                   int              `json:"aiven-generation"`
 	AivenProject                      string           `json:"aiven-project"`
 	AivenRange                        string           `json:"aiven-range"`
 	ApiServerIp                       string           `json:"api-server-ip"`
@@ -190,6 +191,7 @@ type Config struct {
 }
 
 const (
+	AivenGeneration                               = "aiven-generation"
 	AivenProject                                  = "aiven-project"
 	AivenRange                                    = "aiven-range"
 	ApiServerIp                                   = "api-server-ip"
@@ -287,6 +289,7 @@ func init() {
 	flag.String(Bind, "127.0.0.1:8080", "ip:port where http requests are served")
 	flag.String(HealthProbeBindAddress, "127.0.0.1:8085", "ip:port where health probes are performed")
 	flag.String(ClusterName, "cluster-name-unconfigured", "cluster name as presented to deployed applications")
+	flag.Int(AivenGeneration, 0, "the generation of aiven secrets in this cluster")
 	flag.String(AivenProject, "aiven-project", "main Aiven project for this cluster")
 	flag.String(AivenRange, "aiven-range", "range of IP addresses for Aiven services")
 	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")

@@ -14,6 +14,7 @@ labels:
 
 stakaterSecret: "0c697898d6b74c708d5acdc318e8f0d7b3117e31"
 naiserator:
+  aiven-generation: 0
   aiven-range: ""
   aiven-project: ""
   bind: 0.0.0.0:8080
