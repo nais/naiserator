@@ -60,7 +60,7 @@ func TestOtelEnvVars(t *testing.T) {
 			Service:   "otelcol",
 			Namespace: "system",
 			Port:      8080,
-			Protocol:  "grcp",
+			Protocol:  "grpc",
 		},
 	}
 
@@ -115,7 +115,7 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 		{
 			Name:  "OTEL_EXPORTER_OTLP_PROTOCOL",
-			Value: "grcp",
+			Value: "grpc",
 		},
 		{
 			Name:  "OTEL_EXPORTER_OTLP_INSECURE",
