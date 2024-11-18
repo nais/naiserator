@@ -120,7 +120,7 @@ func createIngressBase(source Source) *networkingv1.Ingress {
 	}
 }
 
-func createIngressBaseNginx(source Source, ingressClass string, redirect string) (*networkingv1.Ingress, error) {
+func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.Ingress, error) {
 	var err error
 	ingress := createIngressBase(source)
 	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
@@ -134,14 +134,6 @@ func createIngressBaseNginx(source Source, ingressClass string, redirect string)
 
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
-
-	if redirect != "" {
-		ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect + "/$1"
-		ingress.Name, err = namegen.ShortName(baseName+"-redirect", validation.DNS1035LabelMaxLength)
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	return ingress, nil
 }
@@ -174,7 +166,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 		return nil, err
 	}
 
-	ingresses, err := getIngresses(source, cfg, rules, "")
+	ingresses, err := getIngresses(source, cfg, rules)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +191,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string, redirect string) (*networkingv1.Ingress, error) {
+func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string) (*networkingv1.Ingress, error) {
 	// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
 	// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
 	if ingressClass == nil {
@@ -210,14 +202,14 @@ func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingres
 		)
 	}
 
-	ingress, err := createIngressBaseNginx(source, *ingressClass, redirect)
+	ingress, err := createIngressBaseNginx(source, *ingressClass)
 	if err != nil {
 		return nil, err
 	}
 	return ingress, nil
 }
 
-func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule, redirect string) (map[string]*networkingv1.Ingress, error) {
+func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (map[string]*networkingv1.Ingress, error) {
 	// Ingress objects must have at least one path rule to be valid.
 	if len(rules) == 0 {
 		return nil, nil
@@ -236,7 +228,7 @@ func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule, r
 		}
 		ingress := ingresses[*ingressClass]
 		if ingress == nil {
-			ing, err := getIngress(source, cfg, rule, ingressClass, redirect)
+			ing, err := getIngress(source, cfg, rule, ingressClass)
 			ingress = ing
 			if err != nil {
 				return nil, err

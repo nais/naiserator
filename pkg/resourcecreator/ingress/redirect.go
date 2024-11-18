@@ -7,8 +7,10 @@ import (
 	"strings"
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -128,6 +130,17 @@ func createIngressRule(source Source, redirectUrl string) (networkingv1.IngressR
 	}, nil
 }
 
+func addRedirectConfiguration(source Source, ingressClass *string, ingress *networkingv1.Ingress, redirect string) (*networkingv1.Ingress, error) {
+	var err error
+	ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect + "/$1"
+	baseName := fmt.Sprintf("%s-%s", source.GetName(), *ingressClass)
+	ingress.Name, err = namegen.ShortName(baseName+"-redirect", validation.DNS1035LabelMaxLength)
+	if err != nil {
+		return nil, err
+	}
+	return ingress, nil
+}
+
 func CreateRedirectIngresses(source Source, cfg Config, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
 	redirects := source.GetRedirects()
 	for _, ing := range ingresses {
@@ -150,12 +163,16 @@ func CreateRedirectIngresses(source Source, cfg Config, ingresses map[string]*ne
 					}
 
 					ingressClass := util.ResolveIngressClass(parsedFromRedirectUrl.Host, cfg.GetGatewayMappings())
-					rdIngress, err := getIngress(source, cfg, r, ingressClass, string(redirect.To))
+					ingress, err := getIngress(source, cfg, r, ingressClass)
 					if err != nil {
 						return err
 					}
-					redirectIngresses[*ingressClass] = rdIngress
-					rdIngress.Spec.Rules = append(rdIngress.Spec.Rules, r)
+					ingress, err = addRedirectConfiguration(source, ingressClass, ingress, string(redirect.To))
+					if err != nil {
+						return err
+					}
+					redirectIngresses[*ingressClass] = ingress
+					ingress.Spec.Rules = append(ingress.Spec.Rules, r)
 				}
 			}
 		}
