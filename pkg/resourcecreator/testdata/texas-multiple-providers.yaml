@@ -1,0 +1,90 @@
+testconfig:
+  description: texas sidecar injected into pod
+config:
+  features:
+    azurerator: true
+    texas: true
+    maskinporten: true
+  cluster-name: mycluster
+  texas:
+    image: nais/texas
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    annotations:
+      texas.nais.io/enabled: "true"
+  spec:
+    image: foo/bar
+    texas:
+      maskinporten: true
+    azure:
+      application:
+        enabled: true
+    maskinporten:
+      enabled: true
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: "deployment contains texas sidecar and desired configuration"
+        type: regex
+        resource:
+          spec:
+            template:
+              metadata:
+                labels:
+                  azure: enabled
+                  maskinporten: enabled
+                  texas: enabled
+              spec:
+                containers:
+                  - name: myapplication
+                    env:
+                      - name: AUTH_TOKEN_ENDPOINT
+                        value: http://127.0.0.1:7164/api/v1/token
+                      - name: AUTH_TOKEN_EXCHANGE_ENDPOINT
+                        value: http://127.0.0.1:7164/api/v1/token
+                      - name: AUTH_INTROSPECTION_ENDPOINT
+                        value: http://127.0.0.1:7164/api/v1/introspect
+                    envFrom:
+                      - secretRef:
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                      - secretRef:
+                          name: ^maskinporten-myapplication-9561321b$
+                initContainers:
+                  - restartPolicy: Always
+                    env:
+                      - name: BIND_ADDRESS
+                        value: ^127.0.0.1:1337$
+                      - name: MASKINPORTEN_ENABLED
+                        value: ^true$
+                      - name: AZURE_ENABLED
+                        value: ^true$
+                    envFrom:
+                      - secretRef:
+                          name: ^maskinporten-myapplication-9561321b$
+                      - secretRef:
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                    image: nais/texas
+                    name: texas
+                    resources:
+                      limits:
+                        memory: 256Mi
+                      requests:
+                        cpu: 20m
+                        memory: 32Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+                      privileged: false
+                      readOnlyRootFilesystem: true
+                      runAsGroup: 1069
+                      runAsNonRoot: true
+                      runAsUser: 1069

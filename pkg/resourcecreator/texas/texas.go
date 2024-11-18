@@ -16,7 +16,7 @@ import (
 type ProviderName string
 
 const (
-	ProviderAzureAD      ProviderName = "azuread"
+	ProviderAzureAD      ProviderName = "azure"
 	ProviderIDPorten     ProviderName = "idporten"
 	ProviderMaskinporten ProviderName = "maskinporten"
 	ProviderTokenX       ProviderName = "tokenx"
@@ -39,7 +39,13 @@ type Config interface {
 	GetTexasOptions() config.Texas
 }
 
-func Create(source Source, ast *resource.Ast, cfg Config, maskinportenClient *nais_io_v1.MaskinportenClient) error {
+func Create(
+	source Source,
+	ast *resource.Ast,
+	cfg Config,
+	maskinportenclient *nais_io_v1.MaskinportenClient,
+	azureadapplication *nais_io_v1.AzureAdApplication,
+) error {
 	needsTexas, ok := source.GetAnnotations()[AnnotationEnable]
 	if !ok || needsTexas != "true" {
 		return nil
@@ -49,13 +55,7 @@ func Create(source Source, ast *resource.Ast, cfg Config, maskinportenClient *na
 		return fmt.Errorf("texas is not available in this cluster")
 	}
 
-	// FIXME: should probably be a constructor on Providers
-	providers := Providers{
-		{
-			Name:       ProviderMaskinporten,
-			SecretName: maskinportenClient.Spec.SecretName,
-		},
-	}
+	providers := NewProviders(maskinportenclient, azureadapplication)
 
 	ast.AppendEnv(applicationEnvVars()...)
 	ast.InitContainers = append(ast.InitContainers, sidecar(cfg, providers))
@@ -77,6 +77,29 @@ func (p Provider) EnvVar() corev1.EnvVar {
 }
 
 type Providers []Provider
+
+func NewProviders(
+	maskinportenclient *nais_io_v1.MaskinportenClient,
+	azureadapplication *nais_io_v1.AzureAdApplication,
+) Providers {
+	providers := Providers{}
+
+	if maskinportenclient != nil {
+		providers = append(providers, Provider{
+			Name:       ProviderMaskinporten,
+			SecretName: maskinportenclient.Spec.SecretName,
+		})
+	}
+
+	if azureadapplication != nil {
+		providers = append(providers, Provider{
+			Name:       ProviderAzureAD,
+			SecretName: azureadapplication.Spec.SecretName,
+		})
+	}
+
+	return providers
+}
 
 func (p Providers) EnvVars() []corev1.EnvVar {
 	vars := make([]corev1.EnvVar, 0, len(p))

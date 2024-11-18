@@ -39,25 +39,25 @@ type Config interface {
 	IsWonderwallEnabled() bool
 }
 
-func Create(source Source, ast *resource.Ast, config Config) error {
+func Create(source Source, ast *resource.Ast, config Config) (*nais_io_v1.AzureAdApplication, error) {
 	az := source.GetAzure()
 	if az == nil {
-		return nil
+		return nil, nil
 	}
 
 	azureEnabled := az.GetApplication() != nil && az.GetApplication().Enabled
 	sidecarEnabled := az.GetSidecar() != nil && az.GetSidecar().Enabled
 	if !azureEnabled && !sidecarEnabled {
-		return nil
+		return nil, nil
 	}
 
 	if !config.IsAzureratorEnabled() {
-		return fmt.Errorf("azure ad is not available in this cluster")
+		return nil, fmt.Errorf("azure ad is not available in this cluster")
 	}
 
 	azureAdApplication, err := application(source, config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ast.Labels["azure"] = "enabled"
@@ -66,10 +66,10 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	pod.WithAdditionalEnvFromSecret(ast, azureAdApplication.Spec.SecretName)
 
 	if sidecarEnabled {
-		return sidecar(source, ast, config, azureAdApplication)
+		return azureAdApplication, sidecar(source, ast, config, azureAdApplication)
 	}
 
-	return nil
+	return azureAdApplication, nil
 }
 
 func application(source Source, config Config) (*nais_io_v1.AzureAdApplication, error) {

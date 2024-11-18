@@ -164,7 +164,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	err = azure.Create(app, ast, cfg)
+	azureadapplication, err := azure.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	}
 
 	// FIXME: figure out a better way to provide secret names to Texas
-	err = texas.Create(app, ast, cfg, maskinportenclient)
+	err = texas.Create(app, ast, cfg, maskinportenclient, azureadapplication)
 	if err != nil {
 		return nil, err
 	}
