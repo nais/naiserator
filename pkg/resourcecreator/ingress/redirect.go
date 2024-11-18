@@ -130,9 +130,9 @@ func createIngressRule(source Source, redirectUrl string) (networkingv1.IngressR
 	}, nil
 }
 
-func addRedirectConfiguration(source Source, ingressClass *string, ingress *networkingv1.Ingress, redirect string) (*networkingv1.Ingress, error) {
+func addRedirectConfiguration(source Source, ingressClass *string, ingress *networkingv1.Ingress, redirect *url.URL) (*networkingv1.Ingress, error) {
 	var err error
-	ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect + "/$1"
+	ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect.String() + "$1"
 	baseName := fmt.Sprintf("%s-%s", source.GetName(), *ingressClass)
 	ingress.Name, err = namegen.ShortName(baseName+"-redirect", validation.DNS1035LabelMaxLength)
 	if err != nil {
@@ -167,7 +167,7 @@ func CreateRedirectIngresses(source Source, cfg Config, ingresses map[string]*ne
 					if err != nil {
 						return err
 					}
-					ingress, err = addRedirectConfiguration(source, ingressClass, ingress, string(redirect.To))
+					ingress, err = addRedirectConfiguration(source, ingressClass, ingress, parsedToRedirectUrl)
 					if err != nil {
 						return err
 					}
