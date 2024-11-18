@@ -87,15 +87,15 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		{
 			ast.AppendEnv(
 				corev1.EnvVar{
-					Name:  "TEXAS_TOKEN_ENDPOINT",
+					Name:  "AUTH_TOKEN_ENDPOINT",
 					Value: "http://127.0.0.1:1337/api/v1/token",
 				},
 				corev1.EnvVar{
-					Name:  "TEXAS_TOKEN_EXCHANGE_ENDPOINT",
+					Name:  "AUTH_TOKEN_EXCHANGE_ENDPOINT",
 					Value: "http://127.0.0.1:1337/api/v1/token/exchange",
 				},
 				corev1.EnvVar{
-					Name:  "TEXAS_INTROSPECTION_ENDPOINT",
+					Name:  "AUTH_INTROSPECTION_ENDPOINT",
 					Value: "http://127.0.0.1:1337/api/v1/introspect",
 				},
 			)
