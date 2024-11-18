@@ -41,11 +41,11 @@ tests:
                   - name: myapplication
                     env:
                       - name: AUTH_TOKEN_ENDPOINT
-                        value: http://127.0.0.1:1337/api/v1/token
+                        value: http://127.0.0.1:7164/api/v1/token
                       - name: AUTH_TOKEN_EXCHANGE_ENDPOINT
-                        value: http://127.0.0.1:1337/api/v1/token
+                        value: http://127.0.0.1:7164/api/v1/token
                       - name: AUTH_INTROSPECTION_ENDPOINT
-                        value: http://127.0.0.1:1337/api/v1/introspect
+                        value: http://127.0.0.1:7164/api/v1/introspect
                     envFrom:
                       - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
