@@ -60,7 +60,7 @@ tests:
                   - restartPolicy: Always
                     env:
                       - name: BIND_ADDRESS
-                        value: ^127.0.0.1:1337$
+                        value: ^127.0.0.1:7164$
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
                       - name: AZURE_ENABLED

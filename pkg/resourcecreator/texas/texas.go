@@ -125,7 +125,7 @@ func sidecar(source Source, cfg Config, providers Providers) corev1.Container {
 	envs := []corev1.EnvVar{
 		{
 			Name:  "BIND_ADDRESS",
-			Value: "127.0.0.1:1337",
+			Value: fmt.Sprintf("127.0.0.1:%d", Port),
 		},
 	}
 	envs = append(envs, providers.EnvVars()...)
