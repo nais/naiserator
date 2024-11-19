@@ -62,6 +62,7 @@ func Create(
 	ast.AppendEnv(applicationEnvVars()...)
 	ast.InitContainers = append(ast.InitContainers, sidecar(source, cfg, providers))
 	ast.Labels["texas"] = "enabled"
+	ast.Labels["otel"] = "enabled"
 
 	return nil
 }

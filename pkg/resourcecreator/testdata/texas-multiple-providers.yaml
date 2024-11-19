@@ -41,6 +41,7 @@ tests:
                   azure: enabled
                   maskinporten: enabled
                   texas: enabled
+                  otel: enabled
               spec:
                 containers:
                   - name: myapplication
