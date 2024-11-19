@@ -145,22 +145,7 @@ func sidecar(cfg Config, providers Providers) corev1.Container {
 				corev1.ResourceMemory: k8sResource.MustParse("256Mi"),
 			},
 		},
-
-		// FIXME: duplicated in securelogs/containers.go
-		SecurityContext: &corev1.SecurityContext{
-			Privileged:               ptr.To(false),
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
-			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"ALL"},
-			},
-			RunAsUser:    ptr.To(int64(1069)),
-			RunAsGroup:   ptr.To(int64(1069)),
-			RunAsNonRoot: ptr.To(true),
-		},
+		SecurityContext: pod.DefaultContainerSecurityContext(),
 	}
 }
 

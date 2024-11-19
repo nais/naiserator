@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/nais/liberator/pkg/namegen"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/utils/pointer"
 )
 
 type Source interface {
@@ -106,19 +106,6 @@ func container(name, namespace, image string) corev1.Container {
 				Value: "json",
 			},
 		},
-		SecurityContext: &corev1.SecurityContext{
-			RunAsUser:                pointer.Int64(1069),
-			RunAsGroup:               pointer.Int64(1069),
-			RunAsNonRoot:             pointer.Bool(true),
-			Privileged:               pointer.Bool(false),
-			AllowPrivilegeEscalation: pointer.Bool(false),
-			ReadOnlyRootFilesystem:   pointer.Bool(true),
-			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"ALL"},
-			},
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
-		},
+		SecurityContext: pod.DefaultContainerSecurityContext(),
 	}
 }
