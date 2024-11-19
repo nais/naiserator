@@ -155,15 +155,15 @@ func sidecar(source Source, cfg Config, providers Providers) corev1.Container {
 func applicationEnvVars() []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{
-			Name:  "AUTH_TOKEN_ENDPOINT",
+			Name:  "NAIS_TOKEN_ENDPOINT",
 			Value: fmt.Sprintf("http://127.0.0.1:%d/api/v1/token", Port),
 		},
 		{
-			Name:  "AUTH_TOKEN_EXCHANGE_ENDPOINT",
+			Name:  "NAIS_TOKEN_EXCHANGE_ENDPOINT",
 			Value: fmt.Sprintf("http://127.0.0.1:%d/api/v1/token/exchange", Port),
 		},
 		{
-			Name:  "AUTH_INTROSPECTION_ENDPOINT",
+			Name:  "NAIS_TOKEN_INTROSPECTION_ENDPOINT",
 			Value: fmt.Sprintf("http://127.0.0.1:%d/api/v1/introspect", Port),
 		},
 	}
