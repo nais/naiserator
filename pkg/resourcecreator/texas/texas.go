@@ -6,6 +6,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
@@ -37,6 +38,7 @@ type Source interface {
 type Config interface {
 	IsTexasEnabled() bool
 	GetTexasOptions() config.Texas
+	GetObservability() config.Observability
 }
 
 func Create(
@@ -58,7 +60,7 @@ func Create(
 	providers := NewProviders(maskinportenclient, azureadapplication)
 
 	ast.AppendEnv(applicationEnvVars()...)
-	ast.InitContainers = append(ast.InitContainers, sidecar(cfg, providers))
+	ast.InitContainers = append(ast.InitContainers, sidecar(source, cfg, providers))
 	ast.Labels["texas"] = "enabled"
 
 	return nil
@@ -119,15 +121,15 @@ func (p Providers) EnvFromSources() []corev1.EnvFromSource {
 	return sources
 }
 
-func sidecar(cfg Config, providers Providers) corev1.Container {
+func sidecar(source Source, cfg Config, providers Providers) corev1.Container {
 	envs := []corev1.EnvVar{
 		{
 			Name:  "BIND_ADDRESS",
 			Value: "127.0.0.1:1337",
 		},
-		// FIXME: otel envvars
 	}
 	envs = append(envs, providers.EnvVars()...)
+	envs = append(envs, observability.OtelEnvVars("texas", source.GetNamespace(), nil, nil, cfg.GetObservability().Otel)...)
 
 	return corev1.Container{
 		Name:            "texas",

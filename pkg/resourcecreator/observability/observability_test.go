@@ -123,7 +123,7 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 	}
 
-	actualEnvVars := otelEnvVars("my-app", "my-team", existingEnvVars, destinations, otel)
+	actualEnvVars := OtelEnvVars("my-app", "my-team", existingEnvVars, destinations, otel)
 
 	assert.Equal(t, expectedEnvVars, actualEnvVars)
 }

@@ -4,6 +4,22 @@ config:
   features:
     texas: true
     maskinporten: true
+  observability:
+    otel:
+      enabled: true
+      auto-instrumentation:
+        enabled: true
+        app-config: "system-namespace/app-config"
+      collector:
+        labels:
+          - key1=value1
+          - key2=value2
+          - key3=value3
+        namespace: "system-namespace"
+        port: 4317
+        service: "my-collector"
+        tls: false
+        protocol: "grpc"
   cluster-name: mycluster
   texas:
     image: nais/texas
@@ -56,6 +72,16 @@ tests:
                         value: ^127.0.0.1:1337$
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
+                      - name: OTEL_SERVICE_NAME
+                        value: ^texas$
+                      - name: OTEL_RESOURCE_ATTRIBUTES
+                        value: service.name=texas,service.namespace=mynamespace
+                      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                        value: http://my-collector.system-namespace:4317
+                      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+                        value: grpc
+                      - name: OTEL_EXPORTER_OTLP_INSECURE
+                        value: "true"
                     envFrom:
                       - secretRef:
                           name: ^maskinporten-myapplication-9561321b$

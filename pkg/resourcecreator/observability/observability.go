@@ -91,7 +91,7 @@ func otelFilterEnvVars(env []corev1.EnvVar) []corev1.EnvVar {
 	return filtered
 }
 
-func otelEnvVars(name, namespace string, env []corev1.EnvVar, destinations []string, otel config.Otel) []corev1.EnvVar {
+func OtelEnvVars(name, namespace string, env []corev1.EnvVar, destinations []string, otel config.Otel) []corev1.EnvVar {
 	return append(otelFilterEnvVars(env), []corev1.EnvVar{
 		{
 			Name:  otelServiceName,
@@ -266,7 +266,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 			}
 		}
 
-		ast.Env = otelEnvVars(source.GetName(), source.GetNamespace(), ast.Env, destinations, cfg.Otel)
+		ast.Env = OtelEnvVars(source.GetName(), source.GetNamespace(), ast.Env, destinations, cfg.Otel)
 		ast.AppendOperation(resource.OperationCreateOrUpdate, netpol)
 	}
 
