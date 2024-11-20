@@ -84,7 +84,7 @@ tests:
                         value: ^true$
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
-                      - name: TOKENX_ENABLED
+                      - name: TOKEN_X_ENABLED
                         value: ^true$
                     envFrom:
                       - secretRef:

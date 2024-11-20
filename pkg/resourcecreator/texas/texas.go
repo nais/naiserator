@@ -2,7 +2,6 @@ package texas
 
 import (
 	"fmt"
-	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -12,15 +11,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
-)
-
-type ProviderName string
-
-const (
-	ProviderAzureAD      ProviderName = "azure"
-	ProviderIDPorten     ProviderName = "idporten"
-	ProviderMaskinporten ProviderName = "maskinporten"
-	ProviderTokenX       ProviderName = "tokenx"
 )
 
 const Port = 7164
@@ -73,13 +63,14 @@ func Create(
 }
 
 type Provider struct {
-	Name       ProviderName
-	SecretName string
+	// EnableEnvVar is the name of the environment variable that enables the provider in Texas.
+	EnableEnvVar string
+	SecretName   string
 }
 
 func (p Provider) EnvVar() corev1.EnvVar {
 	return corev1.EnvVar{
-		Name:  strings.ToUpper(string(p.Name)) + "_ENABLED",
+		Name:  p.EnableEnvVar,
 		Value: "true",
 	}
 }
@@ -96,29 +87,29 @@ func NewProviders(
 
 	if azureadapplication != nil {
 		providers = append(providers, Provider{
-			Name:       ProviderAzureAD,
-			SecretName: azureadapplication.Spec.SecretName,
+			EnableEnvVar: "AZURE_ENABLED",
+			SecretName:   azureadapplication.Spec.SecretName,
 		})
 	}
 
 	if idportenclient != nil {
 		providers = append(providers, Provider{
-			Name:       ProviderIDPorten,
-			SecretName: idportenclient.Spec.SecretName,
+			EnableEnvVar: "IDPORTEN_ENABLED",
+			SecretName:   idportenclient.Spec.SecretName,
 		})
 	}
 
 	if maskinportenclient != nil {
 		providers = append(providers, Provider{
-			Name:       ProviderMaskinporten,
-			SecretName: maskinportenclient.Spec.SecretName,
+			EnableEnvVar: "MASKINPORTEN_ENABLED",
+			SecretName:   maskinportenclient.Spec.SecretName,
 		})
 	}
 
 	if tokenxclient != nil {
 		providers = append(providers, Provider{
-			Name:       ProviderTokenX,
-			SecretName: tokenxclient.Spec.SecretName,
+			EnableEnvVar: "TOKEN_X_ENABLED",
+			SecretName:   tokenxclient.Spec.SecretName,
 		})
 	}
 
