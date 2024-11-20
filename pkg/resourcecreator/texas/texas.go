@@ -45,8 +45,10 @@ func Create(
 	source Source,
 	ast *resource.Ast,
 	cfg Config,
-	maskinportenclient *nais_io_v1.MaskinportenClient,
 	azureadapplication *nais_io_v1.AzureAdApplication,
+	idportenclient *nais_io_v1.IDPortenClient,
+	maskinportenclient *nais_io_v1.MaskinportenClient,
+	tokenxclient *nais_io_v1.Jwker,
 ) error {
 	needsTexas, ok := source.GetAnnotations()[AnnotationEnable]
 	if !ok || needsTexas != "true" {
@@ -57,7 +59,10 @@ func Create(
 		return fmt.Errorf("texas is not available in this cluster")
 	}
 
-	providers := NewProviders(maskinportenclient, azureadapplication)
+	providers := NewProviders(maskinportenclient, azureadapplication, idportenclient, tokenxclient)
+	if len(providers) == 0 {
+		return nil
+	}
 
 	ast.AppendEnv(applicationEnvVars()...)
 	ast.InitContainers = append(ast.InitContainers, sidecar(source, cfg, providers))
@@ -84,8 +89,24 @@ type Providers []Provider
 func NewProviders(
 	maskinportenclient *nais_io_v1.MaskinportenClient,
 	azureadapplication *nais_io_v1.AzureAdApplication,
+	idportenclient *nais_io_v1.IDPortenClient,
+	tokenxclient *nais_io_v1.Jwker,
 ) Providers {
 	providers := Providers{}
+
+	if azureadapplication != nil {
+		providers = append(providers, Provider{
+			Name:       ProviderAzureAD,
+			SecretName: azureadapplication.Spec.SecretName,
+		})
+	}
+
+	if idportenclient != nil {
+		providers = append(providers, Provider{
+			Name:       ProviderIDPorten,
+			SecretName: idportenclient.Spec.SecretName,
+		})
+	}
 
 	if maskinportenclient != nil {
 		providers = append(providers, Provider{
@@ -94,10 +115,10 @@ func NewProviders(
 		})
 	}
 
-	if azureadapplication != nil {
+	if tokenxclient != nil {
 		providers = append(providers, Provider{
-			Name:       ProviderAzureAD,
-			SecretName: azureadapplication.Spec.SecretName,
+			Name:       ProviderTokenX,
+			SecretName: tokenxclient.Spec.SecretName,
 		})
 	}
 

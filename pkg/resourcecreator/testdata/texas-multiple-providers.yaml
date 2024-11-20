@@ -3,9 +3,15 @@ testconfig:
 config:
   features:
     azurerator: true
-    texas: true
+    idporten: true
+    jwker: true
     maskinporten: true
+    texas: true
+    wonderwall: true
   cluster-name: mycluster
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: very-nginx
   texas:
     image: nais/texas
 input:
@@ -18,12 +24,18 @@ input:
       texas.nais.io/enabled: "true"
   spec:
     image: foo/bar
-    texas:
-      maskinporten: true
+    ingresses:
+      - "https://my-client.nav.no/"
     azure:
       application:
         enabled: true
+    idporten:
+      enabled: true
+      sidecar:
+        enabled: true
     maskinporten:
+      enabled: true
+    tokenx:
       enabled: true
 tests:
   - operation: CreateOrUpdate
@@ -56,21 +68,33 @@ tests:
                       - secretRef:
                           name: ^azure-myapplication-4190a8ca-.{6,7}$
                       - secretRef:
+                          name: ^idporten-sso$
+                      - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
+                      - secretRef:
+                          name: ^tokenx-myapplication-.+$
                 initContainers:
                   - restartPolicy: Always
                     env:
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:7164$
+                      - name: AZURE_ENABLED
+                        value: ^true$
+                      - name: IDPORTEN_ENABLED
+                        value: ^true$
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
-                      - name: AZURE_ENABLED
+                      - name: TOKENX_ENABLED
                         value: ^true$
                     envFrom:
                       - secretRef:
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                      - secretRef:
+                          name: ^idporten-sso$
+                      - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
                       - secretRef:
-                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                          name: ^tokenx-myapplication-.+$
                     image: nais/texas
                     name: texas
                     resources:

@@ -169,7 +169,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	err = idporten.Create(app, ast, cfg)
+	idportenclient, err := idporten.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,8 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	certificateauthority.Create(app, ast, cfg)
 	securelogs.Create(app, ast, cfg)
 	poddisruptionbudget.Create(app, ast)
-	jwker.Create(app, ast, cfg)
+
+	tokenxclient := jwker.Create(app, ast, cfg)
 
 	err = aiven.Create(app, ast, cfg)
 	if err != nil {
@@ -209,8 +210,8 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	// FIXME: figure out a better way to provide secret names to Texas
-	err = texas.Create(app, ast, cfg, maskinportenclient, azureadapplication)
+	// TODO: figure out a better way to provide secret names to Texas
+	err = texas.Create(app, ast, cfg, azureadapplication, idportenclient, maskinportenclient, tokenxclient)
 	if err != nil {
 		return nil, err
 	}

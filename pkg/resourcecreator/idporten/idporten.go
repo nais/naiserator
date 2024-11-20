@@ -28,35 +28,42 @@ type Config interface {
 	IsIDPortenEnabled() bool
 }
 
-func Create(source Source, ast *resource.Ast, cfg Config) error {
+func Create(source Source, ast *resource.Ast, cfg Config) (*nais_io_v1.IDPortenClient, error) {
 	idporten := source.GetIDPorten()
 	if idporten == nil || !idporten.Enabled {
-		return nil
+		return nil, nil
 	}
 
 	if !cfg.IsIDPortenEnabled() {
-		return fmt.Errorf("idporten is not available in this cluster")
+		return nil, fmt.Errorf("idporten is not available in this cluster")
 	}
 
 	// TODO - automatically enable sidecar if just idporten is enabled when the grace period for migration ends.
 	if idporten.Sidecar == nil || !idporten.Sidecar.Enabled {
-		return fmt.Errorf("idporten sidecar must be enabled when idporten is enabled")
+		return nil, fmt.Errorf("idporten sidecar must be enabled when idporten is enabled")
 	}
 
 	if !cfg.IsWonderwallEnabled() {
-		return fmt.Errorf("idporten sidecar is not enabled for this cluster")
+		return nil, fmt.Errorf("idporten sidecar is not enabled for this cluster")
 	}
 
 	ingresses := source.GetIngress()
 	if len(ingresses) == 0 {
-		return fmt.Errorf("idporten requires at least 1 ingress")
+		return nil, fmt.Errorf("idporten requires at least 1 ingress")
 	}
 
 	ast.Labels["idporten"] = "enabled"
 	pod.WithAdditionalSecret(ast, idportenSsoSecretName, nais_io_v1alpha1.DefaultDigdiratorIDPortenMountPath)
 	pod.WithAdditionalEnvFromSecret(ast, idportenSsoSecretName)
 
-	return wonderwall.Create(source, ast, cfg, wonderwall.Configuration{
+	// Construct a fake ID-porten client as we're using a shared client across all applications.
+	client := &nais_io_v1.IDPortenClient{
+		Spec: nais_io_v1.IDPortenClientSpec{
+			SecretName: idportenSsoSecretName,
+		},
+	}
+
+	return client, wonderwall.Create(source, ast, cfg, wonderwall.Configuration{
 		ACRValues:             idporten.Sidecar.Level,
 		AutoLogin:             idporten.Sidecar.AutoLogin,
 		AutoLoginIgnorePaths:  idporten.Sidecar.AutoLoginIgnorePaths,

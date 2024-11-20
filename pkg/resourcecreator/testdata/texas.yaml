@@ -33,8 +33,6 @@ input:
       texas.nais.io/enabled: "true"
   spec:
     image: foo/bar
-    texas:
-      maskinporten: true
     maskinporten:
       enabled: true
 tests:
