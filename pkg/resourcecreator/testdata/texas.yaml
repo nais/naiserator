@@ -69,6 +69,12 @@ tests:
                     env:
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:7164$
+                      - name: DOWNSTREAM_APP_NAME
+                        value: myapplication
+                      - name: DOWNSTREAM_APP_NAMESPACE
+                        value: mynamespace
+                      - name: DOWNSTREAM_APP_CLUSTER
+                        value: mycluster
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
                       - name: OTEL_SERVICE_NAME

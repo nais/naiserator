@@ -29,6 +29,7 @@ type Config interface {
 	IsTexasEnabled() bool
 	GetTexasOptions() config.Texas
 	GetObservability() config.Observability
+	GetClusterName() string
 }
 
 func Create(
@@ -139,6 +140,18 @@ func sidecar(source Source, cfg Config, providers Providers) corev1.Container {
 		{
 			Name:  "BIND_ADDRESS",
 			Value: fmt.Sprintf("127.0.0.1:%d", Port),
+		},
+		{
+			Name:  "DOWNSTREAM_APP_NAME",
+			Value: source.GetName(),
+		},
+		{
+			Name:  "DOWNSTREAM_APP_NAMESPACE",
+			Value: source.GetNamespace(),
+		},
+		{
+			Name:  "DOWNSTREAM_APP_CLUSTER",
+			Value: cfg.GetClusterName(),
 		},
 	}
 	envs = append(envs, providers.EnvVars()...)
