@@ -7,6 +7,7 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
@@ -30,6 +31,8 @@ type Config interface {
 	GetTexasOptions() config.Texas
 	GetObservability() config.Observability
 	GetClusterName() string
+	GetGoogleProjectID() string
+	GetWebProxyOptions() config.Proxy
 }
 
 func Create(
@@ -55,8 +58,13 @@ func Create(
 		return nil
 	}
 
+	sidecarSpec, err := sidecar(source, cfg, providers)
+	if err != nil {
+		return err
+	}
+
 	ast.AppendEnv(applicationEnvVars()...)
-	ast.InitContainers = append(ast.InitContainers, sidecar(source, cfg, providers))
+	ast.InitContainers = append(ast.InitContainers, *sidecarSpec)
 	ast.Labels["texas"] = "enabled"
 	ast.Labels["otel"] = "enabled"
 
@@ -135,7 +143,7 @@ func (p Providers) EnvFromSources() []corev1.EnvFromSource {
 	return sources
 }
 
-func sidecar(source Source, cfg Config, providers Providers) corev1.Container {
+func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container, error) {
 	envs := []corev1.EnvVar{
 		{
 			Name:  "BIND_ADDRESS",
@@ -157,7 +165,17 @@ func sidecar(source Source, cfg Config, providers Providers) corev1.Container {
 	envs = append(envs, providers.EnvVars()...)
 	envs = append(envs, observability.OtelEnvVars("texas", source.GetNamespace(), nil, nil, cfg.GetObservability().Otel)...)
 
-	return corev1.Container{
+	// If GCP is unconfigured, it means we are running on-premises, and we need the web proxy config.
+	// Note that we need the web proxy regardless of whether the app has requested one, so we don't care about `.spec.webProxy`.
+	if len(cfg.GetGoogleProjectID()) == 0 {
+		proxyEnvs, err := proxyopts.EnvironmentVariables(cfg)
+		if err != nil {
+			return nil, fmt.Errorf("generate texas webproxy environment variables: %w", err)
+		}
+		envs = append(proxyEnvs, envs...)
+	}
+
+	return &corev1.Container{
 		Name:            "texas",
 		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways),
 		Image:           cfg.GetTexasOptions().Image,
@@ -174,7 +192,7 @@ func sidecar(source Source, cfg Config, providers Providers) corev1.Container {
 			},
 		},
 		SecurityContext: pod.DefaultContainerSecurityContext(),
-	}
+	}, nil
 }
 
 // applicationEnvVars are the environment variables exposed to the main application container.
