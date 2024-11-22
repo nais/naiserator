@@ -89,6 +89,11 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 		return nil, fmt.Errorf("query existing namespace: %s", err)
 	}
 
+	// Check if the application is allowed to redirect to another host
+	if err = ingress.RedirectAllowed(ctx, app, kube); err != nil {
+		return nil, err
+	}
+
 	// Auto-detect Google Team Project ID
 	o.GoogleTeamProjectID = namespace.Annotations["cnrm.cloud.google.com/project-id"]
 
