@@ -4,6 +4,12 @@ config:
   features:
     texas: true
     maskinporten: true
+  proxy:
+    address: http://foo.bar:5224
+    exclude:
+      - foo
+      - bar
+      - baz
   observability:
     otel:
       enabled: true
@@ -21,7 +27,6 @@ config:
         tls: false
         protocol: "grpc"
   cluster-name: mycluster
-  google-project-id: google-project-id
   texas:
     image: nais/texas
 input:
@@ -42,7 +47,7 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: "deployment contains texas sidecar and desired configuration"
+      - name: "deployment contains texas sidecar and desired configuration with webproxy options"
         type: regex
         resource:
           spec:
@@ -68,6 +73,20 @@ tests:
                 initContainers:
                   - restartPolicy: Always
                     env:
+                      - name: "HTTP_PROXY"
+                        value: "http://foo.bar:5224"
+                      - name: "http_proxy"
+                        value: "http://foo.bar:5224"
+                      - name: "HTTPS_PROXY"
+                        value: "http://foo.bar:5224"
+                      - name: "https_proxy"
+                        value: "http://foo.bar:5224"
+                      - name: "NO_PROXY"
+                        value: "foo,bar,baz"
+                      - name: "no_proxy"
+                        value: "foo,bar,baz"
+                      - name: "JAVA_PROXY_OPTIONS"
+                        value: "-Dhttp.proxyHost=foo.bar -Dhttps.proxyHost=foo.bar -Dhttp.proxyPort=5224 -Dhttps.proxyPort=5224 -Dhttp.nonProxyHosts=foo|bar|baz"
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:7164$
                       - name: DOWNSTREAM_APP_NAME

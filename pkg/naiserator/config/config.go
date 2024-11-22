@@ -253,6 +253,7 @@ const (
 	SynchronizerRolloutCheckInterval              = "synchronizer.rollout-check-interval"
 	SynchronizerRolloutTimeout                    = "synchronizer.rollout-timeout"
 	SynchronizerSynchronizationTimeout            = "synchronizer.synchronization-timeout"
+	TexasImage                                    = "texas.image"
 	VaultAddress                                  = "vault.address"
 	VaultAuthPath                                 = "vault.auth-path"
 	VaultInitContainerImage                       = "vault.init-container-image"
@@ -352,6 +353,8 @@ func init() {
 	)
 
 	flag.String(SecurelogsLogShipperImage, "", "Docker image used for shipping secure logs")
+
+	flag.String(TexasImage, "", "Docker image used for Texas")
 
 	flag.String(ProxyAddress, "", "HTTPS?_PROXY environment variable injected into containers")
 	flag.StringSlice(

@@ -9,6 +9,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/frontend"
 	"github.com/nais/naiserator/pkg/resourcecreator/login"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
+	"github.com/nais/naiserator/pkg/resourcecreator/texas"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -168,12 +169,12 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	err = azure.Create(app, ast, cfg)
+	azureadapplication, err := azure.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = idporten.Create(app, ast, cfg)
+	idportenclient, err := idporten.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -193,15 +194,16 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	certificateauthority.Create(app, ast, cfg)
-	securelogs.Create(app, ast, cfg)
-	err = maskinporten.Create(app, ast, cfg)
+	maskinportenclient, err := maskinporten.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
+
+	certificateauthority.Create(app, ast, cfg)
+	securelogs.Create(app, ast, cfg)
 	poddisruptionbudget.Create(app, ast)
 
-	jwker.Create(app, ast, cfg)
+	tokenxclient := jwker.Create(app, ast, cfg)
 
 	err = aiven.Create(app, ast, cfg)
 	if err != nil {
@@ -209,6 +211,12 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	}
 
 	err = vault.Create(app, ast, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: figure out a better way to provide secret names to Texas
+	err = texas.Create(app, ast, cfg, azureadapplication, idportenclient, maskinportenclient, tokenxclient)
 	if err != nil {
 		return nil, err
 	}

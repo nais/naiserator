@@ -2,26 +2,16 @@ testconfig:
   description: texas sidecar injected into pod
 config:
   features:
-    texas: true
+    azurerator: true
+    idporten: true
+    jwker: true
     maskinporten: true
-  observability:
-    otel:
-      enabled: true
-      auto-instrumentation:
-        enabled: true
-        app-config: "system-namespace/app-config"
-      collector:
-        labels:
-          - key1=value1
-          - key2=value2
-          - key3=value3
-        namespace: "system-namespace"
-        port: 4317
-        service: "my-collector"
-        tls: false
-        protocol: "grpc"
+    texas: true
+    wonderwall: true
   cluster-name: mycluster
-  google-project-id: google-project-id
+  gateway-mappings:
+    - domainSuffix: .nav.no
+      ingressClass: very-nginx
   texas:
     image: nais/texas
 input:
@@ -34,7 +24,18 @@ input:
       texas.nais.io/enabled: "true"
   spec:
     image: foo/bar
+    ingresses:
+      - "https://my-client.nav.no/"
+    azure:
+      application:
+        enabled: true
+    idporten:
+      enabled: true
+      sidecar:
+        enabled: true
     maskinporten:
+      enabled: true
+    tokenx:
       enabled: true
 tests:
   - operation: CreateOrUpdate
@@ -49,6 +50,7 @@ tests:
             template:
               metadata:
                 labels:
+                  azure: enabled
                   maskinporten: enabled
                   texas: enabled
                   otel: enabled
@@ -64,33 +66,35 @@ tests:
                         value: http://127.0.0.1:7164/api/v1/introspect
                     envFrom:
                       - secretRef:
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                      - secretRef:
+                          name: ^idporten-sso$
+                      - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
+                      - secretRef:
+                          name: ^tokenx-myapplication-.+$
                 initContainers:
                   - restartPolicy: Always
                     env:
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:7164$
-                      - name: DOWNSTREAM_APP_NAME
-                        value: myapplication
-                      - name: DOWNSTREAM_APP_NAMESPACE
-                        value: mynamespace
-                      - name: DOWNSTREAM_APP_CLUSTER
-                        value: mycluster
+                      - name: AZURE_ENABLED
+                        value: ^true$
+                      - name: IDPORTEN_ENABLED
+                        value: ^true$
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
-                      - name: OTEL_SERVICE_NAME
-                        value: ^texas$
-                      - name: OTEL_RESOURCE_ATTRIBUTES
-                        value: service.name=texas,service.namespace=mynamespace
-                      - name: OTEL_EXPORTER_OTLP_ENDPOINT
-                        value: http://my-collector.system-namespace:4317
-                      - name: OTEL_EXPORTER_OTLP_PROTOCOL
-                        value: grpc
-                      - name: OTEL_EXPORTER_OTLP_INSECURE
-                        value: "true"
+                      - name: TOKEN_X_ENABLED
+                        value: ^true$
                     envFrom:
                       - secretRef:
+                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                      - secretRef:
+                          name: ^idporten-sso$
+                      - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
+                      - secretRef:
+                          name: ^tokenx-myapplication-.+$
                     image: nais/texas
                     name: texas
                     resources:

@@ -6,10 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
+	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -130,22 +129,28 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	return podSpec, nil
 }
 
-func configureSecurityContext(annotations map[string]string) *corev1.SecurityContext {
-	ctx := &corev1.SecurityContext{
-		RunAsUser:                ptr.To(runAsUser(annotations)),
-		RunAsGroup:               ptr.To(runAsGroup(annotations)),
-		RunAsNonRoot:             ptr.To(true),
-		Privileged:               ptr.To(false),
+func DefaultContainerSecurityContext() *corev1.SecurityContext {
+	return &corev1.SecurityContext{
 		AllowPrivilegeEscalation: ptr.To(false),
-		ReadOnlyRootFilesystem:   ptr.To(readOnlyFileSystem(annotations)),
-		SeccompProfile: &corev1.SeccompProfile{
-			Type: corev1.SeccompProfileTypeRuntimeDefault,
-		},
+		Privileged:               ptr.To(false),
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		RunAsNonRoot:             ptr.To(true),
+		RunAsGroup:               ptr.To(int64(1069)),
+		RunAsUser:                ptr.To(int64(1069)),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{"ALL"},
 		},
+		SeccompProfile: &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		},
 	}
+}
 
+func configureSecurityContext(annotations map[string]string) *corev1.SecurityContext {
+	ctx := DefaultContainerSecurityContext()
+	ctx.RunAsUser = ptr.To(runAsUser(annotations))
+	ctx.RunAsGroup = ptr.To(runAsGroup(annotations))
+	ctx.ReadOnlyRootFilesystem = ptr.To(readOnlyFileSystem(annotations))
 	return ctx
 }
 

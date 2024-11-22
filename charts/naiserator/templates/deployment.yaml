@@ -44,6 +44,13 @@ spec:
               key: wonderwall_image
               name: wonderwall
         {{ end }}
+        {{ if .Values.naiserator.features.texas }}
+        - name: NAISERATOR_TEXAS_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              key: texas_image
+              name: texas
+        {{ end }}
         {{ if .Values.naiserator.kafka.enabled }}
         - name: KAFKA_BROKERS
           valueFrom:

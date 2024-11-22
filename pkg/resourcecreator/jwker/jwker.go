@@ -27,12 +27,12 @@ func secretName(name string) string {
 	return namegen.PrefixedRandShortName("tokenx", name, validation.DNS1035LabelMaxLength)
 }
 
-func Create(source Source, ast *resource.Ast, cfg Config) {
+func Create(source Source, ast *resource.Ast, cfg Config) *nais_io_v1.Jwker {
 	naisTokenX := source.GetTokenX()
 	naisAccessPolicy := source.GetAccessPolicy()
 
 	if !cfg.IsJwkerEnabled() || naisTokenX == nil || naisAccessPolicy == nil || !naisTokenX.Enabled {
-		return
+		return nil
 	}
 
 	ast.Labels["tokenx"] = "enabled"
@@ -55,4 +55,6 @@ func Create(source Source, ast *resource.Ast, cfg Config) {
 	if !naisTokenX.MountSecretsAsFilesOnly {
 		pod.WithAdditionalEnvFromSecret(ast, jwker.Spec.SecretName)
 	}
+
+	return jwker
 }

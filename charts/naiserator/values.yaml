@@ -50,8 +50,6 @@ naiserator:
     vault: false
     webhook: true
     wonderwall: false
-  texas:
-    image: europe-north1-docker.pkg.dev/nais-io/nais/images/texas:latest
   frontend:
     telemetry-url: http://localhost:12347/collect
   informer:

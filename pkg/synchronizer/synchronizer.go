@@ -390,7 +390,7 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 		return false
 	}
 
-	resources, err := updater.FindAll(ctx, n.Client, n.scheme, n.listers, rollout.Source)
+	resources, err := updater.FindAll(ctx, n.Client, n.listers, rollout.Source)
 	if err != nil {
 		return nil, fmt.Errorf("discovering unreferenced resources: %s", err)
 	}

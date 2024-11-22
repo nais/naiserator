@@ -155,7 +155,7 @@ func DeleteIfExists(ctx context.Context, cli client.Client, resource client.Obje
 }
 
 // FindAll finds all Kubernetes resource matching label selector 'app=NAME' for all specified types
-func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, types []client.ObjectList, source resource.Source) ([]runtime.Object, error) {
+func FindAll(ctx context.Context, cli client.Client, types []client.ObjectList, source resource.Source) ([]runtime.Object, error) {
 	// Set up label selector 'app=NAME'
 	labelSelector := labels.NewSelector()
 	labelreq, err := labels.NewRequirement("app", selection.Equals, []string{source.GetName()})
@@ -179,6 +179,10 @@ func FindAll(ctx context.Context, cli client.Client, scheme *runtime.Scheme, typ
 			resources = append(resources, item)
 			return nil
 		})
+
+		if panicErr := recover(); panicErr != nil {
+			return nil, fmt.Errorf("recovered PANIC when listing %T: %s", obj, panicErr)
+		}
 	}
 
 	return withOwnerReference(source, resources), nil

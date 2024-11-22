@@ -60,7 +60,7 @@ func TestOtelEnvVars(t *testing.T) {
 			Service:   "otelcol",
 			Namespace: "system",
 			Port:      8080,
-			Protocol:  "grcp",
+			Protocol:  "grpc",
 		},
 	}
 
@@ -115,7 +115,7 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 		{
 			Name:  "OTEL_EXPORTER_OTLP_PROTOCOL",
-			Value: "grcp",
+			Value: "grpc",
 		},
 		{
 			Name:  "OTEL_EXPORTER_OTLP_INSECURE",
@@ -123,7 +123,7 @@ func TestOtelEnvVars(t *testing.T) {
 		},
 	}
 
-	actualEnvVars := otelEnvVars("my-app", "my-team", existingEnvVars, destinations, otel)
+	actualEnvVars := OtelEnvVars("my-app", "my-team", existingEnvVars, destinations, otel)
 
 	assert.Equal(t, expectedEnvVars, actualEnvVars)
 }

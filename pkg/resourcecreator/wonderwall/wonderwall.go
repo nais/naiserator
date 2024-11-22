@@ -11,14 +11,12 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/keygen"
 	"github.com/nais/liberator/pkg/namegen"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/utils/pointer"
-
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -175,21 +173,8 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 				Name:          MetricsPortName,
 			},
 		},
-		Resources: pod.ResourceLimits(*resourceReqs),
-		SecurityContext: &corev1.SecurityContext{
-			AllowPrivilegeEscalation: pointer.Bool(false),
-			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"ALL"},
-			},
-			Privileged:             pointer.Bool(false),
-			ReadOnlyRootFilesystem: pointer.Bool(true),
-			RunAsGroup:             pointer.Int64(1069),
-			RunAsNonRoot:           pointer.Bool(true),
-			RunAsUser:              pointer.Int64(1069),
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
-		},
+		Resources:       pod.ResourceLimits(*resourceReqs),
+		SecurityContext: pod.DefaultContainerSecurityContext(),
 	}, nil
 }
 

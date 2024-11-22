@@ -119,7 +119,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	if err != nil {
 		return nil, err
 	}
-	err = azure.Create(naisjob, ast, cfg)
+	_, err = azure.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	}
 	certificateauthority.Create(naisjob, ast, cfg)
 	securelogs.Create(naisjob, ast, cfg)
-	err = maskinporten.Create(naisjob, ast, cfg)
+	_, err = maskinporten.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err
 	}

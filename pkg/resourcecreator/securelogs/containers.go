@@ -1,12 +1,17 @@
 package securelogs
 
 import (
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
 )
 
 func fluentdSidecar(cfg Config) corev1.Container {
+	securityContext := pod.DefaultContainerSecurityContext()
+	securityContext.RunAsUser = ptr.To(int64(1065))
+	securityContext.RunAsGroup = ptr.To(int64(1065))
+
 	return corev1.Container{
 		Name:            "secure-logs-fluentbit",
 		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways),
@@ -53,20 +58,7 @@ func fluentdSidecar(cfg Config) corev1.Container {
 			},
 		},
 
-		SecurityContext: &corev1.SecurityContext{
-			Privileged:               ptr.To(false),
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
-			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"ALL"},
-			},
-			RunAsUser:    ptr.To(int64(1065)),
-			RunAsGroup:   ptr.To(int64(1065)),
-			RunAsNonRoot: ptr.To(true),
-		},
+		SecurityContext: securityContext,
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "secure-logs",

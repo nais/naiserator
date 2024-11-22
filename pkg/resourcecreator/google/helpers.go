@@ -27,6 +27,10 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 		},
 	}
 
+	securityContext := pod.DefaultContainerSecurityContext()
+	securityContext.RunAsUser = ptr.To(int64(2))
+	securityContext.RunAsGroup = ptr.To(int64(2))
+
 	return corev1.Container{
 		Name:            "cloudsql-proxy",
 		Image:           googleCloudSQLProxyContainerImage,
@@ -43,20 +47,7 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 			"--quitquitquit",
 			connectionName,
 		},
-		Resources: pod.ResourceLimits(cloudSqlProxyContainerResourceSpec),
-		SecurityContext: &corev1.SecurityContext{
-			RunAsUser:                ptr.To(int64(2)),
-			RunAsGroup:               ptr.To(int64(2)),
-			RunAsNonRoot:             ptr.To(bool(true)),
-			Privileged:               ptr.To(bool(false)),
-			AllowPrivilegeEscalation: ptr.To(bool(false)),
-			ReadOnlyRootFilesystem:   ptr.To(bool(true)),
-			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"ALL"},
-			},
-			SeccompProfile: &corev1.SeccompProfile{
-				Type: corev1.SeccompProfileTypeRuntimeDefault,
-			},
-		},
+		Resources:       pod.ResourceLimits(cloudSqlProxyContainerResourceSpec),
+		SecurityContext: securityContext,
 	}
 }
