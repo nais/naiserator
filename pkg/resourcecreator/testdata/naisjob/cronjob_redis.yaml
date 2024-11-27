@@ -101,6 +101,8 @@ tests:
           spec:
             plan: startup-4
             project: dev-project
+            tags:
+              app: mynaisjob
   - operation: CreateIfNotExists
     apiVersion: aiven.io/v1alpha1
     kind: Redis
@@ -117,3 +119,5 @@ tests:
           spec:
             plan: startup-4
             project: dev-project
+            tags:
+              app: mynaisjob

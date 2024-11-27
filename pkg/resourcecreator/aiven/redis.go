@@ -58,6 +58,9 @@ func addDefaultRedisIfNotExists(ast *resource.Ast, source Source, aivenProject, 
 			ServiceCommonSpec: aiven_io_v1alpha1.ServiceCommonSpec{
 				Project: aivenProject,
 				Plan:    DefaultPlan,
+				Tags: map[string]string{
+					"app": source.GetName(),
+				},
 			},
 		},
 	}

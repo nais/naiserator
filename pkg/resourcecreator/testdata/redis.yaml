@@ -98,6 +98,8 @@ tests:
           spec:
             plan: startup-4
             project: dev-project
+            tags:
+              app: myapplication
   - operation: CreateIfNotExists
     apiVersion: aiven.io/v1alpha1
     kind: Redis
@@ -114,3 +116,5 @@ tests:
           spec:
             plan: startup-4
             project: dev-project
+            tags:
+              app: myapplication
