@@ -29,8 +29,6 @@ spec:
     spec:
       containers:
       - env:
-        - name: STAKATER_NAISERATOR_SECRET
-          value: {{ .Values.stakaterSecret }}
         - name: NAISERATOR_LEADER_ELECTION_IMAGE
           valueFrom:
             configMapKeyRef:

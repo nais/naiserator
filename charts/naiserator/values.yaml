@@ -12,7 +12,6 @@ imageTag: "2022-12-08-5b1e996"
 labels:
   kafka: enabled
 
-stakaterSecret: "0c697898d6b74c708d5acdc318e8f0d7b3117e31"
 naiserator:
   aiven-generation: 0
   aiven-range: ""
