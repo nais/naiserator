@@ -161,6 +161,14 @@ func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container,
 			Name:  "DOWNSTREAM_APP_CLUSTER",
 			Value: cfg.GetClusterName(),
 		},
+		{
+			Name: "NAIS_POD_NAME",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
 	}
 	envs = append(envs, providers.EnvVars()...)
 	envs = append(envs, observability.OtelEnvVars("texas", source.GetNamespace(), nil, nil, cfg.GetObservability().Otel)...)

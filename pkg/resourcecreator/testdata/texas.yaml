@@ -76,6 +76,10 @@ tests:
                         value: mynamespace
                       - name: DOWNSTREAM_APP_CLUSTER
                         value: mycluster
+                      - name: NAIS_POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
                       - name: OTEL_SERVICE_NAME
