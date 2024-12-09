@@ -52,9 +52,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) *nais_io_v1.Jwker {
 	ast.AppendOperation(resource.OperationCreateOrUpdate, jwker)
 
 	pod.WithAdditionalSecret(ast, jwker.Spec.SecretName, nais_io_v1alpha1.DefaultJwkerMountPath)
-	if !naisTokenX.MountSecretsAsFilesOnly {
-		pod.WithAdditionalEnvFromSecret(ast, jwker.Spec.SecretName)
-	}
+	pod.WithAdditionalEnvFromSecret(ast, jwker.Spec.SecretName)
 
 	return jwker
 }

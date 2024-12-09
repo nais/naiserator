@@ -228,27 +228,6 @@ func TestJwker(t *testing.T) {
 		assert.Equal(t, jwkerSecretName, ast.EnvFrom[0].SecretRef.Name)
 	})
 
-	t.Run("jwker secrets are mounted as files and not exposed as env-variables if MountSecretsAsFilesOnly is true", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.Spec.TokenX.Enabled = true
-		app.Spec.TokenX.MountSecretsAsFilesOnly = true
-		ast := resource.NewAst()
-		jwker.Create(app, ast, opts)
-		jwkerSecretName := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker).Spec.SecretName
-
-		volumeMount := test.GetVolumeMountByName(ast.VolumeMounts, jwkerSecretName)
-		assert.NotEmpty(t, volumeMount)
-		assert.Equal(t, jwkerSecretName, volumeMount.Name)
-		assert.Equal(t, "/var/run/secrets/nais.io/jwker", volumeMount.MountPath)
-
-		jwkerVolume := test.GetVolumeByName(ast.Volumes, jwkerSecretName)
-		assert.NotEmpty(t, jwkerVolume)
-		assert.Equal(t, jwkerSecretName, jwkerVolume.Name)
-		assert.Equal(t, jwkerSecretName, jwkerVolume.VolumeSource.Secret.SecretName)
-
-		assert.Equal(t, 0, len(ast.EnvFrom))
-	})
-
 	t.Run("when no secretName is given there should be no jwker volume mount", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		ast := resource.NewAst()
