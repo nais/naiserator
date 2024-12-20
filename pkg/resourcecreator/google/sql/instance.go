@@ -120,7 +120,6 @@ func availabilityType(highAvailability bool) string {
 func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.CloudSqlInstance, cfg Config) (*google_sql_crd.SQLInstance, error) {
 	objectMeta.Name = instance.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
-	util.SetAnnotation(&objectMeta, google.StateIntoSpec, google.StateIntoSpecValue)
 
 	if len(instance.Tier) == 0 {
 		return nil, fmt.Errorf("DB instance tier missing. Previous default value was `db-f1-micro` (recommended only for development); closest recommended value for production use is `db-custom-1-3840`")

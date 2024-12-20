@@ -35,7 +35,6 @@ func TestCopyMeta(t *testing.T) {
 	updating := fixture()
 
 	util.SetAnnotation(existing, "cnrm.cloud.google.com/existing-but-we-dont-care", "fooooo")
-	util.SetAnnotation(existing, "cnrm.cloud.google.com/state-into-spec", "baz") // should be preserved
 	util.SetAnnotation(existing, "foo", "oldvalue")
 
 	util.SetAnnotation(updating, "foo", "newvalue")
@@ -45,9 +44,8 @@ func TestCopyMeta(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.EqualValues(t, map[string]string{
-		"foo":                                   "newvalue",
-		"bar":                                   "baz",
-		"cnrm.cloud.google.com/state-into-spec": "baz",
+		"foo": "newvalue",
+		"bar": "baz",
 	}, updating.GetAnnotations())
 
 	assert.Equal(t, "resourceid", updating.Spec.ResourceID)
