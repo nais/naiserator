@@ -271,6 +271,10 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 func CreateContainerEnvVars(app EnvSource, ast *resource.Ast, cfg Config) {
 	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
 	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
+	if !cfg.IsLinkerdEnabled() {
+		disableLinkerd := corev1.EnvVar{Name: "LINKERD_DISABLED", Value: "true"}
+		ast.Env = append(ast.Env, disableLinkerd)
+	}
 }
 
 func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {

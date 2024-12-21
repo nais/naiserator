@@ -63,6 +63,8 @@ tests:
                         value: "8080"
                       - name: BIND_ADDRESS
                         value: "0.0.0.0:8080"
+                      - name: LINKERD_DISABLED
+                        value: "true"
                     image: ghcr.io/nais/testapp:latest
                     imagePullPolicy: IfNotPresent
                     lifecycle:
