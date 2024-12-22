@@ -37,7 +37,7 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 				"NAIS_DATABASE_FOO_BAR_USERNAME": "foo",
 				"NAIS_DATABASE_FOO_BAR_PASSWORD": "password",
 				"NAIS_DATABASE_FOO_BAR_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
-				"NAIS_DATABASE_FOO_BAR_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
+				"NAIS_DATABASE_FOO_BAR_JDBC_URL": "jdbc:postgresql://127.0.0.1:5432/bar?user=foo&password=password",
 			},
 		},
 		{
@@ -51,7 +51,7 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 			want: map[string]string{
 				"YOLO_PASSWORD": "password",
 				"YOLO_URL":      "postgres://foo:password@127.0.0.1:5432/bar",
-				"YOLO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=foo&password=password",
+				"YOLO_JDBC_URL": "jdbc:postgresql://127.0.0.1:5432/bar?user=foo&password=password",
 				"YOLO_USERNAME": "foo",
 				"YOLO_HOST":     "127.0.0.1",
 				"YOLO_PORT":     "5432",
@@ -69,7 +69,7 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 			want: map[string]string{
 				"YOLO_USER_TWO_PASSWORD": "password",
 				"YOLO_USER_TWO_URL":      "postgres://user-two:password@127.0.0.1:5432/bar",
-				"YOLO_USER_TWO_JDBC_URL": "jdbc:postgres://127.0.0.1:5432/bar?user=user-two&password=password",
+				"YOLO_USER_TWO_JDBC_URL": "jdbc:postgresql://127.0.0.1:5432/bar?user=user-two&password=password",
 				"YOLO_USER_TWO_USERNAME": "user-two",
 				"YOLO_USER_TWO_HOST":     "127.0.0.1",
 				"YOLO_USER_TWO_PORT":     "5432",

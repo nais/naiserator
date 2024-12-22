@@ -55,7 +55,7 @@ tests:
             PWNED_PASSWORD: ".{43}"
             PWNED_PORT: "5432"
             PWNED_URL: postgres://myapplication:.{43}@127.0.0.1:5432/mydb
-            PWNED_JDBC_URL: jdbc:postgres://127.0.0.1:5432/mydb\?user=myapplication&password=.{43}
+            PWNED_JDBC_URL: jdbc:postgresql://127.0.0.1:5432/mydb\?user=myapplication&password=.{43}
             PWNED_USERNAME: myapplication
           type: Opaque
   - apiVersion: sql.cnrm.cloud.google.com/v1beta1

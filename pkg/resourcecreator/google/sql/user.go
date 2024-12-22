@@ -28,7 +28,7 @@ const (
 	googleSQLPostgresHost    = "127.0.0.1"
 	googleSQLPostgresPort    = "5432"
 	googleSQLPostgresURL     = "postgres://%s:%s@%s:%s/%s"
-	googleSQLPostgresJDBCURL = "jdbc:postgres://%s:%s/%s?user=%s&password=%s"
+	googleSQLPostgresJDBCURL = "jdbc:postgresql://%s:%s/%s?user=%s&password=%s"
 )
 
 type GoogleSqlUser struct {
