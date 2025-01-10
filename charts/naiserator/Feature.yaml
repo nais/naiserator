@@ -178,15 +178,9 @@ values:
         - domainSuffix: "{{ . }}"
           ingressClass: "nais-ingress-fa"
         {{- end }}
-        {{ if eq .Kind "legacy" }}
+        {{ if and (eq .Tenant.Name "nav") (eq .Env.name "dev")  }}
         - domainSuffix: .very.intern.dev.nav.no
           ingressClass: nais-ingress-very-internal
-        - domainSuffix: .dev-gcp.nais.io
-          ingressClass: gw-dev-gcp-nais-io
-        - domainSuffix: .prod-gcp.nais.io
-          ingressClass: gw-prod-gcp-nais-io
-        - domainSuffix: .nais.io
-          ingressClass: gw-nais-io
         {{ end }}
   naiserator.google-project-id:
     displayName: Google project ID
