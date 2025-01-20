@@ -3,7 +3,6 @@ package aiven
 import (
 	"fmt"
 	"regexp"
-	"strings"
 
 	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
@@ -77,8 +76,4 @@ func addRedisEnvVariables(ast *resource.Ast, secretName, instanceName string) {
 		makeOptionalSecretEnvVar(fmt.Sprintf("REDIS_HOST_%s", suffix), secretName),
 		makeOptionalSecretEnvVar(fmt.Sprintf("REDIS_PORT_%s", suffix), secretName),
 	}...)
-}
-
-func envVarSuffix(instanceName string) string {
-	return strings.ToUpper(namePattern.ReplaceAllString(instanceName, "_"))
 }

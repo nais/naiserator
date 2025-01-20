@@ -3,6 +3,7 @@ package aiven
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
@@ -26,6 +27,7 @@ type Source interface {
 	GetKafka() *nais_io_v1.Kafka
 	GetOpenSearch() *nais_io_v1.OpenSearch
 	GetRedis() []nais_io_v1.Redis
+	GetValkey() []nais_io_v1.Valkey
 }
 
 type Config interface {
@@ -75,6 +77,11 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
+	valkeyEnabled, err := Valkey(ast, config, source, &aivenApp)
+	if err != nil {
+		return err
+	}
+
 	if len(kafkaKeyPaths) > 0 {
 		credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
 
@@ -82,7 +89,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
-	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || redisEnabled {
+	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || redisEnabled || valkeyEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.PrependEnv([]v1.EnvVar{
 			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),
@@ -120,4 +127,8 @@ func makeOptionalSecretEnvVar(key, secretName string) v1.EnvVar {
 			},
 		},
 	}
+}
+
+func envVarSuffix(instanceName string) string {
+	return strings.ToUpper(namePattern.ReplaceAllString(instanceName, "_"))
 }

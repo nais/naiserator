@@ -44,6 +44,7 @@ rules:
       - 'poddisruptionbudgets'
       - 'bigquerydatasets'
       - 'streams'
+      - 'valkey'
     verbs:
       - 'get'
       - 'create'
