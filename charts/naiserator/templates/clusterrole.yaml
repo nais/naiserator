@@ -48,7 +48,7 @@ rules:
       - 'storagebucketaccesscontrols'
       - 'storagebuckets'
       - 'streams'
-      - 'valkey'
+      - 'valkeys'
     verbs:
       - 'get'
       - 'create'
