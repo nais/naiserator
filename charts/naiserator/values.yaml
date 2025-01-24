@@ -39,7 +39,6 @@ naiserator:
     kafkarator: false
     legacy-gcp: false
     linkerd: false
-    login-proxy: false
     maskinporten: false
     nav-ca-bundle: false
     network-policy: true

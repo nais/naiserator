@@ -21,7 +21,6 @@ type Source interface {
 
 type Config interface {
 	wonderwall.Config
-	IsLoginProxyEnabled() bool
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
@@ -30,12 +29,8 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return nil
 	}
 
-	if !cfg.IsLoginProxyEnabled() {
-		return fmt.Errorf("login proxy is not available in this cluster")
-	}
-
 	if !cfg.IsWonderwallEnabled() {
-		return fmt.Errorf("login proxy is enabled but wonderwall is not")
+		return fmt.Errorf("login proxy is not available in this cluster")
 	}
 
 	ingresses := source.GetIngress()
@@ -47,8 +42,6 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	if err != nil {
 		return err
 	}
-
-	ast.Labels["login-proxy"] = "enabled"
 
 	return wonderwall.Create(source, ast, cfg, wonderwall.Configuration{
 		AutoLogin: login.Enforce != nil && login.Enforce.Enabled,

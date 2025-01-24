@@ -3,7 +3,6 @@ testconfig:
 config:
   cluster-name: mycluster
   features:
-    login-proxy: true
     wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no
@@ -36,7 +35,6 @@ tests:
               metadata:
                 labels:
                   aiven: enabled
-                  login-proxy: enabled
                   team: mynamespace
                   wonderwall: enabled
               spec:
