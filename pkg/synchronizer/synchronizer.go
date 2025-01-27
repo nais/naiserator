@@ -152,6 +152,9 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	// fixme: can be removed when we don't have garbage data anymore. Late 2024?
 	app.GetStatus().Conditions = nil
 
+	// Clear out any old problems from previous synchronizations.
+	app.GetStatus().ClearProblems()
+
 	kind := app.GetObjectKind().GroupVersionKind().Kind
 	changed := true
 
@@ -224,6 +227,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
 		app.GetStatus().SetSynchronizationStateWithCondition(events.FailedPrepare, err.Error())
+		app.GetStatus().SetError(err.Error())
 		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		return ctrl.Result{RequeueAfter: prepareRetryInterval}, nil
 	}
@@ -247,6 +251,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	rollout.ResourceOperations, err = n.generator.Generate(rollout.Source, rollout.Options)
 	if err != nil {
 		app.GetStatus().SetSynchronizationStateWithCondition(events.FailedGenerate, err.Error())
+		app.GetStatus().SetError(err.Error())
 		n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		return ctrl.Result{}, err
 	}
@@ -260,9 +265,11 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	if err != nil {
 		if retry {
 			app.GetStatus().SetSynchronizationStateWithCondition(events.Retrying, err.Error())
+			// No error in problems array, because this is a transient error which the user has no control over.
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 		} else {
 			app.GetStatus().SetSynchronizationStateWithCondition(events.FailedSynchronization, err.Error())
+			app.GetStatus().SetError(err.Error())
 			app.GetStatus().SynchronizationHash = rollout.SynchronizationHash // permanent failure
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 			err = nil
