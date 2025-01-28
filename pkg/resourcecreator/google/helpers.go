@@ -35,6 +35,7 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 		Name:            "cloudsql-proxy",
 		Image:           googleCloudSQLProxyContainerImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
+		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways),
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
 			Protocol:      corev1.ProtocolTCP,

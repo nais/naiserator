@@ -103,7 +103,7 @@ func CreateInstance(source Source, ast *resource.Ast, cfg Config) error {
 
 	if needsCloudSqlProxyContainer {
 		cloudSqlProxyContainer := google.CloudSqlProxyContainer(5432, cfg.GetGoogleCloudSQLProxyContainerImage(), googleTeamProjectID, googleSqlInstance.Name)
-		ast.Containers = append(ast.Containers, cloudSqlProxyContainer)
+		ast.InitContainers = append(ast.InitContainers, cloudSqlProxyContainer)
 	}
 
 	return nil
