@@ -26,6 +26,9 @@ func Valkey(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nai
 		}
 
 		addValkeyEnvVariables(ast, aivenApp.Spec.SecretName, valkey.Instance)
+		// Make the transition easier for teams coming from Redis by setting the `REDIS_` env variables too
+		addRedisEnvVariables(ast, aivenApp.Spec.SecretName, valkey.Instance)
+
 		aivenApp.Spec.Valkey = append(aivenApp.Spec.Valkey, &aiven_nais_io_v1.ValkeySpec{
 			Instance: valkey.Instance,
 			Access:   valkey.Access,
