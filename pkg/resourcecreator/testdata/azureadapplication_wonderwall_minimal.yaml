@@ -8,6 +8,15 @@ config:
     - domainSuffix: .nav.no
       ingressClass: very-nginx
   cluster-name: mycluster
+  observability:
+    otel:
+      enabled: true
+      collector:
+        namespace: "system-namespace"
+        port: 4317
+        service: "my-collector"
+        tls: false
+        protocol: "grpc"
   wonderwall:
     image: nais/wonderwall
 input:
@@ -38,6 +47,7 @@ tests:
                 labels:
                   aiven: enabled
                   azure: enabled
+                  otel: enabled
                   team: mynamespace
                   wonderwall: enabled
               spec:
@@ -61,6 +71,16 @@ tests:
                         value: 30s
                       - name: WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD
                         value: 7s
+                      - name: OTEL_SERVICE_NAME
+                        value: ^wonderwall$
+                      - name: OTEL_RESOURCE_ATTRIBUTES
+                        value: service.name=wonderwall,service.namespace=mynamespace
+                      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                        value: http://my-collector.system-namespace:4317
+                      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+                        value: grpc
+                      - name: OTEL_EXPORTER_OTLP_INSECURE
+                        value: "true"
                     envFrom:
                       - secretRef:
                           name: ^azure-myapplication-4190a8ca-.{6,7}$

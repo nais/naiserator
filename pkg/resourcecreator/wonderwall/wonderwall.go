@@ -12,6 +12,7 @@ import (
 	"github.com/nais/liberator/pkg/keygen"
 	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
@@ -52,6 +53,7 @@ type Source interface {
 }
 
 type Config interface {
+	GetObservability() config.Observability
 	GetWonderwallOptions() config.Wonderwall
 	IsWonderwallEnabled() bool
 }
@@ -59,6 +61,7 @@ type Config interface {
 func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Configuration) error {
 	ast.Labels["aiven"] = "enabled"
 	ast.Labels["wonderwall"] = "enabled"
+	ast.Labels["otel"] = "enabled"
 
 	err := validate(source, naisCfg, wonderwallCfg)
 	if err != nil {
@@ -159,7 +162,7 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 		Name:            "wonderwall",
 		Image:           image,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env:             envVars(source, wonderwallCfg),
+		Env:             envVars(source, naisCfg, wonderwallCfg),
 		EnvFrom:         envFromSources,
 		Ports: []corev1.ContainerPort{
 			{
@@ -203,7 +206,7 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 	return reqs, nil
 }
 
-func envVars(source Source, cfg Configuration) []corev1.EnvVar {
+func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
 	terminationGracePeriodSeconds := 30
 	if source.GetTerminationGracePeriodSeconds() != nil {
 		terminationGracePeriodSeconds = int(*source.GetTerminationGracePeriodSeconds())
@@ -255,6 +258,8 @@ func envVars(source Source, cfg Configuration) []corev1.EnvVar {
 	if cfg.AutoLogin {
 		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source, cfg))
 	}
+
+	result = append(result, observability.OtelEnvVars("wonderwall", source.GetNamespace(), nil, nil, naisCfg.GetObservability().Otel)...)
 
 	return result
 }
