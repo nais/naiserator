@@ -259,7 +259,13 @@ func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
 		result = appendStringEnvVar(result, "WONDERWALL_AUTO_LOGIN_IGNORE_PATHS", autoLoginIgnorePaths(source, cfg))
 	}
 
-	result = append(result, observability.OtelEnvVars("wonderwall", source.GetNamespace(), nil, nil, naisCfg.GetObservability().Otel)...)
+	otelEnvs := []corev1.EnvVar{
+		{
+			Name:  "OTEL_RESOURCE_ATTRIBUTES",
+			Value: fmt.Sprintf("wonderwall.upstream.name=%s", source.GetName()),
+		},
+	}
+	result = append(result, observability.OtelEnvVars("wonderwall", source.GetNamespace(), otelEnvs, nil, naisCfg.GetObservability().Otel)...)
 
 	return result
 }

@@ -87,7 +87,7 @@ tests:
                       - name: OTEL_SERVICE_NAME
                         value: ^wonderwall$
                       - name: OTEL_RESOURCE_ATTRIBUTES
-                        value: service.name=wonderwall,service.namespace=mynamespace
+                        value: service.name=wonderwall,service.namespace=mynamespace,wonderwall.upstream.name=myapplication
                       - name: OTEL_EXPORTER_OTLP_ENDPOINT
                         value: http://my-collector.system-namespace:4317
                       - name: OTEL_EXPORTER_OTLP_PROTOCOL
