@@ -11,6 +11,7 @@ import (
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalev2 "k8s.io/api/autoscaling/v2"
+	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -28,6 +29,8 @@ func GenericListers() []client.ObjectList {
 	return []client.ObjectList{
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
+		&v1.CronJobList{},
+		&v1.JobList{},
 		&autoscalev2.HorizontalPodAutoscalerList{},
 		&corev1.SecretList{},
 		&corev1.ServiceAccountList{},
