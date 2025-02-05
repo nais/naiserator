@@ -69,6 +69,7 @@ func GCPListers() []client.ObjectList {
 func AivenListers() []client.ObjectList {
 	return []client.ObjectList{
 		&aiven_io_v1alpha1.RedisList{},
+		&aiven_io_v1alpha1.ValkeyList{},
 		&aiven_io_v1alpha1.OpenSearchList{},
 	}
 }
