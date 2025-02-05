@@ -1,6 +1,7 @@
 package naiserator_scheme
 
 import (
+	fqdn "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha3"
 	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	google_nais_io_v1 "github.com/nais/liberator/pkg/apis/google.nais.io/v1"
@@ -63,6 +64,7 @@ func GCPListers() []client.ObjectList {
 		&sql_cnrm_cloud_google_com_v1beta1.SQLSSLCertList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControlList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
+		&fqdn.FQDNNetworkPolicyList{},
 
 		&google_nais_io_v1.BigQueryDatasetList{},
 	}
