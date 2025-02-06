@@ -7,20 +7,11 @@ import (
 	"os"
 	"time"
 
-	fqdn_scheme "github.com/GoogleCloudPlatform/gke-fqdnnetworkpolicies-golang/api/v1alpha3"
 	"github.com/go-logr/logr"
+	fqdn_scheme "github.com/nais/liberator/pkg/apis/fqdnnetworkpolicies.networking.gke.io/v1alpha3"
 	"github.com/nais/liberator/pkg/logrus2logr"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/liberator/pkg/tlsutil"
-	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	log "github.com/sirupsen/logrus"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
-
 	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/kafka"
@@ -29,6 +20,14 @@ import (
 	"github.com/nais/naiserator/pkg/readonly"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
+	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	log "github.com/sirupsen/logrus"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 func main() {

@@ -16,6 +16,16 @@ import (
 	"github.com/nais/liberator/pkg/crd"
 	"github.com/nais/liberator/pkg/events"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
+	"github.com/nais/naiserator/pkg/controllers"
+	"github.com/nais/naiserator/pkg/generators"
+	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	resourcecreator_secret "github.com/nais/naiserator/pkg/resourcecreator/secret"
+	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
+	"github.com/nais/naiserator/pkg/synchronizer"
+	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -25,23 +35,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrl_config "sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/nais/naiserator/pkg/generators"
-	resourcecreator_secret "github.com/nais/naiserator/pkg/resourcecreator/secret"
-
-	"github.com/nais/naiserator/pkg/controllers"
-	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
-	"github.com/nais/naiserator/pkg/synchronizer"
-	"github.com/nais/naiserator/pkg/test/fixtures"
 )
 
 const (
@@ -95,6 +95,9 @@ func newTestRig(config config.Config) (*testRig, error) {
 	}
 
 	rig.manager, err = ctrl.NewManager(rig.kubernetes.Config, ctrl.Options{
+		Controller: ctrl_config.Controller{
+			SkipNameValidation: ptr.To(true),
+		},
 		Scheme: rig.scheme,
 		Metrics: metricsserver.Options{
 			BindAddress: "0",
