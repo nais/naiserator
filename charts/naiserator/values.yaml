@@ -100,8 +100,6 @@ naiserator:
         port: 80
       - host: private.googleapis.com
         port: 443
-      - host: login.microsoftonline.com
-        port: 443
       - host: aivencloud.com
         port: 443
       - host: unleash.nais.io
