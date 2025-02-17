@@ -89,18 +89,16 @@ tests:
                         value: "-Dhttp.proxyHost=foo.bar -Dhttps.proxyHost=foo.bar -Dhttp.proxyPort=5224 -Dhttps.proxyPort=5224 -Dhttp.nonProxyHosts=foo|bar|baz"
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:7164$
-                      - name: DOWNSTREAM_APP_NAME
-                        value: myapplication
-                      - name: DOWNSTREAM_APP_NAMESPACE
-                        value: mynamespace
-                      - name: DOWNSTREAM_APP_CLUSTER
-                        value: mycluster
+                      - name: NAIS_POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
                       - name: OTEL_SERVICE_NAME
                         value: ^texas$
                       - name: OTEL_RESOURCE_ATTRIBUTES
-                        value: service.name=texas,service.namespace=mynamespace
+                        value: ^service.name=texas,service.namespace=mynamespace,downstream.app.name=myapplication,downstream.app.namespace=mynamespace,downstream.cluster.name=mycluster,nais.pod.name=\$\(NAIS_POD_NAME\)$
                       - name: OTEL_EXPORTER_OTLP_ENDPOINT
                         value: http://my-collector.system-namespace:4317
                       - name: OTEL_EXPORTER_OTLP_PROTOCOL

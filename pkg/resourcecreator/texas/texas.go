@@ -150,18 +150,6 @@ func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container,
 			Value: fmt.Sprintf("127.0.0.1:%d", Port),
 		},
 		{
-			Name:  "DOWNSTREAM_APP_NAME",
-			Value: source.GetName(),
-		},
-		{
-			Name:  "DOWNSTREAM_APP_NAMESPACE",
-			Value: source.GetNamespace(),
-		},
-		{
-			Name:  "DOWNSTREAM_APP_CLUSTER",
-			Value: cfg.GetClusterName(),
-		},
-		{
 			Name: "NAIS_POD_NAME",
 			ValueFrom: &corev1.EnvVarSource{
 				FieldRef: &corev1.ObjectFieldSelector{
@@ -171,7 +159,16 @@ func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container,
 		},
 	}
 	envs = append(envs, providers.EnvVars()...)
-	envs = append(envs, observability.OtelEnvVars("texas", source.GetNamespace(), nil, nil, cfg.GetObservability().Otel)...)
+	otelEnvs := []corev1.EnvVar{
+		{
+			Name: "OTEL_RESOURCE_ATTRIBUTES",
+			Value: fmt.Sprintf(
+				"downstream.app.name=%s,downstream.app.namespace=%s,downstream.cluster.name=%s,nais.pod.name=$(NAIS_POD_NAME)",
+				source.GetName(), source.GetNamespace(), cfg.GetClusterName(),
+			),
+		},
+	}
+	envs = append(envs, observability.OtelEnvVars("texas", source.GetNamespace(), otelEnvs, nil, cfg.GetObservability().Otel)...)
 
 	// If GCP is unconfigured, it means we are running on-premises, and we need the web proxy config.
 	// Note that we need the web proxy regardless of whether the app has requested one, so we don't care about `.spec.webProxy`.
