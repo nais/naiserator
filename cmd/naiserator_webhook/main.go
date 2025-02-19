@@ -10,11 +10,13 @@ import (
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	log "github.com/sirupsen/logrus"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
+	ctrl_log "sigs.k8s.io/controller-runtime/pkg/log"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func main() {
@@ -54,6 +56,9 @@ func run() error {
 		return err
 	}
 
+	logSink := &logrus2logr.Logrus2Logr{Logger: log.StandardLogger()}
+	ctrl_log.SetLogger(logr.New(logSink.WithName("controller-runtime")))
+
 	kconfig, err := ctrl.GetConfig()
 	if err != nil {
 		return err
@@ -62,7 +67,6 @@ func run() error {
 	kconfig.Burst = cfg.Ratelimit.Burst
 
 	metrics.Register(kubemetrics.Registry)
-	logSink := &logrus2logr.Logrus2Logr{Logger: log.StandardLogger()}
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
 		Scheme: kscheme,
 		Metrics: metricsserver.Options{
@@ -72,7 +76,7 @@ func run() error {
 			Host: "0.0.0.0",
 			Port: 8443,
 		}),
-		Logger: logr.New(logSink),
+		Logger: logr.New(logSink.WithName("controller")),
 	})
 	if err != nil {
 		return err
