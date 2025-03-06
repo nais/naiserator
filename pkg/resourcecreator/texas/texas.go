@@ -189,7 +189,7 @@ func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container,
 		EnvFrom:         providers.EnvFromSources(),
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    k8sResource.MustParse("30m"),
+				corev1.ResourceCPU:    k8sResource.MustParse("20m"),
 				corev1.ResourceMemory: k8sResource.MustParse("32Mi"),
 			},
 			Limits: corev1.ResourceList{
