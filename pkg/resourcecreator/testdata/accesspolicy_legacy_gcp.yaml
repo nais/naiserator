@@ -132,6 +132,7 @@ tests:
                   - podSelector:
                       matchLabels:
                         app: app3
+              - to:
                   - podSelector:
                       matchLabels:
                         app: app4

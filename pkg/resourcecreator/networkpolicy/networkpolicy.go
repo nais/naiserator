@@ -96,53 +96,56 @@ func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) []
 		return nil
 	}
 
-	peers := make([]networkingv1.NetworkPolicyPeer, 0)
-	for _, rule := range policy.Outbound.Rules.GetRules() {
+	var egressRules []networkingv1.NetworkPolicyEgressRule
+
+	for _, outbound := range policy.Outbound.Rules {
 		// non-local access policy rules do not result in network policies
-		if rule.Application == "" || rule.Application == "*" || !rule.MatchesCluster(cfg.GetClusterName()) {
+		if outbound.Application == "" || outbound.Application == "*" || !outbound.MatchesCluster(cfg.GetClusterName()) {
 			continue
 		}
 
 		peer := networkingv1.NetworkPolicyPeer{
-			PodSelector: labelSelector("app", rule.Application),
+			PodSelector: labelSelector("app", outbound.Application),
 		}
 
-		if rule.Namespace != "" {
-			peer.NamespaceSelector = labelSelector("kubernetes.io/metadata.name", rule.Namespace)
+		if outbound.Namespace != "" {
+			peer.NamespaceSelector = labelSelector("kubernetes.io/metadata.name", outbound.Namespace)
 		}
 
-		peers = append(peers, peer)
+		egressRules = append(egressRules, networkingv1.NetworkPolicyEgressRule{
+			To: []networkingv1.NetworkPolicyPeer{peer},
+		})
 	}
 
-	var ports []networkingv1.NetworkPolicyPort
-	for _, outboundExtPol := range policy.Outbound.External {
-		if onlyIPv4IsSpecified(outboundExtPol) {
-			peer := networkingv1.NetworkPolicyPeer{
-				IPBlock: &networkingv1.IPBlock{
-					CIDR: outboundExtPol.IPv4 + "/32",
-				},
-			}
-			for _, port := range outboundExtPol.Ports {
+	for _, external := range policy.Outbound.External {
+		if onlyIPv4IsSpecified(external) {
+			var ports []networkingv1.NetworkPolicyPort
+			for _, port := range external.Ports {
 				ports = append(ports, networkingv1.NetworkPolicyPort{
 					Port: &intstr.IntOrString{
 						IntVal: int32(port.Port),
 					},
 				})
 			}
-			peers = append(peers, peer)
+
+			egressRules = append(egressRules, networkingv1.NetworkPolicyEgressRule{
+				To: []networkingv1.NetworkPolicyPeer{
+					{
+						IPBlock: &networkingv1.IPBlock{
+							CIDR: external.IPv4 + "/32",
+						},
+					},
+				},
+				Ports: ports,
+			})
 		}
 	}
 
-	if len(peers) == 0 {
+	if len(egressRules) == 0 {
 		return nil
 	}
 
-	return []networkingv1.NetworkPolicyEgressRule{
-		{
-			To:    peers,
-			Ports: ports,
-		},
-	}
+	return egressRules
 }
 
 func defaultEgressRules(cfg Config) []networkingv1.NetworkPolicyEgressRule {
