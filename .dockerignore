@@ -1,0 +1,14 @@
+.idea/
+naiserator.iml
+vendor/
+cover.out
+./naiserator
+/bin/
+*.proto
+/.testbin/
+*.DS_Store
+.direnv
+hack
+charts
+.github
+README.md
