@@ -102,8 +102,6 @@ naiserator:
         port: 443
       - host: aivencloud.com
         port: 443
-      - host: unleash.nais.io
-        port: 443
 
 podSecurityContext:
   fsGroup: 65532
