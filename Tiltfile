@@ -1,14 +1,8 @@
 load('ext://cert_manager', 'deploy_cert_manager')
 load('ext://helm_resource', 'helm_resource', 'helm_repo')
 load('ext://local_output', 'local_output')
-load('ext://restart_process', 'docker_build_with_restart')
 
 APP_NAME="naiserator"
-
-
-def api_server_ip():
-    cmd = ["kubectl", "get", "service", "--context", k8s_context(), "--namespace", "default", "kubernetes", "-o", "jsonpath='{.spec.clusterIP}'"]
-    return str(local(cmd, quiet=True))[1:-1]
 
 
 def ignore_rules():
@@ -23,6 +17,7 @@ helm_repo('prometheus', 'https://prometheus-community.github.io/helm-charts')
 helm_resource('prometheus-operator-crds', 'prometheus/prometheus-operator-crds', resource_deps=['prometheus'], pod_readiness="ignore")
 
 # Load liberator charts, assuming liberator checked out next to naiserator
+# Automatically generate updated CRDs from the liberator code when the apis change, and apply them to the cluster
 local_resource("liberator-chart",
     cmd="make generate",
     dir="../liberator",
@@ -49,16 +44,29 @@ k8s_resource(
     resource_deps=["liberator-chart"],
 )
 
+# Create a tempdir for naiserator configs
+tempdir=local_output("mktemp -d -t tilt-naiserator-XXXX")
+
+# Copy tilt spesific naiserator config to tempdir for naiserator to use
 local_resource("naiserator-config",
-    cmd="cp ./hack/tilt-naiserator-config.yaml /tmp/naiserator.yaml",
+    cmd="cp ./hack/tilt-naiserator-config.yaml {}/naiserator.yaml".format(tempdir),
     deps=["hack/tilt-naiserator-config.yaml"],
 )
 
+# Ensure we save the current kube context to a file for naiserator
+# This is so we don't accidentally switch context if other tools change the current context after startup
+# Falls apart if the Tiltfile is updated, as that copies the kubeconfig again.
+# See https://github.com/tilt-dev/tilt/issues/6295
+local_resource("naiserator-kubeconfig",
+    cmd="kubectl config view --minify --flatten > {}/kubeconfig".format(tempdir),
+)
+
+# Start naiserator locally, so changes are detected and rebuilt automatically
 local_resource("naiserator",
     cmd="go build -o cmd/naiserator/naiserator ./cmd/naiserator",
-    serve_cmd="{}/cmd/naiserator/naiserator".format(config. main_dir),
+    serve_cmd="{}/cmd/naiserator/naiserator --kubeconfig={}/kubeconfig".format(config.main_dir, tempdir),
     deps=["cmd/naiserator/naiserator.go", "go.mod", "go.sum", "pkg", "/tmp/naiserator.yaml"],
-    resource_deps=["nais-crds", "aiven-operator-crds", "prometheus-operator-crds", "naiserator-config"],
+    resource_deps=["nais-crds", "aiven-operator-crds", "prometheus-operator-crds", "naiserator-config", "naiserator-kubeconfig"],
     ignore=ignore_rules(),
-    serve_dir="/tmp",
+    serve_dir=tempdir,
 )
