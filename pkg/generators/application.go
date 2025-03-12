@@ -79,6 +79,11 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 		return nil, fmt.Errorf("cannot create an Application with name '%s' because a Naisjob with that name exists", source.GetName())
 	}
 
+	err = SetSynchronizedImage(ctx, app, key, kube)
+	if err != nil {
+		return nil, fmt.Errorf("could not read external Image from cluster: %w", err)
+	}
+
 	o.NumReplicas = numReplicas(deploy, app.GetReplicas().Min, app.GetReplicas().Max)
 
 	// Retrieve current namespace to check for labels and annotations

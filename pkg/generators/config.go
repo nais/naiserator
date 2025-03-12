@@ -16,6 +16,7 @@ type Options struct {
 	Config              config.Config
 	GoogleProjectID     string
 	GoogleTeamProjectID string
+	Image               string
 	Linkerd             bool
 	NumReplicas         int32
 	Team                string
@@ -197,4 +198,8 @@ func (o *Options) GetObservability() config.Observability {
 
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {
 	return o.Config.Features.SqlInstanceInSharedVpc
+}
+
+func (o *Options) GetImage() string {
+	return o.Image
 }
