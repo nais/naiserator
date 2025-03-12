@@ -45,28 +45,29 @@ k8s_resource(
 )
 
 # Create a tempdir for naiserator configs
-tempdir=local_output("mktemp -d -t tilt-naiserator-XXXX")
+naiserator_dir="/tmp/tilt-naiserator"
+local("mkdir -p {}".format(naiserator_dir))
 
 # Copy tilt spesific naiserator config to tempdir for naiserator to use
 local_resource("naiserator-config",
-    cmd="cp ./hack/tilt-naiserator-config.yaml {}/naiserator.yaml".format(tempdir),
-    deps=["hack/tilt-naiserator-config.yaml"],
-)
+               cmd="cp ./hack/tilt-naiserator-config.yaml {}/naiserator.yaml".format(naiserator_dir),
+               deps=["hack/tilt-naiserator-config.yaml"],
+               )
 
 # Ensure we save the current kube context to a file for naiserator
 # This is so we don't accidentally switch context if other tools change the current context after startup
 # Falls apart if the Tiltfile is updated, as that copies the kubeconfig again.
 # See https://github.com/tilt-dev/tilt/issues/6295
 local_resource("naiserator-kubeconfig",
-    cmd="kubectl config view --minify --flatten > {}/kubeconfig".format(tempdir),
-)
+               cmd="kubectl config view --minify --flatten > {}/kubeconfig".format(naiserator_dir),
+               )
 
 # Start naiserator locally, so changes are detected and rebuilt automatically
 local_resource("naiserator",
-    cmd="go build -o cmd/naiserator/naiserator ./cmd/naiserator",
-    serve_cmd="{}/cmd/naiserator/naiserator --kubeconfig={}/kubeconfig".format(config.main_dir, tempdir),
-    deps=["cmd/naiserator/naiserator.go", "go.mod", "go.sum", "pkg", "/tmp/naiserator.yaml"],
-    resource_deps=["nais-crds", "aiven-operator-crds", "prometheus-operator-crds", "naiserator-config", "naiserator-kubeconfig"],
-    ignore=ignore_rules(),
-    serve_dir=tempdir,
-)
+               cmd="go build -o cmd/naiserator/naiserator ./cmd/naiserator",
+               serve_cmd="{}/cmd/naiserator/naiserator --kubeconfig={}/kubeconfig".format(config.main_dir, naiserator_dir),
+               deps=["cmd/naiserator/naiserator.go", "go.mod", "go.sum", "pkg", "/tmp/naiserator.yaml"],
+               resource_deps=["nais-crds", "aiven-operator-crds", "prometheus-operator-crds", "naiserator-config", "naiserator-kubeconfig"],
+               ignore=ignore_rules(),
+               serve_dir=naiserator_dir,
+               )
