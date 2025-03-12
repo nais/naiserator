@@ -14,7 +14,6 @@ def api_server_ip():
 def ignore_rules():
     return str(read_file(".dockerignore")).split("\n")
 
-
 deploy_cert_manager()
 
 helm_repo('aiven', 'https://aiven.github.io/aiven-charts')
@@ -24,8 +23,13 @@ helm_repo('prometheus', 'https://prometheus-community.github.io/helm-charts')
 helm_resource('prometheus-operator-crds', 'prometheus/prometheus-operator-crds', resource_deps=['prometheus'], pod_readiness="ignore")
 
 # Load liberator charts, assuming liberator checked out next to naiserator
+local_resource("liberator-chart",
+    cmd="make generate",
+    dir="../liberator",
+    ignore=["../liberator/**/zz_generated.deepcopy.go"],
+    deps=["../liberator/pkg/apis"],
+)
 k8s_yaml(helm("../liberator/charts", name="nais-crds"))
-
 liberator_objects = [
     "aivenapplications.aiven.nais.io:CustomResourceDefinition:default",
     "bigquerydatasets.google.nais.io:CustomResourceDefinition:default",
@@ -42,6 +46,7 @@ liberator_objects = [
 k8s_resource(
     new_name="nais-crds",
     objects=liberator_objects,
+    resource_deps=["liberator-chart"],
 )
 
 local_resource("naiserator-config",
