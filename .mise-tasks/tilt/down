@@ -8,5 +8,3 @@
 context_name="${usage_product}-tilt-naiserator"
 
 kubie exec "${context_name}" "${usage_namespace}" tilt down
-
-ctlptl delete cluster "${context_name}"
