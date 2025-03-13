@@ -20,7 +20,7 @@ type MockConfig struct {
 	CreateSqlInstanceInSharedVpc      bool
 	sqlInstanceExists                 bool
 	sqlInstanceHasPrivateIp           bool
-	clusterName string
+	clusterName                       string
 }
 
 func (m *MockConfig) GetGoogleProjectID() string {
@@ -62,12 +62,12 @@ func TestGoogleSqlInstance(t *testing.T) {
 		GoogleCloudSQLProxyContainerImage: "cloudsql/image:latest",
 		CreateSqlInstanceInSharedVpc:      true,
 		sqlInstanceExists:                 false,
-		clusterName: "test-cluster",
+		clusterName:                       "test-cluster",
 	}
 
 	spec := &nais.CloudSqlInstance{
 		Name: app.Name,
-		Type: "POSTGRES_11",
+		Type: "POSTGRES_17",
 		Tier: tier,
 	}
 	spec, err := google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)
@@ -195,12 +195,12 @@ func TestGoogleSqlInstance(t *testing.T) {
 		app.Spec.GCP = &nais.GCP{
 			SqlInstances: []nais.CloudSqlInstance{
 				{
-					Type: "POSTGRES_11",
+					Type: "POSTGRES_17",
 					Name: "postgres-11",
 					Tier: tier,
 				},
 				{
-					Type: "POSTGRES_12",
+					Type: "POSTGRES_17",
 					Name: "postgres-12",
 					Tier: tier,
 				},

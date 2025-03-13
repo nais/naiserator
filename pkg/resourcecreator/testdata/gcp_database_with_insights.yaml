@@ -18,7 +18,7 @@ input:
       sqlInstances:
         - databases:
             - name: mydb
-          type: POSTGRES_11
+          type: POSTGRES_17
           tier: db-f1-micro
           pointInTimeRecovery: true
           insights:
@@ -86,7 +86,7 @@ tests:
             name: myapplication
             namespace: mynamespace
           spec:
-            databaseVersion: POSTGRES_11
+            databaseVersion: POSTGRES_17
             region: europe-north1
             settings:
               availabilityType: ZONAL
