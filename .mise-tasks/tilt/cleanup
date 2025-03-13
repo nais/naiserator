@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Launch tilt for local development, confined to selected context"
+#USAGE flag "-p --product <product>" help="The product used to launch local kubernetes" default="kind" { choices "kind" "minikube" "docker-desktop" "k3d" }
+
+# shellcheck disable=SC2154
+
+context_name="${usage_product}-tilt-naiserator"
+
+ctlptl delete cluster "${context_name}"
