@@ -67,11 +67,6 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 		return nil, fmt.Errorf("cannot create a Naisjob with name '%s' because an Application with that name exists", source.GetName())
 	}
 
-	err = SetSynchronizedImage(ctx, job, key, kube)
-	if err != nil {
-		return nil, fmt.Errorf("could not read external Image from cluster: %w", err)
-	}
-
 	// Auto-detect Google Team Project ID
 	o.GoogleTeamProjectID = namespace.Annotations["cnrm.cloud.google.com/project-id"]
 

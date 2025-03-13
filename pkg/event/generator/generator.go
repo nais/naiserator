@@ -14,11 +14,11 @@ import (
 
 type MonitorSource interface {
 	resource.Source
-	GetImage() string
+	GetEffectiveImage() string
 }
 
 func NewDeploymentEvent(source MonitorSource) *deployment.Event {
-	image := ContainerImage(source.GetImage())
+	image := ContainerImage(source.GetEffectiveImage())
 	ts := convertTimestamp(time.Now())
 
 	return &deployment.Event{

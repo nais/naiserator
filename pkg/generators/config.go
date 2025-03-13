@@ -199,7 +199,3 @@ func (o *Options) GetObservability() config.Observability {
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {
 	return o.Config.Features.SqlInstanceInSharedVpc
 }
-
-func (o *Options) GetImage() string {
-	return o.Image
-}

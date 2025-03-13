@@ -89,7 +89,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		viper.Set("cluster-name", clusterName)
 
 		app := fixtures.MinimalApplication()
-		app.Spec.Image = "image:version"
+		app.Status.EffectiveImage = "image:version"
 
 		event := generator.NewDeploymentEvent(app)
 

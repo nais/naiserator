@@ -22,7 +22,7 @@ type Source interface {
 	GetEnv() nais_io_v1.EnvVars
 	GetEnvFrom() []nais_io_v1.EnvFrom
 	GetFilesFrom() []nais_io_v1.FilesFrom
-	GetImage() string
+	GetEffectiveImage() string
 	GetLiveness() *nais_io_v1.Probe
 	GetLogformat() string
 	GetLogtransform() string
