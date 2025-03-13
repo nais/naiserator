@@ -57,6 +57,22 @@ type testRig struct {
 	config       config.Config
 }
 
+// testResourceNotExists tests that a resource does not exist in the fake cluster
+func (rig *testRig) testResourceNotExist(t *testing.T, ctx context.Context, resource client.Object, objectKey client.ObjectKey) {
+	err := rig.client.Get(ctx, objectKey, resource)
+	assert.True(t, errors.IsNotFound(err), "the resource found in the cluster should not be there")
+}
+
+// testResource tests that a resource has been created in the fake cluster
+func (rig *testRig) testResource(t *testing.T, ctx context.Context, resource client.Object, objectKey client.ObjectKey, assertFuncs ...func(t *testing.T, resource client.Object)) {
+	err := rig.client.Get(ctx, objectKey, resource)
+	assert.NoError(t, err)
+	assert.NotNil(t, resource)
+	for _, assertFunc := range assertFuncs {
+		assertFunc(t, resource)
+	}
+}
+
 func testBinDirectory() string {
 	_, filename, _, _ := go_runtime.Caller(0)
 	return filepath.Clean(filepath.Join(filepath.Dir(filename), "../../.testbin/"))
@@ -146,9 +162,9 @@ func TestSynchronizer(t *testing.T) {
 	cfg := config.Config{
 		AivenGeneration: 0,
 		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 2 * time.Second,
+			SynchronizationTimeout: 2 * time.Hour,
 			RolloutCheckInterval:   5 * time.Second,
-			RolloutTimeout:         20 * time.Second,
+			RolloutTimeout:         20 * time.Hour,
 		},
 		GoogleProjectId:                   "1337",
 		GoogleCloudSQLProxyContainerImage: config.GoogleCloudSQLProxyContainerImage,
@@ -166,7 +182,7 @@ func TestSynchronizer(t *testing.T) {
 	defer rig.kubernetes.Stop()
 
 	// Allow no more than 15 seconds for these tests to run
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Hour*15)
 	defer cancel()
 
 	// Check that listing all resources work.
@@ -179,29 +195,10 @@ func TestSynchronizer(t *testing.T) {
 		assert.NoError(t, err, "Unable to list resource, are the CRDs installed?")
 	}
 
-	// Create Application fixture
-	app := fixtures.MinimalApplication()
-	app.SetAnnotations(map[string]string{
-		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id",
-	})
-
-	// Test that a resource has been created in the fake cluster
-	testResource := func(resource client.Object, objectKey client.ObjectKey) {
-		err := rig.client.Get(ctx, objectKey, resource)
-		assert.NoError(t, err)
-		assert.NotNil(t, resource)
-	}
-
-	// Test that a resource does not exist in the fake cluster
-	testResourceNotExist := func(resource client.Object, objectKey client.ObjectKey) {
-		err := rig.client.Get(ctx, objectKey, resource)
-		assert.True(t, errors.IsNotFound(err), "the resource found in the cluster should not be there")
-	}
-
 	// Ensure that the application's namespace exists
 	err = rig.client.Create(ctx, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: app.GetNamespace(),
+			Name: fixtures.ApplicationNamespace,
 		},
 	})
 	assert.NoError(t, err)
@@ -214,10 +211,53 @@ func TestSynchronizer(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
+	t.Run("App Deployment", func(t *testing.T) {
+		app := fixtures.MinimalApplication(
+			fixtures.WithAnnotation(nais_io_v1.DeploymentCorrelationIDAnnotation, "deploy-id"),
+		)
+		testAppDeployment(t, rig, ctx, app, cfg)
+
+		rig.testResource(t, ctx, &nais_io_v1alpha1.Application{}, client.ObjectKey{Name: app.Name, Namespace: app.Namespace}, func(t *testing.T, resource client.Object) {
+			app := resource.(*nais_io_v1alpha1.Application)
+			assert.Equal(t, fixtures.DefaultApplicationImage, app.Status.EffectiveImage)
+		})
+	})
+
+	t.Run("Delete IAM Resources", func(t *testing.T) {
+		app := fixtures.MinimalApplication(
+			fixtures.WithAnnotation(nais_io_v1.DeploymentCorrelationIDAnnotation, "deploy-id"),
+		)
+		testDeleteCorrectIAMResources(t, rig, ctx, app)
+	})
+
+	t.Run("App With External Image Deployment", func(t *testing.T) {
+		// Ensure that external image resource exists
+		image := fixtures.MinimalImage(fixtures.WithName(fixtures.OtherApplicationName))
+		err = rig.client.Create(ctx, image)
+		assert.NoError(t, err)
+
+		// Create Application fixture
+		app := fixtures.MinimalApplication(
+			fixtures.WithAnnotation(nais_io_v1.DeploymentCorrelationIDAnnotation, "external-deploy-id"),
+			appWithoutImage(),
+			fixtures.WithName(fixtures.OtherApplicationName),
+		)
+		testAppDeployment(t, rig, ctx, app, cfg)
+
+		rig.testResource(t, ctx, &nais_io_v1alpha1.Application{}, client.ObjectKey{Name: app.Name, Namespace: app.Namespace}, func(t *testing.T, resource client.Object) {
+			app := resource.(*nais_io_v1alpha1.Application)
+			assert.Equal(t, fixtures.OtherApplicationImage, app.Status.EffectiveImage)
+		})
+	})
+}
+
+func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application, cfg config.Config) {
+	appCorrelationId := app.GetAnnotations()[nais_io_v1.DeploymentCorrelationIDAnnotation]
+
 	// Store the Application resource in the cluster before testing commences.
 	// This simulates a deployment into the cluster which is then picked up by the
 	// informer queue.
-	err = rig.client.Create(ctx, app)
+	err := rig.client.Create(ctx, app)
 	if err != nil {
 		t.Fatalf("Application resource cannot be persisted to fake Kubernetes: %s", err)
 	}
@@ -253,7 +293,8 @@ func TestSynchronizer(t *testing.T) {
 	err = ingress.Create(app, ast, opts)
 	assert.NoError(t, err)
 	ing = ast.Operations[1].Resource.(*networkingv1.Ingress)
-	ing.SetName("disowned-ingress")
+	disownedIngressName := "disowned-ingress-" + app.GetName()
+	ing.SetName(disownedIngressName)
 	ing.SetOwnerReferences(nil)
 	app.Spec.Ingresses = []nais_io_v1.Ingress{}
 	err = rig.client.Create(ctx, ing)
@@ -295,66 +336,72 @@ func TestSynchronizer(t *testing.T) {
 
 	// Test that the status field is set with RolloutComplete
 	assert.Equalf(t, events.Synchronized, persistedApp.Status.SynchronizationState, "Synchronization state is set")
-	assert.Equalf(t, "deploy-id", persistedApp.Status.CorrelationID, "Correlation ID is set")
+	assert.Equalf(t, appCorrelationId, persistedApp.Status.CorrelationID, "Correlation ID is set")
 
 	// Test that a base resource set was created successfully
-	testResource(&appsv1.Deployment{}, objectKey)
-	testResource(&corev1.Service{}, objectKey)
-	testResource(&corev1.ServiceAccount{}, objectKey)
+	rig.testResource(t, ctx, &appsv1.Deployment{}, objectKey)
+	rig.testResource(t, ctx, &corev1.Service{}, objectKey)
+	rig.testResource(t, ctx, &corev1.ServiceAccount{}, objectKey)
 
 	// Test that the Ingress resource was removed
-	testResourceNotExist(&networkingv1.Ingress{}, objectKey)
+	rig.testResourceNotExist(t, ctx, &networkingv1.Ingress{}, objectKey)
 
 	// Test that a Synchronized event was generated and has the correct deployment correlation id
 	eventList := &corev1.EventList{}
-	err = rig.client.List(ctx, eventList)
+	err = rig.client.List(ctx, eventList, client.MatchingLabels{"app": app.Name})
 	assert.NoError(t, err)
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 1, eventList.Items[0].Count)
-	assert.Equal(t, "deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, appCorrelationId, eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, events.Synchronized, eventList.Items[0].Reason)
 
 	// Run synchronization processing again, and check that resources still exist.
+	newAppCorrelationId := "new-" + appCorrelationId
 	persistedApp.DeepCopyInto(app)
 	app.Status.SynchronizationHash = ""
-	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = "new-deploy-id"
+	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = newAppCorrelationId
 	err = rig.client.Update(ctx, app)
 	assert.NoError(t, err)
 	result, err = rig.synchronizer.Reconcile(ctx, req)
 
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
-	testResource(&appsv1.Deployment{}, objectKey)
-	testResource(&corev1.Service{}, objectKey)
-	testResource(&corev1.ServiceAccount{}, objectKey)
-	testResource(&networkingv1.Ingress{}, client.ObjectKey{Name: "disowned-ingress", Namespace: app.Namespace})
+	rig.testResource(t, ctx, &appsv1.Deployment{}, objectKey, func(t *testing.T, resource client.Object) {
+		dep := resource.(*appsv1.Deployment)
+		assert.Equal(t, app.Name, dep.Name)
+		assert.Equal(t, app.Status.EffectiveImage, dep.Spec.Template.Spec.Containers[0].Image)
+	})
+	rig.testResource(t, ctx, &corev1.Service{}, objectKey)
+	rig.testResource(t, ctx, &corev1.ServiceAccount{}, objectKey)
+	rig.testResource(t, ctx, &networkingv1.Ingress{}, client.ObjectKey{Name: disownedIngressName, Namespace: app.Namespace})
 
 	// Test that the naiserator event was updated with increased count and new correlation id
-	err = rig.client.List(ctx, eventList)
+	err = rig.client.List(ctx, eventList, client.MatchingLabels{"app": app.Name})
 	assert.NoError(t, err)
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 2, eventList.Items[0].Count)
-	assert.Equal(t, "new-deploy-id", eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, newAppCorrelationId, eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, events.Synchronized, eventList.Items[0].Reason)
+}
 
-	// Assert that we delete the correct IAM-resources from the cnrm namespace
+func testDeleteCorrectIAMResources(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application) {
 	app2 := fixtures.MinimalApplication()
 	app2.SetAnnotations(map[string]string{
 		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id-2",
 	})
 	app2.ObjectMeta.Name = "iam-test"
-	err = rig.client.Create(ctx, app2)
+	err := rig.client.Create(ctx, app2)
 	if err != nil {
 		t.Fatalf("Application resource cannot be persisted to fake Kubernetes: %s", err)
 	}
-	req = ctrl.Request{
+	req := ctrl.Request{
 		NamespacedName: types.NamespacedName{
 			Namespace: app2.Namespace,
 			Name:      app2.Name,
 		},
 	}
 	// Reconcile for finalizer
-	result, err = rig.synchronizer.Reconcile(ctx, req)
+	result, err := rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
 	assert.Equal(t, ctrl.Result{}, result)
 
@@ -563,4 +610,11 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	}, updatedSecret)
 	assert.NoError(t, err)
 	assert.Equal(t, newCorrelationId, updatedSecret.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+}
+
+func appWithoutImage() fixtures.FixtureModifier {
+	return func(obj client.Object) {
+		app := obj.(*nais_io_v1alpha1.Application)
+		app.Spec.Image = ""
+	}
 }

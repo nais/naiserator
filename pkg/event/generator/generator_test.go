@@ -4,12 +4,14 @@ import (
 	"testing"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	deployment "github.com/nais/naiserator/pkg/event"
 	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type containerImageTest struct {
@@ -88,8 +90,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		clusterName := "test-cluster"
 		viper.Set("cluster-name", clusterName)
 
-		app := fixtures.MinimalApplication()
-		app.Status.EffectiveImage = "image:version"
+		app := fixtures.MinimalApplication(withEffectiveImage("image:version"))
 
 		event := generator.NewDeploymentEvent(app)
 
@@ -102,7 +103,7 @@ func TestNewDeploymentEvent(t *testing.T) {
 		assert.Equal(t, deployment.Environment_development, event.GetEnvironment())
 		assert.Equal(t, fixtures.ApplicationNamespace, event.GetNamespace())
 		assert.Equal(t, clusterName, event.GetCluster())
-		assert.Equal(t, fixtures.ApplicationName, event.GetApplication())
+		assert.Equal(t, fixtures.DefaultApplicationName, event.GetApplication())
 		assert.Equal(t, "version", event.GetVersion())
 
 		image := event.GetImage()
@@ -128,11 +129,11 @@ func TestNewDeploymentEvent(t *testing.T) {
 	})
 
 	t.Run("Get correlationID from app annotations", func(t *testing.T) {
-		app := fixtures.MinimalApplication()
-		app.ObjectMeta = resource.CreateObjectMeta(app)
-
 		correlationID := "correlation-id"
-		app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = correlationID
+		app := fixtures.MinimalApplication(
+			fixtures.WithAnnotation(nais_io_v1.DeploymentCorrelationIDAnnotation, correlationID),
+		)
+		app.ObjectMeta = resource.CreateObjectMeta(app)
 
 		event := generator.NewDeploymentEvent(app)
 
@@ -147,4 +148,11 @@ func TestNewDeploymentEvent(t *testing.T) {
 		assert.Equal(t, "mynamespace", event.Team)
 	})
 
+}
+
+func withEffectiveImage(image string) fixtures.FixtureModifier {
+	return func(obj client.Object) {
+		app := obj.(*nais.Application)
+		app.Status.EffectiveImage = image
+	}
 }
