@@ -14,7 +14,7 @@ require (
 	github.com/magiconair/properties v1.8.9
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nais/liberator v0.0.0-20250219141329-f224bfab7a8d
+	github.com/nais/liberator v0.0.0-20250313145220-cef67aaac1ec
 	github.com/novln/docker-parser v1.0.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.74.0
 	github.com/prometheus/client_golang v1.21.0
@@ -105,5 +105,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.5.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-replace github.com/nais/liberator => ../liberator
