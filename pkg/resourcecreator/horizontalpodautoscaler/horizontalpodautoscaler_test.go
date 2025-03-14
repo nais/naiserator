@@ -110,7 +110,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 			ScalingStrategy: &nais_io_v1.ScalingStrategy{
 				Kafka: &nais_io_v1.KafkaScaling{
 					Topic:         topic,
-					ConsumerGroup: fixtures.ApplicationName,
+					ConsumerGroup: fixtures.DefaultApplicationName,
 					Threshold:     10,
 				},
 			},
@@ -129,7 +129,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		assert.Equal(t, int64(10), actualAvgValue)
 		matchLabels := externalMetric.Metric.Selector.MatchLabels
 		assert.Equal(t, topic, matchLabels["topic"])
-		assert.Equal(t, fixtures.ApplicationName, matchLabels["group"])
+		assert.Equal(t, fixtures.DefaultApplicationName, matchLabels["group"])
 	})
 
 	t.Run("should add both cpu and kafka metric when both are set", func(t *testing.T) {
@@ -145,7 +145,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 				},
 				Kafka: &nais_io_v1.KafkaScaling{
 					Topic:         topic,
-					ConsumerGroup: fixtures.ApplicationName,
+					ConsumerGroup: fixtures.DefaultApplicationName,
 					Threshold:     10,
 				},
 			},

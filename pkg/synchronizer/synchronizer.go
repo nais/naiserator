@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8s_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -105,7 +105,7 @@ func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Ev
 	err = n.simpleClient.List(ctx, events, &client.ListOptions{
 		FieldSelector: selector,
 	})
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !k8s_errors.IsNotFound(err) {
 		return nil, fmt.Errorf("get events for app '%s': %s", reportedEvent.InvolvedObject.Name, err)
 	}
 
@@ -417,10 +417,10 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []commit) (bool, error
 		if err := observeDuration(commit.fn); err != nil {
 			retry := false
 			// In case of race condition errors
-			if errors.IsConflict(err) {
+			if k8s_errors.IsConflict(err) {
 				retry = true
 			}
-			reason := errors.ReasonForError(err)
+			reason := k8s_errors.ReasonForError(err)
 			if reason == metav1.StatusReasonUnknown {
 				reason = "validation error"
 			}
@@ -456,10 +456,24 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 		return nil, fmt.Errorf("BUG: create application hash: %s", err)
 	}
 
+	readOnlyClient := readonly.NewClient(n.Client)
+
+	imageSource, ok := source.(ImageSource)
+	if !ok {
+		return nil, fmt.Errorf("BUG: the synchronizer only accepts objects that satisfy ImageSource interface")
+	}
+
+	wantedImage, err := getWantedImage(ctx, imageSource, readOnlyClient)
+	if err != nil {
+		return nil, fmt.Errorf("get wanted image: %w", err)
+	}
+
 	// Skip processing if application didn't change since last synchronization.
-	if source.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
+	if !imageHasChanged(wantedImage, imageSource) && source.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
 		return nil, nil
 	}
+
+	updateEffectiveImage(source, wantedImage)
 
 	err = ensureCorrelationID(source)
 	if err != nil {
@@ -468,7 +482,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 
 	// Prepare for rollout (i.e. use cluster information to generate a configuration object).
 	// For this operation, make sure that write operations are disabled.
-	opts, err := n.generator.Prepare(ctx, source, readonly.NewClient(n.Client))
+	opts, err := n.generator.Prepare(ctx, source, readOnlyClient)
 	if err != nil {
 		return nil, fmt.Errorf("preparing rollout configuration: %w", err)
 	}

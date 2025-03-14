@@ -1,0 +1,27 @@
+cluster-name: "dev-nais-tilt"
+gateway-mappings:
+  - domainSuffix: dev-nais-local.dev-nais.cloud.nais.io
+    ingressClass: nais-ingress
+synchronizer:
+  synchronization-timeout: 5m
+  rollout-timeout: 5m
+features:
+  azurerator: false
+  cnrm: false
+  gar-toleration: false
+  gcp: false
+  idporten: false
+  influx-credentials: false
+  jwker: false
+  kafkarator: false
+  legacy-gcp: false
+  linkerd: false
+  maskinporten: false
+  nav-ca-bundle: false
+  network-policy: false
+  prometheus-operator: false
+  sql-instance-in-shared-vpc: false
+  texas: false
+  vault: false
+  webhook: false
+  wonderwall: false

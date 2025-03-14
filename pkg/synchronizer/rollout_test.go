@@ -1,1 +1,0 @@
-package synchronizer_test

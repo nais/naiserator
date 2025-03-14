@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Launch tilt for local development, confined to selected context"
+#USAGE flag "-p --product <product>" help="The product used to launch local kubernetes" default="kind" { choices "kind" "minikube" "docker-desktop" "k3d" }
+#USAGE flag "-n --namespace <namespace>" help="The namespace to use" default="default"
+
+# shellcheck disable=SC2154
+
+context_name="${usage_product}-tilt-naiserator"
+
+ctlptl create cluster "${usage_product}" --registry=ctlptl-registry --name "${context_name}"
+
+kubie exec "${context_name}" "${usage_namespace}" tilt up --stream

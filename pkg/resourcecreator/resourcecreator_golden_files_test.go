@@ -76,6 +76,10 @@ func TestApplicationGoldenFile(t *testing.T) {
 			return nil, fmt.Errorf("failed preparing options for resource generation: %w", err)
 		}
 
+		// Set EffectiveImage on Input to mimic the status when generator is called
+		status := test.Input.GetStatus()
+		status.EffectiveImage = test.Input.Spec.Image
+
 		return gen.Generate(&test.Input, opts)
 	})
 }
@@ -119,6 +123,10 @@ func TestNaisjobGoldenFile(t *testing.T) {
 		if err != nil {
 			return nil, fmt.Errorf("failed preparing options for resource generation: %w", err)
 		}
+
+		// Set EffectiveImage on Input to mimic the status when generator is called
+		status := test.Input.GetStatus()
+		status.EffectiveImage = test.Input.Spec.Image
 
 		return gen.Generate(&test.Input, opts)
 	})
