@@ -36,6 +36,11 @@ func getExternalImage(ctx context.Context, source ImageSource, kube client.Clien
 }
 
 func imageHasChanged(wantedImage string, source ImageSource) bool {
+	// Avoid resync if effective image is not set, and image is set on spec, as that will be the case for every app on first sync of this feature
+	// Remove once a majority of apps have effective image set
+	if len(source.GetEffectiveImage()) == 0 && len(source.GetImage()) > 0 {
+		return false
+	}
 	return wantedImage != source.GetEffectiveImage()
 }
 
