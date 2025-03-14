@@ -72,12 +72,12 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
-	redisEnabled, err := Redis(ast, config, source, &aivenApp)
+	valkeyEnabled, err := Valkey(ast, config, source, &aivenApp)
 	if err != nil {
 		return err
 	}
 
-	valkeyEnabled, err := Valkey(ast, config, source, &aivenApp)
+	redisEnabled, err := Redis(ast, config, source, &aivenApp)
 	if err != nil {
 		return err
 	}
