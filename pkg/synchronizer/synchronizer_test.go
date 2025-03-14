@@ -162,9 +162,9 @@ func TestSynchronizer(t *testing.T) {
 	cfg := config.Config{
 		AivenGeneration: 0,
 		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 2 * time.Hour,
+			SynchronizationTimeout: 2 * time.Second,
 			RolloutCheckInterval:   5 * time.Second,
-			RolloutTimeout:         20 * time.Hour,
+			RolloutTimeout:         20 * time.Second,
 		},
 		GoogleProjectId:                   "1337",
 		GoogleCloudSQLProxyContainerImage: config.GoogleCloudSQLProxyContainerImage,
@@ -182,7 +182,7 @@ func TestSynchronizer(t *testing.T) {
 	defer rig.kubernetes.Stop()
 
 	// Allow no more than 15 seconds for these tests to run
-	ctx, cancel := context.WithTimeout(context.Background(), time.Hour*15)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 
 	// Check that listing all resources work.
