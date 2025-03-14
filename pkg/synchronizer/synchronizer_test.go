@@ -480,7 +480,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	app.Spec.GCP = &nais_io_v1.GCP{
 		SqlInstances: []nais_io_v1.CloudSqlInstance{
 			{
-				Type: nais_io_v1.CloudSqlInstanceTypePostgres11,
+				Type: nais_io_v1.CloudSqlInstanceTypePostgres17,
 				Tier: "db-f1-micro",
 				Databases: []nais_io_v1.CloudSqlDatabase{
 					{
