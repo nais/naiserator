@@ -346,7 +346,7 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg 
 
 	container := corev1.Container{
 		Name:            naisjob.Name,
-		Image:           naisjob.Spec.Image,
+		Image:           naisjob.GetEffectiveImage(),
 		Command:         naisjob.Spec.Command,
 		Resources:       ResourceLimits(*naisjob.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,
