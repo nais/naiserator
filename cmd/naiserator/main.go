@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrl_log "sigs.k8s.io/controller-runtime/pkg/log"
 	kubemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
@@ -122,6 +123,7 @@ func run() error {
 
 	metrics.Register(kubemetrics.Registry)
 	logSink := &logrus2logr.Logrus2Logr{Logger: log.StandardLogger()}
+	ctrl_log.SetLogger(logr.New(logSink))
 	mgr, err := ctrl.NewManager(kconfig, ctrl.Options{
 		Cache: cache.Options{
 			SyncPeriod: &cfg.Informer.FullSyncInterval,
