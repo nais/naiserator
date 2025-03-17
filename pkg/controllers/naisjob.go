@@ -5,6 +5,7 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 )
 
 type NaisjobReconciler struct {
@@ -28,6 +29,7 @@ func (r *NaisjobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1.Naisjob{}).
+		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
 		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }
