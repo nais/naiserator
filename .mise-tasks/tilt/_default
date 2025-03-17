@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Launch tilt for local development, confined to selected context"
+#MISE depends_post=["tilt:cleanup"]
 #USAGE flag "-p --product <product>" help="The product used to launch local kubernetes" default="kind" { choices "kind" "minikube" "docker-desktop" "k3d" }
 #USAGE flag "-n --namespace <namespace>" help="The namespace to use" default="default"
 

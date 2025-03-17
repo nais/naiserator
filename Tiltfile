@@ -77,6 +77,16 @@ local_resource(
                    "naiserator-kubeconfig"],
     ignore=ignore_rules(),
     serve_dir=naiserator_dir,
-    auto_init=False,
-    trigger_mode=TRIGGER_MODE_MANUAL,
 )
+
+
+config.set_enabled_resources([
+    "aiven",
+    "aiven-operator-crds",
+    "prometheus",
+    "prometheus-operator-crds",
+    "liberator-chart",
+    "nais-crds",
+    "naiserator-config",
+    "naiserator-kubeconfig",
+])
