@@ -3,8 +3,10 @@ package controllers
 import (
 	"context"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 )
 
 type ApplicationReconciler struct {
@@ -28,6 +30,7 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1alpha1.Application{}).
+		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
 		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }
