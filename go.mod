@@ -14,7 +14,7 @@ require (
 	github.com/magiconair/properties v1.8.9
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nais/liberator v0.0.0-20250314120052-1cb863cb99a7
+	github.com/nais/liberator v0.0.0-20250318133902-16463bfb012c
 	github.com/novln/docker-parser v1.0.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.74.0
 	github.com/prometheus/client_golang v1.21.0
@@ -94,7 +94,7 @@ require (
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/vektra/mockery/v2 v2.53.1 // indirect
+	github.com/vektra/mockery/v2 v2.53.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
