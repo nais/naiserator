@@ -4,13 +4,22 @@
   inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  outputs = inputs: inputs.flake-utils.lib.eachSystem
-      [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ]
+  outputs =
+    inputs:
+    inputs.flake-utils.lib.eachSystem
+      [
+        "x86_64-linux"
+        "x86_64-darwin"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ]
       (
         system:
         let
           pkgs = import inputs.nixpkgs {
-            localSystem = { inherit system; };
+            localSystem = {
+              inherit system;
+            };
             overlays = [
               (
                 final: prev:
