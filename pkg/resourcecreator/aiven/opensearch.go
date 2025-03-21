@@ -18,10 +18,16 @@ func OpenSearch(ast *resource.Ast, openSearch *nais_io_v1.OpenSearch, aivenApp *
 		return false, fmt.Errorf("OpenSearch enabled, but no instance specified")
 	}
 
-	addOpenSearchEnvVariables(ast, aivenApp.Spec.SecretName)
+	secretName, err := generateAivenSecretName(aivenApp.Name, "opensearch", aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"])
+	if err != nil {
+		return false, err
+	}
+
+	addOpenSearchEnvVariables(ast, secretName)
 	aivenApp.Spec.OpenSearch = &aiven_nais_io_v1.OpenSearchSpec{
-		Instance: fmt.Sprintf("opensearch-%s-%s", aivenApp.GetNamespace(), openSearch.Instance),
-		Access:   openSearch.Access,
+		Instance:   fmt.Sprintf("opensearch-%s-%s", aivenApp.GetNamespace(), openSearch.Instance),
+		Access:     openSearch.Access,
+		SecretName: secretName,
 	}
 	ast.Labels["aiven"] = "enabled"
 
