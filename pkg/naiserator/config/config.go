@@ -58,7 +58,6 @@ type Features struct {
 	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
-	LegacyGCP                   bool     `json:"legacy-gcp"`
 	Linkerd                     bool     `json:"linkerd"`
 	Maskinporten                bool     `json:"maskinporten"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
@@ -214,7 +213,6 @@ const (
 	FeaturesVault                                 = "features.vault"
 	FeaturesWebhook                               = "features.webhook"
 	FeaturesWonderwall                            = "features.wonderwall"
-	FeaturesLegacyGCP                             = "features.legacy-gcp"
 	FQDNPolicyEnabled                             = "fqdn-policy.enabled"
 	GoogleCloudSQLProxyContainerImage             = "google-cloud-sql-proxy-container-image"
 	GoogleProjectId                               = "google-project-id"
@@ -311,7 +309,6 @@ func init() {
 	flag.Bool(FeaturesMaskinporten, false, "enable creation of Maskinporten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
-	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
 	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FeaturesTexas, false, "enable token exchange as a sidecar/service")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")

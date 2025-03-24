@@ -4,7 +4,6 @@ config:
   features:
     linkerd: true
     network-policy: true
-    legacy-gcp: true
   google-project-id: google-project-id
   cluster-name: mycluster
   nais-namespace: nais-system
