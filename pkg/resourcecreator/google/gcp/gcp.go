@@ -27,17 +27,17 @@ type Source interface {
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
 	gcp := source.GetGCP()
-	projectID := cfg.GetGoogleProjectID()
-	teamProjectID := cfg.GetGoogleTeamProjectID()
 
-	if gcp != nil && len(teamProjectID) == 0 {
-		// We're not currently in a team namespace with corresponding GCP team project
-		return fmt.Errorf("GCP resources requested, but no team project ID annotation set on namespace %s (not running on GCP?)", source.GetNamespace())
-	}
-
-	if !cfg.IsCNRMEnabled() && len(projectID) == 0 {
+	if !cfg.IsCNRMEnabled() && gcp == nil {
 		return nil
 	}
+
+	if !cfg.IsCNRMEnabled() && gcp != nil {
+		return fmt.Errorf("GCP resources requested, but CNRM is not enabled (not running on GCP?)")
+	}
+
+	projectID := cfg.GetGoogleProjectID()
+	teamProjectID := cfg.GetGoogleTeamProjectID()
 
 	googleServiceAccount := google_iam.CreateServiceAccount(source, projectID)
 	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, projectID)
