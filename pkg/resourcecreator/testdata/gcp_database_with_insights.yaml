@@ -221,6 +221,7 @@ tests:
                         value: team-project-id
                       - name: GCP_TEAM_PROJECT_ID
                         value: team-project-id
+                initContainers:
                   - name: cloudsql-proxy
                     command:
                       - /cloud-sql-proxy
@@ -234,6 +235,7 @@ tests:
                         protocol: TCP
                     resources: {}
                     imagePullPolicy: IfNotPresent
+                    restartPolicy: Always
                     securityContext:
                       allowPrivilegeEscalation: false
                       runAsUser: 2
