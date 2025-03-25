@@ -28,6 +28,7 @@ type Source interface {
 
 type Config interface {
 	IsTexasEnabled() bool
+	IsGCPEnabled() bool
 	GetTexasOptions() config.Texas
 	GetObservability() config.Observability
 	GetClusterName() string
@@ -172,7 +173,7 @@ func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container,
 
 	// If GCP is unconfigured, it means we are running on-premises, and we need the web proxy config.
 	// Note that we need the web proxy regardless of whether the app has requested one, so we don't care about `.spec.webProxy`.
-	if len(cfg.GetGoogleProjectID()) == 0 {
+	if cfg.IsGCPEnabled() {
 		proxyEnvs, err := proxyopts.EnvironmentVariables(cfg)
 		if err != nil {
 			return nil, fmt.Errorf("generate texas webproxy environment variables: %w", err)
