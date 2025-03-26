@@ -29,7 +29,6 @@ type Config interface {
 	GetGoogleProjectID() string
 	GetNaisNamespace() string
 	IsNetworkPolicyEnabled() bool
-	IsLegacyGCP() bool
 }
 
 func baseNetworkPolicy(source Source) *networkingv1.NetworkPolicy {
@@ -45,13 +44,6 @@ func baseNetworkPolicy(source Source) *networkingv1.NetworkPolicy {
 func Create(source Source, ast *resource.Ast, cfg Config) {
 	if !cfg.IsNetworkPolicyEnabled() {
 		return
-	}
-
-	if cfg.IsLegacyGCP() {
-		np := baseNetworkPolicy(source)
-		np.Spec = legacyNetpolSpec(source.GetName(), cfg.GetClusterName())
-		np.SetName(source.GetName() + "-legacy")
-		ast.AppendOperation(resource.OperationCreateOrUpdate, np)
 	}
 
 	np := baseNetworkPolicy(source)
@@ -220,32 +212,6 @@ func defaultIngressRules(cfg Config) []networkingv1.NetworkPolicyIngressRule {
 					NamespaceSelector: labelSelector("kubernetes.io/metadata.name", cfg.GetNaisNamespace()),
 					PodSelector:       labelSelector("app.kubernetes.io/name", "prometheus"),
 				},
-			},
-		},
-	}
-}
-
-func legacyNetpolSpec(appName string, clusterName string) networkingv1.NetworkPolicySpec {
-	return networkingv1.NetworkPolicySpec{
-		PodSelector: *labelSelector("app", appName),
-		PolicyTypes: []networkingv1.PolicyType{
-			networkingv1.PolicyTypeIngress,
-			networkingv1.PolicyTypeEgress,
-		},
-		Ingress: []networkingv1.NetworkPolicyIngressRule{
-			{
-				From: []networkingv1.NetworkPolicyPeer{
-					{
-						NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-					},
-				},
-			},
-		},
-		Egress: []networkingv1.NetworkPolicyEgressRule{
-			{
-				To: []networkingv1.NetworkPolicyPeer{{
-					NamespaceSelector: labelSelector("linkerd.io/is-control-plane", "true"),
-				}},
 			},
 		},
 	}

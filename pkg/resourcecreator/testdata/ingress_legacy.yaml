@@ -3,7 +3,6 @@ testconfig:
 config:
   features:
     linkerd: true
-    legacy-gcp: true
   gateway-mappings:
     - domainSuffix: .intern.nav.no
       ingressClass: nais-ingress
