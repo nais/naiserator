@@ -21,7 +21,7 @@ input:
               users:
                 - name: user-two
                 - name: user-three3
-          type: POSTGRES_12
+          type: POSTGRES_17
           name: myinstance
           tier: db-f1-micro
 existing:
@@ -47,7 +47,7 @@ tests:
             name: myInstance
             namespace: mynamespace
           spec:
-            databaseVersion: POSTGRES_12
+            databaseVersion: POSTGRES_17
             region: europe-north1
             settings:
               availabilityType: ZONAL

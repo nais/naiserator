@@ -26,7 +26,7 @@ input:
       sqlInstances:
         - databases:
             - name: mydb
-          type: POSTGRES_11
+          type: POSTGRES_17
           tier: db-f1-micro
           flags:
             - name: max_connections

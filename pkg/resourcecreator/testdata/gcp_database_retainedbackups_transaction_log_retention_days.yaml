@@ -18,7 +18,7 @@ input:
       sqlInstances:
         - databases:
             - name: mydb
-          type: POSTGRES_11
+          type: POSTGRES_17
           retainedBackups: 3
           # transactionLogRetentionDays <= retainedBackups
           transactionLogRetentionDays: 3

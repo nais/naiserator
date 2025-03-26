@@ -23,6 +23,7 @@ rules:
       - 'iampolicymembers'
       - 'iamserviceaccounts'
       - 'idportenclients'
+      - 'images'
       - 'ingresses'
       - 'jobs'
       - 'jwkers'

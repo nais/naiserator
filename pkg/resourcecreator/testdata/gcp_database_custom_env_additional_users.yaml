@@ -21,7 +21,7 @@ input:
               users:
                 - name: user-two
               envVarPrefix: "PWNED"
-          type: POSTGRES_11
+          type: POSTGRES_17
           tier: db-f1-micro
 existing:
   - kind: Namespace

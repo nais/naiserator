@@ -20,7 +20,7 @@ input:
       sqlInstances:
         - databases:
             - name: mydb
-          type: POSTGRES_11
+          type: POSTGRES_17
           diskSize: 20
           tier: db-f1-micro
 existing:

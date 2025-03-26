@@ -37,10 +37,20 @@ type Config interface {
 	GetAivenGeneration() int
 }
 
+// TODO: Remove once all aiven secrets are per service
 func generateSharedAivenSecretName(name string, generation int) (string, error) {
 	prefixedName := fmt.Sprintf("aiven-%s", name)
 	year, week := time.Now().ISOWeek()
 	suffix := fmt.Sprintf("%d-%d-%d", year, week, generation%10)
+	maxLen := validation.DNS1035LabelMaxLength
+
+	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
+}
+
+func generateAivenSecretName(name, service, generation string) (string, error) {
+	prefixedName := fmt.Sprintf("aiven-%s-%s", service, name)
+	year, week := time.Now().ISOWeek()
+	suffix := fmt.Sprintf("%d-%d-%s", year, week, generation)
 	maxLen := validation.DNS1035LabelMaxLength
 
 	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
@@ -72,12 +82,12 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
-	redisEnabled, err := Redis(ast, config, source, &aivenApp)
+	valkeyEnabled, err := Valkey(ast, config, source, &aivenApp)
 	if err != nil {
 		return err
 	}
 
-	valkeyEnabled, err := Valkey(ast, config, source, &aivenApp)
+	redisEnabled, err := Redis(ast, config, source, &aivenApp)
 	if err != nil {
 		return err
 	}

@@ -2,44 +2,60 @@
   description = "naiserator";
 
   inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
+  inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  outputs = { nixpkgs, ... }:
-    let
-      goOverlay = final: prev: {
-        go = prev.go.overrideAttrs (old: {
-          version = "1.23.0";
-          src = prev.fetchurl {
-            url = "https://go.dev/dl/go1.23.0.src.tar.gz";
-            hash = "sha256-Qreo6A2AXaoDAi7T/eQyHUw78smQoUQWXQHu7Nb2mcY=";
-          };
-        });
-      };
-      withSystem = nixpkgs.lib.genAttrs [
+  outputs =
+    inputs:
+    inputs.flake-utils.lib.eachSystem
+      [
         "x86_64-linux"
         "x86_64-darwin"
         "aarch64-linux"
         "aarch64-darwin"
-      ];
-      withPkgs = callback:
-        withSystem (system:
-          callback (import nixpkgs {
-            inherit system;
-            overlays = [ goOverlay ];
-          }));
-    in {
-      devShells = withPkgs (pkgs: {
-        default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            go
-            gopls
-            gotools
-            go-tools
-            gnumake
-            gofumpt
-          ];
-        };
-      });
+      ]
+      (
+        system:
+        let
+          pkgs = import inputs.nixpkgs {
+            localSystem = {
+              inherit system;
+            };
+            overlays = [
+              (
+                final: prev:
+                let
+                  version = "1.23.0";
+                  newerGoVersion = prev.go.overrideAttrs (old: {
+                    inherit version;
+                    src = prev.fetchurl {
+                      url = "https://go.dev/dl/go${version}.src.tar.gz";
+                      hash = "sha256-Qreo6A2AXaoDAi7T/eQyHUw78smQoUQWXQHu7Nb2mcY=";
+                    };
+                  });
+                  nixpkgsVersion = prev.go.version;
+                  newVersionNotInNixpkgs = -1 == builtins.compareVersions nixpkgsVersion version;
+                in
+                {
+                  go = if newVersionNotInNixpkgs then newerGoVersion else prev.go;
+                  buildGoModule = prev.buildGoModule.override { go = final.go; };
+                }
+              )
+            ];
+          };
+        in
+        {
+          devShells.default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              go
+              gopls
+              gotools
+              go-tools
+              gnumake
+              gofumpt
+            ];
+          };
 
-      formatter = withPkgs (pkgs: pkgs.nixfmt-rfc-style);
-    };
+          formatter = pkgs.nixfmt-rfc-style;
+        }
+      );
 }
