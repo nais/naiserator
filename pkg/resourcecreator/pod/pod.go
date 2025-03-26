@@ -57,6 +57,7 @@ type Config interface {
 	GetGoogleProjectID() string
 	GetHostAliases() []config.HostAlias
 	GetImagePullSecrets() []string
+	IsGCPEnabled() bool
 	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsGARTolerationEnabled() bool
@@ -399,7 +400,7 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = app.GetName()
 
-	if len(cfg.GetGoogleProjectID()) > 0 {
+	if cfg.IsGCPEnabled() {
 		objectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "true"
 	}
 
