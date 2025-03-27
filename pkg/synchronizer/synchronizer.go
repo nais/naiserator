@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -305,6 +306,11 @@ func (n *Synchronizer) cleanUpAfterAppDeletion(ctx context.Context, app resource
 			return err
 		}
 
+		err = n.deleteImageResource(ctx, app)
+		if err != nil {
+			return err
+		}
+
 		controllerutil.RemoveFinalizer(app, NaiseratorFinalizer)
 		err = n.Update(ctx, app)
 		if err != nil {
@@ -365,6 +371,32 @@ func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Sou
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// deleteImageResource cleans up any lingering Image resource related to the workload
+func (n *Synchronizer) deleteImageResource(ctx context.Context, src resource.Source) error {
+	key := client.ObjectKey{
+		Name:      src.GetName(),
+		Namespace: src.GetNamespace(),
+	}
+	image := &nais_io_v1.Image{}
+	err := n.Get(ctx, key, image)
+	if err != nil {
+		if k8s_errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	err = n.Delete(ctx, image)
+	if err != nil {
+		if k8s_errors.IsNotFound(err) {
+			return nil
+		}
+		return err
 	}
 
 	return nil
