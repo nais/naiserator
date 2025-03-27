@@ -86,11 +86,6 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 		}
 	}
 
-	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
-	if g.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
-		o.Linkerd = true
-	}
-
 	o.Team = job.GetNamespace()
 
 	return o, nil

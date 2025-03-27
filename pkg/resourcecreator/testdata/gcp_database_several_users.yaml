@@ -2,7 +2,6 @@ testconfig:
   description: additional cloudsql databases and users
 config:
   features:
-    linkerd: true
     cnrm: true
   google-project-id: google-project-id
 input:

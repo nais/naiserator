@@ -17,7 +17,6 @@ type Options struct {
 	GoogleProjectID     string
 	GoogleTeamProjectID string
 	Image               string
-	Linkerd             bool
 	NumReplicas         int32
 	Team                string
 	SqlInstance         SqlInstance
@@ -33,11 +32,6 @@ func (o *Options) SqlInstanceExists() bool {
 
 func (o *Options) SqlInstanceHasPrivateIpInSharedVpc() bool {
 	return o.SqlInstance.hasPrivateIpInSharedVpc
-}
-
-func (o *Options) IsLinkerdEnabled() bool {
-	// not o.Config.Features - this flag is detected in Prepare()
-	return o.Linkerd
 }
 
 func (o *Options) GetAPIServerIP() string {
@@ -58,10 +52,6 @@ func (o *Options) GetGatewayMappings() []config.GatewayMapping {
 
 func (o *Options) IsNetworkPolicyEnabled() bool {
 	return o.Config.Features.NetworkPolicy
-}
-
-func (o *Options) IsLegacyGCP() bool {
-	return o.Config.Features.LegacyGCP
 }
 
 func (o *Options) IsCNRMEnabled() bool {

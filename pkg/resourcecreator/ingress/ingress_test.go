@@ -23,7 +23,6 @@ func TestIngress(t *testing.T) {
 			assert.NoError(t, err)
 
 			opts := &generators.Options{}
-			opts.Config.Features.Linkerd = false
 			err = ingress.Create(app, ast, opts)
 
 			assert.NotNil(t, err)
@@ -40,7 +39,6 @@ func TestIngress(t *testing.T) {
 			assert.NoError(t, err)
 
 			opts := &generators.Options{}
-			opts.Linkerd = true
 			opts.Config.GatewayMappings = []config.GatewayMapping{
 				{
 					DomainSuffix: ".bar",

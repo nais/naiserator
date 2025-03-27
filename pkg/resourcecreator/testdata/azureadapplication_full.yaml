@@ -2,7 +2,6 @@ testconfig:
   description: azure application with access policies
 config:
   features:
-    linkerd: true
     azurerator: true
   google-project-id: google-project-id
   cluster-name: mycluster

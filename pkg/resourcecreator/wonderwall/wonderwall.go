@@ -247,7 +247,7 @@ func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
 		},
 		{
 			Name:  "WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD",
-			Value: "7s", // should be less than linkerd's sleep (10s) and greater than application's sleep (5s)
+			Value: "7s", // should be greater than application's sleep (5s)
 		},
 	}
 
