@@ -2,11 +2,9 @@ package test
 
 import (
 	"os"
-	"strings"
 	"testing"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	v1 "k8s.io/api/core/v1"
 )
 
 func EnvWrapper(envVars map[string]string, testFunc func(t *testing.T)) func(t *testing.T) {
@@ -26,18 +24,8 @@ func EnvWrapper(envVars map[string]string, testFunc func(t *testing.T)) func(t *
 			} else {
 				os.Unsetenv(k)
 			}
-
 		}
 	}
-}
-
-func NamedResource(resources []runtime.Object, kind string) runtime.Object {
-	for _, r := range resources {
-		if strings.EqualFold(r.GetObjectKind().GroupVersionKind().Kind, kind) {
-			return r
-		}
-	}
-	panic("no matching resource kind found")
 }
 
 func EnvValue(envVars []v1.EnvVar, key string) string {
@@ -63,16 +51,6 @@ func GetVolumeMountByName(volumeMounts []v1.VolumeMount, name string) *v1.Volume
 	for _, v := range volumeMounts {
 		if v.Name == name {
 			return &v
-		}
-	}
-
-	return nil
-}
-
-func GetContainerByName(containers []v1.Container, name string) *v1.Container {
-	for i, v := range containers {
-		if v.Name == name {
-			return &containers[i]
 		}
 	}
 

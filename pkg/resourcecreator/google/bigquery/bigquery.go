@@ -13,7 +13,7 @@ import (
 	"github.com/nais/naiserator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type Source interface {
@@ -67,7 +67,7 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.
 			Role:   "roles/bigquery.jobUser",
 			ResourceRef: google_iam_crd.ResourceRef{
 				Kind: "Project",
-				Name: pointer.StringPtr(""),
+				Name: ptr.To(""),
 			},
 		},
 	}

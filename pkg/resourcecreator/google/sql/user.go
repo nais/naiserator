@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -34,7 +33,7 @@ const (
 type GoogleSqlUser struct {
 	Username string
 	AppName  string
-	DB       *nais.CloudSqlDatabase
+	DB       *nais_io_v1.CloudSqlDatabase
 	Instance *googlesqlcrd.SQLInstance
 }
 
@@ -101,17 +100,6 @@ func (in GoogleSqlUser) createSqlUserDBResources(objectMeta metav1.ObjectMeta, a
 
 	ast.AppendOperation(resource.AnnotateIfExists, googleSqlUser)
 	ast.AppendOperation(resource.OperationCreateIfNotExists, googleSqlUser)
-}
-
-func (in GoogleSqlUser) filterDefaultUserKey(key string, suffix string) string {
-	if in.prefixIsSet() && in.isDefault() {
-		prefix := in.googleSqlUserPrefix()
-		noPrefixSubstring := strings.TrimPrefix(key, prefix)
-		if noPrefixSubstring == suffix {
-			return key
-		}
-	}
-	return ""
 }
 
 func (in GoogleSqlUser) sqlUserEnvPrefix() string {

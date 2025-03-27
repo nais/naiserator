@@ -243,7 +243,7 @@ func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
 		},
 		{
 			Name:  "WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD",
-			Value: fmt.Sprintf("%s", time.Duration(terminationGracePeriodSeconds)*time.Second),
+			Value: (time.Duration(terminationGracePeriodSeconds) * time.Second).String(),
 		},
 		{
 			Name:  "WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD",
