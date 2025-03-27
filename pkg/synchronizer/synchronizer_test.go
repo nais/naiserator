@@ -317,6 +317,7 @@ func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nai
 	objectKey := client.ObjectKey{Name: app.Name, Namespace: app.Namespace}
 	persistedApp := &nais_io_v1alpha1.Application{}
 	err = rig.client.Get(ctx, objectKey, persistedApp)
+	assert.NoError(t, err)
 	assert.Len(t, persistedApp.ObjectMeta.Finalizers, 1, "After the first reconcile only finalizer is set")
 
 	// We need to run another reconcile after finalizer is set

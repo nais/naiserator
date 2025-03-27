@@ -113,11 +113,6 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 		}
 	}
 
-	// Create Linkerd resources only if feature is enabled and namespace is Linkerd-enabled
-	if g.Config.Features.Linkerd && namespace.Annotations["linkerd.io/inject"] == "enabled" {
-		o.Linkerd = true
-	}
-
 	o.Team = app.GetNamespace()
 
 	return o, nil

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -165,7 +164,7 @@ func yamlRunner(t *testing.T, filename string, resources resource.Operations, te
 
 func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCallback) {
 	fixture := fileReader(path)
-	data, err := ioutil.ReadAll(fixture)
+	data, err := io.ReadAll(fixture)
 	if err != nil {
 		t.Errorf("unable to read test data: %s", err)
 		t.Fail()
@@ -199,7 +198,7 @@ func yamlSubTest(t *testing.T, path string, createOperations CreateOperationsCal
 type CreateOperationsCallback func([]byte, generators.Options, config.Config) (resource.Operations, error)
 
 func Run(t *testing.T, testDataDirectory string, createOperations CreateOperationsCallback) {
-	files, err := ioutil.ReadDir(testDataDirectory)
+	files, err := os.ReadDir(testDataDirectory)
 	if err != nil {
 		t.Error(err)
 		t.Fail()

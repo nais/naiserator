@@ -2,7 +2,6 @@ testconfig:
   description: egress rules will create network policies
 config:
   features:
-    linkerd: true
     network-policy: true
     jwker: true
   google-project-id: google-project-id

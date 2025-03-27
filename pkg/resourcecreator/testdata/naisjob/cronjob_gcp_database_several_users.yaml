@@ -3,7 +3,6 @@ testconfig:
 config:
   features:
     cnrm: true
-    linkerd: true
   google-project-id: google-project-id
 existing:
   - kind: Namespace
