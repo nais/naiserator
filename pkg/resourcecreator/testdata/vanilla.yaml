@@ -3,6 +3,8 @@ testconfig:
 config:
   features:
     network-policy: true
+    gcp: true
+    cnrm: true
   nais-namespace: nais-system
   aiven-range: 1.2.3.4/32
   google-project-id: google-project-id

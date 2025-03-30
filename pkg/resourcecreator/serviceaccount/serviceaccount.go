@@ -9,13 +9,14 @@ import (
 
 type Config interface {
 	GetGoogleProjectID() string
+	IsGCPEnabled() bool
 }
 
-func Create(source resource.Source, ast *resource.Ast, config Config) {
+func Create(source resource.Source, ast *resource.Ast, cfg Config) {
 	objectMeta := resource.CreateObjectMeta(source)
 
-	googleProjectID := config.GetGoogleProjectID()
-	if len(googleProjectID) > 0 {
+	if cfg.IsGCPEnabled() {
+		googleProjectID := cfg.GetGoogleProjectID()
 		objectMeta.Annotations["iam.gke.io/gcp-service-account"] = google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectID)
 	}
 
