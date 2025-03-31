@@ -30,7 +30,7 @@ const (
 type EnvSource interface {
 	resource.Source
 	GetEnv() nais_io_v1.EnvVars
-	GetImage() string
+	GetEffectiveImage() string
 }
 
 type Source interface {
@@ -39,7 +39,7 @@ type Source interface {
 	GetEnv() nais_io_v1.EnvVars
 	GetEnvFrom() []nais_io_v1.EnvFrom
 	GetFilesFrom() []nais_io_v1.FilesFrom
-	GetImage() string
+	GetEffectiveImage() string
 	GetLiveness() *nais_io_v1.Probe
 	GetLogformat() string
 	GetLogtransform() string
@@ -269,7 +269,7 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 }
 
 func CreateContainerEnvVars(app EnvSource, ast *resource.Ast, cfg Config) {
-	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetImage())...)
+	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetEffectiveImage())...)
 	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
 	if !cfg.IsLinkerdEnabled() {
 		disableLinkerd := corev1.EnvVar{Name: "LINKERD_DISABLED", Value: "true"}
@@ -308,7 +308,7 @@ func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
 
 	container := corev1.Container{
 		Name:            app.GetName(),
-		Image:           app.GetImage(),
+		Image:           app.GetEffectiveImage(),
 		Ports:           containerPorts,
 		Command:         app.GetCommand(),
 		Resources:       ResourceLimits(*app.GetResources()),
@@ -346,7 +346,7 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg 
 
 	container := corev1.Container{
 		Name:            naisjob.Name,
-		Image:           naisjob.Spec.Image,
+		Image:           naisjob.GetEffectiveImage(),
 		Command:         naisjob.Spec.Command,
 		Resources:       ResourceLimits(*naisjob.Spec.Resources),
 		ImagePullPolicy: corev1.PullIfNotPresent,

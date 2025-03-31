@@ -8,10 +8,11 @@ import (
 	"sync"
 	"time"
 
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8s_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -105,7 +106,7 @@ func (n *Synchronizer) reportEvent(ctx context.Context, reportedEvent *corev1.Ev
 	err = n.simpleClient.List(ctx, events, &client.ListOptions{
 		FieldSelector: selector,
 	})
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !k8s_errors.IsNotFound(err) {
 		return nil, fmt.Errorf("get events for app '%s': %s", reportedEvent.InvolvedObject.Name, err)
 	}
 
@@ -305,6 +306,11 @@ func (n *Synchronizer) cleanUpAfterAppDeletion(ctx context.Context, app resource
 			return err
 		}
 
+		err = n.deleteImageResource(ctx, app)
+		if err != nil {
+			return err
+		}
+
 		controllerutil.RemoveFinalizer(app, NaiseratorFinalizer)
 		err = n.Update(ctx, app)
 		if err != nil {
@@ -370,6 +376,32 @@ func (n *Synchronizer) deleteCNRMResources(ctx context.Context, app resource.Sou
 	return nil
 }
 
+// deleteImageResource cleans up any lingering Image resource related to the workload
+func (n *Synchronizer) deleteImageResource(ctx context.Context, src resource.Source) error {
+	key := client.ObjectKey{
+		Name:      src.GetName(),
+		Namespace: src.GetNamespace(),
+	}
+	image := &nais_io_v1.Image{}
+	err := n.Get(ctx, key, image)
+	if err != nil {
+		if k8s_errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	err = n.Delete(ctx, image)
+	if err != nil {
+		if k8s_errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
 // Unreferenced return all resources in cluster which was created by synchronizer previously, but is not included in the current rollout.
 func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]runtime.Object, error) {
 	// Return true if a cluster resource also is applied with the rollout.
@@ -417,10 +449,10 @@ func (n *Synchronizer) rolloutWithRetryAndMetrics(commits []commit) (bool, error
 		if err := observeDuration(commit.fn); err != nil {
 			retry := false
 			// In case of race condition errors
-			if errors.IsConflict(err) {
+			if k8s_errors.IsConflict(err) {
 				retry = true
 			}
-			reason := errors.ReasonForError(err)
+			reason := k8s_errors.ReasonForError(err)
 			if reason == metav1.StatusReasonUnknown {
 				reason = "validation error"
 			}
@@ -456,10 +488,24 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 		return nil, fmt.Errorf("BUG: create application hash: %s", err)
 	}
 
+	readOnlyClient := readonly.NewClient(n.Client)
+
+	imageSource, ok := source.(ImageSource)
+	if !ok {
+		return nil, fmt.Errorf("BUG: the synchronizer only accepts objects that satisfy ImageSource interface")
+	}
+
+	wantedImage, err := getWantedImage(ctx, imageSource, readOnlyClient)
+	if err != nil {
+		return nil, fmt.Errorf("get wanted image: %w", err)
+	}
+
 	// Skip processing if application didn't change since last synchronization.
-	if source.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
+	if !imageHasChanged(wantedImage, imageSource) && source.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
 		return nil, nil
 	}
+
+	updateEffectiveImage(source, wantedImage)
 
 	err = ensureCorrelationID(source)
 	if err != nil {
@@ -468,7 +514,7 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 
 	// Prepare for rollout (i.e. use cluster information to generate a configuration object).
 	// For this operation, make sure that write operations are disabled.
-	opts, err := n.generator.Prepare(ctx, source, readonly.NewClient(n.Client))
+	opts, err := n.generator.Prepare(ctx, source, readOnlyClient)
 	if err != nil {
 		return nil, fmt.Errorf("preparing rollout configuration: %w", err)
 	}

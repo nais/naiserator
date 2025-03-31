@@ -16,7 +16,7 @@ import (
 type Source interface {
 	resource.Source
 	GetFrontend() *nais_io_v1.Frontend
-	GetImage() string
+	GetEffectiveImage() string
 }
 
 type Config interface {
@@ -38,7 +38,7 @@ export default {
 `
 
 func naisJs(source Source, telemetryURL string) string {
-	img := generator.ContainerImage(source.GetImage())
+	img := generator.ContainerImage(source.GetEffectiveImage())
 	return fmt.Sprintf(naisJsTemplate, telemetryURL, source.GetName(), img.GetTag())
 }
 

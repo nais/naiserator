@@ -1,0 +1,25 @@
+---
+apiVersion: nais.io/v1
+kind: Image
+metadata:
+  labels:
+    team: default
+  name: debug
+  namespace: default
+spec:
+  image: europe-north1-docker.pkg.dev/nais-io/nais/images/kafka-debug:2024-01-23-155445-7f24c4c
+#  image: europe-north1-docker.pkg.dev/nais-io/nais/images/kafka-debug:2025-01-22-132723-a7c7314
+---
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    team: default
+  name: debug
+  namespace: default
+spec:
+  replicas:
+    min: 1
+    max: 2
+#  image: europe-north1-docker.pkg.dev/nais-io/nais/images/kafka-debug:2024-01-23-155445-7f24c4c
+#  image: europe-north1-docker.pkg.dev/nais-io/nais/images/kafka-debug:2025-01-22-132723-a7c7314
