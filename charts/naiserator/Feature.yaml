@@ -5,7 +5,6 @@ dependencies:
 environmentKinds:
   - tenant
   - onprem
-  - legacy
 values:
   imageTag:
     displayName: Image tag
@@ -93,13 +92,6 @@ values:
     displayName: Enable Kafka for applications
     computed:
       template: '{{ne .Env.aiven_project ""}}'
-  naiserator.features.legacy-gcp:
-    description: Configure Naiserator to work with legacy GCP clusters (override mapping for migration)
-    displayName: Enable legacy GCP mode
-    computed:
-      template: '{{eq .Kind "legacy"}}'
-    config:
-      type: bool
   naiserator.features.nav-ca-bundle:
     displayName: Enable NAV CA bundle
     config:
@@ -215,34 +207,29 @@ values:
       type: string
     ignoreKind:
       - tenant
-      - legacy
   naiserator.proxy.exclude:
     config:
       type: string
     ignoreKind:
       - tenant
-      - legacy
   naiserator.vault.address:
     required: true
     config:
       type: string
     ignoreKind:
       - tenant
-      - legacy
   naiserator.vault.auth-path:
     required: true
     config:
       type: string
     ignoreKind:
       - tenant
-      - legacy
   naiserator.vault.kv-path:
     required: true
     config:
       type: string
     ignoreKind:
       - tenant
-      - legacy
   naiserator.image-pull-secrets:
     description: List of image pull secrets to use for pulling images
     config:
