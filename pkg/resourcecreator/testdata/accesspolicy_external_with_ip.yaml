@@ -1,10 +1,8 @@
 testconfig:
-  description: vanilla application running with linkerd, default configuration and network policies
+  description: vanilla application running, default configuration and network policies
 config:
   features:
-    linkerd: true
     network-policy: true
-    legacy-gcp: true
   google-project-id: google-project-id
   cluster-name: mycluster
   nais-namespace: nais-system

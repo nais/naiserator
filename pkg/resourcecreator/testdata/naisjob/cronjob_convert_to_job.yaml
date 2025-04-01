@@ -2,7 +2,6 @@ testconfig:
   description: existing naisjob with schedule removed should create job and delete cronjob
 config:
   features:
-    linkerd: true
     network-policy: true
     jwker: true
   google-project-id: google-project-id

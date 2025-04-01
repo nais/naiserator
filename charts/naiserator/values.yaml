@@ -37,8 +37,6 @@ naiserator:
     influx-credentials: false
     jwker: false
     kafkarator: false
-    legacy-gcp: false
-    linkerd: false
     maskinporten: false
     nav-ca-bundle: false
     network-policy: true

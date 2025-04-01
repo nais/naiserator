@@ -10,7 +10,7 @@ import (
 	"github.com/nais/liberator/pkg/namegen"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/accesspolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
@@ -124,7 +124,7 @@ func sidecar(source Source, ast *resource.Ast, config Config, azureApp *nais_io_
 	azureApp.Spec.LogoutUrl = util.AppendPathToIngress(ingresses[0], wonderwall.FrontChannelLogoutPath)
 
 	// ensure that singlePageApplication is _disabled_ if sidecar is enabled
-	azureApp.Spec.SinglePageApplication = pointer.Bool(false)
+	azureApp.Spec.SinglePageApplication = ptr.To(false)
 
 	s := source.GetAzure().GetSidecar()
 	return wonderwall.Create(source, ast, config, wonderwall.Configuration{

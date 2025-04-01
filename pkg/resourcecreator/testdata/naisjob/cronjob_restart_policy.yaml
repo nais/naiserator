@@ -1,7 +1,6 @@
 testconfig:
   description: Cronjob restart policy
 config:
-  linkerd: true
   google-project-id: google-project-id
   cluster-name: dev-localtest
 input:

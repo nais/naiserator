@@ -2,7 +2,6 @@ testconfig:
   description: existing job with schedule addded should create cronjob and delete job
 config:
   features:
-    linkerd: true
     network-policy: true
     jwker: true
   google-project-id: google-project-id

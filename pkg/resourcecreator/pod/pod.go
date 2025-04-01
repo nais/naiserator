@@ -57,7 +57,6 @@ type Config interface {
 	GetGoogleProjectID() string
 	GetHostAliases() []config.HostAlias
 	GetImagePullSecrets() []string
-	IsLinkerdEnabled() bool
 	IsPrometheusOperatorEnabled() bool
 	IsGARTolerationEnabled() bool
 }
@@ -271,10 +270,6 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 func CreateContainerEnvVars(app EnvSource, ast *resource.Ast, cfg Config) {
 	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetEffectiveImage())...)
 	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
-	if !cfg.IsLinkerdEnabled() {
-		disableLinkerd := corev1.EnvVar{Name: "LINKERD_DISABLED", Value: "true"}
-		ast.Env = append(ast.Env, disableLinkerd)
-	}
 }
 
 func CreateAppContainer(app Source, ast *resource.Ast, cfg Config) error {
@@ -417,10 +412,6 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 		objectMeta.Annotations["nais.io/logtransform"] = app.GetLogtransform()
 	}
 
-	if cfg.IsLinkerdEnabled() {
-		copyLinkerdAnnotations(app.GetAnnotations(), objectMeta.Annotations)
-	}
-
 	return objectMeta
 }
 
@@ -442,19 +433,7 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg
 		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
 	}
 
-	if cfg.IsLinkerdEnabled() {
-		copyLinkerdAnnotations(naisjob.Annotations, objectMeta.Annotations)
-	}
-
 	return objectMeta
-}
-
-func copyLinkerdAnnotations(src, dst map[string]string) {
-	for k, v := range src {
-		if strings.HasPrefix(k, "config.linkerd.io/") || strings.HasPrefix(k, "config.alpha.linkerd.io/") {
-			dst[k] = v
-		}
-	}
 }
 
 // The default PreStopHook will wait for five seconds before killing pods.
