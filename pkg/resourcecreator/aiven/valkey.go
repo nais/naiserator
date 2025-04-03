@@ -75,3 +75,15 @@ func addValkeyEnvVariables(ast *resource.Ast, secretName, instanceName string) {
 		makeOptionalSecretEnvVar(fmt.Sprintf("VALKEY_PORT_%s", suffix), secretName),
 	}...)
 }
+
+func addRedisEnvVariables(ast *resource.Ast, secretName, instanceName string) {
+	// Add environment variables for string data
+	suffix := envVarSuffix(instanceName)
+	ast.PrependEnv([]corev1.EnvVar{
+		makeSecretEnvVar(fmt.Sprintf("REDIS_USERNAME_%s", suffix), secretName),
+		makeSecretEnvVar(fmt.Sprintf("REDIS_PASSWORD_%s", suffix), secretName),
+		makeSecretEnvVar(fmt.Sprintf("REDIS_URI_%s", suffix), secretName),
+		makeOptionalSecretEnvVar(fmt.Sprintf("REDIS_HOST_%s", suffix), secretName),
+		makeOptionalSecretEnvVar(fmt.Sprintf("REDIS_PORT_%s", suffix), secretName),
+	}...)
+}

@@ -30,7 +30,6 @@ rules:
       - 'namespaces'
       - 'networkpolicies'
       - 'opensearches'
-      - 'redis'
       - 'rolebindings'
       - 'roles'
       - 'secrets'

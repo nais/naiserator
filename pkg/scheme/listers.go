@@ -73,7 +73,6 @@ func GCPListers() []client.ObjectList {
 // AivenListers returns resources that exist only in a Aiven supported clusters
 func AivenListers() []client.ObjectList {
 	return []client.ObjectList{
-		&aiven_io_v1alpha1.RedisList{},
 		&aiven_io_v1alpha1.ValkeyList{},
 		&aiven_io_v1alpha1.OpenSearchList{},
 	}
