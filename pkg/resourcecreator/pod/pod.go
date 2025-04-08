@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"strconv"
 	"strings"
@@ -377,16 +378,10 @@ func defaultEnvVars(source resource.Source, clusterName, appImage string) []core
 	}
 }
 
-func mapMerge(dst, src map[string]string) {
-	for k, v := range src {
-		dst[k] = v
-	}
-}
-
 func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(app)
 	objectMeta.Annotations = ast.Annotations
-	mapMerge(objectMeta.Labels, ast.Labels)
+	maps.Copy(objectMeta.Labels, ast.Labels)
 
 	port := app.GetPrometheus().Port
 	if len(port) == 0 {
@@ -419,7 +414,7 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) metav1.ObjectMeta {
 	objectMeta := resource.CreateObjectMeta(naisjob)
 	objectMeta.Annotations = ast.Annotations
-	mapMerge(objectMeta.Labels, ast.Labels)
+	maps.Copy(objectMeta.Labels, ast.Labels)
 
 	objectMeta.Annotations["kubectl.kubernetes.io/default-container"] = naisjob.GetName()
 
