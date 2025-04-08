@@ -1,6 +1,6 @@
 module github.com/nais/naiserator
 
-go 1.23.6
+go 1.24
 
 require (
 	github.com/Shopify/sarama v1.38.1
