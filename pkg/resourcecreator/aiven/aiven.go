@@ -2,6 +2,7 @@ package aiven
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -21,12 +22,13 @@ const (
 	aivenCredentialFilesVolumeName = "aiven-credentials"
 )
 
+var namePattern = regexp.MustCompile("[^a-z0-9]")
+
 type Source interface {
 	resource.Source
 	GetInflux() *nais_io_v1.Influx
 	GetKafka() *nais_io_v1.Kafka
 	GetOpenSearch() *nais_io_v1.OpenSearch
-	GetRedis() []nais_io_v1.Redis
 	GetValkey() []nais_io_v1.Valkey
 }
 
@@ -37,20 +39,10 @@ type Config interface {
 	GetAivenGeneration() int
 }
 
-// TODO: Remove once all aiven secrets are per service
 func generateSharedAivenSecretName(name string, generation int) (string, error) {
 	prefixedName := fmt.Sprintf("aiven-%s", name)
 	year, week := time.Now().ISOWeek()
 	suffix := fmt.Sprintf("%d-%d-%d", year, week, generation%10)
-	maxLen := validation.DNS1035LabelMaxLength
-
-	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
-}
-
-func generateAivenSecretName(name, service, generation string) (string, error) {
-	prefixedName := fmt.Sprintf("aiven-%s-%s", service, name)
-	year, week := time.Now().ISOWeek()
-	suffix := fmt.Sprintf("%d-%d-%s", year, week, generation)
 	maxLen := validation.DNS1035LabelMaxLength
 
 	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
@@ -87,11 +79,6 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
-	redisEnabled, err := Redis(ast, config, source, &aivenApp)
-	if err != nil {
-		return err
-	}
-
 	if len(kafkaKeyPaths) > 0 {
 		credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
 
@@ -99,7 +86,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
-	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || redisEnabled || valkeyEnabled {
+	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || valkeyEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.PrependEnv([]v1.EnvVar{
 			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),

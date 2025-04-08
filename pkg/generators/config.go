@@ -58,6 +58,10 @@ func (o *Options) IsCNRMEnabled() bool {
 	return o.Config.Features.CNRM
 }
 
+func (o *Options) IsGCPEnabled() bool {
+	return o.Config.Features.GCP
+}
+
 func (o *Options) GetTeam() string {
 	return o.Team
 }

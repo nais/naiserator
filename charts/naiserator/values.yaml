@@ -20,7 +20,7 @@ naiserator:
   health-probe-bind-address: 0.0.0.0:8085
   cluster-name: ""
   google-project-id: ""
-  google-cloud-sql-proxy-container-image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8-alpine"
+  google-cloud-sql-proxy-container-image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15-alpine"
   api-server-ip: ""
   host-aliases: ""
   nais-namespace: "nais-system"

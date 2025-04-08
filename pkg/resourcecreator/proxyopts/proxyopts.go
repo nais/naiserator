@@ -18,6 +18,7 @@ type Source interface {
 type Config interface {
 	GetGoogleProjectID() string
 	GetWebProxyOptions() config.Proxy
+	IsGCPEnabled() bool
 }
 
 // All pods will have web proxy settings injected as environment variables. This is
@@ -82,7 +83,7 @@ func appendDualCaseEnvVar(envVars []corev1.EnvVar, key, value string) []corev1.E
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
-	if !source.GetWebProxy() || len(cfg.GetGoogleProjectID()) > 0 {
+	if !source.GetWebProxy() || cfg.IsGCPEnabled() {
 		return nil
 	}
 
