@@ -4,7 +4,6 @@ config:
   features:
     gcp: true
     cnrm: true
-    linkerd: true
     sql-instance-in-shared-vpc: true
   google-project-id: google-project-id
 input:

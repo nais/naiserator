@@ -2,7 +2,6 @@ testconfig:
   description: additional cloudsql users with custom env for each user
 config:
   features:
-    linkerd: true
     cnrm: true
   google-project-id: google-project-id
 input:

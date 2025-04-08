@@ -2,7 +2,6 @@ testconfig:
   description: vanilla application running in NAAS with default configuration and access policies
 config:
   features:
-    linkerd: true
     network-policy: true
   google-project-id: google-project-id
 input:

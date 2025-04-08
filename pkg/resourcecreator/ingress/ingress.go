@@ -30,7 +30,6 @@ type Source interface {
 
 type Config interface {
 	GetGatewayMappings() []config.GatewayMapping
-	IsLinkerdEnabled() bool
 	GetDocUrl() string
 	GetClusterName() string
 }

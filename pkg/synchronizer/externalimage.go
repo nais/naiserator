@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	k8s_errors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var ImageNotFound = errors.New("external image resource not found")
+var ErrImageNotFound = errors.New("external image resource not found")
 
 type ImageSource interface {
 	resource.Source
@@ -30,7 +30,7 @@ func getExternalImage(ctx context.Context, source ImageSource, kube client.Clien
 		if !k8s_errors.IsNotFound(err) {
 			return "", fmt.Errorf("query existing image: %s", err)
 		}
-		return "", fmt.Errorf("%s: %w", key, ImageNotFound)
+		return "", fmt.Errorf("%s: %w", key, ErrImageNotFound)
 	}
 	return image.Spec.Image, nil
 }
