@@ -36,7 +36,6 @@ rules:
       - 'pods'
       - 'poddisruptionbudgets'
       - 'podmonitors'
-      - 'redis'
       - 'rolebindings'
       - 'roles'
       - 'secrets'

@@ -8,7 +8,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 
-	"github.com/mitchellh/mapstructure"
+	"slices"
+
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
 
@@ -58,8 +60,6 @@ type Features struct {
 	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
-	LegacyGCP                   bool     `json:"legacy-gcp"`
-	Linkerd                     bool     `json:"linkerd"`
 	Maskinporten                bool     `json:"maskinporten"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	NetworkPolicy               bool     `json:"network-policy"`
@@ -206,7 +206,6 @@ const (
 	FeaturesJwker                                 = "features.jwker"
 	FeaturesCNRM                                  = "features.cnrm"
 	FeaturesKafkarator                            = "features.kafkarator"
-	FeaturesLinkerd                               = "features.linkerd"
 	FeaturesMaskinporten                          = "features.maskinporten"
 	FeaturesNetworkPolicy                         = "features.network-policy"
 	FeaturesPrometheusOperator                    = "features.prometheus-operator"
@@ -214,7 +213,6 @@ const (
 	FeaturesVault                                 = "features.vault"
 	FeaturesWebhook                               = "features.webhook"
 	FeaturesWonderwall                            = "features.wonderwall"
-	FeaturesLegacyGCP                             = "features.legacy-gcp"
 	FQDNPolicyEnabled                             = "fqdn-policy.enabled"
 	GoogleCloudSQLProxyContainerImage             = "google-cloud-sql-proxy-container-image"
 	GoogleProjectId                               = "google-project-id"
@@ -295,7 +293,6 @@ func init() {
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
 	flag.String(NaisNamespace, "nais-system", "namespace where nais resources are deployed")
-	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
 	flag.StringSlice(
 		FeaturesAccessPolicyNotAllowedCIDRs, []string{""},
 		"CIDRs that should not be included within the allowed IP Block rule for network policy",
@@ -311,7 +308,6 @@ func init() {
 	flag.Bool(FeaturesMaskinporten, false, "enable creation of Maskinporten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
-	flag.Bool(FeaturesLegacyGCP, false, "enable legacy GCP resources")
 	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FeaturesTexas, false, "enable token exchange as a sidecar/service")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
@@ -380,23 +376,14 @@ func init() {
 
 // Print out all configuration options except secret stuff.
 func Print(redacted []string) {
-	ok := func(key string) bool {
-		for _, forbiddenKey := range redacted {
-			if forbiddenKey == key {
-				return false
-			}
-		}
-		return true
-	}
-
 	var keys sort.StringSlice = viper.AllKeys()
 
 	keys.Sort()
 	for _, key := range keys {
-		if ok(key) {
-			log.Printf("%s: %v", key, viper.Get(key))
-		} else {
+		if slices.Contains(redacted, key) {
 			log.Printf("%s: ***REDACTED***", key)
+		} else {
+			log.Printf("%s: %v", key, viper.Get(key))
 		}
 	}
 }
