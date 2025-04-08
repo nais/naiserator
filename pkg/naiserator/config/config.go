@@ -8,6 +8,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 
+	"slices"
+
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
@@ -374,23 +376,14 @@ func init() {
 
 // Print out all configuration options except secret stuff.
 func Print(redacted []string) {
-	ok := func(key string) bool {
-		for _, forbiddenKey := range redacted {
-			if forbiddenKey == key {
-				return false
-			}
-		}
-		return true
-	}
-
 	var keys sort.StringSlice = viper.AllKeys()
 
 	keys.Sort()
 	for _, key := range keys {
-		if ok(key) {
-			log.Printf("%s: %v", key, viper.Get(key))
-		} else {
+		if slices.Contains(redacted, key) {
 			log.Printf("%s: ***REDACTED***", key)
+		} else {
+			log.Printf("%s: %v", key, viper.Get(key))
 		}
 	}
 }
