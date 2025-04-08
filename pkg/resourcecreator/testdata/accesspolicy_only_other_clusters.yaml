@@ -2,7 +2,6 @@ testconfig:
   description: accesspolicy containing rules for only other clusters should not add empty ingress and egress rules
 config:
   features:
-    linkerd: false
     network-policy: true
   google-project-id: google-project-id
   cluster-name: mycluster

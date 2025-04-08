@@ -52,10 +52,6 @@ values:
     displayName: Enable Azure AD for applications
     config:
       type: bool
-  naiserator.features.linkerd:
-    displayName: Enable Linkerd annotations
-    config:
-      type: bool
   naiserator.doc-url:
     computed:
       template: |

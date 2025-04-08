@@ -2,7 +2,6 @@ testconfig:
   description: azure application with reply urls
 config:
   features:
-    linkerd: true
     azurerator: true
   google-project-id: google-project-id
   cluster-name: mycluster

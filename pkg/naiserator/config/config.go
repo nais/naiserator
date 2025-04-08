@@ -58,7 +58,6 @@ type Features struct {
 	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
-	Linkerd                     bool     `json:"linkerd"`
 	Maskinporten                bool     `json:"maskinporten"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	NetworkPolicy               bool     `json:"network-policy"`
@@ -205,7 +204,6 @@ const (
 	FeaturesJwker                                 = "features.jwker"
 	FeaturesCNRM                                  = "features.cnrm"
 	FeaturesKafkarator                            = "features.kafkarator"
-	FeaturesLinkerd                               = "features.linkerd"
 	FeaturesMaskinporten                          = "features.maskinporten"
 	FeaturesNetworkPolicy                         = "features.network-policy"
 	FeaturesPrometheusOperator                    = "features.prometheus-operator"
@@ -293,7 +291,6 @@ func init() {
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
 	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
 	flag.String(NaisNamespace, "nais-system", "namespace where nais resources are deployed")
-	flag.Bool(FeaturesLinkerd, false, "enable creation of Linkerd-specific resources")
 	flag.StringSlice(
 		FeaturesAccessPolicyNotAllowedCIDRs, []string{""},
 		"CIDRs that should not be included within the allowed IP Block rule for network policy",
