@@ -2,6 +2,7 @@ testconfig:
   description: google cloud sql instances provisioned with databases and automatic configuration with pre-existing private ip
 config:
   features:
+    gcp: true
     cnrm: true
     linkerd: true
     sql-instance-in-shared-vpc: true

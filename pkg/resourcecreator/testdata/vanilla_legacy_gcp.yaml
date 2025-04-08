@@ -5,6 +5,8 @@ config:
     linkerd: true
     network-policy: true
     legacy-gcp: true
+    gcp: true
+    cnrm: true
   nais-namespace: nais-system
   google-project-id: google-project-id
   cluster-name: prod-gcp
