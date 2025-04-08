@@ -209,6 +209,7 @@ tests:
                             value: team-project-id
                           - name: GCP_TEAM_PROJECT_ID
                             value: team-project-id
+                    initContainers:
                       - name: cloudsql-proxy
                         command:
                           - /cloud-sql-proxy
@@ -220,3 +221,4 @@ tests:
                         ports:
                           - containerPort: 5432
                             protocol: TCP
+                        restartPolicy: Always
