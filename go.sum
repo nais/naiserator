@@ -145,10 +145,14 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
+github.com/nais/liberator v0.0.0-20230807082713-b3572ceadac6 h1:H7asgSI4gI5NtTVN/vVCRxeyJcorydNBz6PuERLg4vA=
+github.com/nais/liberator v0.0.0-20230807082713-b3572ceadac6/go.mod h1:xQOcZklbFgmMPn++3F/hQLsCSL9t0Cyt6KJGsXkGs3Y=
 github.com/nais/liberator v0.0.0-20250408101050-2ffa1b42f7f2 h1:D0sz4dQXye5DdmW1PAMVn9f27eb+ZIoe/+vz9o+uKRo=
 github.com/nais/liberator v0.0.0-20250408101050-2ffa1b42f7f2/go.mod h1:UJvCuiANXCb54BuAIKoHY4EczdVhqxi0JIoj4393lC4=
 github.com/nais/liberator v0.0.0-20250410122003-62ee6c61528d h1:MdmMNa4g6vZZbDBKH6AvT6OxvxTZE4fhtoLb/6SDhkA=
 github.com/nais/liberator v0.0.0-20250410122003-62ee6c61528d/go.mod h1:UJvCuiANXCb54BuAIKoHY4EczdVhqxi0JIoj4393lC4=
+github.com/nais/liberator v0.0.0-20250410122843-7846b2b295f3 h1:H+o9ObIVl0ooE9o8E/Hs3EsxF7tKqo/BNgjLQZoXqas=
+github.com/nais/liberator v0.0.0-20250410122843-7846b2b295f3/go.mod h1:UJvCuiANXCb54BuAIKoHY4EczdVhqxi0JIoj4393lC4=
 github.com/novln/docker-parser v1.0.0 h1:PjEBd9QnKixcWczNGyEdfUrP6GR0YUilAqG7Wksg3uc=
 github.com/novln/docker-parser v1.0.0/go.mod h1:oCeM32fsoUwkwByB5wVjsrsVQySzPWkl3JdlTn1txpE=
 github.com/onsi/ginkgo/v2 v2.22.1 h1:QW7tbJAUDyVDVOM5dFa7qaybo+CRfR7bemlQUN6Z8aM=
