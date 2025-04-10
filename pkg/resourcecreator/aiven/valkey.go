@@ -20,18 +20,24 @@ func Valkey(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nai
 		return false, fmt.Errorf("aiven project not defined for this cluster; needed for Valkey")
 	}
 
+	secretName, err := generateAivenSecretName(aivenApp.Name, "valkey", aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"])
+	if err != nil {
+		return false, err
+	}
+
 	for _, valkey := range valkeyes {
 		if valkey.Instance == "" {
 			return false, fmt.Errorf("Valkey requires instance name")
 		}
 
-		addValkeyEnvVariables(ast, aivenApp.Spec.SecretName, valkey.Instance)
+		addValkeyEnvVariables(ast, secretName, valkey.Instance)
 		// Make the transition easier for teams coming from Redis by setting the `REDIS_` env variables too
-		addRedisEnvVariables(ast, aivenApp.Spec.SecretName, valkey.Instance)
+		addRedisEnvVariables(ast, secretName, valkey.Instance)
 
 		aivenApp.Spec.Valkey = append(aivenApp.Spec.Valkey, &aiven_nais_io_v1.ValkeySpec{
-			Instance: valkey.Instance,
-			Access:   valkey.Access,
+			Instance:   valkey.Instance,
+			Access:     valkey.Access,
+			SecretName: secretName,
 		})
 
 		addDefaultValkeyIfNotExists(ast, source, config.GetAivenProject(), valkey.Instance)
