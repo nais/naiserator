@@ -20,14 +20,14 @@ func Valkey(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nai
 		return false, fmt.Errorf("aiven project not defined for this cluster; needed for Valkey")
 	}
 
-	secretName, err := generateAivenSecretName(aivenApp.Name, "valkey", aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"])
-	if err != nil {
-		return false, err
-	}
-
 	for _, valkey := range valkeyes {
 		if valkey.Instance == "" {
 			return false, fmt.Errorf("Valkey requires instance name")
+		}
+
+		secretName, err := generateAivenSecretName(aivenApp.Name, fmt.Sprintf("valkey-%s", valkey.Instance), aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"])
+		if err != nil {
+			return false, err
 		}
 
 		addValkeyEnvVariables(ast, secretName, valkey.Instance)
