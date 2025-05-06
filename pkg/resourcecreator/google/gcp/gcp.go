@@ -36,7 +36,6 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	projectID := cfg.GetGoogleProjectID()
-	teamProjectID := cfg.GetGoogleTeamProjectID()
 
 	googleServiceAccount := google_iam.CreateServiceAccount(source, projectID)
 	googleServiceAccountBinding := google_iam.CreatePolicy(source, &googleServiceAccount, projectID)
