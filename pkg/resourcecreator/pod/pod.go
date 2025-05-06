@@ -56,6 +56,7 @@ type Source interface {
 type Config interface {
 	GetClusterName() string
 	GetGoogleProjectID() string
+	GetGoogleTeamProjectID() string
 	GetHostAliases() []config.HostAlias
 	GetImagePullSecrets() []string
 	IsGCPEnabled() bool
@@ -270,7 +271,7 @@ func imagePullSecrets(cfg Config) []corev1.LocalObjectReference {
 }
 
 func CreateContainerEnvVars(app EnvSource, ast *resource.Ast, cfg Config) {
-	ast.Env = append(ast.Env, defaultEnvVars(app, cfg.GetClusterName(), app.GetEffectiveImage())...)
+	ast.Env = append(ast.Env, defaultEnvVars(app, cfg, app.GetEffectiveImage())...)
 	ast.Env = append(ast.Env, app.GetEnv().ToKubernetes()...)
 }
 
@@ -358,24 +359,31 @@ func CreateNaisjobContainer(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg 
 	return err
 }
 
-func defaultEnvVars(source resource.Source, clusterName, appImage string) []corev1.EnvVar {
-	var port string
+func defaultEnvVars(source resource.Source, cfg Config, appImage string) []corev1.EnvVar {
+	port := strconv.Itoa(source.GetPort())
 	if source.GetPort() == 0 {
 		port = defaultPort
-	} else {
-		port = strconv.Itoa(source.GetPort())
 	}
 
-	return []corev1.EnvVar{
+	envs := []corev1.EnvVar{
 		{Name: naisAppNameEnv, Value: source.GetName()},
 		{Name: naisNamespaceEnv, Value: source.GetNamespace()},
 		{Name: naisAppImageEnv, Value: appImage},
-		{Name: naisClusterNameEnv, Value: clusterName},
-		{Name: naisClientId, Value: AppClientID(source, clusterName)},
+		{Name: naisClusterNameEnv, Value: cfg.GetClusterName()},
+		{Name: naisClientId, Value: AppClientID(source, cfg.GetClusterName())},
 		{Name: "LOG4J_FORMAT_MSG_NO_LOOKUPS", Value: "true"},
 		{Name: "PORT", Value: port},
-		{Name: "BIND_ADDRESS", Value: fmt.Sprintf("0.0.0.0:%s", port)},
+		{Name: "BIND_ADDRESS", Value: "0.0.0.0:" + port},
 	}
+
+	if googleTeamProjectID := cfg.GetGoogleTeamProjectID(); len(googleTeamProjectID) > 0 {
+		envs = append(envs,
+			corev1.EnvVar{Name: "GOOGLE_CLOUD_PROJECT", Value: googleTeamProjectID},
+			corev1.EnvVar{Name: "GCP_TEAM_PROJECT_ID", Value: googleTeamProjectID}, // Legacy variable
+		)
+	}
+
+	return envs
 }
 
 func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.ObjectMeta {
