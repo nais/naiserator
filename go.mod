@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.16
-	github.com/magiconair/properties v1.8.9
+	github.com/magiconair/properties v1.8.10
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/nais/liberator v0.0.0-20250410122843-7846b2b295f3
 	github.com/novln/docker-parser v1.0.0
