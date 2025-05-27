@@ -5,8 +5,11 @@ import (
 	"time"
 
 	acid_zalan_do_v1 "github.com/nais/liberator/pkg/apis/acid.zalan.do/v1"
+	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -38,6 +41,7 @@ type Source interface {
 }
 
 type Config interface {
+	GetGoogleProjectID() string
 	PostgresStorageClass() string
 	PostgresImage() string
 }
@@ -56,8 +60,44 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	createClusterSpec(source, ast, cfg, pgClusterName, pgNamespace, postgres)
 	createNetworkPolicies(source, ast, pgClusterName, pgNamespace)
+	createIAMPolicy(source, ast, cfg.GetGoogleProjectID(), pgNamespace)
 
 	return nil
+}
+
+func createIAMPolicy(source Source, ast *resource.Ast, projectId, pgNamespace string) {
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetNamespace())
+	objectMeta.Namespace = google.IAMServiceAccountNamespace
+	objectMeta.OwnerReferences = nil
+	delete(objectMeta.Labels, "app")
+
+	iamPolicy := google_iam_crd.IAMPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "IAMPolicy",
+			APIVersion: google.IAMAPIVersion,
+		},
+		ObjectMeta: objectMeta,
+		Spec: google_iam_crd.IAMPolicySpec{
+			ResourceRef: &google_iam_crd.ResourceRef{
+				ApiVersion: google.IAMAPIVersion,
+				Kind:       "IAMServiceAccount",
+				Name:       ptr.To("postgres-pod"),
+			},
+			Bindings: []google_iam_crd.Bindings{
+				{
+					Role: "roles/iam.workloadIdentityUser",
+					Members: []string{
+						fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/postgres-pod]", projectId, pgNamespace),
+					},
+				},
+			},
+		},
+	}
+
+	util.SetAnnotation(&iamPolicy, google.ProjectIdAnnotation, projectId)
+
+	ast.AppendOperation(resource.OperationCreateIfNotExists, &iamPolicy)
 }
 
 func createNetworkPolicies(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
@@ -201,6 +241,7 @@ func createClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = pgClusterName
 	objectMeta.Namespace = pgNamespace
+	objectMeta.Labels["apiserver-access"] = "enabled"
 
 	if postgres.Cluster.AllowDeletion {
 		objectMeta.Annotations[allowDeletionAnnotation] = pgClusterName

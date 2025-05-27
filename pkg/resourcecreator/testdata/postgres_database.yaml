@@ -3,6 +3,7 @@ testconfig:
 config:
   features:
     postgres-operator: true
+  google-project-id: google-project-id
   postgres:
     storage-class: premium-rwo
     image: nais-io/postgres-image:1.2.3
@@ -42,27 +43,27 @@ existing:
     metadata:
       name: pg-mynamespace
 tests:
-#  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
-#    kind: IAMPolicy
-#    operation: CreateIfNotExists
-#    name: myapplicati-mynamespac-w4o5cwa
-#    match:
-#      - type: subset
-#        name: "IAMPolicy created in namespace serviceaccounts"
-#        resource:
-#          metadata:
-#            annotations:
-#              cnrm.cloud.google.com/project-id: google-project-id
-#            namespace: serviceaccounts
-#          spec:
-#            bindings:
-#              - members:
-#                  - serviceAccount:google-project-id.svc.id.goog[mynamespace/myapplication]
-#                role: roles/iam.workloadIdentityUser
-#            resourceRef:
-#              apiVersion: iam.cnrm.cloud.google.com/v1beta1
-#              kind: IAMServiceAccount
-#              name: myapplicati-mynamespac-w4o5cwa
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicy
+    operation: CreateIfNotExists
+    name: pg-mynamespace
+    match:
+      - type: subset
+        name: "IAMPolicy created in namespace serviceaccounts"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+            namespace: serviceaccounts
+          spec:
+            bindings:
+              - members:
+                  - serviceAccount:google-project-id.svc.id.goog[pg-mynamespace/postgres-pod]
+                role: roles/iam.workloadIdentityUser
+            resourceRef:
+              apiVersion: iam.cnrm.cloud.google.com/v1beta1
+              kind: IAMServiceAccount
+              name: postgres-pod
   - apiVersion: acid.zalan.do/v1
     kind: postgresql
     operation: CreateOrUpdate
@@ -75,6 +76,10 @@ tests:
           metadata:
             annotations:
               nais.io/postgresqlDeleteResource: my-postgres-cluster
+            labels:
+              app: myapplication
+              team: mynamespace
+              apiserver-access: enabled
           spec:
             dockerImage: nais-io/postgres-image:1.2.3
             teamId: mynamespace
