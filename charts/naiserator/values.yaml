@@ -40,6 +40,7 @@ naiserator:
     maskinporten: false
     nav-ca-bundle: false
     network-policy: true
+    postgres-operator: false
     prometheus-operator: false
     sql-instance-in-shared-vpc: false
     texas: false
@@ -77,6 +78,8 @@ naiserator:
         service: "opentelemetry-collector"
         tls: false
         protocol: "grpc"
+  postgres:
+    storage-class: ""
   proxy:
     address: ""
     exclude: ""

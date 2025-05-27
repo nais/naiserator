@@ -17,6 +17,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
@@ -107,10 +108,19 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	if err != nil {
 		return nil, err
 	}
+
 	err = gcp.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
+
+	if cfg.PostgresOperatorEnabled() {
+		err = postgres.Create(naisjob, ast, cfg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err = proxyopts.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err

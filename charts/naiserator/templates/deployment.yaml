@@ -35,6 +35,14 @@ spec:
               key: elector_image
               name: elector
               optional: true
+        {{ if (get .Values.naiserator.features "postgres-operator") }}
+        - name: NAISERATOR_POSTGRES_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              key: postgres_image
+              name: postgres-image
+              optional: true
+        {{ end }}
         {{ if .Values.naiserator.features.wonderwall }}
         - name: NAISERATOR_WONDERWALL_IMAGE
           valueFrom:

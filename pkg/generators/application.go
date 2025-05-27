@@ -9,6 +9,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/frontend"
 	"github.com/nais/naiserator/pkg/resourcecreator/login"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
+	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
 	"github.com/nais/naiserator/pkg/resourcecreator/texas"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -171,6 +172,13 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	err = gcp.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.PostgresOperatorEnabled() {
+		err = postgres.Create(app, ast, cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = proxyopts.Create(app, ast, cfg)

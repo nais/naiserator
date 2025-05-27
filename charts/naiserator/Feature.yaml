@@ -100,6 +100,14 @@ values:
     displayName: Enable Network Policy
     computed:
       template: '{{ne .Kind "onprem"}}'
+  naiserator.features.postgres-operator:
+    description: Enable Postgres Operator
+    displayName: Enable Postgres Operator
+    config:
+      type: bool
+    ignoreKind:
+      - onprem
+      - management
   naiserator.features.prometheus-operator:
     description: Enable Prometheus Operator
     displayName: Enable Prometheus Operator
@@ -198,6 +206,13 @@ values:
         - {{ $k }}
         {{- end }}
         {{- end }}
+  naiserator.postgres.storage-class:
+    description: Storage class for Postgres ("standard-rwo" (default) or "premium-rwo")
+    config:
+      type: string
+    ignoreKind:
+      - onprem
+      - management
   naiserator.proxy.address:
     config:
       type: string

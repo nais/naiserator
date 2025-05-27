@@ -1,14 +1,13 @@
 package config
 
 import (
+	"slices"
 	"sort"
 	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
-
-	"slices"
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
@@ -63,6 +62,7 @@ type Features struct {
 	Maskinporten                bool     `json:"maskinporten"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	NetworkPolicy               bool     `json:"network-policy"`
+	PostgresOperator            bool     `json:"postgres-operator"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
 	SqlInstanceInSharedVpc      bool     `json:"sql-instance-in-shared-vpc"`
 	Texas                       bool     `json:"texas"`
@@ -154,6 +154,11 @@ type Frontend struct {
 	TelemetryURL string `json:"telemetry-url"`
 }
 
+type Postgres struct {
+	Image        string `json:"image"`
+	StorageClass string `json:"storage-class"`
+}
+
 type Config struct {
 	AivenGeneration                   int              `json:"aiven-generation"`
 	AivenProject                      string           `json:"aiven-project"`
@@ -180,6 +185,7 @@ type Config struct {
 	MaxConcurrentReconciles           int              `json:"max-concurrent-reconciles"`
 	NaisNamespace                     string           `json:"nais-namespace"`
 	Observability                     Observability    `json:"observability"`
+	Postgres                          Postgres         `json:"postgres"`
 	Proxy                             Proxy            `json:"proxy"`
 	Ratelimit                         Ratelimit        `json:"ratelimit"`
 	Securelogs                        Securelogs       `json:"securelogs"`
@@ -208,6 +214,7 @@ const (
 	FeaturesKafkarator                            = "features.kafkarator"
 	FeaturesMaskinporten                          = "features.maskinporten"
 	FeaturesNetworkPolicy                         = "features.network-policy"
+	FeaturesPostgresOperator                      = "features.postgres-operator"
 	FeaturesPrometheusOperator                    = "features.prometheus-operator"
 	FeaturesTexas                                 = "features.texas"
 	FeaturesVault                                 = "features.vault"
@@ -241,6 +248,8 @@ const (
 	ObservabilityOtelDestinations                 = "observability.otel.destinations"
 	ObservabilityOtelAutoInstrumentationAppConfig = "observability.otel.auto-instrumentation.app-config"
 	ObservabilityOtelAutoInstrumentationEnabled   = "observability.otel.auto-instrumentation.enabled"
+	PostgresImage                                 = "postgres.image"
+	PostgresStorageClass                          = "postgres.storage-class"
 	ProxyAddress                                  = "proxy.address"
 	ProxyExclude                                  = "proxy.exclude"
 	RateLimitBurst                                = "ratelimit.burst"
@@ -308,6 +317,7 @@ func init() {
 	flag.Bool(FeaturesMaskinporten, false, "enable creation of Maskinporten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
+	flag.Bool(FeaturesPostgresOperator, false, "enable Postgres Operator")
 	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FeaturesTexas, false, "enable token exchange as a sidecar/service")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
@@ -329,6 +339,8 @@ func init() {
 	flag.Int(ObservabilityOtelCollectorPort, 4317, "port used by the OpenTelemetry collector")
 	flag.Bool(ObservabilityOtelCollectorTLS, false, "use TLS for the OpenTelemetry collector")
 	flag.StringArray(ObservabilityOtelCollectorLabels, []string{}, "list of labels to be used by the OpenTelemetry collector")
+	flag.String(PostgresImage, "", "Docker image used for Postgres clusters")
+	flag.String(PostgresStorageClass, "", "Storage class used for Postgres clusters")
 	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
 	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 

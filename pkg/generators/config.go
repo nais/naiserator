@@ -193,3 +193,15 @@ func (o *Options) GetObservability() config.Observability {
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {
 	return o.Config.Features.SqlInstanceInSharedVpc
 }
+
+func (o *Options) PostgresOperatorEnabled() bool {
+	return o.Config.Features.PostgresOperator
+}
+
+func (o *Options) PostgresImage() string {
+	return o.Config.Postgres.Image
+}
+
+func (o *Options) PostgresStorageClass() string {
+	return o.Config.Postgres.StorageClass
+}
