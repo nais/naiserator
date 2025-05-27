@@ -7,6 +7,7 @@ import (
 	acid_zalan_do_v1 "github.com/nais/liberator/pkg/apis/acid.zalan.do/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -54,8 +55,146 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	pgNamespace := fmt.Sprintf("pg-%s", source.GetNamespace())
 
 	createClusterSpec(source, ast, cfg, pgClusterName, pgNamespace, postgres)
+	createNetworkPolicies(source, ast, pgClusterName, pgNamespace)
 
 	return nil
+}
+
+func createNetworkPolicies(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+	createPostgresNetworkPolicy(source, ast, pgClusterName, pgNamespace)
+	createSourceNetworkPolicy(source, ast, pgClusterName, pgNamespace)
+}
+
+func createPostgresNetworkPolicy(source Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = pgClusterName
+	objectMeta.Namespace = pgNamespace
+
+	pgNetpol := &networkingv1.NetworkPolicy{
+		ObjectMeta: objectMeta,
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"application": "spilo",
+					"app":         source.GetName(),
+				},
+			},
+			Egress: []networkingv1.NetworkPolicyEgressRule{
+				{
+					To: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"application": "spilo",
+									"app":         source.GetName(),
+								},
+							},
+						},
+					},
+				},
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"application": "spilo",
+									"app":         source.GetName(),
+								},
+							},
+						},
+					},
+				},
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"kubernetes.io/metadata.name": "nais-system",
+								},
+							},
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app.kubernetes.io/name": "postgres-operator",
+								},
+							},
+						},
+					},
+				},
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"kubernetes.io/metadata.name": source.GetNamespace(),
+								},
+							},
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app": source.GetName(),
+								},
+							},
+						},
+					},
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeEgress,
+				networkingv1.PolicyTypeIngress,
+			},
+		},
+	}
+
+	ast.AppendOperation(resource.OperationCreateOrUpdate, pgNetpol)
+}
+
+func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
+	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetName())
+
+	sourceNetpol := &networkingv1.NetworkPolicy{
+		ObjectMeta: objectMeta,
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": source.GetName(),
+				},
+			},
+			Egress: []networkingv1.NetworkPolicyEgressRule{
+				{
+					To: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"kubernetes.io/metadata.name": pgNamespace,
+								},
+							},
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"application": "spilo",
+									"app":         source.GetName(),
+								},
+							},
+						},
+					},
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeEgress,
+			},
+		},
+	}
+
+	ast.AppendOperation(resource.OperationCreateOrUpdate, sourceNetpol)
 }
 
 func createClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterName string, pgNamespace string, postgres *nais_io_v1.Postgres) {
