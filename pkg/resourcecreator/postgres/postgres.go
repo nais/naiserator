@@ -10,6 +10,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -61,6 +62,47 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	createClusterSpec(source, ast, cfg, pgClusterName, pgNamespace, postgres)
 	createNetworkPolicies(source, ast, pgClusterName, pgNamespace)
 	createIAMPolicy(source, ast, cfg.GetGoogleProjectID(), pgNamespace)
+
+	envVars := []corev1.EnvVar{
+		{
+			Name:  "PGHOST",
+			Value: fmt.Sprintf("%s.%s", pgClusterName, pgNamespace),
+		},
+		{
+			Name:  "PGPORT",
+			Value: "5432",
+		},
+		{
+			Name:  "PGDATABASE",
+			Value: "app",
+		},
+		{
+			Name: "PGUSER",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "username",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName)}}},
+		},
+		{
+			Name: "PGPASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "password",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName)}}},
+		},
+		{
+			Name:  "PGURL",
+			Value: fmt.Sprintf("postgresql://$(PGUSER):$(PGPASSWORD)@%s.%s:5432/app?sslmode=disable", pgClusterName, pgNamespace),
+		},
+		{
+			Name:  "PGJDBCURL",
+			Value: fmt.Sprintf("jdbc:postgresql://%s.%s:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable", pgClusterName, pgNamespace),
+		},
+	}
+
+	ast.Env = append(ast.Env, envVars...)
 
 	return nil
 }

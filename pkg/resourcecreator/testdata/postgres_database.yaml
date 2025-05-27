@@ -175,55 +175,45 @@ tests:
                 application: spilo
                 app: myapplication
 
-#  - apiVersion: apps/v1
-#    kind: Deployment
-#    operation: CreateOrUpdate
-#    name: myapplication
-#    match:
-#      - type: subset
-#        name: "deployment created"
-#        exclude:
-#          - .metadata
-#          - .status
-#          - .spec.template.metadata
-#        resource:
-#          spec:
-#            template:
-#              spec:
-#                dnsPolicy: ClusterFirst
-#                restartPolicy: Always
-#                serviceAccountName: myapplication
-#                containers:
-#                  - name: myapplication
-#                    image: navikt/myapplication:1.2.3
-#                    envFrom:
-#                      - secretRef:
-#                          name: google-sql-myapplication
-#                    env:
-#                      - name: GOOGLE_CLOUD_PROJECT
-#                        value: team-project-id
-#                      - name: GCP_TEAM_PROJECT_ID
-#                        value: team-project-id
-#                initContainers:
-#                  - name: cloudsql-proxy
-#                    command:
-#                      - /cloud-sql-proxy
-#                      - --max-sigterm-delay
-#                      - 30s
-#                      - --port
-#                      - "5432"
-#                      - team-project-id:europe-north1:myapplication
-#                    ports:
-#                      - containerPort: 5432
-#                        protocol: TCP
-#                    resources:
-#                      limits:
-#                        memory: 256Mi
-#                      requests:
-#                        cpu: 50m
-#                        memory: 32Mi
-#                    imagePullPolicy: IfNotPresent
-#                    restartPolicy: Always
-#                    securityContext:
-#                      allowPrivilegeEscalation: false
-#                      runAsUser: 2
+  - apiVersion: apps/v1
+    kind: Deployment
+    operation: CreateOrUpdate
+    name: myapplication
+    match:
+      - type: subset
+        name: "deployment created"
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata
+        resource:
+          spec:
+            template:
+              spec:
+                dnsPolicy: ClusterFirst
+                restartPolicy: Always
+                serviceAccountName: myapplication
+                containers:
+                  - name: myapplication
+                    image: navikt/myapplication:1.2.3
+                    env:
+                      - name: PGHOST
+                        value: my-postgres-cluster.pg-mynamespace
+                      - name: PGPORT
+                        value: "5432"
+                      - name: PGDATABASE
+                        value: app
+                      - name: PGUSER
+                        valueFrom:
+                          secretKeyRef:
+                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
+                            key: username
+                      - name: PGPASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
+                            key: password
+                      - name: PGURL
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster.pg-mynamespace:5432/app?sslmode=disable"
+                      - name: PGJDBCURL
+                        value: "jdbc:postgresql://my-postgres-cluster.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
