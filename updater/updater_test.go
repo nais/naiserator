@@ -100,9 +100,9 @@ func TestAssertOwnerReferenceEqual(t *testing.T) {
 		},
 	}
 
-	assert.NoError(t, updater.AssertOwnerReferenceEqual(resource, ownedByCandidate))
-	assert.Error(t, updater.AssertOwnerReferenceEqual(resource, ownedBySomethingElse))
-	assert.Error(t, updater.AssertOwnerReferenceEqual(resource, notOwned))
+	assert.NoError(t, updater.AssertValidOwnerReference(resource, ownedByCandidate, false))
+	assert.Error(t, updater.AssertValidOwnerReference(resource, ownedBySomethingElse, false))
+	assert.Error(t, updater.AssertValidOwnerReference(resource, notOwned, false))
 }
 
 func TestKeepOwnerReferenceMultiOwner(t *testing.T) {

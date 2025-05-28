@@ -66,6 +66,14 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 		}
 		objectKey := client.ObjectKeyFromObject(resource)
 
+		namespace := corev1.Namespace{}
+		err = cli.Get(ctx, client.ObjectKey{Name: resource.GetNamespace()}, &namespace)
+		if err != nil {
+			return fmt.Errorf("get namespace %s: %w", resource.GetNamespace(), err)
+		}
+
+		isPgNamespace := namespace.Labels["nais.io/type"] == "postgres"
+
 		err = cli.Get(ctx, objectKey, existing.(client.Object))
 
 		if errors.IsNotFound(err) {
@@ -79,7 +87,7 @@ func CreateOrUpdate(ctx context.Context, cli client.Client, scheme *runtime.Sche
 			if err != nil {
 				return err
 			}
-			err = AssertOwnerReferenceEqual(resource, existing)
+			err = AssertValidOwnerReference(resource, existing, isPgNamespace)
 			if err != nil {
 				return err
 			}
@@ -216,7 +224,7 @@ func ownerReferenceSimilar(a, b metav1.OwnerReference) bool {
 	return a.Name == b.Name && a.Kind == b.Kind
 }
 
-func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
+func AssertValidOwnerReference(dst, src runtime.Object, isPgNamespace bool) error {
 	srcacc, err := meta.Accessor(src)
 	if err != nil {
 		return err
@@ -229,6 +237,13 @@ func AssertOwnerReferenceEqual(dst, src runtime.Object) error {
 
 	existingReferences := srcacc.GetOwnerReferences()
 	newReferences := dstacc.GetOwnerReferences()
+
+	// If the destination resource is in a Postgres namespace, we do not want ownerReferences.
+	// Users are not able to create resources in the Postgres namespace, so we can assume everything
+	// in that namespace belongs to the platform.
+	if newReferences == nil && isPgNamespace {
+		return nil
+	}
 
 	// Resources with no ownerReference will not be touched, in case it was created manually.
 	//
