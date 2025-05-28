@@ -1,0 +1,203 @@
+testconfig:
+  description: minimal postgresql provisioned with databases and automatic configuration
+config:
+  features:
+    postgres-operator: true
+  google-project-id: google-project-id
+  postgres:
+    storage-class: premium-rwo
+    image: nais-io/postgres-image:1.2.3
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    postgres:
+      cluster:
+        resources:
+          diskSize: 10Gi
+          cpu: 100m
+          memory: 4G
+        majorVersion: 17
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: pg-mynamespace
+tests:
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicy
+    operation: CreateIfNotExists
+    name: pg-mynamespace
+    match:
+      - type: subset
+        name: "IAMPolicy created in namespace serviceaccounts"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+            namespace: serviceaccounts
+          spec:
+            bindings:
+              - members:
+                  - serviceAccount:google-project-id.svc.id.goog[pg-mynamespace/postgres-pod]
+                role: roles/iam.workloadIdentityUser
+            resourceRef:
+              apiVersion: iam.cnrm.cloud.google.com/v1beta1
+              kind: IAMServiceAccount
+              name: postgres-pod
+  - apiVersion: acid.zalan.do/v1
+    kind: postgresql
+    operation: CreateOrUpdate
+    name: myapplication
+    namespace: pg-mynamespace
+    match:
+      - type: subset
+        name: "postgresql created in team postgres namespace"
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: mynamespace
+              apiserver-access: enabled
+          spec:
+            dockerImage: nais-io/postgres-image:1.2.3
+            teamId: mynamespace
+            volume:
+              size: "10Gi"
+              storageClass: "premium-rwo"
+            numberOfInstances: 2
+            patroni:
+              initdb:
+                encoding: UTF8
+                locale: en_US.UTF-8
+              synchronous_mode: true
+              synchronous_mode_strict: true
+            preparedDatabases:
+              app:
+                defaultUsers: true
+                secretNamespace: mynamespace
+            resources:
+              limits:
+                cpu: "400m"
+                memory: "4G"
+              requests:
+                cpu: "100m"
+                memory: "4G"
+            postgresql:
+              version: "17"
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: pg-myapplication
+    namespace: mynamespace
+    match:
+      - name: "source to postgres network policy created"
+        type: subset
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: pg-mynamespace
+                    podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: myapplication
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+              - Egress
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    namespace: pg-mynamespace
+    match:
+      - name: "postgres network policy created"
+        type: subset
+        resource:
+          spec:
+            egress:
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: myapplication
+            ingress:
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: myapplication
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: postgres-operator
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: mynamespace
+                    podSelector:
+                      matchLabels:
+                        app: myapplication
+            podSelector:
+              matchLabels:
+                application: spilo
+                app: myapplication
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    operation: CreateOrUpdate
+    name: myapplication
+    match:
+      - type: subset
+        name: "deployment created"
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata
+        resource:
+          spec:
+            template:
+              spec:
+                dnsPolicy: ClusterFirst
+                restartPolicy: Always
+                serviceAccountName: myapplication
+                containers:
+                  - name: myapplication
+                    image: navikt/myapplication:1.2.3
+                    env:
+                      - name: PGHOST
+                        value: myapplication.pg-mynamespace
+                      - name: PGPORT
+                        value: "5432"
+                      - name: PGDATABASE
+                        value: app
+                      - name: PGUSER
+                        valueFrom:
+                          secretKeyRef:
+                            name: app-owner-user.myapplication.credentials.postgresql.acid.zalan.do
+                            key: username
+                      - name: PGPASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: app-owner-user.myapplication.credentials.postgresql.acid.zalan.do
+                            key: password
+                      - name: PGURL
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@myapplication.pg-mynamespace:5432/app?sslmode=disable"
+                      - name: PGJDBCURL
+                        value: "jdbc:postgresql://myapplication.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"

@@ -297,21 +297,35 @@ func createClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 		numberOfInstances = haNumInstances
 	}
 
-	startTime := defaultMaintenanceStart
-	if postgres.MaintenanceWindow.Hour != nil {
-		startTime = time.Hour * time.Duration(*postgres.MaintenanceWindow.Hour)
+	maintenanceWindows := []acid_zalan_do_v1.MaintenanceWindow{}
+	if postgres.MaintenanceWindow != nil && postgres.MaintenanceWindow.Day != 0 && postgres.MaintenanceWindow.Hour != nil {
+		startTime := time.Hour * time.Duration(*postgres.MaintenanceWindow.Hour)
+
+		maintenanceStartTime := metav1.NewTime(time.Time{}.Add(startTime))
+		maintenanceEndTime := metav1.NewTime(maintenanceStartTime.Add(maintenanceDuration * time.Hour))
+
+		maintenanceWindows = append(maintenanceWindows, acid_zalan_do_v1.MaintenanceWindow{
+			Everyday:  postgres.MaintenanceWindow.Day == 0,
+			Weekday:   makeWeekday(postgres),
+			StartTime: maintenanceStartTime,
+			EndTime:   maintenanceEndTime,
+		})
 	}
-	maintenanceStartTime := metav1.NewTime(time.Time{}.Add(startTime))
-	maintenanceEndTime := metav1.NewTime(maintenanceStartTime.Add(maintenanceDuration * time.Hour))
 
 	extensions := map[string]string{}
-	for _, extension := range postgres.Database.Extensions {
-		extensions[extension.Name] = defaultSchema
+	if postgres.Database != nil && postgres.Database.Extensions != nil {
+		for _, extension := range postgres.Database.Extensions {
+			extensions[extension.Name] = defaultSchema
+		}
 	}
 	for _, extension := range defaultExtensions {
 		extensions[extension] = defaultSchema
 	}
 
+	collation := "en_US.UTF-8"
+	if postgres.Database != nil && postgres.Database.Collation != "" {
+		collation = fmt.Sprintf("%s.UTF-8", postgres.Database.Collation)
+	}
 	cluster := &acid_zalan_do_v1.Postgresql{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "postgresql",
@@ -332,7 +346,7 @@ func createClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 			Patroni: acid_zalan_do_v1.Patroni{
 				InitDB: map[string]string{
 					"encoding": "UTF8",
-					"locale":   fmt.Sprintf("%s.UTF-8", postgres.Database.Collation),
+					"locale":   collation,
 				},
 				SynchronousMode:       true,
 				SynchronousModeStrict: true,
@@ -347,17 +361,10 @@ func createClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 					Memory: ptr.To(postgres.Cluster.Resources.Memory.String()),
 				},
 			},
-			TeamID:            source.GetNamespace(),
-			DockerImage:       cfg.PostgresImage(),
-			NumberOfInstances: numberOfInstances,
-			MaintenanceWindows: []acid_zalan_do_v1.MaintenanceWindow{
-				{
-					Everyday:  postgres.MaintenanceWindow.Day == 0,
-					Weekday:   makeWeekday(postgres),
-					StartTime: maintenanceStartTime,
-					EndTime:   maintenanceEndTime,
-				},
-			},
+			TeamID:             source.GetNamespace(),
+			DockerImage:        cfg.PostgresImage(),
+			NumberOfInstances:  numberOfInstances,
+			MaintenanceWindows: maintenanceWindows,
 			PreparedDatabases: map[string]acid_zalan_do_v1.PreparedDatabase{
 				defaultDatabaseName: {
 					DefaultUsers:    true,
@@ -374,5 +381,8 @@ func createClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 // makeWeekday creates a weekday from an integer day
 // Weekday is Sun 0-6 Sat, while Day is Mon 1-7 Sun
 func makeWeekday(postgres *nais_io_v1.Postgres) time.Weekday {
+	if postgres.MaintenanceWindow == nil {
+		return time.Tuesday
+	}
 	return time.Weekday(postgres.MaintenanceWindow.Day % 7)
 }
