@@ -59,7 +59,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 	pgNamespace := fmt.Sprintf("pg-%s", source.GetNamespace())
 
-	createClusterSpec(source, ast, cfg, pgClusterName, pgNamespace, postgres)
+	CreateClusterSpec(source, ast, cfg, pgClusterName, pgNamespace)
 	createNetworkPolicies(source, ast, pgClusterName, pgNamespace)
 	createIAMPolicy(source, ast, cfg.GetGoogleProjectID(), pgNamespace)
 
@@ -279,8 +279,10 @@ func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgClusterName s
 	ast.AppendOperation(resource.OperationCreateOrUpdate, sourceNetpol)
 }
 
-func createClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterName string, pgNamespace string, postgres *nais_io_v1.Postgres) {
+func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterName string, pgNamespace string) {
+	postgres := source.GetPostgres()
 	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.OwnerReferences = nil
 	objectMeta.Name = pgClusterName
 	objectMeta.Namespace = pgNamespace
 	objectMeta.Labels["apiserver-access"] = "enabled"
