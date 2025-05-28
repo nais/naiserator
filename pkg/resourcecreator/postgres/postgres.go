@@ -30,6 +30,8 @@ const (
 	defaultSchema = "public"
 
 	defaultDatabaseName = "app"
+
+	sharedPreloadLibraries = "bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,pgaudit"
 )
 
 var defaultExtensions = []string{
@@ -339,7 +341,8 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 			PostgresqlParam: acid_zalan_do_v1.PostgresqlParam{
 				PgVersion: postgres.Cluster.MajorVersion,
 				Parameters: map[string]string{
-					"log_destination": "jsonlog",
+					"log_destination":          "jsonlog",
+					"shared_preload_libraries": sharedPreloadLibraries,
 				},
 			},
 			Volume: acid_zalan_do_v1.Volume{
