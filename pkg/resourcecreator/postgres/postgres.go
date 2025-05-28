@@ -149,6 +149,7 @@ func createNetworkPolicies(source Source, ast *resource.Ast, pgClusterName, pgNa
 
 func createPostgresNetworkPolicy(source Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
 	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.OwnerReferences = nil
 	objectMeta.Name = pgClusterName
 	objectMeta.Namespace = pgNamespace
 
