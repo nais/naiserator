@@ -1,6 +1,7 @@
 load('ext://cert_manager', 'deploy_cert_manager')
 load('ext://helm_resource', 'helm_resource', 'helm_repo')
 load('ext://local_output', 'local_output')
+load('ext://namespace', 'namespace_create')
 
 APP_NAME = "naiserator"
 
@@ -17,6 +18,10 @@ helm_resource('aiven-operator-crds', 'aiven/aiven-operator-crds', resource_deps=
 helm_repo('prometheus', 'https://prometheus-community.github.io/helm-charts')
 helm_resource('prometheus-operator-crds', 'prometheus/prometheus-operator-crds', resource_deps=['prometheus'],
               pod_readiness="ignore")
+
+namespace_create("nais-system")
+namespace_create("basseng", labels=["team: basseng", "nais.io/type: workload"])
+namespace_create("pg-basseng", labels=["team: basseng", "nais.io/type: postgres"])
 
 # Load liberator charts, assuming liberator checked out next to naiserator
 # Automatically generate updated CRDs from the liberator code when the apis change, and apply them to the cluster
@@ -47,6 +52,15 @@ k8s_resource(
     resource_deps=["liberator-chart"],
 )
 
+for name in ["postgres-operator"]:
+    # Load charts, assuming helm-charts checked out next to naiserator
+    k8s_yaml(helm("../helm-charts/features/{}".format(name), name=name, namespace="nais-system"))
+    k8s_resource(
+        workload=name,
+        resource_deps=["nais-crds"],
+    )
+
+
 # Create a tempdir for naiserator configs
 naiserator_dir = "/tmp/tilt-naiserator"
 local("mkdir -p {}".format(naiserator_dir))
@@ -73,8 +87,14 @@ local_resource(
     cmd="go build -o cmd/naiserator/naiserator ./cmd/naiserator",
     serve_cmd="{}/cmd/naiserator/naiserator --kubeconfig={}/kubeconfig".format(config.main_dir, naiserator_dir),
     deps=["cmd/naiserator/naiserator.go", "go.mod", "go.sum", "pkg", "/tmp/naiserator.yaml"],
-    resource_deps=["nais-crds", "aiven-operator-crds", "prometheus-operator-crds", "naiserator-config",
-                   "naiserator-kubeconfig"],
+    resource_deps=[
+        "nais-crds",
+        "aiven-operator-crds",
+        "prometheus-operator-crds",
+        "naiserator-config",
+        "naiserator-kubeconfig",
+        "postgres-operator",
+    ],
     ignore=ignore_rules(),
     serve_dir=naiserator_dir,
 )
@@ -89,4 +109,5 @@ config.set_enabled_resources([
     "nais-crds",
     "naiserator-config",
     "naiserator-kubeconfig",
+    "postgres-operator",
 ])
