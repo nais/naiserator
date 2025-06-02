@@ -1,0 +1,202 @@
+testconfig:
+  description: minimal postgresql provisioned with databases and automatic configuration
+config:
+  features:
+    postgres-operator: true
+  google-project-id: google-project-id
+  postgres:
+    storage-class: premium-rwo
+    image: nais-io/postgres-image:1.2.3
+input:
+  kind: NaisJob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/mynaisjob:1.2.3
+    postgres:
+      cluster:
+        resources:
+          diskSize: 10Gi
+          cpu: 100m
+          memory: 4G
+        majorVersion: 17
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: pg-mynamespace
+tests:
+  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMPolicy
+    operation: CreateIfNotExists
+    name: pg-mynamespace
+    match:
+      - type: subset
+        name: "IAMPolicy created in namespace serviceaccounts"
+        resource:
+          metadata:
+            annotations:
+              cnrm.cloud.google.com/project-id: google-project-id
+            namespace: serviceaccounts
+          spec:
+            bindings:
+              - members:
+                  - serviceAccount:google-project-id.svc.id.goog[pg-mynamespace/postgres-pod]
+                role: roles/iam.workloadIdentityUser
+            resourceRef:
+              apiVersion: iam.cnrm.cloud.google.com/v1beta1
+              kind: IAMServiceAccount
+              name: postgres-pod
+  - apiVersion: acid.zalan.do/v1
+    kind: postgresql
+    operation: CreateOrUpdate
+    name: mynaisjob
+    namespace: pg-mynamespace
+    match:
+      - type: subset
+        name: "postgresql created in team postgres namespace"
+        resource:
+          metadata:
+            labels:
+              app: mynaisjob
+              team: mynamespace
+              apiserver-access: enabled
+          spec:
+            dockerImage: nais-io/postgres-image:1.2.3
+            teamId: mynamespace
+            volume:
+              size: "10Gi"
+              storageClass: "premium-rwo"
+            numberOfInstances: 2
+            patroni:
+              initdb:
+                encoding: UTF8
+                locale: en_US.UTF-8
+              synchronous_mode: true
+              synchronous_mode_strict: true
+            preparedDatabases:
+              app:
+                defaultUsers: true
+                secretNamespace: mynamespace
+            resources:
+              limits:
+                cpu: "400m"
+                memory: "4G"
+              requests:
+                cpu: "100m"
+                memory: "4G"
+            postgresql:
+              version: "17"
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: pg-mynaisjob
+    namespace: mynamespace
+    match:
+      - name: "source to postgres network policy created"
+        type: subset
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: pg-mynamespace
+                    podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: mynaisjob
+            podSelector:
+              matchLabels:
+                app: mynaisjob
+            policyTypes:
+              - Egress
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: mynaisjob
+    namespace: pg-mynamespace
+    match:
+      - name: "postgres network policy created"
+        type: subset
+        resource:
+          spec:
+            egress:
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: mynaisjob
+            ingress:
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: mynaisjob
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: postgres-operator
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: mynamespace
+                    podSelector:
+                      matchLabels:
+                        app: mynaisjob
+            podSelector:
+              matchLabels:
+                application: spilo
+                app: mynaisjob
+
+  - apiVersion: batch/v1
+    kind: Job
+    operation: CreateOrRecreate
+    name: mynaisjob
+    match:
+      - type: subset
+        name: "deployment created"
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata
+        resource:
+          spec:
+            template:
+              spec:
+                dnsPolicy: ClusterFirst
+                serviceAccountName: mynaisjob
+                containers:
+                  - name: mynaisjob
+                    image: navikt/mynaisjob:1.2.3
+                    env:
+                      - name: PGHOST
+                        value: mynaisjob.pg-mynamespace
+                      - name: PGPORT
+                        value: "5432"
+                      - name: PGDATABASE
+                        value: app
+                      - name: PGUSER
+                        valueFrom:
+                          secretKeyRef:
+                            name: app-owner-user.mynaisjob.credentials.postgresql.acid.zalan.do
+                            key: username
+                      - name: PGPASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: app-owner-user.mynaisjob.credentials.postgresql.acid.zalan.do
+                            key: password
+                      - name: PGURL
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@mynaisjob.pg-mynamespace:5432/app?sslmode=disable"
+                      - name: PGJDBCURL
+                        value: "jdbc:postgresql://mynaisjob.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
