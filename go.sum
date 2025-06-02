@@ -153,6 +153,8 @@ github.com/nais/liberator v0.0.0-20250527120532-395ad5dd5a01 h1:xNQ7kUfbmY1E0/q3
 github.com/nais/liberator v0.0.0-20250527120532-395ad5dd5a01/go.mod h1:YZNeWAtVfMBml21vngj3AYkJdft1utyYCKra4Gl6mbo=
 github.com/nais/liberator v0.0.0-20250528112457-20d2dd7facb2 h1:6hdebpUBnz1gAMzITW4fX5c9tSbOv5oT2EE8ESmYgvs=
 github.com/nais/liberator v0.0.0-20250528112457-20d2dd7facb2/go.mod h1:YZNeWAtVfMBml21vngj3AYkJdft1utyYCKra4Gl6mbo=
+github.com/nais/liberator v0.0.0-20250602062459-b6e768f1fe5b h1:40eTwFtR6BYuuvlt143sUKOT8DWrjhIPa9rdeYhEIkg=
+github.com/nais/liberator v0.0.0-20250602062459-b6e768f1fe5b/go.mod h1:YZNeWAtVfMBml21vngj3AYkJdft1utyYCKra4Gl6mbo=
 github.com/novln/docker-parser v1.0.0 h1:PjEBd9QnKixcWczNGyEdfUrP6GR0YUilAqG7Wksg3uc=
 github.com/novln/docker-parser v1.0.0/go.mod h1:oCeM32fsoUwkwByB5wVjsrsVQySzPWkl3JdlTn1txpE=
 github.com/onsi/ginkgo/v2 v2.22.1 h1:QW7tbJAUDyVDVOM5dFa7qaybo+CRfR7bemlQUN6Z8aM=

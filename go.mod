@@ -14,7 +14,7 @@ require (
 	github.com/imdario/mergo v0.3.16
 	github.com/magiconair/properties v1.8.9
 	github.com/mitchellh/hashstructure v1.1.0
-	github.com/nais/liberator v0.0.0-20250528112457-20d2dd7facb2
+	github.com/nais/liberator v0.0.0-20250602062459-b6e768f1fe5b
 	github.com/novln/docker-parser v1.0.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.74.0
 	github.com/prometheus/client_golang v1.22.0
