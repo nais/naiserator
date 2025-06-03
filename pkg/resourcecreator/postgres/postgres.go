@@ -15,8 +15,7 @@ import (
 const (
 	cpuLimitFactor = 4
 
-	defaultMaintenanceStart = 5 * time.Hour
-	maintenanceDuration     = 1
+	maintenanceDuration = 1
 
 	allowDeletionAnnotation = "nais.io/postgresqlDeleteResource"
 
