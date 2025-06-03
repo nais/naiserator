@@ -117,7 +117,7 @@ tests:
                         kubernetes.io/metadata.name: pg-mynamespace
                     podSelector:
                       matchLabels:
-                        application: spilo
+                        application: db-connection-pooler
                         app: mynaisjob
             podSelector:
               matchLabels:

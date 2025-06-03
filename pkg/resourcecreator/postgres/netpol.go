@@ -203,7 +203,7 @@ func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgNamespace str
 							},
 							PodSelector: &v2.LabelSelector{
 								MatchLabels: map[string]string{
-									"application": "spilo",
+									"application": "db-connection-pooler",
 									"app":         source.GetName(),
 								},
 							},

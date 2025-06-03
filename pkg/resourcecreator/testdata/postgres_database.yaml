@@ -134,13 +134,14 @@ tests:
                         kubernetes.io/metadata.name: pg-mynamespace
                     podSelector:
                       matchLabels:
-                        application: spilo
+                        application: db-connection-pooler
                         app: myapplication
             podSelector:
               matchLabels:
                 app: myapplication
             policyTypes:
               - Egress
+
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
