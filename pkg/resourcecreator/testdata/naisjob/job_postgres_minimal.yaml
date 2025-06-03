@@ -69,6 +69,12 @@ tests:
               team: mynamespace
               apiserver-access: enabled
           spec:
+            enableConnectionPooler: true
+            connectionPooler:
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "50Mi"
             dockerImage: nais-io/postgres-image:1.2.3
             teamId: mynamespace
             volume:
@@ -181,7 +187,7 @@ tests:
                     image: navikt/mynaisjob:1.2.3
                     env:
                       - name: PGHOST
-                        value: mynaisjob.pg-mynamespace
+                        value: mynaisjob-pooler.pg-mynamespace
                       - name: PGPORT
                         value: "5432"
                       - name: PGDATABASE
@@ -197,6 +203,6 @@ tests:
                             name: app-owner-user.mynaisjob.credentials.postgresql.acid.zalan.do
                             key: password
                       - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@mynaisjob.pg-mynamespace:5432/app?sslmode=disable"
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@mynaisjob-pooler.pg-mynamespace:5432/app?sslmode=disable"
                       - name: PGJDBCURL
-                        value: "jdbc:postgresql://mynaisjob.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
+                        value: "jdbc:postgresql://mynaisjob-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"

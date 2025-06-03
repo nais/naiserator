@@ -64,7 +64,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	envVars := []corev1.EnvVar{
 		{
 			Name:  "PGHOST",
-			Value: fmt.Sprintf("%s.%s", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("%s-pooler.%s", pgClusterName, pgNamespace),
 		},
 		{
 			Name:  "PGPORT",
@@ -92,11 +92,11 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		},
 		{
 			Name:  "PGURL",
-			Value: fmt.Sprintf("postgresql://$(PGUSER):$(PGPASSWORD)@%s.%s:5432/app?sslmode=disable", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("postgresql://$(PGUSER):$(PGPASSWORD)@%s-pooler.%s:5432/app?sslmode=disable", pgClusterName, pgNamespace),
 		},
 		{
 			Name:  "PGJDBCURL",
-			Value: fmt.Sprintf("jdbc:postgresql://%s.%s:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("jdbc:postgresql://%s-pooler.%s:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable", pgClusterName, pgNamespace),
 		},
 	}
 
@@ -161,6 +161,16 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 		},
 		ObjectMeta: objectMeta,
 		Spec: acid_zalan_do_v1.PostgresSpec{
+			EnableConnectionPooler:        ptr.To(true),
+			EnableReplicaConnectionPooler: ptr.To(false),
+			ConnectionPooler: &acid_zalan_do_v1.ConnectionPooler{
+				Resources: &acid_zalan_do_v1.Resources{
+					ResourceRequests: acid_zalan_do_v1.ResourceDescription{
+						CPU:    ptr.To("50m"),
+						Memory: ptr.To("50Mi"),
+					},
+				},
+			},
 			PostgresqlParam: acid_zalan_do_v1.PostgresqlParam{
 				PgVersion: postgres.Cluster.MajorVersion,
 				Parameters: map[string]string{
