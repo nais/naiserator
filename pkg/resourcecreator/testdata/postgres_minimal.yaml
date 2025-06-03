@@ -147,6 +147,40 @@ tests:
                         application: spilo
                         app: myapplication
               - from:
+                  - podSelector:
+                      matchLabels:
+                        application: db-connection-pooler
+                        app: myapplication
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: postgres-operator
+            podSelector:
+              matchLabels:
+                application: spilo
+                app: myapplication
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication-pooler
+    namespace: pg-mynamespace
+    match:
+      - name: "postgres pooler network policy created"
+        type: subset
+        resource:
+          spec:
+            egress:
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: myapplication
+            ingress:
+              - from:
                   - namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: nais-system
@@ -162,7 +196,7 @@ tests:
                         app: myapplication
             podSelector:
               matchLabels:
-                application: spilo
+                application: db-connection-pooler
                 app: myapplication
 
   - apiVersion: apps/v1
