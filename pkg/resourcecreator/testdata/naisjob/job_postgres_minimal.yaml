@@ -199,6 +199,27 @@ tests:
                 application: db-connection-pooler
                 app: mynaisjob
 
+  - operation: CreateOrUpdate
+    apiVersion: monitoring.coreos.com/v1
+    kind: PodMonitor
+    name: mynaisjob
+    namespace: pg-mynamespace
+    match:
+      - name: "postgres pod monitor created"
+        type: subset
+        resource:
+          spec:
+            podMetricsEndpoints:
+              - path: /metrics
+                port: exporter
+            selector:
+              matchLabels:
+                application: spilo
+                cluster-name: mynaisjob
+            podTargetLabels:
+              - application
+              - cluster-name
+
   - apiVersion: batch/v1
     kind: Job
     operation: CreateOrRecreate

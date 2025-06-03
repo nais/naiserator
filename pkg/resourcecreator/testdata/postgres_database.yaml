@@ -217,6 +217,27 @@ tests:
                 application: db-connection-pooler
                 app: myapplication
 
+  - operation: CreateOrUpdate
+    apiVersion: monitoring.coreos.com/v1
+    kind: PodMonitor
+    name: my-postgres-cluster
+    namespace: pg-mynamespace
+    match:
+      - name: "postgres pod monitor created"
+        type: subset
+        resource:
+          spec:
+            podMetricsEndpoints:
+              - path: /metrics
+                port: exporter
+            selector:
+              matchLabels:
+                application: spilo
+                cluster-name: my-postgres-cluster
+            podTargetLabels:
+              - application
+              - cluster-name
+
   - apiVersion: apps/v1
     kind: Deployment
     operation: CreateOrUpdate

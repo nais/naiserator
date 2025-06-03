@@ -59,6 +59,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	CreateClusterSpec(source, ast, cfg, pgClusterName, pgNamespace)
 	createNetworkPolicies(source, ast, pgClusterName, pgNamespace)
 	createIAMPolicy(source, ast, cfg.GetGoogleProjectID(), pgNamespace)
+	CreatePodMonitor(source, ast, pgClusterName, pgNamespace)
 
 	envVars := []corev1.EnvVar{
 		{
