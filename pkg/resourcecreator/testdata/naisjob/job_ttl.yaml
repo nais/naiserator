@@ -1,0 +1,23 @@
+testconfig:
+  description: Job with euthanaisa kill annotations is created
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+  spec:
+    image: foo/bar
+    ttl: 1h
+tests:
+  - apiVersion: batch/v1
+    kind: Job
+    name: mynaisjob
+    operation: CreateOrRecreate
+    match:
+      - type: regex
+        name: "Job with euthanaisa kill annotations"
+        resource:
+          metadata:
+            annotations:
+              euthanaisa.nais.io/kill-after: ".+$"
