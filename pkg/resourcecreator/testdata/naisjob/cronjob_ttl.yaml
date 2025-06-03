@@ -1,0 +1,24 @@
+testconfig:
+  description: Cronjob with euthanaisa kill annotations is created
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+  spec:
+    schedule: "* 2 * * *"
+    image: foo/bar
+    ttl: 1h
+tests:
+  - apiVersion: batch/v1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "cronjob with euthanaisa kill annotations"
+        resource:
+          metadata:
+            annotations:
+              euthanaisa.nais.io/kill-after: ".+$"
