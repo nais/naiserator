@@ -1,13 +1,15 @@
 package batch
 
 import (
+	"fmt"
+	"time"
+
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 type Config interface {
@@ -42,6 +44,15 @@ func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error
 
 	if val, ok := naisjob.GetAnnotations()["kubernetes.io/change-cause"]; ok {
 		objectMeta.Annotations["kubernetes.io/change-cause"] = val
+	}
+
+	if naisjob.Spec.TTL != "" {
+		d, err := time.ParseDuration(naisjob.Spec.TTL)
+		if err != nil {
+			return fmt.Errorf("parsing TTL: %w", err)
+		}
+
+		objectMeta.Annotations["euthanaisa.nais.io/kill-after"] = time.Now().Add(d).Format(time.RFC3339)
 	}
 
 	jobSpec, err := CreateJobSpec(naisjob, ast, cfg)
