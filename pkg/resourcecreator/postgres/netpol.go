@@ -88,6 +88,22 @@ func createPostgresNetworkPolicy(source Source, ast *resource.Ast, pgClusterName
 						},
 					},
 				},
+				{
+					From: []v1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: &v2.LabelSelector{
+								MatchLabels: map[string]string{
+									"kubernetes.io/metadata.name": "nais-system",
+								},
+							},
+							PodSelector: &v2.LabelSelector{
+								MatchLabels: map[string]string{
+									"app.kubernetes.io/name": "prometheus",
+								},
+							},
+						},
+					},
+				},
 			},
 			PolicyTypes: []v1.PolicyType{
 				v1.PolicyTypeEgress,
@@ -144,6 +160,22 @@ func createPoolerNetworkPolicy(source Source, ast *resource.Ast, pgClusterName s
 							PodSelector: &v2.LabelSelector{
 								MatchLabels: map[string]string{
 									"app.kubernetes.io/name": "postgres-operator",
+								},
+							},
+						},
+					},
+				},
+				{
+					From: []v1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: &v2.LabelSelector{
+								MatchLabels: map[string]string{
+									"kubernetes.io/metadata.name": "nais-system",
+								},
+							},
+							PodSelector: &v2.LabelSelector{
+								MatchLabels: map[string]string{
+									"app.kubernetes.io/name": "prometheus",
 								},
 							},
 						},

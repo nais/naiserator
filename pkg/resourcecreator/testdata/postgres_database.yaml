@@ -176,6 +176,13 @@ tests:
                     podSelector:
                       matchLabels:
                         app.kubernetes.io/name: postgres-operator
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
             podSelector:
               matchLabels:
                 application: spilo
@@ -205,6 +212,13 @@ tests:
                     podSelector:
                       matchLabels:
                         app.kubernetes.io/name: postgres-operator
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
               - from:
                   - namespaceSelector:
                       matchLabels:
