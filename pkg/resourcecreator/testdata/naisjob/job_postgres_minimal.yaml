@@ -240,25 +240,3 @@ tests:
                         value: "postgresql://$(PGUSER):$(PGPASSWORD)@mynaisjob-pooler.pg-mynamespace:5432/app?sslmode=disable"
                       - name: PGJDBCURL
                         value: "jdbc:postgresql://mynaisjob-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
-
-  - operation: CreateOrUpdate
-    apiVersion: monitoring.coreos.com/v1
-    kind: PodMonitor
-    name: mynaisjob
-    namespace: pg-mynamespace
-    match:
-      - name: "postgres pod monitor created"
-        type: subset
-        resource:
-          spec:
-            podMetricsEndpoints:
-              - path: /metrics
-                port: exporter
-            selector:
-              matchLabels:
-                application: spilo
-                cluster-name: mynaisjob
-            podTargetLabels:
-              - app
-              - cluster-name
-              - team
