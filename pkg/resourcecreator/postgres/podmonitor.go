@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreatePodMonitor(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+func createPodMonitor(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.OwnerReferences = nil
 	objectMeta.Name = pgClusterName
@@ -20,7 +20,7 @@ func CreatePodMonitor(source Source, ast *resource.Ast, pgClusterName, pgNamespa
 		ObjectMeta: objectMeta,
 		Spec: pov1.PodMonitorSpec{
 			JobLabel:        "app.kubernetes.io/name",
-			PodTargetLabels: []string{"application", "cluster-name"},
+			PodTargetLabels: []string{"app", "cluster-name", "team"},
 			PodMetricsEndpoints: []pov1.PodMetricsEndpoint{
 				{
 					Port:        "exporter",

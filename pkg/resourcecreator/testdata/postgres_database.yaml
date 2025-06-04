@@ -217,27 +217,6 @@ tests:
                 application: db-connection-pooler
                 app: myapplication
 
-  - operation: CreateOrUpdate
-    apiVersion: monitoring.coreos.com/v1
-    kind: PodMonitor
-    name: my-postgres-cluster
-    namespace: pg-mynamespace
-    match:
-      - name: "postgres pod monitor created"
-        type: subset
-        resource:
-          spec:
-            podMetricsEndpoints:
-              - path: /metrics
-                port: exporter
-            selector:
-              matchLabels:
-                application: spilo
-                cluster-name: my-postgres-cluster
-            podTargetLabels:
-              - application
-              - cluster-name
-
   - apiVersion: apps/v1
     kind: Deployment
     operation: CreateOrUpdate
@@ -280,3 +259,25 @@ tests:
                         value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.pg-mynamespace:5432/app?sslmode=disable"
                       - name: PGJDBCURL
                         value: "jdbc:postgresql://my-postgres-cluster-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
+
+  - operation: CreateOrUpdate
+    apiVersion: monitoring.coreos.com/v1
+    kind: PodMonitor
+    name: my-postgres-cluster
+    namespace: pg-mynamespace
+    match:
+      - name: "postgres pod monitor created"
+        type: subset
+        resource:
+          spec:
+            podMetricsEndpoints:
+              - path: /metrics
+                port: exporter
+            selector:
+              matchLabels:
+                application: spilo
+                cluster-name: my-postgres-cluster
+            podTargetLabels:
+              - app
+              - cluster-name
+              - team
