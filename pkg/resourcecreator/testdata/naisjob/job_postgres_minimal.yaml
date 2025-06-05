@@ -251,6 +251,6 @@ tests:
                             name: app-owner-user.mynaisjob.credentials.postgresql.acid.zalan.do
                             key: password
                       - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@mynaisjob-pooler.pg-mynamespace:5432/app?sslmode=disable"
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@mynaisjob-pooler.pg-mynamespace:5432/app"
                       - name: PGJDBCURL
-                        value: "jdbc:postgresql://mynaisjob-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
+                        value: "jdbc:postgresql://mynaisjob-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

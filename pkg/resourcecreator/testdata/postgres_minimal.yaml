@@ -252,6 +252,6 @@ tests:
                             name: app-owner-user.myapplication.credentials.postgresql.acid.zalan.do
                             key: password
                       - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@myapplication-pooler.pg-mynamespace:5432/app?sslmode=disable"
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@myapplication-pooler.pg-mynamespace:5432/app"
                       - name: PGJDBCURL
-                        value: "jdbc:postgresql://myapplication-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
+                        value: "jdbc:postgresql://myapplication-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

@@ -91,11 +91,11 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		},
 		{
 			Name:  "PGURL",
-			Value: fmt.Sprintf("postgresql://$(PGUSER):$(PGPASSWORD)@%s-pooler.%s:5432/app?sslmode=disable", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("postgresql://$(PGUSER):$(PGPASSWORD)@%s-pooler.%s:5432/app", pgClusterName, pgNamespace),
 		},
 		{
 			Name:  "PGJDBCURL",
-			Value: fmt.Sprintf("jdbc:postgresql://%s-pooler.%s:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("jdbc:postgresql://%s-pooler.%s:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)", pgClusterName, pgNamespace),
 		},
 	}
 
