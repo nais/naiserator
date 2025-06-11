@@ -170,6 +170,21 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 					},
 				},
 			},
+			NodeAffinity: &corev1.NodeAffinity{
+				RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+					NodeSelectorTerms: []corev1.NodeSelectorTerm{
+						{
+							MatchExpressions: []corev1.NodeSelectorRequirement{
+								{
+									Key:      "nais.io/type",
+									Operator: "In",
+									Values:   []string{"postgres"},
+								},
+							},
+						},
+					},
+				},
+			},
 			PostgresqlParam: acid_zalan_do_v1.PostgresqlParam{
 				PgVersion: postgres.Cluster.MajorVersion,
 				Parameters: map[string]string{

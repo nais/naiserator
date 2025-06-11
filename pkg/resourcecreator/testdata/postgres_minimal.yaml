@@ -69,6 +69,14 @@ tests:
               team: mynamespace
               apiserver-access: enabled
           spec:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: nais.io/type
+                        operator: In
+                        values:
+                          - postgres
             enableConnectionPooler: true
             connectionPooler:
               resources:
