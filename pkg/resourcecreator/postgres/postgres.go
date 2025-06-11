@@ -208,6 +208,9 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 					DefaultUsers:    true,
 					Extensions:      extensions,
 					SecretNamespace: source.GetNamespace(),
+					PreparedSchemas: map[string]acid_zalan_do_v1.PreparedSchema{
+						defaultSchema: {},
+					},
 				},
 			},
 		},

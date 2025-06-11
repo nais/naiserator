@@ -103,6 +103,8 @@ tests:
               app:
                 defaultUsers: true
                 secretNamespace: mynamespace
+                schemas:
+                  public: {}
             resources:
               limits:
                 cpu: "400m"
