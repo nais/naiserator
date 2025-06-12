@@ -1,6 +1,9 @@
 package batch
 
 import (
+	"fmt"
+	"time"
+
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,6 +22,15 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 	jobSpec, err := CreateJobSpec(naisjob, ast, cfg)
 	if err != nil {
 		return err
+	}
+
+	if naisjob.Spec.TTL != "" {
+		d, err := time.ParseDuration(naisjob.Spec.TTL)
+		if err != nil {
+			return fmt.Errorf("parsing TTL: %w", err)
+		}
+
+		objectMeta.Annotations["euthanaisa.nais.io/kill-after"] = time.Now().Add(d).Format(time.RFC3339)
 	}
 
 	cronJob := batchv1.CronJob{
