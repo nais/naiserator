@@ -30,8 +30,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    annotations:
-      texas.nais.io/enabled: "true"
   spec:
     image: foo/bar
     maskinporten:

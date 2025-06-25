@@ -16,12 +16,6 @@ import (
 
 const Port = 7164
 
-const (
-	// AnnotationEnable is an opt-in annotation key used to enable Texas sidecar
-	// FIXME: remove when Texas is considered stable enough to be enabled by default
-	AnnotationEnable = "texas.nais.io/enabled"
-)
-
 type Source interface {
 	resource.Source
 }
@@ -45,13 +39,8 @@ func Create(
 	maskinportenclient *nais_io_v1.MaskinportenClient,
 	tokenxclient *nais_io_v1.Jwker,
 ) error {
-	needsTexas, ok := source.GetAnnotations()[AnnotationEnable]
-	if !ok || needsTexas != "true" {
-		return nil
-	}
-
 	if !cfg.IsTexasEnabled() {
-		return fmt.Errorf("texas is not available in this cluster")
+		return nil
 	}
 
 	providers := NewProviders(maskinportenclient, azureadapplication, idportenclient, tokenxclient)
