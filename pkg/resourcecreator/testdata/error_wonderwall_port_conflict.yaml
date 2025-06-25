@@ -7,6 +7,8 @@ config:
   gateway-mappings:
     - domainSuffix: .nav.no
       ingressClass: nav-no-gateway
+  wonderwall:
+    image: nais/wonderwall
 input:
   kind: "Application"
   apiVersion: nais.io/v1alpha1

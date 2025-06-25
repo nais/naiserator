@@ -6,6 +6,8 @@ config:
     texas: true
   google-project-id: google-project-id
   cluster-name: mycluster
+  texas:
+    image: nais/texas
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

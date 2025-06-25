@@ -48,6 +48,10 @@ func Create(
 		return nil
 	}
 
+	if cfg.GetTexasOptions().Image == "" {
+		return fmt.Errorf("texas image not configured")
+	}
+
 	sidecarSpec, err := sidecar(source, cfg, providers)
 	if err != nil {
 		return err
