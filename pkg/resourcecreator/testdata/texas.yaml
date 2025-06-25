@@ -2,8 +2,8 @@ testconfig:
   description: texas sidecar injected into pod
 config:
   features:
-    texas: true
     maskinporten: true
+    texas: true
   observability:
     otel:
       enabled: true
@@ -55,11 +55,11 @@ tests:
                   - name: myapplication
                     env:
                       - name: NAIS_TOKEN_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/token
+                        value: ^http://127.0.0.1:7164/api/v1/token$
                       - name: NAIS_TOKEN_EXCHANGE_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/token
+                        value: ^http://127.0.0.1:7164/api/v1/token/exchange$
                       - name: NAIS_TOKEN_INTROSPECTION_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/introspect
+                        value: ^http://127.0.0.1:7164/api/v1/introspect$
                     envFrom:
                       - secretRef:
                           name: ^maskinporten-myapplication-9561321b$

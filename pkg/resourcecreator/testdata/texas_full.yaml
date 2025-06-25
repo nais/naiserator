@@ -1,5 +1,5 @@
 testconfig:
-  description: texas sidecar injected into pod
+  description: texas sidecar injected into pod with all supported providers
 config:
   features:
     azurerator: true
@@ -59,11 +59,11 @@ tests:
                   - name: myapplication
                     env:
                       - name: NAIS_TOKEN_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/token
+                        value: ^http://127.0.0.1:7164/api/v1/token$
                       - name: NAIS_TOKEN_EXCHANGE_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/token
+                        value: ^http://127.0.0.1:7164/api/v1/token/exchange$
                       - name: NAIS_TOKEN_INTROSPECTION_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/introspect
+                        value: ^http://127.0.0.1:7164/api/v1/introspect$
                     envFrom:
                       - secretRef:
                           name: ^azure-myapplication-4190a8ca-.{6,7}$
@@ -97,19 +97,3 @@ tests:
                           name: ^tokenx-myapplication-.+$
                     image: nais/texas
                     name: texas
-                    resources:
-                      limits:
-                        memory: 256Mi
-                      requests:
-                        cpu: 20m
-                        memory: 32Mi
-                    securityContext:
-                      allowPrivilegeEscalation: false
-                      capabilities:
-                        drop:
-                          - ALL
-                      privileged: false
-                      readOnlyRootFilesystem: true
-                      runAsGroup: 1069
-                      runAsNonRoot: true
-                      runAsUser: 1069

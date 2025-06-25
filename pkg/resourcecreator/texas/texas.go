@@ -21,123 +21,78 @@ type Source interface {
 }
 
 type Config interface {
-	IsTexasEnabled() bool
-	IsGCPEnabled() bool
-	GetTexasOptions() config.Texas
-	GetObservability() config.Observability
 	GetClusterName() string
-	GetGoogleProjectID() string
+	GetObservability() config.Observability
 	GetWebProxyOptions() config.Proxy
+	IsGCPEnabled() bool
+	IsTexasEnabled() bool
+	TexasImage() string
 }
 
 func Create(
 	source Source,
 	ast *resource.Ast,
 	cfg Config,
-	azureadapplication *nais_io_v1.AzureAdApplication,
-	idportenclient *nais_io_v1.IDPortenClient,
-	maskinportenclient *nais_io_v1.MaskinportenClient,
-	tokenxclient *nais_io_v1.Jwker,
+	clients Clients,
 ) error {
-	if !cfg.IsTexasEnabled() {
+	if !cfg.IsTexasEnabled() || clients.IsEmpty() {
 		return nil
 	}
 
-	providers := NewProviders(maskinportenclient, azureadapplication, idportenclient, tokenxclient)
-	if len(providers) == 0 {
-		return nil
-	}
-
-	if cfg.GetTexasOptions().Image == "" {
+	if cfg.TexasImage() == "" {
 		return fmt.Errorf("texas image not configured")
 	}
 
-	sidecarSpec, err := sidecar(source, cfg, providers)
-	if err != nil {
-		return err
+	envs := clients.EnvVars()
+	envs = append(envs, otelEnvVars(source, cfg)...)
+
+	// If GCP is unconfigured, it means we are running on-premises, and we need the web proxy config.
+	// Note that we need the web proxy regardless of whether the app has requested one, so we don't care about `.spec.webProxy`.
+	if !cfg.IsGCPEnabled() {
+		proxyEnvs, err := proxyopts.EnvironmentVariables(cfg)
+		if err != nil {
+			return fmt.Errorf("generate texas webproxy environment variables: %w", err)
+		}
+		envs = append(proxyEnvs, envs...)
 	}
 
 	ast.AppendEnv(applicationEnvVars()...)
-	ast.InitContainers = append(ast.InitContainers, *sidecarSpec)
+	ast.InitContainers = append(ast.InitContainers, corev1.Container{
+		Name:            "texas",
+		Env:             envs,
+		EnvFrom:         clients.EnvFromSources(),
+		Image:           cfg.TexasImage(),
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    k8sResource.MustParse("20m"),
+				corev1.ResourceMemory: k8sResource.MustParse("32Mi"),
+			},
+			Limits: corev1.ResourceList{
+				corev1.ResourceMemory: k8sResource.MustParse("256Mi"),
+			},
+		},
+		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways), // native sidecar
+		SecurityContext: pod.DefaultContainerSecurityContext(),
+	})
 	ast.Labels["texas"] = "enabled"
 	ast.Labels["otel"] = "enabled"
 
 	return nil
 }
 
-type Provider struct {
-	// EnableEnvVar is the name of the environment variable that enables the provider in Texas.
-	EnableEnvVar string
-	SecretName   string
+type Clients struct {
+	Azure        *nais_io_v1.AzureAdApplication
+	IDPorten     *nais_io_v1.IDPortenClient
+	Maskinporten *nais_io_v1.MaskinportenClient
+	TokenX       *nais_io_v1.Jwker
 }
 
-func (p Provider) EnvVar() corev1.EnvVar {
-	return corev1.EnvVar{
-		Name:  p.EnableEnvVar,
-		Value: "true",
-	}
+func (c Clients) IsEmpty() bool {
+	return c.Azure == nil && c.IDPorten == nil && c.Maskinporten == nil && c.TokenX == nil
 }
 
-type Providers []Provider
-
-func NewProviders(
-	maskinportenclient *nais_io_v1.MaskinportenClient,
-	azureadapplication *nais_io_v1.AzureAdApplication,
-	idportenclient *nais_io_v1.IDPortenClient,
-	tokenxclient *nais_io_v1.Jwker,
-) Providers {
-	providers := Providers{}
-
-	if azureadapplication != nil {
-		providers = append(providers, Provider{
-			EnableEnvVar: "AZURE_ENABLED",
-			SecretName:   azureadapplication.Spec.SecretName,
-		})
-	}
-
-	if idportenclient != nil {
-		providers = append(providers, Provider{
-			EnableEnvVar: "IDPORTEN_ENABLED",
-			SecretName:   idportenclient.Spec.SecretName,
-		})
-	}
-
-	if maskinportenclient != nil {
-		providers = append(providers, Provider{
-			EnableEnvVar: "MASKINPORTEN_ENABLED",
-			SecretName:   maskinportenclient.Spec.SecretName,
-		})
-	}
-
-	if tokenxclient != nil {
-		providers = append(providers, Provider{
-			EnableEnvVar: "TOKEN_X_ENABLED",
-			SecretName:   tokenxclient.Spec.SecretName,
-		})
-	}
-
-	return providers
-}
-
-func (p Providers) EnvVars() []corev1.EnvVar {
-	vars := make([]corev1.EnvVar, 0, len(p))
-	for _, provider := range p {
-		vars = append(vars, provider.EnvVar())
-	}
-
-	return vars
-}
-
-func (p Providers) EnvFromSources() []corev1.EnvFromSource {
-	sources := make([]corev1.EnvFromSource, 0, len(p))
-	for _, provider := range p {
-		sources = append(sources, pod.EnvFromSecret(provider.SecretName))
-	}
-
-	return sources
-}
-
-func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container, error) {
+func (c Clients) EnvVars() []corev1.EnvVar {
 	envs := []corev1.EnvVar{
 		{
 			Name:  "BIND_ADDRESS",
@@ -152,46 +107,48 @@ func sidecar(source Source, cfg Config, providers Providers) (*corev1.Container,
 			},
 		},
 	}
-	envs = append(envs, providers.EnvVars()...)
-	otelEnvs := []corev1.EnvVar{
-		{
-			Name: "OTEL_RESOURCE_ATTRIBUTES",
-			Value: fmt.Sprintf(
-				"downstream.app.name=%s,downstream.app.namespace=%s,downstream.cluster.name=%s,nais.pod.name=$(NAIS_POD_NAME)",
-				source.GetName(), source.GetNamespace(), cfg.GetClusterName(),
-			),
-		},
+	if c.Azure != nil {
+		envs = append(envs, corev1.EnvVar{
+			Name:  "AZURE_ENABLED",
+			Value: "true",
+		})
 	}
-	envs = append(envs, observability.OtelEnvVars("texas", source.GetNamespace(), otelEnvs, nil, cfg.GetObservability().Otel)...)
-
-	// If GCP is unconfigured, it means we are running on-premises, and we need the web proxy config.
-	// Note that we need the web proxy regardless of whether the app has requested one, so we don't care about `.spec.webProxy`.
-	if !cfg.IsGCPEnabled() {
-		proxyEnvs, err := proxyopts.EnvironmentVariables(cfg)
-		if err != nil {
-			return nil, fmt.Errorf("generate texas webproxy environment variables: %w", err)
-		}
-		envs = append(proxyEnvs, envs...)
+	if c.IDPorten != nil {
+		envs = append(envs, corev1.EnvVar{
+			Name:  "IDPORTEN_ENABLED",
+			Value: "true",
+		})
 	}
+	if c.Maskinporten != nil {
+		envs = append(envs, corev1.EnvVar{
+			Name:  "MASKINPORTEN_ENABLED",
+			Value: "true",
+		})
+	}
+	if c.TokenX != nil {
+		envs = append(envs, corev1.EnvVar{
+			Name:  "TOKEN_X_ENABLED",
+			Value: "true",
+		})
+	}
+	return envs
+}
 
-	return &corev1.Container{
-		Name:            "texas",
-		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways),
-		Image:           cfg.GetTexasOptions().Image,
-		ImagePullPolicy: corev1.PullIfNotPresent,
-		Env:             envs,
-		EnvFrom:         providers.EnvFromSources(),
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    k8sResource.MustParse("20m"),
-				corev1.ResourceMemory: k8sResource.MustParse("32Mi"),
-			},
-			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: k8sResource.MustParse("256Mi"),
-			},
-		},
-		SecurityContext: pod.DefaultContainerSecurityContext(),
-	}, nil
+func (c Clients) EnvFromSources() []corev1.EnvFromSource {
+	sources := make([]corev1.EnvFromSource, 0)
+	if c.Azure != nil {
+		sources = append(sources, pod.EnvFromSecret(c.Azure.Spec.SecretName))
+	}
+	if c.IDPorten != nil {
+		sources = append(sources, pod.EnvFromSecret(c.IDPorten.Spec.SecretName))
+	}
+	if c.Maskinporten != nil {
+		sources = append(sources, pod.EnvFromSecret(c.Maskinporten.Spec.SecretName))
+	}
+	if c.TokenX != nil {
+		sources = append(sources, pod.EnvFromSecret(c.TokenX.Spec.SecretName))
+	}
+	return sources
 }
 
 // applicationEnvVars are the environment variables exposed to the main application container.
@@ -210,4 +167,22 @@ func applicationEnvVars() []corev1.EnvVar {
 			Value: fmt.Sprintf("http://127.0.0.1:%d/api/v1/introspect", Port),
 		},
 	}
+}
+
+func otelEnvVars(source Source, cfg Config) []corev1.EnvVar {
+	return observability.OtelEnvVars(
+		"texas",
+		source.GetNamespace(),
+		[]corev1.EnvVar{
+			{
+				Name: "OTEL_RESOURCE_ATTRIBUTES",
+				Value: fmt.Sprintf(
+					"downstream.app.name=%s,downstream.app.namespace=%s,downstream.cluster.name=%s,nais.pod.name=$(NAIS_POD_NAME)",
+					source.GetName(), source.GetNamespace(), cfg.GetClusterName(),
+				),
+			},
+		},
+		nil,
+		cfg.GetObservability().Otel,
+	)
 }

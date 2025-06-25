@@ -207,8 +207,12 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 		return nil, err
 	}
 
-	// TODO: figure out a better way to provide secret names to Texas
-	err = texas.Create(app, ast, cfg, azureadapplication, idportenclient, maskinportenclient, tokenxclient)
+	err = texas.Create(app, ast, cfg, texas.Clients{
+		Azure:        azureadapplication,
+		IDPorten:     idportenclient,
+		Maskinporten: maskinportenclient,
+		TokenX:       tokenxclient,
+	})
 	if err != nil {
 		return nil, err
 	}

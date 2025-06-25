@@ -94,8 +94,8 @@ func (o *Options) GetGoogleTeamProjectID() string {
 	return o.GoogleTeamProjectID
 }
 
-func (o *Options) GetTexasOptions() config.Texas {
-	return o.Config.Texas
+func (o *Options) TexasImage() string {
+	return o.Config.Texas.Image
 }
 
 func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
