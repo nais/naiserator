@@ -1,0 +1,19 @@
+testconfig:
+  description: applications cannot use ports occupied by texas
+config:
+  features:
+    maskinporten: true
+    texas: true
+  texas:
+    image: nais/texas
+input:
+  kind: "Application"
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+  spec:
+    maskinporten:
+      enabled: true
+    port: 7164
+error: "cannot use port '7164'; conflicts with sidecar"

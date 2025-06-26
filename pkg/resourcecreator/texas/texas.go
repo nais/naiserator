@@ -43,6 +43,11 @@ func Create(
 		return fmt.Errorf("texas image not configured")
 	}
 
+	port := source.GetPort()
+	if port == Port {
+		return fmt.Errorf("cannot use port '%d'; conflicts with sidecar", port)
+	}
+
 	envs := clients.EnvVars()
 	envs = append(envs, otelEnvVars(source, cfg)...)
 
