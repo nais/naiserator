@@ -2,6 +2,7 @@ dependencies:
   - allOf:
       - nais-crds
       - cert-manager
+      - texas
 environmentKinds:
   - tenant
   - onprem
@@ -118,10 +119,6 @@ values:
       - management
   naiserator.features.sql-instance-in-shared-vpc:
     displayName: Create SQL Instance in Shared VPC
-    config:
-      type: bool
-  naiserator.features.texas:
-    displayName: Enable Token Exchange as a Service
     config:
       type: bool
   naiserator.features.vault:
