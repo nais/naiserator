@@ -3,7 +3,6 @@ testconfig:
 config:
   features:
     azurerator: true
-  google-project-id: google-project-id
   cluster-name: mycluster
 input:
   kind: Application

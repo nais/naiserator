@@ -3,13 +3,7 @@ testconfig:
 config:
   features:
     azurerator: true
-  google-project-id: google-project-id
   cluster-name: mycluster
-  gateway-mappings:
-    - domainSuffix: .adeo.no
-      ingressClass: adeo-gateway
-    - domainSuffix: .domain
-      ingressClass: domain-gateway
 input:
   kind: Naisjob
   apiVersion: nais.io/v1
@@ -36,6 +30,30 @@ input:
             namespace: t1
             cluster: other-cluster
 tests:
+  - apiVersion: batch/v1
+    kind: CronJob
+    name: mynaisjob
+    match:
+      - name: "cronjob contains azure secrets"
+        type: regex
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    volumes:
+                      - name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                        secret:
+                          secretName: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                    containers:
+                      - envFrom:
+                          - secretRef:
+                              name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                        volumeMounts:
+                          - name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                            readOnly: true
+                            mountPath: /var/run/secrets/nais.io/azure
   - apiVersion: nais.io/v1
     kind: AzureAdApplication
     name: mynaisjob

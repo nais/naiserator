@@ -3,12 +3,7 @@ testconfig:
 config:
   features:
     azurerator: true
-  google-project-id: google-project-id
   cluster-name: mycluster
-  service-hosts:
-    azurerator:
-      - login.azure-ad.test
-      - graph.microsoft.test
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

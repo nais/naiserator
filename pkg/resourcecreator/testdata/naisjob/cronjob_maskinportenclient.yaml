@@ -1,7 +1,6 @@
 testconfig:
   description: minimal maskinporten config in naisjob spec should result in MaskinportenClient
 config:
-  google-project-id: google-project-id
   cluster-name: mycluster
   features:
     maskinporten: true
