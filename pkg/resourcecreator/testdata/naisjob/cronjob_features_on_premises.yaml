@@ -108,6 +108,10 @@ tests:
                             value: test-cluster
                           - name: NAIS_CLIENT_ID
                             value: test-cluster:mynamespace:mynaisjob
+                          - name: NAIS_POD_NAME
+                            valueFrom:
+                              fieldRef:
+                                fieldPath: metadata.name
                           - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
                             value: "true"
                           - name: PORT
