@@ -45,6 +45,7 @@ tests:
               spec:
                 containers:
                   - name: "myapplication"
+                initContainers:
                   - name: "elector"
                     image: "nais/elector:latest"
                     args:
@@ -57,4 +58,5 @@ tests:
                     resources:
                       requests:
                         cpu: "100m"
+                    restartPolicy: "Always"
                     imagePullPolicy: "IfNotPresent"

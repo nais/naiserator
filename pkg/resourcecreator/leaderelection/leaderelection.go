@@ -11,6 +11,7 @@ import (
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/utils/ptr"
 )
 
 type Source interface {
@@ -41,7 +42,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrRecreate, roleBinding(appObjectMeta, roleBindingObjectMeta))
-	ast.Containers = append(ast.Containers, container(source.GetName(), source.GetNamespace(), image))
+	ast.InitContainers = append(ast.InitContainers, container(source.GetName(), source.GetNamespace(), image))
 	ast.PrependEnv(electorEnv()...)
 	return nil
 }
@@ -95,6 +96,7 @@ func container(name, namespace, image string) corev1.Container {
 				corev1.ResourceCPU: k8sResource.MustParse("100m"),
 			},
 		},
+		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: 4040,
 			Protocol:      corev1.ProtocolTCP,
