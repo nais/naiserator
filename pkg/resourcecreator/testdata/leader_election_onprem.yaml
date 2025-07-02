@@ -45,6 +45,13 @@ tests:
               spec:
                 containers:
                   - name: "myapplication"
+                    env:
+                      - name: "ELECTOR_PATH"
+                        value: "localhost:4040"
+                      - name: "ELECTOR_GET_URL"
+                        value: "http://localhost:4040/"
+                      - name: "ELECTOR_SSE_URL"
+                        value: "http://localhost:4040/sse"
                 initContainers:
                   - name: "elector"
                     image: "nais/elector:latest"
