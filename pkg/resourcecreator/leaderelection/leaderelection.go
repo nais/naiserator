@@ -10,6 +10,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/utils/ptr"
 )
@@ -101,7 +102,12 @@ func container(name, namespace, image string) corev1.Container {
 			ContainerPort: 4040,
 			Protocol:      corev1.ProtocolTCP,
 		}},
-		Args: []string{fmt.Sprintf("--election=%s", name), "--http=localhost:4040", fmt.Sprintf("--election-namespace=%s", namespace)},
+		Args: []string{
+			fmt.Sprintf("--election=%s", name),
+			fmt.Sprintf("--election-namespace=%s", namespace),
+			"--http=localhost:4040",
+			"--probe-address=0.0.0.0:4041",
+		},
 		Env: []corev1.EnvVar{
 			{
 				Name:  "ELECTOR_LOG_FORMAT",
@@ -109,5 +115,13 @@ func container(name, namespace, image string) corev1.Container {
 			},
 		},
 		SecurityContext: pod.DefaultContainerSecurityContext(),
+		StartupProbe: &corev1.Probe{
+			ProbeHandler: corev1.ProbeHandler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/healthz",
+					Port: intstr.FromInt32(4041),
+				},
+			},
+		},
 	}
 }

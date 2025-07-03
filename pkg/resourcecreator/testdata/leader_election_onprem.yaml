@@ -57,8 +57,9 @@ tests:
                     image: "nais/elector:latest"
                     args:
                       - "--election=myapplication"
-                      - "--http=localhost:4040"
                       - "--election-namespace=mynamespace"
+                      - "--http=localhost:4040"
+                      - "--probe-address=0.0.0.0:4041"
                     ports:
                       - protocol: "TCP"
                         containerPort: 4040
@@ -67,3 +68,7 @@ tests:
                         cpu: "100m"
                     restartPolicy: "Always"
                     imagePullPolicy: "IfNotPresent"
+                    startupProbe:
+                      httpGet:
+                        path: "/healthz"
+                        port: 4041
