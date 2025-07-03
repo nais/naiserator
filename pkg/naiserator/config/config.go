@@ -56,7 +56,6 @@ type Features struct {
 	GARToleration               bool     `json:"gar-toleration"`
 	GCP                         bool     `json:"gcp"`
 	IDPorten                    bool     `json:"idporten"`
-	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Maskinporten                bool     `json:"maskinporten"`

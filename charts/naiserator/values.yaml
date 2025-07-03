@@ -34,7 +34,6 @@ naiserator:
     gar-toleration: false
     gcp: true
     idporten: false
-    influx-credentials: false
     jwker: false
     kafkarator: false
     maskinporten: false

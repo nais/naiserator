@@ -26,7 +26,6 @@ var namePattern = regexp.MustCompile("[^a-z0-9]")
 
 type Source interface {
 	resource.Source
-	GetInflux() *nais_io_v1.Influx
 	GetKafka() *nais_io_v1.Kafka
 	GetOpenSearch() *nais_io_v1.OpenSearch
 	GetValkey() []nais_io_v1.Valkey
@@ -34,7 +33,6 @@ type Source interface {
 
 type Config interface {
 	IsKafkaratorEnabled() bool
-	IsInfluxCredentialsEnabled() bool
 	GetAivenProject() string
 	GetAivenGeneration() int
 }
@@ -74,11 +72,6 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 
 	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
 
-	influxEnabled, err := Influx(ast, source.GetInflux(), &aivenApp, config.IsInfluxCredentialsEnabled())
-	if err != nil {
-		return err
-	}
-
 	openSearchEnabled, err := OpenSearch(ast, source.GetOpenSearch(), &aivenApp)
 	if err != nil {
 		return err
@@ -96,7 +89,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 	}
 
-	if len(kafkaKeyPaths) > 0 || influxEnabled || openSearchEnabled || valkeyEnabled {
+	if len(kafkaKeyPaths) > 0 || openSearchEnabled || valkeyEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.PrependEnv([]v1.EnvVar{
 			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),

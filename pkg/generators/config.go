@@ -138,10 +138,6 @@ func (o *Options) IsIDPortenEnabled() bool {
 	return o.Config.Features.IDPorten
 }
 
-func (o *Options) IsInfluxCredentialsEnabled() bool {
-	return o.Config.Features.InfluxCredentials
-}
-
 func (o *Options) IsJwkerEnabled() bool {
 	return o.Config.Features.Jwker
 }

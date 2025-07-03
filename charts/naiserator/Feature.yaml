@@ -77,10 +77,6 @@ values:
     displayName: Enable GCP
     computed:
       template: '{{ne .Kind "onprem"}}'
-  naiserator.features.influx-credentials:
-    displayName: Enable provisioning of InfluxDB credentials
-    config:
-      type: bool
   naiserator.features.jwker:
     displayName: Enable Jwker
     config:
