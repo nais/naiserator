@@ -15,9 +15,15 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+const (
+	Port      = 4040
+	ProbePort = 4041
+)
+
 type Source interface {
 	resource.Source
 	GetLeaderElection() bool
+	GetPort() int
 }
 
 type Config interface {
@@ -31,6 +37,11 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	image := cfg.GetLeaderElectionImage()
 	if image == "" {
 		return fmt.Errorf("leader election image not configured")
+	}
+
+	port := source.GetPort()
+	if port == Port || port == ProbePort {
+		return fmt.Errorf("cannot use port '%d'; conflicts with leader election sidecar", port)
 	}
 
 	appObjectMeta := resource.CreateObjectMeta(source)
@@ -78,11 +89,11 @@ func electorEnv() []corev1.EnvVar {
 		},
 		{
 			Name:  "ELECTOR_GET_URL",
-			Value: "http://localhost:4040/",
+			Value: fmt.Sprintf("http://localhost:%d/", Port),
 		},
 		{
 			Name:  "ELECTOR_SSE_URL",
-			Value: "http://localhost:4040/sse",
+			Value: fmt.Sprintf("http://localhost:%d/sse", Port),
 		},
 	}
 }
@@ -99,14 +110,14 @@ func container(name, namespace, image string) corev1.Container {
 		},
 		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
 		Ports: []corev1.ContainerPort{{
-			ContainerPort: 4040,
+			ContainerPort: Port,
 			Protocol:      corev1.ProtocolTCP,
 		}},
 		Args: []string{
 			fmt.Sprintf("--election=%s", name),
 			fmt.Sprintf("--election-namespace=%s", namespace),
-			"--http=localhost:4040",
-			"--probe-address=0.0.0.0:4041",
+			fmt.Sprintf("--http=localhost:%d", Port),
+			fmt.Sprintf("--probe-address=0.0.0.0:%d", ProbePort),
 		},
 		Env: []corev1.EnvVar{
 			{
@@ -119,7 +130,7 @@ func container(name, namespace, image string) corev1.Container {
 			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: "/healthz",
-					Port: intstr.FromInt32(4041),
+					Port: intstr.FromInt32(ProbePort),
 				},
 			},
 		},
