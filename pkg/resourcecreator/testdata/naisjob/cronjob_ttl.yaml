@@ -22,3 +22,5 @@ tests:
           metadata:
             annotations:
               euthanaisa.nais.io/kill-after: ".+$"
+            labels:
+              euthanaisa.nais.io/enabled: "true"
