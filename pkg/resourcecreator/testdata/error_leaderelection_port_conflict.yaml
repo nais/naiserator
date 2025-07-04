@@ -1,0 +1,15 @@
+testconfig:
+  description: applications cannot use ports occupied by elector sidecar
+config:
+  leader-election:
+    image: "nais/elector:latest"
+input:
+  kind: "Application"
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+  spec:
+    leaderElection: true
+    port: 4040
+error: "cannot use port '4040'; conflicts with leader election sidecar"

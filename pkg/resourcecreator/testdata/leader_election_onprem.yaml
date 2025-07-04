@@ -45,16 +45,30 @@ tests:
               spec:
                 containers:
                   - name: "myapplication"
+                    env:
+                      - name: "ELECTOR_PATH"
+                        value: "localhost:4040"
+                      - name: "ELECTOR_GET_URL"
+                        value: "http://localhost:4040/"
+                      - name: "ELECTOR_SSE_URL"
+                        value: "http://localhost:4040/sse"
+                initContainers:
                   - name: "elector"
                     image: "nais/elector:latest"
                     args:
                       - "--election=myapplication"
-                      - "--http=localhost:4040"
                       - "--election-namespace=mynamespace"
+                      - "--http=localhost:4040"
+                      - "--probe-address=0.0.0.0:4041"
                     ports:
                       - protocol: "TCP"
                         containerPort: 4040
                     resources:
                       requests:
                         cpu: "100m"
+                    restartPolicy: "Always"
                     imagePullPolicy: "IfNotPresent"
+                    startupProbe:
+                      httpGet:
+                        path: "/healthz"
+                        port: 4041
