@@ -1,31 +1,15 @@
 testconfig:
-  description: texas sidecar injected into pod
+  description: texas sidecar injected into pod on-premises
 config:
   features:
-    texas: true
     maskinporten: true
+    texas: true
   proxy:
     address: http://foo.bar:5224
     exclude:
       - foo
       - bar
       - baz
-  observability:
-    otel:
-      enabled: true
-      auto-instrumentation:
-        enabled: true
-        app-config: "system-namespace/app-config"
-      collector:
-        labels:
-          - key1=value1
-          - key2=value2
-          - key3=value3
-        namespace: "system-namespace"
-        port: 4317
-        service: "my-collector"
-        tls: false
-        protocol: "grpc"
   cluster-name: mycluster
   texas:
     image: nais/texas
@@ -35,8 +19,6 @@ input:
   metadata:
     name: myapplication
     namespace: mynamespace
-    annotations:
-      texas.nais.io/enabled: "true"
   spec:
     image: foo/bar
     maskinporten:
@@ -62,11 +44,11 @@ tests:
                   - name: myapplication
                     env:
                       - name: NAIS_TOKEN_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/token
+                        value: ^http://127.0.0.1:7164/api/v1/token$
                       - name: NAIS_TOKEN_EXCHANGE_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/token
+                        value: ^http://127.0.0.1:7164/api/v1/token/exchange$
                       - name: NAIS_TOKEN_INTROSPECTION_ENDPOINT
-                        value: http://127.0.0.1:7164/api/v1/introspect
+                        value: ^http://127.0.0.1:7164/api/v1/introspect$
                     envFrom:
                       - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
@@ -95,34 +77,8 @@ tests:
                             fieldPath: metadata.name
                       - name: MASKINPORTEN_ENABLED
                         value: ^true$
-                      - name: OTEL_SERVICE_NAME
-                        value: ^texas$
-                      - name: OTEL_RESOURCE_ATTRIBUTES
-                        value: ^service.name=texas,service.namespace=mynamespace,downstream.app.name=myapplication,downstream.app.namespace=mynamespace,downstream.cluster.name=mycluster,nais.pod.name=\$\(NAIS_POD_NAME\)$
-                      - name: OTEL_EXPORTER_OTLP_ENDPOINT
-                        value: http://my-collector.system-namespace:4317
-                      - name: OTEL_EXPORTER_OTLP_PROTOCOL
-                        value: grpc
-                      - name: OTEL_EXPORTER_OTLP_INSECURE
-                        value: "true"
                     envFrom:
                       - secretRef:
                           name: ^maskinporten-myapplication-9561321b$
                     image: nais/texas
                     name: texas
-                    resources:
-                      limits:
-                        memory: 256Mi
-                      requests:
-                        cpu: 20m
-                        memory: 32Mi
-                    securityContext:
-                      allowPrivilegeEscalation: false
-                      capabilities:
-                        drop:
-                          - ALL
-                      privileged: false
-                      readOnlyRootFilesystem: true
-                      runAsGroup: 1069
-                      runAsNonRoot: true
-                      runAsUser: 1069

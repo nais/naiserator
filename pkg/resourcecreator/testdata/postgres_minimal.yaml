@@ -69,6 +69,20 @@ tests:
               team: mynamespace
               apiserver-access: enabled
           spec:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: nais.io/type
+                        operator: In
+                        values:
+                          - postgres
+            enableConnectionPooler: true
+            connectionPooler:
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "50Mi"
             dockerImage: nais-io/postgres-image:1.2.3
             teamId: mynamespace
             volume:
@@ -85,6 +99,8 @@ tests:
               app:
                 defaultUsers: true
                 secretNamespace: mynamespace
+                schemas:
+                  public: {}
             resources:
               limits:
                 cpu: "400m"
@@ -111,7 +127,7 @@ tests:
                         kubernetes.io/metadata.name: pg-mynamespace
                     podSelector:
                       matchLabels:
-                        application: spilo
+                        application: db-connection-pooler
                         app: myapplication
             podSelector:
               matchLabels:
@@ -141,6 +157,11 @@ tests:
                         application: spilo
                         app: myapplication
               - from:
+                  - podSelector:
+                      matchLabels:
+                        application: db-connection-pooler
+                        app: myapplication
+              - from:
                   - namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: nais-system
@@ -150,13 +171,56 @@ tests:
               - from:
                   - namespaceSelector:
                       matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+            podSelector:
+              matchLabels:
+                application: spilo
+                app: myapplication
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication-pooler
+    namespace: pg-mynamespace
+    match:
+      - name: "postgres pooler network policy created"
+        type: subset
+        resource:
+          spec:
+            egress:
+              - to:
+                  - podSelector:
+                      matchLabels:
+                        application: spilo
+                        app: myapplication
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: postgres-operator
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
                         kubernetes.io/metadata.name: mynamespace
                     podSelector:
                       matchLabels:
                         app: myapplication
             podSelector:
               matchLabels:
-                application: spilo
+                application: db-connection-pooler
                 app: myapplication
 
   - apiVersion: apps/v1
@@ -182,7 +246,7 @@ tests:
                     image: navikt/myapplication:1.2.3
                     env:
                       - name: PGHOST
-                        value: myapplication.pg-mynamespace
+                        value: myapplication-pooler.pg-mynamespace
                       - name: PGPORT
                         value: "5432"
                       - name: PGDATABASE
@@ -198,6 +262,6 @@ tests:
                             name: app-owner-user.myapplication.credentials.postgresql.acid.zalan.do
                             key: password
                       - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@myapplication.pg-mynamespace:5432/app?sslmode=disable"
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@myapplication-pooler.pg-mynamespace:5432/app"
                       - name: PGJDBCURL
-                        value: "jdbc:postgresql://myapplication.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable"
+                        value: "jdbc:postgresql://myapplication-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

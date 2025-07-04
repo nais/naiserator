@@ -34,7 +34,6 @@ naiserator:
     gar-toleration: false
     gcp: true
     idporten: false
-    influx-credentials: false
     jwker: false
     kafkarator: false
     maskinporten: false
@@ -43,7 +42,7 @@ naiserator:
     postgres-operator: false
     prometheus-operator: false
     sql-instance-in-shared-vpc: false
-    texas: false
+    texas: true
     vault: false
     webhook: true
     wonderwall: false

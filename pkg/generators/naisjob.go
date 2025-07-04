@@ -22,6 +22,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
+	"github.com/nais/naiserator/pkg/resourcecreator/texas"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	corev1 "k8s.io/api/core/v1"
@@ -104,7 +105,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	if err != nil {
 		return nil, err
 	}
-	_, err = azure.Create(naisjob, ast, cfg)
+	azureadapplication, err := azure.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +128,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	}
 	certificateauthority.Create(naisjob, ast, cfg)
 	securelogs.Create(naisjob, ast, cfg)
-	_, err = maskinporten.Create(naisjob, ast, cfg)
+	maskinportenclient, err := maskinporten.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +139,14 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	}
 
 	err = vault.Create(naisjob, ast, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = texas.Create(naisjob, ast, cfg, texas.Clients{
+		Azure:        azureadapplication,
+		Maskinporten: maskinportenclient,
+	})
 	if err != nil {
 		return nil, err
 	}

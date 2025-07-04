@@ -16,7 +16,6 @@ type Source interface {
 }
 
 type Config interface {
-	GetGoogleProjectID() string
 	GetWebProxyOptions() config.Proxy
 	IsGCPEnabled() bool
 }

@@ -57,6 +57,10 @@ tests:
                       - name: NAIS_CLUSTER_NAME
                       - name: NAIS_CLIENT_ID
                         value: :mynamespace:myapplication
+                      - name: NAIS_POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
                       - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
                         value: "true"
                       - name: PORT

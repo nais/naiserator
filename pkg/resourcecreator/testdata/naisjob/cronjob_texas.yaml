@@ -1,0 +1,110 @@
+testconfig:
+  description: texas sidecar injected into pod with all supported providers
+config:
+  features:
+    azurerator: true
+    maskinporten: true
+    texas: true
+  cluster-name: mycluster
+  observability:
+    otel:
+      enabled: true
+      auto-instrumentation:
+        enabled: true
+        app-config: "system-namespace/app-config"
+      collector:
+        labels:
+          - key1=value1
+          - key2=value2
+          - key3=value3
+        namespace: "system-namespace"
+        port: 4317
+        service: "my-collector"
+        tls: false
+        protocol: "grpc"
+  texas:
+    image: nais/texas
+input:
+  kind: NaisJob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+  spec:
+    schedule: "* 2 * * *"
+    image: foo/bar
+    azure:
+      application:
+        enabled: true
+    maskinporten:
+      enabled: true
+tests:
+  - apiVersion: batch/v1
+    kind: CronJob
+    name: mynaisjob
+    match:
+      - name: "cronjob contains texas sidecar and desired configuration"
+        type: regex
+        resource:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  metadata:
+                    labels:
+                      azure: enabled
+                      maskinporten: enabled
+                      texas: enabled
+                      otel: enabled
+                  spec:
+                    containers:
+                      - name: mynaisjob
+                        env:
+                          - name: NAIS_TOKEN_ENDPOINT
+                            value: ^http://127.0.0.1:7164/api/v1/token$
+                          - name: NAIS_TOKEN_EXCHANGE_ENDPOINT
+                            value: ^http://127.0.0.1:7164/api/v1/token/exchange$
+                          - name: NAIS_TOKEN_INTROSPECTION_ENDPOINT
+                            value: ^http://127.0.0.1:7164/api/v1/introspect$
+                    initContainers:
+                      - restartPolicy: Always
+                        env:
+                          - name: BIND_ADDRESS
+                            value: ^127.0.0.1:7164$
+                          - name: AZURE_ENABLED
+                            value: ^true$
+                          - name: MASKINPORTEN_ENABLED
+                            value: ^true$
+                          - name: OTEL_SERVICE_NAME
+                            value: ^texas$
+                          - name: OTEL_RESOURCE_ATTRIBUTES
+                            value: ^service.name=texas,service.namespace=mynamespace,downstream.app.name=mynaisjob,downstream.app.namespace=mynamespace,downstream.cluster.name=mycluster,nais.pod.name=\$\(NAIS_POD_NAME\)$
+                          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                            value: http://my-collector.system-namespace:4317
+                          - name: OTEL_EXPORTER_OTLP_PROTOCOL
+                            value: grpc
+                          - name: OTEL_EXPORTER_OTLP_INSECURE
+                            value: "true"
+                        envFrom:
+                          - secretRef:
+                              name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                          - secretRef:
+                              name: ^maskinporten-mynaisjob-37970c24$
+                        image: nais/texas
+                        name: texas
+                        resources:
+                          limits:
+                            memory: 256Mi
+                          requests:
+                            cpu: 10m
+                            memory: 32Mi
+                        securityContext:
+                          allowPrivilegeEscalation: false
+                          capabilities:
+                            drop:
+                              - ALL
+                          privileged: false
+                          readOnlyRootFilesystem: true
+                          runAsGroup: 1069
+                          runAsNonRoot: true
+                          runAsUser: 1069

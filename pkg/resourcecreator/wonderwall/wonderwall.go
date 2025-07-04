@@ -106,6 +106,10 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 		return fmt.Errorf("wonderwall is not enabled for this cluster")
 	}
 
+	if naisCfg.GetWonderwallOptions().Image == "" {
+		return fmt.Errorf("wonderwall image not configured")
+	}
+
 	if len(wonderwallCfg.Provider) == 0 {
 		return fmt.Errorf("configuration has empty provider")
 	}

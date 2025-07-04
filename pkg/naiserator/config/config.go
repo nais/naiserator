@@ -56,7 +56,6 @@ type Features struct {
 	GARToleration               bool     `json:"gar-toleration"`
 	GCP                         bool     `json:"gcp"`
 	IDPorten                    bool     `json:"idporten"`
-	InfluxCredentials           bool     `json:"influx-credentials"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
 	Maskinporten                bool     `json:"maskinporten"`
@@ -318,8 +317,8 @@ func init() {
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
 	flag.Bool(FeaturesPostgresOperator, false, "enable Postgres Operator")
-	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FeaturesTexas, false, "enable token exchange as a sidecar/service")
+	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
 	flag.Duration(
 		InformerFullSynchronizationInterval, time.Duration(30*time.Minute),

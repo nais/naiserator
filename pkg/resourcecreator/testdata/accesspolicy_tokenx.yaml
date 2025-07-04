@@ -4,7 +4,6 @@ config:
   features:
     network-policy: true
     jwker: true
-  google-project-id: google-project-id
   cluster-name: mycluster
 input:
   kind: Application

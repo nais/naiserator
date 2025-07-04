@@ -5,13 +5,9 @@ import (
 	"time"
 
 	acid_zalan_do_v1 "github.com/nais/liberator/pkg/apis/acid.zalan.do/v1"
-	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -19,8 +15,7 @@ import (
 const (
 	cpuLimitFactor = 4
 
-	defaultMaintenanceStart = 5 * time.Hour
-	maintenanceDuration     = 1
+	maintenanceDuration = 1
 
 	allowDeletionAnnotation = "nais.io/postgresqlDeleteResource"
 
@@ -68,7 +63,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	envVars := []corev1.EnvVar{
 		{
 			Name:  "PGHOST",
-			Value: fmt.Sprintf("%s.%s", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("%s-pooler.%s", pgClusterName, pgNamespace),
 		},
 		{
 			Name:  "PGPORT",
@@ -96,190 +91,17 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		},
 		{
 			Name:  "PGURL",
-			Value: fmt.Sprintf("postgresql://$(PGUSER):$(PGPASSWORD)@%s.%s:5432/app?sslmode=disable", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("postgresql://$(PGUSER):$(PGPASSWORD)@%s-pooler.%s:5432/app", pgClusterName, pgNamespace),
 		},
 		{
 			Name:  "PGJDBCURL",
-			Value: fmt.Sprintf("jdbc:postgresql://%s.%s:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)&sslmode=disable", pgClusterName, pgNamespace),
+			Value: fmt.Sprintf("jdbc:postgresql://%s-pooler.%s:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)", pgClusterName, pgNamespace),
 		},
 	}
 
 	ast.Env = append(ast.Env, envVars...)
 
 	return nil
-}
-
-func createIAMPolicy(source Source, ast *resource.Ast, projectId, pgNamespace string) {
-	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetNamespace())
-	objectMeta.Namespace = google.IAMServiceAccountNamespace
-	objectMeta.OwnerReferences = nil
-	delete(objectMeta.Labels, "app")
-
-	iamPolicy := google_iam_crd.IAMPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IAMPolicy",
-			APIVersion: google.IAMAPIVersion,
-		},
-		ObjectMeta: objectMeta,
-		Spec: google_iam_crd.IAMPolicySpec{
-			ResourceRef: &google_iam_crd.ResourceRef{
-				ApiVersion: google.IAMAPIVersion,
-				Kind:       "IAMServiceAccount",
-				Name:       ptr.To("postgres-pod"),
-			},
-			Bindings: []google_iam_crd.Bindings{
-				{
-					Role: "roles/iam.workloadIdentityUser",
-					Members: []string{
-						fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/postgres-pod]", projectId, pgNamespace),
-					},
-				},
-			},
-		},
-	}
-
-	util.SetAnnotation(&iamPolicy, google.ProjectIdAnnotation, projectId)
-
-	ast.AppendOperation(resource.OperationCreateIfNotExists, &iamPolicy)
-}
-
-func createNetworkPolicies(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
-	createPostgresNetworkPolicy(source, ast, pgClusterName, pgNamespace)
-	createSourceNetworkPolicy(source, ast, pgClusterName, pgNamespace)
-}
-
-func createPostgresNetworkPolicy(source Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
-	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.OwnerReferences = nil
-	objectMeta.Name = pgClusterName
-	objectMeta.Namespace = pgNamespace
-
-	pgNetpol := &networkingv1.NetworkPolicy{
-		ObjectMeta: objectMeta,
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
-		Spec: networkingv1.NetworkPolicySpec{
-			PodSelector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"application": "spilo",
-					"app":         source.GetName(),
-				},
-			},
-			Egress: []networkingv1.NetworkPolicyEgressRule{
-				{
-					To: []networkingv1.NetworkPolicyPeer{
-						{
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"application": "spilo",
-									"app":         source.GetName(),
-								},
-							},
-						},
-					},
-				},
-			},
-			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"application": "spilo",
-									"app":         source.GetName(),
-								},
-							},
-						},
-					},
-				},
-				{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							NamespaceSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"kubernetes.io/metadata.name": "nais-system",
-								},
-							},
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"app.kubernetes.io/name": "postgres-operator",
-								},
-							},
-						},
-					},
-				},
-				{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							NamespaceSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"kubernetes.io/metadata.name": source.GetNamespace(),
-								},
-							},
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"app": source.GetName(),
-								},
-							},
-						},
-					},
-				},
-			},
-			PolicyTypes: []networkingv1.PolicyType{
-				networkingv1.PolicyTypeEgress,
-				networkingv1.PolicyTypeIngress,
-			},
-		},
-	}
-
-	ast.AppendOperation(resource.OperationCreateOrUpdate, pgNetpol)
-}
-
-func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
-	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetName())
-
-	sourceNetpol := &networkingv1.NetworkPolicy{
-		ObjectMeta: objectMeta,
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
-		Spec: networkingv1.NetworkPolicySpec{
-			PodSelector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": source.GetName(),
-				},
-			},
-			Egress: []networkingv1.NetworkPolicyEgressRule{
-				{
-					To: []networkingv1.NetworkPolicyPeer{
-						{
-							NamespaceSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"kubernetes.io/metadata.name": pgNamespace,
-								},
-							},
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"application": "spilo",
-									"app":         source.GetName(),
-								},
-							},
-						},
-					},
-				},
-			},
-			PolicyTypes: []networkingv1.PolicyType{
-				networkingv1.PolicyTypeEgress,
-			},
-		},
-	}
-
-	ast.AppendOperation(resource.OperationCreateOrUpdate, sourceNetpol)
 }
 
 func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterName string, pgNamespace string) {
@@ -338,6 +160,31 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 		},
 		ObjectMeta: objectMeta,
 		Spec: acid_zalan_do_v1.PostgresSpec{
+			EnableConnectionPooler:        ptr.To(true),
+			EnableReplicaConnectionPooler: ptr.To(false),
+			ConnectionPooler: &acid_zalan_do_v1.ConnectionPooler{
+				Resources: &acid_zalan_do_v1.Resources{
+					ResourceRequests: acid_zalan_do_v1.ResourceDescription{
+						CPU:    ptr.To("50m"),
+						Memory: ptr.To("50Mi"),
+					},
+				},
+			},
+			NodeAffinity: &corev1.NodeAffinity{
+				RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+					NodeSelectorTerms: []corev1.NodeSelectorTerm{
+						{
+							MatchExpressions: []corev1.NodeSelectorRequirement{
+								{
+									Key:      "nais.io/type",
+									Operator: "In",
+									Values:   []string{"postgres"},
+								},
+							},
+						},
+					},
+				},
+			},
 			PostgresqlParam: acid_zalan_do_v1.PostgresqlParam{
 				PgVersion: postgres.Cluster.MajorVersion,
 				Parameters: map[string]string{
@@ -376,6 +223,9 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 					DefaultUsers:    true,
 					Extensions:      extensions,
 					SecretNamespace: source.GetNamespace(),
+					PreparedSchemas: map[string]acid_zalan_do_v1.PreparedSchema{
+						defaultSchema: {},
+					},
 				},
 			},
 		},

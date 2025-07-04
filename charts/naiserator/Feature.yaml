@@ -2,6 +2,7 @@ dependencies:
   - allOf:
       - nais-crds
       - cert-manager
+      - texas
 environmentKinds:
   - tenant
   - onprem
@@ -76,10 +77,6 @@ values:
     displayName: Enable GCP
     computed:
       template: '{{ne .Kind "onprem"}}'
-  naiserator.features.influx-credentials:
-    displayName: Enable provisioning of InfluxDB credentials
-    config:
-      type: bool
   naiserator.features.jwker:
     displayName: Enable Jwker
     config:
@@ -118,10 +115,6 @@ values:
       - management
   naiserator.features.sql-instance-in-shared-vpc:
     displayName: Create SQL Instance in Shared VPC
-    config:
-      type: bool
-  naiserator.features.texas:
-    displayName: Enable Token Exchange as a Service
     config:
       type: bool
   naiserator.features.vault:

@@ -8,6 +8,8 @@ config:
     azurerator: true
     idporten: true
     wonderwall: true
+  wonderwall:
+    image: nais/wonderwall
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

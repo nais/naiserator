@@ -25,6 +25,7 @@ const (
 	naisClientId       = "NAIS_CLIENT_ID"
 	naisClusterNameEnv = "NAIS_CLUSTER_NAME"
 	naisNamespaceEnv   = "NAIS_NAMESPACE"
+	naisPodNameEnv     = "NAIS_POD_NAME"
 	defaultPort        = "8080"
 )
 
@@ -365,12 +366,19 @@ func defaultEnvVars(source resource.Source, cfg Config, appImage string) []corev
 		port = defaultPort
 	}
 
+	podName := &corev1.EnvVarSource{
+		FieldRef: &corev1.ObjectFieldSelector{
+			FieldPath: "metadata.name",
+		},
+	}
+
 	envs := []corev1.EnvVar{
 		{Name: naisAppNameEnv, Value: source.GetName()},
 		{Name: naisNamespaceEnv, Value: source.GetNamespace()},
 		{Name: naisAppImageEnv, Value: appImage},
 		{Name: naisClusterNameEnv, Value: cfg.GetClusterName()},
 		{Name: naisClientId, Value: AppClientID(source, cfg.GetClusterName())},
+		{Name: naisPodNameEnv, ValueFrom: podName},
 		{Name: "LOG4J_FORMAT_MSG_NO_LOOKUPS", Value: "true"},
 		{Name: "PORT", Value: port},
 		{Name: "BIND_ADDRESS", Value: "0.0.0.0:" + port},
