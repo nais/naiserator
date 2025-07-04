@@ -25,6 +25,12 @@ type Config interface {
 
 func Create(source Source, ast *resource.Ast, config Config) {
 	svc := source.GetService()
+
+	targetPort := intstr.FromString(nais_io_v1_alpha1.DefaultPortName)
+	if wonderwall.IsEnabled(source, config) {
+		targetPort = intstr.FromInt32(wonderwall.Port)
+	}
+
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -36,23 +42,13 @@ func Create(source Source, ast *resource.Ast, config Config) {
 			Selector: map[string]string{"app": source.GetName()},
 			Ports: []corev1.ServicePort{
 				{
-					Name:     svc.Protocol,
-					Protocol: corev1.ProtocolTCP,
-					Port:     svc.Port,
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.String,
-						StrVal: nais_io_v1_alpha1.DefaultPortName,
-					},
+					Name:       svc.Protocol,
+					Protocol:   corev1.ProtocolTCP,
+					Port:       svc.Port,
+					TargetPort: targetPort,
 				},
 			},
 		},
-	}
-
-	if wonderwall.IsEnabled(source, config) {
-		service.Spec.Ports[0].TargetPort = intstr.IntOrString{
-			Type:   intstr.String,
-			StrVal: wonderwall.PortName,
-		}
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, service)
