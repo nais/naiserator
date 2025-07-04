@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/imdario/mergo"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -17,14 +16,15 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/resourcecreator/secret"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/utils/ptr"
 )
 
 const (
-	PortName               = "wonderwall"
-	MetricsPortName        = "ww-metrics"
-	Port                   = 7564
+	Port                   = 7564 // we don't use a named port due to Services/Endpoints/EndpointSlices not fully working with native sidecars prior to v1.33
 	MetricsPort            = 7565
+	MetricsPortName        = "ww-metrics" // referenced by Prometheus PodMonitor
 	FrontChannelLogoutPath = "/oauth2/logout/frontchannel"
 )
 
@@ -49,7 +49,6 @@ type Source interface {
 	GetPort() int
 	GetPrometheus() *nais_io_v1.PrometheusConfig
 	GetReadiness() *nais_io_v1.Probe
-	GetTerminationGracePeriodSeconds() *int64
 }
 
 type Config interface {
@@ -59,10 +58,6 @@ type Config interface {
 }
 
 func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Configuration) error {
-	ast.Labels["aiven"] = "enabled"
-	ast.Labels["wonderwall"] = "enabled"
-	ast.Labels["otel"] = "enabled"
-
 	err := validate(source, naisCfg, wonderwallCfg)
 	if err != nil {
 		return err
@@ -83,8 +78,10 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 		container.EnvFrom = append(container.EnvFrom, pod.EnvFromSecret(encryptionKeySecret.GetName()))
 	}
 
-	ast.Containers = append(ast.Containers, *container)
-
+	ast.InitContainers = append(ast.InitContainers, *container)
+	ast.Labels["aiven"] = "enabled"
+	ast.Labels["otel"] = "enabled"
+	ast.Labels["wonderwall"] = "enabled"
 	return nil
 }
 
@@ -172,7 +169,6 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 			{
 				ContainerPort: int32(Port),
 				Protocol:      corev1.ProtocolTCP,
-				Name:          PortName,
 			},
 			{
 				ContainerPort: int32(MetricsPort),
@@ -180,7 +176,17 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 				Name:          MetricsPortName,
 			},
 		},
-		Resources:       pod.ResourceLimits(*resourceReqs),
+		Resources:     pod.ResourceLimits(*resourceReqs),
+		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
+		// StartupProbe ensures that the sidecar is ready to handle requests before the main application starts.
+		StartupProbe: &corev1.Probe{
+			ProbeHandler: corev1.ProbeHandler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/oauth2/ping",
+					Port: intstr.FromInt32(Port),
+				},
+			},
+		},
 		SecurityContext: pod.DefaultContainerSecurityContext(),
 	}, nil
 }
@@ -211,11 +217,6 @@ func resourceRequirements(cfg Configuration) (*nais_io_v1.ResourceRequirements, 
 }
 
 func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
-	terminationGracePeriodSeconds := 30
-	if source.GetTerminationGracePeriodSeconds() != nil {
-		terminationGracePeriodSeconds = int(*source.GetTerminationGracePeriodSeconds())
-	}
-
 	result := []corev1.EnvVar{
 		{
 			Name:  "WONDERWALL_OPENID_PROVIDER",
@@ -226,6 +227,7 @@ func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
 			Value: ingressString(source.GetIngress()),
 		},
 		{
+			// Ideally we would be using the loopback address here, but some applications bind to _just_ eth0 instead of all interfaces
 			Name: "WONDERWALL_UPSTREAM_IP",
 			ValueFrom: &corev1.EnvVarSource{
 				FieldRef: &corev1.ObjectFieldSelector{
@@ -244,14 +246,6 @@ func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
 		{
 			Name:  "WONDERWALL_METRICS_BIND_ADDRESS",
 			Value: fmt.Sprintf("0.0.0.0:%d", MetricsPort),
-		},
-		{
-			Name:  "WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD",
-			Value: (time.Duration(terminationGracePeriodSeconds) * time.Second).String(),
-		},
-		{
-			Name:  "WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD",
-			Value: "7s", // should be greater than application's sleep (5s)
 		},
 	}
 

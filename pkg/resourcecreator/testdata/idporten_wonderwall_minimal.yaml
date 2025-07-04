@@ -65,6 +65,7 @@ tests:
                       - mountPath: /var/run/secrets/nais.io/idporten
                         name: ^idporten-sso$
                         readOnly: true
+                initContainers:
                   - env:
                       - name: WONDERWALL_OPENID_PROVIDER
                         value: ^idporten$
@@ -80,10 +81,6 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
-                      - name: WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD
-                        value: 30s
-                      - name: WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD
-                        value: 7s
                       - name: OTEL_SERVICE_NAME
                         value: ^wonderwall$
                       - name: OTEL_RESOURCE_ATTRIBUTES
@@ -103,11 +100,11 @@ tests:
                     name: wonderwall
                     ports:
                       - containerPort: 7564
-                        name: wonderwall
                         protocol: TCP
                       - containerPort: 7565
                         name: ww-metrics
                         protocol: TCP
+                    restartPolicy: Always
                     resources:
                       limits:
                         cpu: "2"
@@ -125,6 +122,10 @@ tests:
                       runAsGroup: 1069
                       runAsNonRoot: true
                       runAsUser: 1069
+                    startupProbe:
+                      httpGet:
+                        path: "/oauth2/ping"
+                        port: 7564
   - apiVersion: v1
     kind: Service
     name: myapplication
@@ -139,7 +140,7 @@ tests:
           spec:
             ports:
               - port: 80
-                targetPort: wonderwall
+                targetPort: 7564
                 name: http
                 protocol: TCP
             selector:
