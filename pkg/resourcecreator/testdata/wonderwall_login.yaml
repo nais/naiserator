@@ -91,6 +91,7 @@ tests:
                       - containerPort: 7565
                         name: ww-metrics
                         protocol: TCP
+                    restartPolicy: Always
                     resources:
                       limits:
                         cpu: "2"

@@ -98,6 +98,7 @@ tests:
                         value: ^true$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
                         value: ^/metrics,/internal/liveness,/internal/readiness,/internal/\*,/path$
+                    restartPolicy: Always
                     resources:
                       limits:
                         cpu: 100m

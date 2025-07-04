@@ -18,6 +18,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -175,7 +176,8 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 				Name:          MetricsPortName,
 			},
 		},
-		Resources: pod.ResourceLimits(*resourceReqs),
+		Resources:     pod.ResourceLimits(*resourceReqs),
+		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
 		// StartupProbe ensures that the sidecar is ready to handle requests before the main application starts.
 		StartupProbe: &corev1.Probe{
 			ProbeHandler: corev1.ProbeHandler{
