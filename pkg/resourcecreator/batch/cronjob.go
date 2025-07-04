@@ -31,7 +31,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 		}
 
 		objectMeta.Annotations["euthanaisa.nais.io/kill-after"] = time.Now().Add(d).Format(time.RFC3339)
-		objectMeta.Labels["euthanaisa.nais.io/managed"] = "true"
+		objectMeta.Labels["euthanaisa.nais.io/enabled"] = "true"
 	}
 
 	cronJob := batchv1.CronJob{

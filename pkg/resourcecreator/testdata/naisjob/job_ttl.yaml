@@ -22,4 +22,4 @@ tests:
             annotations:
               euthanaisa.nais.io/kill-after: ".+$"
             labels:
-              euthanaisa.nais.io/managed: "true"
+              euthanaisa.nais.io/enabled: "true"

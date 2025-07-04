@@ -64,7 +64,7 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 		}
 
 		objectMeta.Annotations["euthanaisa.nais.io/kill-after"] = time.Now().Add(d).Format(time.RFC3339)
-		objectMeta.Labels["euthanaisa.nais.io/managed"] = "true"
+		objectMeta.Labels["euthanaisa.nais.io/enabled"] = "true"
 	}
 
 	deployment := &appsv1.Deployment{
