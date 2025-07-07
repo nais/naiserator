@@ -1,13 +1,13 @@
 testconfig:
-  description: idporten config with sidecar should result in wonderwall sidecar injected to pod
+  description: azure config with sidecar should result in wonderwall sidecar injected to pod
 config:
-  cluster-name: mycluster
   features:
-    idporten: true
+    azurerator: true
     wonderwall: true
   gateway-mappings:
     - domainSuffix: .nav.no
       ingressClass: very-nginx
+  cluster-name: mycluster
   wonderwall:
     image: nais/wonderwall
 input:
@@ -18,18 +18,19 @@ input:
     namespace: mynamespace
   spec:
     image: foo/bar
-    idporten:
-      enabled: true
-      redirectPath: "/some/path"
-      frontchannelLogoutPath: "/some/other/path"
-      postLogoutRedirectURIs:
-        - "https://my-client.nav.no/logged_out"
-        - "https://nav.no/"
-        - "https://some-other-client.nav.no/"
+    azure:
+      application:
+        allowAllUsers: true
+        claims:
+          groups:
+            - id: 00000000-0000-0000-0000-000000000000
+        enabled: true
+        replyURLs:
+          - https://myapplication.nav.no/oauth2/callback
+        singlePageApplication: true
+        tenant: nav.no
       sidecar:
         enabled: true
-        level: Level3
-        locale: se
         autoLogin: true
         autoLoginIgnorePaths:
           - "/internal/*"
@@ -43,7 +44,7 @@ input:
             memory: 64Mi
     ingresses:
       - "https://my-client.nav.no/"
-      - "https://my-client-2.nav.no/"
+      - "https://my-old-client.nav.no"
     port: 1234
     prometheus:
       enabled: true
@@ -52,7 +53,6 @@ input:
       path: internal/liveness
     readiness:
       path: internal/readiness
-    terminationGracePeriodSeconds: 60
 tests:
   - operation: CreateOrUpdate
     apiVersion: apps/v1
@@ -76,13 +76,14 @@ tests:
                       - containerPort: 1234
                         name: http
                         protocol: TCP
+                initContainers:
                   - name: wonderwall
                     image: nais/wonderwall
                     env:
                       - name: WONDERWALL_OPENID_PROVIDER
-                        value: ^idporten$
+                        value: ^azure$
                       - name: WONDERWALL_INGRESS
-                        value: ^https://my-client.nav.no/,https://my-client-2.nav.no/$
+                        value: ^https://my-client.nav.no/,https://my-old-client.nav.no$
                       - name: WONDERWALL_UPSTREAM_IP
                         valueFrom:
                           fieldRef:
@@ -93,18 +94,11 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
-                      - name: WONDERWALL_SHUTDOWN_GRACEFUL_PERIOD
-                        value: 1m0s
-                      - name: WONDERWALL_SHUTDOWN_WAIT_BEFORE_PERIOD
-                        value: 7s
                       - name: WONDERWALL_AUTO_LOGIN
                         value: ^true$
-                      - name: WONDERWALL_OPENID_ACR_VALUES
-                        value: ^Level3$
-                      - name: WONDERWALL_OPENID_UI_LOCALES
-                        value: ^se$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
                         value: ^/metrics,/internal/liveness,/internal/readiness,/internal/\*,/path$
+                    restartPolicy: Always
                     resources:
                       limits:
                         cpu: 100m
@@ -112,3 +106,41 @@ tests:
                       requests:
                         cpu: 100m
                         memory: 64Mi
+  - apiVersion: nais.io/v1
+    kind: AzureAdApplication
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: regex
+        name: "secret name is generated"
+        resource:
+          spec:
+            secretName: ^azure-myapplication-4190a8ca-.{6,7}$
+      - type: exact
+        name: "spec is populated with correct values"
+        exclude:
+          - .status
+          - .metadata.creationTimestamp
+          - .metadata.labels
+          - .metadata.ownerReferences
+          - .spec.secretName
+        resource:
+          apiVersion: nais.io/v1
+          kind: AzureAdApplication
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: ""
+            name: myapplication
+            namespace: mynamespace
+          spec:
+            allowAllUsers: true
+            claims:
+              groups:
+                - id: 00000000-0000-0000-0000-000000000000
+            logoutUrl: "https://my-client.nav.no/oauth2/logout/frontchannel"
+            replyUrls:
+              - url: "https://myapplication.nav.no/oauth2/callback"
+              - url: "https://my-client.nav.no/oauth2/callback"
+              - url: "https://my-old-client.nav.no/oauth2/callback"
+            singlePageApplication: false
+            tenant: nav.no
