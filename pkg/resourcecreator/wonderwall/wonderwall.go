@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	Port                   = 7564 // we don't use a named port due to Services/Endpoints/EndpointSlices not fully working with native sidecars prior to v1.33
+	Port                   = 7564
 	MetricsPort            = 7565
-	MetricsPortName        = "ww-metrics" // referenced by Prometheus PodMonitor
+	ProbePort              = 7566
 	FrontChannelLogoutPath = "/oauth2/logout/frontchannel"
 )
 
@@ -139,7 +139,7 @@ func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error 
 	}
 
 	port := source.GetPort()
-	if port == Port || port == MetricsPort {
+	if port == Port || port == MetricsPort || port == ProbePort {
 		return fmt.Errorf("cannot use port '%d'; conflicts with sidecar", port)
 	}
 
@@ -169,11 +169,17 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 			{
 				ContainerPort: int32(Port),
 				Protocol:      corev1.ProtocolTCP,
+				Name:          "wonderwall", // purely informational, should not be referenced by Service resources prior to v1.33
 			},
 			{
 				ContainerPort: int32(MetricsPort),
 				Protocol:      corev1.ProtocolTCP,
-				Name:          MetricsPortName,
+				Name:          "ww-metrics", // referenced by Prometheus PodMonitor
+			},
+			{
+				ContainerPort: int32(ProbePort),
+				Protocol:      corev1.ProtocolTCP,
+				Name:          "ww-probe",
 			},
 		},
 		Resources:     pod.ResourceLimits(*resourceReqs),
@@ -182,8 +188,8 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 		StartupProbe: &corev1.Probe{
 			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Path: "/oauth2/ping",
-					Port: intstr.FromInt32(Port),
+					Path: "/healthz",
+					Port: intstr.FromInt32(ProbePort),
 				},
 			},
 		},
@@ -246,6 +252,10 @@ func envVars(source Source, naisCfg Config, cfg Configuration) []corev1.EnvVar {
 		{
 			Name:  "WONDERWALL_METRICS_BIND_ADDRESS",
 			Value: fmt.Sprintf("0.0.0.0:%d", MetricsPort),
+		},
+		{
+			Name:  "WONDERWALL_PROBE_BIND_ADDRESS",
+			Value: fmt.Sprintf("0.0.0.0:%d", ProbePort),
 		},
 	}
 

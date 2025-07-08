@@ -81,6 +81,8 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
+                      - name: WONDERWALL_PROBE_BIND_ADDRESS
+                        value: ^0.0.0.0:7566$
                       - name: OTEL_SERVICE_NAME
                         value: ^wonderwall$
                       - name: OTEL_RESOURCE_ATTRIBUTES
@@ -124,8 +126,8 @@ tests:
                       runAsUser: 1069
                     startupProbe:
                       httpGet:
-                        path: "/oauth2/ping"
-                        port: 7564
+                        path: "/healthz"
+                        port: 7566
   - apiVersion: v1
     kind: Service
     name: myapplication

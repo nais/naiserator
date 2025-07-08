@@ -94,6 +94,8 @@ tests:
                         value: ^0.0.0.0:7564$
                       - name: WONDERWALL_METRICS_BIND_ADDRESS
                         value: ^0.0.0.0:7565$
+                      - name: WONDERWALL_PROBE_BIND_ADDRESS
+                        value: ^0.0.0.0:7566$
                       - name: WONDERWALL_AUTO_LOGIN
                         value: ^true$
                       - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS

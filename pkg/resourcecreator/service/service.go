@@ -28,6 +28,7 @@ func Create(source Source, ast *resource.Ast, config Config) {
 
 	targetPort := intstr.FromString(nais_io_v1_alpha1.DefaultPortName)
 	if wonderwall.IsEnabled(source, config) {
+		// we don't use a named port due to Services/Endpoints/EndpointSlices not fully working with native sidecars prior to v1.33
 		targetPort = intstr.FromInt32(wonderwall.Port)
 	}
 
