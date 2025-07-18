@@ -1,4 +1,70 @@
+[tasks.build]
+description = "Build Naiserator"
+run = """
+go build -o cmd/naiserator/naiserator ./cmd/naiserator
+go build -o cmd/naiserator_webhook/naiserator_webhook ./cmd/naiserator_webhook
+"""
+
+[tasks.local]
+description = "Run Naiserator locally"
+run = "	go run cmd/naiserator/main.go --kubeconfig=${KUBECONFIG} --bind=127.0.0.1:8080"
+
+[tasks.check]
+description = "Run all static analysis tools"
+depends = ['fmt', 'staticcheck', 'vulncheck', 'deadcode', 'vet']
+
+[tasks.staticcheck]
+description = "Run staticcheck"
+wait_for = ['fmt']
+run = "go tool honnef.co/go/tools/cmd/staticcheck ./..."
+
+[tasks.vulncheck]
+description = "Run govulncheck"
+wait_for = ['fmt']
+run = "go tool golang.org/x/vuln/cmd/govulncheck -show verbose ./..."
+
+[tasks.deadcode]
+description = "Run deadcode"
+wait_for = ['fmt']
+run = "go tool golang.org/x/tools/cmd/deadcode -test ./..."
+
+[tasks.gosec]
+description = "Run gosec"
+wait_for = ['fmt']
+run = "go tool github.com/securego/gosec/v2/cmd/gosec --exclude-generated -terse ./..."
+
+[tasks.vet]
+description = "Run go vet"
+wait_for = ['fmt']
+run = "go vet ./..."
+
+[tasks.test]
+wait_for = ['fmt']
+description = "Run tests"
+run = "go test -v --race --cover --coverprofile=cover.out ./..."
+
+[tasks."test:goldenfiles"]
+description = "Run just golden files tests"
+run = "go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1"
+alias = "golden"
+
+[tasks.fmt]
+description = "Format all Go code using gofumpt"
+run = "go tool mvdan.cc/gofumpt -w ./"
+
+[tasks.proto]
+description = "Generate Protobuf code"
+run = """
+wget -O pkg/event/event.proto https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
+protoc --go_opt=Mpkg/event/event.proto=github.com/nais/naiserator/pkg/deployment,paths=source_relative --go_out=. pkg/event/event.proto
+rm -f pkg/event/event.proto
+"""
+
 [tools]
 ctlptl = "latest"
 kubie = "latest"
 tilt = "latest"
+protoc = "latest"
+protoc-gen-go = "latest"
+protoc-gen-go-grpc = "latest"
+kubebuilder = "latest"

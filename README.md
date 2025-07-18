@@ -72,10 +72,9 @@ See `charts/naiserator` for a installable Helm chart.
 Try these:
 
 ```
-make test
-make golden_file_test
-make build
-make local
+mise run test
+mise run build
+mise run local
 ```
 
 ### Kafka & Protobuf
@@ -89,7 +88,7 @@ is sent to a Kafka topic. There's a few prerequisites to develop with this enabl
 
 #### Update and compile Protobuf definition
 
-Whenever the Protobuf definition is updated you can update using `make proto`. It will download the definitions, compile
+Whenever the Protobuf definition is updated you can update using `mise run proto`. It will download the definitions, compile
 and place them in the correct packages.
 
 ## Verifying the Naiserator image and its contents

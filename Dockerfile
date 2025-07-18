@@ -5,7 +5,7 @@ WORKDIR /src
 COPY go.* /src/
 RUN go mod download
 COPY . /src
-RUN make test
+RUN go test -v --race --cover --coverprofile=cover.out ./...
 RUN cd cmd/naiserator && go build -a -installsuffix cgo -o naiserator
 RUN cd cmd/naiserator_webhook && go build -a -installsuffix cgo -o naiserator_webhook
 
