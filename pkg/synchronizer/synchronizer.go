@@ -75,7 +75,6 @@ func NewSynchronizer(
 	listers []client.ObjectList,
 	scheme *runtime.Scheme,
 ) *Synchronizer {
-
 	rolloutMonitor := make(map[client.ObjectKey]RolloutMonitor)
 	return &Synchronizer{
 		Client:         cli,

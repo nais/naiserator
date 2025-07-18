@@ -7,8 +7,10 @@ import (
 	"github.com/nais/liberator/pkg/keygen"
 )
 
-const strTrimMiddleTruncate = "---[truncated]---"
-const strTrimRightTruncate = "..."
+const (
+	strTrimMiddleTruncate = "---[truncated]---"
+	strTrimRightTruncate  = "..."
+)
 
 func StrTrimRight(s string, maxlen int) string {
 	l := len(strTrimRightTruncate)

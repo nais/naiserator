@@ -23,9 +23,11 @@ type Config interface {
 	GetFrontendOptions() config.Frontend
 }
 
-const volumeName = "frontend-config"
-const configFileName = "nais.js"
-const configMapSuffix = "-frontend-config-js"
+const (
+	volumeName      = "frontend-config"
+	configFileName  = "nais.js"
+	configMapSuffix = "-frontend-config-js"
+)
 
 var naisJsTemplate = `
 export default {

@@ -7,7 +7,7 @@ import (
 )
 
 func (v Vault) Validate() error {
-	var result = &multierror.Error{}
+	result := &multierror.Error{}
 
 	if len(v.Address) == 0 {
 		multierror.Append(result, fmt.Errorf("vault address not found in environment"))

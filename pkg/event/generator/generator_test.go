@@ -147,7 +147,6 @@ func TestNewDeploymentEvent(t *testing.T) {
 
 		assert.Equal(t, "mynamespace", event.Team)
 	})
-
 }
 
 func withEffectiveImage(image string) fixtures.FixtureModifier {

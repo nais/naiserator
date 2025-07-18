@@ -127,6 +127,7 @@ func TestOtelEnvVars(t *testing.T) {
 
 	assert.Equal(t, expectedEnvVars, actualEnvVars)
 }
+
 func TestLabelsFromCollectorConfig(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -253,6 +254,7 @@ func TestTracingNetpol(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedNetworkPolicy, actualNetworkPolicy)
 }
+
 func TestLogLabels(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -362,6 +364,7 @@ func TestOtelAutoInstrumentAnnotations(t *testing.T) {
 
 	assert.Equal(t, expectedAnnotations, actualAnnotations)
 }
+
 func TestOtelAutoInstrumentationDestinations(t *testing.T) {
 	tests := []struct {
 		name          string

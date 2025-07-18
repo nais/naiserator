@@ -11,9 +11,11 @@ import (
 
 type flagValidator = func(value string) error
 
-const maxFloat32 float64 = 3.4028235e+38
-const maxInt32 = 2147483647
-const eightk = 8192
+const (
+	maxFloat32 float64 = 3.4028235e+38
+	maxInt32           = 2147483647
+	eightk             = 8192
+)
 
 func ValidateFlag(key string, value string) error {
 	validatorFunc := validators[key]

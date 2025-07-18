@@ -206,7 +206,6 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
 	deploy := &appsv1.Deployment{}
 	err := n.Get(ctx, objectKey, deploy)
-
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			logger.Errorf("Monitor rollout: failed to query Deployment: %v", err)

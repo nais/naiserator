@@ -71,7 +71,8 @@ func appAffinity(appName string) *corev1.PodAntiAffinity {
 						{
 							Key:      "app",
 							Operator: metav1.LabelSelectorOpIn,
-							Values:   []string{appName}},
+							Values:   []string{appName},
+						},
 					},
 				},
 				TopologyKey: "kubernetes.io/hostname",

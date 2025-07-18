@@ -17,7 +17,6 @@ type Config interface {
 }
 
 func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) (batchv1.JobSpec, error) {
-
 	podSpec, err := pod.CreateSpec(ast, cfg, naisjob.GetName(), naisjob.Annotations, RestartPolicy(naisjob.Spec.RestartPolicy), naisjob.Spec.TerminationGracePeriodSeconds)
 	if err != nil {
 		return batchv1.JobSpec{}, err
@@ -39,7 +38,6 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) (
 }
 
 func CreateJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) error {
-
 	objectMeta := resource.CreateObjectMeta(naisjob)
 
 	if val, ok := naisjob.GetAnnotations()["kubernetes.io/change-cause"]; ok {

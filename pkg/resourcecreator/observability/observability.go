@@ -28,17 +28,23 @@ type Config interface {
 
 // Standard environment variable names from https://opentelemetry.io/docs/specs/otel/protocol/exporter/
 // These are hard-coded because they are the same across installations, feel free to make them configurable.
-const otelServiceName = "OTEL_SERVICE_NAME"
-const otelResourceAttributes = "OTEL_RESOURCE_ATTRIBUTES"
-const otelExporterEndpoint = "OTEL_EXPORTER_OTLP_ENDPOINT"
-const otelExporterProtocol = "OTEL_EXPORTER_OTLP_PROTOCOL"
-const otelExporterInsecure = "OTEL_EXPORTER_OTLP_INSECURE"
+const (
+	otelServiceName        = "OTEL_SERVICE_NAME"
+	otelResourceAttributes = "OTEL_RESOURCE_ATTRIBUTES"
+	otelExporterEndpoint   = "OTEL_EXPORTER_OTLP_ENDPOINT"
+	otelExporterProtocol   = "OTEL_EXPORTER_OTLP_PROTOCOL"
+	otelExporterInsecure   = "OTEL_EXPORTER_OTLP_INSECURE"
+)
 
-const logLabelDefault = "logs.nais.io/flow-default"
-const logLabelPrefix = "logs.nais.io/flow-"
+const (
+	logLabelDefault = "logs.nais.io/flow-default"
+	logLabelPrefix  = "logs.nais.io/flow-"
+)
 
-const autoInstrumentationInjectAnnotationPrefix = "instrumentation.opentelemetry.io/inject-"
-const autoInstrumentationContainerNamesAnnotation = "instrumentation.opentelemetry.io/container-names"
+const (
+	autoInstrumentationInjectAnnotationPrefix   = "instrumentation.opentelemetry.io/inject-"
+	autoInstrumentationContainerNamesAnnotation = "instrumentation.opentelemetry.io/container-names"
+)
 
 func otelEndpointFromConfig(collector config.OtelCollector) string {
 	schema := "http"

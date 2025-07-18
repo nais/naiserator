@@ -33,5 +33,4 @@ func TestEnvWrapper(t *testing.T) {
 	assert.False(t, env3)
 
 	os.Unsetenv("testEnv")
-
 }

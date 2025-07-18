@@ -8,7 +8,6 @@ import (
 )
 
 func TestStrTrimMiddle(t *testing.T) {
-
 	t.Run("truncate long string", func(t *testing.T) {
 		s := "This is an example of a string that will get truncated. The truncate length must be sufficiently long."
 		truncated := util.StrTrimMiddle(s, 40)

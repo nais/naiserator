@@ -79,7 +79,10 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 				SecretKeyRef: &corev1.SecretKeySelector{
 					Key: "username",
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName)}}},
+						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName),
+					},
+				},
+			},
 		},
 		{
 			Name: "PGPASSWORD",
@@ -87,7 +90,10 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 				SecretKeyRef: &corev1.SecretKeySelector{
 					Key: "password",
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName)}}},
+						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName),
+					},
+				},
+			},
 		},
 		{
 			Name:  "PGURL",
