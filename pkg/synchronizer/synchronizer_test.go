@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	go_runtime "runtime"
 	"testing"
 	"time"
 
@@ -73,22 +72,20 @@ func (rig *testRig) testResource(t *testing.T, ctx context.Context, resource cli
 	}
 }
 
-func testBinDirectory() string {
-	_, filename, _, _ := go_runtime.Caller(0)
-	return filepath.Clean(filepath.Join(filepath.Dir(filename), "../../.testbin/"))
-}
-
 func newTestRig(config config.Config) (*testRig, error) {
 	rig := &testRig{}
-
-	err := os.Setenv("KUBEBUILDER_ASSETS", testBinDirectory())
-	if err != nil {
-		return nil, fmt.Errorf("failed to set environment variable: %w", err)
-	}
 
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
 		CRDDirectoryPaths: []string{crdPath},
+	}
+
+	// Retrieve the first found binary directory to allow running tests from IDEs
+	dir, err := getFirstFoundEnvTestBinaryDir()
+	if err != nil {
+		return nil, err
+	} else {
+		rig.kubernetes.BinaryAssetsDirectory = dir
 	}
 
 	rig.config = config
@@ -620,4 +617,27 @@ func appWithoutImage() fixtures.FixtureModifier {
 		app := obj.(*nais_io_v1alpha1.Application)
 		app.Spec.Image = ""
 	}
+}
+
+// getFirstFoundEnvTestBinaryDir locates the first binary in the specified path.
+// ENVTEST-based tests depend on specific binaries, usually located in paths set by
+// controller-runtime. When running tests directly (e.g., via an IDE) without using
+// Makefile targets, the 'BinaryAssetsDirectory' must be explicitly configured.
+//
+// This function streamlines the process by finding the required binaries, similar to
+// setting the 'KUBEBUILDER_ASSETS' environment variable. To ensure the binaries are
+// properly set up, run 'make setup-envtest' beforehand.
+func getFirstFoundEnvTestBinaryDir() (string, error) {
+	basePath := filepath.Join("..", "..", "bin", "k8s")
+	entries, err := os.ReadDir(basePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read directory %s: %w", basePath, err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			return filepath.Join(basePath, entry.Name()), nil
+		}
+	}
+
+	return "", nil
 }
