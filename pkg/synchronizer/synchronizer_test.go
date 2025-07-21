@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	go_runtime "runtime"
 	"testing"
 	"time"
 
@@ -72,6 +73,11 @@ func (rig *testRig) testResource(t *testing.T, ctx context.Context, resource cli
 	}
 }
 
+func testBinDirectory() string {
+	_, filename, _, _ := go_runtime.Caller(0)
+	return filepath.Clean(filepath.Join(filepath.Dir(filename), "../../.testbin/"))
+}
+
 func newTestRig(config config.Config) (*testRig, error) {
 	rig := &testRig{}
 
@@ -80,12 +86,9 @@ func newTestRig(config config.Config) (*testRig, error) {
 		CRDDirectoryPaths: []string{crdPath},
 	}
 
-	// Retrieve the first found binary directory to allow running tests from IDEs
-	dir, err := getFirstFoundEnvTestBinaryDir()
+	err := os.Setenv("KUBEBUILDER_ASSETS", testBinDirectory())
 	if err != nil {
-		return nil, err
-	} else {
-		rig.kubernetes.BinaryAssetsDirectory = dir
+		return nil, fmt.Errorf("failed to set environment variable: %w", err)
 	}
 
 	rig.config = config
