@@ -3,6 +3,7 @@ package google_sql
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -12,9 +13,9 @@ import (
 type flagValidator = func(value string) error
 
 const (
-	maxFloat32 float64 = 3.4028235e+38
-	maxInt32           = 2147483647
-	eightk             = 8192
+	maxFloat32 = math.MaxFloat32
+	maxInt32   = math.MaxInt32
+	eightk     = 8192
 )
 
 func ValidateFlag(key string, value string) error {

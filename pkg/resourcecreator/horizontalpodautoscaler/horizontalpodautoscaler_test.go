@@ -58,7 +58,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		assert.Len(t, ast.Operations, 0)
 	})
 
-	t.Run("should use value from cpuThresholdPercentage", func(t *testing.T) {
+	t.Run("should use value from deprecated cpuThresholdPercentage", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Replicas = &nais_io_v1.Replicas{
 			Min:                    util.Intp(1),
@@ -74,6 +74,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		assert.Equal(t, resource.OperationCreateOrUpdate, operation.Operation)
 		hpa, ok := operation.Resource.(*v2.HorizontalPodAutoscaler)
 		assert.True(t, ok)
+		//lint:ignore SA1019 deprecated field, but we still support it for backwards compatibility
 		assert.Equal(t, util.Int32p(int32(app.Spec.Replicas.CpuThresholdPercentage)), hpa.Spec.Metrics[0].Resource.Target.AverageUtilization)
 	})
 

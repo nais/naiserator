@@ -1,7 +1,7 @@
 package horizontalpodautoscaler
 
 import (
-	"github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	v2 "k8s.io/api/autoscaling/v2"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +40,7 @@ func Create(source Source, ast *resource.Ast) {
 			metricSpecs = append(metricSpecs, createKafkaMetricSpec(replicas.ScalingStrategy.Kafka))
 		}
 	} else {
+		//lint:ignore SA1019 deprecated field, but we still support it for backwards compatibility
 		metricSpecs = append(metricSpecs, createCpuMetricSpec(replicas.CpuThresholdPercentage))
 	}
 
