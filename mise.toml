@@ -21,7 +21,7 @@ run = "go tool honnef.co/go/tools/cmd/staticcheck ./..."
 [tasks.vulncheck]
 description = "Run govulncheck"
 wait_for = ['fmt']
-run = "go tool golang.org/x/vuln/cmd/govulncheck -show verbose ./..."
+run = "go tool golang.org/x/vuln/cmd/govulncheck ./..."
 
 [tasks.deadcode]
 description = "Run deadcode"
@@ -41,7 +41,7 @@ run = "go vet ./..."
 [tasks.test]
 wait_for = ['fmt']
 description = "Run tests"
-run = "go test -v --race --cover --coverprofile=cover.out ./..."
+run = "go test --race --cover --coverprofile=cover.out ./..."
 
 [tasks."test:goldenfiles"]
 description = "Run just golden files tests"
