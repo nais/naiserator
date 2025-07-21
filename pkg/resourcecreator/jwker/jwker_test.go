@@ -84,7 +84,7 @@ func TestJwker(t *testing.T) {
 
 	t.Run("one outbound and no inbound", func(t *testing.T) {
 		app := fixture()
-		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{{otherApplication, otherNamespace, otherCluster}}
+		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{{Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster}}
 		ast := resource.NewAst()
 		jwker.Create(app, ast, opts)
 		jkr := ast.Operations[len(ast.Operations)-1].Resource.(*nais_io_v1.Jwker)
@@ -130,13 +130,13 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{
 			{
-				otherApplication, otherNamespace, otherCluster,
+				Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster,
 			},
 			{
-				otherApplication2, otherNamespace2, "",
+				Application: otherApplication2, Namespace: otherNamespace2, Cluster: "",
 			},
 			{
-				otherApplication3, "", "",
+				Application: otherApplication3, Namespace: "", Cluster: "",
 			},
 		}
 		ast := resource.NewAst()
@@ -172,13 +172,13 @@ func TestJwker(t *testing.T) {
 
 		app.Spec.AccessPolicy.Outbound.Rules = []nais_io_v1.AccessPolicyRule{
 			{
-				otherApplication, otherNamespace, otherCluster,
+				Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster,
 			},
 			{
-				otherApplication2, otherNamespace2, "",
+				Application: otherApplication2, Namespace: otherNamespace2, Cluster: "",
 			},
 			{
-				otherApplication3, "", "",
+				Application: otherApplication3, Namespace: "", Cluster: "",
 			},
 		}
 		ast := resource.NewAst()
@@ -222,7 +222,7 @@ func TestJwker(t *testing.T) {
 		jwkerVolume := test.GetVolumeByName(ast.Volumes, jwkerSecretName)
 		assert.NotEmpty(t, jwkerVolume)
 		assert.Equal(t, jwkerSecretName, jwkerVolume.Name)
-		assert.Equal(t, jwkerSecretName, jwkerVolume.VolumeSource.Secret.SecretName)
+		assert.Equal(t, jwkerSecretName, jwkerVolume.Secret.SecretName)
 
 		assert.Equal(t, 1, len(ast.EnvFrom))
 		assert.Equal(t, jwkerSecretName, ast.EnvFrom[0].SecretRef.Name)

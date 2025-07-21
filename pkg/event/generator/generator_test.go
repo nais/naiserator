@@ -19,7 +19,7 @@ type containerImageTest struct {
 	container deployment.ContainerImage
 }
 
-var containerImageTests = []containerImageTest{
+var containerImageTests = []*containerImageTest{
 	{
 		name: "nginx",
 		container: deployment.ContainerImage{
@@ -81,7 +81,7 @@ var containerImageTests = []containerImageTest{
 func TestContainerImage(t *testing.T) {
 	for _, test := range containerImageTests {
 		container := generator.ContainerImage(test.name)
-		assert.Equal(t, test.container, container)
+		assert.Equal(t, &test.container, &container)
 	}
 }
 
@@ -108,10 +108,10 @@ func TestNewDeploymentEvent(t *testing.T) {
 
 		image := event.GetImage()
 		assert.NotEmpty(t, image)
-		assert.Equal(t, deployment.ContainerImage{
+		assert.Equal(t, &deployment.ContainerImage{
 			Name: "docker.io/library/image",
 			Tag:  "version",
-		}, *image)
+		}, image)
 
 		assert.True(t, event.GetTimestampAsTime().Unix() > 0)
 		assert.True(t, event.GetTimestampAsTime().UnixNano() > 0)
