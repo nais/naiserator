@@ -190,6 +190,10 @@ github.com/nais/liberator v0.0.0-20250718123756-f62404bee1c0 h1:HI+MyMTBxoVpoy16
 github.com/nais/liberator v0.0.0-20250718123756-f62404bee1c0/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
 github.com/nais/liberator v0.0.0-20250729143724-94a01a9a9cef h1:dUYYNIChrXeS+H4ZUEkwzX1dvAl6Bx4IU61CneBE02A=
 github.com/nais/liberator v0.0.0-20250729143724-94a01a9a9cef/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
+github.com/nais/liberator v0.0.0-20250731114651-ca9a379ed606 h1:UAM+0FsoIAuR54S18Qp5bNxJ8JVo2FEaJZvkmCaUHog=
+github.com/nais/liberator v0.0.0-20250731114651-ca9a379ed606/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
+github.com/nais/liberator v0.0.0-20250801122957-a2fc39364663 h1:AcTuQVI6v2tPcrqfojBuRFsVhBtXfCkuBZu/pDgGWCI=
+github.com/nais/liberator v0.0.0-20250801122957-a2fc39364663/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
 github.com/novln/docker-parser v1.0.0 h1:PjEBd9QnKixcWczNGyEdfUrP6GR0YUilAqG7Wksg3uc=
 github.com/novln/docker-parser v1.0.0/go.mod h1:oCeM32fsoUwkwByB5wVjsrsVQySzPWkl3JdlTn1txpE=
 github.com/onsi/ginkgo/v2 v2.23.4 h1:ktYTpKJAVZnDT4VjxSbiBenUjmlL/5QkBEocaWXiQus=
