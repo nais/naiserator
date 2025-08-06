@@ -27,6 +27,10 @@ const (
 	defaultDatabaseName = "app"
 
 	sharedPreloadLibraries = "bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,pgaudit"
+
+	runAsUser  = int64(101)
+	runAsGroup = int64(103)
+	fsGroup    = int64(103)
 )
 
 var defaultExtensions = []string{
@@ -234,6 +238,9 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 					},
 				},
 			},
+			SpiloRunAsUser:  ptr.To(runAsUser),
+			SpiloRunAsGroup: ptr.To(runAsGroup),
+			SpiloFSGroup:    ptr.To(fsGroup),
 		},
 	}
 
