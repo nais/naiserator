@@ -110,6 +110,9 @@ tests:
                 memory: "4G"
             postgresql:
               version: "17"
+            spiloFSGroup: 103
+            spiloRunAsUser: 101
+            spiloRunAsGroup: 103
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy

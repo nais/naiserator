@@ -127,6 +127,9 @@ tests:
                 log_destination: jsonlog
             maintenanceWindows:
               - Wed:13:00-14:00
+            spiloFSGroup: 103
+            spiloRunAsGroup: 103
+            spiloRunAsUser: 101
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
