@@ -190,6 +190,8 @@ func TestSynchronizer(t *testing.T) {
 	listers := naiserator_scheme.GenericListers()
 	listers = append(listers, naiserator_scheme.GCPListers()...)
 	listers = append(listers, naiserator_scheme.AivenListers()...)
+	// DO NOT ADD! Adding the AcidZalandoListers here breaks the test due to some inconsistencies in how envtest responds to requests
+	// listers = append(listers, naiserator_scheme.AcidZalandoListers()...)
 	for _, list := range listers {
 		err = rig.client.List(ctx, list)
 		assert.NoError(t, err, "Unable to list resource, are the CRDs installed?")
