@@ -52,13 +52,12 @@ k8s_resource(
     resource_deps=["liberator-chart"],
 )
 
-for name in ["postgres-operator"]:
-    # Load charts, assuming helm-charts checked out next to naiserator
-    k8s_yaml(helm("../helm-charts/features/{}".format(name), name=name, namespace="nais-system"))
-    k8s_resource(
-        workload=name,
-        resource_deps=["nais-crds"],
-    )
+# Load charts, assuming helm-charts checked out next to naiserator
+k8s_yaml(helm("../helm-charts/features/postgres-operator", name="postgres-operator", namespace="nais-system", set="fasit.env.kind=management,apiServerCIDR=10.96.0.1/32"))
+k8s_resource(
+    workload="postgres-operator",
+    resource_deps=["nais-crds"],
+)
 
 
 # Create a tempdir for naiserator configs
