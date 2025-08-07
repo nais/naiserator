@@ -3,30 +3,24 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly"
-    reviewers:
-      - "nais/features-dependabot-reviewer"
+      interval: "weekly"
     groups:
       gh:
         patterns:
-          - '*'
+          - "*"
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "monthly"
-    reviewers:
-      - "nais/features-dependabot-reviewer"
+      interval: "weekly"
     groups:
       docker:
         patterns:
-          - '*'
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "monthly"
-    reviewers:
-      - "nais/features-dependabot-reviewer"
+      interval: "weekly"
     groups:
       gomod:
         patterns:
-          - '*'
+          - "*"
