@@ -55,6 +55,7 @@ rules:
       - 'create'
       - 'update'
       - 'delete'
+      - 'deletecollection'
       - 'patch'
       - 'list'
       - 'watch'
