@@ -199,6 +199,7 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 				PgVersion: postgres.Cluster.MajorVersion,
 				Parameters: map[string]string{
 					"log_destination":          "jsonlog",
+					"log_filename":             "postgresql.log",
 					"shared_preload_libraries": sharedPreloadLibraries,
 				},
 			},
