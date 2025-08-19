@@ -125,6 +125,7 @@ tests:
               parameters:
                 shared_preload_libraries: bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,pgaudit
                 log_destination: jsonlog
+                log_filename: postgresql.log
             maintenanceWindows:
               - Wed:13:00-14:00
   - operation: CreateOrUpdate
