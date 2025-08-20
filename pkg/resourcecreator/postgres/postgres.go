@@ -253,6 +253,9 @@ func makePostgresParameters(audit *nais_io_v1.PostgresAudit) map[string]string {
 	}
 	if audit != nil && audit.Enabled {
 		classes := ""
+		if len(audit.StatementClasses) == 0 {
+			classes = "write,ddl"
+		}
 		for _, statementClass := range audit.StatementClasses {
 			if classes != "" {
 				classes += ","

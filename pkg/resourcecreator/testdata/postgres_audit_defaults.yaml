@@ -1,0 +1,114 @@
+testconfig:
+  description: postgresql with audit logging enabled
+config:
+  features:
+    postgres-operator: true
+  google-project-id: google-project-id
+  postgres:
+    storage-class: premium-rwo
+    image: nais-io/postgres-image:1.2.3
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    postgres:
+      maintenanceWindow:
+        day: 3
+        hour: 13
+      cluster:
+        name: my-postgres-cluster
+        resources:
+          diskSize: 10Gi
+          cpu: 100m
+          memory: 4G
+        majorVersion: 17
+        highAvailability: true
+        allowDeletion: true
+        audit:
+          enabled: true
+      database:
+        collation: nb_NO
+        extensions:
+          - name: postgis
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: pg-mynamespace
+tests:
+  - apiVersion: acid.zalan.do/v1
+    kind: postgresql
+    operation: CreateOrUpdate
+    name: my-postgres-cluster
+    namespace: pg-mynamespace
+    match:
+      - type: subset
+        name: "postgresql created in team postgres namespace"
+        resource:
+          metadata:
+            annotations:
+              nais.io/postgresqlDeleteResource: my-postgres-cluster
+            labels:
+              app: myapplication
+              team: mynamespace
+              apiserver-access: enabled
+          spec:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: nais.io/type
+                        operator: In
+                        values:
+                          - postgres
+            enableConnectionPooler: true
+            connectionPooler:
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "50Mi"
+            dockerImage: nais-io/postgres-image:1.2.3
+            teamId: mynamespace
+            volume:
+              size: "10Gi"
+              storageClass: "premium-rwo"
+            numberOfInstances: 3
+            patroni:
+              initdb:
+                encoding: UTF8
+                locale: nb_NO.UTF-8
+              synchronous_mode: true
+              synchronous_mode_strict: true
+            preparedDatabases:
+              app:
+                defaultUsers: true
+                secretNamespace: mynamespace
+                schemas:
+                  public: {}
+            resources:
+              limits:
+                cpu: "400m"
+                memory: "4G"
+              requests:
+                cpu: "100m"
+                memory: "4G"
+            postgresql:
+              version: "17"
+              parameters:
+                shared_preload_libraries: bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,pgaudit
+                log_destination: jsonlog
+                pgaudit.log: write,ddl
+            maintenanceWindows:
+              - Wed:13:00-14:00
+            spiloFSGroup: 103
+            spiloRunAsGroup: 103
+            spiloRunAsUser: 101
