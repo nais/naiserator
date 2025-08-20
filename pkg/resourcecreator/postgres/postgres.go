@@ -163,6 +163,7 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 	if postgres.Database != nil && postgres.Database.Collation != "" {
 		collation = fmt.Sprintf("%s.UTF-8", postgres.Database.Collation)
 	}
+
 	cluster := &acid_zalan_do_v1.Postgresql{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "postgresql",
@@ -196,12 +197,8 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 				},
 			},
 			PostgresqlParam: acid_zalan_do_v1.PostgresqlParam{
-				PgVersion: postgres.Cluster.MajorVersion,
-				Parameters: map[string]string{
-					"log_destination":          "jsonlog",
-					"log_filename":             "postgresql.log",
-					"shared_preload_libraries": sharedPreloadLibraries,
-				},
+				PgVersion:  postgres.Cluster.MajorVersion,
+				Parameters: makePostgresParameters(postgres.Cluster.Audit),
 			},
 			Volume: acid_zalan_do_v1.Volume{
 				Size:         postgres.Cluster.Resources.DiskSize.String(),
@@ -246,6 +243,25 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 	}
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, cluster)
+}
+
+func makePostgresParameters(audit *nais_io_v1.PostgresAudit) map[string]string {
+	postgresParameters := map[string]string{
+		"log_destination":          "jsonlog",
+		"log_filename":             "postgresql.log",
+		"shared_preload_libraries": sharedPreloadLibraries,
+	}
+	if audit != nil && audit.Enabled {
+		classes := ""
+		for _, statementClass := range audit.StatementClasses {
+			if classes != "" {
+				classes += ","
+			}
+			classes += string(statementClass)
+		}
+		postgresParameters["pgaudit.log"] = classes
+	}
+	return postgresParameters
 }
 
 // makeWeekday creates a weekday from an integer day
