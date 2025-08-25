@@ -70,7 +70,10 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 	aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
 
-	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
+	kafkaKeyPaths, err := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
+	if err != nil {
+		return err
+	}
 
 	openSearchEnabled, err := OpenSearch(ast, source.GetOpenSearch(), &aivenApp)
 	if err != nil {

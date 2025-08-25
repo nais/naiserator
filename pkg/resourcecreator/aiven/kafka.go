@@ -95,10 +95,16 @@ func createKafkaKeyToPaths() []corev1.KeyToPath {
 	}
 }
 
-func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) []corev1.KeyToPath {
+func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) ([]corev1.KeyToPath, error) {
+	secretName, err := generateAivenSecretName(aivenApp.Name, "kafka", aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"])
+	if err != nil {
+		return nil, err
+	}
+
 	if config.IsKafkaratorEnabled() && naisKafka != nil {
-		addKafkaEnvVariables(ast, aivenApp.Spec.SecretName)
+		addKafkaEnvVariables(ast, secretName)
 		ast.Labels["kafka"] = "enabled"
+
 		aivenApp.Spec.Kafka = &aiven_nais_io_v1.KafkaSpec{
 			Pool: naisKafka.Pool,
 		}
@@ -112,10 +118,10 @@ func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *
 			}}...)
 		}
 
-		return createKafkaKeyToPaths()
+		return createKafkaKeyToPaths(), nil
 	}
 
-	return []corev1.KeyToPath{}
+	return []corev1.KeyToPath{}, nil
 }
 
 func CreateStream(source resource.Source, kafka *nais_io_v1.Kafka) *kafka_nais_io_v1.Stream {
