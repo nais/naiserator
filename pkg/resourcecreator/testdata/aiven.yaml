@@ -23,7 +23,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+            secretName: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
       - name: "pool is propagated"
         type: subset
         resource:
@@ -44,7 +44,7 @@ tests:
                 volumes:
                   - name: aiven-credentials
                     secret:
-                      secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                      secretName: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       items:
                         - key: KAFKA_CERTIFICATE
                           path: kafka.crt
@@ -66,12 +66,12 @@ tests:
                         valueFrom:
                           secretKeyRef:
                             key: AIVEN_SECRET_UPDATED
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: AIVEN_CA
                         valueFrom:
                           secretKeyRef:
                             key: AIVEN_CA
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                             optional: true
                       - name: KAFKA_CERTIFICATE
                         valueFrom:
