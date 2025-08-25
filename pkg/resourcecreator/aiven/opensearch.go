@@ -23,7 +23,7 @@ func OpenSearch(ast *resource.Ast, openSearch *nais_io_v1.OpenSearch, aivenApp *
 		return false, err
 	}
 
-	makeOptionalSecretEnvVar("AIVEN_CA", secretName)
+	ast.PrependEnv([]corev1.EnvVar{makeOptionalSecretEnvVar("AIVEN_CA", secretName)}...)
 	addOpenSearchEnvVariables(ast, secretName)
 	aivenApp.Spec.OpenSearch = &aiven_nais_io_v1.OpenSearchSpec{
 		Instance:   fmt.Sprintf("opensearch-%s-%s", aivenApp.GetNamespace(), openSearch.Instance),
