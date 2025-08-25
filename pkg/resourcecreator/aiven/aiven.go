@@ -70,7 +70,10 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 	aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
 
-	kafkaKeyPaths := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
+	kafkaKeyPaths, err := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
+	if err != nil {
+		return err
+	}
 
 	openSearchEnabled, err := OpenSearch(ast, source.GetOpenSearch(), &aivenApp)
 	if err != nil {
@@ -92,8 +95,8 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	if len(kafkaKeyPaths) > 0 || openSearchEnabled || valkeyEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.PrependEnv([]v1.EnvVar{
+			// V legacy info and different for each service, depending on what got updated, when.
 			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),
-			makeOptionalSecretEnvVar("AIVEN_CA", aivenApp.Spec.SecretName),
 		}...)
 	}
 	return nil

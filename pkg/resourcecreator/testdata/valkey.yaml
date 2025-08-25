@@ -55,6 +55,11 @@ tests:
                 containers:
                   - name: "myapplication"
                     env:
+                      - name: AIVEN_CA
+                        valueFrom:
+                          secretKeyRef:
+                            key: AIVEN_CA
+                            name: ^aiven-valkey-naistest2-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: REDIS_USERNAME_NAISTEST2
                         valueFrom:
                           secretKeyRef:
