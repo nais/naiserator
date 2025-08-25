@@ -24,7 +24,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^aiven-mynaisjob-.{8}-\d{4}-\d\d?-0$
+            secretName: ^aiven-kafka-mynaisjob-.{8}-\d{4}-\d\d?-0$
       - name: "pool is propagated"
         type: subset
         resource:
