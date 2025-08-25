@@ -95,8 +95,9 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 	if len(kafkaKeyPaths) > 0 || openSearchEnabled || valkeyEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.PrependEnv([]v1.EnvVar{
+			// V legacy info and different for each service, depending on what got updated, when.
 			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),
-			makeOptionalSecretEnvVar("AIVEN_CA", aivenApp.Spec.SecretName),
+			// V the same for every service
 		}...)
 	}
 	return nil

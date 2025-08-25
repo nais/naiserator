@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	aivenCa                        = "AIVEN_CA"
 	kafkaCertificatePathKey        = "KAFKA_CERTIFICATE_PATH"
 	kafkaPrivateKeyPathKey         = "KAFKA_PRIVATE_KEY_PATH"
 	kafkaCAPathKey                 = "KAFKA_CA_PATH"
@@ -44,6 +45,7 @@ func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
 		makeSecretEnvVar(kafkaSchemaRegistryUserKey, secretName),
 		makeSecretEnvVar(kafkaSchemaRegistryPasswordKey, secretName),
 		makeSecretEnvVar(kafkaCAKey, secretName),
+		makeOptionalSecretEnvVar(aivenCa, secretName),
 		makeSecretEnvVar(kafkaCredStorePasswordKey, secretName),
 		// Inject path environment variables to refer to mounted secrets
 		{
