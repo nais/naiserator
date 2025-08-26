@@ -110,6 +110,11 @@ tests:
                 memory: "4G"
             postgresql:
               version: "17"
+              parameters:
+                shared_preload_libraries: bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,pgaudit
+                log_destination: jsonlog
+                log_filename: postgresql.log
+                pg_stat_statements.track: all
             spiloFSGroup: 103
             spiloRunAsUser: 101
             spiloRunAsGroup: 103
