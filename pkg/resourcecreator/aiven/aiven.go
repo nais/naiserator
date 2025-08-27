@@ -9,17 +9,11 @@ import (
 
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
-	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-)
-
-const (
-	aivenCredentialFilesVolumeName = "aiven-credentials"
 )
 
 var namePattern = regexp.MustCompile("[^a-z0-9]")
@@ -47,8 +41,8 @@ func generateSharedAivenSecretName(name string, generation int) (string, error) 
 	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
 }
 
-func generateAivenSecretName(name, service, generation string) (string, error) {
-	prefixedName := fmt.Sprintf("aiven-%s-%s", service, name)
+func generateAivenSecretName(appName, aivenService, generation string) (string, error) {
+	prefixedName := fmt.Sprintf("aiven-%s-%s", aivenService, appName)
 	year, week := time.Now().ISOWeek()
 	suffix := fmt.Sprintf("%d-%d-%s", year, week, generation)
 	maxLen := validation.DNS1035LabelMaxLength
@@ -57,20 +51,20 @@ func generateAivenSecretName(name, service, generation string) (string, error) {
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	secretName, err := generateSharedAivenSecretName(source.GetName(), config.GetAivenGeneration())
+	sharedSecretName, err := generateSharedAivenSecretName(source.GetName(), config.GetAivenGeneration())
 	if err != nil {
 		return err
 	}
 
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
 		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
-			SecretName: secretName,
+			SecretName: sharedSecretName,
 		}).
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 	aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
 
-	kafkaKeyPaths, err := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
+	kafkaEnabled, err := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
 	if err != nil {
 		return err
 	}
@@ -85,14 +79,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		return err
 	}
 
-	if len(kafkaKeyPaths) > 0 {
-		credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, secretName, kafkaKeyPaths)
-
-		ast.Volumes = append(ast.Volumes, credentialFilesVolume)
-		ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
-	}
-
-	if len(kafkaKeyPaths) > 0 || openSearchEnabled || valkeyEnabled {
+	if kafkaEnabled || openSearchEnabled || valkeyEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
 		ast.PrependEnv([]v1.EnvVar{
 			// V legacy info and different for each service, depending on what got updated, when.
