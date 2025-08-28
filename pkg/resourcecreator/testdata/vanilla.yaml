@@ -109,6 +109,12 @@ tests:
                     podSelector:
                       matchLabels:
                         app.kubernetes.io/name: prometheus
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                    podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: alloy
             podSelector:
               matchLabels:
                 app: myapplication

@@ -212,6 +212,10 @@ func defaultIngressRules(cfg Config) []networkingv1.NetworkPolicyIngressRule {
 					NamespaceSelector: labelSelector("kubernetes.io/metadata.name", cfg.GetNaisNamespace()),
 					PodSelector:       labelSelector("app.kubernetes.io/name", "prometheus"),
 				},
+				{
+					NamespaceSelector: labelSelector("kubernetes.io/metadata.name", cfg.GetNaisNamespace()),
+					PodSelector:       labelSelector("app.kubernetes.io/name", "alloy"),
+				},
 			},
 		},
 	}

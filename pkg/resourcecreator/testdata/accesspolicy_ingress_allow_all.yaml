@@ -46,6 +46,12 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: nais-system
+                  - podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: alloy
+                    namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
               - from:
                   - namespaceSelector: {}
                     podSelector: {}
