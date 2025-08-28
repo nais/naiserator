@@ -60,7 +60,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ .Release.Name }}-prometheus
+  name: {{ .Release.Name }}-metrics
 spec:
   ingress:
   - from:
@@ -70,6 +70,12 @@ spec:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: prometheus
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: nais-system
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: alloy
   podSelector:
     matchLabels:
       app: naiserator
