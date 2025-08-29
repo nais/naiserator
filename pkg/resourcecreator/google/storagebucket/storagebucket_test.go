@@ -43,10 +43,11 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 	t.Run("bucket with life cycle rules", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		lifecycleCondition := nais.LifecycleCondition{
-			Age:              7,
-			CreatedBefore:    "2019-01-01",
-			NumNewerVersions: 2,
-			WithState:        "ANY",
+			Age:                 7,
+			CreatedBefore:       "2019-01-01",
+			DaysSinceCustomTime: 3,
+			NumNewerVersions:    2,
+			WithState:           "ANY",
 		}
 		csb := nais.CloudStorageBucket{Name: "mystoragebucket", LifecycleCondition: &lifecycleCondition}
 		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb, "projectId")
@@ -55,6 +56,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 		assert.Equal(t, csb.Name, bucket.Name)
 		assert.Equal(t, csb.LifecycleCondition.Age, lifecycleRule.Condition.Age)
 		assert.Equal(t, csb.LifecycleCondition.CreatedBefore, lifecycleRule.Condition.CreatedBefore)
+		assert.Equal(t, csb.LifecycleCondition.DaysSinceCustomTime, lifecycleRule.Condition.DaysSinceCustomTime)
 		assert.Equal(t, csb.LifecycleCondition.NumNewerVersions, lifecycleRule.Condition.NumNewerVersions)
 		assert.Equal(t, csb.LifecycleCondition.WithState, lifecycleRule.Condition.WithState)
 		assert.Equal(t, google.Region, bucket.Spec.Location)

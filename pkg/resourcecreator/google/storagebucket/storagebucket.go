@@ -54,10 +54,11 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 		lifecycleRule := google_storage_crd.LifecycleRules{
 			Action: google_storage_crd.Action{Type: "Delete"},
 			Condition: google_storage_crd.Condition{
-				Age:              bucket.LifecycleCondition.Age,
-				CreatedBefore:    bucket.LifecycleCondition.CreatedBefore,
-				NumNewerVersions: bucket.LifecycleCondition.NumNewerVersions,
-				WithState:        bucket.LifecycleCondition.WithState,
+				Age:                 bucket.LifecycleCondition.Age,
+				CreatedBefore:       bucket.LifecycleCondition.CreatedBefore,
+				DaysSinceCustomTime: bucket.LifecycleCondition.DaysSinceCustomTime,
+				NumNewerVersions:    bucket.LifecycleCondition.NumNewerVersions,
+				WithState:           bucket.LifecycleCondition.WithState,
 			},
 		}
 		storagebucketPolicySpec.LifecycleRules = append(storagebucketPolicySpec.LifecycleRules, lifecycleRule)
