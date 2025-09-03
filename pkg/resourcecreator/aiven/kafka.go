@@ -10,10 +10,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 const (
+	aivenCa                        = "AIVEN_CA"
+	aivenCredentialFilesVolumeName = "aiven-credentials"
 	kafkaCertificatePathKey        = "KAFKA_CERTIFICATE_PATH"
 	kafkaPrivateKeyPathKey         = "KAFKA_PRIVATE_KEY_PATH"
 	kafkaCAPathKey                 = "KAFKA_CA_PATH"
@@ -44,6 +47,7 @@ func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
 		makeSecretEnvVar(kafkaSchemaRegistryUserKey, secretName),
 		makeSecretEnvVar(kafkaSchemaRegistryPasswordKey, secretName),
 		makeSecretEnvVar(kafkaCAKey, secretName),
+		makeOptionalSecretEnvVar(aivenCa, secretName),
 		makeSecretEnvVar(kafkaCredStorePasswordKey, secretName),
 		// Inject path environment variables to refer to mounted secrets
 		{
@@ -69,9 +73,9 @@ func addKafkaEnvVariables(ast *resource.Ast, secretName string) {
 	}...)
 }
 
-func createKafkaKeyToPaths() []corev1.KeyToPath {
+func createKafkaKeyToPaths(ast *resource.Ast, nameOfSecretContainingKeys string) {
 	// Mount specific secret keys as credential files
-	return []corev1.KeyToPath{
+	paths := []corev1.KeyToPath{
 		{
 			Key:  kafkaCertificateKey,
 			Path: kafkaCertificateFilename,
@@ -93,29 +97,41 @@ func createKafkaKeyToPaths() []corev1.KeyToPath {
 			Path: kafkaTruststoreFilename,
 		},
 	}
+	credentialFilesVolume := pod.FromFilesSecretVolume(aivenCredentialFilesVolumeName, nameOfSecretContainingKeys, paths)
+
+	ast.Volumes = append(ast.Volumes, credentialFilesVolume)
+	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
 }
 
-func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) []corev1.KeyToPath {
-	if config.IsKafkaratorEnabled() && naisKafka != nil {
-		addKafkaEnvVariables(ast, aivenApp.Spec.SecretName)
-		ast.Labels["kafka"] = "enabled"
-		aivenApp.Spec.Kafka = &aiven_nais_io_v1.KafkaSpec{
-			Pool: naisKafka.Pool,
-		}
-
-		if naisKafka.Streams {
-			stream := CreateStream(source, naisKafka)
-			ast.AppendOperation(resource.OperationCreateOrUpdate, stream)
-			ast.PrependEnv([]corev1.EnvVar{{
-				Name:  "KAFKA_STREAMS_APPLICATION_ID",
-				Value: stream.TopicPrefix(),
-			}}...)
-		}
-
-		return createKafkaKeyToPaths()
+func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) (bool, error) {
+	individualSecretName, err := generateAivenSecretName(aivenApp.Name, "kafka", aivenApp.Labels["aiven.nais.io/secret-generation"])
+	if err != nil {
+		return false, err
 	}
 
-	return []corev1.KeyToPath{}
+	if !config.IsKafkaratorEnabled() || naisKafka == nil {
+		return false, nil
+	}
+
+	addKafkaEnvVariables(ast, individualSecretName)
+	ast.Labels["kafka"] = "enabled"
+
+	aivenApp.Spec.Kafka = &aiven_nais_io_v1.KafkaSpec{
+		Pool:       naisKafka.Pool,
+		SecretName: individualSecretName,
+	}
+
+	if naisKafka.Streams {
+		stream := CreateStream(source, naisKafka)
+		ast.AppendOperation(resource.OperationCreateOrUpdate, stream)
+		ast.PrependEnv([]corev1.EnvVar{{
+			Name:  "KAFKA_STREAMS_APPLICATION_ID",
+			Value: stream.TopicPrefix(),
+		}}...)
+	}
+
+	createKafkaKeyToPaths(ast, individualSecretName)
+	return true, nil
 }
 
 func CreateStream(source resource.Source, kafka *nais_io_v1.Kafka) *kafka_nais_io_v1.Stream {
