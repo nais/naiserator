@@ -62,7 +62,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 		}).
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
-	aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
+	aivenApp.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
 
 	kafkaEnabled, err := Kafka(source, ast, config, source.GetKafka(), &aivenApp)
 	if err != nil {

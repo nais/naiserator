@@ -101,11 +101,10 @@ func createKafkaKeyToPaths(ast *resource.Ast, nameOfSecretContainingKeys string)
 
 	ast.Volumes = append(ast.Volumes, credentialFilesVolume)
 	ast.VolumeMounts = append(ast.VolumeMounts, pod.FromFilesVolumeMount(credentialFilesVolume.Name, nais_io_v1alpha1.DefaultKafkaratorMountPath, "", true))
-	return
 }
 
 func Kafka(source resource.Source, ast *resource.Ast, config Config, naisKafka *nais_io_v1.Kafka, aivenApp *aiven_nais_io_v1.AivenApplication) (bool, error) {
-	individualSecretName, err := generateAivenSecretName(aivenApp.Name, "kafka", aivenApp.ObjectMeta.Labels["aiven.nais.io/secret-generation"])
+	individualSecretName, err := generateAivenSecretName(aivenApp.Name, "kafka", aivenApp.Labels["aiven.nais.io/secret-generation"])
 	if err != nil {
 		return false, err
 	}
