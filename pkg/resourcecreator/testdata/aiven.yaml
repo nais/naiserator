@@ -23,7 +23,8 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+            kafka:
+              secretName: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
       - name: "pool is propagated"
         type: subset
         resource:
@@ -44,7 +45,7 @@ tests:
                 volumes:
                   - name: aiven-credentials
                     secret:
-                      secretName: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                      secretName: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       items:
                         - key: KAFKA_CERTIFICATE
                           path: kafka.crt
@@ -67,52 +68,52 @@ tests:
                           secretKeyRef:
                             key: AIVEN_SECRET_UPDATED
                             name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
-                      - name: AIVEN_CA
-                        valueFrom:
-                          secretKeyRef:
-                            key: AIVEN_CA
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
-                            optional: true
                       - name: KAFKA_CERTIFICATE
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_CERTIFICATE
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_PRIVATE_KEY
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_PRIVATE_KEY
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_BROKERS
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_BROKERS
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_SCHEMA_REGISTRY
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_SCHEMA_REGISTRY
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_SCHEMA_REGISTRY_USER
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_SCHEMA_REGISTRY_USER
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_SCHEMA_REGISTRY_PASSWORD
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_SCHEMA_REGISTRY_PASSWORD
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_CA
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_CA
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
+                      - name: AIVEN_CA
+                        valueFrom:
+                          secretKeyRef:
+                            key: AIVEN_CA
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
+                            optional: true
                       - name: KAFKA_CREDSTORE_PASSWORD
                         valueFrom:
                           secretKeyRef:
                             key: KAFKA_CREDSTORE_PASSWORD
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
+                            name: ^aiven-kafka-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_CERTIFICATE_PATH
                         value: /var/run/secrets/nais.io/kafka/kafka.crt
                       - name: KAFKA_PRIVATE_KEY_PATH
