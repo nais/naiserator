@@ -6,6 +6,7 @@ import (
 
 	acid_zalan_do_v1 "github.com/nais/liberator/pkg/apis/acid.zalan.do/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,6 +14,9 @@ import (
 )
 
 const (
+	// Max length is 63, but we need to save space for suffixes added by Zalando operator, such as `-pooler`
+	maxClusterNameLength = 56
+
 	cpuLimitFactor = 4
 
 	maintenanceDuration = 1
@@ -54,9 +58,16 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return nil
 	}
 
+	var err error
 	pgClusterName := source.GetName()
 	if postgres.Cluster.Name != "" {
 		pgClusterName = postgres.Cluster.Name
+	}
+	if len(pgClusterName) > maxClusterNameLength {
+		pgClusterName, err = namegen.ShortName(pgClusterName, maxClusterNameLength)
+		if err != nil {
+			return fmt.Errorf("failed to shorten PostgreSQL cluster name: %w", err)
+		}
 	}
 	pgNamespace := fmt.Sprintf("pg-%s", source.GetNamespace())
 
