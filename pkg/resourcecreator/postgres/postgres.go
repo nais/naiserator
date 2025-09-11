@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	// Max length is 63, but we need to save space for suffixes added by Zalando operator, such as `-pooler`
-	maxClusterNameLength = 56
+	// Max length is 63, but we need to save space for suffixes added by Zalando operator or StatefulSets
+	maxClusterNameLength = 50
 
 	cpuLimitFactor = 4
 

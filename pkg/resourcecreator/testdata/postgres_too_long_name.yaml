@@ -58,7 +58,7 @@ tests:
   - apiVersion: acid.zalan.do/v1
     kind: postgresql
     operation: CreateOrUpdate
-    name: this-is-a-very-long-postgres-cluster-name-excee-a4197108
+    name: this-is-a-very-long-postgres-cluster-name-a4197108
     namespace: pg-mynamespace
     match:
       - type: subset
@@ -146,7 +146,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: this-is-a-very-long-postgres-cluster-name-excee-a4197108
+    name: this-is-a-very-long-postgres-cluster-name-a4197108
     namespace: pg-mynamespace
     match:
       - name: "postgres network policy created"
@@ -192,7 +192,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: this-is-a-very-long-postgres-cluster-name-excee-a4197108-pooler
+    name: this-is-a-very-long-postgres-cluster-name-a4197108-pooler
     namespace: pg-mynamespace
     match:
       - name: "postgres pooler network policy created"
@@ -255,7 +255,7 @@ tests:
                     image: navikt/myapplication:1.2.3
                     env:
                       - name: PGHOST
-                        value: this-is-a-very-long-postgres-cluster-name-excee-a4197108-pooler.pg-mynamespace
+                        value: this-is-a-very-long-postgres-cluster-name-a4197108-pooler.pg-mynamespace
                       - name: PGPORT
                         value: "5432"
                       - name: PGDATABASE
@@ -263,14 +263,14 @@ tests:
                       - name: PGUSER
                         valueFrom:
                           secretKeyRef:
-                            name: app-owner-user.this-is-a-very-long-postgres-cluster-name-excee-a4197108.credentials.postgresql.acid.zalan.do
+                            name: app-owner-user.this-is-a-very-long-postgres-cluster-name-a4197108.credentials.postgresql.acid.zalan.do
                             key: username
                       - name: PGPASSWORD
                         valueFrom:
                           secretKeyRef:
-                            name: app-owner-user.this-is-a-very-long-postgres-cluster-name-excee-a4197108.credentials.postgresql.acid.zalan.do
+                            name: app-owner-user.this-is-a-very-long-postgres-cluster-name-a4197108.credentials.postgresql.acid.zalan.do
                             key: password
                       - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@this-is-a-very-long-postgres-cluster-name-excee-a4197108-pooler.pg-mynamespace:5432/app"
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@this-is-a-very-long-postgres-cluster-name-a4197108-pooler.pg-mynamespace:5432/app"
                       - name: PGJDBCURL
-                        value: "jdbc:postgresql://this-is-a-very-long-postgres-cluster-name-excee-a4197108-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"
+                        value: "jdbc:postgresql://this-is-a-very-long-postgres-cluster-name-a4197108-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"
