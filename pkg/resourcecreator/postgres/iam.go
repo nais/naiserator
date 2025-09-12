@@ -14,7 +14,6 @@ import (
 func createIAMPolicyMember(source Source, ast *resource.Ast, projectId, pgNamespace string) {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = "postgres-pod"
-	objectMeta.Namespace = pgNamespace
 	objectMeta.OwnerReferences = nil
 	delete(objectMeta.Labels, "app")
 
