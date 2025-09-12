@@ -4,16 +4,23 @@ import (
 	"fmt"
 
 	"github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/utils/ptr"
 )
 
-func createIAMPolicyMember(source Source, ast *resource.Ast, projectId, pgNamespace string) {
+func createIAMPolicyMember(source Source, ast *resource.Ast, projectId, pgNamespace string) error {
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = "postgres-pod"
+	name, err := namegen.SuffixedShortName(pgNamespace, "postgres-pod", validation.DNS1123LabelMaxLength)
+	if err != nil {
+		return fmt.Errorf("generating IAMPolicyMember name: %w", err)
+	}
+	objectMeta.Name = name
+	objectMeta.Namespace = google.IAMServiceAccountNamespace
 	objectMeta.OwnerReferences = nil
 	delete(objectMeta.Labels, "app")
 
@@ -37,4 +44,6 @@ func createIAMPolicyMember(source Source, ast *resource.Ast, projectId, pgNamesp
 	util.SetAnnotation(&iamPolicyMember, google.ProjectIdAnnotation, projectId)
 
 	ast.AppendOperation(resource.OperationCreateIfNotExists, &iamPolicyMember)
+
+	return nil
 }

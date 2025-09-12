@@ -36,7 +36,8 @@ tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMPolicyMember
     operation: CreateIfNotExists
-    name: postgres-pod
+    name: pg-mynamespace-8a3ec607-postgres-pod
+    namespace: serviceaccounts
     match:
       - type: subset
         name: "IAMPolicyMember created"

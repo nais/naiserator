@@ -73,7 +73,10 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 	CreateClusterSpec(source, ast, cfg, pgClusterName, pgNamespace)
 	createNetworkPolicies(source, ast, pgClusterName, pgNamespace)
-	createIAMPolicyMember(source, ast, cfg.GetGoogleProjectID(), pgNamespace)
+	err = createIAMPolicyMember(source, ast, cfg.GetGoogleProjectID(), pgNamespace)
+	if err != nil {
+		return fmt.Errorf("failed to create IAMPolicyMember: %w", err)
+	}
 
 	envVars := []corev1.EnvVar{
 		{
