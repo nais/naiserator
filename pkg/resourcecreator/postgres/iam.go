@@ -11,37 +11,31 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func createIAMPolicy(source Source, ast *resource.Ast, projectId, pgNamespace string) {
+func createIAMPolicyMember(source Source, ast *resource.Ast, projectId, pgNamespace string) {
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetNamespace())
-	objectMeta.Namespace = google.IAMServiceAccountNamespace
+	objectMeta.Name = "postgres-pod"
+	objectMeta.Namespace = pgNamespace
 	objectMeta.OwnerReferences = nil
 	delete(objectMeta.Labels, "app")
 
-	iamPolicy := iam_cnrm_cloud_google_com_v1beta1.IAMPolicy{
+	iamPolicyMember := iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMember{
 		TypeMeta: v1.TypeMeta{
-			Kind:       "IAMPolicy",
+			Kind:       "IAMPolicyMember",
 			APIVersion: google.IAMAPIVersion,
 		},
 		ObjectMeta: objectMeta,
-		Spec: iam_cnrm_cloud_google_com_v1beta1.IAMPolicySpec{
-			ResourceRef: &iam_cnrm_cloud_google_com_v1beta1.ResourceRef{
+		Spec: iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberSpec{
+			Member: fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/postgres-pod]", projectId, pgNamespace),
+			Role:   "roles/iam.workloadIdentityUser",
+			ResourceRef: iam_cnrm_cloud_google_com_v1beta1.ResourceRef{
 				ApiVersion: google.IAMAPIVersion,
 				Kind:       "IAMServiceAccount",
 				Name:       ptr.To("postgres-pod"),
 			},
-			Bindings: []iam_cnrm_cloud_google_com_v1beta1.Bindings{
-				{
-					Role: "roles/iam.workloadIdentityUser",
-					Members: []string{
-						fmt.Sprintf("serviceAccount:%s.svc.id.goog[%s/postgres-pod]", projectId, pgNamespace),
-					},
-				},
-			},
 		},
 	}
 
-	util.SetAnnotation(&iamPolicy, google.ProjectIdAnnotation, projectId)
+	util.SetAnnotation(&iamPolicyMember, google.ProjectIdAnnotation, projectId)
 
-	ast.AppendOperation(resource.OperationCreateIfNotExists, &iamPolicy)
+	ast.AppendOperation(resource.OperationCreateIfNotExists, &iamPolicyMember)
 }

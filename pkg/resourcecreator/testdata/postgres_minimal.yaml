@@ -34,22 +34,19 @@ existing:
       name: pg-mynamespace
 tests:
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
-    kind: IAMPolicy
+    kind: IAMPolicyMember
     operation: CreateIfNotExists
-    name: pg-mynamespace
+    name: postgres-pod
     match:
       - type: subset
-        name: "IAMPolicy created in namespace serviceaccounts"
+        name: "IAMPolicyMember created"
         resource:
           metadata:
             annotations:
               cnrm.cloud.google.com/project-id: google-project-id
-            namespace: serviceaccounts
           spec:
-            bindings:
-              - members:
-                  - serviceAccount:google-project-id.svc.id.goog[pg-mynamespace/postgres-pod]
-                role: roles/iam.workloadIdentityUser
+            member: serviceAccount:google-project-id.svc.id.goog[pg-mynamespace/postgres-pod]
+            role: roles/iam.workloadIdentityUser
             resourceRef:
               apiVersion: iam.cnrm.cloud.google.com/v1beta1
               kind: IAMServiceAccount
