@@ -20,8 +20,8 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4 # ratchet:exclude
-      - uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # ratchet:azure/setup-helm@v3
+      - uses: actions/checkout@v5 # ratchet:exclude
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # ratchet:azure/setup-helm@v3
         with:
           version: "v3.11.1"
       - uses: nais/build-push-sign@main
@@ -57,7 +57,7 @@ jobs:
       - id: "auth"
         if: github.ref == 'refs/heads/master'
         name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v2" # ratchet:exclude
+        uses: "google-github-actions/auth@v3" # ratchet:exclude
         with:
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: "gh-${{ env.FEATURE_NAME }}@nais-io.iam.gserviceaccount.com"
