@@ -51,15 +51,8 @@ func generateAivenSecretName(appName, aivenService, generation string) (string, 
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	sharedSecretName, err := generateSharedAivenSecretName(source.GetName(), config.GetAivenGeneration())
-	if err != nil {
-		return err
-	}
-
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
-		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
-			SecretName: sharedSecretName,
-		}).
+		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{}).
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 	aivenApp.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
