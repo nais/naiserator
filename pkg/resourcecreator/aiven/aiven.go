@@ -31,16 +31,6 @@ type Config interface {
 	GetAivenGeneration() int
 }
 
-// TODO: Remove once all aiven secrets are per service
-func generateSharedAivenSecretName(name string, generation int) (string, error) {
-	prefixedName := fmt.Sprintf("aiven-%s", name)
-	year, week := time.Now().ISOWeek()
-	suffix := fmt.Sprintf("%d-%d-%d", year, week, generation%10)
-	maxLen := validation.DNS1035LabelMaxLength
-
-	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
-}
-
 func generateAivenSecretName(appName, aivenService, generation string) (string, error) {
 	prefixedName := fmt.Sprintf("aiven-%s-%s", aivenService, appName)
 	year, week := time.Now().ISOWeek()
