@@ -31,16 +31,6 @@ type Config interface {
 	GetAivenGeneration() int
 }
 
-// TODO: Remove once all aiven secrets are per service
-func generateSharedAivenSecretName(name string, generation int) (string, error) {
-	prefixedName := fmt.Sprintf("aiven-%s", name)
-	year, week := time.Now().ISOWeek()
-	suffix := fmt.Sprintf("%d-%d-%d", year, week, generation%10)
-	maxLen := validation.DNS1035LabelMaxLength
-
-	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
-}
-
 func generateAivenSecretName(appName, aivenService, generation string) (string, error) {
 	prefixedName := fmt.Sprintf("aiven-%s-%s", aivenService, appName)
 	year, week := time.Now().ISOWeek()
@@ -51,15 +41,8 @@ func generateAivenSecretName(appName, aivenService, generation string) (string, 
 }
 
 func Create(source Source, ast *resource.Ast, config Config) error {
-	sharedSecretName, err := generateSharedAivenSecretName(source.GetName(), config.GetAivenGeneration())
-	if err != nil {
-		return err
-	}
-
 	aivenApp := aiven_nais_io_v1.NewAivenApplicationBuilder(source.GetName(), source.GetNamespace()).
-		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{
-			SecretName: sharedSecretName,
-		}).
+		WithSpec(aiven_nais_io_v1.AivenApplicationSpec{}).
 		Build()
 	aivenApp.ObjectMeta = resource.CreateObjectMeta(source)
 	aivenApp.Labels["aiven.nais.io/secret-generation"] = strconv.Itoa(config.GetAivenGeneration())
@@ -81,10 +64,10 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 
 	if kafkaEnabled || openSearchEnabled || valkeyEnabled {
 		ast.AppendOperation(resource.OperationCreateOrUpdate, &aivenApp)
-		ast.PrependEnv([]v1.EnvVar{
-			// V legacy info and different for each service, depending on what got updated, when.
-			makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),
-		}...)
+		// ast.PrependEnv([]v1.EnvVar{
+		// 	// V legacy info and different for each service, depending on what got updated, when.
+		// 	makeSecretEnvVar("AIVEN_SECRET_UPDATED", aivenApp.Spec.SecretName),
+		// }...)
 	}
 	return nil
 }

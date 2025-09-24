@@ -63,11 +63,6 @@ tests:
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/kafka
                     env:
-                      - name: AIVEN_SECRET_UPDATED
-                        valueFrom:
-                          secretKeyRef:
-                            key: AIVEN_SECRET_UPDATED
-                            name: ^aiven-myapplication-.{8}-\d{4}-\d\d?-0$
                       - name: KAFKA_CERTIFICATE
                         valueFrom:
                           secretKeyRef:
