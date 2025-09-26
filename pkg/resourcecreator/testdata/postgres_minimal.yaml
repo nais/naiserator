@@ -67,6 +67,13 @@ tests:
               team: mynamespace
               apiserver-access: enabled
           spec:
+            additionalVolumes:
+              - name: postgres-pgaudit-scripts
+                mountPath: /scripts/pgaudit
+                volumeSource:
+                  configMap:
+                    name: postgres-pgaudit-scripts
+                    optional: true
             nodeAffinity:
               requiredDuringSchedulingIgnoredDuringExecution:
                 nodeSelectorTerms:
