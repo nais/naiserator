@@ -173,23 +173,6 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 		extensions[extension] = defaultSchema
 	}
 
-	additionalVolumes := make([]acid_zalan_do_v1.AdditionalVolume, 0, len(extensions))
-	for extension, _ := range extensions {
-		name := fmt.Sprintf("postgres-%s-scripts", extension)
-		additionalVolumes = append(additionalVolumes, acid_zalan_do_v1.AdditionalVolume{
-			Name:      name,
-			MountPath: fmt.Sprintf("/scripts/%s", extension),
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: name,
-					},
-					Optional: ptr.To(true),
-				},
-			},
-		})
-	}
-
 	collation := "en_US.UTF-8"
 	if postgres.Database != nil && postgres.Database.Collation != "" {
 		collation = fmt.Sprintf("%s.UTF-8", postgres.Database.Collation)
@@ -202,7 +185,6 @@ func CreateClusterSpec(source Source, ast *resource.Ast, cfg Config, pgClusterNa
 		},
 		ObjectMeta: objectMeta,
 		Spec: acid_zalan_do_v1.PostgresSpec{
-			AdditionalVolumes:             additionalVolumes,
 			EnableConnectionPooler:        ptr.To(true),
 			EnableReplicaConnectionPooler: ptr.To(false),
 			ConnectionPooler: &acid_zalan_do_v1.ConnectionPooler{

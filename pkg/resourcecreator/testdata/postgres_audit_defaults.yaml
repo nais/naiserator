@@ -62,19 +62,6 @@ tests:
               team: mynamespace
               apiserver-access: enabled
           spec:
-            additionalVolumes:
-              - name: postgres-postgis-scripts
-                mountPath: /scripts/postgis
-                volumeSource:
-                  configMap:
-                    name: postgres-postgis-scripts
-                    optional: true
-              - name: postgres-pgaudit-scripts
-                mountPath: /scripts/pgaudit
-                volumeSource:
-                  configMap:
-                    name: postgres-pgaudit-scripts
-                    optional: true
             nodeAffinity:
               requiredDuringSchedulingIgnoredDuringExecution:
                 nodeSelectorTerms:
