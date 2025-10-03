@@ -8,5 +8,5 @@ metadata:
 spec:
   kafka:
     pool: nav-infrastructure
-  secretName: aiven-{{ .Release.Name }}-{{ now | date "2006-01" }}
+    secretName: aiven-kafka-{{ .Release.Name }}-{{ now | date "2006-01" }}
 {{ end }}
