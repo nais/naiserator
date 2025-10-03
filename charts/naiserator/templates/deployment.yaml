@@ -62,7 +62,7 @@ spec:
           valueFrom:
             secretKeyRef:
               key: KAFKA_BROKERS
-              name: aiven-{{ .Release.Name }}-{{ now | date "2006-01" }}
+              name: aiven-kafka-{{ .Release.Name }}-{{ now | date "2006-01" }}
         - name: KAFKA_CERTIFICATE_PATH
           value: /var/run/secrets/nais.io/kafka/kafka.crt
         - name: KAFKA_PRIVATE_KEY_PATH
@@ -121,5 +121,5 @@ spec:
               path: kafka.key
             - key: KAFKA_CA
               path: ca.crt
-          secretName: aiven-{{ .Release.Name }}-{{ now | date "2006-01" }}
+          secretName: aiven-kafka-{{ .Release.Name }}-{{ now | date "2006-01" }}
       {{ end }}
