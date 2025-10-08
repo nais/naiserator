@@ -265,6 +265,7 @@ func makePostgresParameters(audit *nais_io_v1.PostgresAudit) map[string]string {
 		"log_filename":             "postgresql.log",
 		"shared_preload_libraries": sharedPreloadLibraries,
 		"pg_stat_statements.track": "all",
+		"track_io_timing":          "on",
 	}
 	if audit != nil && audit.Enabled {
 		classes := ""
