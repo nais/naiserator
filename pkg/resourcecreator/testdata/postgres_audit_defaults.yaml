@@ -106,7 +106,8 @@ tests:
               parameters:
                 shared_preload_libraries: bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,pgaudit
                 log_destination: jsonlog
-                pgaudit.log: write,ddl
+                pgaudit.log: "write,ddl,role"
+                pgaudit.log_parameter: "on"
             maintenanceWindows:
               - Wed:13:00-14:00
             spiloFSGroup: 103
