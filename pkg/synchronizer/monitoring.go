@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nais/naiserator/pkg/resourcecreator/batch"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
@@ -27,8 +28,6 @@ import (
 const (
 	RolloutMessageCompleted        = "Rollout has completed"
 	RolloutMessageCronJobCompleted = "No support for monitoring CronJobs"
-	RolloutMessageJobCompleted     = "Job finished successfully"
-	RolloutMessageJobFailed        = "Job has failed"
 )
 
 var rolloutMonitorLock sync.Mutex
@@ -158,47 +157,31 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
 	cronJob := batchv1.CronJob{}
 	err := n.Get(ctx, objectKey, &cronJob)
-	if err == nil {
-		// If we find a cronjob with the same name, it's most probably a Naisjob with schedule, and we can mark the rollout
-		// as completed, and finish the monitoring
-		err := n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageCronJobCompleted)
-		if err != nil {
-			logger.Errorf("Monitor rollout: %v", err)
-			return true
-		}
-		return false
-	} else if !errors.IsNotFound(err) {
-		logger.Errorf("Monitor rollout: failed to query CronJob: %v", err)
-	}
-
-	job := &batchv1.Job{}
-	err = n.Get(ctx, objectKey, job)
 	if err != nil {
-		if !errors.IsNotFound(err) {
-			logger.Errorf("Monitor rollout: failed to query Job: %v", err)
-		}
+		logger.Errorf("Monitor rollout: getting cronjob: %v", err)
 		return true
 	}
 
-	if job.Status.Failed > 0 {
-		err = n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageJobFailed)
+	// All Naisjob are CronJobs, if no schedule is set we run it once on creation and set suspend to true. The job can be rerun on demand.
+	if cronJob.GetObjectMeta().GetGeneration() == 1 && cronJob.Spec.Suspend != nil && *cronJob.Spec.Suspend {
+		run, err := batch.CreateJobFromCronJob(&cronJob)
 		if err != nil {
-			logger.Errorf("Monitor rollout: store Naisjob sync status: %v", err)
+			logger.Errorf("Monitor rollout: create Job from CronJob: %v", err)
 			return true
 		}
-		return false
-	}
-
-	if job.Status.Active == 0 {
-		err = n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageJobCompleted)
+		err = n.Create(ctx, run)
 		if err != nil {
-			logger.Errorf("Monitor rollout: %v", err)
+			logger.Errorf("Monitor rollout: create Job from CronJob: %v", err)
 			return true
 		}
-		return false
 	}
 
-	return true
+	err = n.completeRolloutRoutine(ctx, app, logger, completion, events.RolloutComplete, RolloutMessageCronJobCompleted)
+	if err != nil {
+		logger.Errorf("Monitor rollout: %v", err)
+		return true
+	}
+	return false
 }
 
 // monitorApplication will only return false when all pods are successfully up and running. As long as we return true

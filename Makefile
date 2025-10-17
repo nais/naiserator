@@ -89,3 +89,9 @@ kubebuilder: $(testbin_dir)/$(tools_archive)
 $(testbin_dir)/$(tools_archive):
 	mkdir -p $(testbin_dir)
 	wget -q --directory-prefix=$(testbin_dir) "https://storage.googleapis.com/kubebuilder-tools/$(tools_archive)"
+
+
+VER ?= test-image
+test-image:
+	docker image build --platform=linux/amd64 -t europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:$(VER) .
+	docker image push europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:$(VER)

@@ -198,3 +198,4 @@ tests:
                             weight: 10
             schedule: "* 2 * * *"
             successfulJobsHistoryLimit: 3
+            suspend: false
