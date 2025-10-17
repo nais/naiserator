@@ -240,8 +240,8 @@ tests:
                 app: mynaisjob
 
   - apiVersion: batch/v1
-    kind: Job
-    operation: CreateOrRecreate
+    kind: CronJob
+    operation: CreateOrUpdate
     name: mynaisjob
     match:
       - type: subset
@@ -252,31 +252,33 @@ tests:
           - .spec.template.metadata
         resource:
           spec:
-            template:
+            jobTemplate:
               spec:
-                dnsPolicy: ClusterFirst
-                serviceAccountName: mynaisjob
-                containers:
-                  - name: mynaisjob
-                    image: navikt/mynaisjob:1.2.3
-                    env:
-                      - name: PGHOST
-                        value: my-postgres-cluster-pooler.pg-mynamespace
-                      - name: PGPORT
-                        value: "5432"
-                      - name: PGDATABASE
-                        value: app
-                      - name: PGUSER
-                        valueFrom:
-                          secretKeyRef:
-                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
-                            key: username
-                      - name: PGPASSWORD
-                        valueFrom:
-                          secretKeyRef:
-                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
-                            key: password
-                      - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.pg-mynamespace:5432/app"
-                      - name: PGJDBCURL
-                        value: "jdbc:postgresql://my-postgres-cluster-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"
+                template:
+                  spec:
+                    dnsPolicy: ClusterFirst
+                    serviceAccountName: mynaisjob
+                    containers:
+                      - name: mynaisjob
+                        image: navikt/mynaisjob:1.2.3
+                        env:
+                          - name: PGHOST
+                            value: my-postgres-cluster-pooler.pg-mynamespace
+                          - name: PGPORT
+                            value: "5432"
+                          - name: PGDATABASE
+                            value: app
+                          - name: PGUSER
+                            valueFrom:
+                              secretKeyRef:
+                                name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
+                                key: username
+                          - name: PGPASSWORD
+                            valueFrom:
+                              secretKeyRef:
+                                name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
+                                key: password
+                          - name: PGURL
+                            value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.pg-mynamespace:5432/app"
+                          - name: PGJDBCURL
+                            value: "jdbc:postgresql://my-postgres-cluster-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

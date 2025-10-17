@@ -156,20 +156,8 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 		return nil, err
 	}
 
-	if naisjob.Spec.Schedule == "" {
-		if err := batch.DeleteCronJob(naisjob, ast); err != nil {
-			return nil, fmt.Errorf("convert to job: %w", err)
-		}
-		if err := batch.CreateJob(naisjob, ast, cfg); err != nil {
-			return nil, err
-		}
-	} else {
-		if err := batch.DeleteJob(naisjob, ast); err != nil {
-			return nil, fmt.Errorf("convert to cronjob: %w", err)
-		}
-		if err := batch.CreateCronJob(naisjob, ast, cfg); err != nil {
-			return nil, err
-		}
+	if err := batch.CreateCronJob(naisjob, ast, cfg); err != nil {
+		return nil, err
 	}
 
 	return ast.Operations, nil

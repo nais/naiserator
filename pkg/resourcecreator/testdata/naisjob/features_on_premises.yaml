@@ -199,4 +199,5 @@ tests:
                               topologyKey: kubernetes.io/hostname
                             weight: 10
             schedule: "* 2 * * *"
+            suspend: false
             successfulJobsHistoryLimit: 4

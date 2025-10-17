@@ -1,0 +1,24 @@
+testconfig:
+  description: no schedule means we create a suspended cronjob
+config:
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: mynaisjob
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/mynaisjob:1.2.3
+tests:
+  - apiVersion: batch/v1
+    kind: CronJob
+    name: mynaisjob
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "suspended cronjob"
+        resource:
+          spec:
+            suspend: true
+            schedule: "0 0 1 1 *"
