@@ -3,11 +3,9 @@ package aiven
 import (
 	"fmt"
 
-	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Valkey(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nais_io_v1.AivenApplication) (bool, error) {
@@ -40,35 +38,10 @@ func Valkey(ast *resource.Ast, config Config, source Source, aivenApp *aiven_nai
 			Access:     valkey.Access,
 			SecretName: secretName,
 		})
-
-		addDefaultValkeyIfNotExists(ast, source, config.GetAivenProject(), valkey.Instance)
 	}
 	ast.Labels["aiven"] = "enabled"
 
 	return true, nil
-}
-
-func addDefaultValkeyIfNotExists(ast *resource.Ast, source Source, aivenProject, instanceName string) {
-	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = fmt.Sprintf("valkey-%s-%s", source.GetNamespace(), instanceName)
-
-	aivenValkey := &aiven_io_v1alpha1.Valkey{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Valkey",
-			APIVersion: "aiven.io/v1alpha1",
-		},
-		ObjectMeta: objectMeta,
-		Spec: aiven_io_v1alpha1.ValkeySpec{
-			ServiceCommonSpec: aiven_io_v1alpha1.ServiceCommonSpec{
-				Project: aivenProject,
-				Plan:    "startup-4",
-				Tags: map[string]string{
-					"app": source.GetName(),
-				},
-			},
-		},
-	}
-	ast.AppendOperation(resource.OperationCreateIfNotExists, aivenValkey)
 }
 
 func addValkeyEnvVariables(ast *resource.Ast, secretName, instanceName string) {
