@@ -12,6 +12,7 @@ webhooks:
       service:
         name: {{ .Release.Name }}-webhook
         namespace: {{ .Release.Namespace }}
+        # `/validate-<group>-<version>-<kind>`
         # kind (the last element of the path) has to be the lowercased name of the Go struct
         path: /validate-nais-io-v1alpha1-application
     failurePolicy: Fail
@@ -35,6 +36,7 @@ webhooks:
       service:
         name: {{ .Release.Name }}-webhook
         namespace: {{ .Release.Namespace }}
+        # `/validate-<group>-<version>-<kind>`
         # kind (the last element of the path) has to be the lowercased name of the Go struct
         path: /validate-nais-io-v1-naisjob
     failurePolicy: Fail
