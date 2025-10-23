@@ -1,7 +1,6 @@
 package naiserator_scheme
 
 import (
-	acid_zalan_do_v1 "github.com/nais/liberator/pkg/apis/acid.zalan.do/v1"
 	aiven_io_v1alpha1 "github.com/nais/liberator/pkg/apis/aiven.io/v1alpha1"
 	aiven_nais_io_v1 "github.com/nais/liberator/pkg/apis/aiven.nais.io/v1"
 	fqdn "github.com/nais/liberator/pkg/apis/fqdnnetworkpolicies.networking.gke.io/v1alpha3"
@@ -76,12 +75,5 @@ func AivenListers() []client.ObjectList {
 	return []client.ObjectList{
 		&aiven_io_v1alpha1.ValkeyList{},
 		&aiven_io_v1alpha1.OpenSearchList{},
-	}
-}
-
-// AcidZalandoListers returns resources that exist only in a Acid Zalando supported clusters
-func AcidZalandoListers() []client.ObjectList {
-	return []client.ObjectList{
-		&acid_zalan_do_v1.PostgresqlList{},
 	}
 }

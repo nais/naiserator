@@ -165,10 +165,6 @@ func run() error {
 		}
 	}
 
-	if cfg.Features.PostgresOperator {
-		listers = append(listers, naiserator_scheme.AcidZalandoListers()...)
-	}
-
 	mgrClient := mgr.GetClient()
 	simpleClient, err := client.New(kconfig, client.Options{
 		Scheme: kscheme,

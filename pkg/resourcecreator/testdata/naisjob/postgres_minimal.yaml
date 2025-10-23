@@ -1,5 +1,5 @@
 testconfig:
-  description: minimal postgresql provisioned with databases and automatic configuration
+  description: minimal postgresql provisioned by pgrator/postgres-operator
 config:
   features:
     postgres-operator: true
@@ -17,12 +17,7 @@ input:
   spec:
     image: navikt/mynaisjob:1.2.3
     postgres:
-      cluster:
-        resources:
-          diskSize: 10Gi
-          cpu: 100m
-          memory: 4G
-        majorVersion: 17
+      clusterName: my-postgres-cluster
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -33,81 +28,6 @@ existing:
     metadata:
       name: pg-mynamespace
 tests:
-  - apiVersion: iam.cnrm.cloud.google.com/v1beta1
-    kind: IAMPolicyMember
-    operation: CreateIfNotExists
-    name: pg-mynamespace-8a3ec607-postgres-pod
-    namespace: serviceaccounts
-    match:
-      - type: subset
-        name: "IAMPolicyMember created"
-        resource:
-          metadata:
-            annotations:
-              cnrm.cloud.google.com/project-id: google-project-id
-          spec:
-            member: serviceAccount:google-project-id.svc.id.goog[pg-mynamespace/postgres-pod]
-            role: roles/iam.workloadIdentityUser
-            resourceRef:
-              apiVersion: iam.cnrm.cloud.google.com/v1beta1
-              kind: IAMServiceAccount
-              name: postgres-pod
-  - apiVersion: acid.zalan.do/v1
-    kind: postgresql
-    operation: CreateOrUpdate
-    name: mynaisjob
-    namespace: pg-mynamespace
-    match:
-      - type: subset
-        name: "postgresql created in team postgres namespace"
-        resource:
-          metadata:
-            labels:
-              app: mynaisjob
-              team: mynamespace
-              apiserver-access: enabled
-          spec:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: nais.io/type
-                        operator: In
-                        values:
-                          - postgres
-            enableConnectionPooler: true
-            connectionPooler:
-              resources:
-                requests:
-                  cpu: "50m"
-                  memory: "50Mi"
-            dockerImage: nais-io/postgres-image:1.2.3
-            teamId: mynamespace
-            volume:
-              size: "10Gi"
-              storageClass: "premium-rwo"
-            numberOfInstances: 2
-            patroni:
-              initdb:
-                encoding: UTF8
-                locale: en_US.UTF-8
-              synchronous_mode: true
-              synchronous_mode_strict: true
-            preparedDatabases:
-              app:
-                defaultUsers: true
-                secretNamespace: mynamespace
-                schemas:
-                  public: {}
-            resources:
-              limits:
-                cpu: "400m"
-                memory: "4G"
-              requests:
-                cpu: "100m"
-                memory: "4G"
-            postgresql:
-              version: "17"
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
@@ -126,7 +46,7 @@ tests:
                     podSelector:
                       matchLabels:
                         application: db-connection-pooler
-                        app: mynaisjob
+                        cluster-name: my-postgres-cluster
             podSelector:
               matchLabels:
                 app: mynaisjob
@@ -135,80 +55,14 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: mynaisjob
-    namespace: pg-mynamespace
-    match:
-      - name: "postgres network policy created"
-        type: subset
-        resource:
-          spec:
-            egress:
-              - to:
-                  - podSelector:
-                      matchLabels:
-                        application: spilo
-                        app: mynaisjob
-            ingress:
-              - from:
-                  - podSelector:
-                      matchLabels:
-                        application: spilo
-                        app: mynaisjob
-              - from:
-                  - podSelector:
-                      matchLabels:
-                        application: db-connection-pooler
-                        app: mynaisjob
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: nais-system
-                    podSelector:
-                      matchLabels:
-                        app.kubernetes.io/name: postgres-operator
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: nais-system
-                    podSelector:
-                      matchLabels:
-                        app.kubernetes.io/name: prometheus
-            podSelector:
-              matchLabels:
-                application: spilo
-                app: mynaisjob
-
-  - operation: CreateOrUpdate
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    name: mynaisjob-pooler
+    name: my-postgres-cluster-pooler
     namespace: pg-mynamespace
     match:
       - name: "postgres pooler network policy created"
         type: subset
         resource:
           spec:
-            egress:
-              - to:
-                  - podSelector:
-                      matchLabels:
-                        application: spilo
-                        app: mynaisjob
             ingress:
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: nais-system
-                    podSelector:
-                      matchLabels:
-                        app.kubernetes.io/name: postgres-operator
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: nais-system
-                    podSelector:
-                      matchLabels:
-                        app.kubernetes.io/name: prometheus
               - from:
                   - namespaceSelector:
                       matchLabels:
@@ -219,7 +73,7 @@ tests:
             podSelector:
               matchLabels:
                 application: db-connection-pooler
-                app: mynaisjob
+                cluster-name: my-postgres-cluster
 
   - apiVersion: batch/v1
     kind: CronJob
@@ -245,7 +99,7 @@ tests:
                         image: navikt/mynaisjob:1.2.3
                         env:
                           - name: PGHOST
-                            value: mynaisjob-pooler.pg-mynamespace
+                            value: my-postgres-cluster-pooler.pg-mynamespace
                           - name: PGPORT
                             value: "5432"
                           - name: PGDATABASE
@@ -253,14 +107,14 @@ tests:
                           - name: PGUSER
                             valueFrom:
                               secretKeyRef:
-                                name: app-owner-user.mynaisjob.credentials.postgresql.acid.zalan.do
+                                name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
                                 key: username
                           - name: PGPASSWORD
                             valueFrom:
                               secretKeyRef:
-                                name: app-owner-user.mynaisjob.credentials.postgresql.acid.zalan.do
+                                name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
                                 key: password
                           - name: PGURL
-                            value: "postgresql://$(PGUSER):$(PGPASSWORD)@mynaisjob-pooler.pg-mynamespace:5432/app"
+                            value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.pg-mynamespace:5432/app"
                           - name: PGJDBCURL
-                            value: "jdbc:postgresql://mynaisjob-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"
+                            value: "jdbc:postgresql://my-postgres-cluster-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

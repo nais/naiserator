@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	acid_zalan_do_v1 "github.com/nais/liberator/pkg/apis/acid.zalan.do/v1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -415,15 +414,7 @@ func (n *Synchronizer) deletePostgresResources(ctx context.Context, app resource
 
 	pgNamespace := "pg-" + app.GetNamespace()
 
-	err := n.DeleteAllOf(ctx, &acid_zalan_do_v1.Postgresql{},
-		client.MatchingLabels{"app": app.GetName()},
-		client.InNamespace(pgNamespace),
-	)
-	if err != nil && client.IgnoreNotFound(err) != nil {
-		return err
-	}
-
-	err = n.DeleteAllOf(ctx, &networkingv1.NetworkPolicy{},
+	err := n.DeleteAllOf(ctx, &networkingv1.NetworkPolicy{},
 		client.MatchingLabels{"app": app.GetName()},
 		client.InNamespace(pgNamespace),
 	)
