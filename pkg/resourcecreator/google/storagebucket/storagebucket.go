@@ -17,9 +17,7 @@ import (
 )
 
 const (
-	objectViewer      = "roles/storage.objectViewer"
-	legacyObjectOwner = "roles/storage.legacyObjectOwner"
-	legacyBucketOwner = "roles/storage.legacyBucketOwner"
+	objectUser = "roles/storage.objectUser"
 )
 
 type Source interface {
@@ -36,8 +34,9 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 	objectMeta.Name = bucket.Name
 	util.SetAnnotation(&objectMeta, google.ProjectIdAnnotation, projectId)
 	storagebucketPolicySpec := google_storage_crd.StorageBucketSpec{
-		Location:                 google.Region,
-		UniformBucketLevelAccess: bucket.UniformBucketLevelAccess,
+		Location: google.Region,
+		// Always enable uniform bucket-level access; ACLs are not used.
+		UniformBucketLevelAccess: true,
 	}
 
 	if !bucket.CascadingDelete {
@@ -109,7 +108,7 @@ func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageB
 	return policy, nil
 }
 
-func Create(source Source, ast *resource.Ast, cfg Config, googleServiceAccount google_iam_crd.IAMServiceAccount) error {
+func Create(source Source, ast *resource.Ast, cfg Config) error {
 	gcp := source.GetGCP()
 	if gcp == nil {
 		return nil
@@ -119,23 +118,8 @@ func Create(source Source, ast *resource.Ast, cfg Config, googleServiceAccount g
 		bucket := CreateBucket(resource.CreateObjectMeta(source), b, cfg.GetGoogleTeamProjectID())
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
-		if b.UniformBucketLevelAccess {
-			bucketOwner, err := iAMPolicyMember(source, bucket, cfg, legacyBucketOwner, "legacy-bucket-owner")
-			if err != nil {
-				return err
-			}
-			ast.AppendOperation(resource.OperationCreateIfNotExists, bucketOwner)
-			objectOwner, err := iAMPolicyMember(source, bucket, cfg, legacyObjectOwner, "legacy-object-owner")
-			if err != nil {
-				return err
-			}
-			ast.AppendOperation(resource.OperationCreateIfNotExists, objectOwner)
-		} else {
-			bucketAccessControl := AccessControl(resource.CreateObjectMeta(source), bucket.Name, cfg.GetGoogleProjectID(), googleServiceAccount.Name)
-			ast.AppendOperation(resource.OperationCreateOrUpdate, bucketAccessControl)
-		}
-
-		iamPolicyMember, err := iAMPolicyMember(source, bucket, cfg, objectViewer, "object-viewer")
+		// Grant the application service account object-level permissions via IAM.
+		iamPolicyMember, err := iAMPolicyMember(source, bucket, cfg, objectUser, "object-user")
 		if err != nil {
 			return err
 		}
