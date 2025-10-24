@@ -45,7 +45,7 @@ Google CNRM resources for Google Cloud Platform provisioning:
   * `IAMServiceAccount`, `IAMPolicy` and `IAMPolicyMember` for workload identity,
   * `PubSubSubscription` for PubSub,
   * `SQLInstance`, `SQLUser` and `SqlDatabase` for Cloud SQL,
-  * `StorageBucket` and `StorageBucketAccessControl` for Storage Buckets.
+  * `StorageBucket` for Storage Buckets
 
 ## Documentation
 
