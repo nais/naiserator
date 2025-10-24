@@ -47,7 +47,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return nil
 	}
 
-	err := google_storagebucket.Create(source, ast, cfg, googleServiceAccount)
+	err := google_storagebucket.Create(source, ast, cfg)
 	if err != nil {
 		return err
 	}
