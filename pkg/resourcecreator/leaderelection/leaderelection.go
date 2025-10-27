@@ -105,7 +105,11 @@ func container(name, namespace, image string) corev1.Container {
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU: k8sResource.MustParse("10m"),
+				corev1.ResourceCPU:    k8sResource.MustParse("10m"),
+				corev1.ResourceMemory: k8sResource.MustParse("64Mi"),
+			},
+			Limits: corev1.ResourceList{
+				corev1.ResourceMemory: k8sResource.MustParse("128Mi"),
 			},
 		},
 		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
