@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -153,7 +152,7 @@ func run() error {
 	}
 
 	if len(cfg.GatewayMappings) == 0 {
-		return fmt.Errorf("no gateway mappings defined. Will not be able to set the right gateway on the ingress")
+		//return fmt.Errorf("no gateway mappings defined. Will not be able to set the right gateway on the ingress")
 	}
 
 	listers := naiserator_scheme.GenericListers()

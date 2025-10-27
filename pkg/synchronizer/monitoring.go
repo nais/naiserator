@@ -162,8 +162,8 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 		return true
 	}
 
-	// All Naisjob are CronJobs, if no schedule is set we run it once on creation and set suspend to true. The job can be rerun on demand.
-	if cronJob.GetObjectMeta().GetGeneration() == 1 && cronJob.Spec.Suspend != nil && *cronJob.Spec.Suspend {
+	// All Naisjob are CronJobs, if no schedule is set we run it when created and updated, then set suspend to true. The job can be rerun on demand.
+	if cronJob.Spec.Suspend != nil && *cronJob.Spec.Suspend {
 		run, err := batch.CreateJobFromCronJob(&cronJob)
 		if err != nil {
 			logger.Errorf("Monitor rollout: create Job from CronJob: %v", err)
