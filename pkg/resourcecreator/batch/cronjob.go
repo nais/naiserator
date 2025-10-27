@@ -66,6 +66,23 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 	return nil
 }
 
+func truncateString(str string, max int) string {
+	truncated := ""
+	count := 0
+	if len(str) < max {
+		return str
+	}
+
+	for _, char := range str {
+		truncated += string(char)
+		count++
+		if count >= max {
+			break
+		}
+	}
+	return truncated
+}
+
 func CreateJobFromCronJob(cronJob *batchv1.CronJob) (*batchv1.Job, error) {
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -73,7 +90,7 @@ func CreateJobFromCronJob(cronJob *batchv1.CronJob) (*batchv1.Job, error) {
 			APIVersion: "batch/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cronJob.Name,
+			Name:      fmt.Sprintf("%s-%d", truncateString(cronJob.Name, 48), cronJob.Generation),
 			Namespace: cronJob.GetNamespace(),
 			Labels:    cronJob.GetLabels(),
 			Annotations: map[string]string{
