@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	objectUser = "roles/storage.objectUser"
+	objectUser   = "roles/storage.objectUser"
+	objectViewer = "roles/storage.objectViewer"
 )
 
 type Source interface {
@@ -104,7 +105,6 @@ func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageB
 	}
 
 	util.SetAnnotation(policy, google.ProjectIdAnnotation, cfg.GetGoogleTeamProjectID())
-
 	return policy, nil
 }
 
@@ -118,13 +118,21 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		bucket := CreateBucket(resource.CreateObjectMeta(source), b, cfg.GetGoogleTeamProjectID())
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
-		// Grant the application service account object-level permissions via IAM.
 		iamPolicyMember, err := iAMPolicyMember(source, bucket, cfg, objectUser, "object-user")
+
 		if err != nil {
 			return err
 		}
 
 		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
+
+		viewer, err := iAMPolicyMember(source, bucket, cfg, objectViewer, "object-viewer")
+		if err != nil {
+			return err
+		}
+
+		ast.AppendOperation(resource.OperationCreateIfNotExists, viewer)
+
 	}
 
 	return nil
