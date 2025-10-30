@@ -38,6 +38,7 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 		Location: google.Region,
 		// Always enable uniform bucket-level access; ACLs are not used.
 		UniformBucketLevelAccess: true,
+		SoftDeletePolicy:         google_storage_crd.SoftDeletePolicy{RetentionDurationSeconds: 0},
 	}
 
 	if !bucket.CascadingDelete {
