@@ -38,6 +38,9 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 		Location: google.Region,
 		// Always enable uniform bucket-level access; ACLs are not used.
 		UniformBucketLevelAccess: true,
+		SoftDeletePolicy: &google_storage_crd.SoftDeletePolicy{
+			RetentionDurationSeconds: 0,
+		},
 	}
 
 	if !bucket.CascadingDelete {
@@ -64,10 +67,9 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 		storagebucketPolicySpec.LifecycleRules = append(storagebucketPolicySpec.LifecycleRules, lifecycleRule)
 	}
 
+	storagebucketPolicySpec.PublicAccessPrevention = google_storage_crd.PublicAccessPreventionInherited
 	if bucket.PublicAccessPrevention {
 		storagebucketPolicySpec.PublicAccessPrevention = google_storage_crd.PublicAccessPreventionEnforced
-	} else {
-		storagebucketPolicySpec.PublicAccessPrevention = google_storage_crd.PublicAccessPreventionInherited
 	}
 
 	return &google_storage_crd.StorageBucket{
