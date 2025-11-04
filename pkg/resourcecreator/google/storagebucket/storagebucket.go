@@ -19,6 +19,7 @@ import (
 const (
 	objectUser   = "roles/storage.objectUser"
 	objectViewer = "roles/storage.objectViewer"
+	bucketViewer = "roles/storage.bucketViewer"
 )
 
 type Source interface {
@@ -120,21 +121,26 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		bucket := CreateBucket(resource.CreateObjectMeta(source), b, cfg.GetGoogleTeamProjectID())
 		ast.AppendOperation(resource.OperationCreateOrUpdate, bucket)
 
-		iamPolicyMember, err := iAMPolicyMember(source, bucket, cfg, objectUser, "object-user")
-
+		objectUser, err := iAMPolicyMember(source, bucket, cfg, objectUser, "object-user")
 		if err != nil {
 			return err
 		}
 
-		ast.AppendOperation(resource.OperationCreateIfNotExists, iamPolicyMember)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, objectUser)
 
-		viewer, err := iAMPolicyMember(source, bucket, cfg, objectViewer, "object-viewer")
+		objectViewer, err := iAMPolicyMember(source, bucket, cfg, objectViewer, "object-viewer")
 		if err != nil {
 			return err
 		}
 
-		ast.AppendOperation(resource.OperationCreateIfNotExists, viewer)
+		ast.AppendOperation(resource.OperationCreateIfNotExists, objectViewer)
 
+		bucketViewer, err := iAMPolicyMember(source, bucket, cfg, bucketViewer, "bucket-viewer")
+		if err != nil {
+			return err
+		}
+
+		ast.AppendOperation(resource.OperationCreateIfNotExists, bucketViewer)
 	}
 
 	return nil
