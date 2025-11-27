@@ -152,8 +152,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
-github.com/nais/liberator v0.0.0-20251031090239-7bc9cdcfda4c h1:yJed9nhxsqMwrjoN2ELILpHX3cZwS8wMHj6/6xDjmgs=
-github.com/nais/liberator v0.0.0-20251031090239-7bc9cdcfda4c/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
+github.com/nais/liberator v0.0.0-20251127094118-ae379937d95b h1:R3siPBpnypbaIsXc/LxK7dUkEk8Y9anF4A4TfAyyFwg=
+github.com/nais/liberator v0.0.0-20251127094118-ae379937d95b/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
 github.com/novln/docker-parser v1.0.0 h1:PjEBd9QnKixcWczNGyEdfUrP6GR0YUilAqG7Wksg3uc=
 github.com/novln/docker-parser v1.0.0/go.mod h1:oCeM32fsoUwkwByB5wVjsrsVQySzPWkl3JdlTn1txpE=
 github.com/onsi/ginkgo/v2 v2.23.4 h1:ktYTpKJAVZnDT4VjxSbiBenUjmlL/5QkBEocaWXiQus=
