@@ -55,7 +55,7 @@ jobs:
           echo "version=$chart_version" >> $GITHUB_OUTPUT
           echo "archive=$name-$chart_version.tgz" >> $GITHUB_OUTPUT
       - id: "auth"
-        if: github.ref == 'refs/heads/master'
+        if: github.actor != 'dependabot[bot]'
         name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v2" # ratchet:exclude
         with:
@@ -63,11 +63,11 @@ jobs:
           service_account: "gh-${{ env.FEATURE_NAME }}@nais-io.iam.gserviceaccount.com"
           token_format: "access_token"
       - name: "Log in to Google Artifact Registry"
-        if: github.ref == 'refs/heads/master'
+        if: github.actor != 'dependabot[bot]'
         run: |-
           echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GOOGLE_REGISTRY }}
       - name: Push Chart
-        if: github.ref == 'refs/heads/master'
+        if: github.actor != 'dependabot[bot]'
         run: |-
           chart="${{ steps.package_chart.outputs.archive }}"
           echo "Pushing: $chart"
