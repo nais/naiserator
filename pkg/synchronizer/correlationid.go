@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	nais_io "github.com/nais/liberator/pkg/apis/nais.io"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
@@ -16,7 +16,7 @@ func ensureCorrelationID(source resource.Source) error {
 		anno = make(map[string]string)
 	}
 
-	if len(anno[nais_io_v1.DeploymentCorrelationIDAnnotation]) != 0 {
+	if len(anno[nais_io.DeploymentCorrelationIDAnnotation]) != 0 {
 		return nil
 	}
 
@@ -25,7 +25,7 @@ func ensureCorrelationID(source resource.Source) error {
 		return fmt.Errorf("generate deployment correlation ID: %s", err)
 	}
 
-	anno[nais_io_v1.DeploymentCorrelationIDAnnotation] = id.String()
+	anno[nais_io.DeploymentCorrelationIDAnnotation] = id.String()
 
 	source.SetAnnotations(anno)
 

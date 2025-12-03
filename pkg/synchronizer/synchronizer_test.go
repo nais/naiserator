@@ -10,6 +10,7 @@ import (
 	"time"
 
 	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
+	nais_io "github.com/nais/liberator/pkg/apis/nais.io"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
@@ -215,7 +216,7 @@ func TestSynchronizer(t *testing.T) {
 
 	t.Run("App Deployment", func(t *testing.T) {
 		app := fixtures.MinimalApplication(
-			fixtures.WithAnnotation(nais_io_v1.DeploymentCorrelationIDAnnotation, "deploy-id"),
+			fixtures.WithAnnotation(nais_io.DeploymentCorrelationIDAnnotation, "deploy-id"),
 		)
 		testAppDeployment(t, rig, ctx, app, cfg)
 
@@ -227,7 +228,7 @@ func TestSynchronizer(t *testing.T) {
 
 	t.Run("Delete IAM Resources", func(t *testing.T) {
 		app := fixtures.MinimalApplication(
-			fixtures.WithAnnotation(nais_io_v1.DeploymentCorrelationIDAnnotation, "deploy-id"),
+			fixtures.WithAnnotation(nais_io.DeploymentCorrelationIDAnnotation, "deploy-id"),
 		)
 		testDeleteCorrectIAMResources(t, rig, ctx, app)
 	})
@@ -240,7 +241,7 @@ func TestSynchronizer(t *testing.T) {
 
 		// Create Application fixture
 		app := fixtures.MinimalApplication(
-			fixtures.WithAnnotation(nais_io_v1.DeploymentCorrelationIDAnnotation, "external-deploy-id"),
+			fixtures.WithAnnotation(nais_io.DeploymentCorrelationIDAnnotation, "external-deploy-id"),
 			appWithoutImage(),
 			fixtures.WithName(fixtures.OtherApplicationName),
 		)
@@ -254,7 +255,7 @@ func TestSynchronizer(t *testing.T) {
 }
 
 func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application, cfg config.Config) {
-	appCorrelationId := app.GetAnnotations()[nais_io_v1.DeploymentCorrelationIDAnnotation]
+	appCorrelationId := app.GetAnnotations()[nais_io.DeploymentCorrelationIDAnnotation]
 
 	// Store the Application resource in the cluster before testing commences.
 	// This simulates a deployment into the cluster which is then picked up by the
@@ -355,14 +356,14 @@ func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nai
 	assert.NoError(t, err)
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 1, eventList.Items[0].Count)
-	assert.Equal(t, appCorrelationId, eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, appCorrelationId, eventList.Items[0].Annotations[nais_io.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, events.Synchronized, eventList.Items[0].Reason)
 
 	// Run synchronization processing again, and check that resources still exist.
 	newAppCorrelationId := "new-" + appCorrelationId
 	persistedApp.DeepCopyInto(app)
 	app.Status.SynchronizationHash = ""
-	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = newAppCorrelationId
+	app.Annotations[nais_io.DeploymentCorrelationIDAnnotation] = newAppCorrelationId
 	err = rig.client.Update(ctx, app)
 	assert.NoError(t, err)
 	result, err = rig.synchronizer.Reconcile(ctx, req)
@@ -383,14 +384,14 @@ func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nai
 	assert.NoError(t, err)
 	assert.Len(t, eventList.Items, 1)
 	assert.EqualValues(t, 2, eventList.Items[0].Count)
-	assert.Equal(t, newAppCorrelationId, eventList.Items[0].Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, newAppCorrelationId, eventList.Items[0].Annotations[nais_io.DeploymentCorrelationIDAnnotation])
 	assert.Equal(t, events.Synchronized, eventList.Items[0].Reason)
 }
 
 func testDeleteCorrectIAMResources(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application) {
 	app2 := fixtures.MinimalApplication()
 	app2.SetAnnotations(map[string]string{
-		nais_io_v1.DeploymentCorrelationIDAnnotation: "deploy-id-2",
+		nais_io.DeploymentCorrelationIDAnnotation: "deploy-id-2",
 	})
 	app2.ObjectMeta.Name = "iam-test"
 	err := rig.client.Create(ctx, app2)
@@ -478,7 +479,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
 	app.SetAnnotations(map[string]string{
-		nais_io_v1.DeploymentCorrelationIDAnnotation: correlationId,
+		nais_io.DeploymentCorrelationIDAnnotation: correlationId,
 	})
 	app.Spec.GCP = &nais_io_v1.GCP{
 		SqlInstances: []nais_io_v1.CloudSqlInstance{
@@ -585,14 +586,14 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		Name:      googleSqlSecretName,
 	}, secret)
 	assert.NoError(t, err)
-	assert.Equal(t, correlationId, secret.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, correlationId, secret.Annotations[nais_io.DeploymentCorrelationIDAnnotation])
 
 	// Simulate an Update event
 	err = rig.client.Get(ctx, req.NamespacedName, app)
 	require.NoError(t, err)
 
 	newCorrelationId := "some-other-correlation-id"
-	app.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation] = newCorrelationId
+	app.Annotations[nais_io.DeploymentCorrelationIDAnnotation] = newCorrelationId
 	err = rig.client.Update(ctx, app)
 	if err != nil {
 		t.Fatalf("Persisting updated Application resource to fake Kubernetes: %s", err)
@@ -606,7 +607,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	updatedSqlUser := &sql_cnrm_cloud_google_com_v1beta1.SQLUser{}
 	err = rig.client.Get(ctx, req.NamespacedName, updatedSqlUser)
 	assert.NoError(t, err)
-	assert.Equal(t, newCorrelationId, updatedSqlUser.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, newCorrelationId, updatedSqlUser.Annotations[nais_io.DeploymentCorrelationIDAnnotation])
 
 	updatedSecret := &corev1.Secret{}
 	err = rig.client.Get(ctx, types.NamespacedName{
@@ -614,7 +615,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		Name:      googleSqlSecretName,
 	}, updatedSecret)
 	assert.NoError(t, err)
-	assert.Equal(t, newCorrelationId, updatedSecret.Annotations[nais_io_v1.DeploymentCorrelationIDAnnotation])
+	assert.Equal(t, newCorrelationId, updatedSecret.Annotations[nais_io.DeploymentCorrelationIDAnnotation])
 }
 
 func appWithoutImage() fixtures.FixtureModifier {

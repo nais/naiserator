@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	nais_io "github.com/nais/liberator/pkg/apis/nais.io"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +49,7 @@ func CreateObjectMeta(source Source) metav1.ObjectMeta {
 		Namespace: source.GetNamespace(),
 		Labels:    labels,
 		Annotations: map[string]string{
-			nais_io_v1.DeploymentCorrelationIDAnnotation: source.CorrelationID(),
+			nais_io.DeploymentCorrelationIDAnnotation: source.CorrelationID(),
 		},
 		OwnerReferences: []metav1.OwnerReference{source.GetOwnerReference()},
 	}
