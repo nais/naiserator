@@ -257,6 +257,12 @@ func AssertValidOwnerReference(dst, src runtime.Object, isPgNamespace bool) erro
 		}
 	}
 
+	// TODO: remove this; this is a temporary fix for adoption of restored resources from velero.
+	if len(existingReferences) == 0 {
+		log.Warnf("Existing resource %s has no ownerReferences, but new resource has ownerReferences set. Adopting resource...", liberator_scheme.TypeName(dst))
+		return nil
+	}
+
 	return fmt.Errorf("refusing to overwrite manually edited resource; please add the correct ownerReference in order to continue")
 }
 
