@@ -572,7 +572,7 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 		case resource.OperationCreateOrRecreate:
 			c.fn = updater.CreateOrRecreate(ctx, n.Client, n.scheme, rop.Resource)
 		case resource.OperationCreateIfNotExists:
-			c.fn = updater.CreateIfNotExists(ctx, n.Client, rop.Resource)
+			c.fn = updater.CreateIfNotExists(ctx, n.Client, n.scheme, rop.Resource)
 		case resource.OperationDeleteIfExists:
 			c.fn = updater.DeleteIfExists(ctx, n.Client, rop.Resource)
 		case resource.AnnotateIfExists:

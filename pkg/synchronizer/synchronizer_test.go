@@ -252,6 +252,14 @@ func TestSynchronizer(t *testing.T) {
 			assert.Equal(t, fixtures.OtherApplicationImage, app.Status.EffectiveImage)
 		})
 	})
+
+	t.Run("Adopt Orphaned Resources", func(t *testing.T) {
+		app := fixtures.MinimalApplication(
+			fixtures.WithAnnotation(nais_io.DeploymentCorrelationIDAnnotation, "deploy-id"),
+			fixtures.WithName(fixtures.OrphanedApplicationName),
+		)
+		testAdoptsOrphanedResources(t, rig, ctx, app, cfg)
+	})
 }
 
 func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application, cfg config.Config) {
@@ -448,6 +456,102 @@ func testDeleteCorrectIAMResources(t *testing.T, rig *testRig, ctx context.Conte
 	assert.NoError(t, err)
 	assert.Len(t, iam_service_accounts.Items, 1)
 	assert.Equal(t, app.GetName(), iam_service_accounts.Items[0].Labels["app"])
+}
+
+func testAdoptsOrphanedResources(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application, cfg config.Config) {
+	// We test the following reconcile scenarios:
+	// - Orphaned SQLInstance (CreateOrUpdate) is adopted
+	// - Orphaned SQLUser (CreateIfExists) is adopted through a Patch
+	// - Orphaned SQLUser created manually (i.e. without the "velero.io/restore-name" label) should not be adopted
+
+	orphanedSQLInstance := &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fixtures.OrphanedApplicationName,
+			Namespace: fixtures.ApplicationNamespace,
+			Labels: map[string]string{
+				"velero.io/restore-name": "some-restore",
+			},
+		},
+		Spec: sql_cnrm_cloud_google_com_v1beta1.SQLInstanceSpec{
+			Settings: sql_cnrm_cloud_google_com_v1beta1.SQLInstanceSettings{
+				DatabaseFlags: []sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseFlag{{Name: "cloudsql.iam_authentication", Value: "on"}},
+			},
+		},
+	}
+	orphanedSQLUser := &sql_cnrm_cloud_google_com_v1beta1.SQLUser{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fixtures.OrphanedApplicationName,
+			Namespace: fixtures.ApplicationNamespace,
+			Labels: map[string]string{
+				"velero.io/restore-name": "some-restore",
+			},
+		},
+		Spec: sql_cnrm_cloud_google_com_v1beta1.SQLUserSpec{},
+	}
+	manualSQLUser := &sql_cnrm_cloud_google_com_v1beta1.SQLUser{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "manual-user",
+			Namespace: fixtures.ApplicationNamespace,
+		},
+		Spec: sql_cnrm_cloud_google_com_v1beta1.SQLUserSpec{},
+	}
+
+	err := rig.client.Create(ctx, orphanedSQLInstance)
+	assert.NoError(t, err)
+	err = rig.client.Create(ctx, orphanedSQLUser)
+	assert.NoError(t, err)
+	err = rig.client.Create(ctx, manualSQLUser)
+	assert.NoError(t, err)
+
+	rig.testResource(t, ctx, &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}, client.ObjectKey{Name: orphanedSQLInstance.GetName(), Namespace: orphanedSQLInstance.GetNamespace()}, func(t *testing.T, resource client.Object) {
+		assert.Empty(t, resource.GetOwnerReferences(), "Orphaned resource should start out with zero owner references")
+	})
+	rig.testResource(t, ctx, &sql_cnrm_cloud_google_com_v1beta1.SQLUser{}, client.ObjectKey{Name: orphanedSQLUser.GetName(), Namespace: orphanedSQLUser.GetNamespace()}, func(t *testing.T, resource client.Object) {
+		assert.Empty(t, resource.GetOwnerReferences(), "Orphaned resource should start out with zero owner references")
+	})
+	rig.testResource(t, ctx, &sql_cnrm_cloud_google_com_v1beta1.SQLUser{}, client.ObjectKey{Name: manualSQLUser.GetName(), Namespace: manualSQLUser.GetNamespace()}, func(t *testing.T, resource client.Object) {
+		assert.Empty(t, resource.GetOwnerReferences(), "Orphaned resource should start out with zero owner references")
+	})
+
+	app.Spec.GCP = &nais_io_v1.GCP{
+		SqlInstances: []nais_io_v1.CloudSqlInstance{
+			{
+				Name: fixtures.OrphanedApplicationName,
+				Type: nais_io_v1.CloudSqlInstanceTypePostgres17,
+				Tier: "db-f1-micro",
+				Databases: []nais_io_v1.CloudSqlDatabase{
+					{
+						Name: fixtures.OrphanedApplicationName,
+						Users: []nais_io_v1.CloudSqlDatabaseUser{
+							{Name: fixtures.OrphanedApplicationName},
+							{Name: "manual-user"}, // Existing user that should not be adopted
+						},
+					},
+				},
+			},
+		},
+	}
+	testAppDeployment(t, rig, ctx, app, cfg)
+
+	ownerReferenceMatches := func(owner, owned client.Object) bool {
+		for _, ownerRef := range owned.GetOwnerReferences() {
+			if ownerRef.UID == owner.GetUID() {
+				return true
+			}
+		}
+		return false
+	}
+	rig.testResource(t, ctx, &sql_cnrm_cloud_google_com_v1beta1.SQLInstance{}, client.ObjectKey{Name: orphanedSQLInstance.GetName(), Namespace: orphanedSQLInstance.GetNamespace()}, func(t *testing.T, resource client.Object) {
+		assert.Len(t, resource.GetOwnerReferences(), 1, "Orphaned resource should contain exactly one owner reference after adoption")
+		assert.True(t, ownerReferenceMatches(app, resource), "Orphaned resource should be adopted by the Application")
+	})
+	rig.testResource(t, ctx, &sql_cnrm_cloud_google_com_v1beta1.SQLUser{}, client.ObjectKey{Name: orphanedSQLUser.GetName(), Namespace: orphanedSQLUser.GetNamespace()}, func(t *testing.T, resource client.Object) {
+		assert.Len(t, resource.GetOwnerReferences(), 1, "Orphaned resource should contain exactly one owner reference after adoption")
+		assert.True(t, ownerReferenceMatches(app, resource), "Orphaned resource should be adopted by the Application")
+	})
+	rig.testResource(t, ctx, &sql_cnrm_cloud_google_com_v1beta1.SQLUser{}, client.ObjectKey{Name: manualSQLUser.GetName(), Namespace: manualSQLUser.GetNamespace()}, func(t *testing.T, resource client.Object) {
+		assert.Len(t, resource.GetOwnerReferences(), 0, "Manually created SQLUser should not be adopted")
+	})
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
