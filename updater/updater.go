@@ -140,14 +140,56 @@ func CreateOrRecreate(ctx context.Context, cli client.Client, scheme *runtime.Sc
 	}
 }
 
-func CreateIfNotExists(ctx context.Context, cli client.Client, resource client.Object) func() error {
+func CreateIfNotExists(ctx context.Context, cli client.Client, scheme *runtime.Scheme, resource client.Object) func() error {
 	return func() error {
 		log.Infof("CreateIfNotExists %s", liberator_scheme.TypeName(resource))
-		err := cli.Create(ctx, resource)
-		if err != nil && errors.IsAlreadyExists(err) {
+		existing, err := scheme.New(resource.GetObjectKind().GroupVersionKind())
+		if err != nil {
+			return fmt.Errorf("internal error: %w", err)
+		}
+
+		objectKey := client.ObjectKeyFromObject(resource)
+		err = cli.Get(ctx, objectKey, existing.(client.Object))
+		if errors.IsNotFound(err) {
+			err := cli.Create(ctx, resource)
+			if err != nil && errors.IsAlreadyExists(err) {
+				return nil
+			}
+			return err
+		}
+		if err != nil {
+			return fmt.Errorf("get existing for CreateIfNotExists: %w", err)
+		}
+
+		adopt, err := ShouldAdoptRestoredOrphan(resource, existing)
+		if err != nil {
+			return fmt.Errorf("check adoption candidacy for CreateIfNotExists: %w", err)
+		}
+		if !adopt {
 			return nil
 		}
-		return err
+
+		patchSource := client.MergeFrom(existing.DeepCopyObject().(client.Object))
+		modified := existing.(client.Object)
+
+		desiredReferences := resource.GetOwnerReferences()
+		existingReferences := modified.GetOwnerReferences()
+
+		if len(desiredReferences) == 0 || len(existingReferences) > 0 {
+			return nil
+		}
+
+		log.Warnf("Adopting restored %s in CreateIfNotExists", liberator_scheme.TypeName(resource))
+		modified.SetOwnerReferences(desiredReferences)
+
+		err = cli.Patch(ctx, modified, patchSource)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			}
+			return fmt.Errorf("patch for CreateIfNotExists: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -257,13 +299,46 @@ func AssertValidOwnerReference(dst, src runtime.Object, isPgNamespace bool) erro
 		}
 	}
 
-	// TODO: remove this; this is a temporary fix for adoption of restored resources from velero.
-	if len(existingReferences) == 0 {
-		log.Warnf("Existing resource %s has no ownerReferences, but new resource has ownerReferences set. Adopting resource...", liberator_scheme.TypeName(dst))
+	adopt, err := ShouldAdoptRestoredOrphan(dst, src)
+	if err != nil {
+		return fmt.Errorf("checking adoption candidacy: %w", err)
+	}
+	if adopt {
 		return nil
 	}
 
 	return fmt.Errorf("refusing to overwrite manually edited resource; please add the correct ownerReference in order to continue")
+}
+
+// ShouldAdoptRestoredOrphan checks if an existing resource was restored from a Velero backup
+// and is missing OwnerReferences that it should have otherwise had.
+func ShouldAdoptRestoredOrphan(dst, src runtime.Object) (bool, error) {
+	srcacc, err := meta.Accessor(src)
+	if err != nil {
+		return false, err
+	}
+
+	dstacc, err := meta.Accessor(dst)
+	if err != nil {
+		return false, err
+	}
+
+	existingReferences := srcacc.GetOwnerReferences()
+	newReferences := dstacc.GetOwnerReferences()
+
+	if len(existingReferences) > 0 || len(newReferences) == 0 {
+		return false, nil
+	}
+
+	existingLabels := srcacc.GetLabels()
+	_, isRestored := existingLabels["velero.io/restore-name"]
+
+	if !isRestored {
+		return false, nil
+	}
+
+	log.Warnf("Existing %s was restored from Velero backup and is missing OwnerReferences.", liberator_scheme.TypeName(dst))
+	return true, nil
 }
 
 // CopyMeta copies resource metadata from one resource to another.

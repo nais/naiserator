@@ -65,8 +65,8 @@ func TestAssertOwnerReferenceEqual(t *testing.T) {
 	multiOwnership := fixtures.MinimalApplication()
 	ownedByCandidate := fixtures.MinimalApplication()
 	ownedBySomethingElse := fixtures.MinimalApplication()
-	// TODO: uncomment
-	//  notOwned := fixtures.MinimalApplication()
+	notOwned := fixtures.MinimalApplication()
+	restoredFromBackup := fixtures.MinimalApplication()
 	resource := fixtures.MinimalApplication()
 
 	ownedByCandidate.OwnerReferences = []metav1.OwnerReference{
@@ -94,6 +94,10 @@ func TestAssertOwnerReferenceEqual(t *testing.T) {
 		},
 	}
 
+	restoredFromBackup.Labels = map[string]string{
+		"velero.io/restore-name": "some-backup",
+	}
+
 	resource.OwnerReferences = []metav1.OwnerReference{
 		{
 			Kind: "Application",
@@ -101,10 +105,11 @@ func TestAssertOwnerReferenceEqual(t *testing.T) {
 		},
 	}
 
+	assert.NoError(t, updater.AssertValidOwnerReference(resource, multiOwnership, false))
 	assert.NoError(t, updater.AssertValidOwnerReference(resource, ownedByCandidate, false))
 	assert.Error(t, updater.AssertValidOwnerReference(resource, ownedBySomethingElse, false))
-	// TODO: uncomment
-	//  assert.Error(t, updater.AssertValidOwnerReference(resource, notOwned, false))
+	assert.Error(t, updater.AssertValidOwnerReference(resource, notOwned, false))
+	assert.NoError(t, updater.AssertValidOwnerReference(resource, restoredFromBackup, false))
 }
 
 func TestKeepOwnerReferenceMultiOwner(t *testing.T) {

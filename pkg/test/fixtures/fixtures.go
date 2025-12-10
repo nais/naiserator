@@ -13,6 +13,7 @@ const (
 	DefaultApplicationImage = "example/app:version"
 	OtherApplicationName    = "otherapplication"
 	OtherApplicationImage   = "example/other-image:version"
+	OrphanedApplicationName = "orphanedapplication"
 )
 
 type FixtureModifier func(app client.Object)
