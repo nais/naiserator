@@ -77,20 +77,6 @@ mise run build
 mise run local
 ```
 
-### Kafka & Protobuf
-
-Whenever an Application is deployed, a [deployment event message](https://github.com/navikt/protos/blob/master/deployment/deployment.proto)
-is sent to a Kafka topic. There's a few prerequisites to develop with this enabled locally:
-
-1. [Protobuf installed](https://github.com/golang/protobuf)
-2. An instance of kafka to test against. Use `docker-compose up` to bring up a local instance.
-3. Enable this feature by passing `-kafka-enabled=true` when starting Naiserator.
-
-#### Update and compile Protobuf definition
-
-Whenever the Protobuf definition is updated you can update using `mise run proto`. It will download the definitions, compile
-and place them in the correct packages.
-
 ## Verifying the Naiserator image and its contents
 
 The image is signed "keylessly" (is that a word?) using [Sigstore cosign](https://github.com/sigstore/cosign).

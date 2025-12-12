@@ -30,7 +30,6 @@ import (
 	"github.com/nais/liberator/pkg/events"
 
 	"github.com/nais/naiserator/pkg/event/generator"
-	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/readonly"
@@ -59,7 +58,6 @@ type Synchronizer struct {
 	client.Client
 	config         config.Config
 	generator      Generator
-	kafka          kafka.Interface
 	listers        []client.ObjectList
 	rolloutMonitor map[client.ObjectKey]RolloutMonitor
 	scheme         *runtime.Scheme
@@ -72,7 +70,6 @@ func NewSynchronizer(
 	simpleClient client.Client,
 	config config.Config,
 	generator Generator,
-	kafka kafka.Interface,
 	listers []client.ObjectList,
 	scheme *runtime.Scheme,
 ) *Synchronizer {
@@ -81,7 +78,6 @@ func NewSynchronizer(
 		Client:         cli,
 		config:         config,
 		generator:      generator,
-		kafka:          kafka,
 		listers:        listers,
 		rolloutMonitor: rolloutMonitor,
 		scheme:         scheme,

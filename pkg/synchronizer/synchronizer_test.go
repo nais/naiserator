@@ -140,7 +140,6 @@ func newTestRig(config config.Config) (*testRig, error) {
 		&generators.Application{
 			Config: rig.config,
 		},
-		nil,
 		listers,
 		rig.scheme,
 	))

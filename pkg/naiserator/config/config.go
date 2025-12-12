@@ -13,22 +13,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type KafkaTLS struct {
-	CAPath          string `json:"ca-path"`
-	CertificatePath string `json:"certificate-path"`
-	Enabled         bool   `json:"enabled"`
-	Insecure        bool   `json:"insecure"`
-	PrivateKeyPath  string `json:"private-key-path"`
-}
-
-type Kafka struct {
-	Brokers      []string `json:"brokers"`
-	Enabled      bool     `json:"enabled"`
-	LogVerbosity string   `json:"log-verbosity"`
-	TLS          KafkaTLS `json:"tls"`
-	Topic        string   `json:"topic"`
-}
-
 type Texas struct {
 	Image string `json:"image"`
 }
@@ -177,7 +161,6 @@ type Config struct {
 	HostAliases                       []HostAlias      `json:"host-aliases"`
 	ImagePullSecrets                  []string         `json:"image-pull-secrets"`
 	Informer                          Informer         `json:"informer"`
-	Kafka                             Kafka            `json:"kafka"`
 	Kubeconfig                        string           `json:"kubeconfig"`
 	LeaderElection                    LeaderElection   `json:"leader-election"`
 	Log                               Log              `json:"log"`
@@ -224,15 +207,6 @@ const (
 	GoogleProjectId                               = "google-project-id"
 	ImagePullSecrets                              = "image-pull-secrets"
 	InformerFullSynchronizationInterval           = "informer.full-sync-interval"
-	KafkaBrokers                                  = "kafka.brokers"
-	KafkaEnabled                                  = "kafka.enabled"
-	KafkaLogVerbosity                             = "kafka.log-verbosity"
-	KafkaTLSCAPath                                = "kafka.tls.ca-path"
-	KafkaTLSCertificatePath                       = "kafka.tls.certificate-path"
-	KafkaTLSEnabled                               = "kafka.tls.enabled"
-	KafkaTLSInsecure                              = "kafka.tls.insecure"
-	KafkaTLSPrivateKeyPath                        = "kafka.tls.private-key-path"
-	KafkaTopic                                    = "kafka.topic"
 	KubeConfig                                    = "kubeconfig"
 	LeaderElectionImage                           = "leader-election.image"
 	MaxConcurrentReconciles                       = "max-concurrent-reconciles"
@@ -265,13 +239,6 @@ const (
 	WonderwallImage                               = "wonderwall.image"
 )
 
-func bindNAIS() {
-	viper.BindEnv(KafkaBrokers, "KAFKA_BROKERS")
-	viper.BindEnv(KafkaTLSCAPath, "KAFKA_CA_PATH")
-	viper.BindEnv(KafkaTLSCertificatePath, "KAFKA_CERTIFICATE_PATH")
-	viper.BindEnv(KafkaTLSPrivateKeyPath, "KAFKA_PRIVATE_KEY_PATH")
-}
-
 func init() {
 	// Automatically read configuration options from environment variables.
 	// i.e. --proxy.address will be configurable using NAISERATOR_PROXY_ADDRESS.
@@ -284,9 +251,6 @@ func init() {
 	viper.SetConfigName("naiserator")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("/etc")
-
-	// Ensure Kafkarator variables are used
-	bindNAIS()
 
 	// Provide command-line flags
 	flag.Bool(DryRun, false, "set to true to run without any actual changes to the cluster")
@@ -369,16 +333,6 @@ func init() {
 	flag.String(VaultInitContainerImage, "", "Docker image of init container to use to read secrets from Vault")
 	flag.String(VaultAuthPath, "", "path to vault kubernetes auth backend")
 	flag.String(VaultKvPath, "", "path to Vault KV mount")
-
-	flag.Bool(KafkaEnabled, false, "Enable connection to kafka")
-	flag.Bool(KafkaTLSEnabled, false, "Use TLS for connecting to Kafka.")
-	flag.Bool(KafkaTLSInsecure, false, "Allow insecure Kafka TLS connections.")
-	flag.String(KafkaLogVerbosity, "trace", "Log verbosity for Kafka client.")
-	flag.String(KafkaTLSCAPath, "", "Path to Kafka TLS CA certificate.")
-	flag.String(KafkaTLSCertificatePath, "", "Path to Kafka TLS certificate.")
-	flag.String(KafkaTLSPrivateKeyPath, "", "Path to Kafka TLS private key.")
-	flag.String(KafkaTopic, "deploymentEvents", "Kafka topic for deployment status.")
-	flag.StringSlice(KafkaBrokers, []string{"localhost:9092"}, "Comma-separated list of Kafka brokers, HOST:PORT.")
 
 	flag.String(WonderwallImage, "", "Docker image used for Wonderwall.")
 

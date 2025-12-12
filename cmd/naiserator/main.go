@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,10 +10,8 @@ import (
 	fqdn_scheme "github.com/nais/liberator/pkg/apis/fqdnnetworkpolicies.networking.gke.io/v1alpha3"
 	"github.com/nais/liberator/pkg/logrus2logr"
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
-	"github.com/nais/liberator/pkg/tlsutil"
 	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/generators"
-	"github.com/nais/naiserator/pkg/kafka"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/readonly"
@@ -66,31 +63,6 @@ func run() error {
 		err = cfg.Vault.Validate()
 		if err != nil {
 			return err
-		}
-	}
-
-	var kafkaClient kafka.Interface
-
-	if cfg.Kafka.Enabled {
-		kafkaLogger := log.New()
-		kafkaLogger.Level, err = log.ParseLevel(cfg.Kafka.LogVerbosity)
-		if err != nil {
-			log.Fatalf("while setting log level: %s", err)
-		}
-		kafkaLogger.SetLevel(log.GetLevel())
-		kafkaLogger.SetFormatter(&formatter)
-
-		kafkaTLS := &tls.Config{}
-		if cfg.Kafka.TLS.Enabled {
-			kafkaTLS, err = tlsutil.TLSConfigFromFiles(cfg.Kafka.TLS.CertificatePath, cfg.Kafka.TLS.PrivateKeyPath, cfg.Kafka.TLS.CAPath)
-			if err != nil {
-				log.Fatalf("load Kafka TLS credentials: %s", err)
-			}
-		}
-
-		kafkaClient, err = kafka.New(cfg.Kafka.Brokers, cfg.Kafka.Topic, kafkaTLS, kafkaLogger)
-		if err != nil {
-			log.Fatalf("unable to setup kafka: %s", err)
 		}
 	}
 
@@ -185,7 +157,6 @@ func run() error {
 		&generators.Application{
 			Config: *cfg,
 		},
-		kafkaClient,
 		listers,
 		kscheme,
 	))
@@ -206,7 +177,6 @@ func run() error {
 		&generators.Naisjob{
 			Config: *cfg,
 		},
-		kafkaClient,
 		listers,
 		kscheme,
 	))
