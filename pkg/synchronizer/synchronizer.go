@@ -8,7 +8,15 @@ import (
 	"sync"
 	"time"
 
+	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/events"
+	"github.com/nais/naiserator/pkg/metrics"
+	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/readonly"
+	"github.com/nais/naiserator/pkg/resourcecreator/google"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
+	"github.com/nais/naiserator/updater"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -25,17 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	iam_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
-	"github.com/nais/liberator/pkg/events"
-
-	"github.com/nais/naiserator/pkg/event/generator"
-	"github.com/nais/naiserator/pkg/metrics"
-	"github.com/nais/naiserator/pkg/naiserator/config"
-	"github.com/nais/naiserator/pkg/readonly"
-	"github.com/nais/naiserator/pkg/resourcecreator/google"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/updater"
 )
 
 const (
@@ -235,10 +232,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 
 		// Application is not rolled out completely; start monitoring
 		if app.GetStatus().SynchronizationState == events.Synchronized {
-			src, ok := app.(generator.MonitorSource)
-			if ok {
-				n.MonitorRollout(src, logger)
-			}
+			n.MonitorRollout(app, logger)
 		}
 
 		return ctrl.Result{}, nil
@@ -287,10 +281,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	}
 
 	// Monitor the rollout status so that we can report a successfully completed rollout to NAIS deploy.
-	src, ok := app.(generator.MonitorSource)
-	if ok {
-		n.MonitorRollout(src, logger)
-	}
+	n.MonitorRollout(app, logger)
 
 	return ctrl.Result{}, nil
 }

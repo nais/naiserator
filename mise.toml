@@ -52,19 +52,8 @@ alias = "golden"
 description = "Format all Go code using gofumpt"
 run = "go tool mvdan.cc/gofumpt -w ./"
 
-[tasks.proto]
-description = "Generate Protobuf code"
-run = """
-wget -O pkg/event/event.proto https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
-protoc --go_opt=Mpkg/event/event.proto=github.com/nais/naiserator/pkg/deployment,paths=source_relative --go_out=. pkg/event/event.proto
-rm -f pkg/event/event.proto
-"""
-
 [tools]
 ctlptl = "latest"
 kubie = "latest"
 tilt = "latest"
-protoc = "latest"
-protoc-gen-go = "latest"
-protoc-gen-go-grpc = "latest"
 kubebuilder = "latest"
