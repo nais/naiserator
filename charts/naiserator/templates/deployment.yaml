@@ -77,11 +77,6 @@ spec:
         - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: webhook-cert
           readOnly: true
-        {{ if .Values.naiserator.kafka.enabled }}
-        - mountPath: /var/run/secrets/nais.io/kafka
-          name: kafka-credentials
-          readOnly: true
-        {{ end}}
       imagePullSecrets:
       - name: {{ .Values.imagePullSecret }}
       serviceAccount: {{ .Release.Name }}
