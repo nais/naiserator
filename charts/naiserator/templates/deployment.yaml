@@ -24,7 +24,6 @@ spec:
         reloader.stakater.com/search: "true"
       labels:
         app: {{ .Release.Name }}
-        {{- toYaml .Values.labels | nindent 8 }}
     spec:
       containers:
       - env:
