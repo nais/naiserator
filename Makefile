@@ -2,7 +2,6 @@ NAME        := naiserator
 TAG         := navikt/${NAME}
 LATEST      := ${TAG}:latest
 ROOT_DIR    := $(shell git rev-parse --show-toplevel)
-PROTOC = $(shell which protoc)
 
 # This is used for Docker
 K8S_VERSION := 1.30.0
@@ -20,7 +19,7 @@ $(LOCALBIN):
 
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 
-.PHONY: build docker docker-push local install test proto kubebuilder
+.PHONY: build docker docker-push local install test kubebuilder
 
 build:
 	go build -o cmd/naiserator/naiserator ./cmd/naiserator
@@ -44,15 +43,6 @@ test: kubebuilder
 
 golden_file_test:
 	go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1
-
-proto:
-	wget -O pkg/event/event.proto https://raw.githubusercontent.com/navikt/protos/master/deployment/event.proto
-	$(PROTOC) --go_opt=Mpkg/event/event.proto=github.com/nais/naiserator/pkg/deployment,paths=source_relative --go_out=. pkg/event/event.proto
-	rm -f pkg/event/event.proto
-
-install-protobuf-go:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 ##@ Dependencies
 setup-envtest: envtest ## Download the binaries required for ENVTEST in the local bin directory.

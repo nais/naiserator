@@ -170,11 +170,6 @@ values:
       template: '"{{.Env.project_id}}"'
     ignoreKind:
       - onprem
-  naiserator.kafka.enabled:
-    description: Enable Kafka topic for event relays
-    displayName: Enable Kafka
-    config:
-      type: bool
   naiserator.observability.otel.enabled:
     computed:
       template: "true"

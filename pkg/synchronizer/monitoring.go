@@ -7,22 +7,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nais/liberator/pkg/events"
+	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/resourcecreator/batch"
+	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/nais/liberator/pkg/events"
-
-	deployment "github.com/nais/naiserator/pkg/event"
-	"github.com/nais/naiserator/pkg/event/generator"
-	"github.com/nais/naiserator/pkg/metrics"
-	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 )
 
 const (
@@ -38,15 +32,10 @@ type RolloutMonitor struct {
 }
 
 type completionState struct {
-	event              *deployment.Event
-	eventReported      bool
-	kafkaProduced      bool
-	skipKafka          bool
-	applicationUpdated bool
-}
-
-func (s completionState) produceKafkaMessage() bool {
-	return !s.skipKafka && !s.kafkaProduced
+	eventReported       bool
+	applicationUpdated  bool
+	rolloutCompleteTime int64
+	rolloutStatus       string
 }
 
 func (s completionState) saveK8sEvent() bool {
@@ -57,19 +46,7 @@ func (s completionState) setSynchronizationState() bool {
 	return !s.applicationUpdated && s.eventReported
 }
 
-func (n *Synchronizer) produceDeploymentEvent(event *deployment.Event) (int64, error) {
-	an, err := anypb.New(event)
-	if err != nil {
-		return 0, fmt.Errorf("wrap Protobuf.Any: %w", err)
-	}
-	payload, err := proto.Marshal(an)
-	if err != nil {
-		return 0, fmt.Errorf("encode Protobuf: %w", err)
-	}
-	return n.kafka.Produce(payload)
-}
-
-func (n *Synchronizer) MonitorRollout(app generator.MonitorSource, logger log.Entry) {
+func (n *Synchronizer) MonitorRollout(app resource.Source, logger log.Entry) {
 	objectKey := client.ObjectKey{
 		Name:      app.GetName(),
 		Namespace: app.GetNamespace(),
@@ -115,7 +92,7 @@ func (n *Synchronizer) cancelMonitor(objectKey client.ObjectKey, expected *uuid.
 }
 
 // Monitoring deployments to signal RolloutComplete.
-func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.MonitorSource, logger log.Entry) {
+func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app resource.Source, logger log.Entry) {
 	logger.Debugf("Monitoring rollout status")
 
 	objectKey := client.ObjectKey{
@@ -123,10 +100,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 		Namespace: app.GetNamespace(),
 	}
 
-	completion := completionState{
-		// Don't produce Kafka message on certain conditions
-		skipKafka: n.kafka == nil || app.SkipDeploymentMessage(),
-	}
+	completion := completionState{}
 
 	for {
 		select {
@@ -154,7 +128,7 @@ func (n *Synchronizer) monitorRolloutRoutine(ctx context.Context, app generator.
 
 // monitorNaisjob will return false when the job has completed successfully or failed. We can then stop monitoring this
 // deployment. As long as we return true we should keep monitoring the deployment.
-func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
+func (n *Synchronizer) monitorNaisjob(ctx context.Context, app resource.Source, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
 	cronJob := batchv1.CronJob{}
 	err := n.Get(ctx, objectKey, &cronJob)
 	if err != nil {
@@ -186,7 +160,7 @@ func (n *Synchronizer) monitorNaisjob(ctx context.Context, app generator.Monitor
 
 // monitorApplication will only return false when all pods are successfully up and running. As long as we return true
 // we should keep monitoring the deployment.
-func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.MonitorSource, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
+func (n *Synchronizer) monitorApplication(ctx context.Context, app resource.Source, logger log.Entry, objectKey client.ObjectKey, completion completionState) bool {
 	deploy := &appsv1.Deployment{}
 	err := n.Get(ctx, objectKey, deploy)
 	if err != nil {
@@ -205,17 +179,11 @@ func (n *Synchronizer) monitorApplication(ctx context.Context, app generator.Mon
 		logger.Errorf("Monitor rollout: %v", err)
 		return true
 	}
+
 	return false
 }
 
-func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator.MonitorSource, logger log.Entry, completion completionState, rolloutStatus, rolloutMessage string) error {
-	// Deployment event for dev-rapid topic.
-	if completion.event == nil {
-		logger.Debugf("Monitor rollout: deployment has rolled out completely")
-		completion.event = generator.NewDeploymentEvent(app)
-		completion.event.RolloutStatus = deployment.RolloutStatus_complete
-	}
-
+func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app resource.Source, logger log.Entry, completion completionState, rolloutStatus, rolloutMessage string) error {
 	// Save a Kubernetes event for this completed deployment.
 	// The deployment will be reported as complete when this event is picked up by NAIS deploy.
 	if completion.saveK8sEvent() {
@@ -227,25 +195,12 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app generator
 		}
 	}
 
-	// Send a deployment event to the dev-rapid topic.
-	// This is picked up by deployment-event-relays and used as official deployment data.
-	if completion.produceKafkaMessage() {
-		offset, err := n.produceDeploymentEvent(completion.event)
-		completion.kafkaProduced = err == nil
-		if err != nil {
-			return fmt.Errorf("failed to produce deployment message: %v", err)
-		}
-		logger.WithFields(log.Fields{
-			"kafka_offset": offset,
-		}).Infof("Deployment event sent successfully")
-	}
-
 	// Set the SynchronizationState field of the application to RolloutComplete.
 	// This will prevent the application from being picked up by this function if Naiserator restarts.
 	// Only update this field if an event has been persisted to the cluster.
 	if completion.setSynchronizationState() {
 		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
-			app = setSyncStatus(app, rolloutStatus, completion.event)
+			app = setSyncStatus(app, rolloutStatus)
 			return n.Update(ctx, app)
 		})
 
@@ -272,10 +227,8 @@ func applicationDeploymentComplete(deployment *appsv1.Deployment) bool {
 		deployment.Status.ObservedGeneration >= deployment.Generation
 }
 
-func setSyncStatus(app resource.Source, synchronizationState string, event *deployment.Event) resource.Source {
+func setSyncStatus(app resource.Source, synchronizationState string) resource.Source {
 	app.GetStatus().SetSynchronizationStateWithCondition(synchronizationState, "Successfully deployed.")
-	app.GetStatus().RolloutCompleteTime = event.GetTimestampAsTime().UnixNano()
-	app.GetStatus().DeploymentRolloutStatus = event.RolloutStatus.String()
 
 	metrics.Synchronizations.With(
 		prometheus.Labels{

@@ -2,10 +2,10 @@ package frontend
 
 import (
 	"fmt"
+	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
-	"github.com/nais/naiserator/pkg/event/generator"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
@@ -40,8 +40,13 @@ export default {
 `
 
 func naisJs(source Source, telemetryURL string) string {
-	img := generator.ContainerImage(source.GetEffectiveImage())
-	return fmt.Sprintf(naisJsTemplate, telemetryURL, source.GetName(), img.GetTag())
+	imageName := strings.Split(source.GetEffectiveImage(), ":")
+	tag := ""
+	if len(imageName) == 2 {
+		tag = imageName[1]
+	}
+
+	return fmt.Sprintf(naisJsTemplate, telemetryURL, source.GetName(), tag)
 }
 
 func naisJsConfigMap(source Source, name, contents string) corev1.ConfigMap {

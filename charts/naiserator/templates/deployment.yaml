@@ -57,19 +57,6 @@ spec:
               key: texas_image
               name: texas
         {{ end }}
-        {{ if .Values.naiserator.kafka.enabled }}
-        - name: KAFKA_BROKERS
-          valueFrom:
-            secretKeyRef:
-              key: KAFKA_BROKERS
-              name: aiven-kafka-{{ .Release.Name }}-{{ now | date "2006-01" }}
-        - name: KAFKA_CERTIFICATE_PATH
-          value: /var/run/secrets/nais.io/kafka/kafka.crt
-        - name: KAFKA_PRIVATE_KEY_PATH
-          value: /var/run/secrets/nais.io/kafka/kafka.key
-        - name: KAFKA_CA_PATH
-          value: /var/run/secrets/nais.io/kafka/ca.crt
-        {{ end }}
         ports:
           - name: metrics
             containerPort: 8080
