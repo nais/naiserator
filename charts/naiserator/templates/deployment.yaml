@@ -92,16 +92,3 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ .Release.Name }}-webhook
-      {{ if .Values.naiserator.kafka.enabled }}
-      - name: kafka-credentials
-        secret:
-          defaultMode: 420
-          items:
-            - key: KAFKA_CERTIFICATE
-              path: kafka.crt
-            - key: KAFKA_PRIVATE_KEY
-              path: kafka.key
-            - key: KAFKA_CA
-              path: ca.crt
-          secretName: aiven-kafka-{{ .Release.Name }}-{{ now | date "2006-01" }}
-      {{ end }}
