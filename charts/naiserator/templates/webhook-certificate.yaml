@@ -8,7 +8,6 @@ metadata:
   {{- end }}
   labels:
     app: {{ .Release.Name }}
-    {{- toYaml .Values.labels | nindent 4 }}
 spec:
   selfSigned: {}
 
@@ -24,7 +23,6 @@ metadata:
   {{- end }}
   labels:
     app: {{ .Release.Name }}
-    {{- toYaml .Values.labels | nindent 4 }}
 spec:
   dnsNames:
   - '{{ .Release.Name }}-webhook.{{ .Release.Namespace }}.svc'

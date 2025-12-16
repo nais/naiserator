@@ -7,7 +7,6 @@ metadata:
   {{- end }}
   labels:
     app: {{ .Release.Name }}
-    {{- toYaml .Values.labels | nindent 4 }}
   name: {{ .Release.Name }}
 spec:
   selector:
