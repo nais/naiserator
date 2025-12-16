@@ -9,9 +9,6 @@ imagePullPolicy: "IfNotPresent"
 imagePullSecret: "gpr-credentials"
 imageTag: "2022-12-08-5b1e996"
 
-labels:
-  kafka: enabled
-
 naiserator:
   aiven-generation: 0
   aiven-range: ""

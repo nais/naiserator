@@ -45,11 +45,6 @@ func run() error {
 		return err
 	}
 
-	config.Print([]string{
-		"kafka.sasl.username",
-		"kafka.sasl.password",
-	})
-
 	// Register CRDs with controller-tools
 	kscheme, err := liberator_scheme.All()
 	if err != nil {

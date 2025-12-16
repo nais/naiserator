@@ -54,11 +54,6 @@ func run() error {
 		return err
 	}
 
-	config.Print([]string{
-		"kafka.sasl.username",
-		"kafka.sasl.password",
-	})
-
 	if cfg.Features.Vault {
 		err = cfg.Vault.Validate()
 		if err != nil {
