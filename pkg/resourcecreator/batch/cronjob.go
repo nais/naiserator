@@ -58,7 +58,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 			},
 			Suspend:                    &suspend,
 			SuccessfulJobsHistoryLimit: util.Int32p(naisjob.Spec.SuccessfulJobsHistoryLimit),
-			FailedJobsHistoryLimit:     util.Int32p(naisjob.Spec.FailedJobsHistoryLimit),
+			FailedJobsHistoryLimit:     naisjob.Spec.FailedJobsHistoryLimit,
 			ConcurrencyPolicy:          batchv1.ConcurrencyPolicy(naisjob.GetConcurrencyPolicy()),
 		},
 	}
