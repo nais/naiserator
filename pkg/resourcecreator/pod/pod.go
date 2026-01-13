@@ -43,8 +43,6 @@ type Source interface {
 	GetFilesFrom() []nais_io_v1.FilesFrom
 	GetEffectiveImage() string
 	GetLiveness() *nais_io_v1.Probe
-	GetLogformat() string
-	GetLogtransform() string
 	GetPort() int
 	GetPreStopHook() *nais_io_v1.PreStopHook
 	GetPreStopHookPath() string
@@ -416,14 +414,6 @@ func CreateAppObjectMeta(app Source, ast *resource.Ast, cfg Config) metav1.Objec
 		objectMeta.Annotations["prometheus.io/path"] = app.GetPrometheus().Path
 	}
 
-	if len(app.GetLogformat()) > 0 {
-		objectMeta.Annotations["nais.io/logformat"] = app.GetLogformat()
-	}
-
-	if len(app.GetLogtransform()) > 0 {
-		objectMeta.Annotations["nais.io/logtransform"] = app.GetLogtransform()
-	}
-
 	return objectMeta
 }
 
@@ -436,14 +426,6 @@ func CreateNaisjobObjectMeta(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg
 
 	// enables HAHAHA
 	objectMeta.Labels["nais.io/naisjob"] = "true"
-
-	if len(naisjob.Spec.Logformat) > 0 {
-		objectMeta.Annotations["nais.io/logformat"] = naisjob.Spec.Logformat
-	}
-
-	if len(naisjob.Spec.Logtransform) > 0 {
-		objectMeta.Annotations["nais.io/logtransform"] = naisjob.Spec.Logtransform
-	}
 
 	return objectMeta
 }

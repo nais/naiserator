@@ -175,6 +175,8 @@ github.com/nais/liberator v0.0.0-20260108121145-39aaf2fdd97f h1:rTzO7V23G3VAys1L
 github.com/nais/liberator v0.0.0-20260108121145-39aaf2fdd97f/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
 github.com/nais/liberator v0.0.0-20260112124809-7c1c402510fe h1:NbU8ukf+GtM6XreM1QGRP901ntTgUebneDgtsWTQlbw=
 github.com/nais/liberator v0.0.0-20260112124809-7c1c402510fe/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
+github.com/nais/liberator v0.0.0-20260113112700-26b7bdc3bc16 h1:1E0rNY+V3LUPbDhyujW2d/XQ5N54XOJ/yhkaW/RPMfw=
+github.com/nais/liberator v0.0.0-20260113112700-26b7bdc3bc16/go.mod h1:p6EA7AKqzH798N7yvG8GDHVMzzkpORoxoyfcFz5Oa7c=
 github.com/onsi/ginkgo/v2 v2.27.2 h1:LzwLj0b89qtIy6SSASkzlNvX6WktqurSHwkk2ipF/Ns=
 github.com/onsi/ginkgo/v2 v2.27.2/go.mod h1:ArE1D/XhNXBXCBkKOLkbsb2c81dQHCRcF5zwn/ykDRo=
 github.com/onsi/gomega v1.38.3 h1:eTX+W6dobAYfFeGC2PV6RwXRu/MyT+cQguijutvkpSM=
