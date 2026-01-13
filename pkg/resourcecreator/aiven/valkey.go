@@ -53,6 +53,9 @@ func addValkeyEnvVariables(ast *resource.Ast, secretName, instanceName string) {
 		makeSecretEnvVar(fmt.Sprintf("VALKEY_URI_%s", suffix), secretName),
 		makeOptionalSecretEnvVar(fmt.Sprintf("VALKEY_HOST_%s", suffix), secretName),
 		makeOptionalSecretEnvVar(fmt.Sprintf("VALKEY_PORT_%s", suffix), secretName),
+		makeOptionalSecretEnvVar(fmt.Sprintf("VALKEY_REPLICA_URI_%s", suffix), secretName),
+		makeOptionalSecretEnvVar(fmt.Sprintf("VALKEY_REPLICA_HOST_%s", suffix), secretName),
+		makeOptionalSecretEnvVar(fmt.Sprintf("VALKEY_REPLICA_PORT_%s", suffix), secretName),
 	}...)
 }
 
