@@ -24,8 +24,6 @@ type Source interface {
 	GetFilesFrom() []nais_io_v1.FilesFrom
 	GetEffectiveImage() string
 	GetLiveness() *nais_io_v1.Probe
-	GetLogformat() string
-	GetLogtransform() string
 	GetPort() int
 	GetPreStopHook() *nais_io_v1.PreStopHook
 	GetPreStopHookPath() string
