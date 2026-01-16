@@ -2,7 +2,6 @@ package batch
 
 import (
 	"fmt"
-	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -27,15 +26,6 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 		return err
 	}
 
-	if naisjob.Spec.TTL != "" {
-		d, err := time.ParseDuration(naisjob.Spec.TTL)
-		if err != nil {
-			return fmt.Errorf("parsing TTL: %w", err)
-		}
-
-		objectMeta.Annotations["euthanaisa.nais.io/kill-after"] = time.Now().Add(d).Format(time.RFC3339)
-		objectMeta.Labels["euthanaisa.nais.io/enabled"] = "true"
-	}
 	schedule := naisjob.Spec.Schedule
 	suspend := false
 	if schedule == "" {

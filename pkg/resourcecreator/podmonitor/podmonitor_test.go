@@ -59,7 +59,7 @@ func TestGetPrometheus(t *testing.T) {
 		pm := ast.Operations[0].Resource.(*pov1.PodMonitor)
 		endpoint := pm.Spec.PodMetricsEndpoints[0]
 
-		assert.Equal(t, "http", endpoint.Port)
+		assert.Equal(t, "http", *endpoint.Port)
 		assert.Equal(t, "/metrics", endpoint.Path)
 	})
 
@@ -83,7 +83,7 @@ func TestGetPrometheus(t *testing.T) {
 		pm := ast.Operations[0].Resource.(*pov1.PodMonitor)
 		endpoint := pm.Spec.PodMetricsEndpoints[0]
 
-		assert.Equal(t, "metrics", endpoint.Port)
+		assert.Equal(t, "metrics", *endpoint.Port)
 		assert.Equal(t, "/_metrics", endpoint.Path)
 	})
 }
