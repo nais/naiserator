@@ -84,3 +84,8 @@ func (c *Client) Status() client.StatusWriter {
 func (c *Client) SubResource(subResource string) client.SubResourceClient {
 	return c.client.SubResource(subResource)
 }
+
+func (c *Client) Apply(ctx context.Context, obj runtime.ApplyConfiguration, opts ...client.ApplyOption) error {
+	log.Debug("Read-only client ignoring APPLY")
+	return nil
+}

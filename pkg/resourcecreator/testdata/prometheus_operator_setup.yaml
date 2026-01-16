@@ -51,10 +51,8 @@ tests:
         resource:
           spec:
             podMetricsEndpoints:
-              - bearerTokenSecret:
-                  key: ""
+              - path: /scrape/path
                 port: metrics
-                path: /scrape/path
             jobLabel: app.kubernetes.io/name
             selector:
               matchLabels:

@@ -43,7 +43,7 @@ func Create(source Source, ast *resource.Ast, config Config) {
 			PodTargetLabels: []string{"app", "team"},
 			PodMetricsEndpoints: []pov1.PodMetricsEndpoint{
 				{
-					Port:        port,
+					Port:        &port,
 					Path:        prom.Path,
 					HonorLabels: false,
 				},
