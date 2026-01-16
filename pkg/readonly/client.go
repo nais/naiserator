@@ -86,6 +86,6 @@ func (c *Client) SubResource(subResource string) client.SubResourceClient {
 }
 
 func (c *Client) Apply(ctx context.Context, obj runtime.ApplyConfiguration, opts ...client.ApplyOption) error {
-	log.Debug("Read-only client ignoring APPLY")
+	log.Debugf("Read-only client ignoring APPLY %T", obj)
 	return nil
 }
