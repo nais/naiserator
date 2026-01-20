@@ -10,6 +10,7 @@ rules:
     resources:
       - 'aivenapplications'
       - 'applications'
+      - 'applications/status'
       - 'azureadapplications'
       - 'bigquerydatasets'
       - 'configmaps'
@@ -30,6 +31,7 @@ rules:
       - 'leases'
       - 'maskinportenclients'
       - 'naisjobs'
+      - 'naisjobs/status'
       - 'namespaces'
       - 'networkpolicies'
       - 'opensearches'
