@@ -141,19 +141,19 @@ values:
   ingress.internal.class:
     displayName: Internal ingress class
     computed:
-      template: '"nais-ingress"'
+      template: "nais-ingress"
     config:
       type: string
   ingress.external.class:
     displayName: External ingress class
     computed:
-      template: '"nais-ingress-external"'
+      template: "nais-ingress-external"
     config:
       type: string
   ingress.fa.class:
     displayName: Forward auth ingress class
     computed:
-      template: '"nais-ingress-fa"'
+      template: "nais-ingress-fa"
     config:
       type: string
   naiserator.gateway-mappings:
@@ -161,22 +161,22 @@ values:
     computed:
       template: |
         - domainSuffix: "{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "{{.Configs.ingress.internal.class}}"
+          ingressClass: "{{ .Configs.ingress.internal.class }}"
         - domainSuffix: "external.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "{{.Configs.ingress.external.class}}"
+          ingressClass: "{{ .Configs.ingress.external.class }}"
         - domainSuffix: "authenticated.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "{{.Configs.ingress.fa.class}}"
+          ingressClass: "{{ .Configs.ingress.fa.class }}"
         {{- range .Configs.mapping.internal_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "{{.Configs.ingress.internal.class}}"
+          ingressClass: "{{ .Configs.ingress.internal.class }}"
         {{- end }}
         {{- range .Configs.mapping.external_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "{{.Configs.ingress.external.class}}"
+          ingressClass: "{{ .Configs.ingress.external.class }}"
         {{- end }}
         {{- range .Configs.mapping.fa_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "{{.Configs.ingress.fa.class}}"
+          ingressClass: "{{ .Configs.ingress.fa.class }}"
         {{- end }}
   naiserator.google-project-id:
     displayName: Google project ID
