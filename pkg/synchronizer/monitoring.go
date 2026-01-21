@@ -201,7 +201,8 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app resource.
 	if completion.setSynchronizationState() {
 		err := n.UpdateResource(ctx, app, func(app resource.Source) error {
 			app = setSyncStatus(app, rolloutStatus)
-			return n.Update(ctx, app)
+			// Use Status().Update() to avoid triggering mutating webhooks
+			return n.Status().Update(ctx, app)
 		})
 
 		completion.applicationUpdated = err == nil

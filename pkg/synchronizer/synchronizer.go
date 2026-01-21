@@ -165,8 +165,6 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 			"team":   app.GetNamespace(),
 		}).Inc()
 		err := n.UpdateResource(ctx, app, func(existing resource.Source) error {
-			existing.SetStatus(app.GetStatus())
-
 			// The team name was previously required as `.metadata.labels.team`.
 			// Teams have had their own namespace many years now, but this team label
 			// have persisted still. When this requirement was removed as of this patch,
@@ -175,13 +173,23 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 			// This function adds the team label to the resource again, in case there
 			// are systems that use the label, especially the ones we don't control.
 			labels := existing.GetLabels()
-			if labels == nil {
-				labels = make(map[string]string)
-			}
-			labels["team"] = existing.GetNamespace()
-			existing.SetLabels(labels)
+			needsLabelUpdate := labels == nil || labels["team"] != existing.GetNamespace()
 
-			return n.Update(ctx, existing) // was app
+			if needsLabelUpdate {
+				if labels == nil {
+					labels = make(map[string]string)
+				}
+				labels["team"] = existing.GetNamespace()
+				existing.SetLabels(labels)
+				// Full update needed to update labels (doesn't update status with subresource enabled)
+				if err := n.Update(ctx, existing); err != nil {
+					return err
+				}
+			}
+
+			// Update status via subresource to avoid triggering webhooks
+			existing.SetStatus(app.GetStatus())
+			return n.Status().Update(ctx, existing)
 		})
 		if err != nil {
 			n.reportError(ctx, events.FailedStatusUpdate, err, app)
