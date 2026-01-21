@@ -160,23 +160,22 @@ values:
     displayName: Gateway mappings
     computed:
       template: |
-        # Set default values since these can be undefined unless explicitly set in Fasit
         {{- $internalClass := "nais-ingress" -}}
         {{- $externalClass := "nais-ingress-external" -}}
         {{- $faClass := "nais-ingress-fa" -}}
-
+        
         {{- if .Configs.ingress.internal.class -}}
-         {{- $internalClass = .Configs.ingress.internal.class -}}
+          {{- $internalClass = .Configs.ingress.internal.class -}}
         {{- end -}}
-
+        
         {{- if .Configs.ingress.external.class -}}
-         {{- $externalClass = .Configs.ingress.external.class -}}
+          {{- $externalClass = .Configs.ingress.external.class -}}
         {{- end -}}
-
+        
         {{- if .Configs.ingress.fa.class -}}
-         {{- $faClass = .Configs.ingress.fa.class -}}
+          {{- $faClass = .Configs.ingress.fa.class -}}
         {{- end -}}
-
+        
         - domainSuffix: "{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
           ingressClass: "{{ $internalClass }}"
         - domainSuffix: "external.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
