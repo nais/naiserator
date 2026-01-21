@@ -160,23 +160,40 @@ values:
     displayName: Gateway mappings
     computed:
       template: |
+        # Set default values since these can be undefined unless explicitly set in Fasit
+        {{- $internalClass := "nais-ingress" -}}
+        {{- $externalClass := "nais-ingress-external" -}}
+        {{- $faClass := "nais-ingress-fa" -}}
+
+        {{- if .Configs.ingress.internal.class -}}
+         {{- $internalClass = .Configs.ingress.internal.class -}}
+        {{- end -}}
+
+        {{- if .Configs.ingress.external.class -}}
+         {{- $externalClass = .Configs.ingress.external.class -}}
+        {{- end -}}
+
+        {{- if .Configs.ingress.fa.class -}}
+         {{- $faClass = .Configs.ingress.fa.class -}}
+        {{- end -}}
+
         - domainSuffix: "{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "{{ .Configs.ingress.internal.class }}"
+          ingressClass: "{{ $internalClass }}"
         - domainSuffix: "external.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "{{ .Configs.ingress.external.class }}"
+          ingressClass: "{{ $externalClass }}"
         - domainSuffix: "authenticated.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "{{ .Configs.ingress.fa.class }}"
+          ingressClass: "{{ $faClass }}"
         {{- range .Configs.mapping.internal_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "{{ .Configs.ingress.internal.class }}"
+          ingressClass: "{{ $internalClass }}"
         {{- end }}
         {{- range .Configs.mapping.external_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "{{ .Configs.ingress.external.class }}"
+          ingressClass: "{{ $externalClass }}"
         {{- end }}
         {{- range .Configs.mapping.fa_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "{{ .Configs.ingress.fa.class }}"
+          ingressClass: "{{ $faClass }}"
         {{- end }}
   naiserator.google-project-id:
     displayName: Google project ID
