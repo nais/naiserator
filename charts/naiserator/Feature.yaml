@@ -138,32 +138,46 @@ values:
     ignoreKind:
       - onprem
       - management
+  ingress.internal.class:
+    displayName: Internal ingress class
+    computed:
+      template: '"nais-ingress"'
+    config:
+      type: string
+  ingress.external.class:
+    displayName: External ingress class
+    computed:
+      template: '"nais-ingress-external"'
+    config:
+      type: string
+  ingress.fa.class:
+    displayName: Forward auth ingress class
+    computed:
+      template: '"nais-ingress-fa"'
+    config:
+      type: string
   naiserator.gateway-mappings:
     displayName: Gateway mappings
     computed:
       template: |
         - domainSuffix: "{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "nais-ingress"
+          ingressClass: "{{.Configs.ingress.internal.class}}"
         - domainSuffix: "external.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "nais-ingress-external"
+          ingressClass: "{{.Configs.ingress.external.class}}"
         - domainSuffix: "authenticated.{{.Env.name}}.{{.Tenant.Name}}.cloud.nais.io"
-          ingressClass: "nais-ingress-fa"
+          ingressClass: "{{.Configs.ingress.fa.class}}"
         {{- range .Configs.mapping.internal_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "nais-ingress"
+          ingressClass: "{{.Configs.ingress.internal.class}}"
         {{- end }}
         {{- range .Configs.mapping.external_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "nais-ingress-external"
+          ingressClass: "{{.Configs.ingress.external.class}}"
         {{- end }}
         {{- range .Configs.mapping.fa_hosts }}
         - domainSuffix: "{{ . }}"
-          ingressClass: "nais-ingress-fa"
+          ingressClass: "{{.Configs.ingress.fa.class}}"
         {{- end }}
-        {{ if and (eq .Tenant.Name "nav") (eq .Env.name "dev")  }}
-        - domainSuffix: .very.intern.dev.nav.no
-          ingressClass: nais-ingress-very-internal
-        {{ end }}
   naiserator.google-project-id:
     displayName: Google project ID
     computed:
