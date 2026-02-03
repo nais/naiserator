@@ -116,7 +116,7 @@ func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource
 	}
 
 	if cfg.PostgresOperatorEnabled() {
-		err = postgres.Create(naisjob, ast, cfg)
+		err = postgres.Create(naisjob, ast)
 		if err != nil {
 			return nil, err
 		}

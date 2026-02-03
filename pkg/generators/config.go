@@ -174,16 +174,8 @@ func (o *Options) IsWonderwallEnabled() bool {
 	return o.Config.Features.Wonderwall
 }
 
-func (o *Options) PostgresImage() string {
-	return o.Config.Postgres.Image
-}
-
 func (o *Options) PostgresOperatorEnabled() bool {
 	return o.Config.Features.PostgresOperator
-}
-
-func (o *Options) PostgresStorageClass() string {
-	return o.Config.Postgres.StorageClass
 }
 
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {

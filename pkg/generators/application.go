@@ -175,7 +175,7 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	}
 
 	if cfg.PostgresOperatorEnabled() {
-		err = postgres.Create(app, ast, cfg)
+		err = postgres.Create(app, ast)
 		if err != nil {
 			return nil, err
 		}

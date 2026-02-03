@@ -137,11 +137,6 @@ type Frontend struct {
 	TelemetryURL string `json:"telemetry-url"`
 }
 
-type Postgres struct {
-	Image        string `json:"image"`
-	StorageClass string `json:"storage-class"`
-}
-
 type Config struct {
 	AivenGeneration                   int              `json:"aiven-generation"`
 	AivenProject                      string           `json:"aiven-project"`
@@ -167,7 +162,6 @@ type Config struct {
 	MaxConcurrentReconciles           int              `json:"max-concurrent-reconciles"`
 	NaisNamespace                     string           `json:"nais-namespace"`
 	Observability                     Observability    `json:"observability"`
-	Postgres                          Postgres         `json:"postgres"`
 	Proxy                             Proxy            `json:"proxy"`
 	Ratelimit                         Ratelimit        `json:"ratelimit"`
 	Securelogs                        Securelogs       `json:"securelogs"`
@@ -221,8 +215,6 @@ const (
 	ObservabilityOtelDestinations                 = "observability.otel.destinations"
 	ObservabilityOtelAutoInstrumentationAppConfig = "observability.otel.auto-instrumentation.app-config"
 	ObservabilityOtelAutoInstrumentationEnabled   = "observability.otel.auto-instrumentation.enabled"
-	PostgresImage                                 = "postgres.image"
-	PostgresStorageClass                          = "postgres.storage-class"
 	ProxyAddress                                  = "proxy.address"
 	ProxyExclude                                  = "proxy.exclude"
 	RateLimitBurst                                = "ratelimit.burst"
@@ -302,8 +294,6 @@ func init() {
 	flag.Int(ObservabilityOtelCollectorPort, 4317, "port used by the OpenTelemetry collector")
 	flag.Bool(ObservabilityOtelCollectorTLS, false, "use TLS for the OpenTelemetry collector")
 	flag.StringArray(ObservabilityOtelCollectorLabels, []string{}, "list of labels to be used by the OpenTelemetry collector")
-	flag.String(PostgresImage, "", "Docker image used for Postgres clusters")
-	flag.String(PostgresStorageClass, "", "Storage class used for Postgres clusters")
 	flag.Int(RateLimitQPS, 20, "how quickly the rate limit burst bucket is filled per second")
 	flag.Int(RateLimitBurst, 200, "how many requests to Kubernetes to allow per second")
 

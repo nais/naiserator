@@ -19,13 +19,7 @@ type Source interface {
 	GetPostgres() *nais_io_v1.Postgres
 }
 
-type Config interface {
-	GetGoogleProjectID() string
-	PostgresStorageClass() string
-	PostgresImage() string
-}
-
-func Create(source Source, ast *resource.Ast, cfg Config) error {
+func Create(source Source, ast *resource.Ast) error {
 	postgres := source.GetPostgres()
 	if postgres == nil {
 		return nil
