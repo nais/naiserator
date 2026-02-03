@@ -32,10 +32,8 @@ type RolloutMonitor struct {
 }
 
 type completionState struct {
-	eventReported       bool
-	applicationUpdated  bool
-	rolloutCompleteTime int64
-	rolloutStatus       string
+	eventReported      bool
+	applicationUpdated bool
 }
 
 func (s completionState) saveK8sEvent() bool {
