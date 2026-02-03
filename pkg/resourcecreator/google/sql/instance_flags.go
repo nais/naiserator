@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
-
-	"k8s.io/utils/strings/slices"
 )
 
 type flagValidator = func(value string) error
