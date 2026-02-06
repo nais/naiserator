@@ -35,7 +35,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/podmonitor"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/resourcecreator/securelogs"
 	"github.com/nais/naiserator/pkg/resourcecreator/service"
 	"github.com/nais/naiserator/pkg/resourcecreator/serviceaccount"
 	"github.com/nais/naiserator/pkg/resourcecreator/vault"
@@ -192,7 +191,6 @@ func (g *Application) Generate(source resource.Source, config interface{}) (reso
 	}
 
 	certificateauthority.Create(app, ast, cfg)
-	securelogs.Create(app, ast, cfg)
 	poddisruptionbudget.Create(app, ast)
 
 	tokenxclient := jwker.Create(app, ast, cfg)
