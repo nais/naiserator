@@ -6,11 +6,6 @@ config:
   google-project-id: google-project-id
   fqdn-policy:
     enabled: true
-    rules:
-      - host: "yolo.com"
-        port: 80
-      - host: "google.com"
-        port: 443
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -43,18 +38,6 @@ tests:
         resource:
           spec:
             egress:
-              - ports:
-                  - port: 80
-                    protocol: TCP
-                to:
-                  - fqdns:
-                      - yolo.com
-              - ports:
-                  - port: 443
-                    protocol: TCP
-                to:
-                  - fqdns:
-                      - google.com
               - ports:
                   - port: 443
                     protocol: TCP
