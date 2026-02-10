@@ -224,13 +224,6 @@ values:
         - {{ $k }}
         {{- end }}
         {{- end }}
-  naiserator.postgres.storage-class:
-    description: Storage class for Postgres ("standard-rwo" (default) or "premium-rwo")
-    config:
-      type: string
-    ignoreKind:
-      - onprem
-      - management
   naiserator.proxy.address:
     config:
       type: string
