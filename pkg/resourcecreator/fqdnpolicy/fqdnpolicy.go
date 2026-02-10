@@ -25,22 +25,24 @@ func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
 	if !(cfg.IsNetworkPolicyEnabled() && cfg.GetFQDNPolicy().Enabled) {
 		return
 	}
-	if len(source.GetAccessPolicy().Outbound.External) == 0 {
+
+	policy := source.GetAccessPolicy()
+	if policy == nil || policy.Outbound == nil || len(policy.Outbound.External) == 0 {
 		return
 	}
 
 	meta := resource.CreateObjectMeta(source)
 	meta.SetName(source.GetName() + "-fqdn")
-	policy := &fqdn.FQDNNetworkPolicy{
+	fqdnpolicy := &fqdn.FQDNNetworkPolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FQDNNetworkPolicy",
 			APIVersion: "networking.gke.io/v1alpha3",
 		},
 		ObjectMeta: meta,
-		Spec:       fqdnPolicySpec(source.GetName(), source.GetAccessPolicy()),
+		Spec:       fqdnPolicySpec(source.GetName(), policy),
 	}
 
-	ast.AppendOperation(resource.OperationCreateOrUpdate, policy)
+	ast.AppendOperation(resource.OperationCreateOrUpdate, fqdnpolicy)
 }
 
 func fqdnPolicySpec(name string, policy *nais_io_v1.AccessPolicy) fqdn.FQDNNetworkPolicySpec {
