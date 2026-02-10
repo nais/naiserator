@@ -25,6 +25,9 @@ func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
 	if !(cfg.IsNetworkPolicyEnabled() && cfg.GetFQDNPolicy().Enabled) {
 		return
 	}
+	if len(source.GetAccessPolicy().Outbound.External) == 0 {
+		return
+	}
 
 	meta := resource.CreateObjectMeta(source)
 	meta.SetName(source.GetName() + "-fqdn")
@@ -41,10 +44,9 @@ func Create(source networkpolicy.Source, ast *resource.Ast, cfg Config) {
 }
 
 func fqdnPolicySpec(name string, policy *nais_io_v1.AccessPolicy) fqdn.FQDNNetworkPolicySpec {
-	merged := egressPolicy(policy.Outbound)
 	return fqdn.FQDNNetworkPolicySpec{
 		PodSelector: *labelSelector("app", name),
-		Egress:      merged,
+		Egress:      egressPolicy(policy.Outbound),
 		PolicyTypes: []networkingv1.PolicyType{
 			networkingv1.PolicyTypeEgress,
 		},
