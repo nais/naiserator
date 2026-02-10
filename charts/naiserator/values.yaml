@@ -68,8 +68,6 @@ naiserator:
         service: "opentelemetry-collector"
         tls: false
         protocol: "grpc"
-  postgres:
-    storage-class: ""
   proxy:
     address: ""
     exclude: ""

@@ -4,9 +4,6 @@ config:
   features:
     postgres-operator: true
   google-project-id: google-project-id
-  postgres:
-    storage-class: premium-rwo
-    image: nais-io/postgres-image:1.2.3
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
