@@ -10,11 +10,6 @@ config:
   google-project-id: google-project-id
   fqdn-policy:
     enabled: true
-    rules:
-      - host: "yolo.com"
-        port: 80
-      - host: "google.com"
-        port: 443
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -120,36 +115,6 @@ tests:
                 app: myapplication
             policyTypes:
               - Ingress
-              - Egress
-  - operation: CreateOrUpdate
-    apiVersion: networking.gke.io/v1alpha3
-    kind: FQDNNetworkPolicy
-    name: myapplication-fqdn
-    match:
-      - name: "FQDN policy created"
-        type: exact
-        exclude:
-          - .metadata
-          - .status
-        resource:
-          spec:
-            egress:
-              - ports:
-                  - port: 80
-                    protocol: TCP
-                to:
-                  - fqdns:
-                      - yolo.com
-              - ports:
-                  - port: 443
-                    protocol: TCP
-                to:
-                  - fqdns:
-                      - google.com
-            podSelector:
-              matchLabels:
-                app: myapplication
-            policyTypes:
               - Egress
   - apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount

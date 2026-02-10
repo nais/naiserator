@@ -124,8 +124,7 @@ type LeaderElection struct {
 }
 
 type FQDNPolicy struct {
-	Enabled bool       `json:"enabled"`
-	Rules   []FQDNRule `json:"rules"`
+	Enabled bool `json:"enabled"`
 }
 
 type FQDNRule struct {

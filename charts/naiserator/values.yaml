@@ -86,13 +86,6 @@ naiserator:
 
   fqdn-policy:
     enabled: true
-    rules:
-      - host: metadata.google.internal
-        port: 80
-      - host: private.googleapis.com
-        port: 443
-      - host: aivencloud.com
-        port: 443
 
 podSecurityContext:
   fsGroup: 65532
