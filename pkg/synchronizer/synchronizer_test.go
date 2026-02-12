@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	go_runtime "runtime"
 	"testing"
 	"time"
 
@@ -74,23 +73,21 @@ func (rig *testRig) testResource(t *testing.T, ctx context.Context, resource cli
 	}
 }
 
-func testBinDirectory() string {
-	_, filename, _, _ := go_runtime.Caller(0)
-	return filepath.Clean(filepath.Join(filepath.Dir(filename), "../../.testbin/"))
-}
-
 func newTestRig(config config.Config) (*testRig, error) {
 	rig := &testRig{}
 
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
-		CRDDirectoryPaths: []string{crdPath},
+		CRDDirectoryPaths:     []string{crdPath},
+		ErrorIfCRDPathMissing: true,
 	}
 
-	err := os.Setenv("KUBEBUILDER_ASSETS", testBinDirectory())
+	// Retrieve the first found binary directory to allow running tests from IDEs
+	dir, err := getFirstFoundEnvTestBinaryDir()
 	if err != nil {
-		return nil, fmt.Errorf("failed to set environment variable: %w", err)
+		return nil, err
 	}
+	rig.kubernetes.BinaryAssetsDirectory = dir
 
 	rig.config = config
 
@@ -159,11 +156,12 @@ func newTestRig(config config.Config) (*testRig, error) {
 // The validity of resources generated are not tested here.
 // This test includes some GCP features suchs as CNRM
 func TestSynchronizer(t *testing.T) {
+	ctx := t.Context()
 	cfg := config.Config{
 		AivenGeneration: 0,
 		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 2 * time.Second,
-			RolloutCheckInterval:   5 * time.Second,
+			SynchronizationTimeout: 4 * time.Second,
+			RolloutCheckInterval:   1 * time.Second,
 			RolloutTimeout:         20 * time.Second,
 		},
 		GoogleProjectId:                   "1337",
@@ -180,10 +178,6 @@ func TestSynchronizer(t *testing.T) {
 	}
 
 	defer rig.kubernetes.Stop()
-
-	// Allow no more than 15 seconds for these tests to run
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-	defer cancel()
 
 	// Check that listing all resources work.
 	// If this test fails, it might mean CRDs are not registered in the test rig.
@@ -450,10 +444,11 @@ func testDeleteCorrectIAMResources(t *testing.T, rig *testRig, ctx context.Conte
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
+	ctx := t.Context()
 	cfg := config.Config{
 		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 2 * time.Second,
-			RolloutCheckInterval:   5 * time.Second,
+			SynchronizationTimeout: 4 * time.Second,
+			RolloutCheckInterval:   1 * time.Second,
 			RolloutTimeout:         20 * time.Second,
 		},
 		Features: config.Features{
@@ -470,10 +465,6 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	}
 
 	defer rig.kubernetes.Stop()
-
-	// Allow no more than 15 seconds for these tests to run
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-	defer cancel()
 
 	// Create Application fixture
 	app := fixtures.MinimalApplication()
@@ -622,4 +613,27 @@ func appWithoutImage() fixtures.FixtureModifier {
 		app := obj.(*nais_io_v1alpha1.Application)
 		app.Spec.Image = ""
 	}
+}
+
+// getFirstFoundEnvTestBinaryDir locates the first binary in the specified path.
+// ENVTEST-based tests depend on specific binaries, usually located in paths set by
+// controller-runtime. When running tests directly (e.g., via an IDE) without using
+// Makefile targets, the 'BinaryAssetsDirectory' must be explicitly configured.
+//
+// This function streamlines the process by finding the required binaries, similar to
+// setting the 'KUBEBUILDER_ASSETS' environment variable. To ensure the binaries are
+// properly set up, run 'make setup-envtest' beforehand.
+func getFirstFoundEnvTestBinaryDir() (string, error) {
+	basePath := filepath.Join("..", "..", "bin", "k8s")
+	entries, err := os.ReadDir(basePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read directory %s: %w", basePath, err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			return filepath.Join(basePath, entry.Name()), nil
+		}
+	}
+
+	return "", nil
 }
