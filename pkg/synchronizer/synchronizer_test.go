@@ -36,7 +36,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrl_config "sigs.k8s.io/controller-runtime/pkg/config"
@@ -113,7 +113,7 @@ func newTestRig(config config.Config) (*testRig, error) {
 
 	rig.manager, err = ctrl.NewManager(rig.kubernetes.Config, ctrl.Options{
 		Controller: ctrl_config.Controller{
-			SkipNameValidation: ptr.To(true),
+			SkipNameValidation: new(true),
 		},
 		Scheme: rig.scheme,
 		Metrics: metricsserver.Options{

@@ -4,17 +4,16 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/utils/ptr"
 )
 
 func fluentdSidecar(cfg Config) corev1.Container {
 	securityContext := pod.DefaultContainerSecurityContext()
-	securityContext.RunAsUser = ptr.To(int64(1065))
-	securityContext.RunAsGroup = ptr.To(int64(1065))
+	securityContext.RunAsUser = new(int64(1065))
+	securityContext.RunAsGroup = new(int64(1065))
 
 	return corev1.Container{
 		Name:            "secure-logs-fluentbit",
-		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways),
+		RestartPolicy:   new(corev1.ContainerRestartPolicyAlways),
 		Image:           cfg.GetSecureLogsOptions().LogShipperImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Command: []string{

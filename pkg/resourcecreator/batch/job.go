@@ -6,7 +6,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/ptr"
 )
 
 type Config interface {
@@ -21,7 +20,7 @@ func CreateJobSpec(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) (
 
 	var completionMode *batchv1.CompletionMode
 	if naisjob.Spec.CompletionMode != nil {
-		completionMode = ptr.To(batchv1.CompletionMode(*naisjob.Spec.CompletionMode))
+		completionMode = new(batchv1.CompletionMode(*naisjob.Spec.CompletionMode))
 	}
 
 	jobSpec := batchv1.JobSpec{

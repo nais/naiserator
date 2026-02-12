@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -113,8 +112,8 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 		Affinity:                      affinity,
 		Tolerations:                   tolerations,
 		SecurityContext: &corev1.PodSecurityContext{
-			FSGroup:             ptr.To[int64](1069),
-			FSGroupChangePolicy: ptr.To(corev1.FSGroupChangeOnRootMismatch),
+			FSGroup:             new(int64(1069)),
+			FSGroupChangePolicy: new(corev1.FSGroupChangeOnRootMismatch),
 			SeccompProfile: &corev1.SeccompProfile{
 				Type: corev1.SeccompProfileTypeRuntimeDefault,
 			},
@@ -132,12 +131,12 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 
 func DefaultContainerSecurityContext() *corev1.SecurityContext {
 	return &corev1.SecurityContext{
-		AllowPrivilegeEscalation: ptr.To(false),
-		Privileged:               ptr.To(false),
-		ReadOnlyRootFilesystem:   ptr.To(true),
-		RunAsNonRoot:             ptr.To(true),
-		RunAsGroup:               ptr.To(int64(1069)),
-		RunAsUser:                ptr.To(int64(1069)),
+		AllowPrivilegeEscalation: new(false),
+		Privileged:               new(false),
+		ReadOnlyRootFilesystem:   new(true),
+		RunAsNonRoot:             new(true),
+		RunAsGroup:               new(int64(1069)),
+		RunAsUser:                new(int64(1069)),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{"ALL"},
 		},
@@ -149,9 +148,9 @@ func DefaultContainerSecurityContext() *corev1.SecurityContext {
 
 func configureSecurityContext(annotations map[string]string) *corev1.SecurityContext {
 	ctx := DefaultContainerSecurityContext()
-	ctx.RunAsUser = ptr.To(runAsUser(annotations))
-	ctx.RunAsGroup = ptr.To(runAsGroup(annotations))
-	ctx.ReadOnlyRootFilesystem = ptr.To(readOnlyFileSystem(annotations))
+	ctx.RunAsUser = new(runAsUser(annotations))
+	ctx.RunAsGroup = new(runAsGroup(annotations))
+	ctx.ReadOnlyRootFilesystem = new(readOnlyFileSystem(annotations))
 	return ctx
 }
 
