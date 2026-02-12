@@ -3,7 +3,6 @@ package securelogs
 import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/utils/ptr"
 )
 
 func Volumes() []corev1.Volume {
@@ -24,7 +23,7 @@ func Volumes() []corev1.Volume {
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "secure-logs-fluentbit",
 					},
-					DefaultMode: ptr.To(int32(420)),
+					DefaultMode: new(int32(420)),
 				},
 			},
 		},

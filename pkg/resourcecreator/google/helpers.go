@@ -6,7 +6,6 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/ptr"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 )
@@ -28,14 +27,14 @@ func CloudSqlProxyContainer(port int32, googleCloudSQLProxyContainerImage, proje
 	}
 
 	securityContext := pod.DefaultContainerSecurityContext()
-	securityContext.RunAsUser = ptr.To(int64(2))
-	securityContext.RunAsGroup = ptr.To(int64(2))
+	securityContext.RunAsUser = new(int64(2))
+	securityContext.RunAsGroup = new(int64(2))
 
 	return corev1.Container{
 		Name:            "cloudsql-proxy",
 		Image:           googleCloudSQLProxyContainerImage,
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways),
+		RestartPolicy:   new(corev1.ContainerRestartPolicyAlways),
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: port,
 			Protocol:      corev1.ProtocolTCP,

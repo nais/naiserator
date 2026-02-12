@@ -12,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -112,7 +111,7 @@ func container(name, namespace, image string) corev1.Container {
 				corev1.ResourceMemory: k8sResource.MustParse("128Mi"),
 			},
 		},
-		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
+		RestartPolicy: new(corev1.ContainerRestartPolicyAlways),
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: Port,
 			Protocol:      corev1.ProtocolTCP,

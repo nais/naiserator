@@ -8,7 +8,6 @@ import (
 	"github.com/nais/naiserator/pkg/util"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 // All Naisjob are CronJobs, if no schedule is set we run it once on creation and set suspend to true. The job can be rerun on demand.
@@ -92,8 +91,8 @@ func CreateJobFromCronJob(cronJob *batchv1.CronJob) (*batchv1.Job, error) {
 					Kind:               cronJob.Kind,
 					Name:               cronJob.GetName(),
 					UID:                cronJob.GetUID(),
-					Controller:         ptr.To(true),
-					BlockOwnerDeletion: ptr.To(true),
+					Controller:         new(true),
+					BlockOwnerDeletion: new(true),
 				},
 			},
 		},

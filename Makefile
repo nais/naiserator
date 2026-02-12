@@ -4,15 +4,12 @@ LATEST      := ${TAG}:latest
 ROOT_DIR    := $(shell git rev-parse --show-toplevel)
 
 # This is used for Docker
-K8S_VERSION := 1.30.0
 arch        := $(shell uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
 os          := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-testbin_dir := ./.testbin/
-tools_archive := kubebuilder-tools-${K8S_VERSION}-$(os)-$(arch).tar.gz
 
-# This works locally, but not in CI
-ENVTEST_VERSION ?= release-0.21
-ENVTEST_K8S_VERSION ?= 1.31.0
+ENVTEST_VERSION ?= release-0.23
+# See https://raw.githubusercontent.com/kubernetes-sigs/controller-tools/HEAD/envtest-releases.yaml for available versions
+ENVTEST_K8S_VERSION ?= 1.33.0
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
@@ -38,7 +35,7 @@ local:
 install:
 	cd cmd/naiserator && go install
 
-test: kubebuilder
+test: setup-envtest
 	go test ./... -count=1 --coverprofile=cover.out
 
 golden_file_test:
@@ -47,7 +44,7 @@ golden_file_test:
 ##@ Dependencies
 setup-envtest: envtest ## Download the binaries required for ENVTEST in the local bin directory.
 	@echo "Setting up envtest binaries for Kubernetes version $(ENVTEST_K8S_VERSION)..."
-	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path || { \
+	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) || { \
 		echo "Error: Failed to set up envtest binaries for version $(ENVTEST_K8S_VERSION)."; \
 		exit 1; \
 	}
@@ -71,15 +68,6 @@ mv $(1) $(1)-$(3) ;\
 } ;\
 ln -sf $(1)-$(3) $(1)
 endef
-
-kubebuilder: $(testbin_dir)/$(tools_archive)
-	tar -xzf $(testbin_dir)/$(tools_archive) --strip-components=2 -C $(testbin_dir)
-	chmod -R +x $(testbin_dir)
-
-$(testbin_dir)/$(tools_archive):
-	mkdir -p $(testbin_dir)
-	wget -q --directory-prefix=$(testbin_dir) "https://storage.googleapis.com/kubebuilder-tools/$(tools_archive)"
-
 
 VER ?= test-image
 test-image:

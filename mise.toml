@@ -53,6 +53,7 @@ description = "Format all Go code using gofumpt"
 run = "go tool mvdan.cc/gofumpt -w ./"
 
 [tools]
+go = "1.26.0"
 ctlptl = "latest"
 kubie = "latest"
 tilt = "latest"

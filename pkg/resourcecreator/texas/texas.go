@@ -11,7 +11,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/utils/ptr"
 )
 
 const Port = 7164
@@ -77,7 +76,7 @@ func Create(
 				corev1.ResourceMemory: k8sResource.MustParse("256Mi"),
 			},
 		},
-		RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways), // native sidecar
+		RestartPolicy:   new(corev1.ContainerRestartPolicyAlways), // native sidecar
 		SecurityContext: pod.DefaultContainerSecurityContext(),
 	})
 	ast.Labels["texas"] = "enabled"
