@@ -7,7 +7,6 @@ ROOT_DIR    := $(shell git rev-parse --show-toplevel)
 arch        := $(shell uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
 os          := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-# This works locally, but not in CI
 ENVTEST_VERSION ?= release-0.23
 # See https://raw.githubusercontent.com/kubernetes-sigs/controller-tools/HEAD/envtest-releases.yaml for available versions
 ENVTEST_K8S_VERSION ?= 1.33.0
