@@ -9,7 +9,8 @@ os          := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 # This works locally, but not in CI
 ENVTEST_VERSION ?= release-0.23
-ENVTEST_K8S_VERSION ?= 1.33.8
+# See https://raw.githubusercontent.com/kubernetes-sigs/controller-tools/HEAD/envtest-releases.yaml for available versions
+ENVTEST_K8S_VERSION ?= 1.33.0
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
