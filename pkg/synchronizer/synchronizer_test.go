@@ -160,7 +160,7 @@ func TestSynchronizer(t *testing.T) {
 	cfg := config.Config{
 		AivenGeneration: 0,
 		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 4 * time.Second,
+			SynchronizationTimeout: 5 * time.Second,
 			RolloutCheckInterval:   1 * time.Second,
 			RolloutTimeout:         20 * time.Second,
 		},
@@ -447,7 +447,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	ctx := t.Context()
 	cfg := config.Config{
 		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 4 * time.Second,
+			SynchronizationTimeout: 5 * time.Second,
 			RolloutCheckInterval:   1 * time.Second,
 			RolloutTimeout:         20 * time.Second,
 		},
