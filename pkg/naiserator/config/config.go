@@ -84,10 +84,6 @@ type Logging struct {
 	Destinations []string `json:"destinations"`
 }
 
-type Securelogs struct {
-	LogShipperImage string `json:"log-shipper-image"`
-}
-
 type Proxy struct {
 	Address string   `json:"address"`
 	Exclude []string `json:"exclude"`
@@ -163,7 +159,6 @@ type Config struct {
 	Observability                     Observability    `json:"observability"`
 	Proxy                             Proxy            `json:"proxy"`
 	Ratelimit                         Ratelimit        `json:"ratelimit"`
-	Securelogs                        Securelogs       `json:"securelogs"`
 	Synchronizer                      Synchronizer     `json:"synchronizer"`
 	Texas                             Texas            `json:"texas"`
 	Vault                             Vault            `json:"vault"`
@@ -218,7 +213,6 @@ const (
 	ProxyExclude                                  = "proxy.exclude"
 	RateLimitBurst                                = "ratelimit.burst"
 	RateLimitQPS                                  = "ratelimit.qps"
-	SecurelogsLogShipperImage                     = "securelogs.log-shipper-image"
 	SynchronizerRolloutCheckInterval              = "synchronizer.rollout-check-interval"
 	SynchronizerRolloutTimeout                    = "synchronizer.rollout-timeout"
 	SynchronizerSynchronizationTimeout            = "synchronizer.synchronization-timeout"
@@ -308,8 +302,6 @@ func init() {
 		SynchronizerRolloutTimeout, time.Duration(5*time.Minute),
 		"how long to keep checking for a successful deployment rollout",
 	)
-
-	flag.String(SecurelogsLogShipperImage, "", "Docker image used for shipping secure logs")
 
 	flag.String(TexasImage, "", "Docker image used for Texas")
 
