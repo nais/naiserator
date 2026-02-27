@@ -74,8 +74,6 @@ naiserator:
   ratelimit:
     qps: 250
     burst: 500
-  securelogs:
-    log-shipper-image: docker.io/fluent/fluent-bit:3.1.6
   vault:
     address: ""
     auth-path: /kubernetes/default/default

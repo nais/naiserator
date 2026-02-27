@@ -98,10 +98,6 @@ func (o *Options) GetObservability() config.Observability {
 	return o.Config.Observability
 }
 
-func (o *Options) GetSecureLogsOptions() config.Securelogs {
-	return o.Config.Securelogs
-}
-
 func (o *Options) GetTeam() string {
 	return o.Team
 }
