@@ -12,7 +12,6 @@ import (
 
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 )
 
 type Source interface {
@@ -74,13 +73,13 @@ func deploymentSpec(app Source, ast *resource.Ast, cfg Config) (*appsv1.Deployme
 	}
 
 	return &appsv1.DeploymentSpec{
-		Replicas: util.Int32p(cfg.GetNumReplicas()),
+		Replicas: new(cfg.GetNumReplicas()),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{"app": app.GetName()},
 		},
 		Strategy:                deploymentStrategy(app),
-		ProgressDeadlineSeconds: util.Int32p(300),
-		RevisionHistoryLimit:    util.Int32p(3),
+		ProgressDeadlineSeconds: new(int32(300)),
+		RevisionHistoryLimit:    new(int32(3)),
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: pod.CreateAppObjectMeta(app, ast, cfg),
 			Spec:       *podSpec,

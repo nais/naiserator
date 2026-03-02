@@ -11,7 +11,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/horizontalpodautoscaler"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/nais/naiserator/pkg/util"
 )
 
 func TestHorizontalPodAutoscaler(t *testing.T) {
@@ -19,8 +18,8 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		for _, count := range []int{1, 2, 3} {
 			app := fixtures.MinimalApplication()
 			app.Spec.Replicas = &nais_io_v1.Replicas{
-				Min: util.Intp(count),
-				Max: util.Intp(count),
+				Min: new(count),
+				Max: new(count),
 			}
 			ast := resource.NewAst()
 			err := app.ApplyDefaults()
@@ -34,8 +33,8 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 	t.Run("should not create if max replicas is less than 1", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Replicas = &nais_io_v1.Replicas{
-			Min: util.Intp(0),
-			Max: util.Intp(0),
+			Min: new(0),
+			Max: new(0),
 		}
 		ast := resource.NewAst()
 		err := app.ApplyDefaults()
@@ -61,8 +60,8 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 	t.Run("should use value from deprecated cpuThresholdPercentage", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Replicas = &nais_io_v1.Replicas{
-			Min:                    util.Intp(1),
-			Max:                    util.Intp(10),
+			Min:                    new(1),
+			Max:                    new(10),
 			CpuThresholdPercentage: 75,
 			DisableAutoScaling:     false,
 			ScalingStrategy:        nil,
@@ -75,14 +74,14 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		hpa, ok := operation.Resource.(*v2.HorizontalPodAutoscaler)
 		assert.True(t, ok)
 		//lint:ignore SA1019 deprecated field, but we still support it for backwards compatibility
-		assert.Equal(t, util.Int32p(int32(app.Spec.Replicas.CpuThresholdPercentage)), hpa.Spec.Metrics[0].Resource.Target.AverageUtilization)
+		assert.Equal(t, new(int32(app.Spec.Replicas.CpuThresholdPercentage)), hpa.Spec.Metrics[0].Resource.Target.AverageUtilization)
 	})
 
 	t.Run("should use value from scalingStrategy.Cpu.ThresholdPercentage when set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Replicas = &nais_io_v1.Replicas{
-			Min:                    util.Intp(1),
-			Max:                    util.Intp(10),
+			Min:                    new(1),
+			Max:                    new(10),
 			CpuThresholdPercentage: 50,
 			DisableAutoScaling:     false,
 			ScalingStrategy: &nais_io_v1.ScalingStrategy{
@@ -98,15 +97,15 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		assert.Equal(t, resource.OperationCreateOrUpdate, operation.Operation)
 		hpa, ok := operation.Resource.(*v2.HorizontalPodAutoscaler)
 		assert.True(t, ok)
-		assert.Equal(t, util.Int32p(int32(app.Spec.Replicas.ScalingStrategy.Cpu.ThresholdPercentage)), hpa.Spec.Metrics[0].Resource.Target.AverageUtilization)
+		assert.Equal(t, new(int32(app.Spec.Replicas.ScalingStrategy.Cpu.ThresholdPercentage)), hpa.Spec.Metrics[0].Resource.Target.AverageUtilization)
 	})
 
 	t.Run("should add kafka scale metric when scalingStrategy.Kafka is set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		topic := fmt.Sprintf("%s.mytopic", fixtures.ApplicationNamespace)
 		app.Spec.Replicas = &nais_io_v1.Replicas{
-			Min:                util.Intp(1),
-			Max:                util.Intp(10),
+			Min:                new(1),
+			Max:                new(10),
 			DisableAutoScaling: false,
 			ScalingStrategy: &nais_io_v1.ScalingStrategy{
 				Kafka: &nais_io_v1.KafkaScaling{
@@ -137,8 +136,8 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		topic := fmt.Sprintf("%s.mytopic", fixtures.ApplicationNamespace)
 		app.Spec.Replicas = &nais_io_v1.Replicas{
-			Min:                util.Intp(1),
-			Max:                util.Intp(10),
+			Min:                new(1),
+			Max:                new(10),
 			DisableAutoScaling: false,
 			ScalingStrategy: &nais_io_v1.ScalingStrategy{
 				Cpu: &nais_io_v1.CpuScaling{

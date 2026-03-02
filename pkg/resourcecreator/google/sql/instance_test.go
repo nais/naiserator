@@ -9,7 +9,6 @@ import (
 	google_sql "github.com/nais/naiserator/pkg/resourcecreator/google/sql"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
-	"github.com/nais/naiserator/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -94,11 +93,11 @@ func TestGoogleSqlInstance(t *testing.T) {
 		spec := &nais.CloudSqlInstance{
 			Name:           app.Name,
 			Type:           nais.CloudSqlInstanceTypePostgres12,
-			AutoBackupHour: util.Intp(backupHour),
+			AutoBackupHour: new(backupHour),
 			Tier:           tier,
 			Maintenance: &nais.Maintenance{
 				Day:  maintenanceDay,
-				Hour: util.Intp(maintenanceHour),
+				Hour: new(maintenanceHour),
 			},
 		}
 		spec, err := google_sql.NaisCloudSqlInstanceWithDefaults(spec, app.Name)

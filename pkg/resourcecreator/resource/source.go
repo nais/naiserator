@@ -4,6 +4,7 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"hash/crc32"
+	"maps"
 	"strings"
 	"time"
 
@@ -37,9 +38,7 @@ type Source interface {
 func CreateObjectMeta(source Source) metav1.ObjectMeta {
 	labels := map[string]string{}
 
-	for k, v := range source.GetLabels() {
-		labels[k] = v
-	}
+	maps.Copy(labels, source.GetLabels())
 
 	labels["app"] = source.GetName()
 	labels["team"] = source.GetNamespace()

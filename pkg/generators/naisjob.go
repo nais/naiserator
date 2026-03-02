@@ -37,7 +37,7 @@ var _ synchronizer.Generator = &Naisjob{}
 
 // Generate a configuration context for further processing.
 // This function detects run-time parameters from a live running cluster.
-func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube client.Client) (interface{}, error) {
+func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube client.Client) (any, error) {
 	job, ok := source.(*nais_io_v1.Naisjob)
 	if !ok {
 		return nil, fmt.Errorf("BUG: this generator accepts only nais_io_v1.Naisjob objects")
@@ -83,7 +83,7 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 
 // CreateNaisjob takes an Naisjob resource and returns a slice of Kubernetes resources
 // along with information about what to do with these resources.
-func (g *Naisjob) Generate(source resource.Source, config interface{}) (resource.Operations, error) {
+func (g *Naisjob) Generate(source resource.Source, config any) (resource.Operations, error) {
 	naisjob, ok := source.(*nais_io_v1.Naisjob)
 	if !ok {
 		return nil, fmt.Errorf("BUG: generator only accepts nais_io_v1.Naisjob objects, fix your caller")

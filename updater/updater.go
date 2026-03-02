@@ -3,6 +3,7 @@ package updater
 import (
 	"context"
 	"fmt"
+	"maps"
 	"time"
 
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
@@ -302,9 +303,7 @@ func CopyAnnotations(dst, src metav1.Object) {
 	if anno == nil {
 		anno = make(map[string]string)
 	}
-	for key, value := range src.GetAnnotations() {
-		anno[key] = value
-	}
+	maps.Copy(anno, src.GetAnnotations())
 	dst.SetAnnotations(anno)
 }
 

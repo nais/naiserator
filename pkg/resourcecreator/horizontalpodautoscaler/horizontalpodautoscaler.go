@@ -7,7 +7,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 )
 
 const (
@@ -57,7 +56,7 @@ func Create(source Source, ast *resource.Ast) {
 				Name:       source.GetName(),
 			},
 			Metrics:     metricSpecs,
-			MinReplicas: util.Int32p(int32(*replicas.Min)),
+			MinReplicas: new(int32(*replicas.Min)),
 			MaxReplicas: int32(*replicas.Max),
 		},
 	}
@@ -92,7 +91,7 @@ func createCpuMetricSpec(percentage int) v2.MetricSpec {
 			Name: "cpu",
 			Target: v2.MetricTarget{
 				Type:               v2.UtilizationMetricType,
-				AverageUtilization: util.Int32p(int32(percentage)),
+				AverageUtilization: new(int32(percentage)),
 			},
 		},
 	}

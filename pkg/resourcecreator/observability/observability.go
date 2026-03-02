@@ -2,6 +2,7 @@ package observability
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -71,7 +72,7 @@ func otelAttributes(name, namesspace string, env []corev1.EnvVar, destinations [
 	// Set user-defined attributes without overwriting default attributes
 	for _, e := range env {
 		if e.Name == otelResourceAttributes {
-			for _, kv := range strings.Split(e.Value, ",") {
+			for kv := range strings.SplitSeq(e.Value, ",") {
 				parts := strings.Split(kv, "=")
 				if len(parts) == 2 && !reservedAttributes[parts[0]] {
 					attributes = fmt.Sprintf("%s,%s", attributes, kv)
@@ -267,9 +268,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 				return err
 			}
 
-			for k, v := range otelAutoInstrumentAnnotations(source, cfg.Otel) {
-				ast.Annotations[k] = v
-			}
+			maps.Copy(ast.Annotations, otelAutoInstrumentAnnotations(source, cfg.Otel))
 		}
 
 		ast.Env = OtelEnvVars(source.GetName(), source.GetNamespace(), ast.Env, destinations, cfg.Otel)
@@ -282,9 +281,7 @@ func Create(source Source, ast *resource.Ast, config Config) error {
 			return err
 		}
 
-		for k, v := range logLabels {
-			ast.Labels[k] = v
-		}
+		maps.Copy(ast.Labels, logLabels)
 	}
 
 	return nil

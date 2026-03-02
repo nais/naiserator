@@ -291,8 +291,8 @@ foo: bar
 	},
 }
 
-func decode(data string) interface{} {
-	i := new(interface{})
+func decode(data string) any {
+	i := new(any)
 	err := json.Unmarshal([]byte(data), &i)
 	if err != nil {
 		panic(fmt.Errorf("error in test fixture: %s", err))

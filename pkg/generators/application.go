@@ -49,7 +49,7 @@ var _ synchronizer.Generator = &Application{}
 
 // Prepare a configuration context for further processing.
 // This function detects run-time parameters from a live running cluster.
-func (g *Application) Prepare(ctx context.Context, source resource.Source, kube client.Client) (interface{}, error) {
+func (g *Application) Prepare(ctx context.Context, source resource.Source, kube client.Client) (any, error) {
 	app, ok := source.(*nais_io_v1alpha1.Application)
 	if !ok {
 		return nil, fmt.Errorf("BUG: this generator accepts only nais_io_v1alpha1.Application objects")
@@ -109,7 +109,7 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 
 // Generate transforms an Application resource into a set of Kubernetes resources,
 // along with information about what to do with these resources, i.e. CreateOrUpdate, etc.
-func (g *Application) Generate(source resource.Source, config interface{}) (resource.Operations, error) {
+func (g *Application) Generate(source resource.Source, config any) (resource.Operations, error) {
 	var err error
 
 	app, ok := source.(*nais_io_v1alpha1.Application)

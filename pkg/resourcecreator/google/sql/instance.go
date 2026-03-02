@@ -232,7 +232,7 @@ func NaisCloudSqlInstanceWithDefaults(instance *nais_io_v1.CloudSqlInstance, app
 
 	// Have to do this check explicitly as mergo is not able to distinguish between nil pointer and 0.
 	if instance.AutoBackupHour == nil {
-		instance.AutoBackupHour = util.Intp(DefaultSqlInstanceAutoBackupHour)
+		instance.AutoBackupHour = new(DefaultSqlInstanceAutoBackupHour)
 	}
 
 	if instance.Name == "" {

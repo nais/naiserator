@@ -8,7 +8,7 @@ import (
 type Rollout struct {
 	Source              resource.Source
 	ResourceOperations  resource.Operations
-	Options             interface{}
+	Options             any
 	CorrelationID       string
 	SynchronizationHash string
 }

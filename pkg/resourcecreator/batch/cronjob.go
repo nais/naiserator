@@ -2,10 +2,10 @@ package batch
 
 import (
 	"fmt"
+	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,7 +46,7 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 				Spec:       jobSpec,
 			},
 			Suspend:                    &suspend,
-			SuccessfulJobsHistoryLimit: util.Int32p(naisjob.Spec.SuccessfulJobsHistoryLimit),
+			SuccessfulJobsHistoryLimit: new(naisjob.Spec.SuccessfulJobsHistoryLimit),
 			FailedJobsHistoryLimit:     naisjob.Spec.FailedJobsHistoryLimit,
 			ConcurrencyPolicy:          batchv1.ConcurrencyPolicy(naisjob.GetConcurrencyPolicy()),
 		},
@@ -56,20 +56,20 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 }
 
 func truncateString(str string, max int) string {
-	truncated := ""
+	var truncated strings.Builder
 	count := 0
 	if len(str) < max {
 		return str
 	}
 
 	for _, char := range str {
-		truncated += string(char)
+		truncated.WriteString(string(char))
 		count++
 		if count >= max {
 			break
 		}
 	}
-	return truncated
+	return truncated.String()
 }
 
 func CreateJobFromCronJob(cronJob *batchv1.CronJob) (*batchv1.Job, error) {

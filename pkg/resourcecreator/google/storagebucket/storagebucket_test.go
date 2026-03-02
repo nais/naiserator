@@ -28,7 +28,7 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 
 	t.Run("bucket creation with retention", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
-		csb := nais.CloudStorageBucket{Name: "mystoragebucket", RetentionPeriodDays: intp(7)}
+		csb := nais.CloudStorageBucket{Name: "mystoragebucket", RetentionPeriodDays: new(7)}
 		expectedRetentionPeriod := *csb.RetentionPeriodDays * int(time.Hour.Seconds()*24)
 
 		bucket := storagebucket.CreateBucket(resource.CreateObjectMeta(app), csb, "projectId")
@@ -64,8 +64,4 @@ func TestGetGoogleStorageBucket(t *testing.T) {
 			DeletionPolicyAnnotation])
 		assert.Nil(t, bucket.Spec.RetentionPolicy)
 	})
-}
-
-func intp(i int) *int {
-	return &i
 }

@@ -9,7 +9,7 @@ import (
 	"regexp"
 )
 
-func Compare(matchType MatchType, expected, actual interface{}) Diffset {
+func Compare(matchType MatchType, expected, actual any) Diffset {
 	switch matchType {
 	case MatchExact:
 		return Exact(expected, actual, matchType)
@@ -23,32 +23,25 @@ func Compare(matchType MatchType, expected, actual interface{}) Diffset {
 }
 
 // Like Exact, but filters out any extra fields not included in the expected data structure.
-func Subset(expected, actual interface{}, matchType MatchType) Diffset {
+func Subset(expected, actual any, matchType MatchType) Diffset {
 	diffs := Exact(expected, actual, matchType)
 	return diffs.Filter(ErrExtraField)
 }
 
 // Like Subset, but matching fields error out, extra fields are ignored, and absent fields are OK
-func Absent(expected, actual interface{}, matchType MatchType) Diffset {
+func Absent(expected, actual any, matchType MatchType) Diffset {
 	diffs := Exact(expected, actual, matchType)
 	return diffs.Filter(ErrMissingField).Filter(ErrExtraField)
 }
 
 // Match expected data against actual data, and return a set of all the differences.
-func Exact(expected, actual interface{}, matchType MatchType) Diffset {
+func Exact(expected, actual any, matchType MatchType) Diffset {
 	if expected == nil || actual == nil {
 		return Diffset{}
 	}
 	a := reflect.ValueOf(expected)
 	b := reflect.ValueOf(actual)
 	return deepValueEqual(a, b, 0, "", matchType)
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 func subslice(a, b reflect.Value, depth int, path string, matchType MatchType) Diffset {
@@ -167,7 +160,7 @@ func deepValueEqual(a, b reflect.Value, depth int, path string, matchType MatchT
 			return append(diffs, simpleExpect)
 		}
 		return deepValueEqual(a.Elem(), b.Elem(), depth+1, path, matchType)
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if a.Pointer() != b.Pointer() {
 			return deepValueEqual(a.Elem(), b.Elem(), depth+1, path, matchType)
 		}

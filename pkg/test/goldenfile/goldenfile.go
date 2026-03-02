@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -57,7 +58,7 @@ type Match struct {
 	Type     deepcomp.MatchType
 	Name     string
 	Exclude  []string // list of keys
-	Resource interface{}
+	Resource any
 }
 
 type TestCase struct {
@@ -89,15 +90,15 @@ func yamlSubtestMatchesResource(resource meta, test SubTest) bool {
 	return false
 }
 
-func resourcemeta(resource interface{}) meta {
+func resourcemeta(resource any) meta {
 	ym := meta{}
 	raw, _ := json.Marshal(resource)
 	_ = json.Unmarshal(raw, &ym)
 	return ym
 }
 
-func rawResource(resource runtime.Object) interface{} {
-	r := new(interface{})
+func rawResource(resource runtime.Object) any {
+	r := new(any)
 	raw, _ := yaml.Marshal(resource)
 	_ = yaml.Unmarshal(raw, r)
 	return r
@@ -132,12 +133,7 @@ func yamlRunner(t *testing.T, filename string, resources resource.Operations, te
 
 			// filter out all cases in the exclusion list
 			callback := func(diff deepcomp.Diff) bool {
-				for _, path := range append(match.Exclude, defaultExclude...) {
-					if path == diff.Path {
-						return true
-					}
-				}
-				return false
+				return slices.Contains(append(match.Exclude, defaultExclude...), diff.Path)
 			}
 
 			t.Logf("%s: Assert '%s' against '%s'", filename, match.Name, rm)

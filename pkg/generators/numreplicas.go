@@ -28,11 +28,3 @@ func numReplicas(deployment *appsv1.Deployment, minReplicas, maxReplicas *int) i
 		return int32(*minReplicas)
 	}
 }
-
-// max returns the larger integer of a, b.
-func max(a, b int32) int32 {
-	if a > b {
-		return a
-	}
-	return b
-}

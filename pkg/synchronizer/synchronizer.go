@@ -45,8 +45,8 @@ const (
 // a configuration object. Then, `Generate()` is called with the configuration object, and returns a full
 // set of Kubernetes resources.
 type Generator interface {
-	Prepare(ctx context.Context, source resource.Source, kube client.Client) (interface{}, error)
-	Generate(source resource.Source, options interface{}) (resource.Operations, error)
+	Prepare(ctx context.Context, source resource.Source, kube client.Client) (any, error)
+	Generate(source resource.Source, options any) (resource.Operations, error)
 }
 
 // Synchronizer creates child resources from Application resources in the cluster.
