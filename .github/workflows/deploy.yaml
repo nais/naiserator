@@ -21,6 +21,9 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v6 # ratchet:exclude
+      - uses: jdx/mise-action@v3
+      - run: mise run check
+      - run: mise run test
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # ratchet:azure/setup-helm@v3
         with:
           version: "v3.11.1"
