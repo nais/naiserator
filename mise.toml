@@ -1,3 +1,10 @@
+[tools]
+go = "1.26.0"
+ctlptl = "latest"
+kubie = "latest"
+tilt = "latest"
+kubebuilder = "latest"
+
 [tasks.build]
 description = "Build Naiserator"
 run = """
@@ -5,56 +12,118 @@ go build -o cmd/naiserator/naiserator ./cmd/naiserator
 go build -o cmd/naiserator_webhook/naiserator_webhook ./cmd/naiserator_webhook
 """
 
+[tasks.docker]
+description = "Build Docker image"
+run = """
+version=$(./version.sh)
+docker image build \
+  -t navikt/naiserator:${version} \
+  -t navikt/naiserator \
+  -t naiserator \
+  -t navikt/naiserator:latest \
+  -f Dockerfile .
+"""
+
+[tasks."docker:push"]
+description = "Push Docker image"
+run = """
+docker image push navikt/naiserator:$(cat ./version)
+docker image push navikt/naiserator:latest
+"""
+
+[tasks."docker:test-image"]
+description = "Build and push test image"
+env = { VER = "test-image" }
+run = """
+docker image build --platform=linux/amd64 \
+  -t europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:${VER} .
+docker image push europe-north1-docker.pkg.dev/nais-io/nais/images/naiserator:${VER}
+"""
+
 [tasks.local]
 description = "Run Naiserator locally"
-run = "	go run cmd/naiserator/main.go --kubeconfig=${KUBECONFIG} --bind=127.0.0.1:8080"
+run = "go run cmd/naiserator/main.go --kubeconfig=${KUBECONFIG} --bind=127.0.0.1:8080"
 
-[tasks.check]
+[tasks.install]
+description = "Install Naiserator"
+run = "cd cmd/naiserator && go install"
+
+[tasks."check"]
 description = "Run all static analysis tools"
-depends = ['fmt', 'staticcheck', 'vulncheck', 'deadcode', 'vet']
+depends = [
+  'fmt',
+  'check:staticcheck',
+  'check:vulncheck',
+  'check:deadcode',
+  'check:vet',
+]
 
-[tasks.staticcheck]
-description = "Run staticcheck"
-wait_for = ['fmt']
-run = "go tool honnef.co/go/tools/cmd/staticcheck ./..."
-
-[tasks.vulncheck]
-description = "Run govulncheck"
-wait_for = ['fmt']
-run = "go tool golang.org/x/vuln/cmd/govulncheck ./..."
-
-[tasks.deadcode]
+[tasks."check:deadcode"]
 description = "Run deadcode"
-wait_for = ['fmt']
 run = "go tool golang.org/x/tools/cmd/deadcode -test ./..."
 
-[tasks.gosec]
+[tasks."check:gosec"]
 description = "Run gosec"
-wait_for = ['fmt']
 run = "go tool github.com/securego/gosec/v2/cmd/gosec --exclude-generated -terse ./..."
 
-[tasks.vet]
+[tasks."check:staticcheck"]
+description = "Run staticcheck"
+run = "go tool honnef.co/go/tools/cmd/staticcheck ./..."
+
+[tasks."check:vulncheck"]
+description = "Run vulncheck"
+run = "go tool golang.org/x/vuln/cmd/govulncheck ./..."
+
+[tasks."check:vet"]
 description = "Run go vet"
 wait_for = ['fmt']
 run = "go vet ./..."
 
+[tasks."fmt"]
+description = "Format all code"
+depends = ['fmt:go', 'fmt:gofix']
+
+[tasks."fmt:go"]
+description = "Format go code using gofumpt"
+run = "go tool mvdan.cc/gofumpt -w ./"
+
+[tasks."fmt:gofix"]
+description = "Fix runs the Go fix tool (cmd/fix) on the named packages and applies suggested fixes."
+run = "go fix ./..."
+
+[tasks.setup-envtest]
+description = "Download envtest binaries for integration tests"
+run = """
+LOCALBIN=$(pwd)/bin
+ENVTEST_VERSION=release-0.23
+ENVTEST_K8S_VERSION=1.33.0
+ENVTEST=${LOCALBIN}/setup-envtest
+
+mkdir -p "${LOCALBIN}"
+
+if [ ! -f "${ENVTEST}-${ENVTEST_VERSION}" ]; then
+  echo "Downloading sigs.k8s.io/controller-runtime/tools/setup-envtest@${ENVTEST_VERSION}"
+  rm -f "${ENVTEST}" || true
+  GOBIN="${LOCALBIN}" go install "sigs.k8s.io/controller-runtime/tools/setup-envtest@${ENVTEST_VERSION}"
+  mv "${ENVTEST}" "${ENVTEST}-${ENVTEST_VERSION}"
+fi
+ln -sf "${ENVTEST}-${ENVTEST_VERSION}" "${ENVTEST}"
+
+echo "Setting up envtest binaries for Kubernetes version ${ENVTEST_K8S_VERSION}..."
+${ENVTEST} use ${ENVTEST_K8S_VERSION} --bin-dir "${LOCALBIN}" || {
+  echo "Error: Failed to set up envtest binaries for version ${ENVTEST_K8S_VERSION}."
+  exit 1
+}
+"""
+
 [tasks.test]
-wait_for = ['fmt']
-description = "Run tests"
+description = "Run all tests"
+depends = ['setup-envtest', 'test:go', 'test:goldenfiles']
+
+[tasks."test:go"]
+description = "Run Go tests"
 run = "go test --race --cover --coverprofile=cover.out ./..."
 
 [tasks."test:goldenfiles"]
-description = "Run just golden files tests"
+description = "Run just Golden files tests"
 run = "go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1"
-alias = "golden"
-
-[tasks.fmt]
-description = "Format all Go code using gofumpt"
-run = "go tool mvdan.cc/gofumpt -w ./"
-
-[tools]
-go = "1.26.0"
-ctlptl = "latest"
-kubie = "latest"
-tilt = "latest"
-kubebuilder = "latest"

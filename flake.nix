@@ -50,7 +50,6 @@
               gopls
               gotools
               go-tools
-              gnumake
               gofumpt
             ];
           };

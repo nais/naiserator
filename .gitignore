@@ -10,3 +10,4 @@ cover.out
 /.testbin/
 *.DS_Store
 .direnv
+.agent-shell
