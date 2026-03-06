@@ -18,6 +18,7 @@ input:
           topic: mynamespace.mytopic
           consumerGroup: myconsumergroup
           threshold: 100
+        scaleUpStabilizationWindowSeconds: 60
 tests:
   - apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
@@ -55,3 +56,6 @@ tests:
                   target:
                     type: AverageValue
                     averageValue: "100"
+            behavior:
+              scaleUp:
+                stabilizationWindowSeconds: 60

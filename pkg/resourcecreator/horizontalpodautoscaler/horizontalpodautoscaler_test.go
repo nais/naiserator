@@ -159,4 +159,55 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		assert.True(t, ok)
 		assert.Len(t, hpa.Spec.Metrics, 2)
 	})
+
+	t.Run("scaleUp stabilization window is nil when not set", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Replicas = &nais_io_v1.Replicas{
+			Min:             new(1),
+			Max:             new(10),
+			ScalingStrategy: nil,
+		}
+		ast := resource.NewAst()
+
+		horizontalpodautoscaler.Create(app, ast)
+		hpa := ast.Operations[0].Resource.(*v2.HorizontalPodAutoscaler)
+		assert.Nil(t, hpa.Spec.Behavior)
+	})
+
+	t.Run("scaleUp stabilization window is nil when explicitly set to 0", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Replicas = &nais_io_v1.Replicas{
+			Min: new(1),
+			Max: new(10),
+			ScalingStrategy: &nais_io_v1.ScalingStrategy{
+				ScaleUpStabilizationWindowSeconds: 0,
+			},
+		}
+		ast := resource.NewAst()
+
+		horizontalpodautoscaler.Create(app, ast)
+		hpa := ast.Operations[0].Resource.(*v2.HorizontalPodAutoscaler)
+		assert.Nil(t, hpa.Spec.Behavior)
+	})
+
+	t.Run("scaleUp stabilization window is set from scalingStrategy when configured", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Replicas = &nais_io_v1.Replicas{
+			Min: new(1),
+			Max: new(10),
+			ScalingStrategy: &nais_io_v1.ScalingStrategy{
+				Cpu: &nais_io_v1.CpuScaling{
+					ThresholdPercentage: 50,
+				},
+				ScaleUpStabilizationWindowSeconds: 120,
+			},
+		}
+		ast := resource.NewAst()
+
+		horizontalpodautoscaler.Create(app, ast)
+		hpa := ast.Operations[0].Resource.(*v2.HorizontalPodAutoscaler)
+		assert.NotNil(t, hpa.Spec.Behavior)
+		assert.NotNil(t, hpa.Spec.Behavior.ScaleUp)
+		assert.Equal(t, new(int32(120)), hpa.Spec.Behavior.ScaleUp.StabilizationWindowSeconds)
+	})
 }
