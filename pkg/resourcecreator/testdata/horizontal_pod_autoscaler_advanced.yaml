@@ -18,6 +18,7 @@ input:
           topic: mynamespace.mytopic
           consumerGroup: myconsumergroup
           threshold: 100
+        scaleUpStabilizationWindowSeconds: 120
 tests:
   - apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
@@ -35,6 +36,9 @@ tests:
               kind: Deployment
               name: myapplication
               apiVersion: apps/v1
+            behavior:
+              scaleUp:
+                stabilizationWindowSeconds: 120
             minReplicas: 3
             maxReplicas: 6
             metrics:

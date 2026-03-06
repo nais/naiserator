@@ -43,22 +43,32 @@ func Create(source Source, ast *resource.Ast) {
 		metricSpecs = append(metricSpecs, createCpuMetricSpec(replicas.CpuThresholdPercentage))
 	}
 
+	hpaSpec := v2.HorizontalPodAutoscalerSpec{
+		ScaleTargetRef: v2.CrossVersionObjectReference{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+			Name:       source.GetName(),
+		},
+		Metrics:     metricSpecs,
+		MinReplicas: new(int32(*replicas.Min)),
+		MaxReplicas: int32(*replicas.Max),
+	}
+
+	if replicas.ScalingStrategy != nil && replicas.ScalingStrategy.ScaleUpStabilizationWindowSeconds > 0 {
+		hpaSpec.Behavior = &v2.HorizontalPodAutoscalerBehavior{
+			ScaleUp: &v2.HPAScalingRules{
+				StabilizationWindowSeconds: new(int32(replicas.ScalingStrategy.ScaleUpStabilizationWindowSeconds)),
+			},
+		}
+	}
+
 	hpa := &v2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
 			APIVersion: v2.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: resource.CreateObjectMeta(source),
-		Spec: v2.HorizontalPodAutoscalerSpec{
-			ScaleTargetRef: v2.CrossVersionObjectReference{
-				APIVersion: "apps/v1",
-				Kind:       "Deployment",
-				Name:       source.GetName(),
-			},
-			Metrics:     metricSpecs,
-			MinReplicas: new(int32(*replicas.Min)),
-			MaxReplicas: int32(*replicas.Max),
-		},
+		Spec:       hpaSpec,
 	}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
 }
