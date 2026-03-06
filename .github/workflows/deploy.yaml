@@ -93,7 +93,8 @@ jobs:
           chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_name }}
           version: ${{ needs.build_and_push.outputs.chart_version }}
           target: |
-            {"tenant":"dev-nais"}
+            
+            {"kind": "tenant","tenant":"dev-nais"}
       #- uses: nais/fasit-deploy@v3 # ratchet:exclude
       #  if: github.ref == 'refs/heads/master'
       #  with:
