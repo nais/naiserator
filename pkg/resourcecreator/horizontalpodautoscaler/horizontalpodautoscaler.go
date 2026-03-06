@@ -58,7 +58,6 @@ func Create(source Source, ast *resource.Ast) {
 			Metrics:     metricSpecs,
 			MinReplicas: new(int32(*replicas.Min)),
 			MaxReplicas: int32(*replicas.Max),
-			Behavior:    scalingBehavior(replicas),
 		},
 	}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
@@ -94,19 +93,6 @@ func createCpuMetricSpec(percentage int) v2.MetricSpec {
 				Type:               v2.UtilizationMetricType,
 				AverageUtilization: new(int32(percentage)),
 			},
-		},
-	}
-}
-
-// scalingBehavior returns a HorizontalPodAutoscalerBehavior, currently only changes scaleup if set..
-func scalingBehavior(replicas *nais_io_v1.Replicas) *v2.HorizontalPodAutoscalerBehavior {
-	if replicas.ScalingStrategy == nil || replicas.ScalingStrategy.ScaleUpStabilizationWindowSeconds == 0 {
-		return nil
-	}
-	stabilizationWindowSeconds := int32(replicas.ScalingStrategy.ScaleUpStabilizationWindowSeconds)
-	return &v2.HorizontalPodAutoscalerBehavior{
-		ScaleUp: &v2.HPAScalingRules{
-			StabilizationWindowSeconds: &stabilizationWindowSeconds,
 		},
 	}
 }
