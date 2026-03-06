@@ -132,6 +132,70 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		assert.Equal(t, fixtures.DefaultApplicationName, matchLabels["group"])
 	})
 
+	t.Run("should not set behavior when scaleUpStabilizationWindowSeconds is not set", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Replicas = &nais_io_v1.Replicas{
+			Min:                new(1),
+			Max:                new(10),
+			DisableAutoScaling: false,
+			ScalingStrategy: &nais_io_v1.ScalingStrategy{
+				Cpu: &nais_io_v1.CpuScaling{
+					ThresholdPercentage: 50,
+				},
+			},
+		}
+		ast := resource.NewAst()
+
+		horizontalpodautoscaler.Create(app, ast)
+		hpa, ok := ast.Operations[0].Resource.(*v2.HorizontalPodAutoscaler)
+		assert.True(t, ok)
+		assert.Nil(t, hpa.Spec.Behavior)
+	})
+
+	t.Run("should not set behavior when scaleUpStabilizationWindowSeconds is 0", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Replicas = &nais_io_v1.Replicas{
+			Min:                new(1),
+			Max:                new(10),
+			DisableAutoScaling: false,
+			ScalingStrategy: &nais_io_v1.ScalingStrategy{
+				Cpu: &nais_io_v1.CpuScaling{
+					ThresholdPercentage: 50,
+				},
+				ScaleUpStabilizationWindowSeconds: 0,
+			},
+		}
+		ast := resource.NewAst()
+
+		horizontalpodautoscaler.Create(app, ast)
+		hpa, ok := ast.Operations[0].Resource.(*v2.HorizontalPodAutoscaler)
+		assert.True(t, ok)
+		assert.Nil(t, hpa.Spec.Behavior)
+	})
+
+	t.Run("should set scaleUp stabilizationWindowSeconds in behavior when set to a positive value", func(t *testing.T) {
+		app := fixtures.MinimalApplication()
+		app.Spec.Replicas = &nais_io_v1.Replicas{
+			Min:                new(1),
+			Max:                new(10),
+			DisableAutoScaling: false,
+			ScalingStrategy: &nais_io_v1.ScalingStrategy{
+				Cpu: &nais_io_v1.CpuScaling{
+					ThresholdPercentage: 50,
+				},
+				ScaleUpStabilizationWindowSeconds: 120,
+			},
+		}
+		ast := resource.NewAst()
+
+		horizontalpodautoscaler.Create(app, ast)
+		hpa, ok := ast.Operations[0].Resource.(*v2.HorizontalPodAutoscaler)
+		assert.True(t, ok)
+		assert.NotNil(t, hpa.Spec.Behavior)
+		assert.NotNil(t, hpa.Spec.Behavior.ScaleUp)
+		assert.Equal(t, int32(120), *hpa.Spec.Behavior.ScaleUp.StabilizationWindowSeconds)
+	})
+
 	t.Run("should add both cpu and kafka metric when both are set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		topic := fmt.Sprintf("%s.mytopic", fixtures.ApplicationNamespace)
