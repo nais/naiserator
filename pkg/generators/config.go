@@ -3,6 +3,7 @@ package generators
 import (
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
 
 	"github.com/nais/naiserator/pkg/naiserator/config"
@@ -86,10 +87,11 @@ func (o *Options) GetIngressClasses(domain string) ([]string, error) {
 }
 
 func (o *Options) GetDomains() []string {
-	domains := []string{}
+	domains := make([]string, 0, len(o.Config.DomainIngressClassMap))
 	for key := range maps.Keys(o.Config.DomainIngressClassMap) {
 		domains = append(domains, key)
 	}
+	slices.Sort(domains)
 
 	return domains
 }
