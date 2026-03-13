@@ -3,11 +3,11 @@ testconfig:
 config:
   google-project-id: google-project-id
   cluster-name: mycluster
-  gateway-mappings:
-    - domainSuffix: .nais.io
-      ingressClass: nais-ingress
-    - domainSuffix: .domain
-      ingressClass: nais-ingress-external
+  domain-ingressclass-mapping:
+    .nais.io:
+      - nais-ingress
+    .domain:
+      - nais-ingress-external
   nais-namespace: nais-system
 existing:
   - kind: Application

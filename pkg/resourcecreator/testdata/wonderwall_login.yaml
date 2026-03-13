@@ -4,9 +4,9 @@ config:
   cluster-name: mycluster
   features:
     wonderwall: true
-  gateway-mappings:
-    - domainSuffix: .nav.no
-      ingressClass: very-nginx
+  domain-ingressclass-mapping:
+    .nav.no:
+      - very-nginx
   observability:
     otel:
       enabled: true

@@ -2,11 +2,11 @@ testconfig:
   description: Can only use supported base domains
 config:
   cluster-name: mycluster
-  gateway-mappings:
-    - domainSuffix: .test.no
-      ingressClass: very-nginx
-    - domainSuffix: .test.nav.no
-      ingressClass: weary-nginx
+  domain-ingressclass-mapping:
+    .test.no:
+      - very-nginx
+    .test.nav.no:
+      - weary-nginx
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -18,4 +18,4 @@ input:
     image: navikt/myapplication:1.2.3
     ingresses:
       - https://bar.ansatt.nav.no
-error: "the domain \"bar.ansatt.nav.no\" cannot be used in cluster \"mycluster\"; use one of .test.no, .test.nav.no"
+error: "the domain \"bar.ansatt.nav.no\" cannot be used in cluster \"mycluster\"; use one of .test.nav.no, .test.no"

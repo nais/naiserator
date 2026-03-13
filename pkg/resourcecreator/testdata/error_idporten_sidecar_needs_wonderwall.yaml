@@ -4,9 +4,9 @@ config:
   features:
     idporten: true
     wonderwall: false
-  gateway-mappings:
-    - domainSuffix: .nav.no
-      ingressClass: nav-no-gateway
+  domain-ingressclass-mapping:
+    .nav.no:
+      - nav-no-gateway
 input:
   kind: "Application"
   apiVersion: nais.io/v1alpha1

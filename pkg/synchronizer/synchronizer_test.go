@@ -260,15 +260,9 @@ func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nai
 
 	opts := &generators.Options{}
 	opts.Config = cfg
-	opts.Config.GatewayMappings = []config.GatewayMapping{
-		{
-			DomainSuffix: ".bar",
-			IngressClass: "very-nginx",
-		},
-		{
-			DomainSuffix: ".baz",
-			IngressClass: "something-else",
-		},
+	opts.Config.DomainIngressClassMap = map[string][]string{
+		".bar": {"very-nginx"},
+		".baz": {"something-else"},
 	}
 
 	// Create an Ingress object that should be deleted once processing has run.
