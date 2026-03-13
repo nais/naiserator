@@ -4,7 +4,7 @@ config:
   features:
     azurerator: true
   cluster-name: mycluster
-  gateway-mappings:
+  domain-ingressclass-mapping:
     .adeo.no:
       - adeo-gateway
     .domain:

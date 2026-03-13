@@ -28,7 +28,7 @@ func TestOptions_GetIngressClasses(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// TODO: construct the receiver type.
 			var o generators.Options
-			o.Config.GatewayMappings = map[string][]string{
+			o.Config.DomainIngressClassMap = map[string][]string{
 				"nais.io":          {"nais"},
 				"external.nais.io": {"nais-external"},
 			}

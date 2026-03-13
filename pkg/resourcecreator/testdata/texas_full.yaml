@@ -9,7 +9,7 @@ config:
     texas: true
     wonderwall: true
   cluster-name: mycluster
-  gateway-mappings:
+  domain-ingressclass-mapping:
     .nav.no:
       - very-nginx
   texas:

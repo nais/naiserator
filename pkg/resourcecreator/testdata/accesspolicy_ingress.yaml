@@ -5,7 +5,7 @@ config:
     network-policy: true
   google-project-id: google-project-id
   cluster-name: mycluster
-  gateway-mappings:
+  domain-ingressclass-mapping:
     .nais.io:
       - nais-ingress
     .domain:

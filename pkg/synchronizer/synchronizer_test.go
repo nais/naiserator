@@ -260,7 +260,7 @@ func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nai
 
 	opts := &generators.Options{}
 	opts.Config = cfg
-	opts.Config.GatewayMappings = map[string][]string{
+	opts.Config.DomainIngressClassMap = map[string][]string{
 		".bar": {"very-nginx"},
 		".baz": {"something-else"},
 	}

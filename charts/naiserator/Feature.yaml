@@ -126,8 +126,8 @@ values:
     ignoreKind:
       - onprem
       - management
-  naiserator.gateway-mappings:
-    displayName: Gateway mappings
+  naiserator.domain-ingressclass-mapping:
+    displayName: Domain to ingress class mapping
     computed:
       template: '"{{ .Env.ingress_gateway_mappings }}"'
   naiserator.google-project-id:

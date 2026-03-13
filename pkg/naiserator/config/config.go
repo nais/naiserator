@@ -139,7 +139,7 @@ type Config struct {
 	FQDNPolicy                        FQDNPolicy          `json:"fqdn-policy"`
 	Features                          Features            `json:"features"`
 	Frontend                          Frontend            `json:"frontend"`
-	GatewayMappings                   map[string][]string `json:"gateway-mappings"`
+	DomainIngressClassMap             map[string][]string `json:"domain-ingressclass-mapping"`
 	GoogleCloudSQLProxyContainerImage string              `json:"google-cloud-sql-proxy-container-image"`
 	GoogleProjectId                   string              `json:"google-project-id"`
 	HealthProbeBindAddress            string              `json:"health-probe-bind-address"`

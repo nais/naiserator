@@ -1,7 +1,7 @@
 testconfig:
   description: both idporten sidecar and azure sidecar enabled is not allowed
 config:
-  gateway-mappings:
+  domain-ingressclass-mapping:
     .nav.no:
       - very-nginx
   features:

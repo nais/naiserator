@@ -1,7 +1,7 @@
 testconfig:
   description: ingress resource is created on-premises
 config:
-  gateway-mappings:
+  domain-ingressclass-mapping:
     .bar:
       - very-nginx
 input:

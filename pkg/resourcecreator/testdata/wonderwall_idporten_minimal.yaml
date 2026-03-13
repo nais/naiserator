@@ -5,7 +5,7 @@ config:
   features:
     idporten: true
     wonderwall: true
-  gateway-mappings:
+  domain-ingressclass-mapping:
     .nav.no:
       - very-nginx
   observability:

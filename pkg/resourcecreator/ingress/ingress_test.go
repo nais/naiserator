@@ -38,7 +38,7 @@ func TestIngress(t *testing.T) {
 			assert.NoError(t, err)
 
 			opts := &generators.Options{}
-			opts.Config.GatewayMappings = map[string][]string{
+			opts.Config.DomainIngressClassMap = map[string][]string{
 				".bar": {"very-nginx"},
 				".baz": {"something-else"},
 			}

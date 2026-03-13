@@ -4,7 +4,7 @@ config:
   features:
     idporten: true
     wonderwall: false
-  gateway-mappings:
+  domain-ingressclass-mapping:
     .nav.no:
       - nav-no-gateway
 input:
