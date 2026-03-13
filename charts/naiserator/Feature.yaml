@@ -11,18 +11,6 @@ values:
     displayName: Image tag
     config:
       type: string
-  mapping.fa_hosts:
-    displayName: Extra forward auth hosts
-    config:
-      type: string_array
-  mapping.external_hosts:
-    displayName: Extra external hosts
-    config:
-      type: string_array
-  mapping.internal_hosts:
-    displayName: Extra internal hosts
-    config:
-      type: string_array
   naiserator.aiven-generation:
     displayName: The generation of Aiven secrets in this cluster
     config:
@@ -141,20 +129,7 @@ values:
   naiserator.gateway-mappings:
     displayName: Gateway mappings
     computed:
-      template: |
-        {{ .Env.ingress_gateway_mappings }}
-        {{- range .Configs.mapping.internal_hosts }}
-        {{ . }}:
-          - nais-ingress
-        {{- end }}
-        {{- range .Configs.mapping.external_hosts }}
-        {{ . }}:
-          - nais-ingress-external
-        {{- end }}
-        {{- range .Configs.mapping.fa_hosts }}
-        {{ . }}:
-          - nais-ingress-fa
-        {{- end }}
+      template: '"{{ .Env.ingress_gateway_mappings }}"'
   naiserator.google-project-id:
     displayName: Google project ID
     computed:
