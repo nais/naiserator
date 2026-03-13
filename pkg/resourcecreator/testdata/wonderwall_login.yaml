@@ -5,8 +5,8 @@ config:
   features:
     wonderwall: true
   gateway-mappings:
-    - domainSuffix: .nav.no
-      ingressClass: very-nginx
+    .nav.no:
+      - very-nginx
   observability:
     otel:
       enabled: true

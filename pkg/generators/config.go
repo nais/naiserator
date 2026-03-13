@@ -1,6 +1,10 @@
 package generators
 
 import (
+	"fmt"
+	"maps"
+	"strings"
+
 	"github.com/nais/naiserator/pkg/naiserator/config"
 )
 
@@ -58,8 +62,26 @@ func (o *Options) GetFQDNPolicy() config.FQDNPolicy {
 	return o.Config.FQDNPolicy
 }
 
-func (o *Options) GetGatewayMappings() []config.GatewayMapping {
-	return o.Config.GatewayMappings
+func (o *Options) GetIngressClasses(domain string) ([]string, error) {
+	classes, ok := o.Config.GatewayMappings[domain]
+	if !ok {
+		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
+			domain,
+			o.GetClusterName(),
+			strings.Join(o.GetDomains(), ", "),
+		)
+	}
+
+	return classes, nil
+}
+
+func (o *Options) GetDomains() []string {
+	domains := []string{}
+	for key := range maps.Keys(o.Config.GatewayMappings) {
+		domains = append(domains, key)
+	}
+
+	return domains
 }
 
 func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {

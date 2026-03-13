@@ -8,7 +8,6 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
-	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -29,7 +28,8 @@ type Source interface {
 }
 
 type Config interface {
-	GetGatewayMappings() []config.GatewayMapping
+	GetIngressClasses(string) ([]string, error)
+	GetDomains() []string
 	GetDocUrl() string
 	GetClusterName() string
 }
@@ -102,8 +102,15 @@ func copyNginxAnnotations(dst, src map[string]string) {
 	}
 }
 
-func createIngressBase(source Source) *networkingv1.Ingress {
+func createIngressBase(source Source, ingressClass string) (*networkingv1.Ingress, error) {
+	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
+	shortName, err := namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
+	if err != nil {
+		return nil, err
+	}
+
 	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = shortName
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = source.GetLiveness().Path
 
@@ -116,14 +123,15 @@ func createIngressBase(source Source) *networkingv1.Ingress {
 		Spec: networkingv1.IngressSpec{
 			Rules: []networkingv1.IngressRule{},
 		},
-	}
+	}, nil
+}
+
+func createIngressBaseHAProxy(source Source, ingressClass string) (*networkingv1.Ingress, error) {
+	return createIngressBase(source, ingressClass)
 }
 
 func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.Ingress, error) {
-	var err error
-	ingress := createIngressBase(source)
-	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
-	ingress.Name, err = namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
+	ingress, err := createIngressBase(source, ingressClass)
 	if err != nil {
 		return nil, err
 	}
@@ -150,15 +158,6 @@ func backendProtocol(portName string) string {
 	}
 }
 
-func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
-	domains := make([]string, 0, len(gatewayMappings))
-
-	for _, v := range gatewayMappings {
-		domains = append(domains, v.DomainSuffix)
-	}
-	return domains
-}
-
 func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
 	rules, err := ingressRules(source)
 	if err != nil {
@@ -172,7 +171,7 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 
 	redirectIngresses := make(map[string]*networkingv1.Ingress)
 	if hasRedirects(source) {
-		err = CreateRedirectIngresses(source, cfg, ingresses, redirectIngresses)
+		err := CreateRedirectIngresses(source, cfg, ingresses, redirectIngresses)
 		if err != nil {
 			return nil, err
 		}
@@ -190,22 +189,12 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string) (*networkingv1.Ingress, error) {
-	// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
-	// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
-	if ingressClass == nil {
-		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
-			rule.Host,
-			cfg.GetClusterName(),
-			strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
-		)
+func createIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass string) (*networkingv1.Ingress, error) {
+	if strings.HasSuffix(ingressClass, "haproxy") { // TODO: Er dette riktig suffix?
+		return createIngressBaseHAProxy(source, ingressClass)
+	} else {
+		return createIngressBaseNginx(source, ingressClass)
 	}
-
-	ingress, err := createIngressBaseNginx(source, *ingressClass)
-	if err != nil {
-		return nil, err
-	}
-	return ingress, nil
 }
 
 func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (map[string]*networkingv1.Ingress, error) {
@@ -217,26 +206,27 @@ func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (
 	ingresses := make(map[string]*networkingv1.Ingress)
 
 	for _, rule := range rules {
-		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-		if ingressClass == nil {
-			return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
-				rule.Host,
-				cfg.GetClusterName(),
-				strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
-			)
+		ingressClasses, err := cfg.GetIngressClasses(rule.Host)
+		if err != nil {
+			return nil, err
 		}
-		ingress := ingresses[*ingressClass]
-		if ingress == nil {
-			ing, err := getIngress(source, cfg, rule, ingressClass)
-			ingress = ing
-			if err != nil {
-				return nil, err
-			}
-			ingresses[*ingressClass] = ingress
-		}
-		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 
+		for _, ingressClass := range ingressClasses {
+			ingress := ingresses[ingressClass]
+			if ingress == nil {
+				newIngress, err := createIngress(source, cfg, rule, ingressClass)
+				if err != nil {
+					return nil, err
+				}
+
+				ingress = newIngress
+				ingresses[ingressClass] = ingress
+			}
+
+			ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
+		}
 	}
+
 	return ingresses, nil
 }
 

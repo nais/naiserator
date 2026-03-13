@@ -5,8 +5,8 @@ config:
     azurerator: true
     wonderwall: true
   gateway-mappings:
-    - domainSuffix: .nav.no
-      ingressClass: very-nginx
+    .nav.no:
+      - very-nginx
   cluster-name: mycluster
   wonderwall:
     image: nais/wonderwall

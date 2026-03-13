@@ -5,8 +5,8 @@ config:
     azurerator: true
     wonderwall: true
   gateway-mappings:
-    - domainSuffix: .nav.no
-      ingressClass: nav-no-gateway
+    .nav.no:
+      - nav-no-gateway
   wonderwall:
     image: nais/wonderwall
 input:

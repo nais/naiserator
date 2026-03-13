@@ -6,10 +6,10 @@ config:
   google-project-id: google-project-id
   cluster-name: mycluster
   gateway-mappings:
-    - domainSuffix: .nais.io
-      ingressClass: nais-ingress
-    - domainSuffix: .domain
-      ingressClass: nais-ingress-external
+    .nais.io:
+      - nais-ingress
+    .domain:
+      - nais-ingress-external
   nais-namespace: nais-system
   fqdn-policy:
     enabled: true

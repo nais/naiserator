@@ -3,10 +3,10 @@ testconfig:
 config:
   cluster-name: mycluster
   gateway-mappings:
-    - domainSuffix: .test.no
-      ingressClass: very-nginx
-    - domainSuffix: .test.nav.no
-      ingressClass: weary-nginx
+    .test.no:
+      - very-nginx
+    .test.nav.no:
+      - weary-nginx
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

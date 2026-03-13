@@ -8,9 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	"github.com/nais/naiserator/pkg/util"
 )
 
 type Source interface {
@@ -25,7 +23,8 @@ type Config interface {
 	GetAccessPolicyNotAllowedCIDRs() []string
 	GetClusterName() string
 	GetAivenRange() string
-	GetGatewayMappings() []config.GatewayMapping
+	GetIngressClasses(string) ([]string, error)
+	GetDomains() []string
 	GetGoogleProjectID() string
 	GetNaisNamespace() string
 	IsNetworkPolicyEnabled() bool
@@ -183,24 +182,28 @@ func ingressRulesFromIngress(ingress []nais_io_v1.Ingress, cfg Config) []network
 			if err != nil {
 				continue
 			}
-			ingressClass := util.ResolveIngressClass(ur.Host, cfg.GetGatewayMappings())
-			if ingressClass == nil {
+
+			ingressClasses, err := cfg.GetIngressClasses(ur.Host)
+			if err != nil {
 				continue
 			}
 
-			ls := labelSelector("nais.io/ingressClass", *ingressClass)
-			ns := cfg.GetNaisNamespace()
+			for _, ingressClass := range ingressClasses {
+				ingressClassSelector := labelSelector("nais.io/ingressClass", ingressClass)
+				ns := cfg.GetNaisNamespace()
 
-			rules = append(rules, networkingv1.NetworkPolicyIngressRule{
-				From: []networkingv1.NetworkPolicyPeer{
-					{
-						NamespaceSelector: labelSelector("kubernetes.io/metadata.name", ns),
-						PodSelector:       ls,
+				rules = append(rules, networkingv1.NetworkPolicyIngressRule{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: labelSelector("kubernetes.io/metadata.name", ns),
+							PodSelector:       ingressClassSelector,
+						},
 					},
-				},
-			})
+				})
+			}
 		}
 	}
+
 	return rules
 }
 

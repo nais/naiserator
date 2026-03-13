@@ -10,8 +10,8 @@ config:
     wonderwall: true
   cluster-name: mycluster
   gateway-mappings:
-    - domainSuffix: .nav.no
-      ingressClass: very-nginx
+    .nav.no:
+      - very-nginx
   texas:
     image: nais/texas
   wonderwall:
