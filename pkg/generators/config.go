@@ -63,7 +63,17 @@ func (o *Options) GetFQDNPolicy() config.FQDNPolicy {
 }
 
 func (o *Options) GetIngressClasses(domain string) ([]string, error) {
-	classes, ok := o.Config.GatewayMappings[domain]
+	longestDomainSuffix := ""
+
+	for domainSuffix := range o.Config.GatewayMappings {
+		if strings.HasSuffix(domain, domainSuffix) {
+			if len(domainSuffix) > len(longestDomainSuffix) {
+				longestDomainSuffix = domainSuffix
+			}
+		}
+	}
+
+	classes, ok := o.Config.GatewayMappings[longestDomainSuffix]
 	if !ok {
 		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
 			domain,
