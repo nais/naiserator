@@ -141,7 +141,20 @@ values:
   naiserator.gateway-mappings:
     displayName: Gateway mappings
     computed:
-      template: '"{{ .Env.ingress_gateway_mappings }}"'
+      template: |
+        {{ .Env.ingress_gateway_mappings }}
+        {{- range .Configs.mapping.internal_hosts }}
+        {{ . }}:
+          - nais-ingress
+        {{- end }}
+        {{- range .Configs.mapping.external_hosts }}
+        {{ . }}:
+          - nais-ingress-external
+        {{- end }}
+        {{- range .Configs.mapping.fa_hosts }}
+        {{ . }}:
+          - nais-ingress-fa
+        {{- end }}
   naiserator.google-project-id:
     displayName: Google project ID
     computed:
