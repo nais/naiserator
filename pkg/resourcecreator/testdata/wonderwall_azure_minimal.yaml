@@ -5,8 +5,8 @@ config:
     azurerator: true
     wonderwall: true
   domain-ingressclass-mapping:
-    .nav.no:
-      - very-nginx
+    - domainSuffix: .nav.no
+      ingressClass: very-nginx
   cluster-name: mycluster
   observability:
     otel:

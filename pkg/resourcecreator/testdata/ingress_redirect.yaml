@@ -4,10 +4,10 @@ config:
   google-project-id: google-project-id
   cluster-name: mycluster
   domain-ingressclass-mapping:
-    .nais.io:
-      - nais-ingress
-    .domain:
-      - nais-ingress-external
+    - domainSuffix: .nais.io
+      ingressClass: nais-ingress
+    - domainSuffix: .domain
+      ingressClass: nais-ingress-external
   nais-namespace: nais-system
 existing:
   - kind: Ingress

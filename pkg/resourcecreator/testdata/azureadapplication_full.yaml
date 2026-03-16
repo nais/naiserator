@@ -5,10 +5,10 @@ config:
     azurerator: true
   cluster-name: mycluster
   domain-ingressclass-mapping:
-    .adeo.no:
-      - adeo-gateway
-    .domain:
-      - domain-gateway
+    - domainSuffix: .adeo.no
+      ingressClass: adeo-gateway
+    - domainSuffix: .domain
+      ingressClass: domain-gateway
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

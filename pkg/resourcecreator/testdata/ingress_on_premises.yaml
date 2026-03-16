@@ -2,8 +2,8 @@ testconfig:
   description: ingress resource is created on-premises
 config:
   domain-ingressclass-mapping:
-    .bar:
-      - very-nginx
+    - domainSuffix: .bar
+      ingressClass: very-nginx
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

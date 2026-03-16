@@ -6,8 +6,8 @@ config:
     idporten: true
     wonderwall: true
   domain-ingressclass-mapping:
-    .nav.no:
-      - very-nginx
+    - domainSuffix: .nav.no
+      ingressClass: very-nginx
   wonderwall:
     image: nais/wonderwall
 input:
