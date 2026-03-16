@@ -129,7 +129,8 @@ values:
   naiserator.domain-ingressclass-mapping:
     displayName: Domain to ingress class mapping
     computed:
-      template: '"{{ .Env.ingress_gateway_mappings }}"'
+      template: |
+        {{ .Env.domain_ingressclass_mapping }}
   naiserator.google-project-id:
     displayName: Google project ID
     computed:
