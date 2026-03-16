@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/nais/naiserator/pkg/generators"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 )
 
 func TestOptions_GetIngressClasses(t *testing.T) {
@@ -26,12 +27,18 @@ func TestOptions_GetIngressClasses(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// TODO: construct the receiver type.
 			var o generators.Options
-			o.Config.DomainIngressClassMap = map[string][]string{
-				"nais.io":          {"nais"},
-				"external.nais.io": {"nais-external"},
+			o.Config.DomainIngressClassMapping = []config.GatewayMapping{
+				{
+					DomainSuffix: "nais.io",
+					IngressClass: "nais",
+				},
+				{
+					DomainSuffix: "external.nais.io",
+					IngressClass: "nais-external",
+				},
 			}
+
 			got, gotErr := o.GetIngressClasses(tt.domain)
 			if gotErr != nil {
 				t.Errorf("GetIngressClasses() failed: %v", gotErr)

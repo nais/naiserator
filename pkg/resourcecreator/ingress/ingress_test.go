@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nais/naiserator/pkg/generators"
+	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/fixtures"
@@ -38,9 +39,15 @@ func TestIngress(t *testing.T) {
 			assert.NoError(t, err)
 
 			opts := &generators.Options{}
-			opts.Config.DomainIngressClassMap = map[string][]string{
-				".bar": {"very-nginx"},
-				".baz": {"something-else"},
+			opts.Config.DomainIngressClassMapping = []config.GatewayMapping{
+				{
+					DomainSuffix: ".bar",
+					IngressClass: "very-nginx",
+				},
+				{
+					DomainSuffix: ".baz",
+					IngressClass: "something-else",
+				},
 			}
 			err = ingress.Create(app, ast, opts)
 

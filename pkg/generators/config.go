@@ -2,7 +2,6 @@ package generators
 
 import (
 	"fmt"
-	"maps"
 	"slices"
 	"strings"
 
@@ -66,16 +65,22 @@ func (o *Options) GetFQDNPolicy() config.FQDNPolicy {
 func (o *Options) GetIngressClasses(domain string) ([]string, error) {
 	longestDomainSuffix := ""
 
-	for domainSuffix := range o.Config.DomainIngressClassMap {
-		if strings.HasSuffix(domain, domainSuffix) {
-			if len(domainSuffix) > len(longestDomainSuffix) {
-				longestDomainSuffix = domainSuffix
+	for _, value := range o.Config.DomainIngressClassMapping {
+		if strings.HasSuffix(domain, value.DomainSuffix) {
+			if len(value.DomainSuffix) > len(longestDomainSuffix) {
+				longestDomainSuffix = value.DomainSuffix
 			}
 		}
 	}
 
-	classes, ok := o.Config.DomainIngressClassMap[longestDomainSuffix]
-	if !ok {
+	classes := []string{}
+	for _, value := range o.Config.DomainIngressClassMapping {
+		if value.DomainSuffix == longestDomainSuffix {
+			classes = append(classes, value.IngressClass)
+		}
+	}
+
+	if len(classes) == 0 {
 		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
 			domain,
 			o.GetClusterName(),
@@ -87,9 +92,9 @@ func (o *Options) GetIngressClasses(domain string) ([]string, error) {
 }
 
 func (o *Options) GetDomains() []string {
-	domains := make([]string, 0, len(o.Config.DomainIngressClassMap))
-	for key := range maps.Keys(o.Config.DomainIngressClassMap) {
-		domains = append(domains, key)
+	domains := make([]string, 0, len(o.Config.DomainIngressClassMapping))
+	for _, value := range o.Config.DomainIngressClassMapping {
+		domains = append(domains, value.DomainSuffix)
 	}
 	slices.Sort(domains)
 

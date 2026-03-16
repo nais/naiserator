@@ -84,6 +84,11 @@ type Logging struct {
 	Destinations []string `json:"destinations"`
 }
 
+type GatewayMapping struct {
+	DomainSuffix string `json:"domainSuffix"`
+	IngressClass string `json:"ingressClass"`
+}
+
 type Proxy struct {
 	Address string   `json:"address"`
 	Exclude []string `json:"exclude"`
@@ -128,36 +133,36 @@ type Frontend struct {
 }
 
 type Config struct {
-	AivenGeneration                   int                 `json:"aiven-generation"`
-	AivenProject                      string              `json:"aiven-project"`
-	AivenRange                        string              `json:"aiven-range"`
-	ApiServerIp                       string              `json:"api-server-ip"`
-	Bind                              string              `json:"bind"`
-	ClusterName                       string              `json:"cluster-name"`
-	DocUrl                            string              `json:"doc-url"`
-	DryRun                            bool                `json:"dry-run"`
-	FQDNPolicy                        FQDNPolicy          `json:"fqdn-policy"`
-	Features                          Features            `json:"features"`
-	Frontend                          Frontend            `json:"frontend"`
-	DomainIngressClassMap             map[string][]string `json:"domain-ingressclass-mapping"`
-	GoogleCloudSQLProxyContainerImage string              `json:"google-cloud-sql-proxy-container-image"`
-	GoogleProjectId                   string              `json:"google-project-id"`
-	HealthProbeBindAddress            string              `json:"health-probe-bind-address"`
-	HostAliases                       []HostAlias         `json:"host-aliases"`
-	ImagePullSecrets                  []string            `json:"image-pull-secrets"`
-	Informer                          Informer            `json:"informer"`
-	Kubeconfig                        string              `json:"kubeconfig"`
-	LeaderElection                    LeaderElection      `json:"leader-election"`
-	Log                               Log                 `json:"log"`
-	MaxConcurrentReconciles           int                 `json:"max-concurrent-reconciles"`
-	NaisNamespace                     string              `json:"nais-namespace"`
-	Observability                     Observability       `json:"observability"`
-	Proxy                             Proxy               `json:"proxy"`
-	Ratelimit                         Ratelimit           `json:"ratelimit"`
-	Synchronizer                      Synchronizer        `json:"synchronizer"`
-	Texas                             Texas               `json:"texas"`
-	Vault                             Vault               `json:"vault"`
-	Wonderwall                        Wonderwall          `json:"wonderwall"`
+	AivenGeneration                   int              `json:"aiven-generation"`
+	AivenProject                      string           `json:"aiven-project"`
+	AivenRange                        string           `json:"aiven-range"`
+	ApiServerIp                       string           `json:"api-server-ip"`
+	Bind                              string           `json:"bind"`
+	ClusterName                       string           `json:"cluster-name"`
+	DocUrl                            string           `json:"doc-url"`
+	DryRun                            bool             `json:"dry-run"`
+	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
+	Features                          Features         `json:"features"`
+	Frontend                          Frontend         `json:"frontend"`
+	DomainIngressClassMapping         []GatewayMapping `json:"domain-ingressclass-mapping"`
+	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
+	GoogleProjectId                   string           `json:"google-project-id"`
+	HealthProbeBindAddress            string           `json:"health-probe-bind-address"`
+	HostAliases                       []HostAlias      `json:"host-aliases"`
+	ImagePullSecrets                  []string         `json:"image-pull-secrets"`
+	Informer                          Informer         `json:"informer"`
+	Kubeconfig                        string           `json:"kubeconfig"`
+	LeaderElection                    LeaderElection   `json:"leader-election"`
+	Log                               Log              `json:"log"`
+	MaxConcurrentReconciles           int              `json:"max-concurrent-reconciles"`
+	NaisNamespace                     string           `json:"nais-namespace"`
+	Observability                     Observability    `json:"observability"`
+	Proxy                             Proxy            `json:"proxy"`
+	Ratelimit                         Ratelimit        `json:"ratelimit"`
+	Synchronizer                      Synchronizer     `json:"synchronizer"`
+	Texas                             Texas            `json:"texas"`
+	Vault                             Vault            `json:"vault"`
+	Wonderwall                        Wonderwall       `json:"wonderwall"`
 }
 
 const (
