@@ -34,8 +34,10 @@ spec:
         - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: webhook-cert
           readOnly: true
+      {{- if ne .Values.imagePullSecret "" }}
       imagePullSecrets:
       - name: {{ .Values.imagePullSecret }}
+      {{ end }}
       serviceAccount: {{ .Release.Name }}
       serviceAccountName: {{ .Release.Name }}
       securityContext:
