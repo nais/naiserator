@@ -163,14 +163,13 @@ func CreateRedirectIngresses(source Source, cfg Config, ingresses map[string]*ne
 						return err
 					}
 
-					// ingressClass := util.ResolveIngressClass(parsedFromRedirectUrl.Host, cfg.GetGatewayMappings())
 					ingressClasses, err := cfg.GetIngressClasses(rule.Host)
 					if err != nil {
 						return err
 					}
 
 					for _, ingressClass := range ingressClasses {
-						ingress, err := createIngress(source, cfg, rule, ingressClass)
+						ingress, err := createIngress(source, ingressClass)
 						if err != nil {
 							return err
 						}

@@ -121,7 +121,8 @@ func createIngressBase(source Source, ingressClass string) (*networkingv1.Ingres
 		},
 		ObjectMeta: objectMeta,
 		Spec: networkingv1.IngressSpec{
-			Rules: []networkingv1.IngressRule{},
+			IngressClassName: &ingressClass,
+			Rules:            []networkingv1.IngressRule{},
 		},
 	}, nil
 }
@@ -137,8 +138,6 @@ func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.I
 	}
 
 	copyNginxAnnotations(ingress.Annotations, source.GetAnnotations())
-	ingress.Spec.IngressClassName = &ingressClass
-
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
 
@@ -189,8 +188,8 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func createIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass string) (*networkingv1.Ingress, error) {
-	if strings.HasSuffix(ingressClass, "haproxy") { // TODO: Er dette riktig suffix?
+func createIngress(source Source, ingressClass string) (*networkingv1.Ingress, error) {
+	if strings.HasSuffix(ingressClass, "haproxy") {
 		return createIngressBaseHAProxy(source, ingressClass)
 	} else {
 		return createIngressBaseNginx(source, ingressClass)
@@ -214,7 +213,7 @@ func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (
 		for _, ingressClass := range ingressClasses {
 			ingress := ingresses[ingressClass]
 			if ingress == nil {
-				newIngress, err := createIngress(source, cfg, rule, ingressClass)
+				newIngress, err := createIngress(source, ingressClass)
 				if err != nil {
 					return nil, err
 				}
