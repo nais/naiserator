@@ -98,22 +98,27 @@ func RedirectAllowed(ctx context.Context, source Source, kube client.Client) err
 	return nil
 }
 
-func createIngressRule(source Source, redirectUrl string) (networkingv1.IngressRule, error) {
+func createRedirectIngressRule(source Source, redirectUrl string, isHAProxy bool) (networkingv1.IngressRule, error) {
 	u, err := url.Parse(strings.TrimRight(redirectUrl, "/"))
 	if err != nil {
 		return networkingv1.IngressRule{}, nil
 	}
 
-	implementationSpecific := networkingv1.PathTypeImplementationSpecific
-	// -V This is an inlined ingressRule call, for readability or something
+	path := "/(.*)?"
+	pathType := networkingv1.PathTypeImplementationSpecific
+	if isHAProxy {
+		path = "/"
+		pathType = networkingv1.PathTypePrefix
+	}
+
 	return networkingv1.IngressRule{
 		Host: u.Host,
 		IngressRuleValue: networkingv1.IngressRuleValue{
 			HTTP: &networkingv1.HTTPIngressRuleValue{
 				Paths: []networkingv1.HTTPIngressPath{
 					{
-						Path:     "/(.*)?",
-						PathType: &implementationSpecific,
+						Path:     path,
+						PathType: &pathType,
 						Backend: networkingv1.IngressBackend{
 							Service: &networkingv1.IngressServiceBackend{
 								Name: source.GetName(),
@@ -129,59 +134,67 @@ func createIngressRule(source Source, redirectUrl string) (networkingv1.IngressR
 	}, nil
 }
 
-func addRedirectConfiguration(source Source, ingressClass string, ingress *networkingv1.Ingress, redirect *url.URL) (*networkingv1.Ingress, error) {
+func addRedirectConfiguration(source Source, ingressClass string, ingress *networkingv1.Ingress, redirect *url.URL, isHAProxy bool) error {
 	var err error
-	ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect.String() + "$1"
 	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
 	ingress.Name, err = namegen.ShortName(baseName+"-redirect", validation.DNS1035LabelMaxLength)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ingress, nil
+	if isHAProxy {
+		ingress.Annotations["haproxy.org/request-redirect"] = redirect.Host
+		ingress.Annotations["haproxy.org/request-redirect-code"] = "302"
+	} else {
+		ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = redirect.String() + "$1"
+	}
+
+	return nil
 }
 
-func CreateRedirectIngresses(source Source, cfg Config, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
+func createRedirectIngresses(source Source, cfg Config, ingresses map[string]*networkingv1.Ingress, redirectIngresses map[string]*networkingv1.Ingress) error {
 	redirects := source.GetRedirects()
 	for _, ing := range ingresses {
 		for _, redirect := range redirects {
-			for _, rule := range ing.Spec.Rules {
+			parsedToRedirectUrl, err := parseIngress(string(redirect.To))
+			if err != nil {
+				return err
+			}
+
+			for _, ingressRule := range ing.Spec.Rules {
+				if ingressRule.Host != parsedToRedirectUrl.Host {
+					continue
+				}
+
 				parsedFromRedirectUrl, err := parseIngress(string(redirect.From))
 				if err != nil {
 					return err
 				}
 
-				parsedToRedirectUrl, err := parseIngress(string(redirect.To))
+				ingressClasses, err := cfg.GetIngressClasses(parsedFromRedirectUrl.Host)
 				if err != nil {
 					return err
 				}
 
-				if rule.Host == parsedToRedirectUrl.Host {
-					// found the ingress that matches the redirect
-					rule, err := createIngressRule(source, parsedFromRedirectUrl.String())
+				for _, ingressClass := range ingressClasses {
+					isHAProxy := strings.HasSuffix(ingressClass, "haproxy")
+
+					rule, err := createRedirectIngressRule(source, parsedFromRedirectUrl.String(), isHAProxy)
 					if err != nil {
 						return err
 					}
 
-					ingressClasses, err := cfg.GetIngressClasses(rule.Host)
+					ingress, err := createIngress(source, ingressClass, isHAProxy)
 					if err != nil {
 						return err
 					}
 
-					for _, ingressClass := range ingressClasses {
-						ingress, err := createIngress(source, ingressClass)
-						if err != nil {
-							return err
-						}
-
-						ingress, err = addRedirectConfiguration(source, ingressClass, ingress, parsedToRedirectUrl)
-						if err != nil {
-							return err
-						}
-
-						redirectIngresses[ingressClass] = ingress
-						ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
+					if err := addRedirectConfiguration(source, ingressClass, ingress, parsedToRedirectUrl, isHAProxy); err != nil {
+						return err
 					}
+
+					redirectIngresses[ingressClass] = ingress
+					ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 				}
 			}
 		}

@@ -4,6 +4,8 @@ config:
   domain-ingressclass-mapping:
     - domainSuffix: .bar
       ingressClass: very-nginx
+    - domainSuffix: .bar
+      ingressClass: very-haproxy
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -46,6 +48,27 @@ tests:
                           port:
                             number: 80
                       path: /
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-very-haproxy-efe42262
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "ingress for foo.bar created with GRPC backend protocol"
+        resource:
+          spec:
+            ingressClassName: "very-haproxy"
+            rules:
+              - host: foo.bar
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
+                      path: /
+                      pathType: Prefix
   - apiVersion: v1
     kind: Service
     name: myapplication

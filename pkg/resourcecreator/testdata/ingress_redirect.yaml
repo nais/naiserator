@@ -6,6 +6,8 @@ config:
   domain-ingressclass-mapping:
     - domainSuffix: .nais.io
       ingressClass: nais-ingress
+    - domainSuffix: .nais.io
+      ingressClass: haproxy
     - domainSuffix: .domain
       ingressClass: nais-ingress-external
   nais-namespace: nais-system
@@ -98,3 +100,29 @@ tests:
                             number: 80
                       path: /(.*)?
                       pathType: ImplementationSpecific
+
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplicationredirect-haproxy-redirect-0a353c97
+    match:
+      - type: subset
+        name: "redirect ingress for myapp"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/request-redirect: myapplication.dev.nais.io
+              haproxy.org/request-redirect-code: "302"
+          spec:
+            ingressClassName: "haproxy"
+            rules:
+              - host: "myapplication.from.redirect.old.dev.nais.io"
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplicationredirect
+                          port:
+                            number: 80
+                      path: /
+                      pathType: Prefix

@@ -34,8 +34,12 @@ type Config interface {
 	GetClusterName() string
 }
 
-func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
+func createIngressRule(appName string, u *url.URL, isHAProxy bool) networkingv1.IngressRule {
 	pathType := networkingv1.PathTypeImplementationSpecific
+	if isHAProxy {
+		pathType = networkingv1.PathTypePrefix
+	}
+
 	return networkingv1.IngressRule{
 		Host: u.Host,
 		IngressRuleValue: networkingv1.IngressRuleValue{
@@ -57,22 +61,6 @@ func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 			},
 		},
 	}
-}
-
-func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
-	var rules []networkingv1.IngressRule
-	ingresses := source.GetIngress()
-
-	for _, ingress := range ingresses {
-		parsedUrl, err := parseIngress(string(ingress))
-		if err != nil {
-			return nil, err
-		}
-
-		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
-	}
-
-	return rules, nil
 }
 
 func parseIngress(ingress string) (*url.URL, error) {
@@ -157,20 +145,15 @@ func backendProtocol(portName string) string {
 	}
 }
 
-func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
-	rules, err := ingressRules(source)
-	if err != nil {
-		return nil, err
-	}
-
-	ingresses, err := getIngresses(source, cfg, rules)
+func createIngressList(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
+	ingresses, err := createIngresses(source, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	redirectIngresses := make(map[string]*networkingv1.Ingress)
 	if hasRedirects(source) {
-		err := CreateRedirectIngresses(source, cfg, ingresses, redirectIngresses)
+		err := createRedirectIngresses(source, cfg, ingresses, redirectIngresses)
 		if err != nil {
 			return nil, err
 		}
@@ -188,32 +171,34 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func createIngress(source Source, ingressClass string) (*networkingv1.Ingress, error) {
-	if strings.HasSuffix(ingressClass, "haproxy") {
+func createIngress(source Source, ingressClass string, isHAProxy bool) (*networkingv1.Ingress, error) {
+	if isHAProxy {
 		return createIngressBaseHAProxy(source, ingressClass)
 	} else {
 		return createIngressBaseNginx(source, ingressClass)
 	}
 }
 
-func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (map[string]*networkingv1.Ingress, error) {
-	// Ingress objects must have at least one path rule to be valid.
-	if len(rules) == 0 {
-		return nil, nil
-	}
-
+func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingress, error) {
 	ingresses := make(map[string]*networkingv1.Ingress)
 
-	for _, rule := range rules {
-		ingressClasses, err := cfg.GetIngressClasses(rule.Host)
+	for _, ingress := range source.GetIngress() {
+		parsedUrl, err := parseIngress(string(ingress))
+		if err != nil {
+			return nil, err
+		}
+
+		ingressClasses, err := cfg.GetIngressClasses(parsedUrl.Host)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, ingressClass := range ingressClasses {
+			isHAProxy := strings.HasSuffix(ingressClass, "haproxy")
+
 			ingress := ingresses[ingressClass]
 			if ingress == nil {
-				newIngress, err := createIngress(source, ingressClass)
+				newIngress, err := createIngress(source, ingressClass, isHAProxy)
 				if err != nil {
 					return nil, err
 				}
@@ -222,6 +207,7 @@ func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (
 				ingresses[ingressClass] = ingress
 			}
 
+			rule := createIngressRule(source.GetName(), parsedUrl, isHAProxy)
 			ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 		}
 	}
@@ -230,7 +216,11 @@ func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
-	ingresses, err := nginxIngresses(source, cfg)
+	if len(source.GetIngress()) == 0 {
+		return nil
+	}
+
+	ingresses, err := createIngressList(source, cfg)
 	if err != nil {
 		return err
 	}
