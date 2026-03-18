@@ -1,0 +1,52 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: redirect to a fixed URL, discarding path entirely.
+    Real-world example: esyfo-info-frontend-redirect redirects
+    /syk/info/snart-slutt-pa-sykepengene(/|$)(.*)?
+    to https://www.nav.no/syk/meroppfolging/snart-slutt-pa-sykepengene
+    The ingress path has capture groups but the rewrite-target ignores them entirely.
+    This is a "discard path and redirect to fixed URL" pattern.
+    Since the redirect target has a path component (not just host), it must use
+    backend-config-snippet (request-redirect only supports host and preserves URI).
+config:
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: meroppfolging-frontend
+    namespace: team-esyfo
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "https://www.nav.no/syk/meroppfolging/snart-slutt-pa-sykepengene"
+  spec:
+    image: navikt/meroppfolging-frontend:1.0.0
+    ingresses:
+      - https://www.ekstern.dev.nav.no/syk/info/snart-slutt-pa-sykepengene
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: meroppfolging-frontend-haproxy-4faea559
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "nginx -> haproxy migrate: redirect to fixed URL with path change uses backend-config-snippet"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: "http-request redirect location https://www.nav.no/syk/meroppfolging/snart-slutt-pa-sykepengene code 302"
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: www.ekstern.dev.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: meroppfolging-frontend
+                          port:
+                            number: 80
+                      path: /syk/info/snart-slutt-pa-sykepengene
+                      pathType: Prefix

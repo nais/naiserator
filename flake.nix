@@ -59,6 +59,7 @@
               gotools
               go-tools
               gofumpt
+              (python3.withPackages(pkgs: [pkgs.pyyaml pkgs.ipython]))
             ];
             shellHook = ''
               export KUBEBUILDER_ASSETS="${envtest-bins}/bin"

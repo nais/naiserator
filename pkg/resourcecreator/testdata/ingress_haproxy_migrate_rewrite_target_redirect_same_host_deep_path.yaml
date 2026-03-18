@@ -1,0 +1,53 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: redirect to same host but different deep path, using $2
+    (skipping $1 which is just the delimiter group).
+    Real-world example: prod-redirect-sykefravarsstatistikk-to-forebygge-fravar redirects
+    /sykefravarsstatistikk(/|$)(.*) to
+    https://arbeidsgiver.nav.no/forebygge-fravar/sykefravarsstatistikk/$2
+    Same host, path rewritten from /sykefravarsstatistikk/... to
+    /forebygge-fravar/sykefravarsstatistikk/...
+    $1 = "/" or end-of-string (discarded), $2 = rest of path (preserved).
+    Must use backend-config-snippet because redirect changes the path.
+config:
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: sykefravarsstatistikk
+    namespace: pia
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "https://arbeidsgiver.nav.no/forebygge-fravar/sykefravarsstatistikk/$2"
+  spec:
+    image: navikt/sykefravarsstatistikk:1.0.0
+    ingresses:
+      - https://arbeidsgiver.nav.no/sykefravarsstatistikk
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: sykefravarsstatistikk-haproxy-492c779d
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "nginx -> haproxy migrate: same-host redirect with deep path change and $2 uses backend-config-snippet"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: 'http-request redirect location https://arbeidsgiver.nav.no/forebygge-fravar/sykefravarsstatistikk/\2 code 302'
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: arbeidsgiver.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: sykefravarsstatistikk
+                          port:
+                            number: 80
+                      path: /sykefravarsstatistikk
+                      pathType: Prefix

@@ -3,6 +3,7 @@ package ingress
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -70,7 +71,7 @@ func parseIngress(ingress string) (*url.URL, error) {
 	}
 
 	if len(parsedUrl.Path) > 1 {
-		parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
+		parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/")
 	} else {
 		parsedUrl.Path = "/"
 	}
@@ -100,7 +101,7 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 		"proxy-read-timeout":    "timeout-server",
 		"proxy-send-timeout":    "timeout-client",
 		"proxy-connect-timeout": "timeout-connect",
-		"rewrite-target":        "path-rewrite", // TODO: Her må det kodes litt
+		// "rewrite-target":        "", // handled by `migrateRewriteTarget()` below
 
 		// "permanent-redirect":    "",             // TODO: no direct equivalent, dette fikser name: sfs-legacy-redirect-ingress, namespace: teamsykmelding
 		// "whitelist-source-range":     "allow-list", // TODO: brukt av atil
@@ -135,6 +136,61 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 			haProxy["haproxy.org/"+haProxyKey] = value
 		}
 	}
+
+	migrateRewriteTarget(haProxy, nginxAnnotations)
+}
+
+var (
+	nginxCaptureGroupRegex = regexp.MustCompile(`\$(\d+)`)
+	nginxArgVariableRegex  = regexp.MustCompile(`\$arg_(\w+)`)
+)
+
+// migrateRewriteTarget translates an nginx rewrite-target annotation to equivalent HAProxy annotation(s)
+func migrateRewriteTarget(annotations, nginxAnnotations map[string]string) {
+	rewriteTarget := nginxAnnotations["nginx.ingress.kubernetes.io/rewrite-target"]
+	if rewriteTarget == "" {
+		return
+	}
+
+	isAbsolute := strings.HasPrefix(rewriteTarget, "http://") || strings.HasPrefix(rewriteTarget, "https://")
+
+	if !isAbsolute {
+		annotations["haproxy.org/path-rewrite"] = nginxToHAProxyCaptureGroups(rewriteTarget)
+		return
+	}
+
+	// Absolute URL → nginx sends 302.
+	// HAProxy's request-redirect only supports host substitution and preserves original URI,
+	// so path-changing redirects must use backend-config-snippet.
+	u, err := url.Parse(rewriteTarget)
+	if err != nil {
+		migrateRewriteTargetAsSnippet(annotations, rewriteTarget)
+		return
+	}
+
+	hostOnly := u.Path == "" || u.Path == "/"
+	hasCaptures := nginxCaptureGroupRegex.MatchString(rewriteTarget)
+	hasArgs := nginxArgVariableRegex.MatchString(rewriteTarget)
+
+	if hostOnly && !hasCaptures && !hasArgs {
+		annotations["haproxy.org/request-redirect"] = u.Host
+		annotations["haproxy.org/request-redirect-code"] = "302"
+		return
+	}
+
+	migrateRewriteTargetAsSnippet(annotations, rewriteTarget)
+}
+
+// nginxToHAProxyCaptureGroups converts $1, $2 to \1, \2
+func nginxToHAProxyCaptureGroups(s string) string {
+	return nginxCaptureGroupRegex.ReplaceAllString(s, `\$1`)
+}
+
+// migrateRewriteTargetAsSnippet uses backend-config-snippet for complex redirects
+func migrateRewriteTargetAsSnippet(annotations map[string]string, rewriteTarget string) {
+	haproxyTarget := nginxToHAProxyCaptureGroups(rewriteTarget)
+	haproxyTarget = nginxArgVariableRegex.ReplaceAllString(haproxyTarget, `%[url_param($1)]`)
+	annotations["haproxy.org/backend-config-snippet"] = fmt.Sprintf("http-request redirect location %s code 302", haproxyTarget)
 }
 
 func copyNginxAnnotations(dst, src map[string]string) {
@@ -270,7 +326,14 @@ func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingres
 				ingresses[ingressClass] = ingress
 			}
 
-			rule := createIngressRule(source.GetName(), parsedUrl, isHAProxy)
+			ruleUrl := parsedUrl
+			if !isHAProxy && len(parsedUrl.Path) > 1 { // handle nginx - delete block on nginx sunsetting
+				nginxUrl := *parsedUrl
+				nginxUrl.Path = parsedUrl.Path + regexSuffix
+				ruleUrl = &nginxUrl
+			}
+
+			rule := createIngressRule(source.GetName(), ruleUrl, isHAProxy)
 			ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 		}
 	}

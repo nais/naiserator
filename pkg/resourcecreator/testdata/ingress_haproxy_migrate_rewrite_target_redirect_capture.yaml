@@ -1,0 +1,52 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: redirect with capture groups appended directly
+    (no slash between target path and $2).
+    Real-world example: loginservice-redirect-login redirects
+    /login(/|$)(.*) to https://login.nav.no/oauth2/login$2.
+    nginx sends a 302 redirect because the target is an absolute URL.
+    HAProxy's request-redirect cannot change the path, so this must use
+    backend-config-snippet with http-request redirect location.
+    Capture groups: $2 -> \2 (POSIX ERE syntax).
+config:
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: loginservice-redirect
+    namespace: plattformsikkerhet
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "https://login.nav.no/oauth2/login$2"
+  spec:
+    image: navikt/loginservice-redirect:1.0.0
+    ingresses:
+      - https://loginservice.nav.no/login
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: loginservice-redirect-haproxy-c6c6a882
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "nginx -> haproxy migrate: redirect+capture $2 no-slash uses backend-config-snippet"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: 'http-request redirect location https://login.nav.no/oauth2/login\2 code 302'
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: loginservice.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: loginservice-redirect
+                          port:
+                            number: 80
+                      path: /login
+                      pathType: Prefix
