@@ -1,0 +1,61 @@
+testconfig:
+  description: ingress resource is created on-premises
+config:
+  domain-ingressclass-mapping:
+    - domainSuffix: .bar
+      ingressClass: very-haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "100"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "101"
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: "102"
+      nginx.ingress.kubernetes.io/rewrite-target: "some"
+      nginx.ingress.kubernetes.io/permanent-redirect: "thing"
+  spec:
+    ingresses:
+      - https://foo.bar/baz
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-very-haproxy-efe42262
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "ingress created with correct config"
+        exclude:
+          - .status
+          - .metadata.creationTimestamp
+          - .metadata.ownerReferences
+          - .metadata.labels
+          - .metadata.name
+          - .metadata.namespace
+        resource:
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: ""
+              haproxy.org/timeout-server: "100"
+              haproxy.org/timeout-client: "101"
+              haproxy.org/timeout-connect: "102"
+              haproxy.org/path-rewrite: "some"
+              haproxy.org/: "thing"
+              prometheus.io/path: ""
+              prometheus.io/scrape: "true"
+          spec:
+            ingressClassName: very-haproxy
+            rules:
+              - host: foo.bar
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
+                      path: /baz
+                      pathType: Prefix
