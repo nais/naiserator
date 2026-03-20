@@ -95,38 +95,14 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 	nginxAnnotations := map[string]string{}
 	copyNginxAnnotations(nginxAnnotations, nginx)
 
-	// Mapping from nginx annotation short key to haproxy annotation short key.
-	// Empty string means no direct equivalent exists yet.
+	// Mapping from nginx annotation short key to HAProxy equivalent.
+	// Only timeout annotations are migrated; other nginx annotations
+	// (e.g. permanent-redirect, whitelist-source-range, proxy-body-size)
+	// have no direct HAProxy equivalent and are not propagated by naiserator.
 	haProxyAnnotations := map[string]string{
 		"proxy-read-timeout":    "timeout-server",
 		"proxy-send-timeout":    "timeout-client",
 		"proxy-connect-timeout": "timeout-connect",
-		// "rewrite-target":        "", // handled by `migrateRewriteTarget()` below
-
-		// "permanent-redirect":    "",             // TODO: no direct equivalent, dette fikser name: sfs-legacy-redirect-ingress, namespace: teamsykmelding
-		// "whitelist-source-range":     "allow-list", // TODO: brukt av atil
-
-		// "proxy-body-size":       "",             // no direct equivalent; use backend-config-snippet with http-request deny
-		// "use-regex":                  "",                       // no direct equivalent; HAProxy uses path-rewrite or path-regex
-		// "backend-protocol":           "server-ssl",             // value differs: nginx "HTTPS" → haproxy "enabled"
-		// "secure-backends":            "server-ssl",             // value differs: nginx "true" → haproxy "enabled"
-		// "proxy-ssl-verify":           "server-ssl-verify",      // value differs: nginx "on"/"off" → haproxy "enabled"/"disabled"
-		// "proxy-next-upstream-timeout": "timeout-server",        // closest equivalent; no direct 1:1 mapping
-		// "proxy-next-upstream-tries":  "",                       // TODO: use backend-config-snippet with "retries 3"
-		// "server-snippet":             "",                       // no direct equivalent; use backend-config-snippet manually
-		// "configuration-snippet":      "frontend-config-snippet",
-		// "upstream-vhost":             "set-host",
-		// "from-to-www-redirect":       "",                       // no direct equivalent
-		// "enable-global-auth":         "",                       // no direct equivalent; use auth-type + auth-secret
-		// "proxy-buffer-size":          "",                       // no direct equivalent; tune.bufsize via global config
-		// "proxy-buffers-number":       "",                       // no direct equivalent; tune.bufsize via global config
-		// "proxy-busy-buffers-size":    "",                       // no direct equivalent
-		// "large-client-header-buffers": "",                      // no direct equivalent; tune.bufsize via global config
-		// "limit-rpm":                  "",                       // TODO: use rate-limit-requests + rate-limit-period
-		// "limit-rps":                  "",                       // TODO: use rate-limit-requests + rate-limit-period
-		// "limit-burst-multiplier":     "",                       // TODO: use rate-limit-requests + rate-limit-period
-		// "limit-connections":          "",                       // TODO: stick-table based rate limiting
-		// "denylist-source-range":      "deny-list",
 	}
 
 	for key, value := range nginxAnnotations {
