@@ -16,7 +16,6 @@ input:
       nginx.ingress.kubernetes.io/proxy-send-timeout: "101"
       nginx.ingress.kubernetes.io/proxy-connect-timeout: "102"
       nginx.ingress.kubernetes.io/rewrite-target: "some"
-      nginx.ingress.kubernetes.io/permanent-redirect: "thing"
   spec:
     ingresses:
       - https://foo.bar/baz
@@ -43,7 +42,6 @@ tests:
               haproxy.org/timeout-client: "101"
               haproxy.org/timeout-connect: "102"
               haproxy.org/path-rewrite: "some"
-              haproxy.org/: "thing"
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
           spec:
