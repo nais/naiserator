@@ -101,7 +101,7 @@ func RedirectAllowed(ctx context.Context, source Source, kube client.Client) err
 func createRedirectIngressRule(source Source, redirectUrl string, isHAProxy bool) (networkingv1.IngressRule, error) {
 	u, err := url.Parse(strings.TrimRight(redirectUrl, "/"))
 	if err != nil {
-		return networkingv1.IngressRule{}, nil
+		return networkingv1.IngressRule{}, err
 	}
 
 	path := "/(.*)?"
