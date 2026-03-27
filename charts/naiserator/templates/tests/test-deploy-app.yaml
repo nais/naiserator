@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-test-deploy-app
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  serviceAccountName: {{ .Release.Name }}
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: bitnami/kubectl:latest
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+
+          APP_NAME="helm-test-app"
+          NAMESPACE="{{ .Release.Namespace }}"
+          TIMEOUT=120
+
+          cleanup() {
+            echo "Cleaning up Application CR..."
+            kubectl delete application "$APP_NAME" -n "$NAMESPACE" --ignore-not-found=true
+          }
+          trap cleanup EXIT
+
+          echo "Creating Nais Application CR..."
+          kubectl apply -f - <<EOF
+          apiVersion: nais.io/v1alpha1
+          kind: Application
+          metadata:
+            name: $APP_NAME
+            namespace: $NAMESPACE
+          spec:
+            image: europe-north1-docker.pkg.dev/nais-io/nais/images/testapp:latest
+          EOF
+
+          echo "Waiting for naiserator to create Deployment (timeout: ${TIMEOUT}s)..."
+          i=0
+          while [ $i -lt $TIMEOUT ]; do
+            if kubectl get deployment "$APP_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+              echo "Success: Deployment $APP_NAME was created by naiserator."
+              exit 0
+            fi
+            i=$((i + 1))
+            sleep 1
+          done
+
+          echo "FAIL: Deployment $APP_NAME was not created within ${TIMEOUT}s."
+          exit 1
