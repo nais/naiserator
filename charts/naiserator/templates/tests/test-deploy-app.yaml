@@ -30,6 +30,11 @@ spec:
           }
           trap cleanup EXIT
 
+          echo "Waiting for naiserator rollout to complete..."
+          kubectl rollout status deployment/{{ .Release.Name }} \
+            -n "$NAMESPACE" \
+            --timeout="${TIMEOUT}s"
+
           echo "Creating Nais Application CR..."
           kubectl apply -f - <<EOF
           apiVersion: nais.io/v1alpha1
@@ -42,15 +47,13 @@ spec:
           EOF
 
           echo "Waiting for naiserator to create Deployment (timeout: ${TIMEOUT}s)..."
-          i=0
-          while [ $i -lt $TIMEOUT ]; do
-            if kubectl get deployment "$APP_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
-              echo "Success: Deployment $APP_NAME was created by naiserator."
-              exit 0
-            fi
-            i=$((i + 1))
-            sleep 1
-          done
+          kubectl wait deployment "$APP_NAME" -n "$NAMESPACE" \
+            --for=create \
+            --timeout="${TIMEOUT}s"
 
-          echo "FAIL: Deployment $APP_NAME was not created within ${TIMEOUT}s."
-          exit 1
+          echo "Waiting for Deployment to become Available (timeout: ${TIMEOUT}s)..."
+          kubectl wait deployment "$APP_NAME" -n "$NAMESPACE" \
+            --for=condition=Available \
+            --timeout="${TIMEOUT}s"
+
+          echo "Success: Deployment $APP_NAME was created and is Available."
