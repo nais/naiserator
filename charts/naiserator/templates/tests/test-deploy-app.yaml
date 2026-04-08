@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-test-deploy-app
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  serviceAccountName: {{ .Release.Name }}
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: bitnami/kubectl:latest
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+
+          APP_NAME="helm-test-app"
+          NAMESPACE="{{ .Release.Namespace }}"
+          TIMEOUT=120
+
+          cleanup() {
+            echo "Cleaning up Application CR..."
+            kubectl delete application "$APP_NAME" -n "$NAMESPACE" --ignore-not-found=true
+          }
+          trap cleanup EXIT
+
+          echo "Waiting for naiserator rollout to complete..."
+          kubectl rollout status deployment/{{ .Release.Name }} \
+            -n "$NAMESPACE" \
+            --timeout="${TIMEOUT}s"
+
+          echo "Creating Nais Application CR..."
+          kubectl apply -f - <<EOF
+          apiVersion: nais.io/v1alpha1
+          kind: Application
+          metadata:
+            name: $APP_NAME
+            namespace: $NAMESPACE
+          spec:
+            image: europe-north1-docker.pkg.dev/nais-io/nais/images/testapp:latest
+          EOF
+
+          echo "Waiting for naiserator to create Deployment (timeout: ${TIMEOUT}s)..."
+          kubectl wait deployment "$APP_NAME" -n "$NAMESPACE" \
+            --for=create \
+            --timeout="${TIMEOUT}s"
+
+          echo "Waiting for Deployment to become Available (timeout: ${TIMEOUT}s)..."
+          kubectl wait deployment "$APP_NAME" -n "$NAMESPACE" \
+            --for=condition=Available \
+            --timeout="${TIMEOUT}s"
+
+          echo "Success: Deployment $APP_NAME was created and is Available."
