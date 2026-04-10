@@ -225,35 +225,45 @@ func generateNameFromMountPath(mountPath string) string {
 }
 
 func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
+	names := make(map[string]int)
+	uniqueName := func(name string) string {
+		count := names[name]
+		names[name]++
+		if count > 0 {
+			return fmt.Sprintf("%s-%d", name, count+1)
+		}
+		return name
+	}
+
 	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
-			name := file.ConfigMap
-			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name))
+			name := uniqueName(file.ConfigMap)
+			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name, file.ConfigMap))
 			ast.VolumeMounts = append(ast.VolumeMounts,
 				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name), true))
 		} else if len(file.Secret) > 0 {
-			name := file.Secret
-			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, name, nil))
+			name := uniqueName(file.Secret)
+			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, file.Secret, nil))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath, true))
 		} else if len(file.PersistentVolumeClaim) > 0 {
-			name := file.PersistentVolumeClaim
-			ast.Volumes = append(ast.Volumes, FromFilesPVCVolume(name, name))
+			name := uniqueName(file.PersistentVolumeClaim)
+			ast.Volumes = append(ast.Volumes, FromFilesPVCVolume(name, file.PersistentVolumeClaim))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultPVCMountPath(name), false))
 		} else if file.EmptyDir != nil && len(file.MountPath) > 0 {
-			name := generateNameFromMountPath(file.MountPath)
+			name := uniqueName(generateNameFromMountPath(file.MountPath))
 			ast.Volumes = append(ast.Volumes, FilesFromEmptyDir(name, file.EmptyDir.Medium))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, file.MountPath, false))
 		}
 	}
 }
 
-func fromFilesConfigmapVolume(name string) corev1.Volume {
+func fromFilesConfigmapVolume(volumeName, configMapName string) corev1.Volume {
 	return corev1.Volume{
-		Name: name,
+		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: name,
+					Name: configMapName,
 				},
 			},
 		},

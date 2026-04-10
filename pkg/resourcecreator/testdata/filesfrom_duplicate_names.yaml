@@ -1,0 +1,47 @@
+testconfig:
+  description: filesFrom with duplicate secret and configmap names
+config:
+  features: {}
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+  spec:
+    filesFrom:
+      - secret: myapplication
+        mountPath: /var/run/secrets/nais.io/app
+      - configmap: myapplication
+        mountPath: /var/run/config/nais.io/app
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: unique volume names for same-named secret and configmap
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: myapplication
+                    secret:
+                      secretName: myapplication
+                  - name: myapplication-2
+                    configMap:
+                      name: myapplication
+                securityContext:
+                  fsGroup: 1069
+                  fsGroupChangePolicy: "OnRootMismatch"
+                containers:
+                  - name: myapplication
+                    volumeMounts:
+                      - name: myapplication
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/app
+                      - name: myapplication-2
+                        readOnly: true
+                        mountPath: /var/run/config/nais.io/app
