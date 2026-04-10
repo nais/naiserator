@@ -100,7 +100,7 @@ func TestDeployment(t *testing.T) {
 
 		appContainer := ast.Containers[0]
 		assert.NotNil(t, appContainer)
-		assert.Equal(t, nais_io_v1alpha1.DefaultSecretMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "foo").MountPath)
-		assert.Equal(t, customMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "bar").MountPath)
+		assert.Equal(t, nais_io_v1alpha1.DefaultSecretMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "secret-1").MountPath)
+		assert.Equal(t, customMountPath, test.GetVolumeMountByName(appContainer.VolumeMounts, "secret-2").MountPath)
 	})
 }
