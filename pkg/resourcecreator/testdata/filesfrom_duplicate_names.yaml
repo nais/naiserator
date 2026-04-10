@@ -27,10 +27,10 @@ tests:
             template:
               spec:
                 volumes:
-                  - name: myapplication
+                  - name: secret-1
                     secret:
                       secretName: myapplication
-                  - name: myapplication-2
+                  - name: config-1
                     configMap:
                       name: myapplication
                 securityContext:
@@ -39,9 +39,9 @@ tests:
                 containers:
                   - name: myapplication
                     volumeMounts:
-                      - name: myapplication
+                      - name: secret-1
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/app
-                      - name: myapplication-2
+                      - name: config-1
                         readOnly: true
                         mountPath: /var/run/config/nais.io/app

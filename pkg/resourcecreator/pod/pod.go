@@ -225,32 +225,31 @@ func generateNameFromMountPath(mountPath string) string {
 }
 
 func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
-	names := make(map[string]int)
-	uniqueName := func(name string) string {
-		count := names[name]
-		names[name]++
-		if count > 0 {
-			return fmt.Sprintf("%s-%d", name, count+1)
-		}
-		return name
-	}
+	configs := 0
+	secrets := 0
+	persistence := 0
+	emptyDirs := 0
 
 	for _, file := range naisFilesFrom {
 		if len(file.ConfigMap) > 0 {
-			name := uniqueName(file.ConfigMap)
+			configs++
+			name := fmt.Sprintf("config-%d", configs)
 			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name, file.ConfigMap))
 			ast.VolumeMounts = append(ast.VolumeMounts,
-				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(name), true))
+				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(file.ConfigMap), true))
 		} else if len(file.Secret) > 0 {
-			name := uniqueName(file.Secret)
+			secrets++
+			name := fmt.Sprintf("secret-%d", secrets)
 			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, file.Secret, nil))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath, true))
 		} else if len(file.PersistentVolumeClaim) > 0 {
-			name := uniqueName(file.PersistentVolumeClaim)
+			persistence++
+			name := fmt.Sprintf("pvc-%d", persistence)
 			ast.Volumes = append(ast.Volumes, FromFilesPVCVolume(name, file.PersistentVolumeClaim))
-			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultPVCMountPath(name), false))
+			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultPVCMountPath(file.PersistentVolumeClaim), false))
 		} else if file.EmptyDir != nil && len(file.MountPath) > 0 {
-			name := uniqueName(generateNameFromMountPath(file.MountPath))
+			emptyDirs++
+			name := fmt.Sprintf("emptydir-%d", emptyDirs)
 			ast.Volumes = append(ast.Volumes, FilesFromEmptyDir(name, file.EmptyDir.Medium))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, file.MountPath, false))
 		}
