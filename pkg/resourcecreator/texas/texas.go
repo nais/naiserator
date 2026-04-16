@@ -7,7 +7,6 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
@@ -22,8 +21,6 @@ type Source interface {
 type Config interface {
 	GetClusterName() string
 	GetObservability() config.Observability
-	GetWebProxyOptions() config.Proxy
-	IsGCPEnabled() bool
 	IsTexasEnabled() bool
 	TexasImage() string
 }
@@ -49,16 +46,6 @@ func Create(
 
 	envs := clients.EnvVars()
 	envs = append(envs, otelEnvVars(source, cfg)...)
-
-	// If GCP is unconfigured, it means we are running on-premises, and we need the web proxy config.
-	// Note that we need the web proxy regardless of whether the app has requested one, so we don't care about `.spec.webProxy`.
-	if !cfg.IsGCPEnabled() {
-		proxyEnvs, err := proxyopts.EnvironmentVariables(cfg)
-		if err != nil {
-			return fmt.Errorf("generate texas webproxy environment variables: %w", err)
-		}
-		envs = append(proxyEnvs, envs...)
-	}
 
 	ast.AppendEnv(applicationEnvVars()...)
 	ast.InitContainers = append(ast.InitContainers, corev1.Container{
