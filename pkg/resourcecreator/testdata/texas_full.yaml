@@ -78,6 +78,8 @@ tests:
                     env:
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:7164$
+                      - name: PROBE_BIND_ADDRESS
+                        value: ^0.0.0.0:7165$
                       - name: AZURE_ENABLED
                         value: ^true$
                       - name: IDPORTEN_ENABLED
@@ -97,3 +99,7 @@ tests:
                           name: ^tokenx-myapplication-.+$
                     image: nais/texas
                     name: texas
+                    startupProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 7165
