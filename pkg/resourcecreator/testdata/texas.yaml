@@ -68,6 +68,8 @@ tests:
                     env:
                       - name: BIND_ADDRESS
                         value: ^127.0.0.1:7164$
+                      - name: PROBE_BIND_ADDRESS
+                        value: ^0.0.0.0:7165$
                       - name: NAIS_POD_NAME
                         valueFrom:
                           fieldRef:
@@ -105,3 +107,7 @@ tests:
                       runAsGroup: 1069
                       runAsNonRoot: true
                       runAsUser: 1069
+                    startupProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 7165
