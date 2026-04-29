@@ -32,7 +32,7 @@ type Synchronizer struct {
 	RolloutCheckInterval   time.Duration `json:"rollout-check-interval"`
 }
 
-// Keep this list sorted!
+// Features should be kept sorted!
 type Features struct {
 	AccessPolicyNotAllowedCIDRs []string `json:"access-policy-not-allowed-cidrs"`
 	Azurerator                  bool     `json:"azurerator"`
@@ -47,7 +47,7 @@ type Features struct {
 	NetworkPolicy               bool     `json:"network-policy"`
 	PostgresOperator            bool     `json:"postgres-operator"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
-	SqlInstanceInSharedVpc      bool     `json:"sql-instance-in-shared-vpc"`
+	SQLInstanceInSharedVpc      bool     `json:"sql-instance-in-shared-vpc"`
 	Texas                       bool     `json:"texas"`
 	Vault                       bool     `json:"vault"`
 	Webhook                     bool     `json:"webhook"`
@@ -77,7 +77,7 @@ type OtelCollector struct {
 	Port      int      `json:"port"`
 	Protocol  string   `json:"protocol"`
 	Service   string   `json:"service"`
-	Tls       bool     `json:"tls"`
+	TLS       bool     `json:"tls"`
 }
 
 type Logging struct {
@@ -136,17 +136,17 @@ type Config struct {
 	AivenGeneration                   int              `json:"aiven-generation"`
 	AivenProject                      string           `json:"aiven-project"`
 	AivenRange                        string           `json:"aiven-range"`
-	ApiServerIp                       string           `json:"api-server-ip"`
+	APIServerIP                       string           `json:"api-server-ip"`
 	Bind                              string           `json:"bind"`
 	ClusterName                       string           `json:"cluster-name"`
-	DocUrl                            string           `json:"doc-url"`
+	DocURL                            string           `json:"doc-url"`
 	DryRun                            bool             `json:"dry-run"`
 	FQDNPolicy                        FQDNPolicy       `json:"fqdn-policy"`
 	Features                          Features         `json:"features"`
 	Frontend                          Frontend         `json:"frontend"`
 	DomainIngressClassMapping         []GatewayMapping `json:"domain-ingressclass-mapping"`
 	GoogleCloudSQLProxyContainerImage string           `json:"google-cloud-sql-proxy-container-image"`
-	GoogleProjectId                   string           `json:"google-project-id"`
+	GoogleProjectID                   string           `json:"google-project-id"`
 	HealthProbeBindAddress            string           `json:"health-probe-bind-address"`
 	HostAliases                       []HostAlias      `json:"host-aliases"`
 	ImagePullSecrets                  []string         `json:"image-pull-secrets"`
@@ -169,7 +169,7 @@ const (
 	AivenGeneration                               = "aiven-generation"
 	AivenProject                                  = "aiven-project"
 	AivenRange                                    = "aiven-range"
-	ApiServerIp                                   = "api-server-ip"
+	APIServerIP                                   = "api-server-ip"
 	Bind                                          = "bind"
 	HealthProbeBindAddress                        = "health-probe-bind-address"
 	ClusterName                                   = "cluster-name"
@@ -192,7 +192,7 @@ const (
 	FeaturesWonderwall                            = "features.wonderwall"
 	FQDNPolicyEnabled                             = "fqdn-policy.enabled"
 	GoogleCloudSQLProxyContainerImage             = "google-cloud-sql-proxy-container-image"
-	GoogleProjectId                               = "google-project-id"
+	GoogleProjectID                               = "google-project-id"
 	ImagePullSecrets                              = "image-pull-secrets"
 	InformerFullSynchronizationInterval           = "informer.full-sync-interval"
 	KubeConfig                                    = "kubeconfig"
@@ -246,9 +246,9 @@ func init() {
 	flag.Int(AivenGeneration, 0, "the generation of aiven secrets in this cluster")
 	flag.String(AivenProject, "aiven-project", "main Aiven project for this cluster")
 	flag.String(AivenRange, "aiven-range", "range of IP addresses for Aiven services")
-	flag.String(GoogleProjectId, "", "GCP project-id to store google service accounts")
+	flag.String(GoogleProjectID, "", "GCP project-id to store google service accounts")
 	flag.String(GoogleCloudSQLProxyContainerImage, "", "Docker image of Cloud SQL Proxy container")
-	flag.String(ApiServerIp, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
+	flag.String(APIServerIP, "", "IP to master in GCP, e.g. 172.16.0.2/32 for GCP")
 	flag.String(NaisNamespace, "nais-system", "namespace where nais resources are deployed")
 	flag.StringSlice(
 		FeaturesAccessPolicyNotAllowedCIDRs, []string{""},

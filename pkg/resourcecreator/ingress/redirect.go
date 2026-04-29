@@ -166,12 +166,12 @@ func createRedirectIngresses(source Source, cfg Config, ingresses map[string]*ne
 					continue
 				}
 
-				parsedFromRedirectUrl, err := parseIngress(string(redirect.From))
+				parsedFromRedirectURL, err := parseIngress(string(redirect.From))
 				if err != nil {
 					return err
 				}
 
-				ingressClasses, err := cfg.GetIngressClasses(parsedFromRedirectUrl.Host)
+				ingressClasses, err := cfg.GetIngressClasses(parsedFromRedirectURL.Host)
 				if err != nil {
 					return err
 				}
@@ -179,7 +179,7 @@ func createRedirectIngresses(source Source, cfg Config, ingresses map[string]*ne
 				for _, ingressClass := range ingressClasses {
 					isHAProxy := strings.HasSuffix(ingressClass, "haproxy")
 
-					rule, err := createRedirectIngressRule(source, parsedFromRedirectUrl.String(), isHAProxy)
+					rule, err := createRedirectIngressRule(source, parsedFromRedirectURL.String(), isHAProxy)
 					if err != nil {
 						return err
 					}

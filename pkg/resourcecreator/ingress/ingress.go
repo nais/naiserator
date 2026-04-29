@@ -65,22 +65,22 @@ func createIngressRule(appName string, u *url.URL, isHAProxy bool) networkingv1.
 }
 
 func parseIngress(ingress string) (*url.URL, error) {
-	parsedUrl, err := url.Parse(ingress)
+	parsedURL, err := url.Parse(ingress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 	}
 
-	if len(parsedUrl.Path) > 1 {
-		parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/")
+	if len(parsedURL.Path) > 1 {
+		parsedURL.Path = strings.TrimRight(parsedURL.Path, "/")
 	} else {
-		parsedUrl.Path = "/"
+		parsedURL.Path = "/"
 	}
 
-	err = util.ValidateUrl(parsedUrl)
+	err = util.ValidateUrl(parsedURL)
 	if err != nil {
 		return nil, err
 	}
-	return parsedUrl, nil
+	return parsedURL, nil
 }
 
 func copyHAProxyAnnotations(dst, src map[string]string) {
@@ -278,12 +278,12 @@ func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingres
 	ingresses := make(map[string]*networkingv1.Ingress)
 
 	for _, ingress := range source.GetIngress() {
-		parsedUrl, err := parseIngress(string(ingress))
+		parsedURL, err := parseIngress(string(ingress))
 		if err != nil {
 			return nil, err
 		}
 
-		ingressClasses, err := cfg.GetIngressClasses(parsedUrl.Host)
+		ingressClasses, err := cfg.GetIngressClasses(parsedURL.Host)
 		if err != nil {
 			return nil, err
 		}
@@ -302,14 +302,14 @@ func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingres
 				ingresses[ingressClass] = ingress
 			}
 
-			ruleUrl := parsedUrl
-			if !isHAProxy && len(parsedUrl.Path) > 1 { // handle nginx - delete block on nginx sunsetting
-				nginxUrl := *parsedUrl
-				nginxUrl.Path = parsedUrl.Path + regexSuffix
-				ruleUrl = &nginxUrl
+			ruleURL := parsedURL
+			if !isHAProxy && len(parsedURL.Path) > 1 { // handle Nginx - delete block on Nginx sunsetting
+				nginxURL := *parsedURL
+				nginxURL.Path = parsedURL.Path + regexSuffix
+				ruleURL = &nginxURL
 			}
 
-			rule := createIngressRule(source.GetName(), ruleUrl, isHAProxy)
+			rule := createIngressRule(source.GetName(), ruleURL, isHAProxy)
 			ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 		}
 	}

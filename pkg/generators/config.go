@@ -43,7 +43,7 @@ func (o *Options) GetAivenRange() string {
 }
 
 func (o *Options) GetAPIServerIP() string {
-	return o.Config.ApiServerIp
+	return o.Config.APIServerIP
 }
 
 func (o *Options) GetClusterName() string {
@@ -51,7 +51,7 @@ func (o *Options) GetClusterName() string {
 }
 
 func (o *Options) GetDocUrl() string {
-	return o.Config.DocUrl
+	return o.Config.DocURL
 }
 
 func (o *Options) GetFrontendOptions() config.Frontend {
@@ -106,7 +106,7 @@ func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
 }
 
 func (o *Options) GetGoogleProjectID() string {
-	return o.Config.GoogleProjectId
+	return o.Config.GoogleProjectID
 }
 
 func (o *Options) GetGoogleTeamProjectID() string {
@@ -214,7 +214,7 @@ func (o *Options) PostgresOperatorEnabled() bool {
 }
 
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {
-	return o.Config.Features.SqlInstanceInSharedVpc
+	return o.Config.Features.SQLInstanceInSharedVpc
 }
 
 func (o *Options) SqlInstanceExists() bool {

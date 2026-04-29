@@ -26,7 +26,7 @@ func TestOtelEndpointFromConfig(t *testing.T) {
 		{
 			name: "TLS disabled",
 			collector: config.OtelCollector{
-				Tls:       false,
+				TLS:       false,
 				Service:   "my-service",
 				Namespace: "my-namespace",
 				Port:      8080,
@@ -36,7 +36,7 @@ func TestOtelEndpointFromConfig(t *testing.T) {
 		{
 			name: "TLS enabled",
 			collector: config.OtelCollector{
-				Tls:       true,
+				TLS:       true,
 				Service:   "my-service",
 				Namespace: "my-namespace",
 				Port:      8080,
@@ -56,7 +56,7 @@ func TestOtelEndpointFromConfig(t *testing.T) {
 func TestOtelEnvVars(t *testing.T) {
 	otel := config.Otel{
 		Collector: config.OtelCollector{
-			Tls:       false,
+			TLS:       false,
 			Service:   "otelcol",
 			Namespace: "system",
 			Port:      8080,
@@ -194,7 +194,7 @@ func TestTracingNetpol(t *testing.T) {
 			Port:      8080,
 			Protocol:  "grcp",
 			Service:   "my-service",
-			Tls:       false,
+			TLS:       false,
 		},
 	}
 
