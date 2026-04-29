@@ -177,6 +177,10 @@ func (o *Options) IsJwkerEnabled() bool {
 	return o.Config.Features.Jwker
 }
 
+func (o *Options) IsHAProxyEnabled() bool {
+	return o.Config.Features.HAProxy
+}
+
 func (o *Options) IsKafkaratorEnabled() bool {
 	return o.Config.Features.Kafkarator
 }

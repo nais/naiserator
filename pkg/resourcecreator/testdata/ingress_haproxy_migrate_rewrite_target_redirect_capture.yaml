@@ -9,6 +9,8 @@ testconfig:
     backend-config-snippet with http-request redirect location.
     Capture groups: $2 -> \2 (POSIX ERE syntax).
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
       ingressClass: haproxy

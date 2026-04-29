@@ -1,6 +1,8 @@
 testconfig:
   description: application with an ingress and a redirect, with a redirect to a existing ingress in the same namespace
 config:
+  features:
+    haproxy: true
   google-project-id: google-project-id
   cluster-name: mycluster
   domain-ingressclass-mapping:

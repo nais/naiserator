@@ -65,6 +65,10 @@ values:
     displayName: Enable GCP
     computed:
       template: '{{ne .Kind "onprem"}}'
+  naiserator.features.haproxy:
+    displayName: Enable HAProxy (dual ingress)
+    config:
+      type: bool
   naiserator.features.jwker:
     displayName: Enable Jwker
     config:

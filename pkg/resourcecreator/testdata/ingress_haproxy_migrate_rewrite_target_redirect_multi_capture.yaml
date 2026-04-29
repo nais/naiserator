@@ -7,6 +7,8 @@ testconfig:
     The target has NO slash between host and $1, reconstructing the subpath.
     Must use backend-config-snippet because request-redirect cannot change the path.
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
       ingressClass: haproxy

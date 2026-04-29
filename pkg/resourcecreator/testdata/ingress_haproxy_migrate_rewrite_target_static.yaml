@@ -5,6 +5,8 @@ testconfig:
     matched requests to /webhook/receive-altinn-cloudevent.
     Expected: haproxy.org/path-rewrite with the static path value.
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .arbeidstilsynet.no
       ingressClass: haproxy

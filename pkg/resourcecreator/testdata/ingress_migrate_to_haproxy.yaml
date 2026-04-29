@@ -1,6 +1,8 @@
 testconfig:
   description: ingress resource is created on-premises
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .bar
       ingressClass: very-haproxy

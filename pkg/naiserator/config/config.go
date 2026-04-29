@@ -39,6 +39,7 @@ type Features struct {
 	CNRM                        bool     `json:"cnrm"`
 	GARToleration               bool     `json:"gar-toleration"`
 	GCP                         bool     `json:"gcp"`
+	HAProxy                     bool     `json:"haproxy"`
 	IDPorten                    bool     `json:"idporten"`
 	Jwker                       bool     `json:"jwker"`
 	Kafkarator                  bool     `json:"kafkarator"`
@@ -178,6 +179,7 @@ const (
 	FeaturesAccessPolicyNotAllowedCIDRs           = "features.access-policy-not-allowed-cidrs"
 	FeaturesAzurerator                            = "features.azurerator"
 	FeaturesGCP                                   = "features.gcp"
+	FeaturesHAProxy                               = "features.haproxy"
 	FeaturesIDPorten                              = "features.idporten"
 	FeaturesJwker                                 = "features.jwker"
 	FeaturesCNRM                                  = "features.cnrm"
@@ -257,6 +259,7 @@ func init() {
 	flag.Bool(FeaturesNetworkPolicy, false, "enable creation of network policies")
 	flag.Bool(FeaturesVault, false, "enable use of vault secret injection")
 	flag.Bool(FeaturesGCP, false, "running in gcp and enable use of CNRM resources")
+	flag.Bool(FeaturesHAProxy, false, "enable creating dual ingress, supporting Nginx and HAProxy")
 	flag.Bool(FeaturesJwker, false, "enable creation of Jwker resources and secret injection")
 	flag.Bool(FeaturesCNRM, false, "enable creation of CNRM resources")
 	flag.Bool(FeaturesAzurerator, false, "enable creation of AzureAdApplication resources and secret injection")

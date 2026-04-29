@@ -8,6 +8,8 @@ testconfig:
     In HAProxy, $arg_NAME maps to %[url_param(NAME)].
     Must use backend-config-snippet.
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
       ingressClass: haproxy

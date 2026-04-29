@@ -10,6 +10,8 @@ testconfig:
     $1 = "/" or end-of-string (discarded), $2 = rest of path (preserved).
     Must use backend-config-snippet because redirect changes the path.
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
       ingressClass: haproxy

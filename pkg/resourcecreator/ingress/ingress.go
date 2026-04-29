@@ -33,6 +33,7 @@ type Config interface {
 	GetDomains() []string
 	GetDocUrl() string
 	GetClusterName() string
+	IsHAProxyEnabled() bool
 }
 
 func createIngressRule(appName string, u *url.URL, isHAProxy bool) networkingv1.IngressRule {
@@ -289,7 +290,7 @@ func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingres
 		}
 
 		for _, ingressClass := range ingressClasses {
-			isHAProxy := strings.HasSuffix(ingressClass, "haproxy")
+			isHAProxy := strings.HasSuffix(ingressClass, "haproxy") && cfg.IsHAProxyEnabled()
 
 			ingress := ingresses[ingressClass]
 			if ingress == nil {

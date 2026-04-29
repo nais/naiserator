@@ -7,6 +7,8 @@ testconfig:
     (/smreg-legacy/) before the capture groups.
     Must use backend-config-snippet.
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
       ingressClass: haproxy

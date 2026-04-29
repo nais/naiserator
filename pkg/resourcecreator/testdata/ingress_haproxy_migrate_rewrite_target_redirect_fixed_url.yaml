@@ -9,6 +9,8 @@ testconfig:
     Since the redirect target has a path component (not just host), it must use
     backend-config-snippet (request-redirect only supports host and preserves URI).
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
       ingressClass: haproxy
