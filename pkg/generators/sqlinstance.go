@@ -17,7 +17,7 @@ func prepareSqlInstance(ctx context.Context, source resource.Source, kube client
 	}
 
 	gcpSpec := source.GetGCP()
-	if len(gcpSpec.SqlInstances) != 1 || !o.Config.Features.SqlInstanceInSharedVpc {
+	if len(gcpSpec.SqlInstances) != 1 || !o.Config.Features.SQLInstanceInSharedVpc {
 		return nil
 	}
 

@@ -1,0 +1,52 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: redirect with two capture groups concatenated ($1$2).
+    Real-world example: syfosmmanuell-gosys-redirect redirects
+    /smm(/|$)(.*) to https://syfosmmanuell.intern.dev.nav.no$1$2.
+    Here $1 captures the delimiter (/ or end-of-string) and $2 captures the rest.
+    The target has NO slash between host and $1, reconstructing the subpath.
+    Must use backend-config-snippet because request-redirect cannot change the path.
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: syfosmmanuell
+    namespace: teamsykmelding
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "https://syfosmmanuell.intern.dev.nav.no$1$2"
+  spec:
+    image: navikt/syfosmmanuell:1.0.0
+    ingresses:
+      - https://sykmelding-redirect.intern.dev.nav.no/smm
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: syfosmmanuell-haproxy-deab6e88
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "nginx -> haproxy migrate: redirect with $1$2 concat uses backend-config-snippet"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: 'http-request redirect location https://syfosmmanuell.intern.dev.nav.no\1\2 code 302'
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: sykmelding-redirect.intern.dev.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: syfosmmanuell
+                          port:
+                            number: 80
+                      path: /smm
+                      pathType: Prefix

@@ -1,5 +1,5 @@
 cluster-name: "dev-nais-tilt"
-gateway-mappings:
+domain-ingressclass-mapping:
   - domainSuffix: dev-nais-local.dev-nais.cloud.nais.io
     ingressClass: nais-ingress
 synchronizer:

@@ -122,7 +122,7 @@ func newTestRig(config config.Config) (*testRig, error) {
 	}
 
 	listers := naiserator_scheme.GenericListers()
-	if len(rig.config.GoogleProjectId) > 0 {
+	if len(rig.config.GoogleProjectID) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 
 		if len(rig.config.AivenProject) > 0 {
@@ -164,7 +164,7 @@ func TestSynchronizer(t *testing.T) {
 			RolloutCheckInterval:   1 * time.Second,
 			RolloutTimeout:         20 * time.Second,
 		},
-		GoogleProjectId:                   "1337",
+		GoogleProjectID:                   "1337",
 		GoogleCloudSQLProxyContainerImage: config.GoogleCloudSQLProxyContainerImage,
 		Features: config.Features{
 			CNRM: true,
@@ -260,7 +260,7 @@ func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nai
 
 	opts := &generators.Options{}
 	opts.Config = cfg
-	opts.Config.GatewayMappings = []config.GatewayMapping{
+	opts.Config.DomainIngressClassMapping = []config.GatewayMapping{
 		{
 			DomainSuffix: ".bar",
 			IngressClass: "very-nginx",
@@ -454,7 +454,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 		Features: config.Features{
 			CNRM: true,
 		},
-		GoogleProjectId:                   "something",
+		GoogleProjectID:                   "something",
 		GoogleCloudSQLProxyContainerImage: "cloudsqlproxy",
 	}
 

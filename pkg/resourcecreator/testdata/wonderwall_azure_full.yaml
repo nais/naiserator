@@ -4,7 +4,7 @@ config:
   features:
     azurerator: true
     wonderwall: true
-  gateway-mappings:
+  domain-ingressclass-mapping:
     - domainSuffix: .nav.no
       ingressClass: very-nginx
   cluster-name: mycluster

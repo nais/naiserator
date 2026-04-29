@@ -3,12 +3,12 @@ package ingress
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/namegen"
-	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -29,13 +29,19 @@ type Source interface {
 }
 
 type Config interface {
-	GetGatewayMappings() []config.GatewayMapping
+	GetIngressClasses(string) ([]string, error)
+	GetDomains() []string
 	GetDocUrl() string
 	GetClusterName() string
+	IsHAProxyEnabled() bool
 }
 
-func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
+func createIngressRule(appName string, u *url.URL, isHAProxy bool) networkingv1.IngressRule {
 	pathType := networkingv1.PathTypeImplementationSpecific
+	if isHAProxy {
+		pathType = networkingv1.PathTypePrefix
+	}
+
 	return networkingv1.IngressRule{
 		Host: u.Host,
 		IngressRuleValue: networkingv1.IngressRuleValue{
@@ -59,39 +65,109 @@ func ingressRule(appName string, u *url.URL) networkingv1.IngressRule {
 	}
 }
 
-func ingressRules(source Source) ([]networkingv1.IngressRule, error) {
-	var rules []networkingv1.IngressRule
-	ingresses := source.GetIngress()
-
-	for _, ingress := range ingresses {
-		parsedUrl, err := parseIngress(string(ingress))
-		if err != nil {
-			return nil, err
-		}
-
-		rules = append(rules, ingressRule(source.GetName(), parsedUrl))
-	}
-
-	return rules, nil
-}
-
 func parseIngress(ingress string) (*url.URL, error) {
-	parsedUrl, err := url.Parse(ingress)
+	parsedURL, err := url.Parse(ingress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse URL '%s': %s", ingress, err)
 	}
 
-	if len(parsedUrl.Path) > 1 {
-		parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + regexSuffix
+	if len(parsedURL.Path) > 1 {
+		parsedURL.Path = strings.TrimRight(parsedURL.Path, "/")
 	} else {
-		parsedUrl.Path = "/"
+		parsedURL.Path = "/"
 	}
 
-	err = util.ValidateUrl(parsedUrl)
+	err = util.ValidateUrl(parsedURL)
 	if err != nil {
 		return nil, err
 	}
-	return parsedUrl, nil
+	return parsedURL, nil
+}
+
+func copyHAProxyAnnotations(dst, src map[string]string) {
+	for k, v := range src {
+		if strings.HasPrefix(k, "haproxy.org/") {
+			dst[k] = v
+		}
+	}
+}
+
+func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]string) {
+	nginxAnnotations := map[string]string{}
+	copyNginxAnnotations(nginxAnnotations, nginx)
+
+	// Mapping from nginx annotation short key to HAProxy equivalent.
+	// Only timeout annotations are migrated; other nginx annotations
+	// (e.g. permanent-redirect, whitelist-source-range, proxy-body-size)
+	// have no direct HAProxy equivalent and are not propagated by naiserator.
+	haProxyAnnotations := map[string]string{
+		"proxy-read-timeout":    "timeout-server",
+		"proxy-send-timeout":    "timeout-client",
+		"proxy-connect-timeout": "timeout-connect",
+	}
+
+	for key, value := range nginxAnnotations {
+		nginxKey, _ := strings.CutPrefix(key, "nginx.ingress.kubernetes.io/")
+		haProxyKey, ok := haProxyAnnotations[nginxKey]
+		if ok && haProxyKey != "" {
+			haProxy["haproxy.org/"+haProxyKey] = value
+		}
+	}
+
+	migrateRewriteTarget(haProxy, nginxAnnotations)
+}
+
+var (
+	nginxCaptureGroupRegex = regexp.MustCompile(`\$(\d+)`)
+	nginxArgVariableRegex  = regexp.MustCompile(`\$arg_(\w+)`)
+)
+
+// migrateRewriteTarget translates an nginx rewrite-target annotation to equivalent HAProxy annotation(s)
+func migrateRewriteTarget(annotations, nginxAnnotations map[string]string) {
+	rewriteTarget := nginxAnnotations["nginx.ingress.kubernetes.io/rewrite-target"]
+	if rewriteTarget == "" {
+		return
+	}
+
+	isAbsolute := strings.HasPrefix(rewriteTarget, "http://") || strings.HasPrefix(rewriteTarget, "https://")
+
+	if !isAbsolute {
+		annotations["haproxy.org/path-rewrite"] = nginxToHAProxyCaptureGroups(rewriteTarget)
+		return
+	}
+
+	// Absolute URL → nginx sends 302.
+	// HAProxy's request-redirect only supports host substitution and preserves original URI,
+	// so path-changing redirects must use backend-config-snippet.
+	u, err := url.Parse(rewriteTarget)
+	if err != nil {
+		migrateRewriteTargetAsSnippet(annotations, rewriteTarget)
+		return
+	}
+
+	hostOnly := u.Path == "" || u.Path == "/"
+	hasCaptures := nginxCaptureGroupRegex.MatchString(rewriteTarget)
+	hasArgs := nginxArgVariableRegex.MatchString(rewriteTarget)
+
+	if hostOnly && !hasCaptures && !hasArgs {
+		annotations["haproxy.org/request-redirect"] = u.Host
+		annotations["haproxy.org/request-redirect-code"] = "302"
+		return
+	}
+
+	migrateRewriteTargetAsSnippet(annotations, rewriteTarget)
+}
+
+// nginxToHAProxyCaptureGroups converts $1, $2 to \1, \2
+func nginxToHAProxyCaptureGroups(s string) string {
+	return nginxCaptureGroupRegex.ReplaceAllString(s, `\$1`)
+}
+
+// migrateRewriteTargetAsSnippet uses backend-config-snippet for complex redirects
+func migrateRewriteTargetAsSnippet(annotations map[string]string, rewriteTarget string) {
+	haproxyTarget := nginxToHAProxyCaptureGroups(rewriteTarget)
+	haproxyTarget = nginxArgVariableRegex.ReplaceAllString(haproxyTarget, `%[url_param($1)]`)
+	annotations["haproxy.org/backend-config-snippet"] = fmt.Sprintf("http-request redirect location %s code 302", haproxyTarget)
 }
 
 func copyNginxAnnotations(dst, src map[string]string) {
@@ -102,8 +178,15 @@ func copyNginxAnnotations(dst, src map[string]string) {
 	}
 }
 
-func createIngressBase(source Source) *networkingv1.Ingress {
+func createIngressBase(source Source, ingressClass string) (*networkingv1.Ingress, error) {
+	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
+	shortName, err := namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
+	if err != nil {
+		return nil, err
+	}
+
 	objectMeta := resource.CreateObjectMeta(source)
+	objectMeta.Name = shortName
 	objectMeta.Annotations["prometheus.io/scrape"] = "true"
 	objectMeta.Annotations["prometheus.io/path"] = source.GetLiveness().Path
 
@@ -114,23 +197,31 @@ func createIngressBase(source Source) *networkingv1.Ingress {
 		},
 		ObjectMeta: objectMeta,
 		Spec: networkingv1.IngressSpec{
-			Rules: []networkingv1.IngressRule{},
+			IngressClassName: &ingressClass,
+			Rules:            []networkingv1.IngressRule{},
 		},
+	}, nil
+}
+
+func createIngressBaseHAProxy(source Source, ingressClass string) (*networkingv1.Ingress, error) {
+	ingress, err := createIngressBase(source, ingressClass)
+	if err != nil {
+		return nil, err
 	}
+
+	migrateNginxAnnotationsToHAProxyAnnotations(ingress.Annotations, source.GetAnnotations())
+	copyHAProxyAnnotations(ingress.Annotations, source.GetAnnotations())
+
+	return ingress, nil
 }
 
 func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.Ingress, error) {
-	var err error
-	ingress := createIngressBase(source)
-	baseName := fmt.Sprintf("%s-%s", source.GetName(), ingressClass)
-	ingress.Name, err = namegen.ShortName(baseName, validation.DNS1035LabelMaxLength)
+	ingress, err := createIngressBase(source, ingressClass)
 	if err != nil {
 		return nil, err
 	}
 
 	copyNginxAnnotations(ingress.Annotations, source.GetAnnotations())
-	ingress.Spec.IngressClassName = &ingressClass
-
 	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
 
@@ -150,29 +241,15 @@ func backendProtocol(portName string) string {
 	}
 }
 
-func supportedDomains(gatewayMappings []config.GatewayMapping) []string {
-	domains := make([]string, 0, len(gatewayMappings))
-
-	for _, v := range gatewayMappings {
-		domains = append(domains, v.DomainSuffix)
-	}
-	return domains
-}
-
-func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
-	rules, err := ingressRules(source)
-	if err != nil {
-		return nil, err
-	}
-
-	ingresses, err := getIngresses(source, cfg, rules)
+func createIngressList(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
+	ingresses, err := createIngresses(source, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	redirectIngresses := make(map[string]*networkingv1.Ingress)
 	if hasRedirects(source) {
-		err = CreateRedirectIngresses(source, cfg, ingresses, redirectIngresses)
+		err := createRedirectIngresses(source, cfg, ingresses, redirectIngresses)
 		if err != nil {
 			return nil, err
 		}
@@ -190,58 +267,63 @@ func nginxIngresses(source Source, cfg Config) ([]*networkingv1.Ingress, error) 
 	return ingressList, nil
 }
 
-func getIngress(source Source, cfg Config, rule networkingv1.IngressRule, ingressClass *string) (*networkingv1.Ingress, error) {
-	// FIXME: urls in error messages is a nice idea, but needs more planning to avoid tech debt.
-	// Reference: __doc_url__/workloads/reference/environments/#ingress-domains
-	if ingressClass == nil {
-		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
-			rule.Host,
-			cfg.GetClusterName(),
-			strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
-		)
+func createIngress(source Source, ingressClass string, isHAProxy bool) (*networkingv1.Ingress, error) {
+	if isHAProxy {
+		return createIngressBaseHAProxy(source, ingressClass)
+	} else {
+		return createIngressBaseNginx(source, ingressClass)
 	}
-
-	ingress, err := createIngressBaseNginx(source, *ingressClass)
-	if err != nil {
-		return nil, err
-	}
-	return ingress, nil
 }
 
-func getIngresses(source Source, cfg Config, rules []networkingv1.IngressRule) (map[string]*networkingv1.Ingress, error) {
-	// Ingress objects must have at least one path rule to be valid.
-	if len(rules) == 0 {
-		return nil, nil
-	}
-
+func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingress, error) {
 	ingresses := make(map[string]*networkingv1.Ingress)
 
-	for _, rule := range rules {
-		ingressClass := util.ResolveIngressClass(rule.Host, cfg.GetGatewayMappings())
-		if ingressClass == nil {
-			return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
-				rule.Host,
-				cfg.GetClusterName(),
-				strings.Join(supportedDomains(cfg.GetGatewayMappings()), ", "),
-			)
+	for _, ingress := range source.GetIngress() {
+		parsedURL, err := parseIngress(string(ingress))
+		if err != nil {
+			return nil, err
 		}
-		ingress := ingresses[*ingressClass]
-		if ingress == nil {
-			ing, err := getIngress(source, cfg, rule, ingressClass)
-			ingress = ing
-			if err != nil {
-				return nil, err
-			}
-			ingresses[*ingressClass] = ingress
-		}
-		ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 
+		ingressClasses, err := cfg.GetIngressClasses(parsedURL.Host)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, ingressClass := range ingressClasses {
+			isHAProxy := strings.HasSuffix(ingressClass, "haproxy") && cfg.IsHAProxyEnabled()
+
+			ingress := ingresses[ingressClass]
+			if ingress == nil {
+				newIngress, err := createIngress(source, ingressClass, isHAProxy)
+				if err != nil {
+					return nil, err
+				}
+
+				ingress = newIngress
+				ingresses[ingressClass] = ingress
+			}
+
+			ruleURL := parsedURL
+			if !isHAProxy && len(parsedURL.Path) > 1 { // handle Nginx - delete block on Nginx sunsetting
+				nginxURL := *parsedURL
+				nginxURL.Path = parsedURL.Path + regexSuffix
+				ruleURL = &nginxURL
+			}
+
+			rule := createIngressRule(source.GetName(), ruleURL, isHAProxy)
+			ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
+		}
 	}
+
 	return ingresses, nil
 }
 
 func Create(source Source, ast *resource.Ast, cfg Config) error {
-	ingresses, err := nginxIngresses(source, cfg)
+	if len(source.GetIngress()) == 0 {
+		return nil
+	}
+
+	ingresses, err := createIngressList(source, cfg)
 	if err != nil {
 		return err
 	}

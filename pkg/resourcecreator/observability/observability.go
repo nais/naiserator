@@ -49,7 +49,7 @@ const (
 
 func otelEndpointFromConfig(collector config.OtelCollector) string {
 	schema := "http"
-	if collector.Tls {
+	if collector.TLS {
 		schema = "https"
 	}
 	return fmt.Sprintf("%s://%s.%s:%d", schema, collector.Service, collector.Namespace, collector.Port)
@@ -118,7 +118,7 @@ func OtelEnvVars(name, namespace string, env []corev1.EnvVar, destinations []str
 		},
 		{
 			Name:  otelExporterInsecure,
-			Value: fmt.Sprintf("%t", !otel.Collector.Tls),
+			Value: fmt.Sprintf("%t", !otel.Collector.TLS),
 		},
 	}...)
 }

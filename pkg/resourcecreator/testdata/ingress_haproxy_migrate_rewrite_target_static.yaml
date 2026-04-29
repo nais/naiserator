@@ -1,0 +1,50 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: static rewrite-target (no capture groups, no redirect).
+    Real-world example: Arbeidstilsynet receiver-external-ingress rewrites all
+    matched requests to /webhook/receive-altinn-cloudevent.
+    Expected: haproxy.org/path-rewrite with the static path value.
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .arbeidstilsynet.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: receiver
+    namespace: meldinger
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "/webhook/receive-altinn-cloudevent"
+  spec:
+    image: navikt/receiver:1.0.0
+    ingresses:
+      - https://meldinger-receiver-api.dev.arbeidstilsynet.no/webhook/receive-altinn-cloudevent
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: receiver-haproxy-c08198ef
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "static rewrite-target becomes path-rewrite"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/path-rewrite: "/webhook/receive-altinn-cloudevent"
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: meldinger-receiver-api.dev.arbeidstilsynet.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: receiver
+                          port:
+                            number: 80
+                      path: /webhook/receive-altinn-cloudevent
+                      pathType: Prefix

@@ -1,4 +1,5 @@
 .idea/
+*.tgz
 naiserator.iml
 cmd/naiserator/naiserator
 cmd/naiserator_webhook/naiserator_webhook

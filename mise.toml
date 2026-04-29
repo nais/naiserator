@@ -127,3 +127,14 @@ run = "go test --race --cover --coverprofile=cover.out ./..."
 [tasks."test:goldenfiles"]
 description = "Run just Golden files tests"
 run = "go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1"
+
+[tasks."chart:push-dev"]
+description = "Build and push Helm chart with dev version"
+dir = "charts/naiserator"
+run = """
+version="0.0.0-dev-$(date +%Y%m%d%H%M%S)-$(git --no-pager log -1 --pretty=%h)"
+
+helm package . --version "$version"
+helm push "naiserator-${version}.tgz" oci://europe-north1-docker.pkg.dev/nais-io/nais/feature
+rm -f "naiserator-${version}.tgz"
+"""

@@ -39,7 +39,7 @@ func TestIngress(t *testing.T) {
 			assert.NoError(t, err)
 
 			opts := &generators.Options{}
-			opts.Config.GatewayMappings = []config.GatewayMapping{
+			opts.Config.DomainIngressClassMapping = []config.GatewayMapping{
 				{
 					DomainSuffix: ".bar",
 					IngressClass: "very-nginx",

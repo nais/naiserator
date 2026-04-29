@@ -1,0 +1,52 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: redirect with capture groups AND a path prefix in target.
+    Real-world example: smregistrering-gosys-redirect redirects
+    /smr(/|$)(.*) to https://syk-dig.intern.dev.nav.no/smreg-legacy/$1$2.
+    Unlike the syfosmmanuell case, the target URL includes a path component
+    (/smreg-legacy/) before the capture groups.
+    Must use backend-config-snippet.
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: smregistrering
+    namespace: teamsykmelding
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "https://syk-dig.intern.dev.nav.no/smreg-legacy/$1$2"
+  spec:
+    image: navikt/smregistrering:1.0.0
+    ingresses:
+      - https://sykmelding-redirect.intern.dev.nav.no/smr
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: smregistrering-haproxy-2f7674ea
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "nginx -> haproxy migrate: redirect with path prefix + $1$2 uses backend-config-snippet"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: 'http-request redirect location https://syk-dig.intern.dev.nav.no/smreg-legacy/\1\2 code 302'
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: sykmelding-redirect.intern.dev.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: smregistrering
+                          port:
+                            number: 80
+                      path: /smr
+                      pathType: Prefix

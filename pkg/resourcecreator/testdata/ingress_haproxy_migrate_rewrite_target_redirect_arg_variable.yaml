@@ -1,0 +1,53 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: redirect using $arg_* nginx variable.
+    Real-world example: syk-dig-gosys-redirect redirects
+    /smd(/|$)(.*) to https://syk-dig.intern.dev.nav.no/oppgave/$arg_oppgaveid?
+    This is the ONLY case using an nginx variable ($arg_NAME) instead of capture groups.
+    The trailing ? clears the query string in nginx.
+    In HAProxy, $arg_NAME maps to %[url_param(NAME)].
+    Must use backend-config-snippet.
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: syk-dig
+    namespace: teamsykmelding
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "https://syk-dig.intern.dev.nav.no/oppgave/$arg_oppgaveid?"
+  spec:
+    image: navikt/syk-dig:1.0.0
+    ingresses:
+      - https://sykmelding-redirect.intern.dev.nav.no/smd
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: syk-dig-haproxy-b240f1e8
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "nginx -> haproxy migrate: redirect with $arg_* variable uses backend-config-snippet"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: 'http-request redirect location https://syk-dig.intern.dev.nav.no/oppgave/%[url_param(oppgaveid)]? code 302'
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: sykmelding-redirect.intern.dev.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: syk-dig
+                          port:
+                            number: 80
+                      path: /smd
+                      pathType: Prefix

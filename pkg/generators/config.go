@@ -1,6 +1,10 @@
 package generators
 
 import (
+	"fmt"
+	"slices"
+	"strings"
+
 	"github.com/nais/naiserator/pkg/naiserator/config"
 )
 
@@ -39,7 +43,7 @@ func (o *Options) GetAivenRange() string {
 }
 
 func (o *Options) GetAPIServerIP() string {
-	return o.Config.ApiServerIp
+	return o.Config.APIServerIP
 }
 
 func (o *Options) GetClusterName() string {
@@ -47,7 +51,7 @@ func (o *Options) GetClusterName() string {
 }
 
 func (o *Options) GetDocUrl() string {
-	return o.Config.DocUrl
+	return o.Config.DocURL
 }
 
 func (o *Options) GetFrontendOptions() config.Frontend {
@@ -58,8 +62,43 @@ func (o *Options) GetFQDNPolicy() config.FQDNPolicy {
 	return o.Config.FQDNPolicy
 }
 
-func (o *Options) GetGatewayMappings() []config.GatewayMapping {
-	return o.Config.GatewayMappings
+func (o *Options) GetIngressClasses(domain string) ([]string, error) {
+	longestDomainSuffix := ""
+
+	for _, value := range o.Config.DomainIngressClassMapping {
+		if strings.HasSuffix(domain, value.DomainSuffix) {
+			if len(value.DomainSuffix) > len(longestDomainSuffix) {
+				longestDomainSuffix = value.DomainSuffix
+			}
+		}
+	}
+
+	classes := []string{}
+	for _, value := range o.Config.DomainIngressClassMapping {
+		if value.DomainSuffix == longestDomainSuffix {
+			classes = append(classes, value.IngressClass)
+		}
+	}
+
+	if len(classes) == 0 {
+		return nil, fmt.Errorf("the domain %q cannot be used in cluster %q; use one of %v",
+			domain,
+			o.GetClusterName(),
+			strings.Join(o.GetDomains(), ", "),
+		)
+	}
+
+	return classes, nil
+}
+
+func (o *Options) GetDomains() []string {
+	domains := make([]string, 0, len(o.Config.DomainIngressClassMapping))
+	for _, value := range o.Config.DomainIngressClassMapping {
+		domains = append(domains, value.DomainSuffix)
+	}
+	slices.Sort(domains)
+
+	return domains
 }
 
 func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
@@ -67,7 +106,7 @@ func (o *Options) GetGoogleCloudSQLProxyContainerImage() string {
 }
 
 func (o *Options) GetGoogleProjectID() string {
-	return o.Config.GoogleProjectId
+	return o.Config.GoogleProjectID
 }
 
 func (o *Options) GetGoogleTeamProjectID() string {
@@ -138,6 +177,10 @@ func (o *Options) IsJwkerEnabled() bool {
 	return o.Config.Features.Jwker
 }
 
+func (o *Options) IsHAProxyEnabled() bool {
+	return o.Config.Features.HAProxy
+}
+
 func (o *Options) IsKafkaratorEnabled() bool {
 	return o.Config.Features.Kafkarator
 }
@@ -175,7 +218,7 @@ func (o *Options) PostgresOperatorEnabled() bool {
 }
 
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {
-	return o.Config.Features.SqlInstanceInSharedVpc
+	return o.Config.Features.SQLInstanceInSharedVpc
 }
 
 func (o *Options) SqlInstanceExists() bool {

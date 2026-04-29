@@ -1,9 +1,11 @@
 testconfig:
   description: ingress resource is created on-premises
 config:
+  features:
+    haproxy: true
   domain-ingressclass-mapping:
     - domainSuffix: .bar
-      ingressClass: very-nginx
+      ingressClass: very-haproxy
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -11,13 +13,18 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "100"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "101"
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: "102"
+      nginx.ingress.kubernetes.io/rewrite-target: "some"
   spec:
     ingresses:
       - https://foo.bar/baz
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: myapplication-very-nginx-e55d5da0
+    name: myapplication-very-haproxy-efe42262
     operation: CreateOrUpdate
     match:
       - type: exact
@@ -33,12 +40,14 @@ tests:
           metadata:
             annotations:
               nais.io/deploymentCorrelationID: ""
-              nginx.ingress.kubernetes.io/backend-protocol: HTTP
-              nginx.ingress.kubernetes.io/use-regex: "true"
+              haproxy.org/timeout-server: "100"
+              haproxy.org/timeout-client: "101"
+              haproxy.org/timeout-connect: "102"
+              haproxy.org/path-rewrite: "some"
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
           spec:
-            ingressClassName: very-nginx
+            ingressClassName: very-haproxy
             rules:
               - host: foo.bar
                 http:
@@ -48,5 +57,5 @@ tests:
                           name: myapplication
                           port:
                             number: 80
-                      path: /baz(/.*)?
-                      pathType: ImplementationSpecific
+                      path: /baz
+                      pathType: Prefix

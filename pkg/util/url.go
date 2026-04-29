@@ -5,10 +5,8 @@ import (
 	"net/url"
 	"path"
 	"regexp"
-	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
-	"github.com/nais/naiserator/pkg/naiserator/config"
 )
 
 var kubernetesFQDNValidation = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
@@ -32,22 +30,4 @@ func AppendPathToIngress(ingress nais_io_v1.Ingress, joinPath string) string {
 	u, _ := url.Parse(string(ingress))
 	u.Path = path.Join(u.Path, joinPath)
 	return u.String()
-}
-
-func ResolveIngressClass(host string, mappings []config.GatewayMapping) *string {
-	ingressClass := ""
-	matchLength := 0
-
-	for _, mapping := range mappings {
-		if strings.HasSuffix(host, mapping.DomainSuffix) {
-			if len(mapping.DomainSuffix) > matchLength {
-				ingressClass = mapping.IngressClass
-				matchLength = len(mapping.DomainSuffix)
-			}
-		}
-	}
-	if ingressClass != "" {
-		return &ingressClass
-	}
-	return nil
 }

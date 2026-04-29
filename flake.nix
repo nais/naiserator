@@ -42,16 +42,28 @@
               )
             ];
           };
+          envtest-bins = pkgs.symlinkJoin {
+            name = "envtest-bins";
+            paths = [
+              pkgs.etcd
+              pkgs.kubernetes
+            ];
+          };
         in
         {
           devShells.default = pkgs.mkShell {
-            buildInputs = with pkgs; [
+            inputsFrom = [envtest-bins];
+            packages = with pkgs; [
               go
               gopls
               gotools
               go-tools
               gofumpt
+              (python3.withPackages(pkgs: [pkgs.pyyaml pkgs.ipython]))
             ];
+            shellHook = ''
+              export KUBEBUILDER_ASSETS="${envtest-bins}/bin"
+            '';
           };
 
           formatter = pkgs.nixfmt-rfc-style;
