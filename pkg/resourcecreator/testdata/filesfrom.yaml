@@ -32,35 +32,35 @@ tests:
             template:
               spec:
                 volumes:
-                  - name: mycm
+                  - name: config-1
                     configMap:
                       name: mycm
-                  - name: mysecret
+                  - name: secret-1
                     secret:
                       secretName: mysecret
-                  - name: pvc-name
+                  - name: pvc-1
                     persistentVolumeClaim:
                       claimName: pvc-name
                   - emptyDir:
                       medium: Memory
-                    name: var-cache-memory
+                    name: emptydir-1
                   - emptyDir: {}
-                    name: var-cache-disk
+                    name: emptydir-2
                 securityContext:
                   fsGroup: 1069
                   fsGroupChangePolicy: "OnRootMismatch"
                 containers:
                   - name: myapplication
                     volumeMounts:
-                      - name: mycm
+                      - name: config-1
                         readOnly: true
                         mountPath: /var/run/configmaps/mycm
-                      - name: mysecret
+                      - name: secret-1
                         readOnly: true
                         mountPath: /var/run/secrets
-                      - name: pvc-name
+                      - name: pvc-1
                         mountPath: /var/run/pvc/pvc-name
                       - mountPath: /var/cache/memory
-                        name: var-cache-memory
+                        name: emptydir-1
                       - mountPath: /var/cache/disk
-                        name: var-cache-disk
+                        name: emptydir-2

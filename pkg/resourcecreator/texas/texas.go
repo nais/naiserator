@@ -7,13 +7,16 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
-	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	k8sResource "k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-const Port = 7164
+const (
+	Port      = 7164
+	ProbePort = 7165
+)
 
 type Source interface {
 	resource.Source
@@ -22,8 +25,6 @@ type Source interface {
 type Config interface {
 	GetClusterName() string
 	GetObservability() config.Observability
-	GetWebProxyOptions() config.Proxy
-	IsGCPEnabled() bool
 	IsTexasEnabled() bool
 	TexasImage() string
 }
@@ -43,22 +44,12 @@ func Create(
 	}
 
 	port := source.GetPort()
-	if port == Port {
+	if port == Port || port == ProbePort {
 		return fmt.Errorf("cannot use port '%d'; conflicts with sidecar", port)
 	}
 
 	envs := clients.EnvVars()
 	envs = append(envs, otelEnvVars(source, cfg)...)
-
-	// If GCP is unconfigured, it means we are running on-premises, and we need the web proxy config.
-	// Note that we need the web proxy regardless of whether the app has requested one, so we don't care about `.spec.webProxy`.
-	if !cfg.IsGCPEnabled() {
-		proxyEnvs, err := proxyopts.EnvironmentVariables(cfg)
-		if err != nil {
-			return fmt.Errorf("generate texas webproxy environment variables: %w", err)
-		}
-		envs = append(proxyEnvs, envs...)
-	}
 
 	ast.AppendEnv(applicationEnvVars()...)
 	ast.InitContainers = append(ast.InitContainers, corev1.Container{
@@ -67,6 +58,18 @@ func Create(
 		EnvFrom:         clients.EnvFromSources(),
 		Image:           cfg.TexasImage(),
 		ImagePullPolicy: corev1.PullIfNotPresent,
+		Ports: []corev1.ContainerPort{
+			{
+				ContainerPort: int32(Port),
+				Protocol:      corev1.ProtocolTCP,
+				Name:          "texas",
+			},
+			{
+				ContainerPort: int32(ProbePort),
+				Protocol:      corev1.ProtocolTCP,
+				Name:          "probe",
+			},
+		},
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
 				corev1.ResourceCPU:    k8sResource.MustParse("10m"),
@@ -78,6 +81,14 @@ func Create(
 		},
 		RestartPolicy:   new(corev1.ContainerRestartPolicyAlways), // native sidecar
 		SecurityContext: pod.DefaultContainerSecurityContext(),
+		StartupProbe: &corev1.Probe{
+			ProbeHandler: corev1.ProbeHandler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/healthz",
+					Port: intstr.FromInt32(ProbePort),
+				},
+			},
+		},
 	})
 	ast.Labels["texas"] = "enabled"
 	ast.Labels["otel"] = "enabled"
@@ -100,7 +111,11 @@ func (c Clients) EnvVars() []corev1.EnvVar {
 	envs := []corev1.EnvVar{
 		{
 			Name:  "BIND_ADDRESS",
-			Value: fmt.Sprintf("127.0.0.1:%d", Port),
+			Value: fmt.Sprintf("127.0.0.1:%d", Port), // loopback only to prevent external access
+		},
+		{
+			Name:  "PROBE_BIND_ADDRESS",
+			Value: fmt.Sprintf("0.0.0.0:%d", ProbePort), // all interfaces to allow health probe access
 		},
 		{
 			Name: "NAIS_POD_NAME",

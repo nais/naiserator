@@ -38,10 +38,10 @@ tests:
                 template:
                   spec:
                     volumes:
-                      - name: mycm
+                      - name: config-1
                         configMap:
                           name: mycm
-                      - name: mysecret
+                      - name: secret-1
                         secret:
                           secretName: mysecret
                     containers:
@@ -59,9 +59,9 @@ tests:
                           - secretRef:
                               name: mysecret
                         volumeMounts:
-                          - name: mycm
+                          - name: config-1
                             readOnly: true
                             mountPath: /var/run/configmaps/mycm
-                          - name: mysecret
+                          - name: secret-1
                             readOnly: true
                             mountPath: /var/run/secrets
