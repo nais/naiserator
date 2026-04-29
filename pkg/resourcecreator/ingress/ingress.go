@@ -290,7 +290,11 @@ func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingres
 		}
 
 		for _, ingressClass := range ingressClasses {
-			isHAProxy := strings.HasSuffix(ingressClass, "haproxy") && cfg.IsHAProxyEnabled()
+			isHAProxy := strings.HasSuffix(ingressClass, "haproxy")
+
+			if isHAProxy && !cfg.IsHAProxyEnabled() {
+				continue // only create HAProxy ingress where HAProxy is enabled
+			}
 
 			ingress := ingresses[ingressClass]
 			if ingress == nil {

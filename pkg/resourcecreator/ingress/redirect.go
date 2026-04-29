@@ -177,7 +177,11 @@ func createRedirectIngresses(source Source, cfg Config, ingresses map[string]*ne
 				}
 
 				for _, ingressClass := range ingressClasses {
-					isHAProxy := strings.HasSuffix(ingressClass, "haproxy") && cfg.IsHAProxyEnabled()
+					isHAProxy := strings.HasSuffix(ingressClass, "haproxy")
+
+					if isHAProxy && !cfg.IsHAProxyEnabled() {
+						continue // only create HAProxy ingress where HAProxy is enabled
+					}
 
 					rule, err := createRedirectIngressRule(source, parsedFromRedirectURL.String(), isHAProxy)
 					if err != nil {
