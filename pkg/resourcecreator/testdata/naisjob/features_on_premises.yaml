@@ -118,6 +118,8 @@ tests:
                             value: "8080"
                           - name: BIND_ADDRESS
                             value: "0.0.0.0:8080"
+                          - name: NAIS_SERVICE_ACCOUNT_TOKEN_PATH
+                            value: /var/run/secrets/nais.io/serviceaccount/token
                         image: navikt/mynaisjob:1.2.3
                         securityContext:
                           runAsUser: 1069
@@ -143,6 +145,9 @@ tests:
                             cpu: 200m
                             memory: 256Mi
                         volumeMounts:
+                          - mountPath: /var/run/secrets/nais.io/serviceaccount
+                            name: nais-token
+                            readOnly: true
                           - mountPath: /etc/ssl/certs/java/cacerts
                             name: ca-bundle-jks
                             readOnly: true
@@ -178,6 +183,13 @@ tests:
                         type: RuntimeDefault
                     serviceAccountName: mynaisjob
                     volumes:
+                      - name: nais-token
+                        projected:
+                          sources:
+                            - serviceAccountToken:
+                                audience: nais
+                                expirationSeconds: 600
+                                path: token
                       - configMap:
                           name: ca-bundle-jks
                         name: ca-bundle-jks

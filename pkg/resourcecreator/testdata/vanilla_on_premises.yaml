@@ -116,6 +116,13 @@ tests:
                   app: myapplication
               spec:
                 volumes:
+                  - name: nais-token
+                    projected:
+                      sources:
+                        - serviceAccountToken:
+                            audience: nais
+                            expirationSeconds: 600
+                            path: token
                   - name: ca-bundle-jks
                     configMap:
                       name: ca-bundle-jks
@@ -167,6 +174,8 @@ tests:
                         value: "8080"
                       - name: BIND_ADDRESS
                         value: "0.0.0.0:8080"
+                      - name: NAIS_SERVICE_ACCOUNT_TOKEN_PATH
+                        value: /var/run/secrets/nais.io/serviceaccount/token
                     resources:
                       limits:
                         memory: 512Mi
@@ -174,6 +183,9 @@ tests:
                         cpu: 200m
                         memory: 256Mi
                     volumeMounts:
+                      - mountPath: /var/run/secrets/nais.io/serviceaccount
+                        name: nais-token
+                        readOnly: true
                       - name: ca-bundle-jks
                         readOnly: true
                         mountPath: /etc/ssl/certs/java/cacerts
