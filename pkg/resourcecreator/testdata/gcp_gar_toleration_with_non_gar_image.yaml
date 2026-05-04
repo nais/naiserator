@@ -67,6 +67,8 @@ tests:
                         value: "8080"
                       - name: BIND_ADDRESS
                         value: "0.0.0.0:8080"
+                      - name: NAIS_SERVICE_ACCOUNT_TOKEN_PATH
+                        value: /var/run/secrets/nais.io/serviceaccount/token
                     image: ghcr.io/nais/testapp:latest
                     imagePullPolicy: IfNotPresent
                     lifecycle:
@@ -97,5 +99,8 @@ tests:
                       seccompProfile:
                         type: RuntimeDefault
                     volumeMounts:
+                      - mountPath: /var/run/secrets/nais.io/serviceaccount
+                        name: nais-token
+                        readOnly: true
                       - mountPath: /tmp
                         name: writable-tmp
