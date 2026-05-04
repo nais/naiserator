@@ -32,16 +32,8 @@ type Config interface {
 	IsGCPEnabled() bool
 }
 
-// ManagedByLabel marks a ServiceAccount as created and managed by naiserator.
-// Used by the ValidatingAdmissionPolicy that locks the SA to its owning workload.
-const (
-	ManagedByLabel = "nais.io/managed-by"
-	ManagedByValue = "naiserator"
-)
-
 func Create(source resource.Source, ast *resource.Ast, cfg Config) {
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Labels[ManagedByLabel] = ManagedByValue
 
 	if cfg.IsGCPEnabled() {
 		googleProjectID := cfg.GetGoogleProjectID()
