@@ -80,25 +80,22 @@ jobs:
       chart_version: ${{ steps.package_chart.outputs.version }}
       chart_archive: ${{ steps.package_chart.outputs.archive }}
 
-  rollout:
+  deploy:
     runs-on: fasit-deploy
     permissions:
       id-token: write
     needs:
       - build_and_push
     steps:
-      - uses: nais/fasit-deploy@v3 # ratchet:exclude
+      - uses: nais/fasit-deploy@97187355184a7f0f4b7a36a2b49a86ce02240f7b # ratchet:nais/fasit-deploy@v4.0.0
         if: github.ref == 'refs/heads/master'
         with:
           chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_name }}
           version: ${{ needs.build_and_push.outputs.chart_version }}
-          target: |
-            {"kind": "tenant"}
-
-      - uses: nais/fasit-deploy@v3 # ratchet:exclude
-        if: github.ref == 'refs/heads/master'
-        with:
-          chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_name }}
-          version: ${{ needs.build_and_push.outputs.chart_version }}
-          target: |
-            {"kind":"onprem"}
+          targets: |
+            [
+              { "target": { "kind": "tenant", "tenant": "ci-nais" }, "wait": true },
+              { "target": { "kind": "onprem", "tenant": "ci-nais" }, "wait": true },
+              { "target": { "kind": "tenant" } },
+              { "target": { "kind": "onprem" } }
+            ]
