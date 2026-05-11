@@ -110,7 +110,11 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 		nginxKey, _ := strings.CutPrefix(key, "nginx.ingress.kubernetes.io/")
 		haProxyKey, ok := haProxyAnnotations[nginxKey]
 		if ok && haProxyKey != "" {
-			haProxy["haproxy.org/"+haProxyKey] = value
+			if strings.HasSuffix(nginxKey, "-timeout") && strings.HasPrefix(haProxyKey, "timeout-") {
+				haProxy["haproxy.org/"+haProxyKey] = value + "s"
+			} else {
+				haProxy["haproxy.org/"+haProxyKey] = value
+			}
 		}
 	}
 
