@@ -101,9 +101,11 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 	// (e.g. permanent-redirect, whitelist-source-range, proxy-body-size)
 	// have no direct HAProxy equivalent and are not propagated by naiserator.
 	haProxyAnnotations := map[string]string{
-		"proxy-read-timeout":    "timeout-server",
-		"proxy-send-timeout":    "timeout-client",
-		"proxy-connect-timeout": "timeout-connect",
+		"keepalive-timeout":      "timeout-http-keep-alive",
+		"proxy-read-timeout":     "timeout-server",
+		"proxy-send-timeout":     "timeout-client",
+		"proxy-connect-timeout":  "timeout-connect",
+		"whitelist-source-range": "whitelist",
 	}
 
 	for key, value := range nginxAnnotations {
