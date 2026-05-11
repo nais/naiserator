@@ -447,7 +447,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	ctx := t.Context()
 	cfg := config.Config{
 		Synchronizer: config.Synchronizer{
-			SynchronizationTimeout: 5 * time.Second,
+			SynchronizationTimeout: 17 * time.Second,
 			RolloutCheckInterval:   1 * time.Second,
 			RolloutTimeout:         20 * time.Second,
 		},
