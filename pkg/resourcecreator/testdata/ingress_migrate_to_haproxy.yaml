@@ -40,9 +40,9 @@ tests:
           metadata:
             annotations:
               nais.io/deploymentCorrelationID: ""
-              haproxy.org/timeout-server: "100"
-              haproxy.org/timeout-client: "101"
-              haproxy.org/timeout-connect: "102"
+              haproxy.org/timeout-server: "100s"
+              haproxy.org/timeout-client: "101s"
+              haproxy.org/timeout-connect: "102s"
               haproxy.org/path-rewrite: "some"
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
