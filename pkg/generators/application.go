@@ -102,6 +102,11 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 		return nil, err
 	}
 
+	err = preparePostgres(ctx, app, kube, o)
+	if err != nil {
+		return nil, err
+	}
+
 	o.Team = app.GetNamespace()
 
 	return o, nil
@@ -174,7 +179,7 @@ func (g *Application) Generate(source resource.Source, config any) (resource.Ope
 	}
 
 	if cfg.PostgresOperatorEnabled() {
-		err = postgres.Create(app, ast)
+		err = postgres.Create(app, ast, cfg)
 		if err != nil {
 			return nil, err
 		}

@@ -1,4 +1,4 @@
-package postgres
+package cnpg
 
 import (
 	"fmt"
@@ -8,12 +8,12 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func createNetworkPolicies(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+func createNetworkPolicies(source resource.Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
 	createPoolerNetworkPolicy(source, ast, pgClusterName, pgNamespace)
 	createSourceNetworkPolicy(source, ast, pgClusterName, pgNamespace)
 }
 
-func createPoolerNetworkPolicy(source Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
+func createPoolerNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.OwnerReferences = nil
 	objectMeta.Name = fmt.Sprintf("%s-pooler", pgClusterName)
@@ -28,8 +28,8 @@ func createPoolerNetworkPolicy(source Source, ast *resource.Ast, pgClusterName s
 		Spec: v1.NetworkPolicySpec{
 			PodSelector: meta_v1.LabelSelector{
 				MatchLabels: map[string]string{
-					"application":  "db-connection-pooler",
-					"cluster-name": pgClusterName,
+					"cnpg.io/podRole": "pooler",
+					"cnpg.io/cluster": pgClusterName,
 				},
 			},
 			Ingress: []v1.NetworkPolicyIngressRule{
@@ -59,7 +59,7 @@ func createPoolerNetworkPolicy(source Source, ast *resource.Ast, pgClusterName s
 	ast.AppendOperation(resource.OperationCreateOrUpdate, pgNetpol)
 }
 
-func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+func createSourceNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetName())
 
@@ -86,8 +86,8 @@ func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgClusterName, 
 							},
 							PodSelector: &meta_v1.LabelSelector{
 								MatchLabels: map[string]string{
-									"application":  "db-connection-pooler",
-									"cluster-name": pgClusterName,
+									"cnpg.io/podRole": "pooler",
+									"cnpg.io/cluster": pgClusterName,
 								},
 							},
 						},
