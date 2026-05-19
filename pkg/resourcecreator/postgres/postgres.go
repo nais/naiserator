@@ -22,6 +22,8 @@ const (
 	EngineCNPG = "cnpg"
 )
 
+var AllEngines = []string{EngineCNPG, EngineZalando}
+
 type Source interface {
 	resource.Source
 	GetPostgres() *nais_io_v1.Postgres
@@ -38,11 +40,12 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	}
 
 	engine := cfg.GetPostgresClusterEngine()
-	if engine == EngineZalando {
-		zalando.Create(source, ast, postgres)
-	} else if engine == EngineCNPG {
+	switch engine {
+	case EngineCNPG:
 		cnpg.Create(source, ast, postgres)
-	} else {
+	case EngineZalando:
+		zalando.Create(source, ast, postgres)
+	default:
 		return fmt.Errorf("unknown postgres engine: %v", engine)
 	}
 
