@@ -1,0 +1,35 @@
+testconfig:
+  description: ingress haproxy migration handles whitelist-source-range
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .bar
+      ingressClass: very-haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    annotations:
+      nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8, 192.168.0.0/16,127.0.0.1"
+  spec:
+    ingresses:
+      - https://foo.bar/baz
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-very-haproxy-efe42262
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "ingress created with correct config"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: |-
+                ###
+                # Added by naiserator due to the `nginx.ingress.kubernetes.io/whitelist-source-range` annotation:
+                acl allowed_src req.hdr_ip(X-Forwarded-For) 10.0.0.0/8 192.168.0.0/16 127.0.0.1
+                http-request deny deny_status 403 if !allowed_src
+                ###

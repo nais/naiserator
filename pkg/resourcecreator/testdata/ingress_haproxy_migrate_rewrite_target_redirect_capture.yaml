@@ -38,7 +38,11 @@ tests:
         resource:
           metadata:
             annotations:
-              haproxy.org/backend-config-snippet: 'http-request redirect location https://login.nav.no/oauth2/login\2 code 302'
+              haproxy.org/backend-config-snippet: |-
+                ###
+                # Added by naiserator due to the `nginx.ingress.kubernetes.io/rewrite-target` annotation:
+                http-request redirect location https://login.nav.no/oauth2/login\2 code 302
+                ###
           spec:
             ingressClassName: haproxy
             rules:

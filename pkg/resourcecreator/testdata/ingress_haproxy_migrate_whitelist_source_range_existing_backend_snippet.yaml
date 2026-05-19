@@ -1,0 +1,44 @@
+testconfig:
+  description: ingress haproxy migration appends generated snippets to an existing backend snippet
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .bar
+      ingressClass: very-haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    annotations:
+      haproxy.org/backend-config-snippet: "http-request set-header X-Test preserved"
+      nginx.ingress.kubernetes.io/rewrite-target: "https://example.com/some/path"
+      nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,192.168.0.0/16"
+  spec:
+    ingresses:
+      - https://foo.bar/baz
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-very-haproxy-efe42262
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "ingress created with combined backend snippet"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/backend-config-snippet: |-
+                http-request set-header X-Test preserved
+
+                ###
+                # Added by naiserator due to the `nginx.ingress.kubernetes.io/rewrite-target` annotation:
+                http-request redirect location https://example.com/some/path code 302
+                ###
+
+                ###
+                # Added by naiserator due to the `nginx.ingress.kubernetes.io/whitelist-source-range` annotation:
+                acl allowed_src req.hdr_ip(X-Forwarded-For) 10.0.0.0/8 192.168.0.0/16
+                http-request deny deny_status 403 if !allowed_src
+                ###

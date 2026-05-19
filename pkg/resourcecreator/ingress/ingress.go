@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	regexSuffix = "(/.*)?"
+	regexSuffix                    = "(/.*)?"
+	haproxyBackendConfigAnnotation = "haproxy.org/backend-config-snippet"
 )
 
 type Source interface {
@@ -86,9 +87,17 @@ func parseIngress(ingress string) (*url.URL, error) {
 
 func copyHAProxyAnnotations(dst, src map[string]string) {
 	for k, v := range src {
-		if strings.HasPrefix(k, "haproxy.org/") {
-			dst[k] = v
+		if !strings.HasPrefix(k, "haproxy.org/") {
+			continue
 		}
+
+		if k == haproxyBackendConfigAnnotation {
+			if existing := dst[k]; existing != "" {
+				dst[k] = fmt.Sprintf("%s\n\n%s", v, existing)
+				continue
+			}
+		}
+		dst[k] = v
 	}
 }
 
@@ -98,30 +107,32 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 
 	// Mapping from nginx annotation short key to HAProxy equivalent.
 	// Only timeout annotations are migrated; other nginx annotations
-	// (e.g. permanent-redirect, whitelist-source-range, proxy-body-size)
+	// (e.g. permanent-redirect, proxy-body-size)
 	// have no direct HAProxy equivalent and are not propagated by naiserator.
 	haProxyAnnotations := map[string]string{
-		"keepalive-timeout":      "timeout-http-keep-alive",
-		"proxy-connect-timeout":  "timeout-connect",
-		"proxy-read-timeout":     "timeout-server",
-		"proxy-send-timeout":     "timeout-client",
-		"upstream-vhost":         "set-host",
-		"whitelist-source-range": "whitelist",
+		"keepalive-timeout":     "timeout-http-keep-alive",
+		"proxy-connect-timeout": "timeout-connect",
+		"proxy-read-timeout":    "timeout-server",
+		"proxy-send-timeout":    "timeout-client",
+		"upstream-vhost":        "set-host",
+		"limit-rpm":             "rate-limit-request",
 	}
 
 	for key, value := range nginxAnnotations {
 		nginxKey, _ := strings.CutPrefix(key, "nginx.ingress.kubernetes.io/")
-		haProxyKey, ok := haProxyAnnotations[nginxKey]
-		if ok && haProxyKey != "" {
-			if strings.HasSuffix(nginxKey, "-timeout") && strings.HasPrefix(haProxyKey, "timeout-") {
-				haProxy["haproxy.org/"+haProxyKey] = value + "s"
-			} else {
-				haProxy["haproxy.org/"+haProxyKey] = value
-			}
+		haProxyKey, performMapping := haProxyAnnotations[nginxKey]
+		if !performMapping || haProxyKey == "" {
+			continue
+		}
+
+		haProxy["haproxy.org/"+haProxyKey] = value
+		if strings.HasSuffix(nginxKey, "-timeout") && strings.HasPrefix(haProxyKey, "timeout-") {
+			haProxy["haproxy.org/"+haProxyKey] = value + "s"
 		}
 	}
 
 	migrateRewriteTarget(haProxy, nginxAnnotations)
+	migrateWhitelistSourceRange(haProxy, nginxAnnotations)
 }
 
 var (
@@ -165,6 +176,37 @@ func migrateRewriteTarget(annotations, nginxAnnotations map[string]string) {
 	migrateRewriteTargetAsSnippet(annotations, rewriteTarget)
 }
 
+func migrateWhitelistSourceRange(annotations, nginxAnnotations map[string]string) {
+	whitelistSourceRange := nginxAnnotations["nginx.ingress.kubernetes.io/whitelist-source-range"]
+	if whitelistSourceRange == "" {
+		return
+	}
+
+	ranges := []string{}
+	for sourceRange := range strings.SplitSeq(whitelistSourceRange, ",") {
+		sourceRange = strings.TrimSpace(sourceRange)
+		if sourceRange != "" {
+			ranges = append(ranges, sourceRange)
+		}
+	}
+	if len(ranges) == 0 {
+		return
+	}
+
+	snippet := fmt.Sprintf(
+		"acl allowed_src req.hdr_ip(X-Forwarded-For) %s\nhttp-request deny deny_status 403 if !allowed_src",
+		strings.Join(ranges, " "),
+	)
+	delimiter := "# Added by naiserator due to the `nginx.ingress.kubernetes.io/whitelist-source-range` annotation:"
+	snippet = fmt.Sprintf("###\n%s\n%s\n###", delimiter, snippet)
+
+	if existing := annotations[haproxyBackendConfigAnnotation]; existing != "" {
+		annotations[haproxyBackendConfigAnnotation] = fmt.Sprintf("%s\n\n%s", existing, snippet)
+		return
+	}
+	annotations[haproxyBackendConfigAnnotation] = snippet
+}
+
 // nginxToHAProxyCaptureGroups converts $1, $2 to \1, \2
 func nginxToHAProxyCaptureGroups(s string) string {
 	return nginxCaptureGroupRegex.ReplaceAllString(s, `\$1`)
@@ -174,7 +216,15 @@ func nginxToHAProxyCaptureGroups(s string) string {
 func migrateRewriteTargetAsSnippet(annotations map[string]string, rewriteTarget string) {
 	haproxyTarget := nginxToHAProxyCaptureGroups(rewriteTarget)
 	haproxyTarget = nginxArgVariableRegex.ReplaceAllString(haproxyTarget, `%[url_param($1)]`)
-	annotations["haproxy.org/backend-config-snippet"] = fmt.Sprintf("http-request redirect location %s code 302", haproxyTarget)
+	snippet := fmt.Sprintf("http-request redirect location %s code 302", haproxyTarget)
+	delimiter := "# Added by naiserator due to the `nginx.ingress.kubernetes.io/rewrite-target` annotation:"
+	snippet = fmt.Sprintf("###\n%s\n%s\n###", delimiter, snippet)
+
+	if existing := annotations[haproxyBackendConfigAnnotation]; existing != "" {
+		annotations[haproxyBackendConfigAnnotation] = fmt.Sprintf("%s\n\n%s", existing, snippet)
+		return
+	}
+	annotations[haproxyBackendConfigAnnotation] = snippet
 }
 
 func copyNginxAnnotations(dst, src map[string]string) {

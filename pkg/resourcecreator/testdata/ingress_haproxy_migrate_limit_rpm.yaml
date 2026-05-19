@@ -1,5 +1,5 @@
 testconfig:
-  description: ingress haproxy migration converts static rewrite-target capture groups
+  description: ingress haproxy migration handles limit-rpm
 config:
   features:
     haproxy: true
@@ -12,7 +12,7 @@ input:
   metadata:
     name: myapplication
     annotations:
-      nginx.ingress.kubernetes.io/rewrite-target: "/$1/rest"
+      nginx.ingress.kubernetes.io/limit-rpm: "500"
   spec:
     ingresses:
       - https://foo.bar/baz
@@ -23,8 +23,8 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: subset
-        name: "ingress created with converted path rewrite capture group"
+        name: "ingress created with correct annotations"
         resource:
           metadata:
             annotations:
-              haproxy.org/path-rewrite: "/\\1/rest"
+              haproxy.org/rate-limit-request: "500"
