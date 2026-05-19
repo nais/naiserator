@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"fmt"
+
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/naiserator/pkg/resourcecreator/postgres/cnpg"
 	"github.com/nais/naiserator/pkg/resourcecreator/postgres/zalando"
@@ -40,6 +42,8 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		zalando.Create(source, ast, postgres)
 	} else if engine == EngineCNPG {
 		cnpg.Create(source, ast, postgres)
+	} else {
+		return fmt.Errorf("unknown postgres engine: %v", engine)
 	}
 
 	return nil
