@@ -1,0 +1,44 @@
+testconfig:
+  description: ingress haproxy migration ignores empty nginx annotations
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .bar
+      ingressClass: very-haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    annotations:
+      nginx.ingress.kubernetes.io/limit-rpm: ""
+      nginx.ingress.kubernetes.io/whitelist-source-range: ""
+      nginx.ingress.kubernetes.io/rewrite-target: ""
+  spec:
+    ingresses:
+      - https://foo.bar/baz
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-very-haproxy-efe42262
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "ingress created without any migrated haproxy annotations"
+        exclude:
+          - .status
+          - .spec
+          - .metadata.creationTimestamp
+          - .metadata.ownerReferences
+          - .metadata.labels
+          - .metadata.name
+          - .metadata.namespace
+          - .metadata.uid
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/rate-limit-request: ""
+              nais.io/deploymentCorrelationID: ""
+              prometheus.io/path: ""
+              prometheus.io/scrape: "true"

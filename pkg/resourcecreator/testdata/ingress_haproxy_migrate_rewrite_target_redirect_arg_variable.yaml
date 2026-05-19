@@ -37,7 +37,11 @@ tests:
         resource:
           metadata:
             annotations:
-              haproxy.org/backend-config-snippet: 'http-request redirect location https://syk-dig.intern.dev.nav.no/oppgave/%[url_param(oppgaveid)]? code 302'
+              haproxy.org/backend-config-snippet: |-
+                ###
+                # Added by naiserator due to the `nginx.ingress.kubernetes.io/rewrite-target` annotation:
+                http-request redirect location https://syk-dig.intern.dev.nav.no/oppgave/%[url_param(oppgaveid)]? code 302
+                ###
           spec:
             ingressClassName: haproxy
             rules:
