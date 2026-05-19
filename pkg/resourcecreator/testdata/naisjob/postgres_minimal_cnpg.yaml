@@ -36,7 +36,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: pg-mynaisjob
+    name: my-postgres-cluster-b0f4f436-pg
     namespace: mynamespace
     match:
       - name: "source to postgres network policy created"
@@ -60,7 +60,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: my-postgres-cluster-pooler
+    name: my-postgres-cluster-b0f4f436-pooler
     namespace: mynamespace
     match:
       - name: "postgres pooler network policy created"

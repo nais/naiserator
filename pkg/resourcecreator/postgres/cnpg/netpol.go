@@ -3,9 +3,11 @@ package cnpg
 import (
 	"fmt"
 
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func createNetworkPolicies(source resource.Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
@@ -14,9 +16,13 @@ func createNetworkPolicies(source resource.Source, ast *resource.Ast, pgClusterN
 }
 
 func createPoolerNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
+	var err error
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.OwnerReferences = nil
-	objectMeta.Name = fmt.Sprintf("%s-pooler", pgClusterName)
+	objectMeta.Name, err = namegen.SuffixedShortName(pgClusterName, "pooler", validation.DNS1123SubdomainMaxLength)
+	if err != nil {
+		panic(fmt.Sprintf("Error when hashing, this should be impossible: %v", err))
+	}
 	objectMeta.Namespace = pgNamespace
 
 	pgNetpol := &v1.NetworkPolicy{
@@ -60,8 +66,12 @@ func createPoolerNetworkPolicy(source resource.Source, ast *resource.Ast, pgClus
 }
 
 func createSourceNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+	var err error
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetName())
+	objectMeta.Name, err = namegen.SuffixedShortName(pgClusterName, "pg", validation.DNS1123LabelMaxLength)
+	if err != nil {
+		panic(fmt.Sprintf("Error when hashing, this should be impossible: %v", err))
+	}
 
 	sourceNetpol := &v1.NetworkPolicy{
 		ObjectMeta: objectMeta,
