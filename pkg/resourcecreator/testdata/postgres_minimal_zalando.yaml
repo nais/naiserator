@@ -1,5 +1,5 @@
 testconfig:
-  description: postgresql with too long cluster name
+  description: minimal postgresql provisioned with databases and automatic configuration
 config:
   features:
     postgres-operator: true
@@ -14,7 +14,7 @@ input:
   spec:
     image: navikt/myapplication:1.2.3
     postgres:
-      clusterName: this-is-a-very-long-postgres-cluster-name-exceeding-the-maximum-length
+      clusterName: my-postgres-cluster
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -24,6 +24,13 @@ existing:
     apiVersion: v1
     metadata:
       name: pg-mynamespace
+  - kind: Postgres
+    apiVersion: data.nais.io/v1
+    metadata:
+      name: my-postgres-cluster
+      namespace: mynamespace
+      annotations:
+        postgres.nais.io/active-engine: zalando
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
@@ -43,7 +50,7 @@ tests:
                     podSelector:
                       matchLabels:
                         application: db-connection-pooler
-                        cluster-name: this-is-a-very-long-postgres-cluster-name-a4197108
+                        cluster-name: my-postgres-cluster
             podSelector:
               matchLabels:
                 app: myapplication
@@ -52,7 +59,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: this-is-a-very-long-postgres-cluster-name-a4197108-pooler
+    name: my-postgres-cluster-pooler
     namespace: pg-mynamespace
     match:
       - name: "postgres pooler network policy created"
@@ -70,7 +77,7 @@ tests:
             podSelector:
               matchLabels:
                 application: db-connection-pooler
-                cluster-name: this-is-a-very-long-postgres-cluster-name-a4197108
+                cluster-name: my-postgres-cluster
 
   - apiVersion: apps/v1
     kind: Deployment
@@ -95,7 +102,7 @@ tests:
                     image: navikt/myapplication:1.2.3
                     env:
                       - name: PGHOST
-                        value: this-is-a-very-long-postgres-cluster-name-a4197108-pooler.pg-mynamespace
+                        value: my-postgres-cluster-pooler.pg-mynamespace
                       - name: PGPORT
                         value: "5432"
                       - name: PGDATABASE
@@ -103,14 +110,14 @@ tests:
                       - name: PGUSER
                         valueFrom:
                           secretKeyRef:
-                            name: app-owner-user.this-is-a-very-long-postgres-cluster-name-a4197108.credentials.postgresql.acid.zalan.do
+                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
                             key: username
                       - name: PGPASSWORD
                         valueFrom:
                           secretKeyRef:
-                            name: app-owner-user.this-is-a-very-long-postgres-cluster-name-a4197108.credentials.postgresql.acid.zalan.do
+                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
                             key: password
                       - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@this-is-a-very-long-postgres-cluster-name-a4197108-pooler.pg-mynamespace:5432/app"
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.pg-mynamespace:5432/app"
                       - name: PGJDBCURL
-                        value: "jdbc:postgresql://this-is-a-very-long-postgres-cluster-name-a4197108-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"
+                        value: "jdbc:postgresql://my-postgres-cluster-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

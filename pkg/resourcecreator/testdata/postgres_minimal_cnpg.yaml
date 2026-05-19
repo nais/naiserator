@@ -24,11 +24,19 @@ existing:
     apiVersion: v1
     metadata:
       name: pg-mynamespace
+  - kind: Postgres
+    apiVersion: data.nais.io/v1
+    metadata:
+      name: my-postgres-cluster
+      namespace: mynamespace
+      annotations:
+        postgres.nais.io/engine: cnpg
+        postgres.nais.io/active-engine: cnpg
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: pg-myapplication
+    name: my-postgres-cluster-b0f4f436-pg
     namespace: mynamespace
     match:
       - name: "source to postgres network policy created"
@@ -39,11 +47,11 @@ tests:
               - to:
                   - namespaceSelector:
                       matchLabels:
-                        kubernetes.io/metadata.name: pg-mynamespace
+                        kubernetes.io/metadata.name: mynamespace
                     podSelector:
                       matchLabels:
-                        application: db-connection-pooler
-                        cluster-name: my-postgres-cluster
+                        cnpg.io/podRole: pooler
+                        cnpg.io/cluster: my-postgres-cluster
             podSelector:
               matchLabels:
                 app: myapplication
@@ -52,8 +60,8 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
-    name: my-postgres-cluster-pooler
-    namespace: pg-mynamespace
+    name: my-postgres-cluster-b0f4f436-pooler
+    namespace: mynamespace
     match:
       - name: "postgres pooler network policy created"
         type: subset
@@ -69,8 +77,8 @@ tests:
                         app: myapplication
             podSelector:
               matchLabels:
-                application: db-connection-pooler
-                cluster-name: my-postgres-cluster
+                cnpg.io/podRole: pooler
+                cnpg.io/cluster: my-postgres-cluster
 
   - apiVersion: apps/v1
     kind: Deployment
@@ -95,7 +103,7 @@ tests:
                     image: navikt/myapplication:1.2.3
                     env:
                       - name: PGHOST
-                        value: my-postgres-cluster-pooler.pg-mynamespace
+                        value: my-postgres-cluster-pooler.mynamespace
                       - name: PGPORT
                         value: "5432"
                       - name: PGDATABASE
@@ -103,14 +111,14 @@ tests:
                       - name: PGUSER
                         valueFrom:
                           secretKeyRef:
-                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
+                            name: my-postgres-cluster-app
                             key: username
                       - name: PGPASSWORD
                         valueFrom:
                           secretKeyRef:
-                            name: app-owner-user.my-postgres-cluster.credentials.postgresql.acid.zalan.do
+                            name: my-postgres-cluster-app
                             key: password
                       - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.pg-mynamespace:5432/app"
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.mynamespace:5432/app"
                       - name: PGJDBCURL
-                        value: "jdbc:postgresql://my-postgres-cluster-pooler.pg-mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"
+                        value: "jdbc:postgresql://my-postgres-cluster-pooler.mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

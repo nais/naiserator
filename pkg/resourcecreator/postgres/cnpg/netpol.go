@@ -1,22 +1,28 @@
-package postgres
+package cnpg
 
 import (
 	"fmt"
 
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func createNetworkPolicies(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+func createNetworkPolicies(source resource.Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
 	createPoolerNetworkPolicy(source, ast, pgClusterName, pgNamespace)
 	createSourceNetworkPolicy(source, ast, pgClusterName, pgNamespace)
 }
 
-func createPoolerNetworkPolicy(source Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
+func createPoolerNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
+	var err error
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.OwnerReferences = nil
-	objectMeta.Name = fmt.Sprintf("%s-pooler", pgClusterName)
+	objectMeta.Name, err = namegen.SuffixedShortName(pgClusterName, "pooler", validation.DNS1123SubdomainMaxLength)
+	if err != nil {
+		panic(fmt.Sprintf("Error when hashing, this should be impossible: %v", err))
+	}
 	objectMeta.Namespace = pgNamespace
 
 	pgNetpol := &v1.NetworkPolicy{
@@ -28,8 +34,8 @@ func createPoolerNetworkPolicy(source Source, ast *resource.Ast, pgClusterName s
 		Spec: v1.NetworkPolicySpec{
 			PodSelector: meta_v1.LabelSelector{
 				MatchLabels: map[string]string{
-					"application":  "db-connection-pooler",
-					"cluster-name": pgClusterName,
+					"cnpg.io/podRole": "pooler",
+					"cnpg.io/cluster": pgClusterName,
 				},
 			},
 			Ingress: []v1.NetworkPolicyIngressRule{
@@ -59,9 +65,13 @@ func createPoolerNetworkPolicy(source Source, ast *resource.Ast, pgClusterName s
 	ast.AppendOperation(resource.OperationCreateOrUpdate, pgNetpol)
 }
 
-func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+func createSourceNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
+	var err error
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name = fmt.Sprintf("pg-%s", source.GetName())
+	objectMeta.Name, err = namegen.SuffixedShortName(pgClusterName, "pg", validation.DNS1123LabelMaxLength)
+	if err != nil {
+		panic(fmt.Sprintf("Error when hashing, this should be impossible: %v", err))
+	}
 
 	sourceNetpol := &v1.NetworkPolicy{
 		ObjectMeta: objectMeta,
@@ -86,8 +96,8 @@ func createSourceNetworkPolicy(source Source, ast *resource.Ast, pgClusterName, 
 							},
 							PodSelector: &meta_v1.LabelSelector{
 								MatchLabels: map[string]string{
-									"application":  "db-connection-pooler",
-									"cluster-name": pgClusterName,
+									"cnpg.io/podRole": "pooler",
+									"cnpg.io/cluster": pgClusterName,
 								},
 							},
 						},
