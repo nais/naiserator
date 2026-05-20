@@ -97,6 +97,12 @@ func copyHAProxyAnnotations(dst, src map[string]string) {
 				continue
 			}
 		}
+		if k == "haproxy.org/request-set-header" {
+			if existing := dst[k]; existing != "" {
+				dst[k] = fmt.Sprintf("%s\n%s", v, existing)
+				continue
+			}
+		}
 		dst[k] = v
 	}
 }
@@ -133,6 +139,7 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 
 	migrateRewriteTarget(haProxy, nginxAnnotations)
 	migrateWhitelistSourceRange(haProxy, nginxAnnotations)
+	migrateConfigurationSnippet(haProxy, nginxAnnotations)
 }
 
 var (
@@ -205,6 +212,63 @@ func migrateWhitelistSourceRange(annotations, nginxAnnotations map[string]string
 		return
 	}
 	annotations[haproxyBackendConfigAnnotation] = snippet
+}
+
+func migrateConfigurationSnippet(annotations, nginxAnnotations map[string]string) {
+	snippet := nginxAnnotations["nginx.ingress.kubernetes.io/configuration-snippet"]
+	if snippet == "" {
+		return
+	}
+
+	var setHeaders []string
+	for line := range strings.SplitSeq(snippet, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "proxy_set_header ") || !strings.HasSuffix(line, ";") {
+			continue
+		}
+
+		// We expect `proxy_set_header <header name> <header value>` syntax
+		inner := strings.TrimSpace(line[len("proxy_set_header ") : len(line)-1])
+		parts := strings.Fields(inner) // Used only to verify that both fields exist.
+		if len(parts) < 2 {
+			continue
+		}
+
+		// Parse `<header value>` to see if it's something we support automatically mapping
+		targetHeader := parts[0]
+		value := strings.TrimSpace(inner[len(targetHeader):])
+		headerValue := strings.Trim(value, `"'`)
+		if headerValue == "" {
+			continue
+		}
+
+		valueHeaderName, isHTTPHeaderVariable := strings.CutPrefix(headerValue, "$http_")
+		if !isHTTPHeaderVariable && strings.Contains(headerValue, "$") { // -> It's another nginx variable, we don't handle those
+			continue
+		}
+
+		haproxyValue := headerValue
+		if isHTTPHeaderVariable {
+			if strings.Contains(valueHeaderName, "$") { // -> It's another nginx variable, we don't handle those
+				continue
+			}
+			// At this point we assume it's safe to interpret it as described for `$http_` here:
+			// https://nginx.org/en/docs/http/ngx_http_core_module.html#variables
+			srcHeader := strings.ReplaceAll(valueHeaderName, "_", "-")
+			haproxyValue = fmt.Sprintf("%%[req.fhdr(%s)]", srcHeader)
+		}
+
+		setHeaders = append(setHeaders, fmt.Sprintf("%s %s", targetHeader, haproxyValue))
+	}
+
+	if len(setHeaders) == 0 {
+		return
+	}
+
+	if existing := annotations["haproxy.org/request-set-header"]; existing != "" {
+		setHeaders = append(setHeaders, existing)
+	}
+	annotations["haproxy.org/request-set-header"] = strings.Join(setHeaders, "\n")
 }
 
 // nginxToHAProxyCaptureGroups converts $1, $2 to \1, \2
