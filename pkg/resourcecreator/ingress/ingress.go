@@ -115,7 +115,6 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 		"proxy-read-timeout":    "timeout-server",
 		"proxy-send-timeout":    "timeout-client",
 		"upstream-vhost":        "set-host",
-		"limit-rpm":             "rate-limit-request",
 	}
 
 	for key, value := range nginxAnnotations {
@@ -131,6 +130,7 @@ func migrateNginxAnnotationsToHAProxyAnnotations(haProxy, nginx map[string]strin
 		}
 	}
 
+	migrateLimitRpm(haProxy, nginxAnnotations)
 	migrateRewriteTarget(haProxy, nginxAnnotations)
 	migrateWhitelistSourceRange(haProxy, nginxAnnotations)
 }
@@ -139,6 +139,17 @@ var (
 	nginxCaptureGroupRegex = regexp.MustCompile(`\$(\d+)`)
 	nginxArgVariableRegex  = regexp.MustCompile(`\$arg_(\w+)`)
 )
+
+func migrateLimitRpm(annotations, nginxAnnotations map[string]string) {
+	limitRpm := nginxAnnotations["nginx.ingress.kubernetes.io/limit-rpm"]
+	if limitRpm == "" {
+		return
+	}
+
+	annotations["haproxy.org/rate-limit-period"] = "1m"
+	annotations["haproxy.org/rate-limit-request"] = fmt.Sprint(limitRpm)
+	annotations["haproxy.org/rate-limit-status-code"] = "429"
+}
 
 // migrateRewriteTarget translates an nginx rewrite-target annotation to equivalent HAProxy annotation(s)
 func migrateRewriteTarget(annotations, nginxAnnotations map[string]string) {
