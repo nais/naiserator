@@ -12,6 +12,9 @@ import (
 const (
 	// ==== These constants are copied from pgrator ====
 
+	// EngineAnnotation is set by users to request a specific Postgres engine.
+	EngineAnnotation = "postgres.nais.io/engine"
+
 	// ActiveEngineAnnotation is set by the operator to persist the engine choice
 	// after first reconcile. Used to detect and reject engine changes.
 	ActiveEngineAnnotation = "postgres.nais.io/active-engine"
