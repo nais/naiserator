@@ -2,6 +2,7 @@ package generators
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -13,14 +14,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func TestPreparePostgresEngineFallback(t *testing.T) {
+func TestPreparePostgresEngineResolution(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		name        string
 		annotations map[string]string
 		wantEngine  string
-		wantError   bool
+		wantErr     string
 	}{
 		{
 			name: "uses active-engine when present",
@@ -30,23 +31,16 @@ func TestPreparePostgresEngineFallback(t *testing.T) {
 			wantEngine: postgres.EngineCNPG,
 		},
 		{
-			name: "falls back to engine annotation when active-engine is missing",
-			annotations: map[string]string{
-				postgres.EngineAnnotation: postgres.EngineCNPG,
-			},
-			wantEngine: postgres.EngineCNPG,
-		},
-		{
-			name:        "defaults to zalando when both engine annotations are missing",
+			name:        "returns retry error when active-engine is missing",
 			annotations: nil,
-			wantEngine:  postgres.EngineZalando,
+			wantErr:     "waiting for pgrator to set active-engine annotation",
 		},
 		{
-			name: "returns error for unknown engine from annotation",
+			name: "returns error for unknown active-engine",
 			annotations: map[string]string{
-				postgres.EngineAnnotation: "unknown",
+				postgres.ActiveEngineAnnotation: "unknown",
 			},
-			wantError: true,
+			wantErr: "unknown postgres engine: unknown",
 		},
 	}
 
@@ -92,9 +86,12 @@ func TestPreparePostgresEngineFallback(t *testing.T) {
 			opts := &Options{}
 
 			err := preparePostgres(context.Background(), source, cl, opts)
-			if tt.wantError {
+			if tt.wantErr != "" {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
+				}
+				if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Fatalf("error = %q, want to contain %q", err.Error(), tt.wantErr)
 				}
 				return
 			}

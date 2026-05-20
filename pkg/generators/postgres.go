@@ -33,10 +33,7 @@ func preparePostgres(ctx context.Context, source postgres.Source, kube client.Cl
 
 	engine := postgresMeta.GetAnnotations()[postgres.ActiveEngineAnnotation]
 	if engine == "" {
-		engine = postgresMeta.GetAnnotations()[postgres.EngineAnnotation]
-	}
-	if engine == "" {
-		engine = postgres.EngineZalando
+		return fmt.Errorf("waiting for pgrator to set active-engine annotation on %s/%s", postgresMeta.GetNamespace(), postgresMeta.GetName())
 	}
 	if !slices.Contains(postgres.AllEngines, engine) {
 		return fmt.Errorf("unknown postgres engine: %v", engine)
