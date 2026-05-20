@@ -38,7 +38,6 @@ tests:
         resource:
           metadata:
             annotations:
-              haproxy.org/rate-limit-request: ""
               nais.io/deploymentCorrelationID: ""
               prometheus.io/path: ""
               prometheus.io/scrape: "true"
