@@ -30,6 +30,7 @@ func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) e
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1.Naisjob{}).
 		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
+		WatchesMetadata(postgresPartialObjectMetadata(), handler.EnqueueRequestsFromMapFunc(mapPostgresToNaisjobs(mgr.GetClient()))).
 		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }

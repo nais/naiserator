@@ -31,6 +31,9 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Optio
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1alpha1.Application{}).
 		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
+		WatchesMetadata(postgresPartialObjectMetadata(), handler.EnqueueRequestsFromMapFunc(mapPostgresToApplications(mgr.GetClient()))).
 		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }
+
+// +kubebuilder:rbac:groups=data.nais.io,resources=postgres,verbs=get;list;watch
