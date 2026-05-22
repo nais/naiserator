@@ -34,7 +34,7 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Optio
 		For(&nais_io_v1alpha1.Application{}).
 		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
 		WatchesMetadata(
-			postgresPartialObjectMetadata(),
+			postgresMetadata,
 			handler.EnqueueRequestsFromMapFunc(mapPostgresToApplications(mgr.GetClient())),
 			builder.WithPredicates(predicate.AnnotationChangedPredicate{}),
 		).

@@ -11,15 +11,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// postgresPartialObjectMetadata returns a PartialObjectMetadata configured to
-// watch Postgres CRs. Using metadata-only watches avoids pulling full specs.
-func postgresPartialObjectMetadata() *metav1.PartialObjectMetadata {
-	return &metav1.PartialObjectMetadata{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "data.nais.io/v1",
-			Kind:       "Postgres",
-		},
-	}
+// postgresMetadata is a PartialObjectMetadata for watching Postgres CRs.
+// Using metadata-only watches avoids pulling full specs.
+var postgresMetadata = &metav1.PartialObjectMetadata{
+	TypeMeta: metav1.TypeMeta{
+		APIVersion: "data.nais.io/v1",
+		Kind:       "Postgres",
+	},
 }
 
 // mapPostgresToApplications returns a map function that enqueues Applications

@@ -33,7 +33,7 @@ func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) e
 		For(&nais_io_v1.Naisjob{}).
 		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
 		WatchesMetadata(
-			postgresPartialObjectMetadata(),
+			postgresMetadata,
 			handler.EnqueueRequestsFromMapFunc(mapPostgresToNaisjobs(mgr.GetClient())),
 			builder.WithPredicates(predicate.AnnotationChangedPredicate{}),
 		).
