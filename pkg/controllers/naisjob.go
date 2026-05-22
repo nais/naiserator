@@ -5,7 +5,9 @@ import (
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 type NaisjobReconciler struct {
@@ -30,7 +32,11 @@ func (r *NaisjobReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Option) e
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1.Naisjob{}).
 		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
-		WatchesMetadata(postgresPartialObjectMetadata(), handler.EnqueueRequestsFromMapFunc(mapPostgresToNaisjobs(mgr.GetClient()))).
+		WatchesMetadata(
+			postgresPartialObjectMetadata(),
+			handler.EnqueueRequestsFromMapFunc(mapPostgresToNaisjobs(mgr.GetClient())),
+			builder.WithPredicates(predicate.AnnotationChangedPredicate{}),
+		).
 		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }
