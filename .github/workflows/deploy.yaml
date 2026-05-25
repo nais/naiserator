@@ -87,7 +87,7 @@ jobs:
     needs:
       - build_and_push
     steps:
-      - uses: nais/fasit-deploy@58a70a338b16dc646373c91724fc7e7522d085a4 # ratchet:nais/fasit-deploy@v4.0.1
+      - uses: nais/fasit-deploy@9f870e05e92cde6cfd827b13384ec09e80be65fd # ratchet:nais/fasit-deploy@v4.1.0
         if: github.ref == 'refs/heads/master'
         with:
           chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_name }}
