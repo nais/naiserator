@@ -6,7 +6,9 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 type ApplicationReconciler struct {
@@ -31,6 +33,13 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, opts ...Optio
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nais_io_v1alpha1.Application{}).
 		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob)).
+		WatchesMetadata(
+			postgresMetadata,
+			handler.EnqueueRequestsFromMapFunc(mapPostgresToApplications(mgr.GetClient())),
+			builder.WithPredicates(predicate.AnnotationChangedPredicate{}),
+		).
 		WithOptions(asControllerOptions(opts)).
 		Complete(r)
 }
+
+// +kubebuilder:rbac:groups=data.nais.io,resources=postgres,verbs=get;list;watch
