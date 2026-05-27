@@ -20,7 +20,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	k8s_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -306,11 +305,6 @@ func (n *Synchronizer) cleanUpAfterAppDeletion(ctx context.Context, app resource
 			return err
 		}
 
-		err = n.deletePostgresResources(ctx, app)
-		if err != nil {
-			return err
-		}
-
 		controllerutil.RemoveFinalizer(app, NaiseratorFinalizer)
 		err = n.Update(ctx, app)
 		if err != nil {
@@ -396,24 +390,6 @@ func (n *Synchronizer) deleteImageResource(ctx context.Context, src resource.Sou
 		if k8s_errors.IsNotFound(err) {
 			return nil
 		}
-		return err
-	}
-
-	return nil
-}
-
-func (n *Synchronizer) deletePostgresResources(ctx context.Context, app resource.Source) error {
-	if !n.config.Features.PostgresOperator {
-		return nil
-	}
-
-	pgNamespace := "pg-" + app.GetNamespace()
-
-	err := n.DeleteAllOf(ctx, &networkingv1.NetworkPolicy{},
-		client.MatchingLabels{"app": app.GetName()},
-		client.InNamespace(pgNamespace),
-	)
-	if err != nil && client.IgnoreNotFound(err) != nil {
 		return err
 	}
 
