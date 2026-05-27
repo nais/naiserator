@@ -12,10 +12,6 @@ import (
 const (
 	// ==== These constants are copied from pgrator ====
 
-	// ActiveEngineAnnotation is set by the operator to persist the engine choice
-	// after first reconcile. Used to detect and reject engine changes.
-	ActiveEngineAnnotation = "postgres.nais.io/active-engine"
-
 	// EngineZalando is the Zalando Postgres Operator engine (default).
 	EngineZalando = "zalando"
 	// EngineCNPG is the CloudNativePG engine.
