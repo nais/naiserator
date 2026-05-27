@@ -162,7 +162,7 @@ func run() error {
 		controllers.WithMaxConcurrentReconciles(cfg.MaxConcurrentReconciles),
 	}
 
-	err = applicationReconciler.SetupWithManager(mgr, opts...)
+	err = applicationReconciler.SetupWithManager(mgr, cfg, opts...)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func run() error {
 		kscheme,
 	))
 
-	err = naisjobReconciler.SetupWithManager(mgr, opts...)
+	err = naisjobReconciler.SetupWithManager(mgr, cfg, opts...)
 	if err != nil {
 		return err
 	}

@@ -141,7 +141,7 @@ func newTestRig(config config.Config) (*testRig, error) {
 		rig.scheme,
 	))
 
-	err = applicationReconciler.SetupWithManager(rig.manager)
+	err = applicationReconciler.SetupWithManager(rig.manager, &rig.config)
 	if err != nil {
 		return nil, fmt.Errorf("setup synchronizer with manager: %w", err)
 	}
