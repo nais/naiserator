@@ -90,13 +90,9 @@ values:
     computed:
       template: '{{ne .Kind "onprem"}}'
   naiserator.features.postgres-operator:
-    description: Enable Postgres Operator
     displayName: Enable Postgres Operator
-    config:
-      type: bool
-    ignoreKind:
-      - onprem
-      - management
+    computed:
+      template: '{{ne .Kind "onprem"}}'
   naiserator.features.prometheus-operator:
     description: Enable Prometheus Operator
     displayName: Enable Prometheus Operator
