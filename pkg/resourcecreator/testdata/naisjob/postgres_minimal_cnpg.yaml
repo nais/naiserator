@@ -31,7 +31,8 @@ existing:
       namespace: mynamespace
       annotations:
         postgres.nais.io/engine: cnpg
-        postgres.nais.io/active-engine: cnpg
+    status:
+      engine: cnpg
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1

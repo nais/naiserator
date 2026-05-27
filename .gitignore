@@ -12,3 +12,4 @@ cover.out
 *.DS_Store
 .direnv
 .agent-shell
+/misc/

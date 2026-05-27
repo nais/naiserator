@@ -29,8 +29,8 @@ existing:
     metadata:
       name: my-postgres-cluster
       namespace: mynamespace
-      annotations:
-        postgres.nais.io/active-engine: zalando
+    status:
+      engine: zalando
 tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1

@@ -6,7 +6,7 @@ import (
 	"slices"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/nais/pgrator/pkg/api/datav1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -20,20 +20,18 @@ func preparePostgres(ctx context.Context, source postgres.Source, kube client.Cl
 		Namespace: source.GetNamespace(),
 	}
 
-	postgresMeta := &v1.PartialObjectMetadata{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "Postgres",
-			APIVersion: "data.nais.io/v1",
-		},
-	}
-	err := kube.Get(ctx, key, postgresMeta)
+	pg := &datav1.Postgres{}
+	err := kube.Get(ctx, key, pg)
 	if err != nil {
 		return fmt.Errorf("failed to get postgres cluster: %w", err)
 	}
 
-	engine := postgresMeta.GetAnnotations()[postgres.ActiveEngineAnnotation]
+	var engine string
+	if pg.Status != nil {
+		engine = pg.Status.Engine
+	}
 	if engine == "" {
-		return fmt.Errorf("waiting for pgrator to set active-engine annotation on %s/%s; will retry", postgresMeta.GetNamespace(), postgresMeta.GetName())
+		return fmt.Errorf("waiting for pgrator to set engine in status on %s/%s; will retry", pg.GetNamespace(), pg.GetName())
 	}
 	if !slices.Contains(postgres.AllEngines, engine) {
 		return fmt.Errorf("unknown postgres engine: %v", engine)
