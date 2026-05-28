@@ -1,0 +1,63 @@
+testconfig:
+  description: network policy that allows egress traffic to all pods in all namespaces
+config:
+  features:
+    network-policy: true
+  cluster-name: mycluster
+  nais-namespace: nais-system
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    accessPolicy:
+      outbound:
+        rules:
+          - application: '*'
+            namespace: '*'
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication
+    match:
+      - name: "network policy created"
+        type: exact
+        exclude:
+          - .metadata
+          - .status
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector: {}
+                    podSelector:
+                      matchLabels:
+                        k8s-app: kube-dns
+              - to:
+                  - namespaceSelector: {}
+                    podSelector: {}
+            ingress:
+              - from:
+                  - podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+                    namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+                  - podSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: alloy
+                    namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: nais-system
+            policyTypes:
+              - Ingress
+              - Egress
+            podSelector:
+              matchLabels:
+                app: myapplication

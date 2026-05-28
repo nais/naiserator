@@ -103,6 +103,11 @@ tests:
                     namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: q2
+              - to:
+                  - podSelector: {}
+                    namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: t2
             policyTypes:
               - Ingress
               - Egress

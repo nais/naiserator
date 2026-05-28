@@ -91,15 +91,20 @@ func egressRulesFromAccessPolicy(policy *nais_io_v1.AccessPolicy, cfg Config) []
 
 	for _, outbound := range policy.Outbound.Rules {
 		// non-local access policy rules do not result in network policies
-		if outbound.Application == "" || outbound.Application == "*" || !outbound.MatchesCluster(cfg.GetClusterName()) {
+		if outbound.Application == "" || !outbound.MatchesCluster(cfg.GetClusterName()) {
 			continue
 		}
 
-		peer := networkingv1.NetworkPolicyPeer{
-			PodSelector: labelSelector("app", outbound.Application),
+		peer := networkingv1.NetworkPolicyPeer{}
+		if outbound.Application == "*" {
+			peer.PodSelector = &metav1.LabelSelector{}
+		} else {
+			peer.PodSelector = labelSelector("app", outbound.Application)
 		}
 
-		if outbound.Namespace != "" {
+		if outbound.Namespace == "*" {
+			peer.NamespaceSelector = &metav1.LabelSelector{}
+		} else if outbound.Namespace != "" {
 			peer.NamespaceSelector = labelSelector("kubernetes.io/metadata.name", outbound.Namespace)
 		}
 
