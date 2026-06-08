@@ -1,6 +1,6 @@
 module github.com/nais/naiserator
 
-go 1.26.3
+go 1.26.4
 
 tool (
 	github.com/securego/gosec/v2/cmd/gosec
@@ -21,7 +21,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.16
 	github.com/mitchellh/hashstructure v1.1.0
-	github.com/nais/liberator v0.0.0-20260526061822-791cc0e0457c
+	github.com/nais/liberator v0.0.0-20260608132622-c8e4e064a83e
 	github.com/nais/pgrator/pkg/api v0.0.0-20260526155844-4b91d90da979
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.88.0
 	github.com/prometheus/client_golang v1.23.2
@@ -135,3 +135,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+replace github.com/nais/liberator => ../liberator
