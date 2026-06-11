@@ -72,7 +72,7 @@ func truncateString(str string, max int) string {
 	return truncated.String()
 }
 
-func CreateJobFromCronJob(cronJob *batchv1.CronJob) (*batchv1.Job, error) {
+func CreateJobFromCronJob(cronJob *batchv1.CronJob) *batchv1.Job {
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Job",
@@ -97,5 +97,5 @@ func CreateJobFromCronJob(cronJob *batchv1.CronJob) (*batchv1.Job, error) {
 			},
 		},
 		Spec: cronJob.Spec.JobTemplate.Spec,
-	}, nil
+	}
 }
