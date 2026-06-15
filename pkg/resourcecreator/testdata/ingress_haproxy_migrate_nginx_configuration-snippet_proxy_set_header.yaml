@@ -1,0 +1,39 @@
+testconfig:
+  description: ingress haproxy migration handles configuration-snippet proxy_set_header
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .bar
+      ingressClass: very-haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    annotations:
+      haproxy.org/request-set-header: "Existing-Header existing-value"
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        proxy_set_header X-ProxyUser-IP $http_x_client_ip;
+        proxy_set_header X-Empty "";
+        proxy_set_header X-Unknown $remote_addr;
+        proxy_set_header X-Static "static-value";
+        more_set_headers "Cache-Control: public,max-age=0";
+  spec:
+    ingresses:
+      - https://foo.bar/baz
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-very-haproxy-efe42262
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "ingress created with correct annotations"
+        resource:
+          metadata:
+            annotations:
+              haproxy.org/request-set-header: |-
+                Existing-Header existing-value
+                X-ProxyUser-IP %[req.fhdr(x-client-ip)]
+                X-Static static-value
