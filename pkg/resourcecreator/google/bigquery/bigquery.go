@@ -32,7 +32,7 @@ func CreateDataset(source Source, ast *resource.Ast, cfg Config, serviceAccountN
 	}
 
 	for _, bigQuerySpec := range gcp.BigQueryDatasets {
-		bigQueryInstance, err := createDataset(source, bigQuerySpec, cfg.GetGoogleProjectID(), cfg.GetGoogleTeamProjectID(), serviceAccountName)
+		bigQueryInstance, err := createDataset(source, bigQuerySpec, cfg.GetGoogleProjectID(), serviceAccountName)
 		if err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.
 	return policy, nil
 }
 
-func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQueryDataset, projectID, teamProjectID, serviceAccountName string) (*google_nais_io_v1.BigQueryDataset, error) {
+func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQueryDataset, projectID, serviceAccountName string) (*google_nais_io_v1.BigQueryDataset, error) {
 	objectMeta := resource.CreateObjectMeta(source)
 	datasetName := strings.ToLower(bigQuerySpec.Name)
 	baseName := strings.ReplaceAll(fmt.Sprintf("%s-%s", source.GetName(), datasetName), "_", "-")
@@ -103,7 +103,6 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 			Name:            datasetName,
 			Location:        google.Region,
 			Description:     bigQuerySpec.Description,
-			Project:         teamProjectID,
 			CascadingDelete: bigQuerySpec.CascadingDelete,
 			Access: []google_nais_io_v1.DatasetAccess{
 				{
