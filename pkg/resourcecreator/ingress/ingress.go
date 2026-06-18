@@ -147,7 +147,7 @@ func migrateLimitRpm(annotations, nginxAnnotations map[string]string) {
 	}
 
 	annotations["haproxy.org/rate-limit-period"] = "1m"
-	annotations["haproxy.org/rate-limit-request"] = fmt.Sprint(limitRpm)
+	annotations["haproxy.org/rate-limit-requests"] = fmt.Sprint(limitRpm)
 	annotations["haproxy.org/rate-limit-status-code"] = "429"
 }
 

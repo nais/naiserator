@@ -28,5 +28,5 @@ tests:
           metadata:
             annotations:
               haproxy.org/rate-limit-period: "1m"
-              haproxy.org/rate-limit-request: "500"
+              haproxy.org/rate-limit-requests: "500"
               haproxy.org/rate-limit-status-code: "429"
