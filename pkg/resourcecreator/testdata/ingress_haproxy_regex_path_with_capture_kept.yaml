@@ -1,0 +1,46 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: a regex ingress path is NOT stripped when a
+    rewrite-target annotation references regex capture groups ($1, $2, ...) from
+    the path. In that case the path regex carries meaning beyond matching, so the
+    original path is preserved as-is.
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+  spec:
+    image: navikt/myapplication:1.0.0
+    ingresses:
+      - https://foo.nav.no/api/(.+)
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "regex ingress path with capture-group rewrite-target is not stripped"
+        resource:
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: foo.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
+                      path: /api/(.+)
+                      pathType: Prefix
