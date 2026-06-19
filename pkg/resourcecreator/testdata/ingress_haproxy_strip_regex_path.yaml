@@ -1,0 +1,47 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: a regex ingress path (written for nginx use-regex
+    matching) is reduced to its literal prefix for HAProxy, which uses
+    pathType: Prefix and does not support regular expressions. "/sok($|\/.+)(/.*)?"
+    becomes "/sok", whose segment-aware Prefix matching is equivalent (still
+    excludes e.g. "/soknader").
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: navno-search-frontend
+    namespace: navno
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/use-regex: "true"
+  spec:
+    image: navikt/navno-search-frontend:1.0.0
+    ingresses:
+      - https://www.nav.no/sok($|\/.+)(/.*)?
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "regex ingress path is stripped to literal prefix for HAProxy"
+        resource:
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: www.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: navno-search-frontend
+                          port:
+                            number: 80
+                      path: /sok
+                      pathType: Prefix

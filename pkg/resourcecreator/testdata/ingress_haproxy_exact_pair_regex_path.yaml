@@ -1,0 +1,54 @@
+testconfig:
+  description: >
+    nginx -> haproxy migrate: a regex ingress path of the form "<literal>($|\/$)"
+    matches only the exact path and the exact path with a single trailing slash
+    (no sub-paths). For HAProxy this is converted to two pathType: Exact entries
+    ("/dagpenger/historikk" and "/dagpenger/historikk/") rather than a Prefix,
+    which would incorrectly also match sub-paths.
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .nav.no
+      ingressClass: haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: dagpenger-innsyn
+    namespace: teamdagpenger
+    uid: "123456"
+    annotations:
+      nginx.ingress.kubernetes.io/use-regex: "true"
+  spec:
+    image: navikt/dagpenger-innsyn:1.0.0
+    ingresses:
+      - https://www.nav.no/dagpenger/historikk($|\/$)
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: "exact-pair regex path is converted to two Exact paths for HAProxy"
+        resource:
+          spec:
+            ingressClassName: haproxy
+            rules:
+              - host: www.nav.no
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: dagpenger-innsyn
+                          port:
+                            number: 80
+                      path: /dagpenger/historikk
+                      pathType: Exact
+                    - backend:
+                        service:
+                          name: dagpenger-innsyn
+                          port:
+                            number: 80
+                      path: /dagpenger/historikk/
+                      pathType: Exact
