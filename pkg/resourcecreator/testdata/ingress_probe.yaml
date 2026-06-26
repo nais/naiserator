@@ -1,5 +1,5 @@
 testconfig:
-  description: ingress resource is created on-premises
+  description: application with liveness path results in ingress resource with prometheus annotations
 config:
   features:
     haproxy: true
@@ -13,14 +13,11 @@ input:
     name: myapplication
     namespace: mynamespace
     uid: "123456"
-    annotations:
-      nginx.ingress.kubernetes.io/proxy-read-timeout: "100"
-      nginx.ingress.kubernetes.io/proxy-send-timeout: "101"
-      nginx.ingress.kubernetes.io/proxy-connect-timeout: "102"
-      nginx.ingress.kubernetes.io/rewrite-target: "some"
   spec:
     ingresses:
       - https://foo.bar/baz
+    liveness:
+      path: "liveness"
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
@@ -40,10 +37,8 @@ tests:
           metadata:
             annotations:
               nais.io/deploymentCorrelationID: ""
-              haproxy.org/timeout-server: "100s"
-              haproxy.org/timeout-client: "101s"
-              haproxy.org/timeout-connect: "102s"
-              haproxy.org/path-rewrite: "some"
+              prometheus.io/path: "liveness"
+              prometheus.io/scrape: "true"
           spec:
             ingressClassName: very-haproxy
             rules:
