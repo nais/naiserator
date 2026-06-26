@@ -18,8 +18,7 @@ func createNetworkPolicies(source resource.Source, ast *resource.Ast, pgClusterN
 func createPoolerNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName string, pgNamespace string) {
 	var err error
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.OwnerReferences = nil
-	objectMeta.Name, err = namegen.SuffixedShortName(pgClusterName, "pooler", validation.DNS1123SubdomainMaxLength)
+	objectMeta.Name, err = namegen.SuffixedShortName(fmt.Sprintf("%s-%s", source.GetName(), pgClusterName), "ingress", validation.DNS1123SubdomainMaxLength)
 	if err != nil {
 		panic(fmt.Sprintf("Error when hashing, this should be impossible: %v", err))
 	}
@@ -68,7 +67,7 @@ func createPoolerNetworkPolicy(source resource.Source, ast *resource.Ast, pgClus
 func createSourceNetworkPolicy(source resource.Source, ast *resource.Ast, pgClusterName, pgNamespace string) {
 	var err error
 	objectMeta := resource.CreateObjectMeta(source)
-	objectMeta.Name, err = namegen.SuffixedShortName(pgClusterName, "pg", validation.DNS1123LabelMaxLength)
+	objectMeta.Name, err = namegen.SuffixedShortName(fmt.Sprintf("%s-%s", source.GetName(), pgClusterName), "egress", validation.DNS1123SubdomainMaxLength)
 	if err != nil {
 		panic(fmt.Sprintf("Error when hashing, this should be impossible: %v", err))
 	}
