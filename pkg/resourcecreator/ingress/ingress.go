@@ -100,8 +100,12 @@ func createIngressBase(source Source, ingressClass string) (*networkingv1.Ingres
 
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = shortName
-	objectMeta.Annotations["prometheus.io/scrape"] = "true"
-	objectMeta.Annotations["prometheus.io/path"] = source.GetLiveness().Path
+
+	liveness := source.GetLiveness()
+	if liveness != nil && liveness.Path != "" {
+		objectMeta.Annotations["prometheus.io/scrape"] = "true"
+		objectMeta.Annotations["prometheus.io/path"] = liveness.Path
+	}
 
 	return &networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{

@@ -35,8 +35,6 @@ tests:
               nais.io/deploymentCorrelationID: ""
               nginx.ingress.kubernetes.io/backend-protocol: HTTP
               nginx.ingress.kubernetes.io/use-regex: "true"
-              prometheus.io/path: ""
-              prometheus.io/scrape: "true"
           spec:
             ingressClassName: very-nginx
             rules:

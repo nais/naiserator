@@ -39,5 +39,3 @@ tests:
           metadata:
             annotations:
               nais.io/deploymentCorrelationID: ""
-              prometheus.io/path: ""
-              prometheus.io/scrape: "true"
