@@ -1,7 +1,9 @@
 package frontend
 
 import (
+	"encoding/json"
 	"fmt"
+	"path"
 	"strings"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -27,14 +29,30 @@ type Config interface {
 const (
 	volumeName      = "frontend-config"
 	configFileName  = "nais.js"
+	jsonFileName    = "nais.json"
 	configMapSuffix = "-frontend-config-js"
 )
 
-// The payload is a versioned contract consumed by the @nais/apm SDK
-// (nais/grafana-apm-app#134): bump schemaVersion when the shape changes.
+// generatedConfig is the frontend config contract consumed by the @nais/apm
+// SDK (nais/grafana-apm-app#134): bump SchemaVersion when the shape changes.
+// It is emitted twice with identical content: as an ES module (nais.js, for
+// import) and as JSON (nais.json, for fetch from a served web root).
+type generatedConfig struct {
+	SchemaVersion         int                `json:"schemaVersion"`
+	TelemetryCollectorURL string             `json:"telemetryCollectorURL"`
+	App                   generatedConfigApp `json:"app"`
+	Environment           string             `json:"environment"`
+}
+
+type generatedConfigApp struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Version   string `json:"version"`
+}
+
 var naisJsTemplate = `
 export default {
-	schemaVersion: 1,
+	schemaVersion: %d,
 	telemetryCollectorURL: '%s',
 	app: {
 		name: '%s',
@@ -45,17 +63,39 @@ export default {
 };
 `
 
-func naisJs(source Source, telemetryURL, clusterName string) string {
+func naisConfig(source Source, telemetryURL, clusterName string) generatedConfig {
 	imageName := strings.Split(source.GetEffectiveImage(), ":")
 	tag := ""
 	if len(imageName) == 2 {
 		tag = imageName[1]
 	}
 
-	return fmt.Sprintf(naisJsTemplate, telemetryURL, source.GetName(), source.GetNamespace(), tag, clusterName)
+	return generatedConfig{
+		SchemaVersion:         1,
+		TelemetryCollectorURL: telemetryURL,
+		App: generatedConfigApp{
+			Name:      source.GetName(),
+			Namespace: source.GetNamespace(),
+			Version:   tag,
+		},
+		Environment: clusterName,
+	}
 }
 
-func naisJsConfigMap(source Source, name, contents string) corev1.ConfigMap {
+func naisJs(cfg generatedConfig) string {
+	return fmt.Sprintf(naisJsTemplate,
+		cfg.SchemaVersion, cfg.TelemetryCollectorURL, cfg.App.Name, cfg.App.Namespace, cfg.App.Version, cfg.Environment)
+}
+
+func naisJson(cfg generatedConfig) (string, error) {
+	contents, err := json.MarshalIndent(cfg, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return string(contents) + "\n", nil
+}
+
+func naisConfigMap(source Source, name, jsContents, jsonContents string) corev1.ConfigMap {
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = name
 
@@ -66,16 +106,17 @@ func naisJsConfigMap(source Source, name, contents string) corev1.ConfigMap {
 		},
 		ObjectMeta: objectMeta,
 		Data: map[string]string{
-			configFileName: contents,
+			configFileName: jsContents,
+			jsonFileName:   jsonContents,
 		},
 	}
 }
 
-func volumeMount(mountPath string) corev1.VolumeMount {
+func volumeMount(mountPath, subPath string) corev1.VolumeMount {
 	return corev1.VolumeMount{
 		Name:      volumeName,
 		MountPath: mountPath,
-		SubPath:   configFileName,
+		SubPath:   subPath,
 		ReadOnly:  true,
 	}
 }
@@ -117,12 +158,24 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 		return err
 	}
 
-	naisJsContents := naisJs(source, cfg.GetFrontendOptions().TelemetryURL, cfg.GetClusterName())
-	cm := naisJsConfigMap(source, configMapName, naisJsContents)
+	generated := naisConfig(source, cfg.GetFrontendOptions().TelemetryURL, cfg.GetClusterName())
+	jsonContents, err := naisJson(generated)
+	if err != nil {
+		return err
+	}
+	cm := naisConfigMap(source, configMapName, naisJs(generated), jsonContents)
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cm)
 	ast.PrependEnv(envVars(cfg.GetFrontendOptions().TelemetryURL)...)
-	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(frontendSpec.GeneratedConfig.MountPath))
+
+	// The ES module mounts at the exact path the app chose; the JSON variant
+	// mounts as its sibling (same directory), so pointing mountPath into a
+	// served web root exposes both files.
+	jsPath := frontendSpec.GeneratedConfig.MountPath
+	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(jsPath, configFileName))
+	if jsonPath := path.Join(path.Dir(jsPath), jsonFileName); jsonPath != jsPath {
+		ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(jsonPath, jsonFileName))
+	}
 	ast.Volumes = append(ast.Volumes, volume(configMapName))
 
 	return nil

@@ -27,6 +27,7 @@ tests:
         resource:
           data:
             nais.js: "\nexport default {\n\tschemaVersion: 1,\n\ttelemetryCollectorURL: 'http://telemetry-collector',\n\tapp: {\n\t\tname: 'myapplication',\n\t\tnamespace: 'mynamespace',\n\t\tversion: '1.2.3'\n\t},\n\tenvironment: 'mycluster'\n};\n"
+            nais.json: "{\n\t\"schemaVersion\": 1,\n\t\"telemetryCollectorURL\": \"http://telemetry-collector\",\n\t\"app\": {\n\t\t\"name\": \"myapplication\",\n\t\t\"namespace\": \"mynamespace\",\n\t\t\"version\": \"1.2.3\"\n\t},\n\t\"environment\": \"mycluster\"\n}\n"
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication
@@ -52,3 +53,8 @@ tests:
                       - name: frontend-config
                         readOnly: true
                         mountPath: /path/to/nais.js
+                        subPath: nais.js
+                      - name: frontend-config
+                        readOnly: true
+                        mountPath: /path/to/nais.json
+                        subPath: nais.json
