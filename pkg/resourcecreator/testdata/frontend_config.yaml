@@ -1,6 +1,7 @@
 testconfig:
   description: application with frontend configuration in a file
 config:
+  cluster-name: mycluster
   frontend:
     telemetry-url: http://telemetry-collector
 input:
@@ -25,7 +26,7 @@ tests:
         name: javascript configuration configmap created
         resource:
           data:
-            nais.js: "\nexport default {\n\ttelemetryCollectorURL: 'http://telemetry-collector',\n\tapp: {\n\t\tname: 'myapplication',\n\t\tversion: '1.2.3'\n\t}\n};\n"
+            nais.js: "\nexport default {\n\tschemaVersion: 1,\n\ttelemetryCollectorURL: 'http://telemetry-collector',\n\tapp: {\n\t\tname: 'myapplication',\n\t\tnamespace: 'mynamespace',\n\t\tversion: '1.2.3'\n\t},\n\tenvironment: 'mycluster'\n};\n"
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication
