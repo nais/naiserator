@@ -2,7 +2,6 @@ package frontend
 
 import (
 	"encoding/json"
-	"fmt"
 	"path"
 	"strings"
 
@@ -50,25 +49,24 @@ type generatedConfigApp struct {
 	Version   string `json:"version"`
 }
 
-var naisJsTemplate = `
-export default {
-	schemaVersion: %d,
-	telemetryCollectorURL: '%s',
-	app: {
-		name: '%s',
-		namespace: '%s',
-		version: '%s'
-	},
-	environment: '%s'
-};
-`
+// versionFromImage extracts the tag from an image reference, handling
+// registry ports (registry:5000/app:tag) and digest references
+// (app@sha256:... has no tag). Mirrors @nais/apm's versionFromImage so the
+// generatedConfig and NAIS_APP_IMAGE resolution paths agree on the version
+// for the same image (adversarial review finding, nais/naiserator#687).
+func versionFromImage(image string) string {
+	if at := strings.Index(image, "@"); at != -1 {
+		image = image[:at]
+	}
+	colon := strings.LastIndex(image, ":")
+	if colon == -1 || colon < strings.LastIndex(image, "/") {
+		return ""
+	}
+	return image[colon+1:]
+}
 
 func naisConfig(source Source, telemetryURL, clusterName string) generatedConfig {
-	imageName := strings.Split(source.GetEffectiveImage(), ":")
-	tag := ""
-	if len(imageName) == 2 {
-		tag = imageName[1]
-	}
+	tag := versionFromImage(source.GetEffectiveImage())
 
 	return generatedConfig{
 		SchemaVersion:         1,
@@ -82,17 +80,21 @@ func naisConfig(source Source, telemetryURL, clusterName string) generatedConfig
 	}
 }
 
-func naisJs(cfg generatedConfig) string {
-	return fmt.Sprintf(naisJsTemplate,
-		cfg.SchemaVersion, cfg.TelemetryCollectorURL, cfg.App.Name, cfg.App.Namespace, cfg.App.Version, cfg.Environment)
-}
-
 func naisJson(cfg generatedConfig) (string, error) {
 	contents, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
 		return "", err
 	}
 	return string(contents) + "\n", nil
+}
+
+// naisJs wraps the marshalled JSON as an ES module. One escaped serialization
+// backs both files: values that JSON escapes (quotes, backslashes, newlines —
+// reachable through the unvalidated spec.image tag) can therefore never break
+// the module or make the two formats disagree (adversarial review finding,
+// nais/naiserator#687).
+func naisJs(jsonContents string) string {
+	return "export default " + strings.TrimSuffix(jsonContents, "\n") + ";\n"
 }
 
 func naisConfigMap(source Source, name, jsContents, jsonContents string) corev1.ConfigMap {
@@ -163,17 +165,29 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	cm := naisConfigMap(source, configMapName, naisJs(generated), jsonContents)
+	cm := naisConfigMap(source, configMapName, naisJs(jsonContents), jsonContents)
 
 	ast.AppendOperation(resource.OperationCreateOrUpdate, &cm)
 	ast.PrependEnv(envVars(cfg.GetFrontendOptions().TelemetryURL)...)
 
-	// The ES module mounts at the exact path the app chose; the JSON variant
-	// mounts as its sibling (same directory), so pointing mountPath into a
-	// served web root exposes both files.
+	// The ES module mounts at the exact path the app chose (unchanged,
+	// backward-compatible behavior).
 	jsPath := frontendSpec.GeneratedConfig.MountPath
 	ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(jsPath, configFileName))
-	if jsonPath := path.Join(path.Dir(jsPath), jsonFileName); jsonPath != jsPath {
+
+	// The JSON variant mounts as a sibling — but ONLY when the app follows the
+	// documented convention of mounting the module as a file named nais.js.
+	// Deliberately narrow (adversarial review findings, nais/naiserator#687):
+	// paths are compared cleaned (so /dir//nais.js can't sneak a duplicate
+	// mount past Kubernetes' exact-string uniqueness check), and directory-ish
+	// or unconventional mountPaths (trailing slash, other filenames) get no
+	// surprise sibling — a mount under a file path would brick the container,
+	// and a sibling next to an unrelated filename lands where nothing serves
+	// it. Apps that ship their own file at <dir>/nais.json will collide at
+	// admission (loud, not silent); documented in the auto-configuration
+	// reference.
+	if cleaned := path.Clean(jsPath); path.Base(cleaned) == configFileName {
+		jsonPath := path.Join(path.Dir(cleaned), jsonFileName)
 		ast.VolumeMounts = append(ast.VolumeMounts, volumeMount(jsonPath, jsonFileName))
 	}
 	ast.Volumes = append(ast.Volumes, volume(configMapName))
