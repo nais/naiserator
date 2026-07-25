@@ -1,6 +1,7 @@
 testconfig:
   description: application with frontend configuration in a file
 config:
+  cluster-name: mycluster
   frontend:
     telemetry-url: http://telemetry-collector
 input:
@@ -25,7 +26,8 @@ tests:
         name: javascript configuration configmap created
         resource:
           data:
-            nais.js: "\nexport default {\n\ttelemetryCollectorURL: 'http://telemetry-collector',\n\tapp: {\n\t\tname: 'myapplication',\n\t\tversion: '1.2.3'\n\t}\n};\n"
+            nais.js: "export default {\n\t\"schemaVersion\": 1,\n\t\"telemetryCollectorURL\": \"http://telemetry-collector\",\n\t\"app\": {\n\t\t\"name\": \"myapplication\",\n\t\t\"namespace\": \"mynamespace\",\n\t\t\"version\": \"1.2.3\"\n\t},\n\t\"environment\": \"mycluster\"\n};\n"
+            nais.json: "{\n\t\"schemaVersion\": 1,\n\t\"telemetryCollectorURL\": \"http://telemetry-collector\",\n\t\"app\": {\n\t\t\"name\": \"myapplication\",\n\t\t\"namespace\": \"mynamespace\",\n\t\t\"version\": \"1.2.3\"\n\t},\n\t\"environment\": \"mycluster\"\n}\n"
   - apiVersion: apps/v1
     kind: Deployment
     name: myapplication
@@ -51,3 +53,8 @@ tests:
                       - name: frontend-config
                         readOnly: true
                         mountPath: /path/to/nais.js
+                        subPath: nais.js
+                      - name: frontend-config
+                        readOnly: true
+                        mountPath: /path/to/nais.json
+                        subPath: nais.json
