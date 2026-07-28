@@ -215,9 +215,9 @@ func (n *Synchronizer) completeRolloutRoutine(ctx context.Context, app resource.
 // Copied-ish from
 // https://github.com/kubernetes/kubernetes/blob/74bcefc8b2bf88a2f5816336999b524cc48cf6c0/pkg/controller/deployment/util/deployment_util.go#L745
 func applicationDeploymentComplete(deployment *appsv1.Deployment) bool {
-	return deployment.Status.UpdatedReplicas == *(deployment.Spec.Replicas) &&
-		deployment.Status.Replicas == *(deployment.Spec.Replicas) &&
-		deployment.Status.AvailableReplicas == *(deployment.Spec.Replicas) &&
+	return deployment.Status.UpdatedReplicas == *deployment.Spec.Replicas &&
+		deployment.Status.Replicas == *deployment.Spec.Replicas &&
+		deployment.Status.AvailableReplicas == *deployment.Spec.Replicas &&
 		deployment.Status.ObservedGeneration >= deployment.Generation
 }
 

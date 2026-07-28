@@ -170,5 +170,5 @@ func secretName(name string) (string, error) {
 }
 
 func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAdReplyUrlString {
-	return (nais_io_v1.AzureAdReplyUrlString)(util.AppendPathToIngress(url, path))
+	return nais_io_v1.AzureAdReplyUrlString(util.AppendPathToIngress(url, path))
 }

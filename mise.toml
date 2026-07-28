@@ -1,5 +1,5 @@
 [tools]
-go = "1.26.4"
+go = "1.26.5"
 ctlptl = "latest"
 kubie = "latest"
 tilt = "latest"
@@ -137,4 +137,11 @@ version="0.0.0-dev-$(date +%Y%m%d%H%M%S)-$(git --no-pager log -1 --pretty=%h)"
 helm package . --version "$version"
 helm push "naiserator-${version}.tgz" oci://europe-north1-docker.pkg.dev/nais-io/nais/feature
 rm -f "naiserator-${version}.tgz"
+"""
+
+[tasks."update:tools"]
+description = "Update all Go tools to latest"
+run = """
+go list tool | xargs go get -tool
+go mod tidy
 """
