@@ -30,17 +30,12 @@ type Config interface {
 
 func Create(source Source, ast *resource.Ast, cfg Config) (*nais_io_v1.IDPortenClient, error) {
 	idporten := source.GetIDPorten()
-	if idporten == nil || !idporten.Enabled {
+	if idporten == nil || idporten.Sidecar == nil || !idporten.Sidecar.Enabled {
 		return nil, nil
 	}
 
 	if !cfg.IsIDPortenEnabled() {
 		return nil, fmt.Errorf("idporten is not available in this cluster")
-	}
-
-	// TODO - automatically enable sidecar if just idporten is enabled when the grace period for migration ends.
-	if idporten.Sidecar == nil || !idporten.Sidecar.Enabled {
-		return nil, fmt.Errorf("idporten sidecar must be enabled when idporten is enabled")
 	}
 
 	if !cfg.IsWonderwallEnabled() {
@@ -49,7 +44,7 @@ func Create(source Source, ast *resource.Ast, cfg Config) (*nais_io_v1.IDPortenC
 
 	ingresses := source.GetIngress()
 	if len(ingresses) == 0 {
-		return nil, fmt.Errorf("idporten requires at least 1 ingress")
+		return nil, fmt.Errorf("idporten sidecar requires at least 1 ingress")
 	}
 
 	ast.Labels["idporten"] = "enabled"

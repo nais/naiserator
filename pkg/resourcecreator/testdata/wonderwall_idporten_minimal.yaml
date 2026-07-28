@@ -1,5 +1,5 @@
 testconfig:
-  description: minimal idporten config with sidecar should result in wonderwall sidecar injected to pod
+  description: minimal idporten sidecar config should result in wonderwall sidecar injected to pod
 config:
   cluster-name: mycluster
   features:
@@ -28,7 +28,6 @@ input:
   spec:
     image: foo/bar
     idporten:
-      enabled: true
       sidecar:
         enabled: true
     ingresses:

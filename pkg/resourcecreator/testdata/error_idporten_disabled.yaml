@@ -1,15 +1,16 @@
 testconfig:
-  description: applications with idporten needs idporten feature toggle
+  description: applications with an idporten sidecar need the idporten feature toggle
 config:
   features:
     idporten: false
 input:
-  kind: "Application"
+  kind: Application
   apiVersion: nais.io/v1alpha1
   metadata:
     name: myapplication
     namespace: mynamespace
   spec:
     idporten:
-      enabled: true
+      sidecar:
+        enabled: true
 error: "idporten is not available in this cluster"
