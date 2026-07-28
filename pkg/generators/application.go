@@ -132,7 +132,21 @@ func (g *Application) Generate(source resource.Source, config any) (resource.Ope
 	// This should be first so that other generators can manipulate environment variables without being overwritten.
 	pod.CreateContainerEnvVars(app, ast, cfg)
 
-	service.Create(app, ast, cfg)
+	// Wonderwall must be configured before Service
+	azureadapplication, err := azure.Create(app, ast, cfg)
+	if err != nil {
+		return nil, err
+	}
+	idportenclient, err := idporten.Create(app, ast, cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = login.Create(app, ast, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	service.Create(app, ast)
 	serviceaccount.Create(app, ast, cfg)
 	horizontalpodautoscaler.Create(app, ast)
 	networkpolicy.Create(app, ast, cfg)
@@ -154,21 +168,6 @@ func (g *Application) Generate(source resource.Source, config any) (resource.Ope
 	}
 
 	err = leaderelection.Create(app, ast, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	azureadapplication, err := azure.Create(app, ast, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	idportenclient, err := idporten.Create(app, ast, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	err = login.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
 	}
