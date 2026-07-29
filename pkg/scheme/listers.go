@@ -30,41 +30,41 @@ func GenericListers() []client.ObjectList {
 	return []client.ObjectList{
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
-		&v1.CronJobList{},
-		&v1.JobList{},
 		&autoscalev2.HorizontalPodAutoscalerList{},
 		&corev1.SecretList{},
 		&corev1.ServiceAccountList{},
 		&corev1.ServiceList{},
-		&policyv1.PodDisruptionBudgetList{},
-		&networkingv1.NetworkPolicyList{},
 		&networkingv1.IngressList{},
+		&networkingv1.NetworkPolicyList{},
+		&policyv1.PodDisruptionBudgetList{},
 		&rbacv1.RoleBindingList{},
 		&rbacv1.RoleList{},
+		&v1.CronJobList{},
+		&v1.JobList{},
 
 		// Custom resources
+		&aiven_nais_io_v1.AivenApplicationList{},
+		&kafka_nais_io_v1.StreamList{},
 		&nais_io_v1.AzureAdApplicationList{},
 		&nais_io_v1.IDPortenClientList{},
 		&nais_io_v1.JwkerList{},
 		&nais_io_v1.MaskinportenClientList{},
-		&aiven_nais_io_v1.AivenApplicationList{},
-		&kafka_nais_io_v1.StreamList{},
 	}
 }
 
 // GCPListers returns resources that exist only in a GCP clusters
 func GCPListers() []client.ObjectList {
 	return []client.ObjectList{
+		&fqdn.FQDNNetworkPolicyList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMPolicyMemberList{},
 		&iam_cnrm_cloud_google_com_v1beta1.IAMServiceAccountList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLDatabaseList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLInstanceList{},
-		&sql_cnrm_cloud_google_com_v1beta1.SQLUserList{},
 		&sql_cnrm_cloud_google_com_v1beta1.SQLSSLCertList{},
+		&sql_cnrm_cloud_google_com_v1beta1.SQLUserList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketAccessControlList{},
 		&storage_cnrm_cloud_google_com_v1beta1.StorageBucketList{},
-		&fqdn.FQDNNetworkPolicyList{},
 
 		&google_nais_io_v1.BigQueryDatasetList{},
 	}
@@ -73,7 +73,7 @@ func GCPListers() []client.ObjectList {
 // AivenListers returns resources that exist only in a Aiven supported clusters
 func AivenListers() []client.ObjectList {
 	return []client.ObjectList{
-		&aiven_io_v1alpha1.ValkeyList{},
 		&aiven_io_v1alpha1.OpenSearchList{},
+		&aiven_io_v1alpha1.ValkeyList{},
 	}
 }
