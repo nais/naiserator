@@ -31,6 +31,7 @@ func GenericListers() []client.ObjectList {
 		// Kubernetes internals
 		&appsv1.DeploymentList{},
 		&autoscalev2.HorizontalPodAutoscalerList{},
+		&corev1.ConfigMapList{},
 		&corev1.SecretList{},
 		&corev1.ServiceAccountList{},
 		&corev1.ServiceList{},
