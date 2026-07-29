@@ -21,6 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	k8s_errors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -582,18 +583,19 @@ func (n *Synchronizer) ClusterOperations(ctx context.Context, rollout Rollout) [
 var appsync sync.Mutex
 
 // UpdateResource atomically updates a resource.
-// Locks the resource to avoid race conditions.
+// Locks the resource to avoid race conditions, and retries on conflict.
 func (n *Synchronizer) UpdateResource(ctx context.Context, source resource.Source, updateFunc func(resource.Source) error) error {
 	appsync.Lock()
 	defer appsync.Unlock()
 
-	existing := source.DeepCopyObject().(resource.Source)
-	err := n.Get(ctx, client.ObjectKey{Namespace: source.GetNamespace(), Name: source.GetName()}, existing)
-	if err != nil {
-		return fmt.Errorf("get newest version of %T: %s", existing, err)
-	}
-
-	return updateFunc(existing)
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existing := source.DeepCopyObject().(resource.Source)
+		err := n.Get(ctx, client.ObjectKey{Namespace: source.GetNamespace(), Name: source.GetName()}, existing)
+		if err != nil {
+			return fmt.Errorf("get newest version of %T: %s", existing, err)
+		}
+		return updateFunc(existing)
+	})
 }
 
 func (n *Synchronizer) checkListable(kind schema.GroupVersionKind) {
