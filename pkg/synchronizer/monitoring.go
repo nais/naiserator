@@ -22,6 +22,7 @@ import (
 const (
 	RolloutMessageCompleted        = "Rollout has completed"
 	RolloutMessageCronJobCompleted = "No support for monitoring CronJobs"
+	RolloutMessageNoop             = "No changes; deployment already up to date"
 )
 
 var rolloutMonitorLock sync.Mutex

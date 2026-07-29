@@ -21,7 +21,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	k8s_errors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/util/retry"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -29,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -238,9 +238,18 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		changed = false
 		logger.Debugf("Synchronization hash not changed; skipping synchronization")
 
-		// Application is not rolled out completely; start monitoring
-		if app.GetStatus().SynchronizationState == events.Synchronized {
+		switch app.GetStatus().SynchronizationState {
+		case events.Synchronized:
+			// Application is not rolled out completely; start monitoring
 			n.MonitorRollout(app, logger)
+		case events.RolloutComplete:
+			// Re-deploy with no spec changes; immediately signal completion with the
+			// current correlationID so deployd doesn't time out waiting for an event
+			// that would never come.
+			_, err = n.reportEvent(ctx, resource.CreateEvent(app, events.RolloutComplete, RolloutMessageNoop, "Normal"))
+			if err != nil {
+				log.Errorf("While creating a noop rollout event, an error occurred: %s", err)
+			}
 		}
 
 		return ctrl.Result{}, nil
