@@ -24,6 +24,9 @@ type Ast struct {
 	Labels         map[string]string
 	Volumes        []corev1.Volume
 	VolumeMounts   []corev1.VolumeMount
+
+	// Override target port for Service. Must be set before service.Create
+	ServiceTargetPort *int32
 }
 
 func NewAst() *Ast {

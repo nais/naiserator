@@ -81,20 +81,11 @@ func Create(source Source, ast *resource.Ast, naisCfg Config, wonderwallCfg Conf
 	ast.Labels["aiven"] = "enabled"
 	ast.Labels["otel"] = "enabled"
 	ast.Labels["wonderwall"] = "enabled"
+
+	// we don't use a named port due to Services/Endpoints/EndpointSlices not fully working with native sidecars prior to v1.33
+	ast.ServiceTargetPort = new(int32(Port))
+
 	return nil
-}
-
-func IsEnabled(source Source, config Config) bool {
-	idporten := source.GetIDPorten()
-	idPortenEnabled := idporten != nil && idporten.Sidecar != nil && idporten.Sidecar.Enabled
-
-	azure := source.GetAzure()
-	azureEnabled := azure != nil && azure.GetSidecar() != nil && azure.GetSidecar().Enabled
-
-	login := source.GetLogin()
-	loginEnabled := login != nil
-
-	return config.IsWonderwallEnabled() && (idPortenEnabled || azureEnabled || loginEnabled)
 }
 
 func validate(source Source, naisCfg Config, wonderwallCfg Configuration) error {
