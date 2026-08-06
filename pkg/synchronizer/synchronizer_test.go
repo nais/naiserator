@@ -245,6 +245,21 @@ func TestSynchronizer(t *testing.T) {
 			assert.Equal(t, fixtures.OtherApplicationImage, app.Status.EffectiveImage)
 		})
 	})
+
+	t.Run("Redeploy With New Correlation ID", func(t *testing.T) {
+		app := fixtures.MinimalApplication(
+			fixtures.WithName("correlation-redeploy"),
+			fixtures.WithAnnotation(nais_io.DeploymentCorrelationIDAnnotation, "deploy-id"),
+		)
+		testRedeployWithNewCorrelationID(t, rig, ctx, app)
+	})
+
+	t.Run("Manual Deployment Without Correlation ID", func(t *testing.T) {
+		app := fixtures.MinimalApplication(
+			fixtures.WithName("manual-deployment"),
+		)
+		testManualDeploymentWithoutCorrelationID(t, rig, ctx, app)
+	})
 }
 
 func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application, cfg config.Config) {
@@ -441,6 +456,85 @@ func testDeleteCorrectIAMResources(t *testing.T, rig *testRig, ctx context.Conte
 	assert.NoError(t, err)
 	assert.Len(t, iam_service_accounts.Items, 1)
 	assert.Equal(t, app.GetName(), iam_service_accounts.Items[0].Labels["app"])
+}
+
+func testRedeployWithNewCorrelationID(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application) {
+	app.Labels = map[string]string{"team": app.Namespace}
+	objectKey := client.ObjectKeyFromObject(app)
+	req := ctrl.Request{NamespacedName: objectKey}
+
+	require.NoError(t, rig.client.Create(ctx, app))
+
+	// Reconcile to set finalizer
+	result, err := rig.synchronizer.Reconcile(ctx, req)
+	require.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	// Reconcile to synchronize
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	require.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	newCorrelationID := "new-deploy-id"
+	existingApp := &nais_io_v1alpha1.Application{}
+	require.NoError(t, rig.client.Get(ctx, objectKey, existingApp))
+	existingSyncHash := existingApp.GetStatus().SynchronizationHash
+
+	// Simulate new deployment request with no other changes
+	existingApp.Annotations[nais_io.DeploymentCorrelationIDAnnotation] = newCorrelationID
+	require.NoError(t, rig.client.Update(ctx, existingApp))
+
+	// Reconcile the new deployment and assert that processing is not skipped.
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	require.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	rig.testResource(t, ctx, &nais_io_v1alpha1.Application{}, objectKey, func(t *testing.T, resource client.Object) {
+		redeployedApp := resource.(*nais_io_v1alpha1.Application)
+		assert.Equal(t, existingSyncHash, redeployedApp.Status.SynchronizationHash)
+		assert.Equal(t, newCorrelationID, redeployedApp.Status.CorrelationID)
+	})
+	rig.testResource(t, ctx, &appsv1.Deployment{}, objectKey, func(t *testing.T, resource client.Object) {
+		deployment := resource.(*appsv1.Deployment)
+		assert.Equal(t, newCorrelationID, deployment.Annotations[nais_io.DeploymentCorrelationIDAnnotation])
+	})
+}
+
+func testManualDeploymentWithoutCorrelationID(t *testing.T, rig *testRig, ctx context.Context, app *nais_io_v1alpha1.Application) {
+	app.Labels = map[string]string{"team": app.Namespace}
+	objectKey := client.ObjectKeyFromObject(app)
+	req := ctrl.Request{NamespacedName: objectKey}
+
+	require.NoError(t, rig.client.Create(ctx, app))
+
+	// Reconcile to set finalizer
+	result, err := rig.synchronizer.Reconcile(ctx, req)
+	require.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	// Reconcile to synchronize
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	require.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	existingApp := &nais_io_v1alpha1.Application{}
+	require.NoError(t, rig.client.Get(ctx, objectKey, existingApp))
+	existingSyncHash := existingApp.Status.SynchronizationHash
+	existingCorrelationID := existingApp.Status.CorrelationID
+	require.NotEmpty(t, existingCorrelationID)
+	assert.Empty(t, existingApp.CorrelationID())
+
+	// Reconcile the unchanged manual deployment and assert that processing is skipped.
+	result, err = rig.synchronizer.Reconcile(ctx, req)
+	require.NoError(t, err)
+	assert.Equal(t, ctrl.Result{}, result)
+
+	rig.testResource(t, ctx, &nais_io_v1alpha1.Application{}, objectKey, func(t *testing.T, resource client.Object) {
+		reconciledApp := resource.(*nais_io_v1alpha1.Application)
+		assert.Equal(t, existingSyncHash, reconciledApp.Status.SynchronizationHash)
+		assert.Equal(t, existingCorrelationID, reconciledApp.Status.CorrelationID)
+		assert.Empty(t, reconciledApp.CorrelationID())
+	})
 }
 
 func TestSynchronizerResourceOptions(t *testing.T) {
