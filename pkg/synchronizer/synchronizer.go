@@ -238,18 +238,9 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		changed = false
 		logger.Debugf("Synchronization hash not changed; skipping synchronization")
 
-		switch app.GetStatus().SynchronizationState {
-		case events.Synchronized:
-			// Application is not rolled out completely; start monitoring
+		// Application is not rolled out completely; start monitoring
+		if app.GetStatus().SynchronizationState == events.Synchronized {
 			n.MonitorRollout(app, logger)
-		case events.RolloutComplete:
-			// Re-deploy with no spec changes; immediately signal completion with the
-			// current correlationID so deployd doesn't time out waiting for an event
-			// that would never come.
-			_, err = n.reportEvent(ctx, resource.CreateEvent(app, events.RolloutComplete, RolloutMessageNoop, "Normal"))
-			if err != nil {
-				log.Errorf("While creating a noop rollout event, an error occurred: %s", err)
-			}
 		}
 
 		return ctrl.Result{}, nil
@@ -505,7 +496,9 @@ func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Ro
 	}
 
 	// Skip processing if application didn't change since last synchronization.
-	if !imageHasChanged(wantedImage, imageSource) && source.GetStatus().SynchronizationHash == rollout.SynchronizationHash {
+	if !imageHasChanged(wantedImage, imageSource) &&
+		source.GetStatus().SynchronizationHash == rollout.SynchronizationHash &&
+		(source.CorrelationID() == "" || source.GetStatus().CorrelationID == source.CorrelationID()) {
 		return nil, nil
 	}
 
