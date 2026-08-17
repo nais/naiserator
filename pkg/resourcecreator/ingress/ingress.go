@@ -101,10 +101,9 @@ func createIngressBase(source Source, ingressClass string) (*networkingv1.Ingres
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = shortName
 
-	liveness := source.GetLiveness()
-	if liveness != nil && liveness.Path != "" {
+	if shouldBeScraped(source) {
 		objectMeta.Annotations["prometheus.io/scrape"] = "true"
-		objectMeta.Annotations["prometheus.io/path"] = liveness.Path
+		objectMeta.Annotations["prometheus.io/path"] = source.GetLiveness().Path
 	}
 
 	return &networkingv1.Ingress{
@@ -118,6 +117,19 @@ func createIngressBase(source Source, ingressClass string) (*networkingv1.Ingres
 			Rules:            []networkingv1.IngressRule{},
 		},
 	}, nil
+}
+
+func shouldBeScraped(source Source) bool {
+	liveness := source.GetLiveness()
+	if liveness != nil && liveness.Path != "" {
+		if liveness.Port != 0 {
+			return liveness.Port == source.GetPort()
+		}
+
+		return true
+	}
+
+	return false
 }
 
 func createIngressBaseHAProxy(source Source, ingressClass string) (*networkingv1.Ingress, error) {
