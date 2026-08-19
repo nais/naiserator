@@ -19,6 +19,7 @@ input:
           consumerGroup: myconsumergroup
           threshold: 100
         scaleUpStabilizationWindowSeconds: 120
+        scaleDownStabilizationWindowSeconds: 60
 tests:
   - apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
@@ -39,6 +40,8 @@ tests:
             behavior:
               scaleUp:
                 stabilizationWindowSeconds: 120
+              scaleDown:
+                stabilizationWindowSeconds: 60
             minReplicas: 3
             maxReplicas: 6
             metrics:
