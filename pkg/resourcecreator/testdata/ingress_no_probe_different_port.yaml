@@ -1,0 +1,54 @@
+testconfig:
+  description: Application with liveness path, but different probe does not results in ingress resource with Prometheus annotations
+config:
+  features:
+    haproxy: true
+  domain-ingressclass-mapping:
+    - domainSuffix: .bar
+      ingressClass: very-haproxy
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    port: 8080
+    ingresses:
+      - https://foo.bar/baz
+    liveness:
+      path: "liveness"
+      port: 8081
+tests:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    name: myapplication-very-haproxy-efe42262
+    operation: CreateOrUpdate
+    match:
+      - type: exact
+        name: "ingress created with correct config"
+        exclude:
+          - .status
+          - .metadata.creationTimestamp
+          - .metadata.ownerReferences
+          - .metadata.labels
+          - .metadata.name
+          - .metadata.namespace
+        resource:
+          metadata:
+            annotations:
+              nais.io/deploymentCorrelationID: ""
+          spec:
+            ingressClassName: very-haproxy
+            rules:
+              - host: foo.bar
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: myapplication
+                          port:
+                            number: 80
+                      path: /baz
+                      pathType: Prefix
