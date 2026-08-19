@@ -54,11 +54,15 @@ func Create(source Source, ast *resource.Ast) {
 		MaxReplicas: int32(*replicas.Max),
 	}
 
-	if replicas.ScalingStrategy != nil && replicas.ScalingStrategy.ScaleUpStabilizationWindowSeconds > 0 {
-		hpaSpec.Behavior = &v2.HorizontalPodAutoscalerBehavior{
-			ScaleUp: &v2.HPAScalingRules{
-				StabilizationWindowSeconds: new(int32(replicas.ScalingStrategy.ScaleUpStabilizationWindowSeconds)),
-			},
+	if replicas.ScalingStrategy != nil {
+		scaleUp := stabilizationWindowRules(replicas.ScalingStrategy.ScaleUpStabilizationWindowSeconds)
+		scaleDown := stabilizationWindowRules(replicas.ScalingStrategy.ScaleDownStabilizationWindowSeconds)
+
+		if scaleUp != nil || scaleDown != nil {
+			hpaSpec.Behavior = &v2.HorizontalPodAutoscalerBehavior{
+				ScaleUp:   scaleUp,
+				ScaleDown: scaleDown,
+			}
 		}
 	}
 
@@ -71,6 +75,15 @@ func Create(source Source, ast *resource.Ast) {
 		Spec:       hpaSpec,
 	}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, hpa)
+}
+
+func stabilizationWindowRules(seconds int) *v2.HPAScalingRules {
+	if seconds <= 0 {
+		return nil
+	}
+	return &v2.HPAScalingRules{
+		StabilizationWindowSeconds: new(int32(seconds)),
+	}
 }
 
 func createKafkaMetricSpec(kafka *nais_io_v1.KafkaScaling) v2.MetricSpec {
