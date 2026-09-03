@@ -38,6 +38,7 @@ rules:
       - 'pods'
       - 'poddisruptionbudgets'
       - 'podmonitors'
+      - 'postgresbindings'
       - 'postgresqls'
       - 'rolebindings'
       - 'roles'
@@ -62,7 +63,7 @@ rules:
       - 'list'
       - 'watch'
   - apiGroups:
-      - data.nais.io
+      - nais.io
     resources:
       - postgres
     verbs:

@@ -17,14 +17,13 @@ type SqlInstance struct {
 // These parameters are set during the Prepare() stage of the generator,
 // and then passed to the different resource generators.
 type Options struct {
-	Config                config.Config
-	GoogleProjectID       string
-	GoogleTeamProjectID   string
-	Image                 string
-	NumReplicas           int32
-	Team                  string
-	SqlInstance           SqlInstance
-	PostgresClusterEngine string
+	Config              config.Config
+	GoogleProjectID     string
+	GoogleTeamProjectID string
+	Image               string
+	NumReplicas         int32
+	Team                string
+	SqlInstance         SqlInstance
 }
 
 func (o *Options) GetAccessPolicyNotAllowedCIDRs() []string {
@@ -214,10 +213,6 @@ func (o *Options) IsWonderwallEnabled() bool {
 	return o.Config.Features.Wonderwall
 }
 
-func (o *Options) PostgresOperatorEnabled() bool {
-	return o.Config.Features.PostgresOperator
-}
-
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {
 	return o.Config.Features.SQLInstanceInSharedVpc
 }
@@ -232,8 +227,4 @@ func (o *Options) SqlInstanceHasPrivateIpInSharedVpc() bool {
 
 func (o *Options) TexasImage() string {
 	return o.Config.Texas.Image
-}
-
-func (o *Options) GetPostgresClusterEngine() string {
-	return o.PostgresClusterEngine
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
 	"github.com/nais/naiserator/pkg/test/fixtures"
+	pgrator_v1 "github.com/nais/pgrator/pkg/api/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -78,7 +80,10 @@ func newTestRig(config config.Config) (*testRig, error) {
 
 	crdPath := crd.YamlDirectory()
 	rig.kubernetes = &envtest.Environment{
-		CRDDirectoryPaths:     []string{crdPath},
+		CRDDirectoryPaths: []string{
+			crdPath,
+			filepath.Join("testdata", "crds"),
+		},
 		ErrorIfCRDPathMissing: true,
 	}
 
@@ -99,6 +104,9 @@ func newTestRig(config config.Config) (*testRig, error) {
 	rig.scheme, err = liberator_scheme.All()
 	if err != nil {
 		return nil, fmt.Errorf("setup scheme: %w", err)
+	}
+	if err := pgrator_v1.AddToScheme(rig.scheme); err != nil {
+		return nil, fmt.Errorf("add pgrator scheme: %w", err)
 	}
 
 	rig.client, err = client.New(cfg, client.Options{
@@ -184,8 +192,6 @@ func TestSynchronizer(t *testing.T) {
 	listers := naiserator_scheme.GenericListers()
 	listers = append(listers, naiserator_scheme.GCPListers()...)
 	listers = append(listers, naiserator_scheme.AivenListers()...)
-	// DO NOT ADD! Adding the AcidZalandoListers here breaks the test due to some inconsistencies in how envtest responds to requests
-	// listers = append(listers, naiserator_scheme.AcidZalandoListers()...)
 	for _, list := range listers {
 		err = rig.client.List(ctx, list)
 		assert.NoError(t, err, "Unable to list resource, are the CRDs installed?")
@@ -206,6 +212,56 @@ func TestSynchronizer(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
+
+	t.Run("Postgres uses schema", func(t *testing.T) {
+		tests := []struct {
+			name       string
+			postgres   []nais_io_v1.PostgresUse
+			wantError  bool
+			errorMatch string
+		}{
+			{
+				name: "valid prefixes",
+				postgres: []nais_io_v1.PostgresUse{
+					{Name: "primary", Role: "readwrite"},
+					{Name: "reporting", Role: "read", EnvPrefix: "REPORTING_"},
+				},
+			},
+			{
+				name: "multiple entries without prefix",
+				postgres: []nais_io_v1.PostgresUse{
+					{Name: "primary", Role: "readwrite"},
+					{Name: "reporting", Role: "read"},
+				},
+				wantError:  true,
+				errorMatch: "envPrefix is required for all but one Postgres entry",
+			},
+			{
+				name: "generated environment variable collision",
+				postgres: []nais_io_v1.PostgresUse{
+					{Name: "primary", Role: "readwrite"},
+					{Name: "reporting", Role: "admin", EnvPrefix: "READWRITE_"},
+				},
+				wantError:  true,
+				errorMatch: "Postgres entries must produce unique environment variable names",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				app := fixtures.MinimalApplication(fixtures.WithName("schema-" + strings.ReplaceAll(tt.name, " ", "-")))
+				app.Spec.Uses = &nais_io_v1.Uses{Postgres: tt.postgres}
+				err := rig.client.Create(ctx, app)
+				if tt.wantError {
+					require.Error(t, err)
+					assert.Contains(t, err.Error(), tt.errorMatch)
+					return
+				}
+				require.NoError(t, err)
+				require.NoError(t, rig.client.Delete(ctx, app))
+			})
+		}
+	})
 
 	t.Run("App Deployment", func(t *testing.T) {
 		app := fixtures.MinimalApplication(
@@ -259,6 +315,37 @@ func TestSynchronizer(t *testing.T) {
 			fixtures.WithName("manual-deployment"),
 		)
 		testManualDeploymentWithoutCorrelationID(t, rig, ctx, app)
+	})
+
+	t.Run("PostgresBinding lifecycle", func(t *testing.T) {
+		app := fixtures.MinimalApplication(
+			fixtures.WithName("postgres-app"),
+			fixtures.WithAnnotation(nais_io.DeploymentCorrelationIDAnnotation, "postgres-deploy-id"),
+		)
+		app.Spec.Uses = &nais_io_v1.Uses{
+			Postgres: []nais_io_v1.PostgresUse{{Name: "mydb", Role: "readwrite"}},
+		}
+		require.NoError(t, rig.client.Create(ctx, app))
+
+		req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: app.Namespace, Name: app.Name}}
+		_, err := rig.synchronizer.Reconcile(ctx, req)
+		require.NoError(t, err)
+		_, err = rig.synchronizer.Reconcile(ctx, req)
+		require.NoError(t, err)
+
+		bindingKey := client.ObjectKey{Name: "mydb-postgres-app-readwrite", Namespace: app.Namespace}
+		binding := &pgrator_v1.PostgresBinding{}
+		require.NoError(t, rig.client.Get(ctx, bindingKey, binding))
+		assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeApplication, binding.Spec.Workload.Type)
+
+		persisted := &nais_io_v1alpha1.Application{}
+		require.NoError(t, rig.client.Get(ctx, client.ObjectKeyFromObject(app), persisted))
+		persisted.Spec.Uses = nil
+		require.NoError(t, rig.client.Update(ctx, persisted))
+		_, err = rig.synchronizer.Reconcile(ctx, req)
+		require.NoError(t, err)
+
+		rig.testResourceNotExist(t, ctx, &pgrator_v1.PostgresBinding{}, bindingKey)
 	})
 }
 

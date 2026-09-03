@@ -1,0 +1,33 @@
+testconfig:
+  description: Naisjob gets prefixed read-only Postgres credentials
+config: {}
+input:
+  kind: Naisjob
+  apiVersion: nais.io/v1
+  metadata:
+    name: myjob
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myjob:1.2.3
+    uses:
+      postgres:
+        - name: reporting
+          role: read
+          envPrefix: REPORTING_
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: nais.io/v1
+    kind: PostgresBinding
+    name: reporting-myjob-read
+    match:
+      - name: read binding created for Naisjob
+        type: subset
+        resource:
+          spec:
+            postgres: reporting
+            workload:
+              name: myjob
+              type: job
+            secretName: reporting-myjob-read-client-cert
+            role: read

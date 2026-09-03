@@ -17,6 +17,7 @@ import (
 	"github.com/nais/naiserator/pkg/readonly"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
+	pgrator_v1 "github.com/nais/pgrator/pkg/api/v1"
 	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -66,6 +67,9 @@ func run() error {
 	// Register CRDs with controller-tools
 	kscheme, err := liberator_scheme.All()
 	if err != nil {
+		return err
+	}
+	if err := pgrator_v1.AddToScheme(kscheme); err != nil {
 		return err
 	}
 
