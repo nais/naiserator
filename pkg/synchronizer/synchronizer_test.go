@@ -20,6 +20,7 @@ import (
 	"github.com/nais/naiserator/pkg/controllers"
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/postgresapi"
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/ingress"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -104,6 +105,9 @@ func newTestRig(config config.Config) (*testRig, error) {
 	rig.scheme, err = liberator_scheme.All()
 	if err != nil {
 		return nil, fmt.Errorf("setup scheme: %w", err)
+	}
+	if err := postgresapi.AddToScheme(rig.scheme); err != nil {
+		return nil, fmt.Errorf("add legacy Postgres scheme: %w", err)
 	}
 	if err := pgrator_v1.AddToScheme(rig.scheme); err != nil {
 		return nil, fmt.Errorf("add pgrator scheme: %w", err)
@@ -261,6 +265,16 @@ func TestSynchronizer(t *testing.T) {
 				require.NoError(t, rig.client.Delete(ctx, app))
 			})
 		}
+	})
+
+	t.Run("legacy Postgres and uses are mutually exclusive", func(t *testing.T) {
+		app := fixtures.MinimalApplication(fixtures.WithName("postgres-mutually-exclusive"))
+		app.Spec.Postgres = &nais_io_v1.Postgres{ClusterName: "legacy-db"}
+		app.Spec.Uses = &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "new-db"}}}
+
+		err := rig.client.Create(ctx, app)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "postgres and uses.postgres are mutually exclusive")
 	})
 
 	t.Run("App Deployment", func(t *testing.T) {

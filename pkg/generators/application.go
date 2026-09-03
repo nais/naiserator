@@ -9,6 +9,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/frontend"
 	"github.com/nais/naiserator/pkg/resourcecreator/login"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
+	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
 	"github.com/nais/naiserator/pkg/resourcecreator/postgresbinding"
 	"github.com/nais/naiserator/pkg/resourcecreator/texas"
 	appsv1 "k8s.io/api/apps/v1"
@@ -102,6 +103,11 @@ func (g *Application) Prepare(ctx context.Context, source resource.Source, kube 
 		return nil, err
 	}
 
+	err = preparePostgres(ctx, app, kube, o)
+	if err != nil {
+		return nil, err
+	}
+
 	o.Team = app.GetNamespace()
 
 	return o, nil
@@ -170,6 +176,13 @@ func (g *Application) Generate(source resource.Source, config any) (resource.Ope
 	err = gcp.Create(app, ast, cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.PostgresOperatorEnabled() {
+		err = postgres.Create(app, ast, cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = postgresbinding.Create(app, ast)

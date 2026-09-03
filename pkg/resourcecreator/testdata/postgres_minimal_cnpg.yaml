@@ -1,0 +1,125 @@
+testconfig:
+  description: minimal postgresql provisioned with databases and automatic configuration
+config:
+  features:
+    postgres-operator: true
+  google-project-id: google-project-id
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    postgres:
+      clusterName: my-postgres-cluster
+existing:
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: mynamespace
+  - kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: pg-mynamespace
+  - kind: Postgres
+    apiVersion: data.nais.io/v1
+    metadata:
+      name: my-postgres-cluster
+      namespace: mynamespace
+      annotations:
+        postgres.nais.io/engine: cnpg
+    status:
+      engine: cnpg
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication-my-postgres-cluster-e485cb5d-egress
+    namespace: mynamespace
+    match:
+      - name: "source to postgres network policy created"
+        type: subset
+        resource:
+          spec:
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: mynamespace
+                    podSelector:
+                      matchLabels:
+                        cnpg.io/podRole: pooler
+                        cnpg.io/cluster: my-postgres-cluster
+            podSelector:
+              matchLabels:
+                app: myapplication
+            policyTypes:
+              - Egress
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: myapplication-my-postgres-cluster-e485cb5d-ingress
+    namespace: mynamespace
+    match:
+      - name: "postgres pooler network policy created"
+        type: subset
+        resource:
+          spec:
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: mynamespace
+                    podSelector:
+                      matchLabels:
+                        app: myapplication
+            podSelector:
+              matchLabels:
+                cnpg.io/podRole: pooler
+                cnpg.io/cluster: my-postgres-cluster
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    operation: CreateOrUpdate
+    name: myapplication
+    match:
+      - type: subset
+        name: "deployment created"
+        exclude:
+          - .metadata
+          - .status
+          - .spec.template.metadata
+        resource:
+          spec:
+            template:
+              spec:
+                dnsPolicy: ClusterFirst
+                restartPolicy: Always
+                serviceAccountName: myapplication
+                containers:
+                  - name: myapplication
+                    image: navikt/myapplication:1.2.3
+                    env:
+                      - name: PGHOST
+                        value: my-postgres-cluster-pooler.mynamespace
+                      - name: PGPORT
+                        value: "5432"
+                      - name: PGDATABASE
+                        value: app
+                      - name: PGUSER
+                        valueFrom:
+                          secretKeyRef:
+                            name: my-postgres-cluster-app
+                            key: username
+                      - name: PGPASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: my-postgres-cluster-app
+                            key: password
+                      - name: PGURL
+                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.mynamespace:5432/app"
+                      - name: PGJDBCURL
+                        value: "jdbc:postgresql://my-postgres-cluster-pooler.mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

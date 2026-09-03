@@ -17,6 +17,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/networkpolicy"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
+	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
 	"github.com/nais/naiserator/pkg/resourcecreator/postgresbinding"
 	"github.com/nais/naiserator/pkg/resourcecreator/proxyopts"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
@@ -76,6 +77,11 @@ func (g *Naisjob) Prepare(ctx context.Context, source resource.Source, kube clie
 		return nil, err
 	}
 
+	err = preparePostgres(ctx, job, kube, o)
+	if err != nil {
+		return nil, err
+	}
+
 	o.Team = job.GetNamespace()
 
 	return o, nil
@@ -112,6 +118,13 @@ func (g *Naisjob) Generate(source resource.Source, config any) (resource.Operati
 	err = gcp.Create(naisjob, ast, cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.PostgresOperatorEnabled() {
+		err = postgres.Create(naisjob, ast, cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = postgresbinding.Create(naisjob, ast)

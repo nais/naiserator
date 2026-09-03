@@ -36,6 +36,7 @@ naiserator:
     maskinporten: false
     nav-ca-bundle: false
     network-policy: true
+    postgres-operator: false
     prometheus-operator: false
     sql-instance-in-shared-vpc: false
     texas: true

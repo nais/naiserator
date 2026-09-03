@@ -14,6 +14,7 @@ import (
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/metrics"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/postgresapi"
 	"github.com/nais/naiserator/pkg/readonly"
 	naiserator_scheme "github.com/nais/naiserator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/synchronizer"
@@ -70,6 +71,9 @@ func run() error {
 		return err
 	}
 	if err := pgrator_v1.AddToScheme(kscheme); err != nil {
+		return err
+	}
+	if err := postgresapi.AddToScheme(kscheme); err != nil {
 		return err
 	}
 
