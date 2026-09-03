@@ -126,7 +126,7 @@ func addCAVolume(ast *resource.Ast, postgres string) {
 	name := volumeName("ca", postgres)
 	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(
 		name,
-		postgres+"-ca",
+		pgrator_v1.CNPGClusterName(postgres)+"-ca",
 		[]corev1.KeyToPath{{Key: "ca.crt", Path: "ca.crt"}},
 		new(int32(0o440)),
 	))
