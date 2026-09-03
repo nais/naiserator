@@ -20,10 +20,10 @@ spec:
     - jsonPath: .spec.postgres
       name: Postgres
       type: string
-    - jsonPath: .spec.workload.name
+    - jsonPath: .spec.consumer.workload.name
       name: Workload
       type: string
-    - jsonPath: .spec.workload.type
+    - jsonPath: .spec.consumer.workload.type
       name: Type
       type: string
     - jsonPath: .spec.role
@@ -36,9 +36,9 @@ spec:
     schema:
       openAPIV3Schema:
         description: |-
-          PostgresBinding grants a workload access to a Postgres instance in the same
+          PostgresBinding grants a consumer access to a Postgres instance in the same
           namespace. It results in a database role authenticated by a client certificate,
-          plus the Secrets a workload needs to connect.
+          plus the Secrets the consumer needs to connect.
         properties:
           apiVersion:
             description: |-
@@ -60,13 +60,40 @@ spec:
           spec:
             description: spec defines the desired state of PostgresBinding
             properties:
+              consumer:
+                description: Consumer identifies what is granted access.
+                properties:
+                  workload:
+                    description: |-
+                      Workload identifies the Application or Naisjob granted access. Its name is
+                      the readable prefix of the login role shown in pg_stat_activity and the audit
+                      log.
+                    properties:
+                      name:
+                        description: Name is the name of the Application or Naisjob.
+                        type: string
+                      type:
+                        description: Type identifies whether the workload is an Application
+                          or Naisjob.
+                        enum:
+                        - application
+                        - job
+                        type: string
+                    required:
+                    - name
+                    - type
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: workload consumer is required
+                  rule: has(self.workload)
               postgres:
                 description: |-
                   Postgres is the name of the Postgres instance to bind to. The instance must
                   live in the same namespace: bindings never cross team boundaries.
                 type: string
               role:
-                description: Role is the level of access granted to the workload.
+                description: Role is the level of access granted to the consumer.
                 enum:
                 - read
                 - readwrite
@@ -74,38 +101,18 @@ spec:
                 type: string
               secretName:
                 description: |-
-                  SecretName is the complete name of the client-certificate Secret naiserator
-                  mounts into the workload. It must be unique per binding so one workload can
-                  hold multiple roles for the same Postgres instance. CloudNativePG derives
-                  this name by appending "-client-cert" to the DatabaseRole name.
+                  SecretName is the complete name of the client-certificate Secret consumed by
+                  the binding's consumer. It must be unique per binding so one consumer can hold
+                  multiple roles for the same Postgres instance. CloudNativePG derives this name
+                  by appending "-client-cert" to the DatabaseRole name.
                 maxLength: 253
                 pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*-client-cert$
                 type: string
-              workload:
-                description: |-
-                  Workload identifies the Application or Naisjob granted access. Its name is
-                  the readable prefix of the login role shown in pg_stat_activity and the audit
-                  log.
-                properties:
-                  name:
-                    description: Name is the name of the Application or Naisjob.
-                    type: string
-                  type:
-                    description: Type identifies whether the workload is an Application
-                      or Naisjob.
-                    enum:
-                    - application
-                    - job
-                    type: string
-                required:
-                - name
-                - type
-                type: object
             required:
+            - consumer
             - postgres
             - role
             - secretName
-            - workload
             type: object
             x-kubernetes-validations:
             - message: spec is immutable

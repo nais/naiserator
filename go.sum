@@ -151,8 +151,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/nais/liberator v0.0.0-20260903081119-e5975f50b76c h1:F28deWqkuuTk3SbGYJl3br7kyeZi0b3hArfyCdcGg6E=
 github.com/nais/liberator v0.0.0-20260903081119-e5975f50b76c/go.mod h1:11Mi+k5w8IcdmgNwk6gORoBhHR9Ua4I9UtI8uljg4kc=
-github.com/nais/pgrator/pkg/api v0.0.0-20260902123750-dcf8b3684f8c h1:z19BkZT2VhaPs1GlcTMJKz7jw/85WpeUwqfcpR2SCLE=
-github.com/nais/pgrator/pkg/api v0.0.0-20260902123750-dcf8b3684f8c/go.mod h1:kjcHI6Uh4++6CEsQf8JeGKE37XrY+ffhoaQv3jn0qAc=
+github.com/nais/pgrator/pkg/api v0.0.0-20260903075558-0e36a714596d h1:wQcAxypgAl0sSAOyNSVUwGgM8LPKms8wo3eE+0ort7I=
+github.com/nais/pgrator/pkg/api v0.0.0-20260903075558-0e36a714596d/go.mod h1:kjcHI6Uh4++6CEsQf8JeGKE37XrY+ffhoaQv3jn0qAc=
 github.com/onsi/ginkgo/v2 v2.32.1 h1:6tlvcDm/3sE8lGJbZ4+d4mO3RLy24/tQWOFzVSQNIfw=
 github.com/onsi/ginkgo/v2 v2.32.1/go.mod h1:+aXOY+vzZ5mu2iI2HpTZUPmM//oQfsNFX6gU9kNcA44=
 github.com/onsi/gomega v1.42.1 h1:iN1rCUX+44NZ1Dc97MPoeFYbFR0vh8zxoxMFwKdyZ6I=

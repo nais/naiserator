@@ -28,9 +28,10 @@ tests:
               team: mynamespace
           spec:
             postgres: mydb
-            workload:
-              name: myapplication
-              type: application
+            consumer:
+              workload:
+                name: myapplication
+                type: application
             secretName: mydb-myapplication-admin-client-cert
             role: admin
   - operation: CreateOrUpdate
@@ -43,8 +44,9 @@ tests:
         resource:
           spec:
             postgres: mydb
-            workload:
-              name: myapplication
-              type: application
+            consumer:
+              workload:
+                name: myapplication
+                type: application
             secretName: mydb-myapplication-readwrite-client-cert
             role: readwrite

@@ -85,9 +85,11 @@ func addBinding(source Source, ast *resource.Ast, workloadType pgrator_v1.Postgr
 		ObjectMeta: objectMeta,
 		Spec: pgrator_v1.PostgresBindingSpec{
 			Postgres: postgres.Name,
-			Workload: pgrator_v1.PostgresBindingWorkload{
-				Name: source.GetName(),
-				Type: workloadType,
+			Consumer: pgrator_v1.PostgresBindingConsumer{
+				Workload: &pgrator_v1.PostgresBindingWorkload{
+					Name: source.GetName(),
+					Type: workloadType,
+				},
 			},
 			SecretName: name + "-client-cert",
 			Role:       role,

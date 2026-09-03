@@ -26,8 +26,9 @@ tests:
         resource:
           spec:
             postgres: reporting
-            workload:
-              name: myjob
-              type: job
+            consumer:
+              workload:
+                name: myjob
+                type: job
             secretName: reporting-myjob-read-client-cert
             role: read

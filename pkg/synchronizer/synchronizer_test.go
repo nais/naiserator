@@ -336,7 +336,8 @@ func TestSynchronizer(t *testing.T) {
 		bindingKey := client.ObjectKey{Name: "mydb-postgres-app-readwrite", Namespace: app.Namespace}
 		binding := &pgrator_v1.PostgresBinding{}
 		require.NoError(t, rig.client.Get(ctx, bindingKey, binding))
-		assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeApplication, binding.Spec.Workload.Type)
+		require.NotNil(t, binding.Spec.Consumer.Workload)
+		assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeApplication, binding.Spec.Consumer.Workload.Type)
 
 		persisted := &nais_io_v1alpha1.Application{}
 		require.NoError(t, rig.client.Get(ctx, client.ObjectKeyFromObject(app), persisted))

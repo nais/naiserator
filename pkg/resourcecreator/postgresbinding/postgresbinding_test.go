@@ -66,8 +66,9 @@ func TestCreate(t *testing.T) {
 				assert.Equal(t, tt.postgres.Name+"-myapp-"+string(wantRole), binding.Name)
 				assert.Equal(t, binding.Name+"-client-cert", binding.Spec.SecretName)
 				assert.Equal(t, tt.postgres.Name, binding.Spec.Postgres)
-				assert.Equal(t, "myapp", binding.Spec.Workload.Name)
-				assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeApplication, binding.Spec.Workload.Type)
+				require.NotNil(t, binding.Spec.Consumer.Workload)
+				assert.Equal(t, "myapp", binding.Spec.Consumer.Workload.Name)
+				assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeApplication, binding.Spec.Consumer.Workload.Type)
 				assert.Equal(t, wantRole, binding.Spec.Role)
 				assert.Equal(t, tt.postgres.EnvPrefix, ast.EnvFrom[i].Prefix)
 				assert.Equal(t, binding.Name, ast.EnvFrom[i].SecretRef.Name)
@@ -107,7 +108,8 @@ func TestCreateNaisjobBinding(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, ast.Operations, 1)
 	binding := ast.Operations[0].Resource.(*pgrator_v1.PostgresBinding)
-	assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeJob, binding.Spec.Workload.Type)
+	require.NotNil(t, binding.Spec.Consumer.Workload)
+	assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeJob, binding.Spec.Consumer.Workload.Type)
 }
 
 func TestCreateRejectsUnsupportedRole(t *testing.T) {
