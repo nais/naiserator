@@ -120,16 +120,16 @@ func (g *Naisjob) Generate(source resource.Source, config any) (resource.Operati
 		return nil, err
 	}
 
-	if cfg.PostgresOperatorEnabled() {
+	if cfg.IsPostgresEnabled() {
 		err = postgres.Create(naisjob, ast, cfg)
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	err = postgresbinding.Create(naisjob, ast)
-	if err != nil {
-		return nil, err
+		err = postgresbinding.Create(naisjob, ast)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = proxyopts.Create(naisjob, ast, cfg)

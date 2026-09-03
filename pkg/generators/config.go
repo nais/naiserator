@@ -214,8 +214,8 @@ func (o *Options) IsWonderwallEnabled() bool {
 	return o.Config.Features.Wonderwall
 }
 
-func (o *Options) PostgresOperatorEnabled() bool {
-	return o.Config.Features.PostgresOperator
+func (o *Options) IsPostgresEnabled() bool {
+	return o.Config.Features.Postgres
 }
 
 func (o *Options) ShouldCreateSqlInstanceInSharedVpc() bool {

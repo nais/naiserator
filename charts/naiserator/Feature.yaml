@@ -89,8 +89,8 @@ values:
     displayName: Enable Network Policy
     computed:
       template: '{{ne .Kind "onprem"}}'
-  naiserator.features.postgres-operator:
-    displayName: Enable Postgres Operator
+  naiserator.features.postgres:
+    displayName: Enable Postgres
     computed:
       template: '{{ne .Kind "onprem"}}'
   naiserator.features.prometheus-operator:

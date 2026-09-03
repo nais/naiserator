@@ -51,6 +51,12 @@ func GenericListers() []client.ObjectList {
 		&nais_io_v1.IDPortenClientList{},
 		&nais_io_v1.JwkerList{},
 		&nais_io_v1.MaskinportenClientList{},
+	}
+}
+
+// PostgresListers returns resources that exist only in Postgres-enabled clusters.
+func PostgresListers() []client.ObjectList {
+	return []client.ObjectList{
 		&pgrator_v1.PostgresBindingList{},
 	}
 }

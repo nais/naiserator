@@ -35,7 +35,7 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.C
 		For(&nais_io_v1alpha1.Application{}).
 		Watches(&nais_io_v1.Image{}, handler.EnqueueRequestsFromMapFunc(mapImageToApplicationOrNaisjob))
 
-	if cfg.Features.PostgresOperator {
+	if cfg.Features.Postgres {
 		controllerBuilder = controllerBuilder.
 			WatchesMetadata(
 				postgresMetadata,

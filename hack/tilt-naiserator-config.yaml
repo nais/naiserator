@@ -16,7 +16,7 @@ features:
   maskinporten: false
   nav-ca-bundle: false
   network-policy: false
-  postgres-operator: true
+  postgres: true
   prometheus-operator: false
   sql-instance-in-shared-vpc: false
   texas: false

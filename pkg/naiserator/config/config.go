@@ -46,7 +46,7 @@ type Features struct {
 	Maskinporten                bool     `json:"maskinporten"`
 	NAVCABundle                 bool     `json:"nav-ca-bundle"`
 	NetworkPolicy               bool     `json:"network-policy"`
-	PostgresOperator            bool     `json:"postgres-operator"`
+	Postgres                    bool     `json:"postgres"`
 	PrometheusOperator          bool     `json:"prometheus-operator"`
 	SQLInstanceInSharedVpc      bool     `json:"sql-instance-in-shared-vpc"`
 	Texas                       bool     `json:"texas"`
@@ -186,7 +186,7 @@ const (
 	FeaturesKafkarator                            = "features.kafkarator"
 	FeaturesMaskinporten                          = "features.maskinporten"
 	FeaturesNetworkPolicy                         = "features.network-policy"
-	FeaturesPostgresOperator                      = "features.postgres-operator"
+	FeaturesPostgres                              = "features.postgres"
 	FeaturesPrometheusOperator                    = "features.prometheus-operator"
 	FeaturesTexas                                 = "features.texas"
 	FeaturesVault                                 = "features.vault"
@@ -268,7 +268,7 @@ func init() {
 	flag.Bool(FeaturesMaskinporten, false, "enable creation of Maskinporten client resources and secret injection")
 	flag.Bool(FeaturesWebhook, false, "enable admission webhook server")
 	flag.Bool(FeaturesPrometheusOperator, false, "enable Prometheus Operator")
-	flag.Bool(FeaturesPostgresOperator, false, "enable Postgres Operator")
+	flag.Bool(FeaturesPostgres, false, "enable Postgres")
 	flag.Bool(FeaturesTexas, false, "enable token exchange as a sidecar/service")
 	flag.Bool(FeaturesWonderwall, false, "enable Wonderwall sidecar")
 	flag.Bool(FQDNPolicyEnabled, false, "enable FQDN policies")
