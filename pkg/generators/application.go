@@ -10,6 +10,7 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/login"
 	"github.com/nais/naiserator/pkg/resourcecreator/observability"
 	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
+	"github.com/nais/naiserator/pkg/resourcecreator/postgresbinding"
 	"github.com/nais/naiserator/pkg/resourcecreator/texas"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -182,6 +183,11 @@ func (g *Application) Generate(source resource.Source, config any) (resource.Ope
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	err = postgresbinding.Create(app, ast)
+	if err != nil {
+		return nil, err
 	}
 
 	err = proxyopts.Create(app, ast, cfg)

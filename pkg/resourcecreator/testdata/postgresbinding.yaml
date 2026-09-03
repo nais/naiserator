@@ -1,0 +1,52 @@
+testconfig:
+  description: application gets admin and runtime Postgres credentials
+config: {}
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+    uid: "123456"
+  spec:
+    image: navikt/myapplication:1.2.3
+    uses:
+      postgres:
+        - name: mydb
+tests:
+  - operation: CreateOrUpdate
+    apiVersion: nais.io/v1
+    kind: PostgresBinding
+    name: mydb-myapplication-admin
+    match:
+      - name: admin binding created
+        type: subset
+        resource:
+          metadata:
+            labels:
+              app: myapplication
+              team: mynamespace
+          spec:
+            postgres: mydb
+            consumer:
+              workload:
+                name: myapplication
+                type: application
+            secretName: mydb-myapplication-admin-client-cert
+            role: admin
+  - operation: CreateOrUpdate
+    apiVersion: nais.io/v1
+    kind: PostgresBinding
+    name: mydb-myapplication-readwrite
+    match:
+      - name: runtime binding created
+        type: subset
+        resource:
+          spec:
+            postgres: mydb
+            consumer:
+              workload:
+                name: myapplication
+                type: application
+            secretName: mydb-myapplication-readwrite-client-cert
+            role: readwrite

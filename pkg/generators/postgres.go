@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/nais/naiserator/pkg/postgresapi"
 	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
-	"github.com/nais/pgrator/pkg/api/datav1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -20,9 +20,8 @@ func preparePostgres(ctx context.Context, source postgres.Source, kube client.Cl
 		Namespace: source.GetNamespace(),
 	}
 
-	pg := &datav1.Postgres{}
-	err := kube.Get(ctx, key, pg)
-	if err != nil {
+	pg := &postgresapi.Postgres{}
+	if err := kube.Get(ctx, key, pg); err != nil {
 		return fmt.Errorf("failed to get postgres cluster: %w", err)
 	}
 

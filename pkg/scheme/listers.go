@@ -10,6 +10,7 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	sql_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	storage_cnrm_cloud_google_com_v1beta1 "github.com/nais/liberator/pkg/apis/storage.cnrm.cloud.google.com/v1beta1"
+	pgrator_v1 "github.com/nais/pgrator/pkg/api/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalev2 "k8s.io/api/autoscaling/v2"
 	v1 "k8s.io/api/batch/v1"
@@ -50,6 +51,7 @@ func GenericListers() []client.ObjectList {
 		&nais_io_v1.IDPortenClientList{},
 		&nais_io_v1.JwkerList{},
 		&nais_io_v1.MaskinportenClientList{},
+		&pgrator_v1.PostgresBindingList{},
 	}
 }
 

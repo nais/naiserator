@@ -13,6 +13,7 @@ import (
 	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
+	"github.com/nais/naiserator/pkg/postgresapi"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/test/goldenfile"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,6 +46,9 @@ func TestApplicationGoldenFile(t *testing.T) {
 
 		_, err = liberator_scheme.AddAll(foobar.Scheme)
 		if err != nil {
+			return nil, err
+		}
+		if err := postgresapi.AddToScheme(foobar.Scheme); err != nil {
 			return nil, err
 		}
 
@@ -94,6 +98,9 @@ func TestNaisjobGoldenFile(t *testing.T) {
 
 		_, err = liberator_scheme.AddAll(foobar.Scheme)
 		if err != nil {
+			return nil, err
+		}
+		if err := postgresapi.AddToScheme(foobar.Scheme); err != nil {
 			return nil, err
 		}
 
