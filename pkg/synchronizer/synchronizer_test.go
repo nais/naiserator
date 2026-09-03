@@ -134,6 +134,9 @@ func newTestRig(config config.Config) (*testRig, error) {
 	}
 
 	listers := naiserator_scheme.GenericListers()
+	if rig.config.Features.Postgres {
+		listers = append(listers, naiserator_scheme.PostgresListers()...)
+	}
 	if len(rig.config.GoogleProjectID) > 0 {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 
@@ -179,7 +182,8 @@ func TestSynchronizer(t *testing.T) {
 		GoogleProjectID:                   "1337",
 		GoogleCloudSQLProxyContainerImage: config.GoogleCloudSQLProxyContainerImage,
 		Features: config.Features{
-			CNRM: true,
+			CNRM:     true,
+			Postgres: true,
 		},
 	}
 
@@ -194,6 +198,7 @@ func TestSynchronizer(t *testing.T) {
 	// Check that listing all resources work.
 	// If this test fails, it might mean CRDs are not registered in the test rig.
 	listers := naiserator_scheme.GenericListers()
+	listers = append(listers, naiserator_scheme.PostgresListers()...)
 	listers = append(listers, naiserator_scheme.GCPListers()...)
 	listers = append(listers, naiserator_scheme.AivenListers()...)
 	for _, list := range listers {

@@ -134,6 +134,9 @@ func run() error {
 	}
 
 	listers := naiserator_scheme.GenericListers()
+	if cfg.Features.Postgres {
+		listers = append(listers, naiserator_scheme.PostgresListers()...)
+	}
 	if cfg.Features.GCP {
 		listers = append(listers, naiserator_scheme.GCPListers()...)
 

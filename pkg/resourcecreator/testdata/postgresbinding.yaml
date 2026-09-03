@@ -1,6 +1,8 @@
 testconfig:
   description: application gets admin and runtime Postgres credentials
-config: {}
+config:
+  features:
+    postgres: true
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

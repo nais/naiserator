@@ -1,6 +1,8 @@
 testconfig:
   description: Naisjob gets prefixed read-only Postgres credentials
-config: {}
+config:
+  features:
+    postgres: true
 input:
   kind: Naisjob
   apiVersion: nais.io/v1

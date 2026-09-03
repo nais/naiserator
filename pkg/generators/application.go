@@ -178,16 +178,16 @@ func (g *Application) Generate(source resource.Source, config any) (resource.Ope
 		return nil, err
 	}
 
-	if cfg.PostgresOperatorEnabled() {
+	if cfg.IsPostgresEnabled() {
 		err = postgres.Create(app, ast, cfg)
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	err = postgresbinding.Create(app, ast)
-	if err != nil {
-		return nil, err
+		err = postgresbinding.Create(app, ast)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = proxyopts.Create(app, ast, cfg)

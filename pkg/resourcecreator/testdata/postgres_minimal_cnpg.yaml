@@ -2,7 +2,7 @@ testconfig:
   description: minimal postgresql provisioned with databases and automatic configuration
 config:
   features:
-    postgres-operator: true
+    postgres: true
   google-project-id: google-project-id
 input:
   kind: Application
