@@ -19,6 +19,7 @@ func TestCreate(t *testing.T) {
 		postgres     nais_io_v1.PostgresUse
 		wantRoles    []pgrator_v1.PostgresBindingRole
 		wantEnvNames []string
+		wantCASecret string
 	}{
 		{
 			name:     "default creates admin and runtime credentials",
@@ -31,6 +32,7 @@ func TestCreate(t *testing.T) {
 				"PGSSLCERT", "PGSSLKEY", "PGSSLROOTCERT",
 				"READWRITE_PGSSLCERT", "READWRITE_PGSSLKEY", "READWRITE_PGSSLROOTCERT",
 			},
+			wantCASecret: "pg-mydb-ca",
 		},
 		{
 			name:      "literal prefix is prepended",
@@ -39,6 +41,7 @@ func TestCreate(t *testing.T) {
 			wantEnvNames: []string{
 				"REPORTING_READ_PGSSLCERT", "REPORTING_READ_PGSSLKEY", "REPORTING_READ_PGSSLROOTCERT",
 			},
+			wantCASecret: "pg-reporting-ca",
 		},
 	}
 
@@ -81,7 +84,7 @@ func TestCreate(t *testing.T) {
 			assert.Equal(t, tt.wantEnvNames, gotEnvNames)
 
 			caVolume := ast.Volumes[0]
-			assert.Equal(t, tt.postgres.Name+"-ca", caVolume.Secret.SecretName)
+			assert.Equal(t, tt.wantCASecret, caVolume.Secret.SecretName)
 			assert.Equal(t, int32(0o440), *caVolume.Secret.DefaultMode)
 			require.Len(t, caVolume.Secret.Items, 1)
 			assert.Equal(t, "ca.crt", caVolume.Secret.Items[0].Key)

@@ -21,8 +21,8 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.16
 	github.com/mitchellh/hashstructure v1.1.0
-	github.com/nais/liberator v0.0.0-20260903090128-e86eadc96b42
-	github.com/nais/pgrator/pkg/api v0.0.0-20260903075558-0e36a714596d
+	github.com/nais/liberator v0.0.0-20260903194126-706ea87ddf9a
+	github.com/nais/pgrator/pkg/api v0.0.0-20260903190055-33b6cf2ce4bc
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.88.0
 	github.com/prometheus/client_golang v1.24.1
 	github.com/sirupsen/logrus v1.10.2
