@@ -26,8 +26,8 @@ spec:
     - jsonPath: .spec.consumer.workload.type
       name: Type
       type: string
-    - jsonPath: .spec.role
-      name: Role
+    - jsonPath: .spec.credentials
+      name: Credentials
       type: string
     - jsonPath: .status.reconcileTime
       name: Last reconcile
@@ -58,7 +58,10 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of PostgresBinding
+            description: |-
+              spec defines the desired state of PostgresBinding
+              Postgres and consumer identity are immutable. Credentials may change as the
+              workload's uses.postgres declaration changes.
             properties:
               consumer:
                 description: Consumer identifies what is granted access.
@@ -87,36 +90,35 @@ spec:
                 x-kubernetes-validations:
                 - message: workload consumer is required
                   rule: has(self.workload)
+              credentials:
+                description: |-
+                  Credentials is the exact, mutable collection of connection credentials the
+                  workload receives. Naiserator expands uses.postgres.role before creating the
+                  binding, so pgrator never has to infer workload mounts from a shorthand.
+                items:
+                  description: PostgresBindingCredential is a connection credential
+                    a workload receives.
+                  enum:
+                  - admin
+                  - read
+                  - readwrite
+                  type: string
+                minItems: 1
+                type: array
+                x-kubernetes-list-type: set
               postgres:
                 description: |-
                   Postgres is the name of the Postgres instance to bind to. The instance must
                   live in the same namespace: bindings never cross team boundaries.
                 type: string
-              role:
-                description: Role is the level of access granted to the consumer.
-                enum:
-                - read
-                - readwrite
-                - admin
-                type: string
-              secretName:
-                description: |-
-                  SecretName is the complete name of the client-certificate Secret consumed by
-                  the binding's consumer. It must be unique per binding so one consumer can hold
-                  multiple roles for the same Postgres instance. CloudNativePG derives this name
-                  by appending "-client-cert" to the DatabaseRole name.
-                maxLength: 253
-                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*-client-cert$
-                type: string
             required:
             - consumer
+            - credentials
             - postgres
-            - role
-            - secretName
             type: object
             x-kubernetes-validations:
-            - message: spec is immutable
-              rule: self == oldSelf
+            - message: postgres and consumer are immutable
+              rule: self.postgres == oldSelf.postgres && self.consumer == oldSelf.consumer
           status:
             description: status defines the observed state of PostgresBinding
             properties:
