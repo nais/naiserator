@@ -6,8 +6,8 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	pgrator_v1 "github.com/nais/pgrator/pkg/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -20,8 +20,9 @@ func TestCreateCreatesOneBindingAndProjectsOnlyRequestedFiles(t *testing.T) {
 	if len(ast.Operations) != 1 {
 		t.Fatalf("operations = %d, want 1", len(ast.Operations))
 	}
-	binding := ast.Operations[0].Resource.(*pgrator_v1.PostgresBinding)
-	if binding.Name != "mydb-myapp" || !binding.HasCredential(pgrator_v1.PostgresBindingCredentialAdmin) || !binding.HasCredential(pgrator_v1.PostgresBindingCredentialReadWrite) {
+	binding := ast.Operations[0].Resource.(*unstructured.Unstructured)
+	credentials, found, err := unstructured.NestedStringSlice(binding.Object, "spec", "credentials")
+	if err != nil || !found || binding.GetName() != "mydb-myapp" || len(credentials) != 2 || credentials[0] != "admin" || credentials[1] != "readwrite" {
 		t.Errorf("binding = %#v", binding)
 	}
 	if len(ast.EnvFrom) != 0 {
