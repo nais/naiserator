@@ -120,6 +120,10 @@ depends = ['setup-envtest', 'test:go']
 description = "Run Go tests"
 run = "go test --race ./..."
 
+[tasks."test:goldenfiles"]
+description = "Run just Golden files tests"
+run = "go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1"
+
 [tasks."chart:push-dev"]
 description = "Build and push Helm chart with dev version"
 dir = "charts/naiserator"
