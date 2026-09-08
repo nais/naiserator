@@ -109,11 +109,19 @@ func stringSlice(values []string) []any {
 	return result
 }
 
+// connectionEnvPrefix is the stable Secret-key and environment-variable
+// prefix shared with pgrator. Admin remains unprefixed for compatibility.
 func connectionEnvPrefix(credential string) string {
-	if credential == credentialAdmin {
+	switch credential {
+	case credentialAdmin:
+		return ""
+	case credentialRead:
+		return "READ_"
+	case credentialReadWrite:
+		return "READWRITE_"
+	default:
 		return ""
 	}
-	return "PG" + credential + "_"
 }
 
 var connectionKeys = []string{"PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGSSLMODE"}
