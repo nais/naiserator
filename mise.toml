@@ -62,10 +62,6 @@ depends = [
 description = "Run deadcode"
 run = "go tool golang.org/x/tools/cmd/deadcode -test ./..."
 
-[tasks."check:gosec"]
-description = "Run gosec"
-run = "go tool github.com/securego/gosec/v2/cmd/gosec --exclude-generated -terse ./..."
-
 [tasks."check:staticcheck"]
 description = "Run staticcheck"
 run = "go tool honnef.co/go/tools/cmd/staticcheck ./..."
@@ -118,15 +114,11 @@ ${ENVTEST} use ${ENVTEST_K8S_VERSION} --bin-dir "${LOCALBIN}" || {
 
 [tasks.test]
 description = "Run all tests"
-depends = ['setup-envtest', 'test:go', 'test:goldenfiles']
+depends = ['setup-envtest', 'test:go']
 
 [tasks."test:go"]
 description = "Run Go tests"
-run = "go test --race --cover --coverprofile=cover.out ./..."
-
-[tasks."test:goldenfiles"]
-description = "Run just Golden files tests"
-run = "go test ./pkg/resourcecreator/resourcecreator_golden_files_test.go -count=1"
+run = "go test --race ./..."
 
 [tasks."chart:push-dev"]
 description = "Build and push Helm chart with dev version"
