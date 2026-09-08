@@ -1,5 +1,5 @@
 testconfig:
-  description: application gets admin and runtime Postgres credentials
+  description: application gets one stable Postgres binding
 config:
   features:
     postgres: true
@@ -19,29 +19,9 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: nais.io/v1
     kind: PostgresBinding
-    name: mydb-myapplication-admin
+    name: mydb-myapplication
     match:
-      - name: admin binding created
-        type: subset
-        resource:
-          metadata:
-            labels:
-              app: myapplication
-              team: mynamespace
-          spec:
-            postgres: mydb
-            consumer:
-              workload:
-                name: myapplication
-                type: application
-            secretName: mydb-myapplication-admin-client-cert
-            role: admin
-  - operation: CreateOrUpdate
-    apiVersion: nais.io/v1
-    kind: PostgresBinding
-    name: mydb-myapplication-readwrite
-    match:
-      - name: runtime binding created
+      - name: binding created with expanded credentials
         type: subset
         resource:
           spec:
@@ -50,5 +30,4 @@ tests:
               workload:
                 name: myapplication
                 type: application
-            secretName: mydb-myapplication-readwrite-client-cert
-            role: readwrite
+            credentials: [admin, readwrite]

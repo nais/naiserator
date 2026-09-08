@@ -1,5 +1,5 @@
 testconfig:
-  description: Naisjob gets prefixed read-only Postgres credentials
+  description: Naisjob gets one prefixed read-only Postgres credential binding
 config:
   features:
     postgres: true
@@ -21,7 +21,7 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: nais.io/v1
     kind: PostgresBinding
-    name: reporting-myjob-read
+    name: reporting-myjob
     match:
       - name: read binding created for Naisjob
         type: subset
@@ -32,5 +32,4 @@ tests:
               workload:
                 name: myjob
                 type: job
-            secretName: reporting-myjob-read-client-cert
-            role: read
+            credentials: [read]
