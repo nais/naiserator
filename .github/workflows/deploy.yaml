@@ -22,6 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7 # ratchet:exclude
       - uses: jdx/mise-action@v4
+        with:
+          minimum_release_age: 24h
       - run: mise run check
       - run: mise run test
       - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # ratchet:azure/setup-helm@v3
