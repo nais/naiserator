@@ -415,10 +415,29 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 				log.Errorf("BUG: unable to determine TypeMeta for new resource: %s", err)
 				return true
 			}
-			if reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing) {
-				if resourceMeta.GetName() == existingMeta.GetName() {
-					return true
+			sameType := reflect.TypeOf(rop.Resource) == reflect.TypeOf(existing)
+			// Generators may deliberately use an Unstructured object for a CRD whose
+			// API module has not yet been released. Compare its explicit GVK with the
+			// scheme's registered GVK for the persisted typed object so obsolete
+			// resources still participate in lifecycle cleanup.
+			if !sameType {
+				desiredGVK := rop.Resource.GetObjectKind().GroupVersionKind()
+				if desiredGVK.Kind != "" {
+					existingGVKs, _, err := n.scheme.ObjectKinds(existing)
+					if err != nil {
+						log.Errorf("BUG: unable to determine persisted resource GVK: %s", err)
+					} else {
+						for _, existingGVK := range existingGVKs {
+							if desiredGVK == existingGVK {
+								sameType = true
+								break
+							}
+						}
+					}
 				}
+			}
+			if sameType && resourceMeta.GetName() == existingMeta.GetName() {
+				return true
 			}
 		}
 		return false
