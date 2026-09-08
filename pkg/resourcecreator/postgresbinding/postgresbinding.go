@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const mountRoot = "/var/run/secrets/nais.io/postgres"
@@ -78,9 +79,13 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 	name := bindingName(postgres.Name, source.GetName())
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = name
+	metadata, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&objectMeta)
+	if err != nil {
+		panic(fmt.Sprintf("convert PostgresBinding metadata to unstructured: %v", err))
+	}
 	binding := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "nais.io/v1", "kind": "PostgresBinding",
-		"metadata": map[string]any{"name": objectMeta.Name, "namespace": objectMeta.Namespace, "labels": objectMeta.Labels, "annotations": objectMeta.Annotations},
+		"metadata": metadata,
 		"spec":     map[string]any{"postgres": postgres.Name, "consumer": map[string]any{"workload": map[string]any{"name": source.GetName(), "type": workloadType}}, "credentials": stringSlice(credentials)},
 	}}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, binding)

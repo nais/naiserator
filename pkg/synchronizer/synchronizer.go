@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -427,11 +428,8 @@ func (n *Synchronizer) Unreferenced(ctx context.Context, rollout Rollout) ([]run
 					if err != nil {
 						log.Errorf("BUG: unable to determine persisted resource GVK: %s", err)
 					} else {
-						for _, existingGVK := range existingGVKs {
-							if desiredGVK == existingGVK {
-								sameType = true
-								break
-							}
+						if slices.Contains(existingGVKs, desiredGVK) {
+							sameType = true
 						}
 					}
 				}
