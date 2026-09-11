@@ -22,14 +22,24 @@ func TestCreateCreatesOneBindingAndProjectsOnlyRequestedFiles(t *testing.T) {
 	}
 	binding := ast.Operations[0].Resource.(*unstructured.Unstructured)
 	credentials, found, err := unstructured.NestedStringSlice(binding.Object, "spec", "credentials")
-	if err != nil || !found || binding.GetName() != "mydb-myapp" || len(credentials) != 2 || credentials[0] != "admin" || credentials[1] != "readwrite" {
+	secretName, secretNameFound, err := unstructured.NestedString(binding.Object, "spec", "secretName")
+	if err != nil || !found || !secretNameFound || binding.GetName() != "mydb-myapp" || secretName != bindingSecretName("mydb", "myapp") || len(credentials) != 2 || credentials[0] != "admin" || credentials[1] != "readwrite" {
 		t.Errorf("binding = %#v", binding)
+	}
+	if got := ast.Volumes[0].Secret.SecretName; got != secretName {
+		t.Errorf("mounted Secret = %q, want %q", got, secretName)
 	}
 	if len(ast.EnvFrom) != 0 {
 		t.Errorf("EnvFrom = %#v, want none", ast.EnvFrom)
 	}
 	if got := ast.Volumes[0].Secret.Items; len(got) != 5 || got[0].Key != "ca.crt" || got[1].Key != "admin.tls.crt" {
 		t.Errorf("projected files = %#v", got)
+	}
+}
+
+func TestBindingSecretNameDistinguishesPostgresAndWorkload(t *testing.T) {
+	if bindingSecretName("a-b", "c") == bindingSecretName("a", "b-c") {
+		t.Fatal("distinct Postgres uses generated the same Secret name")
 	}
 }
 
