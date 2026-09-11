@@ -60,7 +60,7 @@ spec:
           spec:
             description: |-
               spec defines the desired state of PostgresBinding
-              Postgres and consumer identity are immutable. Credentials may change as the
+              Postgres, secret name, and consumer identity are immutable. Credentials may change as the
               workload's uses.postgres declaration changes.
             properties:
               consumer:
@@ -111,14 +111,20 @@ spec:
                   Postgres is the name of the Postgres instance to bind to. The instance must
                   live in the same namespace: bindings never cross team boundaries.
                 type: string
+              secretName:
+                description: |-
+                  SecretName is the stable connection Secret name Naiserator mounts into the
+                  workload. It is selected by Naiserator to avoid naming collisions. Empty is
+                  supported only for bindings created before this field was introduced.
+                type: string
             required:
             - consumer
             - credentials
             - postgres
             type: object
             x-kubernetes-validations:
-            - message: postgres and consumer are immutable
-              rule: self.postgres == oldSelf.postgres && self.consumer == oldSelf.consumer
+            - message: "postgres, secretName, and consumer are immutable"
+              rule: 'self.postgres == oldSelf.postgres && self.consumer == oldSelf.consumer && (has(oldSelf.secretName) ? self.secretName == oldSelf.secretName : true)'
           status:
             description: status defines the observed state of PostgresBinding
             properties:

@@ -6,12 +6,14 @@ import (
 	"fmt"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const mountRoot = "/var/run/secrets/nais.io/postgres"
@@ -77,6 +79,7 @@ func bindingCredentials(role string) ([]string, error) {
 
 func addBinding(source Source, ast *resource.Ast, workloadType string, postgres nais_io_v1.PostgresUse, credentials []string) {
 	name := bindingName(postgres.Name, source.GetName())
+	secretName := bindingSecretName(postgres.Name, source.GetName())
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = name
 	metadata, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&objectMeta)
@@ -86,16 +89,16 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 	binding := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "nais.io/v1", "kind": "PostgresBinding",
 		"metadata": metadata,
-		"spec":     map[string]any{"postgres": postgres.Name, "consumer": map[string]any{"workload": map[string]any{"name": source.GetName(), "type": workloadType}}, "credentials": stringSlice(credentials)},
+		"spec":     map[string]any{"postgres": postgres.Name, "secretName": secretName, "consumer": map[string]any{"workload": map[string]any{"name": source.GetName(), "type": workloadType}}, "credentials": stringSlice(credentials)},
 	}}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, binding)
-	volumeName := volumeName("credentials", name)
-	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(volumeName, name, credentialFiles(credentials), new(int32(0o440))))
+	volumeName := volumeName("credentials", secretName)
+	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(volumeName, secretName, credentialFiles(credentials), new(int32(0o440))))
 	ast.VolumeMounts = append(ast.VolumeMounts, corev1.VolumeMount{Name: volumeName, MountPath: postgresMountPath(postgres.Name), ReadOnly: true})
 	for _, credential := range credentials {
 		prefix := postgres.EnvPrefix + connectionEnvPrefix(credential)
 		for _, key := range connectionKeys {
-			ast.AppendEnv(corev1.EnvVar{Name: prefix + key, ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: name}, Key: connectionEnvPrefix(credential) + key}}})
+			ast.AppendEnv(corev1.EnvVar{Name: prefix + key, ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: secretName}, Key: connectionEnvPrefix(credential) + key}}})
 		}
 		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGSSLCERT", Value: credentialMountPath(postgres.Name, credential) + "/tls.crt"}, corev1.EnvVar{Name: prefix + "PGSSLKEY", Value: credentialMountPath(postgres.Name, credential) + "/tls.key"}, corev1.EnvVar{Name: prefix + "PGSSLROOTCERT", Value: postgresMountPath(postgres.Name) + "/ca.crt"})
 	}
@@ -127,6 +130,14 @@ func connectionEnvPrefix(credential string) string {
 var connectionKeys = []string{"PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGSSLMODE"}
 
 func bindingName(postgres, workload string) string { return fmt.Sprintf("%s-%s", postgres, workload) }
+
+func bindingSecretName(postgres, workload string) string {
+	name, err := namegen.SuffixedShortName(fmt.Sprintf("%s--%s", postgres, workload), "connection", validation.DNS1123SubdomainMaxLength)
+	if err != nil {
+		panic(fmt.Sprintf("generate PostgresBinding Secret name: %v", err))
+	}
+	return name
+}
 
 func credentialFiles(credentials []string) []corev1.KeyToPath {
 	files := []corev1.KeyToPath{{Key: "ca.crt", Path: "ca.crt"}}
