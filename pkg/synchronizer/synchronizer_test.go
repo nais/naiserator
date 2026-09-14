@@ -352,7 +352,7 @@ func TestSynchronizer(t *testing.T) {
 		_, err = rig.synchronizer.Reconcile(ctx, req)
 		require.NoError(t, err)
 
-		bindingKey := client.ObjectKey{Name: "mydb-postgres-app-readwrite", Namespace: app.Namespace}
+		bindingKey := client.ObjectKey{Name: "mydb-postgres-app", Namespace: app.Namespace}
 		binding := &pgrator_v1.PostgresBinding{}
 		require.NoError(t, rig.client.Get(ctx, bindingKey, binding))
 		require.NotNil(t, binding.Spec.Consumer.Workload)

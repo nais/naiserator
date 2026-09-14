@@ -6,123 +6,131 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	pgrator_v1 "github.com/nais/pgrator/pkg/api/v1"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func TestCreate(t *testing.T) {
-	tests := []struct {
-		name         string
-		postgres     nais_io_v1.PostgresUse
-		wantRoles    []pgrator_v1.PostgresBindingRole
-		wantEnvNames []string
-		wantCASecret string
-	}{
-		{
-			name:     "default creates admin and runtime credentials",
-			postgres: nais_io_v1.PostgresUse{Name: "mydb"},
-			wantRoles: []pgrator_v1.PostgresBindingRole{
-				pgrator_v1.PostgresBindingRoleAdmin,
-				pgrator_v1.PostgresBindingRoleReadWrite,
-			},
-			wantEnvNames: []string{
-				"PGSSLCERT", "PGSSLKEY", "PGSSLROOTCERT",
-				"READWRITE_PGSSLCERT", "READWRITE_PGSSLKEY", "READWRITE_PGSSLROOTCERT",
-			},
-			wantCASecret: "pg-mydb-ca",
-		},
-		{
-			name:      "literal prefix is prepended",
-			postgres:  nais_io_v1.PostgresUse{Name: "reporting", Role: "read", EnvPrefix: "REPORTING_"},
-			wantRoles: []pgrator_v1.PostgresBindingRole{pgrator_v1.PostgresBindingRoleRead},
-			wantEnvNames: []string{
-				"REPORTING_READ_PGSSLCERT", "REPORTING_READ_PGSSLKEY", "REPORTING_READ_PGSSLROOTCERT",
-			},
-			wantCASecret: "pg-reporting-ca",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			app := &nais_io_v1alpha1.Application{
-				ObjectMeta: metav1.ObjectMeta{Name: "myapp", Namespace: "myteam", UID: types.UID("app-uid")},
-				Spec: nais_io_v1alpha1.ApplicationSpec{
-					Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{tt.postgres}},
-				},
-			}
-			ast := resource.NewAst()
-
-			err := Create(app, ast)
-			require.NoError(t, err)
-			require.Len(t, ast.Operations, len(tt.wantRoles))
-			require.Len(t, ast.EnvFrom, len(tt.wantRoles))
-			require.Len(t, ast.Volumes, len(tt.wantRoles)+1)
-			require.Len(t, ast.VolumeMounts, len(tt.wantRoles)+1)
-
-			for i, wantRole := range tt.wantRoles {
-				binding, ok := ast.Operations[i].Resource.(*pgrator_v1.PostgresBinding)
-				require.True(t, ok)
-				assert.Equal(t, resource.OperationCreateOrUpdate, ast.Operations[i].Operation)
-				assert.Equal(t, tt.postgres.Name+"-myapp-"+string(wantRole), binding.Name)
-				assert.Equal(t, binding.Name+"-client-cert", binding.Spec.SecretName)
-				assert.Equal(t, tt.postgres.Name, binding.Spec.Postgres)
-				require.NotNil(t, binding.Spec.Consumer.Workload)
-				assert.Equal(t, "myapp", binding.Spec.Consumer.Workload.Name)
-				assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeApplication, binding.Spec.Consumer.Workload.Type)
-				assert.Equal(t, wantRole, binding.Spec.Role)
-				assert.Equal(t, tt.postgres.EnvPrefix, ast.EnvFrom[i].Prefix)
-				assert.Equal(t, binding.Name, ast.EnvFrom[i].SecretRef.Name)
-			}
-
-			gotEnvNames := make([]string, 0, len(ast.Env))
-			for _, env := range ast.Env {
-				gotEnvNames = append(gotEnvNames, env.Name)
-			}
-			assert.Equal(t, tt.wantEnvNames, gotEnvNames)
-
-			caVolume := ast.Volumes[0]
-			assert.Equal(t, tt.wantCASecret, caVolume.Secret.SecretName)
-			assert.Equal(t, int32(0o440), *caVolume.Secret.DefaultMode)
-			require.Len(t, caVolume.Secret.Items, 1)
-			assert.Equal(t, "ca.crt", caVolume.Secret.Items[0].Key)
-			assert.Equal(t, "ca.crt", caVolume.Secret.Items[0].Path)
-
-			for _, volume := range ast.Volumes[1:] {
-				assert.Equal(t, int32(0o440), *volume.Secret.DefaultMode)
-				require.Len(t, volume.Secret.Items, 2)
-			}
-		})
-	}
-}
-
-func TestCreateNaisjobBinding(t *testing.T) {
-	job := &nais_io_v1.Naisjob{
-		ObjectMeta: metav1.ObjectMeta{Name: "myjob", Namespace: "myteam", UID: types.UID("job-uid")},
-		Spec: nais_io_v1.NaisjobSpec{
-			Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb", Role: "readwrite"}}},
-		},
-	}
+func TestCreateCreatesOneBindingAndProjectsOnlyRequestedFiles(t *testing.T) {
+	app := &nais_io_v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "myapp", Namespace: "myteam", UID: types.UID("app-uid")}, Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb"}}}}}
 	ast := resource.NewAst()
-
-	err := Create(job, ast)
-	require.NoError(t, err)
-	require.Len(t, ast.Operations, 1)
-	binding := ast.Operations[0].Resource.(*pgrator_v1.PostgresBinding)
-	require.NotNil(t, binding.Spec.Consumer.Workload)
-	assert.Equal(t, pgrator_v1.PostgresBindingWorkloadTypeJob, binding.Spec.Consumer.Workload.Type)
+	if err := Create(app, ast); err != nil {
+		t.Fatal(err)
+	}
+	if len(ast.Operations) != 1 {
+		t.Fatalf("operations = %d, want 1", len(ast.Operations))
+	}
+	binding := ast.Operations[0].Resource.(*unstructured.Unstructured)
+	credentials, found, err := unstructured.NestedStringSlice(binding.Object, "spec", "credentials")
+	if err != nil || !found || len(credentials) != 2 || credentials[0] != "admin" || credentials[1] != "readwrite" {
+		t.Errorf("binding = %#v", binding)
+	}
+	secretName, secretNameFound, err := unstructured.NestedString(binding.Object, "spec", "secretName")
+	if err != nil || !secretNameFound || binding.GetName() != "mydb-myapp" || secretName != bindingSecretName("mydb", "myapp") {
+		t.Errorf("binding = %#v", binding)
+	}
+	if got := ast.Volumes[0].Secret.SecretName; got != secretName {
+		t.Errorf("mounted Secret = %q, want %q", got, secretName)
+	}
+	if got := ast.VolumeMounts; len(got) != 1 || got[0].Name != ast.Volumes[0].Name || got[0].MountPath != "/var/run/secrets/nais.io/postgres/mydb" || !got[0].ReadOnly {
+		t.Errorf("volume mounts = %#v", got)
+	}
+	if len(ast.EnvFrom) != 0 {
+		t.Errorf("EnvFrom = %#v, want none", ast.EnvFrom)
+	}
+	if got := ast.Volumes[0].Secret.Items; len(got) != 5 || got[0].Key != "ca.crt" || got[1].Key != "admin.tls.crt" {
+		t.Errorf("projected files = %#v", got)
+	}
+	assertConnectionEnvironment(t, ast, "mydb", secretName, []connectionEnvironment{
+		{credential: "admin"},
+		{credential: "readwrite", environmentPrefix: "READWRITE_", secretKeyPrefix: "READWRITE_"},
+	})
 }
 
-func TestCreateRejectsUnsupportedRole(t *testing.T) {
-	app := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{Name: "myapp", Namespace: "myteam"},
-		Spec: nais_io_v1alpha1.ApplicationSpec{
-			Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb", Role: "owner"}}},
-		},
+func TestCreateUsesPrefixedReadOnlyConnectionEnvironment(t *testing.T) {
+	app := &nais_io_v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "myapp", Namespace: "myteam", UID: types.UID("app-uid")}, Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "reporting", Role: "read", EnvPrefix: "REPORTING_"}}}}}
+	ast := resource.NewAst()
+	if err := Create(app, ast); err != nil {
+		t.Fatal(err)
 	}
 
-	err := Create(app, resource.NewAst())
-	require.EqualError(t, err, `unsupported PostgresBinding role "owner"`)
+	binding := ast.Operations[0].Resource.(*unstructured.Unstructured)
+	secretName, found, err := unstructured.NestedString(binding.Object, "spec", "secretName")
+	if err != nil || !found {
+		t.Fatalf("binding secretName = %q, found = %t, err = %v", secretName, found, err)
+	}
+	if got := ast.Volumes[0].Secret.Items; len(got) != 3 || got[0].Key != "ca.crt" || got[1].Key != "read.tls.crt" || got[2].Key != "read.tls.key" {
+		t.Errorf("projected files = %#v", got)
+	}
+	if got := ast.VolumeMounts; len(got) != 1 || got[0].MountPath != "/var/run/secrets/nais.io/postgres/reporting" || !got[0].ReadOnly {
+		t.Errorf("volume mounts = %#v", got)
+	}
+	assertConnectionEnvironment(t, ast, "reporting", secretName, []connectionEnvironment{
+		{credential: "read", environmentPrefix: "REPORTING_READ_", secretKeyPrefix: "READ_"},
+	})
+}
+
+type connectionEnvironment struct {
+	credential        string
+	environmentPrefix string
+	secretKeyPrefix   string
+}
+
+func assertConnectionEnvironment(t *testing.T, ast *resource.Ast, postgres, secretName string, connections []connectionEnvironment) {
+	t.Helper()
+	const connectionVariableCount = 8
+	if got, want := len(ast.Env), len(connections)*connectionVariableCount; got != want {
+		t.Fatalf("environment variable count = %d, want %d: %#v", got, want, ast.Env)
+	}
+
+	environment := make(map[string]int, len(ast.Env))
+	for i, env := range ast.Env {
+		if _, exists := environment[env.Name]; exists {
+			t.Errorf("duplicate environment variable %q", env.Name)
+		}
+		environment[env.Name] = i
+	}
+	get := func(name string) int {
+		t.Helper()
+		i, found := environment[name]
+		if !found {
+			t.Fatalf("environment variable %q is missing", name)
+		}
+		return i
+	}
+
+	for _, connection := range connections {
+		for _, key := range []string{"PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGSSLMODE"} {
+			env := ast.Env[get(connection.environmentPrefix+key)]
+			if env.ValueFrom == nil || env.ValueFrom.SecretKeyRef == nil || env.ValueFrom.SecretKeyRef.Name != secretName || env.ValueFrom.SecretKeyRef.Key != connection.secretKeyPrefix+key {
+				t.Errorf("%s = %#v, want Secret %q key %q", env.Name, env, secretName, connection.secretKeyPrefix+key)
+			}
+		}
+
+		mountPath := "/var/run/secrets/nais.io/postgres/" + postgres
+		wantTLSVariables := map[string]string{
+			connection.environmentPrefix + "PGSSLCERT":     mountPath + "/" + connection.credential + "/tls.crt",
+			connection.environmentPrefix + "PGSSLKEY":      mountPath + "/" + connection.credential + "/tls.key",
+			connection.environmentPrefix + "PGSSLROOTCERT": mountPath + "/ca.crt",
+		}
+		for name, wantValue := range wantTLSVariables {
+			env := ast.Env[get(name)]
+			if env.Value != wantValue || env.ValueFrom != nil {
+				t.Errorf("%s = %#v, want literal %q", name, env, wantValue)
+			}
+		}
+	}
+}
+
+func TestBindingSecretNameDistinguishesPostgresAndWorkload(t *testing.T) {
+	if bindingSecretName("a-b", "c") == bindingSecretName("a", "b-c") {
+		t.Fatal("distinct Postgres uses generated the same Secret name")
+	}
+}
+
+func TestCreateRejectsDuplicatePostgresUse(t *testing.T) {
+	app := &nais_io_v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "myapp"}, Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb"}, {Name: "mydb"}}}}}
+	if err := Create(app, resource.NewAst()); err == nil {
+		t.Fatal("expected duplicate Postgres use error")
+	}
 }

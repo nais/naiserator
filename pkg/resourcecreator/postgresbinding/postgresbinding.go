@@ -1,4 +1,4 @@
-// Package postgresbinding connects workloads to CloudNativePG Postgres instances.
+// Package postgresbinding connects workloads to pgrator-managed Postgres bindings.
 package postgresbinding
 
 import (
@@ -6,14 +6,23 @@ import (
 	"fmt"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
+	"github.com/nais/liberator/pkg/namegen"
 	"github.com/nais/naiserator/pkg/resourcecreator/pod"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	pgrator_v1 "github.com/nais/pgrator/pkg/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const mountRoot = "/var/run/secrets/nais.io/postgres"
+
+const (
+	credentialAdmin     = "admin"
+	credentialRead      = "read"
+	credentialReadWrite = "readwrite"
+)
 
 type Source interface {
 	resource.Source
@@ -25,153 +34,126 @@ func Create(source Source, ast *resource.Ast) error {
 	if uses == nil {
 		return nil
 	}
-
 	workloadType, err := workloadType(source.GetOwnerReference().Kind)
 	if err != nil {
 		return err
 	}
-
+	seen := make(map[string]struct{}, len(uses.Postgres))
 	for _, postgres := range uses.Postgres {
-		roles, err := bindingRoles(postgres.Role)
+		if _, ok := seen[postgres.Name]; ok {
+			return fmt.Errorf("postgres %q is used more than once by workload %q", postgres.Name, source.GetName())
+		}
+		seen[postgres.Name] = struct{}{}
+		credentials, err := bindingCredentials(postgres.Role)
 		if err != nil {
 			return err
 		}
-
-		addCAVolume(ast, postgres.Name)
-		for _, role := range roles {
-			addBinding(source, ast, workloadType, postgres, role)
-		}
+		addBinding(source, ast, workloadType, postgres, credentials)
 	}
 	return nil
 }
 
-func workloadType(kind string) (pgrator_v1.PostgresBindingWorkloadType, error) {
+func workloadType(kind string) (string, error) {
 	switch kind {
 	case "Application":
-		return pgrator_v1.PostgresBindingWorkloadTypeApplication, nil
+		return "application", nil
 	case "Naisjob":
-		return pgrator_v1.PostgresBindingWorkloadTypeJob, nil
+		return "job", nil
 	default:
 		return "", fmt.Errorf("unsupported PostgresBinding workload kind %q", kind)
 	}
 }
 
-func bindingRoles(role string) ([]pgrator_v1.PostgresBindingRole, error) {
+func bindingCredentials(role string) ([]string, error) {
 	switch role {
-	case "", string(pgrator_v1.PostgresBindingRoleAdmin):
-		return []pgrator_v1.PostgresBindingRole{
-			pgrator_v1.PostgresBindingRoleAdmin,
-			pgrator_v1.PostgresBindingRoleReadWrite,
-		}, nil
-	case string(pgrator_v1.PostgresBindingRoleRead):
-		return []pgrator_v1.PostgresBindingRole{pgrator_v1.PostgresBindingRoleRead}, nil
-	case string(pgrator_v1.PostgresBindingRoleReadWrite):
-		return []pgrator_v1.PostgresBindingRole{pgrator_v1.PostgresBindingRoleReadWrite}, nil
+	case "", credentialAdmin:
+		return []string{credentialAdmin, credentialReadWrite}, nil
+	case credentialRead:
+		return []string{credentialRead}, nil
+	case credentialReadWrite:
+		return []string{credentialReadWrite}, nil
 	default:
 		return nil, fmt.Errorf("unsupported PostgresBinding role %q", role)
 	}
 }
 
-func addBinding(source Source, ast *resource.Ast, workloadType pgrator_v1.PostgresBindingWorkloadType, postgres nais_io_v1.PostgresUse, role pgrator_v1.PostgresBindingRole) {
-	name := bindingName(postgres.Name, source.GetName(), role)
+func addBinding(source Source, ast *resource.Ast, workloadType string, postgres nais_io_v1.PostgresUse, credentials []string) {
+	name := bindingName(postgres.Name, source.GetName())
+	secretName := bindingSecretName(postgres.Name, source.GetName())
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = name
-
-	binding := &pgrator_v1.PostgresBinding{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: pgrator_v1.GroupVersion.String(),
-			Kind:       "PostgresBinding",
-		},
-		ObjectMeta: objectMeta,
-		Spec: pgrator_v1.PostgresBindingSpec{
-			Postgres: postgres.Name,
-			Consumer: pgrator_v1.PostgresBindingConsumer{
-				Workload: &pgrator_v1.PostgresBindingWorkload{
-					Name: source.GetName(),
-					Type: workloadType,
-				},
-			},
-			SecretName: name + "-client-cert",
-			Role:       role,
-		},
+	metadata, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&objectMeta)
+	if err != nil {
+		panic(fmt.Sprintf("convert PostgresBinding metadata to unstructured: %v", err))
 	}
+	binding := &unstructured.Unstructured{Object: map[string]any{
+		"apiVersion": "nais.io/v1", "kind": "PostgresBinding",
+		"metadata": metadata,
+		"spec":     map[string]any{"postgres": postgres.Name, "secretName": secretName, "consumer": map[string]any{"workload": map[string]any{"name": source.GetName(), "type": workloadType}}, "credentials": stringSlice(credentials)},
+	}}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, binding)
-
-	ast.EnvFrom = append(ast.EnvFrom, corev1.EnvFromSource{
-		Prefix: postgres.EnvPrefix,
-		SecretRef: &corev1.SecretEnvSource{
-			LocalObjectReference: corev1.LocalObjectReference{Name: name},
-		},
-	})
-
-	addClientCertificate(ast, postgres, role, binding.Spec.SecretName)
+	volumeName := volumeName("credentials", secretName)
+	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(volumeName, secretName, credentialFiles(credentials), new(int32(0o440))))
+	ast.VolumeMounts = append(ast.VolumeMounts, corev1.VolumeMount{Name: volumeName, MountPath: postgresMountPath(postgres.Name), ReadOnly: true})
+	for _, credential := range credentials {
+		prefix := postgres.EnvPrefix + connectionEnvPrefix(credential)
+		for _, key := range connectionKeys {
+			ast.AppendEnv(corev1.EnvVar{Name: prefix + key, ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: secretName}, Key: connectionEnvPrefix(credential) + key}}})
+		}
+		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGSSLCERT", Value: credentialMountPath(postgres.Name, credential) + "/tls.crt"}, corev1.EnvVar{Name: prefix + "PGSSLKEY", Value: credentialMountPath(postgres.Name, credential) + "/tls.key"}, corev1.EnvVar{Name: prefix + "PGSSLROOTCERT", Value: postgresMountPath(postgres.Name) + "/ca.crt"})
+	}
 }
 
-func bindingName(postgres, workload string, role pgrator_v1.PostgresBindingRole) string {
-	return fmt.Sprintf("%s-%s-%s", postgres, workload, role)
+func stringSlice(values []string) []any {
+	result := make([]any, len(values))
+	for i := range values {
+		result[i] = values[i]
+	}
+	return result
 }
 
-func roleEnvPrefix(role pgrator_v1.PostgresBindingRole) string {
-	switch role {
-	case pgrator_v1.PostgresBindingRoleRead:
+// connectionEnvPrefix is the stable Secret-key and environment-variable
+// prefix shared with pgrator. Admin remains unprefixed for compatibility.
+func connectionEnvPrefix(credential string) string {
+	switch credential {
+	case credentialAdmin:
+		return ""
+	case credentialRead:
 		return "READ_"
-	case pgrator_v1.PostgresBindingRoleReadWrite:
+	case credentialReadWrite:
 		return "READWRITE_"
 	default:
 		return ""
 	}
 }
 
-func addCAVolume(ast *resource.Ast, postgres string) {
-	name := volumeName("ca", postgres)
-	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(
-		name,
-		pgrator_v1.CNPGClusterName(postgres)+"-ca",
-		[]corev1.KeyToPath{{Key: "ca.crt", Path: "ca.crt"}},
-		new(int32(0o440)),
-	))
-	ast.VolumeMounts = append(ast.VolumeMounts, corev1.VolumeMount{
-		Name:      name,
-		MountPath: caMountPath(postgres),
-		ReadOnly:  true,
-	})
+var connectionKeys = []string{"PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGSSLMODE"}
+
+func bindingName(postgres, workload string) string { return fmt.Sprintf("%s-%s", postgres, workload) }
+
+func bindingSecretName(postgres, workload string) string {
+	name, err := namegen.SuffixedShortName(fmt.Sprintf("%s--%s", postgres, workload), "connection", validation.DNS1123SubdomainMaxLength)
+	if err != nil {
+		panic(fmt.Sprintf("generate PostgresBinding Secret name: %v", err))
+	}
+	return name
 }
 
-func addClientCertificate(ast *resource.Ast, postgres nais_io_v1.PostgresUse, role pgrator_v1.PostgresBindingRole, secretName string) {
-	name := volumeName("client", secretName)
-	mountPath := clientMountPath(postgres.Name, role)
-	ast.Volumes = append(ast.Volumes, pod.FromFilesSecretVolumeWithMode(
-		name,
-		secretName,
-		[]corev1.KeyToPath{
-			{Key: "tls.crt", Path: "tls.crt"},
-			{Key: "tls.key", Path: "tls.key"},
-		},
-		new(int32(0o440)),
-	))
-	ast.VolumeMounts = append(ast.VolumeMounts, corev1.VolumeMount{
-		Name:      name,
-		MountPath: mountPath,
-		ReadOnly:  true,
-	})
-
-	prefix := postgres.EnvPrefix + roleEnvPrefix(role)
-	ast.AppendEnv(
-		corev1.EnvVar{Name: prefix + "PGSSLCERT", Value: mountPath + "/tls.crt"},
-		corev1.EnvVar{Name: prefix + "PGSSLKEY", Value: mountPath + "/tls.key"},
-		corev1.EnvVar{Name: prefix + "PGSSLROOTCERT", Value: caMountPath(postgres.Name) + "/ca.crt"},
-	)
+func credentialFiles(credentials []string) []corev1.KeyToPath {
+	files := []corev1.KeyToPath{{Key: "ca.crt", Path: "ca.crt"}}
+	for _, credential := range credentials {
+		files = append(files, corev1.KeyToPath{Key: credential + ".tls.crt", Path: credential + "/tls.crt"}, corev1.KeyToPath{Key: credential + ".tls.key", Path: credential + "/tls.key"})
+	}
+	return files
 }
 
 func volumeName(kind, identity string) string {
 	hash := sha256.Sum256([]byte(identity))
 	return fmt.Sprintf("postgres-%s-%x", kind, hash[:6])
 }
-
-func caMountPath(postgres string) string {
-	return fmt.Sprintf("%s/%s/ca", mountRoot, postgres)
+func postgresMountPath(postgres string) string { return fmt.Sprintf("%s/%s", mountRoot, postgres) }
+func credentialMountPath(postgres, credential string) string {
+	return fmt.Sprintf("%s/%s", postgresMountPath(postgres), credential)
 }
 
-func clientMountPath(postgres string, role pgrator_v1.PostgresBindingRole) string {
-	return fmt.Sprintf("%s/%s/%s", mountRoot, postgres, role)
-}
+var _ = metav1.ObjectMeta{}

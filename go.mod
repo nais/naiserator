@@ -19,7 +19,7 @@ require (
 	github.com/imdario/mergo v0.3.16
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/nais/liberator v0.0.0-20260903194126-706ea87ddf9a
-	github.com/nais/pgrator/pkg/api v0.0.0-20260903190055-33b6cf2ce4bc
+	github.com/nais/pgrator/pkg/api v0.0.0-20260914081104-fd47a4ac1ecf
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.88.0
 	github.com/prometheus/client_golang v1.24.1
 	github.com/sirupsen/logrus v1.10.2
