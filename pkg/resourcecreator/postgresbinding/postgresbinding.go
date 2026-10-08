@@ -86,10 +86,14 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 	if err != nil {
 		panic(fmt.Sprintf("convert PostgresBinding metadata to unstructured: %v", err))
 	}
+	spec := map[string]any{"postgres": postgres.Name, "secretName": secretName, "consumer": map[string]any{"workload": map[string]any{"name": source.GetName(), "type": workloadType}}, "credentials": stringSlice(credentials)}
+	if postgres.Branch != "" {
+		spec["branch"] = postgres.Branch
+	}
 	binding := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "nais.io/v1", "kind": "PostgresBinding",
 		"metadata": metadata,
-		"spec":     map[string]any{"postgres": postgres.Name, "secretName": secretName, "consumer": map[string]any{"workload": map[string]any{"name": source.GetName(), "type": workloadType}}, "credentials": stringSlice(credentials)},
+		"spec":     spec,
 	}}
 	ast.AppendOperation(resource.OperationCreateOrUpdate, binding)
 	volumeName := volumeName("credentials", secretName)
