@@ -5,9 +5,9 @@ config:
   cluster-name: mycluster
   domain-ingressclass-mapping:
     - domainSuffix: .nais.io
-      ingressClass: nais-ingress
+      ingressClass: haproxy
     - domainSuffix: .domain
-      ingressClass: nais-ingress-external
+      ingressClass: haproxy-external
   nais-namespace: nais-system
 existing:
   - kind: Application
@@ -29,10 +29,8 @@ existing:
       namespace: my-other-namespace
       labels:
         app: myapplicationredirect-preexisting-app
-      annotations:
-        nginx.ingress.kubernetes.io/use-regex: "true"
     spec:
-      ingressClassName: "nais-ingress"
+      ingressClassName: "haproxy"
       rules:
         - host: "myapplication.from.redirect.old.dev.nais.io"
           http:
@@ -43,7 +41,7 @@ existing:
                     port:
                       number: 80
                   path: /
-                  pathType: ImplementationSpecific
+                  pathType: Prefix
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -63,16 +61,13 @@ tests:
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: myapplicationredirect-nais-ingress-8b7125b7
+    name: myapplicationredirect-haproxy-37469aa4
     match:
       - type: subset
         name: "ingress for myapp with a normal ingress and a redirect ingress"
         resource:
-          metadata:
-            annotations:
-              nginx.ingress.kubernetes.io/use-regex: "true"
           spec:
-            ingressClassName: "nais-ingress"
+            ingressClassName: "haproxy"
             rules:
               - host: "myapplication.dev.nais.io"
                 http:
@@ -83,22 +78,22 @@ tests:
                           port:
                             number: 80
                       path: /
-                      pathType: ImplementationSpecific
+                      pathType: Prefix
 
   - operation: CreateOrUpdate
     apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: myapplicationredirect-nais-ingress-redirect-9062cefa
+    name: myapplicationredirect-haproxy-redirect-0a353c97
     match:
       - type: subset
         name: "redirect ingress for myapp"
         resource:
           metadata:
             annotations:
-              nginx.ingress.kubernetes.io/rewrite-target: "https://myapplication.dev.nais.io/$1"
-              nginx.ingress.kubernetes.io/use-regex: "true"
+              haproxy.org/request-redirect: myapplication.dev.nais.io
+              haproxy.org/request-redirect-code: "302"
           spec:
-            ingressClassName: "nais-ingress"
+            ingressClassName: "haproxy"
             rules:
               - host: "myapplication.from.redirect.old.dev.nais.io"
                 http:
@@ -108,5 +103,5 @@ tests:
                           name: myapplicationredirect
                           port:
                             number: 80
-                      path: /(.*)?
-                      pathType: ImplementationSpecific
+                      path: /
+                      pathType: Prefix

@@ -1,6 +1,6 @@
 module github.com/nais/naiserator
 
-go 1.26.7
+go 1.26.8
 
 tool (
 	golang.org/x/tools/cmd/deadcode
@@ -27,9 +27,9 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.36.4
-	k8s.io/apimachinery v0.36.4
-	k8s.io/client-go v0.36.4
+	k8s.io/api v0.36.5
+	k8s.io/apimachinery v0.36.5
+	k8s.io/client-go v0.36.5
 	sigs.k8s.io/controller-runtime v0.24.1
 )
 

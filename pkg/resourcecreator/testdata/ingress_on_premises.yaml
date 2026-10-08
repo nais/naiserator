@@ -3,7 +3,7 @@ testconfig:
 config:
   domain-ingressclass-mapping:
     - domainSuffix: .bar
-      ingressClass: very-nginx
+      ingressClass: very-haproxy
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
@@ -17,7 +17,7 @@ input:
 tests:
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
-    name: myapplication-very-nginx-e55d5da0
+    name: myapplication-very-haproxy-efe42262
     operation: CreateOrUpdate
     match:
       - type: exact
@@ -33,10 +33,8 @@ tests:
           metadata:
             annotations:
               nais.io/deploymentCorrelationID: ""
-              nginx.ingress.kubernetes.io/backend-protocol: HTTP
-              nginx.ingress.kubernetes.io/use-regex: "true"
           spec:
-            ingressClassName: very-nginx
+            ingressClassName: very-haproxy
             rules:
               - host: foo.bar
                 http:
@@ -46,5 +44,5 @@ tests:
                           name: myapplication
                           port:
                             number: 80
-                      path: /baz(/.*)?
-                      pathType: ImplementationSpecific
+                      path: /baz
+                      pathType: Prefix
