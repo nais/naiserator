@@ -97,5 +97,8 @@ jobs:
           targets: |
             [
               { "target": { "kind": "tenant", "tenant": "ci-nais" }, "wait": true },
-              { "target": { "kind": "tenant", "tenant": "dev-nais" }, "wait": true }
+              { "target": { "kind": "onprem", "tenant": "ci-nais" }, "wait": true },
+              { "target": { "kind": "tenant" } },
+              { "target": { "kind": "onprem" } }
+              
             ]
