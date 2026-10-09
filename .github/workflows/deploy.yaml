@@ -100,4 +100,5 @@ jobs:
               { "target": { "kind": "onprem", "tenant": "ci-nais" }, "wait": true },
               { "target": { "kind": "tenant" } },
               { "target": { "kind": "onprem" } }
+              
             ]

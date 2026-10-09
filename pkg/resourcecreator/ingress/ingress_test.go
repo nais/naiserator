@@ -42,7 +42,7 @@ func TestIngress(t *testing.T) {
 			opts.Config.DomainIngressClassMapping = []config.GatewayMapping{
 				{
 					DomainSuffix: ".bar",
-					IngressClass: "very-nginx",
+					IngressClass: "very-haproxy",
 				},
 				{
 					DomainSuffix: ".baz",

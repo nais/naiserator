@@ -6,7 +6,7 @@ config:
     wonderwall: true
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
-      ingressClass: very-nginx
+      ingressClass: very-haproxy
   cluster-name: mycluster
   wonderwall:
     image: nais/wonderwall

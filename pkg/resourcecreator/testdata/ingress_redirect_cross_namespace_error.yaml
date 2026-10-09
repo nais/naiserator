@@ -5,9 +5,9 @@ config:
   cluster-name: mycluster
   domain-ingressclass-mapping:
     - domainSuffix: .nais.io
-      ingressClass: nais-ingress
+      ingressClass: haproxy
     - domainSuffix: .domain
-      ingressClass: nais-ingress-external
+      ingressClass: haproxy-external
   nais-namespace: nais-system
 existing:
   - kind: Application
@@ -27,10 +27,8 @@ existing:
       namespace: my-other-namespace
       labels:
         app: myapplicationredirect-preexisting-app
-      annotations:
-        nginx.ingress.kubernetes.io/use-regex: "true"
     spec:
-      ingressClassName: "nais-ingress"
+      ingressClassName: "haproxy"
       rules:
         - host: "myapplication.from.redirect.old.dev.nais.io"
           http:
@@ -41,7 +39,7 @@ existing:
                     port:
                       number: 80
                   path: /
-                  pathType: ImplementationSpecific
+                  pathType: Prefix
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1
