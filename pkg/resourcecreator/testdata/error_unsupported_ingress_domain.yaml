@@ -4,9 +4,9 @@ config:
   cluster-name: mycluster
   domain-ingressclass-mapping:
     - domainSuffix: .test.no
-      ingressClass: very-nginx
+      ingressClass: very-haproxy
     - domainSuffix: .test.nav.no
-      ingressClass: weary-nginx
+      ingressClass: weary-haproxy
 input:
   kind: Application
   apiVersion: nais.io/v1alpha1

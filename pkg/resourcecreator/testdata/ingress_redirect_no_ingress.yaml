@@ -5,9 +5,9 @@ config:
   cluster-name: mycluster
   domain-ingressclass-mapping:
     - domainSuffix: .nais.io
-      ingressClass: nais-ingress
+      ingressClass: haproxy
     - domainSuffix: .domain
-      ingressClass: nais-ingress-external
+      ingressClass: haproxy-external
   nais-namespace: nais-system
 input:
   kind: Application

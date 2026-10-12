@@ -3,7 +3,7 @@ testconfig:
 config:
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
-      ingressClass: very-nginx
+      ingressClass: very-haproxy
   features:
     azurerator: true
     idporten: true

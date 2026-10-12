@@ -1,7 +1,7 @@
 cluster-name: "dev-nais-tilt"
 domain-ingressclass-mapping:
   - domainSuffix: dev-nais-local.dev-nais.cloud.nais.io
-    ingressClass: nais-ingress
+    ingressClass: internal-haproxy
 synchronizer:
   synchronization-timeout: 5m
   rollout-timeout: 5m

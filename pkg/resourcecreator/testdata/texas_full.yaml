@@ -11,7 +11,7 @@ config:
   cluster-name: mycluster
   domain-ingressclass-mapping:
     - domainSuffix: .nav.no
-      ingressClass: very-nginx
+      ingressClass: very-haproxy
   texas:
     image: nais/texas
   wonderwall:

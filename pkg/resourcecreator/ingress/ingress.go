@@ -15,8 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-const regexSuffix = "(/.*)?"
-
 type Source interface {
 	resource.Source
 	GetIngress() []nais_io_v1.Ingress
@@ -30,7 +28,6 @@ type Config interface {
 	GetDomains() []string
 	GetDocUrl() string
 	GetClusterName() string
-	IsHAProxyEnabled() bool
 }
 
 func ingressServiceBackend(appName string) networkingv1.IngressBackend {
@@ -52,15 +49,10 @@ func ingressPath(path string, pathType networkingv1.PathType, backend networking
 	}
 }
 
-func createIngressRule(appName string, u *url.URL, isHAProxy bool, annotations map[string]string) networkingv1.IngressRule {
+func createIngressRule(appName string, u *url.URL, annotations map[string]string) networkingv1.IngressRule {
 	backend := ingressServiceBackend(appName)
 
-	var paths []networkingv1.HTTPIngressPath
-	if isHAProxy {
-		paths = haproxyIngressPaths(u.Path, annotations, backend)
-	} else {
-		paths = []networkingv1.HTTPIngressPath{ingressPath(u.Path, networkingv1.PathTypeImplementationSpecific, backend)}
-	}
+	paths := haproxyIngressPaths(u.Path, annotations, backend)
 
 	return networkingv1.IngressRule{
 		Host: u.Host,
@@ -132,7 +124,7 @@ func shouldBeScraped(source Source) bool {
 	return false
 }
 
-func createIngressBaseHAProxy(source Source, ingressClass string) (*networkingv1.Ingress, error) {
+func createIngress(source Source, ingressClass string) (*networkingv1.Ingress, error) {
 	ingress, err := createIngressBase(source, ingressClass)
 	if err != nil {
 		return nil, err
@@ -142,30 +134,6 @@ func createIngressBaseHAProxy(source Source, ingressClass string) (*networkingv1
 	copyHAProxyAnnotations(ingress.Annotations, source.GetAnnotations())
 
 	return ingress, nil
-}
-
-func createIngressBaseNginx(source Source, ingressClass string) (*networkingv1.Ingress, error) {
-	ingress, err := createIngressBase(source, ingressClass)
-	if err != nil {
-		return nil, err
-	}
-
-	copyNginxAnnotations(ingress.Annotations, source.GetAnnotations())
-	ingress.Annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
-	ingress.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = backendProtocol(source.GetService().Protocol)
-
-	return ingress, nil
-}
-
-// Using backend-protocol annotations is possible to indicate how NGINX should communicate with the backend service.
-// Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI
-func backendProtocol(portName string) string {
-	switch portName {
-	case "grpc":
-		return "GRPC"
-	default:
-		return "HTTP"
-	}
 }
 
 func createIngressList(source Source, cfg Config) ([]*networkingv1.Ingress, error) {
@@ -194,14 +162,6 @@ func createIngressList(source Source, cfg Config) ([]*networkingv1.Ingress, erro
 	return ingressList, nil
 }
 
-func createIngress(source Source, ingressClass string, isHAProxy bool) (*networkingv1.Ingress, error) {
-	if isHAProxy {
-		return createIngressBaseHAProxy(source, ingressClass)
-	} else {
-		return createIngressBaseNginx(source, ingressClass)
-	}
-}
-
 func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingress, error) {
 	ingresses := make(map[string]*networkingv1.Ingress)
 
@@ -217,15 +177,10 @@ func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingres
 		}
 
 		for _, ingressClass := range ingressClasses {
-			isHAProxy := strings.HasSuffix(ingressClass, "haproxy")
-
-			if isHAProxy && !cfg.IsHAProxyEnabled() {
-				continue // only create HAProxy ingress where HAProxy is enabled
-			}
 
 			ingress := ingresses[ingressClass]
 			if ingress == nil {
-				newIngress, err := createIngress(source, ingressClass, isHAProxy)
+				newIngress, err := createIngress(source, ingressClass)
 				if err != nil {
 					return nil, err
 				}
@@ -234,14 +189,7 @@ func createIngresses(source Source, cfg Config) (map[string]*networkingv1.Ingres
 				ingresses[ingressClass] = ingress
 			}
 
-			ruleURL := parsedURL
-			if !isHAProxy && len(parsedURL.Path) > 1 { // handle Nginx - delete block on Nginx sunsetting
-				nginxURL := *parsedURL
-				nginxURL.Path = parsedURL.Path + regexSuffix
-				ruleURL = &nginxURL
-			}
-
-			rule := createIngressRule(source.GetName(), ruleURL, isHAProxy, source.GetAnnotations())
+			rule := createIngressRule(source.GetName(), parsedURL, source.GetAnnotations())
 			ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
 		}
 	}

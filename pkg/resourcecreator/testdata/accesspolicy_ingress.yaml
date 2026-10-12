@@ -7,9 +7,9 @@ config:
   cluster-name: mycluster
   domain-ingressclass-mapping:
     - domainSuffix: .nais.io
-      ingressClass: nais-ingress
+      ingressClass: internal-haproxy
     - domainSuffix: .domain
-      ingressClass: nais-ingress-external
+      ingressClass: external-haproxy
   nais-namespace: nais-system
 input:
   kind: Application
@@ -43,14 +43,14 @@ tests:
                         kubernetes.io/metadata.name: nais-system
                     podSelector:
                       matchLabels:
-                        nais.io/ingressClass: nais-ingress
+                        nais.io/ingressClass: internal-haproxy
               - from:
                   - namespaceSelector:
                       matchLabels:
                         kubernetes.io/metadata.name: nais-system
                     podSelector:
                       matchLabels:
-                        nais.io/ingressClass: nais-ingress-external
+                        nais.io/ingressClass: external-haproxy
             podSelector:
               matchLabels:
                 app: myapplication
