@@ -234,13 +234,13 @@ func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
 		if len(file.ConfigMap) > 0 {
 			configs++
 			name := fmt.Sprintf("config-%d", configs)
-			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name, file.ConfigMap))
+			ast.Volumes = append(ast.Volumes, fromFilesConfigmapVolume(name, file.ConfigMap, file.Mode))
 			ast.VolumeMounts = append(ast.VolumeMounts,
 				FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.GetDefaultMountPath(file.ConfigMap), true))
 		} else if len(file.Secret) > 0 {
 			secrets++
 			name := fmt.Sprintf("secret-%d", secrets)
-			ast.Volumes = append(ast.Volumes, FromFilesSecretVolume(name, file.Secret, nil))
+			ast.Volumes = append(ast.Volumes, FromFilesSecretVolumeWithMode(name, file.Secret, nil, file.Mode))
 			ast.VolumeMounts = append(ast.VolumeMounts, FromFilesVolumeMount(name, file.MountPath, nais_io_v1alpha1.DefaultSecretMountPath, true))
 		} else if len(file.PersistentVolumeClaim) > 0 {
 			persistence++
@@ -256,7 +256,7 @@ func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
 	}
 }
 
-func fromFilesConfigmapVolume(volumeName, configMapName string) corev1.Volume {
+func fromFilesConfigmapVolume(volumeName, configMapName string, mode *int32) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
@@ -264,6 +264,7 @@ func fromFilesConfigmapVolume(volumeName, configMapName string) corev1.Volume {
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: configMapName,
 				},
+				DefaultMode: mode,
 			},
 		},
 	}

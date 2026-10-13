@@ -1,0 +1,31 @@
+testconfig:
+  description: filesFrom secret with explicit file mode
+config:
+  features: {}
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+  spec:
+    filesFrom:
+      - secret: sqlcertificate
+        mode: 0640
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: secret volume has requested mode
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: secret-1
+                    secret:
+                      secretName: sqlcertificate
+                      defaultMode: 416
