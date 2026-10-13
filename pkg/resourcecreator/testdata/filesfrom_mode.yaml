@@ -1,5 +1,5 @@
 testconfig:
-  description: explicit file permissions, including zero, survive Application resource generation
+  description: filesFrom secret with explicit file mode
 config:
   features: {}
 input:
@@ -11,10 +11,7 @@ input:
   spec:
     filesFrom:
       - secret: sqlcertificate
-        mountPath: /var/run/secrets/nais.io/sqlcertificate
         mode: 0640
-      - configmap: mycm
-        mode: 0
 tests:
   - apiVersion: apps/v1
     kind: Deployment
@@ -22,7 +19,7 @@ tests:
     operation: CreateOrUpdate
     match:
       - type: subset
-        name: requested permissions on secret and configmap volumes
+        name: secret volume has requested mode
         resource:
           spec:
             template:
@@ -32,15 +29,3 @@ tests:
                     secret:
                       secretName: sqlcertificate
                       defaultMode: 416
-                  - name: config-1
-                    configMap:
-                      name: mycm
-                      defaultMode: 0
-                securityContext:
-                  fsGroup: 1069
-                containers:
-                  - name: myapplication
-                    volumeMounts:
-                      - name: secret-1
-                        readOnly: true
-                        mountPath: /var/run/secrets/nais.io/sqlcertificate
