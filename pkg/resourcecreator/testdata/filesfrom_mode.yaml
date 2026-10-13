@@ -1,0 +1,46 @@
+testconfig:
+  description: explicit file permissions, including zero, survive Application resource generation
+config:
+  features: {}
+input:
+  kind: Application
+  apiVersion: nais.io/v1alpha1
+  metadata:
+    name: myapplication
+    namespace: mynamespace
+  spec:
+    filesFrom:
+      - secret: sqlcertificate
+        mountPath: /var/run/secrets/nais.io/sqlcertificate
+        mode: 0640
+      - configmap: mycm
+        mode: 0
+tests:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    operation: CreateOrUpdate
+    match:
+      - type: subset
+        name: requested permissions on secret and configmap volumes
+        resource:
+          spec:
+            template:
+              spec:
+                volumes:
+                  - name: secret-1
+                    secret:
+                      secretName: sqlcertificate
+                      defaultMode: 416
+                  - name: config-1
+                    configMap:
+                      name: mycm
+                      defaultMode: 0
+                securityContext:
+                  fsGroup: 1069
+                containers:
+                  - name: myapplication
+                    volumeMounts:
+                      - name: secret-1
+                        readOnly: true
+                        mountPath: /var/run/secrets/nais.io/sqlcertificate
