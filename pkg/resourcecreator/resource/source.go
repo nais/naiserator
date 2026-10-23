@@ -29,7 +29,6 @@ type Source interface {
 	GetGCP() *nais_io_v1.GCP
 	GetPort() int
 	CorrelationID() string
-	SkipDeploymentMessage() bool
 	LogFields() log.Fields
 	ApplyDefaults() error
 	Hash(aivenGeneration int) (string, error)
