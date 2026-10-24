@@ -117,7 +117,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^azure-myapplication-4190a8ca-.{6,7}$
+            secretName: ^azure-myapplication-4190a8ca$
       - type: exact
         name: "spec is populated with correct values"
         exclude:
