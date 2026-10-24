@@ -81,7 +81,7 @@ tests:
                         value: "true"
                     envFrom:
                       - secretRef:
-                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                          name: ^azure-myapplication-4190a8ca$
                       - secretRef:
                           name: ^wonderwall-azure-config$
                       - secretRef:
@@ -145,7 +145,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^azure-myapplication-4190a8ca-.{6,7}$
+            secretName: ^azure-myapplication-4190a8ca$
   - apiVersion: v1
     kind: Secret
     operation: CreateIfNotExists

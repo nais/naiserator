@@ -43,15 +43,15 @@ tests:
                 template:
                   spec:
                     volumes:
-                      - name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                      - name: ^azure-mynaisjob-0fe7b27f$
                         secret:
-                          secretName: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                          secretName: ^azure-mynaisjob-0fe7b27f$
                     containers:
                       - envFrom:
                           - secretRef:
-                              name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                              name: ^azure-mynaisjob-0fe7b27f$
                         volumeMounts:
-                          - name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                          - name: ^azure-mynaisjob-0fe7b27f$
                             readOnly: true
                             mountPath: /var/run/secrets/nais.io/azure
   - apiVersion: nais.io/v1

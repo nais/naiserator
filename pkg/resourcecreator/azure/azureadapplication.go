@@ -3,7 +3,6 @@ package azure
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
@@ -161,12 +160,7 @@ func callbackURLs(ingresses []nais_io_v1.Ingress) []nais_io_v1.AzureAdReplyUrlSt
 }
 
 func secretName(name string) (string, error) {
-	prefixedName := fmt.Sprintf("%s-%s", "azure", name)
-	year, week := time.Now().ISOWeek()
-	suffix := fmt.Sprintf("%d-%d", year, week)
-	maxLen := validation.DNS1035LabelMaxLength
-
-	return namegen.SuffixedShortName(prefixedName, suffix, maxLen)
+	return namegen.ShortName("azure-"+name, validation.DNS1035LabelMaxLength)
 }
 
 func appendPathToIngress(url nais_io_v1.Ingress, path string) nais_io_v1.AzureAdReplyUrlString {
