@@ -38,7 +38,7 @@ func TestCreateCreatesOneBindingAndProjectsOnlyRequestedFiles(t *testing.T) {
 	if len(ast.EnvFrom) != 0 {
 		t.Errorf("EnvFrom = %#v, want none", ast.EnvFrom)
 	}
-	if got := ast.Volumes[0].Secret.Items; len(got) != 5 || got[0].Key != "ca.crt" || got[1].Key != "admin.tls.crt" {
+	if got := ast.Volumes[0].Secret.Items; len(got) != 7 || got[0].Key != "ca.crt" || got[1].Key != "admin.tls.crt" {
 		t.Errorf("projected files = %#v", got)
 	}
 	assertConnectionEnvironment(t, ast, "mydb", secretName, []connectionEnvironment{
@@ -59,7 +59,7 @@ func TestCreateUsesPrefixedReadOnlyConnectionEnvironment(t *testing.T) {
 	if err != nil || !found {
 		t.Fatalf("binding secretName = %q, found = %t, err = %v", secretName, found, err)
 	}
-	if got := ast.Volumes[0].Secret.Items; len(got) != 3 || got[0].Key != "ca.crt" || got[1].Key != "read.tls.crt" || got[2].Key != "read.tls.key" {
+	if got := ast.Volumes[0].Secret.Items; len(got) != 4 || got[0].Key != "ca.crt" || got[1].Key != "read.tls.crt" || got[2].Key != "read.tls.key" || got[3].Key != "read.tls.pk8" {
 		t.Errorf("projected files = %#v", got)
 	}
 	if got := ast.VolumeMounts; len(got) != 1 || got[0].MountPath != "/var/run/secrets/nais.io/postgres/reporting" || !got[0].ReadOnly {
@@ -78,7 +78,7 @@ type connectionEnvironment struct {
 
 func assertConnectionEnvironment(t *testing.T, ast *resource.Ast, postgres, secretName string, connections []connectionEnvironment) {
 	t.Helper()
-	const connectionVariableCount = 8
+	const connectionVariableCount = 9
 	if got, want := len(ast.Env), len(connections)*connectionVariableCount; got != want {
 		t.Fatalf("environment variable count = %d, want %d: %#v", got, want, ast.Env)
 	}
