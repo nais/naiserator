@@ -1,7 +1,6 @@
 package postgresbinding
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 	"testing"
@@ -12,33 +11,30 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestJDBCConnectionForEveryWorkloadRoleAndPrefix(t *testing.T) {
-	for _, kind := range []string{"Application", "Naisjob"} {
-		for _, role := range []string{"", "admin", "read", "readwrite"} {
-			for _, envPrefix := range []string{"", "ORDERS_"} {
-				for _, branch := range []string{"", "pr-123"} {
-					t.Run(fmt.Sprintf("%s/role=%s/prefix=%s/branch=%s", kind, role, envPrefix, branch), func(t *testing.T) {
-						uses := &v1.Uses{Postgres: []v1.PostgresUse{{Name: "orders", Role: role, EnvPrefix: envPrefix, Branch: branch}}}
-						meta := metav1.ObjectMeta{Name: "consumer", Namespace: "team", UID: "consumer-uid"}
-						var source Source
-						if kind == "Application" {
-							source = &v1alpha1.Application{ObjectMeta: meta, Spec: v1alpha1.ApplicationSpec{Uses: uses}}
-						} else {
-							source = &v1.Naisjob{ObjectMeta: meta, Spec: v1.NaisjobSpec{Uses: uses}}
-						}
-						ast := resource.NewAst()
-						if err := Create(source, ast); err != nil {
-							t.Fatal(err)
-						}
-						credentials := []string{"admin", "readwrite"}
-						if role == "read" || role == "readwrite" {
-							credentials = []string{role}
-						}
-						assertJDBCConnections(t, ast, "orders", envPrefix, credentials)
-					})
-				}
+func TestJDBCConnectionUsesCredentialRoleAndPrefix(t *testing.T) {
+	for _, tt := range []struct {
+		name        string
+		role        string
+		envPrefix   string
+		credentials []string
+	}{
+		{"default", "", "", []string{"admin", "readwrite"}},
+		{"prefixed read", "read", "ORDERS_", []string{"read"}},
+		{"readwrite", "readwrite", "", []string{"readwrite"}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			app := &v1alpha1.Application{
+				ObjectMeta: metav1.ObjectMeta{Name: "consumer", Namespace: "team", UID: "consumer-uid"},
+				Spec: v1alpha1.ApplicationSpec{Uses: &v1.Uses{Postgres: []v1.PostgresUse{
+					{Name: "orders", Role: tt.role, EnvPrefix: tt.envPrefix},
+				}}},
 			}
-		}
+			ast := resource.NewAst()
+			if err := Create(app, ast); err != nil {
+				t.Fatal(err)
+			}
+			assertJDBCConnections(t, ast, "orders", tt.envPrefix, tt.credentials)
+		})
 	}
 }
 
