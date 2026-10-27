@@ -31,3 +31,23 @@ tests:
                 name: myapplication
                 type: application
             credentials: [admin, readwrite]
+  - operation: CreateOrUpdate
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapplication
+    match:
+      - name: JDBC URL and legacy PEM path reach the application container
+        type: subset
+        resource:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: myapplication
+                    env:
+                      - name: PGSSLKEY
+                        value: /var/run/secrets/nais.io/postgres/mydb/admin/tls.key
+                      - name: PGJDBCURL
+                        value: jdbc:postgresql://$(PGHOST):$(PGPORT)/$(PGDATABASE)?user=$(PGUSER)&sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fadmin%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fadmin%2Ftls.pk8&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fca.crt
+                      - name: READWRITE_PGJDBCURL
+                        value: jdbc:postgresql://$(READWRITE_PGHOST):$(READWRITE_PGPORT)/$(READWRITE_PGDATABASE)?user=$(READWRITE_PGUSER)&sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Freadwrite%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Freadwrite%2Ftls.pk8&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fca.crt

@@ -4,6 +4,7 @@ package postgresbinding
 import (
 	"crypto/sha256"
 	"fmt"
+	"net/url"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
@@ -105,6 +106,9 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 			ast.AppendEnv(corev1.EnvVar{Name: prefix + key, ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: secretName}, Key: connectionEnvPrefix(credential) + key}}})
 		}
 		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGSSLCERT", Value: credentialMountPath(postgres.Name, credential) + "/tls.crt"}, corev1.EnvVar{Name: prefix + "PGSSLKEY", Value: credentialMountPath(postgres.Name, credential) + "/tls.key"}, corev1.EnvVar{Name: prefix + "PGSSLROOTCERT", Value: postgresMountPath(postgres.Name) + "/ca.crt"})
+		// Kubernetes expands references to the preceding Secret-backed variables
+		// when starting the container, including the selected branch's host.
+		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGJDBCURL", Value: jdbcURL(postgres.Name, credential, prefix)})
 	}
 }
 
@@ -146,9 +150,19 @@ func bindingSecretName(postgres, workload string) string {
 func credentialFiles(credentials []string) []corev1.KeyToPath {
 	files := []corev1.KeyToPath{{Key: "ca.crt", Path: "ca.crt"}}
 	for _, credential := range credentials {
-		files = append(files, corev1.KeyToPath{Key: credential + ".tls.crt", Path: credential + "/tls.crt"}, corev1.KeyToPath{Key: credential + ".tls.key", Path: credential + "/tls.key"})
+		files = append(files, corev1.KeyToPath{Key: credential + ".tls.crt", Path: credential + "/tls.crt"}, corev1.KeyToPath{Key: credential + ".tls.key", Path: credential + "/tls.key"}, corev1.KeyToPath{Key: credential + ".tls.pk8", Path: credential + "/tls.pk8"})
 	}
 	return files
+}
+
+func jdbcURL(postgres, credential, prefix string) string {
+	query := url.Values{
+		"sslmode":     {"verify-full"},
+		"sslrootcert": {postgresMountPath(postgres) + "/ca.crt"},
+		"sslcert":     {credentialMountPath(postgres, credential) + "/tls.crt"},
+		"sslkey":      {credentialMountPath(postgres, credential) + "/tls.pk8"},
+	}
+	return fmt.Sprintf("jdbc:postgresql://$(%sPGHOST):$(%sPGPORT)/$(%sPGDATABASE)?user=$(%sPGUSER)&%s", prefix, prefix, prefix, prefix, query.Encode())
 }
 
 func volumeName(kind, identity string) string {
