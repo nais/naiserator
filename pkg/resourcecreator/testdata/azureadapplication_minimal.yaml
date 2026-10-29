@@ -39,7 +39,7 @@ tests:
         name: "secret name is generated"
         resource:
           spec:
-            secretName: ^azure-myapplication-4190a8ca-.{6,7}$
+            secretName: ^azure-myapplication-4190a8ca$
   - operation: CreateOrUpdate
     apiVersion: apps/v1
     kind: Deployment
@@ -55,14 +55,14 @@ tests:
                   azure: enabled
               spec:
                 volumes:
-                  - name: ^azure-myapplication-4190a8ca-.{6,7}$
+                  - name: ^azure-myapplication-4190a8ca$
                     secret:
-                      secretName: ^azure-myapplication-4190a8ca-.{6,7}$
+                      secretName: ^azure-myapplication-4190a8ca$
                 containers:
                   - envFrom:
                       - secretRef:
-                          name: ^azure-myapplication-4190a8ca-.{6,7}$
+                          name: ^azure-myapplication-4190a8ca$
                     volumeMounts:
-                      - name: ^azure-myapplication-4190a8ca-.{6,7}$
+                      - name: ^azure-myapplication-4190a8ca$
                         readOnly: true
                         mountPath: /var/run/secrets/nais.io/azure

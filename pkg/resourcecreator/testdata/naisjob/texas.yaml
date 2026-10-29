@@ -89,7 +89,7 @@ tests:
                             value: "true"
                         envFrom:
                           - secretRef:
-                              name: ^azure-mynaisjob-0fe7b27f-.{6,7}$
+                              name: ^azure-mynaisjob-0fe7b27f$
                           - secretRef:
                               name: ^maskinporten-mynaisjob-37970c24$
                         image: nais/texas
