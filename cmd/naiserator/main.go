@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -130,7 +129,7 @@ func run() error {
 	}
 
 	if len(cfg.DomainIngressClassMapping) == 0 {
-		return fmt.Errorf("no gateway mappings defined. Will not be able to set the right gateway on the ingress")
+		log.Info("domain to ingress class mapping is empty, will not be able to create ingresses")
 	}
 
 	listers := naiserator_scheme.GenericListers()
