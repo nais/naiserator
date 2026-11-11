@@ -1,6 +1,7 @@
 package postgresbinding
 
 import (
+	"reflect"
 	"testing"
 
 	v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -10,10 +11,11 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestCreateSelectsBranchWithoutChangingConnectionIdentity(t *testing.T) {
+func TestCreateOmitsDeprecatedMainBranchWithoutChangingConnectionIdentity(t *testing.T) {
 	for _, kind := range []string{"Application", "Naisjob"} {
 		t.Run(kind, func(t *testing.T) {
-			for _, branch := range []string{"", "main", "pr-123"} {
+			var defaultAst *resource.Ast
+			for _, branch := range []string{"", "main"} {
 				t.Run("branch="+branch, func(t *testing.T) {
 					uses := &v1.Uses{Postgres: []v1.PostgresUse{{Name: "orders", Branch: branch, Role: "read"}}}
 					meta := metav1.ObjectMeta{Name: "consumer", Namespace: "team", UID: "consumer-uid"}
@@ -27,13 +29,18 @@ func TestCreateSelectsBranchWithoutChangingConnectionIdentity(t *testing.T) {
 					if err := Create(source, ast); err != nil {
 						t.Fatal(err)
 					}
+					if branch == "" {
+						defaultAst = ast
+					} else if !reflect.DeepEqual(defaultAst, ast) {
+						t.Error("legacy main changed the binding, environment, credentials or mounted files")
+					}
 					binding, ok := ast.Operations[0].Resource.(*unstructured.Unstructured)
 					if !ok {
 						t.Fatalf("resource = %T", ast.Operations[0].Resource)
 					}
 					got, found, err := unstructured.NestedString(binding.Object, "spec", "branch")
-					if err != nil || got != branch || found != (branch != "") {
-						t.Fatalf("binding branch = (%q, %t, %v), want %q", got, found, err, branch)
+					if err != nil || got != "" || found {
+						t.Fatalf("binding branch = (%q, %t, %v), want omitted", got, found, err)
 					}
 					if binding.GetName() != bindingName("orders", "consumer") {
 						t.Errorf("branch changed binding name: %q", binding.GetName())
@@ -45,6 +52,27 @@ func TestCreateSelectsBranchWithoutChangingConnectionIdentity(t *testing.T) {
 						t.Error("branch changed mount path")
 					}
 				})
+			}
+		})
+	}
+}
+
+func TestCreateRejectsNonMainBranch(t *testing.T) {
+	for _, kind := range []string{"Application", "Naisjob"} {
+		t.Run(kind, func(t *testing.T) {
+			uses := &v1.Uses{Postgres: []v1.PostgresUse{{Name: "orders", Branch: "pr-123"}}}
+			var source Source
+			if kind == "Application" {
+				source = &v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{Uses: uses}}
+			} else {
+				source = &v1.Naisjob{Spec: v1.NaisjobSpec{Uses: uses}}
+			}
+			ast := resource.NewAst()
+			if err := Create(source, ast); err == nil {
+				t.Fatal("non-main branch was silently mapped to the database")
+			}
+			if len(ast.Operations) != 0 {
+				t.Fatal("invalid branch produced binding operations")
 			}
 		})
 	}

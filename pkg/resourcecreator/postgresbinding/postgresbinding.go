@@ -41,6 +41,9 @@ func Create(source Source, ast *resource.Ast) error {
 	}
 	seen := make(map[string]struct{}, len(uses.Postgres))
 	for _, postgres := range uses.Postgres {
+		if postgres.Branch != "" && postgres.Branch != "main" {
+			return fmt.Errorf("postgres %q: branch selection is no longer supported; remove uses.postgres.branch", postgres.Name)
+		}
 		if _, ok := seen[postgres.Name]; ok {
 			return fmt.Errorf("postgres %q is used more than once by workload %q", postgres.Name, source.GetName())
 		}
@@ -88,9 +91,6 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 		panic(fmt.Sprintf("convert PostgresBinding metadata to unstructured: %v", err))
 	}
 	spec := map[string]any{"postgres": postgres.Name, "secretName": secretName, "consumer": map[string]any{"workload": map[string]any{"name": source.GetName(), "type": workloadType}}, "credentials": stringSlice(credentials)}
-	if postgres.Branch != "" {
-		spec["branch"] = postgres.Branch
-	}
 	binding := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "nais.io/v1", "kind": "PostgresBinding",
 		"metadata": metadata,
@@ -107,7 +107,7 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 		}
 		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGSSLCERT", Value: credentialMountPath(postgres.Name, credential) + "/tls.crt"}, corev1.EnvVar{Name: prefix + "PGSSLKEY", Value: credentialMountPath(postgres.Name, credential) + "/tls.key"}, corev1.EnvVar{Name: prefix + "PGSSLROOTCERT", Value: postgresMountPath(postgres.Name) + "/ca.crt"})
 		// Kubernetes expands references to the preceding Secret-backed variables
-		// when starting the container, including the selected branch's host.
+		// when starting the container, including the database host.
 		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGJDBCURL", Value: jdbcURL(postgres.Name, credential, prefix)})
 	}
 }
