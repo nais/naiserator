@@ -36,7 +36,7 @@ tests:
     kind: Deployment
     name: myapplication
     match:
-      - name: JDBC URL and legacy PEM path reach the application container
+      - name: PGURL, JDBC URL and legacy PEM path reach the application container
         type: subset
         resource:
           spec:
@@ -47,7 +47,11 @@ tests:
                     env:
                       - name: PGSSLKEY
                         value: /var/run/secrets/nais.io/postgres/mydb/admin/tls.key
+                      - name: PGURL
+                        value: postgresql://$(PGUSER)@$(PGHOST):$(PGPORT)/$(PGDATABASE)?sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fadmin%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fadmin%2Ftls.key&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fca.crt
                       - name: PGJDBCURL
                         value: jdbc:postgresql://$(PGHOST):$(PGPORT)/$(PGDATABASE)?user=$(PGUSER)&sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fadmin%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fadmin%2Ftls.pk8&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fca.crt
+                      - name: READWRITE_PGURL
+                        value: postgresql://$(READWRITE_PGUSER)@$(READWRITE_PGHOST):$(READWRITE_PGPORT)/$(READWRITE_PGDATABASE)?sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Freadwrite%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Freadwrite%2Ftls.key&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fca.crt
                       - name: READWRITE_PGJDBCURL
                         value: jdbc:postgresql://$(READWRITE_PGHOST):$(READWRITE_PGPORT)/$(READWRITE_PGDATABASE)?user=$(READWRITE_PGUSER)&sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Freadwrite%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Freadwrite%2Ftls.pk8&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmydb%2Fca.crt

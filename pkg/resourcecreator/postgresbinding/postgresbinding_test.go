@@ -1,6 +1,9 @@
 package postgresbinding
 
 import (
+	"fmt"
+	"net/url"
+	"strings"
 	"testing"
 
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
@@ -78,7 +81,7 @@ type connectionEnvironment struct {
 
 func assertConnectionEnvironment(t *testing.T, ast *resource.Ast, postgres, secretName string, connections []connectionEnvironment) {
 	t.Helper()
-	const connectionVariableCount = 9
+	const connectionVariableCount = 10
 	if got, want := len(ast.Env), len(connections)*connectionVariableCount; got != want {
 		t.Fatalf("environment variable count = %d, want %d: %#v", got, want, ast.Env)
 	}
@@ -118,6 +121,16 @@ func assertConnectionEnvironment(t *testing.T, ast *resource.Ast, postgres, secr
 			if env.Value != wantValue || env.ValueFrom != nil {
 				t.Errorf("%s = %#v, want literal %q", name, env, wantValue)
 			}
+		}
+
+		p := connection.environmentPrefix
+		wantURL := fmt.Sprintf("postgresql://$(%sPGUSER)@$(%sPGHOST):$(%sPGPORT)/$(%sPGDATABASE)?", p, p, p, p)
+		urlEnv := ast.Env[get(p+"PGURL")]
+		if !strings.HasPrefix(urlEnv.Value, wantURL) || !strings.Contains(urlEnv.Value, url.QueryEscape(mountPath+"/"+connection.credential+"/tls.key")) || urlEnv.ValueFrom != nil {
+			t.Errorf("%sPGURL = %#v, want prefix %q with PEM key", p, urlEnv, wantURL)
+		}
+		if get(p+"PGURL") < get(p+"PGHOST") {
+			t.Errorf("%sPGURL must be defined after the variables it references", p)
 		}
 	}
 }
