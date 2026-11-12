@@ -13,8 +13,9 @@ input:
     uid: "123456"
   spec:
     image: navikt/myapplication:1.2.3
-    postgres:
-      clusterName: my-postgres-cluster
+    uses:
+      postgres:
+        - name: my-postgres-cluster
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -35,51 +36,21 @@ existing:
       engine: cnpg
 tests:
   - operation: CreateOrUpdate
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    name: myapplication-my-postgres-cluster-e485cb5d-egress
-    namespace: mynamespace
+    apiVersion: nais.io/v1
+    kind: PostgresBinding
+    name: my-postgres-cluster-myapplication
     match:
-      - name: "source to postgres network policy created"
+      - name: "postgres binding created"
         type: subset
         resource:
           spec:
-            egress:
-              - to:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: mynamespace
-                    podSelector:
-                      matchLabels:
-                        cnpg.io/podRole: pooler
-                        cnpg.io/cluster: my-postgres-cluster
-            podSelector:
-              matchLabels:
-                app: myapplication
-            policyTypes:
-              - Egress
-  - operation: CreateOrUpdate
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    name: myapplication-my-postgres-cluster-e485cb5d-ingress
-    namespace: mynamespace
-    match:
-      - name: "postgres pooler network policy created"
-        type: subset
-        resource:
-          spec:
-            ingress:
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: mynamespace
-                    podSelector:
-                      matchLabels:
-                        app: myapplication
-            podSelector:
-              matchLabels:
-                cnpg.io/podRole: pooler
-                cnpg.io/cluster: my-postgres-cluster
+            postgres: my-postgres-cluster
+            secretName: my-postgres-cluster--myapplication-d642e6e0-connection
+            consumer:
+              workload:
+                name: myapplication
+                type: application
+            credentials: [admin, readwrite]
 
   - apiVersion: apps/v1
     kind: Deployment
@@ -96,30 +67,30 @@ tests:
           spec:
             template:
               spec:
-                dnsPolicy: ClusterFirst
-                restartPolicy: Always
-                serviceAccountName: myapplication
                 containers:
                   - name: myapplication
-                    image: navikt/myapplication:1.2.3
                     env:
-                      - name: PGHOST
-                        value: my-postgres-cluster-pooler.mynamespace
-                      - name: PGPORT
-                        value: "5432"
-                      - name: PGDATABASE
-                        value: app
-                      - name: PGUSER
-                        valueFrom:
-                          secretKeyRef:
-                            name: my-postgres-cluster-app
-                            key: username
-                      - name: PGPASSWORD
-                        valueFrom:
-                          secretKeyRef:
-                            name: my-postgres-cluster-app
-                            key: password
-                      - name: PGURL
-                        value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.mynamespace:5432/app"
-                      - name: PGJDBCURL
-                        value: "jdbc:postgresql://my-postgres-cluster-pooler.mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"
+                    - name: PGHOST
+                      valueFrom:
+                        secretKeyRef:
+                          name: my-postgres-cluster--myapplication-d642e6e0-connection
+                          key: PGHOST
+                    - name: PGPORT
+                      valueFrom:
+                        secretKeyRef:
+                          name: my-postgres-cluster--myapplication-d642e6e0-connection
+                          key: PGPORT
+                    - name: PGDATABASE
+                      valueFrom:
+                        secretKeyRef:
+                          name: my-postgres-cluster--myapplication-d642e6e0-connection
+                          key: PGDATABASE
+                    - name: PGUSER
+                      valueFrom:
+                        secretKeyRef:
+                          name: my-postgres-cluster--myapplication-d642e6e0-connection
+                          key: PGUSER
+                    - name: PGURL
+                      value: postgresql://$(PGUSER)@$(PGHOST):$(PGPORT)/$(PGDATABASE)?sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.key&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fca.crt
+                    - name: PGJDBCURL
+                      value: jdbc:postgresql://$(PGHOST):$(PGPORT)/$(PGDATABASE)?user=$(PGUSER)&sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.pk8&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fca.crt

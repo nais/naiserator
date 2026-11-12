@@ -108,7 +108,10 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGSSLCERT", Value: credentialMountPath(postgres.Name, credential) + "/tls.crt"}, corev1.EnvVar{Name: prefix + "PGSSLKEY", Value: credentialMountPath(postgres.Name, credential) + "/tls.key"}, corev1.EnvVar{Name: prefix + "PGSSLROOTCERT", Value: postgresMountPath(postgres.Name) + "/ca.crt"})
 		// Kubernetes expands references to the preceding Secret-backed variables
 		// when starting the container, including the database host.
-		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGJDBCURL", Value: jdbcURL(postgres.Name, credential, prefix)})
+		ast.AppendEnv(
+			corev1.EnvVar{Name: prefix + "PGURL", Value: pgURL(postgres.Name, credential, prefix)},
+			corev1.EnvVar{Name: prefix + "PGJDBCURL", Value: jdbcURL(postgres.Name, credential, prefix)},
+		)
 	}
 }
 
@@ -155,14 +158,22 @@ func credentialFiles(credentials []string) []corev1.KeyToPath {
 	return files
 }
 
+func pgURL(postgres, credential, prefix string) string {
+	return fmt.Sprintf("postgresql://$(%sPGUSER)@$(%sPGHOST):$(%sPGPORT)/$(%sPGDATABASE)?%s", prefix, prefix, prefix, prefix, sslParameters(postgres, credential, "tls.key"))
+}
+
 func jdbcURL(postgres, credential, prefix string) string {
-	query := url.Values{
+	return fmt.Sprintf("jdbc:postgresql://$(%sPGHOST):$(%sPGPORT)/$(%sPGDATABASE)?user=$(%sPGUSER)&%s", prefix, prefix, prefix, prefix, sslParameters(postgres, credential, "tls.pk8"))
+}
+
+// sslParameters takes the key file name because libpq reads PEM keys while JDBC requires PKCS#8.
+func sslParameters(postgres, credential, keyFile string) string {
+	return url.Values{
 		"sslmode":     {"verify-full"},
 		"sslrootcert": {postgresMountPath(postgres) + "/ca.crt"},
 		"sslcert":     {credentialMountPath(postgres, credential) + "/tls.crt"},
-		"sslkey":      {credentialMountPath(postgres, credential) + "/tls.pk8"},
-	}
-	return fmt.Sprintf("jdbc:postgresql://$(%sPGHOST):$(%sPGPORT)/$(%sPGDATABASE)?user=$(%sPGUSER)&%s", prefix, prefix, prefix, prefix, query.Encode())
+		"sslkey":      {credentialMountPath(postgres, credential) + "/" + keyFile},
+	}.Encode()
 }
 
 func volumeName(kind, identity string) string {
