@@ -21,7 +21,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7 # ratchet:exclude
-      - uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550 # ratchet:jdx/mise-action@v5.2.2
+      - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # ratchet:jdx/mise-action@v5.2.7
         with:
           version: "2026.9.1"
       - run: mise run check
