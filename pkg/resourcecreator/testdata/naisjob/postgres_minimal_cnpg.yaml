@@ -13,9 +13,8 @@ input:
     uid: "123456"
   spec:
     image: navikt/mynaisjob:1.2.3
-    uses:
-      postgres:
-        - name: my-postgres-cluster
+    postgres:
+      clusterName: my-postgres-cluster
 existing:
   - kind: Namespace
     apiVersion: v1
@@ -36,21 +35,51 @@ existing:
       engine: cnpg
 tests:
   - operation: CreateOrUpdate
-    apiVersion: nais.io/v1
-    kind: PostgresBinding
-    name: my-postgres-cluster-mynaisjob
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: mynaisjob-my-postgres-cluster-f9bd9411-egress
+    namespace: mynamespace
     match:
-      - name: "postgres binding created"
+      - name: "source to postgres network policy created"
         type: subset
         resource:
           spec:
-            postgres: my-postgres-cluster
-            secretName: my-postgres-cluster--mynaisjob-b79b367a-connection
-            consumer:
-              workload:
-                name: mynaisjob
-                type: job
-            credentials: [admin, readwrite]
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: mynamespace
+                    podSelector:
+                      matchLabels:
+                        cnpg.io/podRole: pooler
+                        cnpg.io/cluster: my-postgres-cluster
+            podSelector:
+              matchLabels:
+                app: mynaisjob
+            policyTypes:
+              - Egress
+  - operation: CreateOrUpdate
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: mynaisjob-my-postgres-cluster-f9bd9411-ingress
+    namespace: mynamespace
+    match:
+      - name: "postgres pooler network policy created"
+        type: subset
+        resource:
+          spec:
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: mynamespace
+                    podSelector:
+                      matchLabels:
+                        app: mynaisjob
+            podSelector:
+              matchLabels:
+                cnpg.io/podRole: pooler
+                cnpg.io/cluster: my-postgres-cluster
 
   - apiVersion: batch/v1
     kind: CronJob
@@ -58,7 +87,7 @@ tests:
     name: mynaisjob
     match:
       - type: subset
-        name: "cronjob created"
+        name: "deployment created"
         exclude:
           - .metadata
           - .status
@@ -69,30 +98,29 @@ tests:
               spec:
                 template:
                   spec:
+                    dnsPolicy: ClusterFirst
+                    serviceAccountName: mynaisjob
                     containers:
                       - name: mynaisjob
+                        image: navikt/mynaisjob:1.2.3
                         env:
                           - name: PGHOST
-                            valueFrom:
-                              secretKeyRef:
-                                name: my-postgres-cluster--mynaisjob-b79b367a-connection
-                                key: PGHOST
+                            value: my-postgres-cluster-pooler.mynamespace
                           - name: PGPORT
-                            valueFrom:
-                              secretKeyRef:
-                                name: my-postgres-cluster--mynaisjob-b79b367a-connection
-                                key: PGPORT
+                            value: "5432"
                           - name: PGDATABASE
-                            valueFrom:
-                              secretKeyRef:
-                                name: my-postgres-cluster--mynaisjob-b79b367a-connection
-                                key: PGDATABASE
+                            value: app
                           - name: PGUSER
                             valueFrom:
                               secretKeyRef:
-                                name: my-postgres-cluster--mynaisjob-b79b367a-connection
-                                key: PGUSER
+                                name: my-postgres-cluster-app
+                                key: username
+                          - name: PGPASSWORD
+                            valueFrom:
+                              secretKeyRef:
+                                name: my-postgres-cluster-app
+                                key: password
                           - name: PGURL
-                            value: postgresql://$(PGUSER)@$(PGHOST):$(PGPORT)/$(PGDATABASE)?sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.key&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fca.crt
+                            value: "postgresql://$(PGUSER):$(PGPASSWORD)@my-postgres-cluster-pooler.mynamespace:5432/app"
                           - name: PGJDBCURL
-                            value: jdbc:postgresql://$(PGHOST):$(PGPORT)/$(PGDATABASE)?user=$(PGUSER)&sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fadmin%2Ftls.pk8&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Fmy-postgres-cluster%2Fca.crt
+                            value: "jdbc:postgresql://my-postgres-cluster-pooler.mynamespace:5432/app?user=$(PGUSER)&password=$(PGPASSWORD)"

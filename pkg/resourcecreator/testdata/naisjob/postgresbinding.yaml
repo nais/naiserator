@@ -38,7 +38,7 @@ tests:
     kind: CronJob
     name: myjob
     match:
-      - name: prefixed JDBC URL and legacy PEM path reach the job container
+      - name: prefixed PGURL, JDBC URL and legacy PEM path reach the job container
         type: subset
         resource:
           spec:
@@ -51,5 +51,7 @@ tests:
                         env:
                           - name: REPORTING_READ_PGSSLKEY
                             value: /var/run/secrets/nais.io/postgres/reporting/read/tls.key
+                          - name: REPORTING_READ_PGURL
+                            value: postgresql://$(REPORTING_READ_PGUSER)@$(REPORTING_READ_PGHOST):$(REPORTING_READ_PGPORT)/$(REPORTING_READ_PGDATABASE)?sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Freporting%2Fread%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Freporting%2Fread%2Ftls.key&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Freporting%2Fca.crt
                           - name: REPORTING_READ_PGJDBCURL
                             value: jdbc:postgresql://$(REPORTING_READ_PGHOST):$(REPORTING_READ_PGPORT)/$(REPORTING_READ_PGDATABASE)?user=$(REPORTING_READ_PGUSER)&sslcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Freporting%2Fread%2Ftls.crt&sslkey=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Freporting%2Fread%2Ftls.pk8&sslmode=verify-full&sslrootcert=%2Fvar%2Frun%2Fsecrets%2Fnais.io%2Fpostgres%2Freporting%2Fca.crt
