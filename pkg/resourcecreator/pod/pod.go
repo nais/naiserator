@@ -86,10 +86,8 @@ func CreateSpec(ast *resource.Ast, cfg Config, appName string, annotations map[s
 	// Pod security context will by default make the filesystem read-only. Mount an emptyDir on /tmp
 	// to allow temporary files to be created.
 	volumes := append(ast.Volumes, corev1.Volume{
-		Name: "writable-tmp",
-		VolumeSource: corev1.VolumeSource{
-			EmptyDir: &corev1.EmptyDirVolumeSource{},
-		},
+		Name:     "writable-tmp",
+		EmptyDir: &corev1.EmptyDirVolumeSource{},
 	})
 
 	containers[0].VolumeMounts = append(containers[0].VolumeMounts, corev1.VolumeMount{
@@ -206,9 +204,7 @@ func envFrom(ast *resource.Ast, naisEnvFrom []nais_io_v1.EnvFrom) {
 func fromEnvConfigmap(name string) corev1.EnvFromSource {
 	return corev1.EnvFromSource{
 		ConfigMapRef: &corev1.ConfigMapEnvSource{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: name,
-			},
+			Name: name,
 		},
 	}
 }
@@ -259,13 +255,9 @@ func filesFrom(ast *resource.Ast, naisFilesFrom []nais_io_v1.FilesFrom) {
 func fromFilesConfigmapVolume(volumeName, configMapName string, mode *int32) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: configMapName,
-				},
-				DefaultMode: mode,
-			},
+		ConfigMap: &corev1.ConfigMapVolumeSource{
+			Name:        configMapName,
+			DefaultMode: mode,
 		},
 	}
 }
@@ -514,11 +506,9 @@ func probe(appPort int, probe nais_io_v1.Probe) *corev1.Probe {
 	}
 
 	k8sprobe := &corev1.Probe{
-		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path: leadingSlash(probe.Path),
-				Port: intstr.FromInt(port),
-			},
+		HTTPGet: &corev1.HTTPGetAction{
+			Path: leadingSlash(probe.Path),
+			Port: intstr.FromInt(port),
 		},
 		InitialDelaySeconds: int32(probe.InitialDelay),
 		PeriodSeconds:       int32(probe.PeriodSeconds),

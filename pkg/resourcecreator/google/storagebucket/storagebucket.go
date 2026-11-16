@@ -74,10 +74,8 @@ func CreateBucket(objectMeta metav1.ObjectMeta, bucket nais_io_v1.CloudStorageBu
 	}
 
 	return &google_storage_crd.StorageBucket{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "StorageBucket",
-			APIVersion: google.StorageAPIVersion,
-		},
+		Kind:       "StorageBucket",
+		APIVersion: google.StorageAPIVersion,
 		ObjectMeta: objectMeta,
 		Spec:       storagebucketPolicySpec,
 	}
@@ -92,10 +90,8 @@ func iAMPolicyMember(source resource.Source, bucket *google_storage_crd.StorageB
 	objectMeta.Name = policyMemberName
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IAMPolicyMember",
-			APIVersion: google.IAMAPIVersion,
-		},
+		Kind:       "IAMPolicyMember",
+		APIVersion: google.IAMAPIVersion,
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), cfg.GetGoogleProjectID())),
 			Role:   role,

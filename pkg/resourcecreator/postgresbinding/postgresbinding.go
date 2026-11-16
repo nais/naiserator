@@ -103,7 +103,7 @@ func addBinding(source Source, ast *resource.Ast, workloadType string, postgres 
 	for _, credential := range credentials {
 		prefix := postgres.EnvPrefix + connectionEnvPrefix(credential)
 		for _, key := range connectionKeys {
-			ast.AppendEnv(corev1.EnvVar{Name: prefix + key, ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: secretName}, Key: connectionEnvPrefix(credential) + key}}})
+			ast.AppendEnv(corev1.EnvVar{Name: prefix + key, ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{Name: secretName, Key: connectionEnvPrefix(credential) + key}}})
 		}
 		ast.AppendEnv(corev1.EnvVar{Name: prefix + "PGSSLCERT", Value: credentialMountPath(postgres.Name, credential) + "/tls.crt"}, corev1.EnvVar{Name: prefix + "PGSSLKEY", Value: credentialMountPath(postgres.Name, credential) + "/tls.key"}, corev1.EnvVar{Name: prefix + "PGSSLROOTCERT", Value: postgresMountPath(postgres.Name) + "/ca.crt"})
 		// Kubernetes expands references to the preceding Secret-backed variables

@@ -67,10 +67,8 @@ func Create(source Source, ast *resource.Ast) {
 	}
 
 	hpa := &v2.HorizontalPodAutoscaler{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "HorizontalPodAutoscaler",
-			APIVersion: v2.SchemeGroupVersion.Identifier(),
-		},
+		Kind:       "HorizontalPodAutoscaler",
+		APIVersion: v2.SchemeGroupVersion.Identifier(),
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec:       hpaSpec,
 	}

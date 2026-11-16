@@ -14,14 +14,10 @@ import (
 
 func fixture() *google_storage_crd.StorageBucket {
 	return &google_storage_crd.StorageBucket{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "StorageBucket",
-			APIVersion: google.StorageAPIVersion,
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "namespace",
-		},
+		Kind:       "StorageBucket",
+		APIVersion: google.StorageAPIVersion,
+		Name:       "foo",
+		Namespace:  "namespace",
 		Spec: google_storage_crd.StorageBucketSpec{
 			ResourceID: "resourceid",
 		},

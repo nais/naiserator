@@ -11,7 +11,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -56,10 +55,8 @@ func iAMPolicyMember(source resource.Source, bigqueryDataset *google_nais_io_v1.
 	objectMeta := resource.CreateObjectMeta(source)
 	objectMeta.Name = shortName
 	policy := &google_iam_crd.IAMPolicyMember{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IAMPolicyMember",
-			APIVersion: google.IAMAPIVersion,
-		},
+		Kind:       "IAMPolicyMember",
+		APIVersion: google.IAMAPIVersion,
 		ObjectMeta: objectMeta,
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(serviceAccountName, googleProjectId)),
@@ -94,10 +91,8 @@ func createDataset(source resource.Source, bigQuerySpec nais_io_v1.CloudBigQuery
 	util.SetAnnotation(&objectMeta, google.CascadingDeleteAnnotation, cascadingDeleteAnnotationValue)
 
 	return &google_nais_io_v1.BigQueryDataset{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "BigQueryDataset",
-			APIVersion: google.BigQueryAPIVersion,
-		},
+		Kind:       "BigQueryDataset",
+		APIVersion: google.BigQueryAPIVersion,
 		ObjectMeta: objectMeta,
 		Spec: google_nais_io_v1.BigQueryDatasetSpec{
 			Name:            datasetName,

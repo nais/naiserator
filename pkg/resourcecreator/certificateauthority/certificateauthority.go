@@ -79,12 +79,8 @@ func certificateAuthorityVolumeMounts() []corev1.VolumeMount {
 func certificateAuthorityVolume(configMapName string) corev1.Volume {
 	return corev1.Volume{
 		Name: configMapName,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: configMapName,
-				},
-			},
+		ConfigMap: &corev1.ConfigMapVolumeSource{
+			Name: configMapName,
 		},
 	}
 }

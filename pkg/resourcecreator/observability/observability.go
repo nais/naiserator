@@ -196,10 +196,8 @@ func otelNetpol(source Source, otel config.Otel) (*networkingv1.NetworkPolicy, e
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: objectMeta,
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
+		Kind:       "NetworkPolicy",
+		APIVersion: "networking.k8s.io/v1",
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{

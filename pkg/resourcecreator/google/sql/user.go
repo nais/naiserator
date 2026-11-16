@@ -154,10 +154,8 @@ func (in GoogleSqlUser) Create(objectMeta metav1.ObjectMeta, cascadingDelete boo
 	secretName := in.googleSQLSecretName()
 
 	return &googlesqlcrd.SQLUser{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "SQLUser",
-			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
-		},
+		Kind:       "SQLUser",
+		APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		ObjectMeta: objectMeta,
 		Spec: googlesqlcrd.SQLUserSpec{
 			InstanceRef: googlesqlcrd.InstanceRef{Name: in.Instance.Name},

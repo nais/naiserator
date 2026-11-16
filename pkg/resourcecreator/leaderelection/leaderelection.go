@@ -60,10 +60,8 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 
 func roleBinding(appObjectMeta, roleObjectMeta metav1.ObjectMeta) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "rbac.authorization.k8s.io/v1",
-			Kind:       "RoleBinding",
-		},
+		APIVersion: "rbac.authorization.k8s.io/v1",
+		Kind:       "RoleBinding",
 		ObjectMeta: roleObjectMeta,
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
@@ -130,11 +128,9 @@ func container(name, namespace, image string) corev1.Container {
 		},
 		SecurityContext: pod.DefaultContainerSecurityContext(),
 		StartupProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path: "/healthz",
-					Port: intstr.FromInt32(ProbePort),
-				},
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: "/healthz",
+				Port: intstr.FromInt32(ProbePort),
 			},
 		},
 	}

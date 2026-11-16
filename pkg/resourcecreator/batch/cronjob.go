@@ -33,10 +33,8 @@ func CreateCronJob(naisjob *nais_io_v1.Naisjob, ast *resource.Ast, cfg Config) e
 	}
 
 	cronJob := batchv1.CronJob{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "CronJob",
-			APIVersion: "batch/v1",
-		},
+		Kind:       "CronJob",
+		APIVersion: "batch/v1",
 		ObjectMeta: objectMeta,
 		Spec: batchv1.CronJobSpec{
 			TimeZone: naisjob.Spec.TimeZone,
@@ -74,26 +72,22 @@ func truncateString(str string, max int) string {
 
 func CreateJobFromCronJob(cronJob *batchv1.CronJob) *batchv1.Job {
 	return &batchv1.Job{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Job",
-			APIVersion: "batch/v1",
+		Kind:       "Job",
+		APIVersion: "batch/v1",
+		Name:       fmt.Sprintf("%s-%d", truncateString(cronJob.Name, 48), cronJob.Generation),
+		Namespace:  cronJob.GetNamespace(),
+		Labels:     cronJob.GetLabels(),
+		Annotations: map[string]string{
+			"cronjob.kubernetes.io/instantiate": "manual",
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%d", truncateString(cronJob.Name, 48), cronJob.Generation),
-			Namespace: cronJob.GetNamespace(),
-			Labels:    cronJob.GetLabels(),
-			Annotations: map[string]string{
-				"cronjob.kubernetes.io/instantiate": "manual",
-			},
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         cronJob.APIVersion,
-					Kind:               cronJob.Kind,
-					Name:               cronJob.GetName(),
-					UID:                cronJob.GetUID(),
-					Controller:         new(true),
-					BlockOwnerDeletion: new(true),
-				},
+		OwnerReferences: []metav1.OwnerReference{
+			{
+				APIVersion:         cronJob.APIVersion,
+				Kind:               cronJob.Kind,
+				Name:               cronJob.GetName(),
+				UID:                cronJob.GetUID(),
+				Controller:         new(true),
+				BlockOwnerDeletion: new(true),
 			},
 		},
 		Spec: cronJob.Spec.JobTemplate.Spec,

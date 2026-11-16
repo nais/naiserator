@@ -9,7 +9,6 @@ import (
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -54,10 +53,8 @@ func naisJsConfigMap(source Source, name, contents string) corev1.ConfigMap {
 	objectMeta.Name = name
 
 	return corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
-			APIVersion: "v1",
-		},
+		Kind:       "ConfigMap",
+		APIVersion: "v1",
 		ObjectMeta: objectMeta,
 		Data: map[string]string{
 			configFileName: contents,
@@ -78,12 +75,8 @@ func volumeMount(mountPath string) corev1.VolumeMount {
 func volume(configMapName string) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: configMapName,
-				},
-			},
+		ConfigMap: &corev1.ConfigMapVolumeSource{
+			Name: configMapName,
 		},
 	}
 }

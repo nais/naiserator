@@ -17,12 +17,10 @@ func FromFilesSecretVolume(volumeName, secretName string, items []corev1.KeyToPa
 func FromFilesSecretVolumeWithMode(volumeName, secretName string, items []corev1.KeyToPath, mode *int32) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
-		VolumeSource: corev1.VolumeSource{
-			Secret: &corev1.SecretVolumeSource{
-				SecretName:  secretName,
-				Items:       items,
-				DefaultMode: mode,
-			},
+		Secret: &corev1.SecretVolumeSource{
+			SecretName:  secretName,
+			Items:       items,
+			DefaultMode: mode,
 		},
 	}
 }
@@ -51,9 +49,7 @@ func FromFilesVolumeMount(name, mountPath, defaultMountPath string, readOnly boo
 func EnvFromSecret(name string) corev1.EnvFromSource {
 	return corev1.EnvFromSource{
 		SecretRef: &corev1.SecretEnvSource{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: name,
-			},
+			Name: name,
 		},
 	}
 }
@@ -88,11 +84,9 @@ func AppClientID(source resource.Source, cluster string) string {
 func FromFilesPVCVolume(volumeName, pvcName string) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
-		VolumeSource: corev1.VolumeSource{
-			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-				ClaimName: pvcName,
-				ReadOnly:  false,
-			},
+		PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+			ClaimName: pvcName,
+			ReadOnly:  false,
 		},
 	}
 }
@@ -100,10 +94,8 @@ func FromFilesPVCVolume(volumeName, pvcName string) corev1.Volume {
 func FilesFromEmptyDir(volumeName string, medium nais_io_v1.MediumType) corev1.Volume {
 	return corev1.Volume{
 		Name: volumeName,
-		VolumeSource: corev1.VolumeSource{
-			EmptyDir: &corev1.EmptyDirVolumeSource{
-				Medium: naisMediumToStorageMedium(medium),
-			},
+		EmptyDir: &corev1.EmptyDirVolumeSource{
+			Medium: naisMediumToStorageMedium(medium),
 		},
 	}
 }

@@ -49,10 +49,8 @@ func Create(source Source, ast *resource.Ast, cfg Config) error {
 	ast.InitContainers = append(ast.InitContainers, createInitContainer(source, vaultCfg, paths))
 	ast.Volumes = append(ast.Volumes, corev1.Volume{
 		Name: "vault-volume",
-		VolumeSource: corev1.VolumeSource{
-			EmptyDir: &corev1.EmptyDirVolumeSource{
-				Medium: corev1.StorageMediumMemory,
-			},
+		EmptyDir: &corev1.EmptyDirVolumeSource{
+			Medium: corev1.StorageMediumMemory,
 		},
 	})
 	ast.VolumeMounts = append(ast.VolumeMounts, createInitContainerMounts(paths)...)

@@ -6,27 +6,20 @@ import (
 
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestApplication_CreateAppNamespaceHash(t *testing.T) {
 	application := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "reallylongapplicationname",
-			Namespace: "evenlongernamespacename",
-		},
+		Name:      "reallylongapplicationname",
+		Namespace: "evenlongernamespacename",
 	}
 	application2 := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "reallylongafoo",
-			Namespace: "evenlongerbar",
-		},
+		Name:      "reallylongafoo",
+		Namespace: "evenlongerbar",
 	}
 	application3 := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "short",
-			Namespace: "name",
-		},
+		Name:      "short",
+		Namespace: "name",
 	}
 	appNameHash := CreateAppNamespaceHash(application)
 	appNameHash2 := CreateAppNamespaceHash(application2)
@@ -49,12 +42,10 @@ func TestApplication_CreateObjectMeta(t *testing.T) {
 		{
 			"test object meta plain",
 			&nais_io_v1alpha1.Application{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      app,
-					Namespace: namespace,
-					Labels: map[string]string{
-						"team": namespace,
-					},
+				Name:      app,
+				Namespace: namespace,
+				Labels: map[string]string{
+					"team": namespace,
 				},
 			},
 			map[string]string{
@@ -65,13 +56,11 @@ func TestApplication_CreateObjectMeta(t *testing.T) {
 		{
 			"test object meta custom label",
 			&nais_io_v1alpha1.Application{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      app,
-					Namespace: namespace,
-					Labels: map[string]string{
-						"team": namespace,
-						key:    value,
-					},
+				Name:      app,
+				Namespace: namespace,
+				Labels: map[string]string{
+					"team": namespace,
+					key:    value,
 				},
 			},
 			map[string]string{
@@ -83,13 +72,11 @@ func TestApplication_CreateObjectMeta(t *testing.T) {
 		{
 			"test object meta app label not overrideable",
 			&nais_io_v1alpha1.Application{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      app,
-					Namespace: namespace,
-					Labels: map[string]string{
-						"team": namespace,
-						"app":  "ignored",
-					},
+				Name:      app,
+				Namespace: namespace,
+				Labels: map[string]string{
+					"team": namespace,
+					"app":  "ignored",
 				},
 			},
 			map[string]string{

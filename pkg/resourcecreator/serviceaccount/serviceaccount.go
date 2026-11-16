@@ -4,7 +4,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -41,10 +40,8 @@ func Create(source resource.Source, ast *resource.Ast, cfg Config) {
 	}
 
 	serviceAccount := &corev1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ServiceAccount",
-			APIVersion: "v1",
-		},
+		Kind:       "ServiceAccount",
+		APIVersion: "v1",
 		ObjectMeta: objectMeta,
 	}
 
@@ -59,15 +56,13 @@ func Create(source resource.Source, ast *resource.Ast, cfg Config) {
 func mountToken(ast *resource.Ast) {
 	ast.Volumes = append(ast.Volumes, corev1.Volume{
 		Name: TokenVolumeName,
-		VolumeSource: corev1.VolumeSource{
-			Projected: &corev1.ProjectedVolumeSource{
-				Sources: []corev1.VolumeProjection{
-					{
-						ServiceAccountToken: &corev1.ServiceAccountTokenProjection{
-							Path:              TokenFileName,
-							Audience:          TokenAudience,
-							ExpirationSeconds: new(TokenExpirationSeconds),
-						},
+		Projected: &corev1.ProjectedVolumeSource{
+			Sources: []corev1.VolumeProjection{
+				{
+					ServiceAccountToken: &corev1.ServiceAccountTokenProjection{
+						Path:              TokenFileName,
+						Audience:          TokenAudience,
+						ExpirationSeconds: new(TokenExpirationSeconds),
 					},
 				},
 			},

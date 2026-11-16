@@ -22,10 +22,8 @@ func Create(source Source, ast *resource.Ast) {
 	}
 
 	podDisruptionBudget := &policyv1.PodDisruptionBudget{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1",
-		},
+		Kind:       "PodDisruptionBudget",
+		APIVersion: "policy/v1",
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			MaxUnavailable: new(intstr.FromInt32(1)),

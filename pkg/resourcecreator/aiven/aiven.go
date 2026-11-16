@@ -77,10 +77,8 @@ func makeSecretEnvVar(key, secretName string) v1.EnvVar {
 		Name: key,
 		ValueFrom: &v1.EnvVarSource{
 			SecretKeyRef: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: secretName,
-				},
-				Key: key,
+				Name: secretName,
+				Key:  key,
 			},
 		},
 	}
@@ -92,9 +90,7 @@ func makeOptionalSecretEnvVar(key, secretName string) v1.EnvVar {
 		Name: key,
 		ValueFrom: &v1.EnvVarSource{
 			SecretKeyRef: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: secretName,
-				},
+				Name:     secretName,
 				Key:      key,
 				Optional: &optional,
 			},

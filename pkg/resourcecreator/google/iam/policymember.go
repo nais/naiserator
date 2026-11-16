@@ -9,7 +9,6 @@ import (
 	google_iam_crd "github.com/nais/liberator/pkg/apis/iam.cnrm.cloud.google.com/v1beta1"
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	"github.com/nais/liberator/pkg/namegen"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
@@ -37,10 +36,8 @@ func policyMember(source resource.Source, policy nais_io_v1.CloudIAMPermission, 
 	objectMeta.Name = name
 	policyMember := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IAMPolicyMember",
-			APIVersion: google.IAMAPIVersion,
-		},
+		Kind:       "IAMPolicyMember",
+		APIVersion: google.IAMAPIVersion,
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf("serviceAccount:%s", google.GcpServiceAccountName(resource.CreateAppNamespaceHash(source), googleProjectId)),
 			Role:   policy.Role,

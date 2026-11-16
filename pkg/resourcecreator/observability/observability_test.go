@@ -174,10 +174,8 @@ func TestLabelsFromCollectorConfig(t *testing.T) {
 
 func TestTracingNetpol(t *testing.T) {
 	app := nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-app",
-			Namespace: "my-namespace",
-		},
+		Name:      "my-app",
+		Namespace: "my-namespace",
 		Spec: nais_io_v1alpha1.ApplicationSpec{
 			Observability: &nais_io_v1.Observability{
 				Tracing: &nais_io_v1.Tracing{
@@ -208,10 +206,8 @@ func TestTracingNetpol(t *testing.T) {
 
 	expectedNetworkPolicy := &networkingv1.NetworkPolicy{
 		ObjectMeta: expectedObjectMeta,
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
+		Kind:       "NetworkPolicy",
+		APIVersion: "networking.k8s.io/v1",
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -335,10 +331,8 @@ func TestLogLabels(t *testing.T) {
 
 func TestOtelAutoInstrumentAnnotations(t *testing.T) {
 	app := nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-app",
-			Namespace: "my-namespace",
-		},
+		Name:      "my-app",
+		Namespace: "my-namespace",
 		Spec: nais_io_v1alpha1.ApplicationSpec{
 			Observability: &nais_io_v1.Observability{
 				AutoInstrumentation: &nais_io_v1.AutoInstrumentation{

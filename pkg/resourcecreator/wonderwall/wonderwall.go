@@ -176,11 +176,9 @@ func sidecarContainer(source Source, naisCfg Config, wonderwallCfg Configuration
 		RestartPolicy: new(corev1.ContainerRestartPolicyAlways),
 		// StartupProbe ensures that the sidecar is ready to handle requests before the main application starts.
 		StartupProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path: "/healthz",
-					Port: intstr.FromInt32(ProbePort),
-				},
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: "/healthz",
+				Port: intstr.FromInt32(ProbePort),
 			},
 		},
 		SecurityContext: pod.DefaultContainerSecurityContext(),

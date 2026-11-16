@@ -5,7 +5,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/google"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateServiceAccount(source resource.Source, projectId string) google_iam_crd.IAMServiceAccount {
@@ -16,10 +15,8 @@ func CreateServiceAccount(source resource.Source, projectId string) google_iam_c
 	objectMeta.OwnerReferences = nil
 
 	iamServiceAccount := google_iam_crd.IAMServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IAMServiceAccount",
-			APIVersion: google.IAMAPIVersion,
-		},
+		Kind:       "IAMServiceAccount",
+		APIVersion: google.IAMAPIVersion,
 		ObjectMeta: objectMeta,
 		Spec: google_iam_crd.IAMServiceAccountSpec{
 			DisplayName: source.GetName(),

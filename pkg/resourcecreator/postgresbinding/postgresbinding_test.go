@@ -9,13 +9,12 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 func TestCreateCreatesOneBindingAndProjectsOnlyRequestedFiles(t *testing.T) {
-	app := &nais_io_v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "myapp", Namespace: "myteam", UID: types.UID("app-uid")}, Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb"}}}}}
+	app := &nais_io_v1alpha1.Application{Name: "myapp", Namespace: "myteam", UID: types.UID("app-uid"), Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb"}}}}}
 	ast := resource.NewAst()
 	if err := Create(app, ast); err != nil {
 		t.Fatal(err)
@@ -51,7 +50,7 @@ func TestCreateCreatesOneBindingAndProjectsOnlyRequestedFiles(t *testing.T) {
 }
 
 func TestCreateUsesPrefixedReadOnlyConnectionEnvironment(t *testing.T) {
-	app := &nais_io_v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "myapp", Namespace: "myteam", UID: types.UID("app-uid")}, Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "reporting", Role: "read", EnvPrefix: "REPORTING_"}}}}}
+	app := &nais_io_v1alpha1.Application{Name: "myapp", Namespace: "myteam", UID: types.UID("app-uid"), Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "reporting", Role: "read", EnvPrefix: "REPORTING_"}}}}}
 	ast := resource.NewAst()
 	if err := Create(app, ast); err != nil {
 		t.Fatal(err)
@@ -142,7 +141,7 @@ func TestBindingSecretNameDistinguishesPostgresAndWorkload(t *testing.T) {
 }
 
 func TestCreateRejectsDuplicatePostgresUse(t *testing.T) {
-	app := &nais_io_v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "myapp"}, Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb"}, {Name: "mydb"}}}}}
+	app := &nais_io_v1alpha1.Application{Name: "myapp", Spec: nais_io_v1alpha1.ApplicationSpec{Uses: &nais_io_v1.Uses{Postgres: []nais_io_v1.PostgresUse{{Name: "mydb"}, {Name: "mydb"}}}}}
 	if err := Create(app, resource.NewAst()); err == nil {
 		t.Fatal("expected duplicate Postgres use error")
 	}

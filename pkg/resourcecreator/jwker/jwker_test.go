@@ -50,7 +50,7 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: "", Cluster: ""},
+				Application: otherApplication, Namespace: "", Cluster: "",
 			},
 		}
 		ast := resource.NewAst()
@@ -68,7 +68,7 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster},
+				Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster,
 			},
 		}
 		ast := resource.NewAst()
@@ -100,13 +100,13 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster},
+				Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster,
 			},
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication2, Namespace: otherNamespace2},
+				Application: otherApplication2, Namespace: otherNamespace2,
 			},
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication3, Namespace: "", Cluster: ""},
+				Application: otherApplication3, Namespace: "", Cluster: "",
 			},
 		}
 		ast := resource.NewAst()
@@ -160,13 +160,13 @@ func TestJwker(t *testing.T) {
 		app := fixture()
 		app.Spec.AccessPolicy.Inbound.Rules = []nais_io_v1.AccessPolicyInboundRule{
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster},
+				Application: otherApplication, Namespace: otherNamespace, Cluster: otherCluster,
 			},
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication2, Namespace: otherNamespace2, Cluster: ""},
+				Application: otherApplication2, Namespace: otherNamespace2, Cluster: "",
 			},
 			{
-				AccessPolicyRule: nais_io_v1.AccessPolicyRule{Application: otherApplication3, Namespace: "", Cluster: ""},
+				Application: otherApplication3, Namespace: "", Cluster: "",
 			},
 		}
 

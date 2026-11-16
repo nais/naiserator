@@ -8,7 +8,6 @@ import (
 	v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestJDBCConnectionUsesCredentialRoleAndPrefix(t *testing.T) {
@@ -24,7 +23,7 @@ func TestJDBCConnectionUsesCredentialRoleAndPrefix(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			app := &v1alpha1.Application{
-				ObjectMeta: metav1.ObjectMeta{Name: "consumer", Namespace: "team", UID: "consumer-uid"},
+				Name: "consumer", Namespace: "team", UID: "consumer-uid",
 				Spec: v1alpha1.ApplicationSpec{Uses: &v1.Uses{Postgres: []v1.PostgresUse{
 					{Name: "orders", Role: tt.role, EnvPrefix: tt.envPrefix},
 				}}},
@@ -39,7 +38,7 @@ func TestJDBCConnectionUsesCredentialRoleAndPrefix(t *testing.T) {
 }
 
 func TestJDBCConnectionsForMultipleDatabasesStaySeparate(t *testing.T) {
-	app := &v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "consumer", Namespace: "team", UID: "consumer-uid"}, Spec: v1alpha1.ApplicationSpec{Uses: &v1.Uses{Postgres: []v1.PostgresUse{
+	app := &v1alpha1.Application{Name: "consumer", Namespace: "team", UID: "consumer-uid", Spec: v1alpha1.ApplicationSpec{Uses: &v1.Uses{Postgres: []v1.PostgresUse{
 		{Name: "orders", Role: "readwrite", EnvPrefix: "ORDERS_"},
 		{Name: "reporting", Role: "read", EnvPrefix: "REPORTING_"},
 	}}}}

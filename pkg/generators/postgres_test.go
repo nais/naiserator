@@ -9,7 +9,6 @@ import (
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/naiserator/pkg/postgresapi"
 	"github.com/nais/naiserator/pkg/resourcecreator/postgres"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -55,17 +54,15 @@ func TestPreparePostgresEngineResolution(t *testing.T) {
 			}
 
 			pg := &postgresapi.Postgres{
-				ObjectMeta: metav1.ObjectMeta{Name: "my-pg-cluster", Namespace: "team-a"},
-				Status:     tt.status,
+				Name: "my-pg-cluster", Namespace: "team-a",
+				Status: tt.status,
 			}
 
 			cl := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(pg).Build()
 
 			source := &nais_io_v1alpha1.Application{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "my-app",
-					Namespace: "team-a",
-				},
+				Name:      "my-app",
+				Namespace: "team-a",
 				Spec: nais_io_v1alpha1.ApplicationSpec{
 					Postgres: &nais_io_v1.Postgres{
 						ClusterName: "my-pg-cluster",

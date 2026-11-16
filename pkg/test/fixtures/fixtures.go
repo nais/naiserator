@@ -3,7 +3,6 @@ package fixtures
 import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 ) // Constant values for the variables returned in the Application spec.
 
@@ -35,14 +34,10 @@ func WithAnnotation(key, value string) FixtureModifier {
 // MinimalApplication returns the absolute minimum configuration needed to create a full set of Kubernetes resources.
 func MinimalApplication(modifiers ...FixtureModifier) *nais.Application {
 	app := &nais.Application{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Application",
-			APIVersion: nais.GroupVersion.Identifier(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      DefaultApplicationName,
-			Namespace: ApplicationNamespace,
-		},
+		Kind:       "Application",
+		APIVersion: nais.GroupVersion.Identifier(),
+		Name:       DefaultApplicationName,
+		Namespace:  ApplicationNamespace,
 		Spec: nais.ApplicationSpec{
 			Image: DefaultApplicationImage,
 		},
@@ -59,14 +54,10 @@ func MinimalApplication(modifiers ...FixtureModifier) *nais.Application {
 
 func MinimalImage(modifiers ...FixtureModifier) *nais_io_v1.Image {
 	img := &nais_io_v1.Image{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Image",
-			APIVersion: nais_io_v1.GroupVersion.Identifier(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      DefaultApplicationName,
-			Namespace: ApplicationNamespace,
-		},
+		Kind:       "Image",
+		APIVersion: nais_io_v1.GroupVersion.Identifier(),
+		Name:       DefaultApplicationName,
+		Namespace:  ApplicationNamespace,
 		Spec: nais_io_v1.ImageSpec{
 			Image: OtherApplicationImage,
 		},

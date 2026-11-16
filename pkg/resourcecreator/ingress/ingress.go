@@ -11,7 +11,6 @@ import (
 	"github.com/nais/naiserator/pkg/resourcecreator/resource"
 	"github.com/nais/naiserator/pkg/util"
 	networkingv1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -56,10 +55,8 @@ func createIngressRule(appName string, u *url.URL, annotations map[string]string
 
 	return networkingv1.IngressRule{
 		Host: u.Host,
-		IngressRuleValue: networkingv1.IngressRuleValue{
-			HTTP: &networkingv1.HTTPIngressRuleValue{
-				Paths: paths,
-			},
+		HTTP: &networkingv1.HTTPIngressRuleValue{
+			Paths: paths,
 		},
 	}
 }
@@ -99,10 +96,8 @@ func createIngressBase(source Source, ingressClass string) (*networkingv1.Ingres
 	}
 
 	return &networkingv1.Ingress{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Ingress",
-			APIVersion: "networking.k8s.io/v1",
-		},
+		Kind:       "Ingress",
+		APIVersion: "networking.k8s.io/v1",
 		ObjectMeta: objectMeta,
 		Spec: networkingv1.IngressSpec{
 			IngressClassName: &ingressClass,

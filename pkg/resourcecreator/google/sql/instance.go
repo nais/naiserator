@@ -162,10 +162,8 @@ func CreateGoogleSqlInstance(objectMeta metav1.ObjectMeta, instance *nais_io_v1.
 	}
 
 	sqlInstance := &google_sql_crd.SQLInstance{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "SQLInstance",
-			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
-		},
+		Kind:       "SQLInstance",
+		APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLInstanceSpec{
 			DatabaseVersion: string(instance.Type),
@@ -247,10 +245,8 @@ func CreateIAMPolicyMemberForInstance(source resource.Source, resourceName strin
 	objectMeta.Name = resourceName
 	policy := &google_iam_crd.IAMPolicyMember{
 		ObjectMeta: objectMeta,
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IAMPolicyMember",
-			APIVersion: google.IAMAPIVersion,
-		},
+		Kind:       "IAMPolicyMember",
+		APIVersion: google.IAMAPIVersion,
 		Spec: google_iam_crd.IAMPolicyMemberSpec{
 			Member: fmt.Sprintf(
 				"serviceAccount:%s",
@@ -289,10 +285,8 @@ func CreateSqlSSLCertResource(ast *resource.Ast, instanceName string, source Sou
 	commonName := namegen.RandShortName(fmt.Sprintf("%s.%s", source.GetName(), clusterName), maxLengthName)
 
 	sqlSSLCert := &google_sql_crd.SQLSSLCert{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "SQLSSLCert",
-			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
-		},
+		Kind:       "SQLSSLCert",
+		APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLSSLCertSpec{
 			CommonName: commonName,

@@ -208,17 +208,13 @@ func TestSynchronizer(t *testing.T) {
 
 	// Ensure that the application's namespace exists
 	err = rig.client.Create(ctx, &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fixtures.ApplicationNamespace,
-		},
+		Name: fixtures.ApplicationNamespace,
 	})
 	assert.NoError(t, err)
 
 	// Ensure that the cnrm namespace exists
 	err = rig.client.Create(ctx, &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: google.IAMServiceAccountNamespace,
-		},
+		Name: google.IAMServiceAccountNamespace,
 	})
 	assert.NoError(t, err)
 
@@ -346,7 +342,7 @@ func TestSynchronizer(t *testing.T) {
 		}
 		require.NoError(t, rig.client.Create(ctx, app))
 
-		req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: app.Namespace, Name: app.Name}}
+		req := ctrl.Request{Namespace: app.Namespace, Name: app.Name}
 		_, err := rig.synchronizer.Reconcile(ctx, req)
 		require.NoError(t, err)
 		_, err = rig.synchronizer.Reconcile(ctx, req)
@@ -423,10 +419,8 @@ func testAppDeployment(t *testing.T, rig *testRig, ctx context.Context, app *nai
 	// Run synchronization processing.
 	// This will attempt to store numerous resources in Kubernetes.
 	req := ctrl.Request{
-		NamespacedName: types.NamespacedName{
-			Namespace: app.Namespace,
-			Name:      app.Name,
-		},
+		Namespace: app.Namespace,
+		Name:      app.Name,
 	}
 	result, err := rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
@@ -514,10 +508,8 @@ func testDeleteCorrectIAMResources(t *testing.T, rig *testRig, ctx context.Conte
 		t.Fatalf("Application resource cannot be persisted to fake Kubernetes: %s", err)
 	}
 	req := ctrl.Request{
-		NamespacedName: types.NamespacedName{
-			Namespace: app2.Namespace,
-			Name:      app2.Name,
-		},
+		Namespace: app2.Namespace,
+		Name:      app2.Name,
 	}
 	// Reconcile for finalizer
 	result, err := rig.synchronizer.Reconcile(ctx, req)
@@ -546,10 +538,8 @@ func testDeleteCorrectIAMResources(t *testing.T, rig *testRig, ctx context.Conte
 	assert.NoError(t, err)
 
 	req = ctrl.Request{
-		NamespacedName: types.NamespacedName{
-			Namespace: app2.Namespace,
-			Name:      app2.Name,
-		},
+		Namespace: app2.Namespace,
+		Name:      app2.Name,
 	}
 	result, err = rig.synchronizer.Reconcile(ctx, req)
 	assert.NoError(t, err)
@@ -689,9 +679,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	// Test that the team project id is fetched from namespace annotation, and used to create the sql proxy sidecar
 	testProjectId := "test-project-id"
 	testNamespace := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: app.GetNamespace(),
-		},
+		Name: app.GetNamespace(),
 	}
 	testNamespace.SetAnnotations(map[string]string{
 		google.ProjectIdAnnotation: testProjectId,
@@ -702,9 +690,7 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 
 	// Ensure that namespace for Google IAM service accounts exists
 	err = rig.client.Create(ctx, &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: google.IAMServiceAccountNamespace,
-		},
+		Name: google.IAMServiceAccountNamespace,
 	})
 	assert.NoError(t, err)
 
@@ -727,10 +713,8 @@ func TestSynchronizerResourceOptions(t *testing.T) {
 	}
 
 	req := ctrl.Request{
-		NamespacedName: types.NamespacedName{
-			Namespace: app.Namespace,
-			Name:      app.Name,
-		},
+		Namespace: app.Namespace,
+		Name:      app.Name,
 	}
 
 	result, err := rig.synchronizer.Reconcile(ctx, req)

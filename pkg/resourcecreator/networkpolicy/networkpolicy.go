@@ -32,10 +32,8 @@ type Config interface {
 
 func baseNetworkPolicy(source Source) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
+		Kind:       "NetworkPolicy",
+		APIVersion: "networking.k8s.io/v1",
 		ObjectMeta: resource.CreateObjectMeta(source),
 	}
 }

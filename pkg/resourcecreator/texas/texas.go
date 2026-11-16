@@ -82,11 +82,9 @@ func Create(
 		RestartPolicy:   new(corev1.ContainerRestartPolicyAlways), // native sidecar
 		SecurityContext: pod.DefaultContainerSecurityContext(),
 		StartupProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path: "/healthz",
-					Port: intstr.FromInt32(ProbePort),
-				},
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: "/healthz",
+				Port: intstr.FromInt32(ProbePort),
 			},
 		},
 	})

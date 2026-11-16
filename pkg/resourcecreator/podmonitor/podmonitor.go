@@ -33,10 +33,8 @@ func Create(source Source, ast *resource.Ast, config Config) {
 	}
 
 	podMonitor := &pov1.PodMonitor{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "PodMonitor",
-			APIVersion: pov1.SchemeGroupVersion.String(),
-		},
+		Kind:       "PodMonitor",
+		APIVersion: pov1.SchemeGroupVersion.String(),
 		ObjectMeta: resource.CreateObjectMeta(source),
 		Spec: pov1.PodMonitorSpec{
 			JobLabel:        "app.kubernetes.io/name",

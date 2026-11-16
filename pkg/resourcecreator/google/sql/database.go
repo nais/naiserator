@@ -31,10 +31,8 @@ func CreateGoogleSQLDatabase(objectMeta metav1.ObjectMeta, instanceName, dbName,
 	}
 
 	return &google_sql_crd.SQLDatabase{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "SQLDatabase",
-			APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
-		},
+		Kind:       "SQLDatabase",
+		APIVersion: "sql.cnrm.cloud.google.com/v1beta1",
 		ObjectMeta: objectMeta,
 		Spec: google_sql_crd.SQLDatabaseSpec{
 			InstanceRef: google_sql_crd.InstanceRef{Name: instanceName},

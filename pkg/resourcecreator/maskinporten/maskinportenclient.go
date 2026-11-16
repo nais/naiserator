@@ -33,10 +33,8 @@ func client(objectMeta metav1.ObjectMeta, naisMaskinporten *nais_io_v1.Maskinpor
 	}
 
 	return &nais_io_v1.MaskinportenClient{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "MaskinportenClient",
-			APIVersion: "nais.io/v1",
-		},
+		Kind:       "MaskinportenClient",
+		APIVersion: "nais.io/v1",
 		ObjectMeta: objectMeta,
 		Spec: nais_io_v1.MaskinportenClientSpec{
 			Scopes: nais_io_v1.MaskinportenScope{

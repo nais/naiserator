@@ -21,10 +21,8 @@ func createPoolerNetworkPolicy(source resource.Source, ast *resource.Ast, pgClus
 
 	pgNetpol := &v1.NetworkPolicy{
 		ObjectMeta: objectMeta,
-		TypeMeta: meta_v1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
+		Kind:       "NetworkPolicy",
+		APIVersion: "networking.k8s.io/v1",
 		Spec: v1.NetworkPolicySpec{
 			PodSelector: meta_v1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -65,10 +63,8 @@ func createSourceNetworkPolicy(source resource.Source, ast *resource.Ast, pgClus
 
 	sourceNetpol := &v1.NetworkPolicy{
 		ObjectMeta: objectMeta,
-		TypeMeta: meta_v1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
+		Kind:       "NetworkPolicy",
+		APIVersion: "networking.k8s.io/v1",
 		Spec: v1.NetworkPolicySpec{
 			PodSelector: meta_v1.LabelSelector{
 				MatchLabels: map[string]string{

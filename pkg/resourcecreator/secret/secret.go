@@ -8,10 +8,8 @@ import (
 func OpaqueSecret(objectMeta metav1.ObjectMeta, secretName string, secrets map[string]string) *corev1.Secret {
 	objectMeta.Name = secretName
 	return &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Secret",
-			APIVersion: "v1",
-		},
+		Kind:       "Secret",
+		APIVersion: "v1",
 		ObjectMeta: objectMeta,
 		StringData: secrets,
 		Type:       "Opaque",

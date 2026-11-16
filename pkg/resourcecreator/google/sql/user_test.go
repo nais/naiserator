@@ -7,14 +7,11 @@ import (
 	nais "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	googlesqlcrd "github.com/nais/liberator/pkg/apis/sql.cnrm.cloud.google.com/v1beta1"
 	google_sql "github.com/nais/naiserator/pkg/resourcecreator/google/sql"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGoogleSQLUserEnvVars(t *testing.T) {
 	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "foo",
-		},
+		Name: "foo",
 	}
 
 	tests := []struct {
@@ -90,9 +87,7 @@ func TestGoogleSQLUserEnvVars(t *testing.T) {
 
 func TestMergeDefaultSQLUser(t *testing.T) {
 	instance := &googlesqlcrd.SQLInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "foo",
-		},
+		Name: "foo",
 	}
 
 	tests := []struct {

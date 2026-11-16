@@ -31,10 +31,8 @@ func Create(source resource.Source, ast *resource.Ast, postgres *nais_io_v1.Post
 			Name: "PGUSER",
 			ValueFrom: &v1.EnvVarSource{
 				SecretKeyRef: &v1.SecretKeySelector{
-					Key: "username",
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName),
-					},
+					Key:  "username",
+					Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName),
 				},
 			},
 		},
@@ -42,10 +40,8 @@ func Create(source resource.Source, ast *resource.Ast, postgres *nais_io_v1.Post
 			Name: "PGPASSWORD",
 			ValueFrom: &v1.EnvVarSource{
 				SecretKeyRef: &v1.SecretKeySelector{
-					Key: "password",
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName),
-					},
+					Key:  "password",
+					Name: fmt.Sprintf("app-owner-user.%s.credentials.postgresql.acid.zalan.do", pgClusterName),
 				},
 			},
 		},

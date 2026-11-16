@@ -53,10 +53,8 @@ func Create(app Source, ast *resource.Ast, cfg Config) error {
 	objectMeta.Annotations["reloader.stakater.com/search"] = "true"
 
 	deployment := &appsv1.Deployment{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
-		},
+		Kind:       "Deployment",
+		APIVersion: "apps/v1",
 		ObjectMeta: objectMeta,
 		Spec:       *spec,
 	}

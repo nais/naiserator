@@ -19,10 +19,8 @@ func TestMapPostgresToApplications(t *testing.T) {
 	_ = nais_io_v1.AddToScheme(scheme)
 
 	matchingApp := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-app",
-			Namespace: "team-a",
-		},
+		Name:      "my-app",
+		Namespace: "team-a",
 		Spec: nais_io_v1alpha1.ApplicationSpec{
 			Postgres: &nais_io_v1.Postgres{
 				ClusterName: "my-pg",
@@ -31,10 +29,8 @@ func TestMapPostgresToApplications(t *testing.T) {
 	}
 
 	otherApp := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "other-app",
-			Namespace: "team-a",
-		},
+		Name:      "other-app",
+		Namespace: "team-a",
 		Spec: nais_io_v1alpha1.ApplicationSpec{
 			Postgres: &nais_io_v1.Postgres{
 				ClusterName: "other-pg",
@@ -43,18 +39,14 @@ func TestMapPostgresToApplications(t *testing.T) {
 	}
 
 	appWithoutPostgres := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "no-pg-app",
-			Namespace: "team-a",
-		},
-		Spec: nais_io_v1alpha1.ApplicationSpec{},
+		Name:      "no-pg-app",
+		Namespace: "team-a",
+		Spec:      nais_io_v1alpha1.ApplicationSpec{},
 	}
 
 	appDifferentNamespace := &nais_io_v1alpha1.Application{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "diff-ns-app",
-			Namespace: "team-b",
-		},
+		Name:      "diff-ns-app",
+		Namespace: "team-b",
 		Spec: nais_io_v1alpha1.ApplicationSpec{
 			Postgres: &nais_io_v1.Postgres{
 				ClusterName: "my-pg",
@@ -68,10 +60,8 @@ func TestMapPostgresToApplications(t *testing.T) {
 		Build()
 
 	pgObject := &metav1.PartialObjectMetadata{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-pg",
-			Namespace: "team-a",
-		},
+		Name:      "my-pg",
+		Namespace: "team-a",
 	}
 
 	mapFn := mapPostgresToApplications(kube)
@@ -96,10 +86,8 @@ func TestMapPostgresToNaisjobs(t *testing.T) {
 	_ = nais_io_v1.AddToScheme(scheme)
 
 	matchingJob := &nais_io_v1.Naisjob{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-job",
-			Namespace: "team-a",
-		},
+		Name:      "my-job",
+		Namespace: "team-a",
 		Spec: nais_io_v1.NaisjobSpec{
 			Postgres: &nais_io_v1.Postgres{
 				ClusterName: "my-pg",
@@ -108,10 +96,8 @@ func TestMapPostgresToNaisjobs(t *testing.T) {
 	}
 
 	otherJob := &nais_io_v1.Naisjob{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "other-job",
-			Namespace: "team-a",
-		},
+		Name:      "other-job",
+		Namespace: "team-a",
 		Spec: nais_io_v1.NaisjobSpec{
 			Postgres: &nais_io_v1.Postgres{
 				ClusterName: "other-pg",
@@ -125,10 +111,8 @@ func TestMapPostgresToNaisjobs(t *testing.T) {
 		Build()
 
 	pgObject := &metav1.PartialObjectMetadata{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-pg",
-			Namespace: "team-a",
-		},
+		Name:      "my-pg",
+		Namespace: "team-a",
 	}
 
 	mapFn := mapPostgresToNaisjobs(kube)
@@ -157,10 +141,8 @@ func TestMapPostgresToApplications_NoMatches(t *testing.T) {
 		Build()
 
 	pgObject := &metav1.PartialObjectMetadata{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "orphan-pg",
-			Namespace: "team-a",
-		},
+		Name:      "orphan-pg",
+		Namespace: "team-a",
 	}
 
 	mapFn := mapPostgresToApplications(kube)

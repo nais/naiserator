@@ -14,10 +14,8 @@ import (
 // postgresMetadata is a PartialObjectMetadata for watching Postgres CRs.
 // Using metadata-only watches avoids pulling full specs.
 var postgresMetadata = &metav1.PartialObjectMetadata{
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "data.nais.io/v1",
-		Kind:       "Postgres",
-	},
+	APIVersion: "data.nais.io/v1",
+	Kind:       "Postgres",
 }
 
 // mapPostgresToApplications returns a map function that enqueues Applications

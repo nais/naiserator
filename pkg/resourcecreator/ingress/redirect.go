@@ -107,18 +107,16 @@ func createRedirectIngressRule(source Source, redirectUrl string) (networkingv1.
 	path := "/"
 	return networkingv1.IngressRule{
 		Host: u.Host,
-		IngressRuleValue: networkingv1.IngressRuleValue{
-			HTTP: &networkingv1.HTTPIngressRuleValue{
-				Paths: []networkingv1.HTTPIngressPath{
-					{
-						Path:     path,
-						PathType: new(networkingv1.PathTypePrefix),
-						Backend: networkingv1.IngressBackend{
-							Service: &networkingv1.IngressServiceBackend{
-								Name: source.GetName(),
-								Port: networkingv1.ServiceBackendPort{
-									Number: int32(nais_io_v1alpha1.DefaultServicePort),
-								},
+		HTTP: &networkingv1.HTTPIngressRuleValue{
+			Paths: []networkingv1.HTTPIngressPath{
+				{
+					Path:     path,
+					PathType: new(networkingv1.PathTypePrefix),
+					Backend: networkingv1.IngressBackend{
+						Service: &networkingv1.IngressServiceBackend{
+							Name: source.GetName(),
+							Port: networkingv1.ServiceBackendPort{
+								Number: int32(nais_io_v1alpha1.DefaultServicePort),
 							},
 						},
 					},
