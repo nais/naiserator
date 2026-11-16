@@ -62,7 +62,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		app.Spec.Replicas = &nais_io_v1.Replicas{
 			Min:                    new(1),
 			Max:                    new(10),
-			CpuThresholdPercentage: 75,
+			CpuThresholdPercentage: 75, //lint:ignore SA1019 deprecated field, but we still support it for backwards compatibility
 			DisableAutoScaling:     false,
 			ScalingStrategy:        nil,
 		}
@@ -80,10 +80,9 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 	t.Run("should use value from scalingStrategy.Cpu.ThresholdPercentage when set", func(t *testing.T) {
 		app := fixtures.MinimalApplication()
 		app.Spec.Replicas = &nais_io_v1.Replicas{
-			Min:                    new(1),
-			Max:                    new(10),
-			CpuThresholdPercentage: 50,
-			DisableAutoScaling:     false,
+			Min:                new(1),
+			Max:                new(10),
+			DisableAutoScaling: false,
 			ScalingStrategy: &nais_io_v1.ScalingStrategy{
 				Cpu: &nais_io_v1.CpuScaling{
 					ThresholdPercentage: 75,
