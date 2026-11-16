@@ -21,12 +21,12 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7 # ratchet:exclude
-      - uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550 # ratchet:jdx/mise-action@v5.2.2
+      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # ratchet:jdx/mise-action@v5.2.8
         with:
           version: "2026.9.1"
       - run: mise run check
       - run: mise run test
-      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # ratchet:azure/setup-helm@v3
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # ratchet:azure/setup-helm@v3
         with:
           version: "v3.11.1"
       - uses: nais/build-push-sign@main
