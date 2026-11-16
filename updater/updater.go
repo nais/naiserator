@@ -188,10 +188,6 @@ func FindAll(ctx context.Context, cli client.Client, types []client.ObjectList, 
 			resources = append(resources, item)
 			return nil
 		})
-
-		if panicErr := recover(); panicErr != nil {
-			return nil, fmt.Errorf("recovered PANIC when listing %T: %s", obj, panicErr)
-		}
 	}
 
 	return withOwnerReference(source, resources), nil
