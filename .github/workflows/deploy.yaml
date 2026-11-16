@@ -21,15 +21,11 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7 # ratchet:exclude
-      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # ratchet:jdx/mise-action@v5.2.8
-        with:
-          version: "2026.9.1"
+      - uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # ratchet:jdx/mise-action@v5.2.9
       - run: mise run check
       - run: mise run test
-      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # ratchet:azure/setup-helm@v3
-        with:
-          version: "v3.11.1"
-      - uses: nais/build-push-sign@main
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # ratchet:azure/setup-helm@v5
+      - uses: nais/build-push-sign@0f74f19fb291a0563f7d30e23fb83de3c4c7c851 # ratchet:nais/build-push-sign@main
         id: build_push_sign
         with:
           name: naiserator
@@ -89,7 +85,7 @@ jobs:
     needs:
       - build_and_push
     steps:
-      - uses: nais/fasit-deploy@53e433b1bdd08fc622e03a78584c0832c9083bd3 # ratchet:nais/fasit-deploy@v4.1.1
+      - uses: nais/fasit-deploy@348660f1e34e6a0f9d2a4182a29ad1e55ebdbc5e # ratchet:nais/fasit-deploy@v4.0.0
         if: github.ref == 'refs/heads/master'
         with:
           chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_name }}
