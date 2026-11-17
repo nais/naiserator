@@ -116,14 +116,16 @@ func assertNextRolloutUsesImage(
 	t.Helper()
 	persisted := &nais_io_v1alpha1.Application{}
 	require.NoError(t, kube.Get(t.Context(), key, persisted))
-	persisted.Spec.Observability = nil
 
 	rollout, err := sync.Prepare(t.Context(), persisted)
 	require.NoError(t, err)
 	require.NotNil(t, rollout, "image change must not be skipped after a failed reconcile")
+	assert.Equal(t, image, persisted.Status.EffectiveImage)
+
+	// Drop the auto-instrumentation that makes generation fail in this test; it is unrelated to the image.
+	persisted.Spec.Observability = nil
 	operations, err := generator.Generate(rollout.Source, rollout.Options)
 	require.NoError(t, err)
-	assert.Equal(t, image, persisted.Status.EffectiveImage)
 
 	deployments := 0
 	for _, operation := range operations {
@@ -158,7 +160,12 @@ func TestReconcileEffectiveImage(t *testing.T) {
 	}{
 		{name: "successful rollout", stage: noFailure, previousImage: fixtures.DefaultApplicationImage},
 		{name: "permanent sync failure", stage: failSyncPermanent, previousImage: fixtures.DefaultApplicationImage},
-		{name: "preparation failure", stage: failPrepare, previousImage: fixtures.DefaultApplicationImage},
+		{
+			name:          "preparation failure with external image",
+			stage:         failPrepare,
+			previousImage: fixtures.DefaultApplicationImage,
+			externalImage: true,
+		},
 		{
 			name:          "generation failure with external image",
 			stage:         failGenerate,
@@ -197,6 +204,16 @@ func TestReconcileEffectiveImage(t *testing.T) {
 			}
 			require.NoError(t, rig.client.Create(ctx, app))
 			app.Status.EffectiveImage = tt.previousImage
+			if tt.externalImage {
+				// Mark the current spec as already synchronized, so only the external image change can trigger
+				// a rollout. Otherwise the hash differs and the skip check in Prepare is never reached.
+				synced := app.DeepCopy()
+				require.NoError(t, synced.ApplyDefaults())
+				hash, err := synced.Hash(cfg.AivenGeneration)
+				require.NoError(t, err)
+				app.Status.SynchronizationHash = hash
+				app.Status.CorrelationID = correlationId
+			}
 			require.NoError(t, rig.client.Status().Update(ctx, app))
 			if tt.previousImage != "" {
 				require.NoError(t, rig.client.Create(ctx, deploymentWithImage(app, tt.previousImage)))
