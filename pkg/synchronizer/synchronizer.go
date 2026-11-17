@@ -226,6 +226,16 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 		}
 	}
 
+	// Roll back the image Prepare wrote to status unless the rollout reaches a final outcome, so the next
+	// reconcile retries the image change. Runs before the deferred status write above.
+	previousEffectiveImage := app.GetStatus().EffectiveImage
+	keepEffectiveImage := false
+	defer func() {
+		if !keepEffectiveImage {
+			app.GetStatus().EffectiveImage = previousEffectiveImage
+		}
+	}()
+
 	// Prepare configuration
 	rollout, err := n.Prepare(ctx, app)
 	if err != nil {
@@ -271,6 +281,8 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 			app.GetStatus().SetSynchronizationStateWithCondition(events.FailedSynchronization, err.Error())
 			app.GetStatus().SetError(err.Error())
 			app.GetStatus().SynchronizationHash = rollout.SynchronizationHash // permanent failure
+			// Keep the attempted image together with the recorded hash, so that a permanent failure is not retried.
+			keepEffectiveImage = true
 			n.reportError(ctx, app.GetStatus().SynchronizationState, err, app)
 			err = nil
 		}
@@ -278,6 +290,7 @@ func (n *Synchronizer) Reconcile(ctx context.Context, req ctrl.Request, app reso
 	}
 
 	// Synchronization OK
+	keepEffectiveImage = true
 	syncMsg := "Deployment has been processed; waiting for completion..."
 	logger.Debugf("Successful synchronization")
 	app.GetStatus().SetSynchronizationStateWithCondition(events.Synchronized, syncMsg)
@@ -482,7 +495,8 @@ func (n *Synchronizer) Sync(ctx context.Context, rollout Rollout) (bool, error) 
 
 // Prepare converts a NAIS application spec into a Rollout object.
 // The Rollout object contains callback functions that commits changes in the cluster.
-// Prepare is a read-only operation.
+// Prepare only reads from the cluster, but it mutates source: it applies defaults, sets the correlation ID,
+// and writes the wanted image to status.EffectiveImage for the generators to read.
 func (n *Synchronizer) Prepare(ctx context.Context, source resource.Source) (*Rollout, error) {
 	var err error
 
