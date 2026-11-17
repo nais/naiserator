@@ -137,7 +137,7 @@ func assertNextRolloutUsesImage(
 
 func TestReconcileEffectiveImage(t *testing.T) {
 	cfg := config.Config{
-		Synchronizer:  config.Synchronizer{SynchronizationTimeout: 5 * time.Second},
+		Synchronizer:  config.Synchronizer{SynchronizationTimeout: 5 * time.Second, RolloutCheckInterval: time.Second},
 		Observability: config.Observability{Otel: config.Otel{Enabled: true}},
 	}
 	rig, err := newTestRig(cfg)
