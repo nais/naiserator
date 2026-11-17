@@ -10,7 +10,6 @@ import (
 	nais_io_v1 "github.com/nais/liberator/pkg/apis/nais.io/v1"
 	nais_io_v1alpha1 "github.com/nais/liberator/pkg/apis/nais.io/v1alpha1"
 	"github.com/nais/liberator/pkg/events"
-	liberator_scheme "github.com/nais/liberator/pkg/scheme"
 	"github.com/nais/naiserator/pkg/generators"
 	"github.com/nais/naiserator/pkg/naiserator/config"
 	"github.com/nais/naiserator/pkg/synchronizer"
@@ -24,7 +23,6 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 )
 
@@ -38,18 +36,14 @@ const (
 	failSyncPermanent
 )
 
-// failingClient is a fake client that fails the requested reconcile stage until fail is set to false.
+// failingClient wraps a client and fails the requested reconcile stage until fail is set to false.
 type failingClient struct {
 	client.WithWatch
 	fail             bool
 	deploymentWrites int
 }
 
-func newFailingClient(t *testing.T, stage failureStage, app client.Object, objects ...client.Object) *failingClient {
-	t.Helper()
-	scheme, err := liberator_scheme.All()
-	require.NoError(t, err)
-
+func newFailingClient(stage failureStage, base client.WithWatch) *failingClient {
 	fc := &failingClient{fail: true}
 	failDeploymentWrite := func(obj client.Object) error {
 		if _, ok := obj.(*appsv1.Deployment); !ok {
@@ -67,44 +61,34 @@ func newFailingClient(t *testing.T, stage failureStage, app client.Object, objec
 		}
 		return nil
 	}
-	fc.WithWatch = fake.NewClientBuilder().
-		WithScheme(scheme).
-		WithStatusSubresource(app).
-		WithObjects(append(objects, app)...).
-		WithIndex(&corev1.Event{}, "involvedObject.name", func(obj client.Object) []string {
-			return []string{obj.(*corev1.Event).InvolvedObject.Name}
-		}).
-		WithIndex(&corev1.Event{}, "involvedObject.uid", func(obj client.Object) []string {
-			return []string{string(obj.(*corev1.Event).InvolvedObject.UID)}
-		}).
-		WithInterceptorFuncs(interceptor.Funcs{
-			Get: func(
-				ctx context.Context, c client.WithWatch,
-				key client.ObjectKey, obj client.Object, opts ...client.GetOption,
-			) error {
-				if _, ok := obj.(*appsv1.Deployment); ok && fc.fail && stage == failPrepare {
-					return fmt.Errorf("deployment lookup unavailable")
-				}
-				return c.Get(ctx, key, obj, opts...)
-			},
-			Create: func(ctx context.Context, c client.WithWatch, obj client.Object, opts ...client.CreateOption) error {
-				if err := failDeploymentWrite(obj); err != nil {
-					return err
-				}
-				return c.Create(ctx, obj, opts...)
-			},
-			Update: func(ctx context.Context, c client.WithWatch, obj client.Object, opts ...client.UpdateOption) error {
-				if err := failDeploymentWrite(obj); err != nil {
-					return err
-				}
-				return c.Update(ctx, obj, opts...)
-			},
-		}).
-		Build()
+	fc.WithWatch = interceptor.NewClient(base, interceptor.Funcs{
+		Get: func(
+			ctx context.Context, c client.WithWatch,
+			key client.ObjectKey, obj client.Object, opts ...client.GetOption,
+		) error {
+			if _, ok := obj.(*appsv1.Deployment); ok && fc.fail && stage == failPrepare {
+				return fmt.Errorf("deployment lookup unavailable")
+			}
+			return c.Get(ctx, key, obj, opts...)
+		},
+		Create: func(ctx context.Context, c client.WithWatch, obj client.Object, opts ...client.CreateOption) error {
+			if err := failDeploymentWrite(obj); err != nil {
+				return err
+			}
+			return c.Create(ctx, obj, opts...)
+		},
+		Update: func(ctx context.Context, c client.WithWatch, obj client.Object, opts ...client.UpdateOption) error {
+			if err := failDeploymentWrite(obj); err != nil {
+				return err
+			}
+			return c.Update(ctx, obj, opts...)
+		},
+	})
 	return fc
 }
 
 func deploymentWithImage(app *nais_io_v1alpha1.Application, image string) *appsv1.Deployment {
+	labels := map[string]string{"app": app.Name}
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            app.Name,
@@ -112,7 +96,9 @@ func deploymentWithImage(app *nais_io_v1alpha1.Application, image string) *appsv
 			OwnerReferences: []metav1.OwnerReference{app.GetOwnerReference()},
 		},
 		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{MatchLabels: labels},
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{Labels: labels},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{Name: app.Name, Image: image}},
 				},
@@ -150,7 +136,21 @@ func assertNextRolloutUsesImage(
 }
 
 func TestReconcileEffectiveImage(t *testing.T) {
-	for _, tt := range []struct {
+	cfg := config.Config{
+		Synchronizer:  config.Synchronizer{SynchronizationTimeout: 5 * time.Second},
+		Observability: config.Observability{Otel: config.Otel{Enabled: true}},
+	}
+	rig, err := newTestRig(cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = rig.kubernetes.Stop() })
+
+	base, err := client.NewWithWatch(rig.kubernetes.Config, client.Options{Scheme: rig.scheme})
+	require.NoError(t, err)
+	require.NoError(t, rig.client.Create(t.Context(), &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: fixtures.ApplicationNamespace},
+	}))
+
+	for i, tt := range []struct {
 		name          string
 		stage         failureStage
 		previousImage string
@@ -175,13 +175,15 @@ func TestReconcileEffectiveImage(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := t.Context()
+			// All cases share one API server, so each gets its own application.
+			name := fmt.Sprintf("app-%d", i)
 			app := fixtures.MinimalApplication(
+				fixtures.WithName(name),
 				fixtures.WithAnnotation(nais_io.DeploymentCorrelationIDAnnotation, correlationId),
 			)
 			app.Finalizers = []string{synchronizer.NaiseratorFinalizer}
 			// Without the team label, Reconcile adds it after hashing, which forces one extra resync.
 			app.Labels = map[string]string{"team": app.Namespace}
-			app.Status.EffectiveImage = tt.previousImage
 			app.Spec.Image = fixtures.OtherApplicationImage
 			if tt.stage == failGenerate {
 				// Auto-instrumentation is not supported by the test config, which makes generation fail.
@@ -189,26 +191,21 @@ func TestReconcileEffectiveImage(t *testing.T) {
 					AutoInstrumentation: &nais_io_v1.AutoInstrumentation{Enabled: true, Runtime: "java"},
 				}
 			}
-
-			objects := []client.Object{
-				&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: app.Namespace}},
-			}
 			if tt.externalImage {
 				app.Spec.Image = ""
-				objects = append(objects, fixtures.MinimalImage())
+				require.NoError(t, rig.client.Create(ctx, fixtures.MinimalImage(fixtures.WithName(name))))
 			}
+			require.NoError(t, rig.client.Create(ctx, app))
+			app.Status.EffectiveImage = tt.previousImage
+			require.NoError(t, rig.client.Status().Update(ctx, app))
 			if tt.previousImage != "" {
-				objects = append(objects, deploymentWithImage(app, tt.previousImage))
+				require.NoError(t, rig.client.Create(ctx, deploymentWithImage(app, tt.previousImage)))
 			}
 			key := client.ObjectKeyFromObject(app)
-			kube := newFailingClient(t, tt.stage, app, objects...)
 
-			cfg := config.Config{
-				Synchronizer:  config.Synchronizer{SynchronizationTimeout: 5 * time.Second},
-				Observability: config.Observability{Otel: config.Otel{Enabled: true}},
-			}
+			kube := newFailingClient(tt.stage, base)
 			generator := &generators.Application{Config: cfg}
-			sync := synchronizer.NewSynchronizer(kube, kube, cfg, generator, nil, kube.Scheme())
+			sync := synchronizer.NewSynchronizer(kube, kube, cfg, generator, nil, rig.scheme)
 
 			wantImage := tt.previousImage
 			if tt.stage == noFailure || tt.stage == failSyncPermanent {
@@ -219,7 +216,7 @@ func TestReconcileEffectiveImage(t *testing.T) {
 			for range 2 {
 				_, err := sync.Reconcile(ctx, ctrl.Request{NamespacedName: key}, &nais_io_v1alpha1.Application{})
 				persisted := &nais_io_v1alpha1.Application{}
-				require.NoError(t, kube.Get(ctx, key, persisted))
+				require.NoError(t, rig.client.Get(ctx, key, persisted))
 				switch tt.stage {
 				case noFailure:
 					require.NoError(t, err)
@@ -252,7 +249,7 @@ func TestReconcileEffectiveImage(t *testing.T) {
 
 			kube.fail = false
 			deployment := &appsv1.Deployment{}
-			err := kube.Get(ctx, key, deployment)
+			err := rig.client.Get(ctx, key, deployment)
 			switch {
 			case tt.stage == noFailure:
 				require.NoError(t, err)
@@ -268,7 +265,7 @@ func TestReconcileEffectiveImage(t *testing.T) {
 				return
 			}
 
-			assertNextRolloutUsesImage(t, sync, generator, kube, key, fixtures.OtherApplicationImage)
+			assertNextRolloutUsesImage(t, sync, generator, rig.client, key, fixtures.OtherApplicationImage)
 		})
 	}
 }
