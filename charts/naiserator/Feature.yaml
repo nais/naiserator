@@ -3,6 +3,7 @@ dependencies:
       - nais-crds
       - cert-manager
       - texas
+      - pgrator
 environmentKinds:
   - tenant
   - onprem
