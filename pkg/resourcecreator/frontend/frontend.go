@@ -33,19 +33,25 @@ export default {
 	telemetryCollectorURL: '%s',
 	app: {
 		name: '%s',
-		version: '%s'
+    namespace: '%s'
+		version: '%s',
 	}
 };
 `
 
 func naisJs(source Source, telemetryURL string) string {
-	imageName := strings.Split(source.GetEffectiveImage(), ":")
-	tag := ""
+	version := getImageVersion(source.GetEffectiveImage())
+	return fmt.Sprintf(naisJsTemplate, telemetryURL, source.GetName(), source.GetNamespace(), version)
+}
+
+func getImageVersion(image string) string {
+	before, _, _ := strings.Cut(image, "@")
+	imageName := strings.Split(before, ":")
 	if len(imageName) == 2 {
-		tag = imageName[1]
+		return imageName[1]
 	}
 
-	return fmt.Sprintf(naisJsTemplate, telemetryURL, source.GetName(), tag)
+	return "unknown"
 }
 
 func naisJsConfigMap(source Source, name, contents string) corev1.ConfigMap {
