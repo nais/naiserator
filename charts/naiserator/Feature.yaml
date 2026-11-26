@@ -121,8 +121,8 @@ values:
       type: bool
   naiserator.frontend.telemetry-url:
     displayName: URL to public Grafana Agent collector endpoint
-    config:
-      type: string
+    computed:
+      template: '"{{ .Env.frontend_telemetry_url }}"'
     ignoreKind:
       - onprem
       - management
