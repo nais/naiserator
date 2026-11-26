@@ -33,8 +33,8 @@ export default {
 	telemetryCollectorURL: '%s',
 	app: {
 		name: '%s',
-    namespace: '%s'
-		version: '%s',
+		namespace: '%s',
+		version: '%s'
 	}
 };
 `
